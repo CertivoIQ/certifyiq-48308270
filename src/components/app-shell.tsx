@@ -15,7 +15,9 @@ import {
   Gift,
   Briefcase,
   Shield,
-, CreditCard } from "lucide-react";
+  CreditCard,
+} from "lucide-react";
+
 import { useState, type ReactNode } from "react";
 import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
