@@ -35,6 +35,7 @@ const NAV = [
   { to: "/launchpad", label: "LaunchPad", icon: Rocket },
   { to: "/trial", label: "My free trial", icon: Gift },
   { to: "/pricing", label: "Plans & pricing", icon: Tag },
+  { to: "/security", label: "Security", icon: Shield },
 ] as const;
 
 
