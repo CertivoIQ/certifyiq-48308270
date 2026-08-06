@@ -9,7 +9,7 @@ import { loadEnv } from "vite";
 import path from "node:path";
 
 // Server routes need non-VITE_ env vars (service role key, API keys) in process.env.
-const serverEnv = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
+const serverEnv = loadEnv(process.env['NODE_ENV'] ?? "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
 export default defineConfig({
