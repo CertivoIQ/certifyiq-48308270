@@ -43,9 +43,39 @@ function PricingPage() {
   const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
   const [portalBusy, setPortalBusy] = useState(false);
 
-  const startCheckout = (priceId: string | null, name: string, quantity?: number) => {
+  const startCheckout = async (priceId: string | null, name: string, quantity?: number) => {
     if (!priceId) {
       toast.error("This plan is not available for self-serve checkout yet.");
+      return;
+    }
+    // Checkout must be tied to an account: without a userId the webhook cannot
+    // provision the plan, so send visitors to sign in and bring them back here.
+    if (!user) {
+      toast.info("Create your account first", {
+        description: "Sign in so we can attach this subscription to your CertifyIQ workspace.",
+      });
+      await navigate({ to: "/auth", search: { redirect: "/pricing" } });
+      return;
+    }
+    // Existing subscribers switch their current subscription instead of
+    // stacking a second one on top of it.
+    if (isActive && PLAN_PRICE_ID_LIST.includes(priceId) && subscription) {
+      setPlanBusy(priceId);
+      try {
+        const result = await changePlan({
+          data: { priceId, environment: getStripeEnvironment() },
+        });
+        if ("error" in result) throw new Error(result.error);
+        toast.success(`Switching to ${name}`, {
+          description: result.effectiveAt
+            ? `Effective ${new Date(result.effectiveAt).toLocaleDateString()} — your current capacity stays until then.`
+            : "Effective at your next renewal.",
+        });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not change plan");
+      } finally {
+        setPlanBusy(null);
+      }
       return;
     }
     try {
@@ -53,14 +83,15 @@ function PricingPage() {
         priceId,
         label: name,
         ...(quantity ? { quantity } : {}),
-        ...(user?.email ? { customerEmail: user.email } : {}),
-        ...(user?.id ? { userId: user.id } : {}),
+        ...(user.email ? { customerEmail: user.email } : {}),
+        userId: user.id,
         returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Checkout unavailable");
     }
   };
+
 
   const openBillingPortal = async () => {
     setPortalBusy(true);
