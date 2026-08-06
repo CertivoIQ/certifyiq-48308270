@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_access: {
+        Row: {
+          academy_seats: number
+          access_until: string | null
+          ai_doc_allowance: number | null
+          created_at: string
+          environment: string
+          files_purge_at: string | null
+          launchpad_started_at: string | null
+          plan_id: string | null
+          price_id: string | null
+          property_limit: number | null
+          status: string
+          unit_limit: number | null
+          updated_at: string
+          user_id: string
+          welcome_sent_at: string | null
+        }
+        Insert: {
+          academy_seats?: number
+          access_until?: string | null
+          ai_doc_allowance?: number | null
+          created_at?: string
+          environment?: string
+          files_purge_at?: string | null
+          launchpad_started_at?: string | null
+          plan_id?: string | null
+          price_id?: string | null
+          property_limit?: number | null
+          status?: string
+          unit_limit?: number | null
+          updated_at?: string
+          user_id: string
+          welcome_sent_at?: string | null
+        }
+        Update: {
+          academy_seats?: number
+          access_until?: string | null
+          ai_doc_allowance?: number | null
+          created_at?: string
+          environment?: string
+          files_purge_at?: string | null
+          launchpad_started_at?: string | null
+          plan_id?: string | null
+          price_id?: string | null
+          property_limit?: number | null
+          status?: string
+          unit_limit?: number | null
+          updated_at?: string
+          user_id?: string
+          welcome_sent_at?: string | null
+        }
+        Relationships: []
+      }
       crm_accounts: {
         Row: {
           account_type: Database["public"]["Enums"]["crm_account_type"]
@@ -285,6 +339,54 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          price_id: string
+          product_id: string
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          price_id: string
+          product_id: string
+          status?: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          price_id?: string
+          product_id?: string
+          status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -311,6 +413,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_active_subscription: {
+        Args: { check_env?: string; user_uuid: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
