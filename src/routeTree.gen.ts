@@ -15,6 +15,7 @@ import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
@@ -52,6 +53,11 @@ const PricingRoute = PricingRouteImport.update({
 const RulesRoute = RulesRouteImport.update({
   id: '/rules',
   path: '/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrialRoute = TrialRouteImport.update({
+  id: '/trial',
+  path: '/trial',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
+  '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
+  '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
+  '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/launchpad'
     | '/pricing'
     | '/rules'
+    | '/trial'
     | '/welcome'
     | '/academy/$courseId'
     | '/api/chat'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/launchpad'
     | '/pricing'
     | '/rules'
+    | '/trial'
     | '/welcome'
     | '/academy/$courseId'
     | '/api/chat'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/launchpad'
     | '/pricing'
     | '/rules'
+    | '/trial'
     | '/welcome'
     | '/academy/$courseId'
     | '/api/chat'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   LaunchpadRoute: typeof LaunchpadRoute
   PricingRoute: typeof PricingRoute
   RulesRoute: typeof RulesRoute
+  TrialRoute: typeof TrialRoute
   WelcomeRoute: typeof WelcomeRoute
   AcademyCourseIdRoute: typeof AcademyCourseIdRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -254,6 +267,13 @@ declare module '@tanstack/react-router' {
       path: '/rules'
       fullPath: '/rules'
       preLoaderRoute: typeof RulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trial': {
+      id: '/trial'
+      path: '/trial'
+      fullPath: '/trial'
+      preLoaderRoute: typeof TrialRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/welcome': {
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchpadRoute: LaunchpadRoute,
   PricingRoute: PricingRoute,
   RulesRoute: RulesRoute,
+  TrialRoute: TrialRoute,
   WelcomeRoute: WelcomeRoute,
   AcademyCourseIdRoute: AcademyCourseIdRoute,
   ApiChatRoute: ApiChatRoute,

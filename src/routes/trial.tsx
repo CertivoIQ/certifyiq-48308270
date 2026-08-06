@@ -4,7 +4,6 @@ import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { MerlinSays } from "@/components/merlin";
-import { IQText } from "@/components/iq-text";
 import { TRIAL } from "@/lib/platform-data";
 import { TRIAL_OFFER, TRIAL_TASKS, TRIAL_INVITES, RETENTION_POLICY, INVITE_ROLES } from "@/lib/trial-data";
 import { Check, Clock, UploadCloud, Link2, Trash2, Send, FileSpreadsheet } from "lucide-react";
@@ -46,7 +45,7 @@ function TrialPage() {
 
   return (
     <AppShell
-      title={<IQText>Your CertifyIQ free trial</IQText>}
+      title="Your CertifyIQ free trial"
       subtitle={`${TRIAL_OFFER.label} · ${TRIAL.daysLeft} days left · Merlin is your guide`}
       actions={
         <Button size="sm" asChild>
