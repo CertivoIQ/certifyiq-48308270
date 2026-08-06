@@ -3,7 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Meter, Cite } from "@/components/ui-kit";
 import { PROPERTIES, riskBand } from "@/lib/demo-data";
 
-export const Route = createFileRoute("/properties")({
+export const Route = createFileRoute("/properties/")({
   head: () => ({
     meta: [
       { title: "Properties & Risk Scores — CertifyIQ" },
