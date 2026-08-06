@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 import { COURSES } from "@/lib/demo-data";
 import { Award, Clock, PlayCircle } from "lucide-react";
 
-export const Route = createFileRoute("/knowledge/")({
+export const Route = createFileRoute("/academy/")({
   head: () => ({
     meta: [
-      { title: "KnowledgeIQ — Affordable Housing Compliance Training" },
+      { title: "CertifyIQ Academy — Affordable Housing Compliance Training" },
       {
         name: "description",
         content:
           "Train new compliance reviewers to audit certifications: LIHTC, HOTMA, Section 8 and HOME course modules with assessments and certificates of achievement.",
       },
-      { property: "og:title", content: "KnowledgeIQ — Compliance Training Academy" },
+      { property: "og:title", content: "CertifyIQ Academy — Compliance Training Academy" },
       {
         property: "og:description",
         content: "Structured modules on auditing a certification, with a graded assessment and a printable certificate.",
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/knowledge/")({
 function KnowledgePage() {
   return (
     <AppShell
-      title="KnowledgeIQ"
+      title="CertifyIQ Academy"
       subtitle="The compliance academy — how to audit a certification, program by program"
       actions={
         <Button variant="outline" size="sm">
@@ -80,7 +80,7 @@ function KnowledgePage() {
               </ul>
 
               <Button className="mt-4 w-full" size="sm" asChild>
-                <Link to="/knowledge/$courseId" params={{ courseId: c.id }}>
+                <Link to="/academy/$courseId" params={{ courseId: c.id }}>
                   <PlayCircle className="size-4" />
                   {c.progress === 100 ? "Review course" : c.progress > 0 ? "Continue" : "Start course"}
                 </Link>

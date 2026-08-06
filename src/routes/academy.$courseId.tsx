@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { COURSES, type Course } from "@/lib/demo-data";
 import { Award, CheckCircle2, ChevronDown, XCircle } from "lucide-react";
 
-export const Route = createFileRoute("/knowledge/$courseId")({
+export const Route = createFileRoute("/academy/$courseId")({
   loader: ({ params }) => {
     const course = COURSES.find((c) => c.id === params.courseId);
     if (!course) throw notFound();
@@ -14,14 +14,14 @@ export const Route = createFileRoute("/knowledge/$courseId")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Course unavailable — KnowledgeIQ" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Course unavailable — CertifyIQ Academy" }, { name: "robots", content: "noindex" }] };
     }
     const c = loaderData.course as Course;
     return {
       meta: [
-        { title: `${c.title} — KnowledgeIQ | CertifyIQ` },
+        { title: `${c.title} — CertifyIQ Academy | CertifyIQ` },
         { name: "description", content: c.summary },
-        { property: "og:title", content: `${c.title} — KnowledgeIQ` },
+        { property: "og:title", content: `${c.title} — CertifyIQ Academy` },
         { property: "og:description", content: c.summary },
       ],
     };
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/knowledge/$courseId")({
   notFoundComponent: () => (
     <AppShell title="Course not found" subtitle="This course is not in the catalog">
       <Button asChild>
-        <Link to="/knowledge">Back to KnowledgeIQ</Link>
+        <Link to="/academy">Back to CertifyIQ Academy</Link>
       </Button>
     </AppShell>
   ),
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/knowledge/$courseId")({
 function Certificate({ course, score }: { course: Course; score: number }) {
   return (
     <div className="ledger-lines rounded-lg border-2 border-ink bg-card p-7 text-center shadow-raised">
-      <p className="cite text-[10.5px] uppercase tracking-[0.24em]">CertifyIQ · KnowledgeIQ Academy</p>
+      <p className="cite text-[10.5px] uppercase tracking-[0.24em]">CertifyIQ · CertifyIQ Academy</p>
       <h2 className="mt-4 font-display text-[26px] leading-tight">Certificate of Achievement</h2>
       <p className="mt-4 text-[13px] text-muted-foreground">awarded to</p>
       <p className="mt-1 font-display text-[21px]">Jordan Alvarez, Compliance Reviewer</p>
@@ -74,7 +74,7 @@ function CoursePage() {
       subtitle={`${course.program} · ${course.level} · ${course.modules.length} modules · ${course.hours} hours`}
       actions={
         <Button variant="outline" size="sm" asChild>
-          <Link to="/knowledge">All courses</Link>
+          <Link to="/academy">All courses</Link>
         </Button>
       }
     >
