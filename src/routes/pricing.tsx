@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { PLANS, ADDONS, ACADEMY_PLANS, TRIAL } from "@/lib/platform-data";
+import { PLANS, ADDONS, ACADEMY_ADDONS, TRIAL } from "@/lib/platform-data";
 import { Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -102,12 +102,12 @@ function PricingPage() {
         </Panel>
 
         <Panel
-          title="CertifyIQ Academy subscriptions"
-          description="Compliance training as its own recurring revenue stream"
+          title="CertifyIQ Academy — add-on only"
+          description="Training attaches to any platform plan; there is no standalone Academy subscription"
           bodyClassName="p-0"
         >
           <ul className="divide-y divide-border">
-            {ACADEMY_PLANS.map((a) => (
+            {ACADEMY_ADDONS.map((a) => (
               <li key={a.name} className="px-5 py-3.5">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-display text-[15px]">{a.name}</span>
@@ -126,6 +126,7 @@ function PricingPage() {
             </Button>
           </div>
         </Panel>
+
       </div>
 
       <p className="mt-5 text-[12.5px] text-muted-foreground">
