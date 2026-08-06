@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Meter, Cite, StatusPill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PROPERTIES, FILES, riskBand } from "@/lib/demo-data";
+import type { Property, CertFile } from "@/lib/demo-data";
 
 export const Route = createFileRoute("/properties/$propertyId")({
   loader: ({ params }) => {
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/properties/$propertyId")({
 });
 
 function PropertyDetail() {
-  const { property, files } = Route.useLoaderData();
+  const { property, files } = Route.useLoaderData() as { property: Property; files: CertFile[] };
   const band = riskBand(property.risk);
 
   return (
