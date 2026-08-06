@@ -140,7 +140,7 @@ export const PLANS = [
       "Custom integrations",
       "Contractual SLA",
     ],
-    cta: "Subscribe now",
+    cta: "Choose Enterprise",
     featured: false,
     selfServe: true,
   },
@@ -148,22 +148,29 @@ export const PLANS = [
 
 export const ADDONS = [
   { name: "Additional state rule packs", price: "$99–$199 / month per state" },
-  { name: "CertifyIQ Academy add-on", price: "$49 / user / month or $499 / company / month" },
+  { name: "CertifyIQ Academy add-on", price: "$49 / user / month or $499 / property / month" },
   { name: "API access", price: "$500–$2,000 / month by usage" },
-  { name: "High-volume AI document processing", price: "Beyond plan allowance, enterprise only" },
+  { name: "High-volume AI document processing", price: "$3 per uploaded certification beyond plan allowance" },
   { name: "AI Onboarding & Migration Wizard", price: "Included on every plan — no account rep required" },
 ];
 
-export const ACADEMY_PLANS = [
-  { id: "academy-individual", name: "Individual", price: "$79", cadence: "/month", note: "One reviewer, full catalog, CE certificates" },
-  { id: "academy-company", name: "Company", price: "$3,499", cadence: "/month", note: "Unlimited seats, manager onboarding tracks, transcripts" },
-  { id: "academy-enterprise", name: "Enterprise", price: "$6,499", cadence: "/month", note: "State-specific curricula, SSO, custom exams, LMS export" },
+export const ACADEMY_ADDONS = [
+  {
+    id: "academy-seat",
+    name: "Academy seat add-on",
+    price: "$49",
+    cadence: "/user / month",
+    note: "Add the Academy to any platform plan, per user",
+  },
+  {
+    id: "academy-property-addon",
+    name: "Academy property add-on",
+    price: "$499",
+    cadence: "/property / month",
+    note: "Unlimited seats at one property on any platform plan",
+  },
 ];
 
-export const ACADEMY_ADDONS = [
-  { id: "academy-seat", name: "Academy seat add-on", price: "$49", cadence: "/user / month", note: "Add the Academy to any platform plan, per user" },
-  { id: "academy-company-addon", name: "Academy company add-on", price: "$499", cadence: "/company / month", note: "Unlimited seats for one company on any platform plan" },
-];
 
 
 export const LAUNCHPAD_STEPS = [
