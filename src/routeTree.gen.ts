@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as FindingsRouteImport } from './routes/findings'
+import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
@@ -36,6 +38,11 @@ const FindingsRoute = FindingsRouteImport.update({
   path: '/findings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LaunchpadRoute = LaunchpadRouteImport.update({
+  id: '/launchpad',
+  path: '/launchpad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -44,6 +51,11 @@ const PricingRoute = PricingRouteImport.update({
 const RulesRoute = RulesRouteImport.update({
   id: '/rules',
   path: '/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcademyIndexRoute = AcademyIndexRouteImport.update({
@@ -81,8 +93,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
+  '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
+  '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
@@ -94,8 +108,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
+  '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
+  '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
@@ -108,8 +124,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
+  '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
+  '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
@@ -123,8 +141,10 @@ export interface FileRouteTypes {
     | '/'
     | '/copilot'
     | '/findings'
+    | '/launchpad'
     | '/pricing'
     | '/rules'
+    | '/welcome'
     | '/academy/$courseId'
     | '/files/$fileId'
     | '/properties/$propertyId'
@@ -136,8 +156,10 @@ export interface FileRouteTypes {
     | '/'
     | '/copilot'
     | '/findings'
+    | '/launchpad'
     | '/pricing'
     | '/rules'
+    | '/welcome'
     | '/academy/$courseId'
     | '/files/$fileId'
     | '/properties/$propertyId'
@@ -149,8 +171,10 @@ export interface FileRouteTypes {
     | '/'
     | '/copilot'
     | '/findings'
+    | '/launchpad'
     | '/pricing'
     | '/rules'
+    | '/welcome'
     | '/academy/$courseId'
     | '/files/$fileId'
     | '/properties/$propertyId'
@@ -163,8 +187,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CopilotRoute: typeof CopilotRoute
   FindingsRoute: typeof FindingsRoute
+  LaunchpadRoute: typeof LaunchpadRoute
   PricingRoute: typeof PricingRoute
   RulesRoute: typeof RulesRoute
+  WelcomeRoute: typeof WelcomeRoute
   AcademyCourseIdRoute: typeof AcademyCourseIdRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
   PropertiesPropertyIdRoute: typeof PropertiesPropertyIdRoute
@@ -196,6 +222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FindingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/launchpad': {
+      id: '/launchpad'
+      path: '/launchpad'
+      fullPath: '/launchpad'
+      preLoaderRoute: typeof LaunchpadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -208,6 +241,13 @@ declare module '@tanstack/react-router' {
       path: '/rules'
       fullPath: '/rules'
       preLoaderRoute: typeof RulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/academy/': {
@@ -259,8 +299,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CopilotRoute: CopilotRoute,
   FindingsRoute: FindingsRoute,
+  LaunchpadRoute: LaunchpadRoute,
   PricingRoute: PricingRoute,
   RulesRoute: RulesRoute,
+  WelcomeRoute: WelcomeRoute,
   AcademyCourseIdRoute: AcademyCourseIdRoute,
   FilesFileIdRoute: FilesFileIdRoute,
   PropertiesPropertyIdRoute: PropertiesPropertyIdRoute,

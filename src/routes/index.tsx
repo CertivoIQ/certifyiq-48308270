@@ -37,7 +37,7 @@ function ExecutiveDashboard() {
 
   return (
     <AppShell
-      title="Portfolio compliance overview"
+      title="CertifyIQ Dashboard"
       subtitle="Meridian Housing Partners · 185 properties · 14 states · period ending Aug 6, 2026"
       actions={
         <>
