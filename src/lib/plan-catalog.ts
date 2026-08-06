@@ -76,3 +76,26 @@ export function planKeyToPriceId(plan: string): string | null {
 export function formatLimit(value: number | null): string {
   return value === null ? "Unlimited" : value.toLocaleString();
 }
+
+/** Free trial capacity, provisioned in the database on email verification. */
+export const TRIAL_DAYS = 7;
+export const TRIAL_ENTITLEMENT = {
+  unitLimit: 250,
+  propertyLimit: 3,
+  aiDocAllowance: 25,
+} as const;
+
+/** Every recurring plan price, used to tell plans apart from add-ons. */
+export const PLAN_PRICE_ID_LIST: string[] = Object.values(PLAN_PRICE_IDS);
+
+export function isPlanPrice(priceId: string | null | undefined): boolean {
+  return !!priceId && PLAN_PRICE_ID_LIST.includes(priceId);
+}
+
+export function isAddonPrice(priceId: string | null | undefined): boolean {
+  return !!priceId && ADDON_PRICE_ID_LIST.includes(priceId);
+}
+
+/** Price charged per certification processed beyond the plan allowance. */
+export const AI_DOC_OVERAGE_PRICE_ID = ADDON_PRICE_IDS.aiDocOverage;
+export const AI_DOC_OVERAGE_AMOUNT_USD = 3;
