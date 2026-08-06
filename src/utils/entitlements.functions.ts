@@ -187,10 +187,11 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
         if (!price) return { error: "Overage price not configured", blocked: true };
         await stripe.invoiceItems.create({
           customer: sub.stripe_customer_id,
-          price: price.id,
+          pricing: { price: price.id },
           quantity: billedNow,
           description: `AI document processing beyond plan allowance (${billedNow} certifications)`,
-        });
+        } as Parameters<typeof stripe.invoiceItems.create>[0]);
+
       } catch (error) {
         return { error: getStripeErrorMessage(error), blocked: true };
       }
