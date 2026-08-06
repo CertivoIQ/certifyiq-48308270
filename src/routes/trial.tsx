@@ -56,7 +56,7 @@ function TrialPage() {
     try {
       const rows = 1248;
       const capacity = await claimCapacity({
-        data: { properties: 1, units: rows, environment: getStripeEnvironment() },
+        data: { kind: "property", amount: 1, environment: getStripeEnvironment() },
       });
       if ("error" in capacity) throw new Error(capacity.error);
       if (!capacity.allowed) {
