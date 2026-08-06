@@ -14,6 +14,7 @@ import {
   Clock,
   Gift,
   Briefcase,
+  Shield,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { TRIAL } from "@/lib/platform-data";

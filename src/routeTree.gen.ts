@@ -21,6 +21,7 @@ import { Route as RulesRouteImport } from './routes/rules'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -90,6 +91,11 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AcademyIndexRoute = AcademyIndexRouteImport.update({
   id: '/academy/',
   path: '/academy/',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/trial'
     | '/welcome'
     | '/crm'
+    | '/security'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/trial'
     | '/welcome'
     | '/crm'
+    | '/security'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/trial'
     | '/welcome'
     | '/_authenticated/crm'
+    | '/_authenticated/security'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -384,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/security': {
+      id: '/_authenticated/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/academy/': {
       id: '/academy/'
       path: '/academy'
@@ -452,10 +471,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -486,13 +507,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
