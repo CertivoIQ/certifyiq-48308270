@@ -14,16 +14,321 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      crm_accounts: {
+        Row: {
+          account_type: Database["public"]["Enums"]["crm_account_type"]
+          arr: number
+          created_at: string
+          created_by: string | null
+          hq: string | null
+          id: string
+          last_touch: string | null
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          owner: string | null
+          plan: string | null
+          reminders_sent: number
+          source: string | null
+          stage: Database["public"]["Enums"]["crm_stage"]
+          trial_ended_on: string | null
+          units: number
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["crm_account_type"]
+          arr?: number
+          created_at?: string
+          created_by?: string | null
+          hq?: string | null
+          id?: string
+          last_touch?: string | null
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          owner?: string | null
+          plan?: string | null
+          reminders_sent?: number
+          source?: string | null
+          stage?: Database["public"]["Enums"]["crm_stage"]
+          trial_ended_on?: string | null
+          units?: number
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["crm_account_type"]
+          arr?: number
+          created_at?: string
+          created_by?: string | null
+          hq?: string | null
+          id?: string
+          last_touch?: string | null
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          owner?: string | null
+          plan?: string | null
+          reminders_sent?: number
+          source?: string | null
+          stage?: Database["public"]["Enums"]["crm_stage"]
+          trial_ended_on?: string | null
+          units?: number
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      crm_campaigns: {
+        Row: {
+          audience: string | null
+          automated: boolean
+          body: string | null
+          channel: string
+          clicked: number
+          compliance_event: string | null
+          converted: number
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          opened: number
+          scheduled_for: string | null
+          sent: number
+          status: string
+          subject: string | null
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          automated?: boolean
+          body?: string | null
+          channel?: string
+          clicked?: number
+          compliance_event?: string | null
+          converted?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          opened?: number
+          scheduled_for?: string | null
+          sent?: number
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          automated?: boolean
+          body?: string | null
+          channel?: string
+          clicked?: number
+          compliance_event?: string | null
+          converted?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          opened?: number
+          scheduled_for?: string | null
+          sent?: number
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "crm_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_contacts: {
+        Row: {
+          account_id: string
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "crm_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_news: {
+        Row: {
+          detail: string | null
+          headline: string
+          id: string
+          kind: string
+          published_at: string
+          source: string | null
+          url: string | null
+        }
+        Insert: {
+          detail?: string | null
+          headline: string
+          id?: string
+          kind?: string
+          published_at?: string
+          source?: string | null
+          url?: string | null
+        }
+        Update: {
+          detail?: string | null
+          headline?: string
+          id?: string
+          kind?: string
+          published_at?: string
+          source?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      crm_templates: {
+        Row: {
+          body: string
+          category: string
+          compliance_event: string | null
+          created_at: string
+          cta_label: string | null
+          id: string
+          name: string
+          subject: string
+        }
+        Insert: {
+          body: string
+          category: string
+          compliance_event?: string | null
+          created_at?: string
+          cta_label?: string | null
+          id?: string
+          name: string
+          subject: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          compliance_event?: string | null
+          created_at?: string
+          cta_label?: string | null
+          id?: string
+          name?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "staff" | "user"
+      crm_account_type: "enterprise" | "company"
+      crm_stage:
+        | "new"
+        | "trialing"
+        | "trial ended"
+        | "negotiation"
+        | "won"
+        | "lost"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +455,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["staff", "user"],
+      crm_account_type: ["enterprise", "company"],
+      crm_stage: [
+        "new",
+        "trialing",
+        "trial ended",
+        "negotiation",
+        "won",
+        "lost",
+      ],
+    },
   },
 } as const
