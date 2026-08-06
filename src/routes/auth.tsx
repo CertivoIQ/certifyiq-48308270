@@ -136,7 +136,7 @@ function AuthPage() {
         if (!data.user) throw new Error("Sign in failed");
 
         const { data: factors } = await supabase.auth.mfa.listFactors();
-        const verified = factors?.verified?.[0];
+        const verified = factors?.totp?.[0];
         if (verified) {
           setMfaFactorId(verified.id);
           setMfaMode(true);
