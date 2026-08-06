@@ -186,10 +186,8 @@ function MerlinChat({ onActivity }: { onActivity: () => void }) {
 
           {messages.map((m) => (
             <Message from={m.role} key={m.id}>
-              <MessageContent
-                variant={m.role === "assistant" ? "flat" : "contained"}
-                className="text-[13px] leading-relaxed"
-              >
+              <MessageContent className="text-[13px] leading-relaxed">
+
                 <MessageResponse>{messageText(m.parts as { type: string; text?: string }[])}</MessageResponse>
               </MessageContent>
             </Message>
