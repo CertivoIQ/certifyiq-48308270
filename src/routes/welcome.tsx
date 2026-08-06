@@ -151,7 +151,7 @@ function WelcomePage() {
         </section>
 
         <section className="mt-12">
-          <h2 className="text-center font-display text-[30px]">The value outweighs the price</h2>
+          <h2 className="text-center font-display text-[30px]">The Smart Investment That Pays for Itself</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {VALUE_MATH.map((v) => (
               <Panel key={v.label} bodyClassName="p-5 text-center">
