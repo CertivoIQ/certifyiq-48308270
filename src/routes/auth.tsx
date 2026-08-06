@@ -35,7 +35,7 @@ export const Route = createFileRoute("/auth")({
           "Sign in to CertifyIQ to review affordable housing certifications, track findings and manage compliance.",
       },
       { property: "og:title", content: "Sign in to CertifyIQ" },
-      { property: "og:description", content: "Access your compliance workspace and CertifyIQ staff tools." },
+      { property: "og:description", content: "Access your compliance workspace and CertifyIQ Academy." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
