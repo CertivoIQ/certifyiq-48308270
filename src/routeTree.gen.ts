@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
@@ -20,6 +21,11 @@ import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$p
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CopilotRoute = CopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindingsRoute = FindingsRouteImport.update({
@@ -55,6 +61,7 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/copilot'
     | '/findings'
     | '/rules'
     | '/files/$fileId'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/copilot'
     | '/findings'
     | '/rules'
     | '/files/$fileId'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/copilot'
     | '/findings'
     | '/rules'
     | '/files/$fileId'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CopilotRoute: typeof CopilotRoute
   FindingsRoute: typeof FindingsRoute
   RulesRoute: typeof RulesRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/copilot': {
+      id: '/copilot'
+      path: '/copilot'
+      fullPath: '/copilot'
+      preLoaderRoute: typeof CopilotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/findings': {
@@ -177,6 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CopilotRoute: CopilotRoute,
   FindingsRoute: FindingsRoute,
   RulesRoute: RulesRoute,
   FilesFileIdRoute: FilesFileIdRoute,
