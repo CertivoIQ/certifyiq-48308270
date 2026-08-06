@@ -20,6 +20,8 @@ import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useIsStaff } from "@/hooks/use-session";
+
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
