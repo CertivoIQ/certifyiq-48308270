@@ -52,7 +52,7 @@ function WelcomePage() {
             <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-primary-foreground">
               IQ
             </span>
-            <span className="font-display text-lg leading-none">CertifyIQ</span>
+            <span className="font-display text-lg leading-none">Certify<span className="text-gold">IQ</span></span>
           </Link>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild>
