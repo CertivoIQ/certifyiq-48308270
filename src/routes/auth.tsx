@@ -12,7 +12,7 @@ type Mode = "signin" | "signup" | "forgot";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { mode?: Mode } => {
-    const mode = search.mode;
+    const mode = search['mode'];
     return mode === "signup" || mode === "forgot" || mode === "signin" ? { mode } : {};
   },
   head: () => ({
