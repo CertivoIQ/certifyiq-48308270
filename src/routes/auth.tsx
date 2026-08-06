@@ -132,13 +132,8 @@ function AuthPage() {
             </Button>
           </form>
 
-          <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-          </div>
 
-          <Button variant="outline" className="w-full" onClick={google}>
-            Continue with Google
-          </Button>
+
 
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
             {mode === "signin" ? "New to CertifyIQ?" : "Already have an account?"}{" "}
