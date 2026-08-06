@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { FILES, PROPERTIES, RULES, money, type CertFile, type Finding } from "@/lib/demo-data";
+import { verdictFor, correctionSteps, LEVEL_META } from "@/lib/platform-data";
 import { CheckCircle2, CircleAlert, FileText, ShieldCheck, Stamp } from "lucide-react";
 
 export const Route = createFileRoute("/files/$fileId")({
