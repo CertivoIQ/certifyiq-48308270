@@ -225,10 +225,11 @@ export const LAUNCHPAD_STEPS = [
   },
   {
     id: 9,
-    title: "Live success review",
-    lead: "You're ready. Schedule your complimentary Customer Success Review.",
-    detail: "Your Customer Success Manager becomes a trusted advisor, not just a trainer.",
-    cta: "Schedule now",
+    title: "Merlin's readiness review",
+    lead: "No phone call, no account rep — Merlin reviews your setup right here.",
+    detail: "He re-checks portfolio coverage, rule pack assignment, document completeness and team roles, then hands you a punch list.",
+    cta: "Run readiness review",
+
   },
   {
     id: 10,
