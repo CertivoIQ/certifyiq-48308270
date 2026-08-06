@@ -13,10 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as AcademyIndexRouteImport } from './routes/academy.index'
+import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
-import { Route as KnowledgeIndexRouteImport } from './routes/knowledge.index'
-import { Route as KnowledgeCourseIdRouteImport } from './routes/knowledge.$courseId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
 
@@ -40,6 +40,16 @@ const RulesRoute = RulesRouteImport.update({
   path: '/rules',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AcademyIndexRoute = AcademyIndexRouteImport.update({
+  id: '/academy/',
+  path: '/academy/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcademyCourseIdRoute = AcademyCourseIdRouteImport.update({
+  id: '/academy/$courseId',
+  path: '/academy/$courseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FilesIndexRoute = FilesIndexRouteImport.update({
   id: '/files/',
   path: '/files/',
@@ -48,16 +58,6 @@ const FilesIndexRoute = FilesIndexRouteImport.update({
 const FilesFileIdRoute = FilesFileIdRouteImport.update({
   id: '/files/$fileId',
   path: '/files/$fileId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KnowledgeIndexRoute = KnowledgeIndexRouteImport.update({
-  id: '/knowledge/',
-  path: '/knowledge/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KnowledgeCourseIdRoute = KnowledgeCourseIdRouteImport.update({
-  id: '/knowledge/$courseId',
-  path: '/knowledge/$courseId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PropertiesIndexRoute = PropertiesIndexRouteImport.update({
@@ -76,11 +76,11 @@ export interface FileRoutesByFullPath {
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
+  '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
-  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
+  '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
-  '/knowledge/': typeof KnowledgeIndexRoute
   '/properties/': typeof PropertiesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -88,11 +88,11 @@ export interface FileRoutesByTo {
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
+  '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
-  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
+  '/academy': typeof AcademyIndexRoute
   '/files': typeof FilesIndexRoute
-  '/knowledge': typeof KnowledgeIndexRoute
   '/properties': typeof PropertiesIndexRoute
 }
 export interface FileRoutesById {
@@ -101,11 +101,11 @@ export interface FileRoutesById {
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
+  '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
-  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
+  '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
-  '/knowledge/': typeof KnowledgeIndexRoute
   '/properties/': typeof PropertiesIndexRoute
 }
 export interface FileRouteTypes {
@@ -115,11 +115,11 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/findings'
     | '/rules'
+    | '/academy/$courseId'
     | '/files/$fileId'
-    | '/knowledge/$courseId'
     | '/properties/$propertyId'
+    | '/academy/'
     | '/files/'
-    | '/knowledge/'
     | '/properties/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,11 +127,11 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/findings'
     | '/rules'
+    | '/academy/$courseId'
     | '/files/$fileId'
-    | '/knowledge/$courseId'
     | '/properties/$propertyId'
+    | '/academy'
     | '/files'
-    | '/knowledge'
     | '/properties'
   id:
     | '__root__'
@@ -139,11 +139,11 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/findings'
     | '/rules'
+    | '/academy/$courseId'
     | '/files/$fileId'
-    | '/knowledge/$courseId'
     | '/properties/$propertyId'
+    | '/academy/'
     | '/files/'
-    | '/knowledge/'
     | '/properties/'
   fileRoutesById: FileRoutesById
 }
@@ -152,11 +152,11 @@ export interface RootRouteChildren {
   CopilotRoute: typeof CopilotRoute
   FindingsRoute: typeof FindingsRoute
   RulesRoute: typeof RulesRoute
+  AcademyCourseIdRoute: typeof AcademyCourseIdRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
-  KnowledgeCourseIdRoute: typeof KnowledgeCourseIdRoute
   PropertiesPropertyIdRoute: typeof PropertiesPropertyIdRoute
+  AcademyIndexRoute: typeof AcademyIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
-  KnowledgeIndexRoute: typeof KnowledgeIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
 }
 
@@ -190,6 +190,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RulesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/academy/': {
+      id: '/academy/'
+      path: '/academy'
+      fullPath: '/academy/'
+      preLoaderRoute: typeof AcademyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/academy/$courseId': {
+      id: '/academy/$courseId'
+      path: '/academy/$courseId'
+      fullPath: '/academy/$courseId'
+      preLoaderRoute: typeof AcademyCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/files/': {
       id: '/files/'
       path: '/files'
@@ -202,20 +216,6 @@ declare module '@tanstack/react-router' {
       path: '/files/$fileId'
       fullPath: '/files/$fileId'
       preLoaderRoute: typeof FilesFileIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/knowledge/': {
-      id: '/knowledge/'
-      path: '/knowledge'
-      fullPath: '/knowledge/'
-      preLoaderRoute: typeof KnowledgeIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/knowledge/$courseId': {
-      id: '/knowledge/$courseId'
-      path: '/knowledge/$courseId'
-      fullPath: '/knowledge/$courseId'
-      preLoaderRoute: typeof KnowledgeCourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/properties/': {
@@ -240,23 +240,13 @@ const rootRouteChildren: RootRouteChildren = {
   CopilotRoute: CopilotRoute,
   FindingsRoute: FindingsRoute,
   RulesRoute: RulesRoute,
+  AcademyCourseIdRoute: AcademyCourseIdRoute,
   FilesFileIdRoute: FilesFileIdRoute,
-  KnowledgeCourseIdRoute: KnowledgeCourseIdRoute,
   PropertiesPropertyIdRoute: PropertiesPropertyIdRoute,
+  AcademyIndexRoute: AcademyIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
-  KnowledgeIndexRoute: KnowledgeIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
