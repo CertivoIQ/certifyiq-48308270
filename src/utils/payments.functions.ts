@@ -218,3 +218,83 @@ export const changePlan = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
+
+type SessionStatusResult =
+  | { status: string; paymentStatus: string; priceId: string | null; provisioned: boolean }
+  | { error: string };
+
+/**
+ * Verifies a completed checkout session so the confirmation page reflects
+ * reality (and can wait for the webhook to provision the account) instead of
+ * trusting the presence of a session id in the URL.
+ */
+export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { sessionId: string; environment: StripeEnv }) => {
+    if (!/^[a-zA-Z0-9_-]+$/.test(data.sessionId)) throw new Error("Invalid sessionId");
+    return data;
+  })
+  .handler(async ({ data, context }): Promise<SessionStatusResult> => {
+    try {
+      const stripe = createStripeClient(data.environment);
+      const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
+        expand: ["line_items.data.price"],
+      });
+
+      // Only the buyer may inspect their own session.
+      if (session.metadata?.["userId"] && session.metadata["userId"] !== context.userId) {
+        return { error: "This checkout session belongs to another account." };
+      }
+
+      const price = session.line_items?.data?.[0]?.price;
+      const priceId = price?.lookup_key ?? price?.id ?? null;
+
+      const { data: access } = await context.supabase
+        .from("account_access")
+        .select("plan_id, status")
+        .eq("user_id", context.userId)
+        .maybeSingle();
+
+      return {
+        status: session.status ?? "unknown",
+        paymentStatus: session.payment_status ?? "unknown",
+        priceId,
+        provisioned: !!access?.plan_id,
+      };
+    } catch (error) {
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
+
+type CancelResult = { ok: true; endsAt: string | null; resumed?: boolean } | { error: string };
+
+/** Cancel at period end (or undo a scheduled cancellation). */
+export const setCancellation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { cancel: boolean; environment: StripeEnv }) => data)
+  .handler(async ({ data, context }): Promise<CancelResult> => {
+    const { supabase, userId } = context;
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("stripe_subscription_id, current_period_end, price_id")
+      .eq("user_id", userId)
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!sub?.stripe_subscription_id) return { error: "No active subscription found" };
+
+    try {
+      const stripe = createStripeClient(data.environment);
+      await stripe.subscriptions.update(sub.stripe_subscription_id, {
+        cancel_at_period_end: data.cancel,
+      });
+      return {
+        ok: true,
+        endsAt: sub.current_period_end ?? null,
+        ...(data.cancel ? {} : { resumed: true }),
+      };
+    } catch (error) {
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
