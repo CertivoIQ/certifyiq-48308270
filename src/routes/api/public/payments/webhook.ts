@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 import {
   ADDON_PRICE_ID_LIST,
@@ -7,7 +7,9 @@ import {
   PLAN_ENTITLEMENTS,
 } from "@/lib/plan-catalog";
 
-let _supabase: ReturnType<typeof createClient> | null = null;
+// Loose typing: this service-role client writes columns across several tables
+// and must not be constrained by the generated single-table row types.
+let _supabase: SupabaseClient<any, any, any> | null = null;
 function getSupabase() {
   if (!_supabase) {
     _supabase = createClient(
@@ -89,8 +91,8 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     access_until: row.cancel_at_period_end ? row.current_period_end : null,
     // Subscribing clears the trial retention hold — files are kept.
     files_purge_at: null,
-    welcome_sent_at: (existing?.["welcome_sent_at"] as string | null) ?? now,
-    launchpad_started_at: (existing?.["launchpad_started_at"] as string | null) ?? now,
+    welcome_sent_at: (existing?.["welcome_sent_at"] as string | null | undefined) ?? now,
+    launchpad_started_at: (existing?.["launchpad_started_at"] as string | null | undefined) ?? now,
   };
 
   if (plan && active) {
@@ -116,7 +118,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     .select("email, full_name")
     .eq("id", userId)
     .maybeSingle();
-  const contactEmail = (profile?.["email"] as string | null) ?? email ?? null;
+  const contactEmail = (profile?.["email"] as string | null | undefined) ?? email ?? null;
 
   let accountName: string | null = null;
   if (contactEmail) {
@@ -130,7 +132,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
       const { data: updated } = await supabase
         .from("crm_accounts")
         .update({
-          stage: "won",
+          stage: "closed_won",
           plan: plan.name,
           last_touch: now,
           trial_ended_on: now,
@@ -139,7 +141,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
         .eq("id", accountId)
         .select("name")
         .maybeSingle();
-      accountName = (updated?.["name"] as string | null) ?? null;
+      accountName = (updated?.["name"] as string | null | undefined) ?? null;
     }
   }
 
