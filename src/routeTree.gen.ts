@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as FindingsRouteImport } from './routes/findings'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
@@ -33,6 +34,11 @@ const CopilotRoute = CopilotRouteImport.update({
 const FindingsRoute = FindingsRouteImport.update({
   id: '/findings',
   path: '/findings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RulesRoute = RulesRouteImport.update({
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
+  '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
+  '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
+  '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/copilot'
     | '/findings'
+    | '/pricing'
     | '/rules'
     | '/academy/$courseId'
     | '/files/$fileId'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/copilot'
     | '/findings'
+    | '/pricing'
     | '/rules'
     | '/academy/$courseId'
     | '/files/$fileId'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/copilot'
     | '/findings'
+    | '/pricing'
     | '/rules'
     | '/academy/$courseId'
     | '/files/$fileId'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CopilotRoute: typeof CopilotRoute
   FindingsRoute: typeof FindingsRoute
+  PricingRoute: typeof PricingRoute
   RulesRoute: typeof RulesRoute
   AcademyCourseIdRoute: typeof AcademyCourseIdRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/findings'
       fullPath: '/findings'
       preLoaderRoute: typeof FindingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rules': {
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CopilotRoute: CopilotRoute,
   FindingsRoute: FindingsRoute,
+  PricingRoute: PricingRoute,
   RulesRoute: RulesRoute,
   AcademyCourseIdRoute: AcademyCourseIdRoute,
   FilesFileIdRoute: FilesFileIdRoute,
