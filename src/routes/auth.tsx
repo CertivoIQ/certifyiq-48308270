@@ -5,14 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { IQText } from "@/components/iq-text";
-import { ShieldCheck, Loader2, MailCheck } from "lucide-react";
+import { ShieldCheck, Loader2, MailCheck, KeyRound } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { verifyAndDisableRecoveryCode } from "@/utils/mfa.functions";
 
 type Mode = "signin" | "signup" | "forgot";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { mode?: Mode } => {
-    const mode = search['mode'];
+    const mode = search["mode"];
     return mode === "signup" || mode === "forgot" || mode === "signin" ? { mode } : {};
   },
   head: () => ({
@@ -41,12 +44,60 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sentTo, setSentTo] = useState<null | { kind: "verify" | "reset"; email: string }>(null);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaMode, setMfaMode] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+
+  const useRecoveryCode = useServerFn(verifyAndDisableRecoveryCode);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/", replace: true });
     });
   }, [navigate]);
+
+  async function proceedAfterMfa() {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) navigate({ to: "/", replace: true });
+  }
+
+  async function handleMfaVerify() {
+    if (!mfaFactorId || mfaCode.length !== 6) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.auth.mfa.challengeAndVerify({
+        factorId: mfaFactorId,
+        code: mfaCode,
+      });
+      if (error) throw error;
+      await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      toast.success("Signed in securely");
+      await proceedAfterMfa();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invalid authentication code");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRecoveryCode() {
+    if (!mfaCode) return;
+    setBusy(true);
+    try {
+      const result = await useRecoveryCode({ data: { code: mfaCode } });
+      if ("error" in result) throw new Error(result.error);
+      toast.success("MFA disabled with recovery code");
+      await proceedAfterMfa();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not verify recovery code");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,7 +124,7 @@ function AuthPage() {
         setSentTo({ kind: "reset", email });
         toast.success("Reset link sent", { description: "Check " + email + " for the password reset link." });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           if (/confirm/i.test(error.message)) {
             setSentTo({ kind: "verify", email });
@@ -82,6 +133,17 @@ function AuthPage() {
           }
           throw error;
         }
+        if (!data.user) throw new Error("Sign in failed");
+
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const verified = factors?.verified?.[0];
+        if (verified) {
+          setMfaFactorId(verified.id);
+          setMfaMode(true);
+          setMfaCode("");
+          return;
+        }
+
         navigate({ to: "/", replace: true });
       }
     } catch (err) {
@@ -109,8 +171,9 @@ function AuthPage() {
     }
   }
 
-  const heading =
-    mode === "signin"
+  const heading = mfaMode
+    ? "Two-factor authentication"
+    : mode === "signin"
       ? "Sign in to CertifyIQ"
       : mode === "signup"
         ? "Create your CertifyIQ account"
@@ -133,12 +196,14 @@ function AuthPage() {
             <IQText>{heading}</IQText>
           </h1>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            {mode === "forgot"
-              ? "Enter your work email and we'll send a secure link to choose a new password."
-              : "Compliance workspace, Academy and — for CertifyIQ staff — the CRM Dashboard."}
+            {mfaMode
+              ? "Enter the 6-digit code from your authenticator app."
+              : mode === "forgot"
+                ? "Enter your work email and we'll send a secure link to choose a new password."
+                : "Compliance workspace, Academy and — for CertifyIQ staff — the CRM Dashboard."}
           </p>
 
-          {sentTo && (
+          {sentTo && !mfaMode && (
             <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3.5">
               <p className="flex items-start gap-2 text-[13px]">
                 <MailCheck className="mt-0.5 size-4 shrink-0 text-seal" />
@@ -164,92 +229,174 @@ function AuthPage() {
             </div>
           )}
 
-          <form onSubmit={submit} className="mt-5 space-y-3.5">
-            {mode === "signup" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Full name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
+          {mfaMode ? (
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center gap-2 rounded-lg border border-gold/30 bg-gold/5 p-3">
+                <KeyRound className="size-4 text-gold" />
+                <p className="text-[13px] text-gold-foreground">
+                  Your account requires an authenticator code to sign in.
+                </p>
               </div>
-            )}
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Work email</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                maxLength={255}
-              />
-            </div>
-            {mode !== "forgot" && (
-              <div className="space-y-1.5">
-                <div className="flex items-baseline justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  {mode === "signin" && (
-                    <button
-                      type="button"
-                      className="text-[12px] font-medium text-primary hover:underline"
-                      onClick={() => {
-                        setSentTo(null);
-                        setMode("forgot");
-                      }}
+              <div>
+                <Label htmlFor="mfa-code" className="text-[12px] uppercase tracking-wide">
+                  {recoveryMode ? "Recovery code" : "Authenticator code"}
+                </Label>
+                <div className="mt-2">
+                  {recoveryMode ? (
+                    <Input
+                      id="recovery-code"
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value.toUpperCase())}
+                      placeholder="XXXX-XXXX-XXX"
+                      disabled={busy}
+                      autoComplete="off"
+                    />
+                  ) : (
+                    <InputOTP
+                      id="mfa-code"
+                      maxLength={6}
+                      value={mfaCode}
+                      onChange={setMfaCode}
+                      disabled={busy}
                     >
-                      Forgot password?
-                    </button>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
                   )}
                 </div>
+                <Button
+                  className="mt-4 w-full"
+                  disabled={
+                    busy || (recoveryMode ? mfaCode.length < 8 : mfaCode.length !== 6)
+                  }
+                  onClick={recoveryMode ? handleRecoveryCode : handleMfaVerify}
+                >
+                  {busy && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  {recoveryMode ? "Use recovery code" : "Verify and sign in"}
+                </Button>
+                <div className="mt-4 flex items-center justify-between">
+                  <button
+                    type="button"
+                    className="text-[12px] font-medium text-primary hover:underline"
+                    onClick={() => {
+                      setRecoveryMode((v) => !v);
+                      setMfaCode("");
+                    }}
+                    disabled={busy}
+                  >
+                    {recoveryMode ? "Use authenticator code" : "Lost your authenticator?"}
+                  </button>
+                  <button
+                    type="button"
+                    className="text-[12px] font-medium text-muted-foreground hover:underline"
+                    onClick={() => {
+                      setMfaMode(false);
+                      setMfaCode("");
+                      setMfaFactorId(null);
+                      setRecoveryMode(false);
+                    }}
+                    disabled={busy}
+                  >
+                    Back to sign in
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={submit} className="mt-5 space-y-3.5">
+              {mode === "signup" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Full name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Work email</Label>
                 <Input
-                  id="password"
-                  type="password"
+                  id="email"
+                  type="email"
                   required
-                  minLength={8}
-                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  maxLength={255}
                 />
               </div>
-            )}
-            <Button type="submit" className="w-full" disabled={busy}>
-              {busy && <Loader2 className="size-4 animate-spin" />}
-              {mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
-            </Button>
-          </form>
+              {mode !== "forgot" && (
+                <div className="space-y-1.5">
+                  <div className="flex items-baseline justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    {mode === "signin" && (
+                      <button
+                        type="button"
+                        className="text-[12px] font-medium text-primary hover:underline"
+                        onClick={() => {
+                          setSentTo(null);
+                          setMode("forgot");
+                        }}
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={busy}>
+                {busy && <Loader2 className="size-4 animate-spin" />}
+                {mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
+              </Button>
+            </form>
+          )}
 
-          <p className="mt-5 text-center text-[13px] text-muted-foreground">
-            {mode === "forgot" ? (
-              <>
-                Remembered it?{" "}
-                <button
-                  type="button"
-                  className="font-medium text-primary hover:underline"
-                  onClick={() => {
-                    setSentTo(null);
-                    setMode("signin");
-                  }}
-                >
-                  Back to sign in
-                </button>
-              </>
-            ) : (
-              <>
-                {mode === "signin" ? "New to CertifyIQ?" : "Already have an account?"}{" "}
-                <button
-                  type="button"
-                  className="font-medium text-primary hover:underline"
-                  onClick={() => {
-                    setSentTo(null);
-                    setMode(mode === "signin" ? "signup" : "signin");
-                  }}
-                >
-                  {mode === "signin" ? "Create an account" : "Sign in"}
-                </button>
-              </>
-            )}
-          </p>
+          {!mfaMode && (
+            <p className="mt-5 text-center text-[13px] text-muted-foreground">
+              {mode === "forgot" ? (
+                <>
+                  Remembered it?{" "}
+                  <button
+                    type="button"
+                    className="font-medium text-primary hover:underline"
+                    onClick={() => {
+                      setSentTo(null);
+                      setMode("signin");
+                    }}
+                  >
+                    Back to sign in
+                  </button>
+                </>
+              ) : (
+                <>
+                  {mode === "signin" ? "New to CertifyIQ?" : "Already have an account?"}{" "}
+                  <button
+                    type="button"
+                    className="font-medium text-primary hover:underline"
+                    onClick={() => {
+                      setSentTo(null);
+                      setMode(mode === "signin" ? "signup" : "signin");
+                    }}
+                  >
+                    {mode === "signin" ? "Create an account" : "Sign in"}
+                  </button>
+                </>
+              )}
+            </p>
+          )}
         </div>
-
 
         <p className="mt-4 flex items-start gap-2 text-[12px] text-muted-foreground">
           <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-gold" />
