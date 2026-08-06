@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { PLANS, ADDONS, ACADEMY_PLANS, TRIAL } from "@/lib/platform-data";
+import { PLANS, ADDONS, ACADEMY_ADDONS, TRIAL } from "@/lib/platform-data";
 import { Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
