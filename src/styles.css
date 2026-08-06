@@ -387,3 +387,37 @@
     animation: none !important;
   }
 }
+
+/* CertifyIQ CRM Dashboard — gold chrome + federal news ticker */
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track {
+  animation: ticker-scroll 48s linear infinite;
+}
+
+.crm-ticker:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}
+
+.crm-surface {
+  background:
+    radial-gradient(1100px 340px at 12% -12%, var(--gold-surface), transparent 70%),
+    var(--background);
+}
+
+.crm-gradient {
+  background: linear-gradient(112deg, var(--gold) 0%, oklch(0.72 0.14 62) 100%);
+}
