@@ -141,7 +141,7 @@ function AuthPage() {
           {sentTo && (
             <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3.5">
               <p className="flex items-start gap-2 text-[13px]">
-                <MailCheck className="mt-0.5 size-4 shrink-0 text-status-compliant" />
+                <MailCheck className="mt-0.5 size-4 shrink-0 text-seal" />
                 <span>
                   {sentTo.kind === "verify"
                     ? "Confirm your email address to activate the account. "
