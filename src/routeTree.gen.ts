@@ -16,6 +16,7 @@ import { Route as RulesRouteImport } from './routes/rules'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as KnowledgeIndexRouteImport } from './routes/knowledge.index'
+import { Route as KnowledgeCourseIdRouteImport } from './routes/knowledge.$courseId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
 
@@ -54,6 +55,11 @@ const KnowledgeIndexRoute = KnowledgeIndexRouteImport.update({
   path: '/knowledge/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KnowledgeCourseIdRoute = KnowledgeCourseIdRouteImport.update({
+  id: '/knowledge/$courseId',
+  path: '/knowledge/$courseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PropertiesIndexRoute = PropertiesIndexRouteImport.update({
   id: '/properties/',
   path: '/properties/',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
   '/files/$fileId': typeof FilesFileIdRoute
+  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/files/': typeof FilesIndexRoute
   '/knowledge/': typeof KnowledgeIndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
   '/files/$fileId': typeof FilesFileIdRoute
+  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/files': typeof FilesIndexRoute
   '/knowledge': typeof KnowledgeIndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/findings': typeof FindingsRoute
   '/rules': typeof RulesRoute
   '/files/$fileId': typeof FilesFileIdRoute
+  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/files/': typeof FilesIndexRoute
   '/knowledge/': typeof KnowledgeIndexRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/findings'
     | '/rules'
     | '/files/$fileId'
+    | '/knowledge/$courseId'
     | '/properties/$propertyId'
     | '/files/'
     | '/knowledge/'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/findings'
     | '/rules'
     | '/files/$fileId'
+    | '/knowledge/$courseId'
     | '/properties/$propertyId'
     | '/files'
     | '/knowledge'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/findings'
     | '/rules'
     | '/files/$fileId'
+    | '/knowledge/$courseId'
     | '/properties/$propertyId'
     | '/files/'
     | '/knowledge/'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   FindingsRoute: typeof FindingsRoute
   RulesRoute: typeof RulesRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
+  KnowledgeCourseIdRoute: typeof KnowledgeCourseIdRoute
   PropertiesPropertyIdRoute: typeof PropertiesPropertyIdRoute
   FilesIndexRoute: typeof FilesIndexRoute
   KnowledgeIndexRoute: typeof KnowledgeIndexRoute
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnowledgeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/knowledge/$courseId': {
+      id: '/knowledge/$courseId'
+      path: '/knowledge/$courseId'
+      fullPath: '/knowledge/$courseId'
+      preLoaderRoute: typeof KnowledgeCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/properties/': {
       id: '/properties/'
       path: '/properties'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   FindingsRoute: FindingsRoute,
   RulesRoute: RulesRoute,
   FilesFileIdRoute: FilesFileIdRoute,
+  KnowledgeCourseIdRoute: KnowledgeCourseIdRoute,
   PropertiesPropertyIdRoute: PropertiesPropertyIdRoute,
   FilesIndexRoute: FilesIndexRoute,
   KnowledgeIndexRoute: KnowledgeIndexRoute,
