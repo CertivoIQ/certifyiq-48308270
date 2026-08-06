@@ -74,7 +74,11 @@
   --color-brand-soft: var(--brand-soft);
   --color-brand-glow: var(--brand-glow);
   --color-gold: var(--gold);
+  --color-gold-surface: var(--gold-surface);
+  --color-gold-ink: var(--gold-ink);
+  --color-gold-line: var(--gold-line);
 }
+
 
 :root {
   --radius: 0.625rem;
