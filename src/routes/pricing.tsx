@@ -3,7 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, ADDONS, ACADEMY_ADDONS, TRIAL } from "@/lib/platform-data";
-import { Check, Sparkles } from "lucide-react";
+import { TRIAL_OFFER, RETENTION_POLICY } from "@/lib/trial-data";
+import { Check, Sparkles, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/pricing")({
@@ -70,6 +71,17 @@ function PricingPage() {
               <span className={p.featured ? "brand-text" : ""}>{p.price}</span>
               <span className="text-[14px] font-normal text-muted-foreground">{p.cadence}</span>
             </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Pill tone="seal">
+                <Clock className="size-3" /> {TRIAL_OFFER.label}
+              </Pill>
+              <span className="cite">{TRIAL_OFFER.blurb}</span>
+            </div>
+            <p className="mt-1.5 text-[12px] text-muted-foreground">
+              Starts free for {TRIAL_OFFER.days} days on this plan — mass upload your portfolio during the trial and keep
+              everything when you subscribe.
+            </p>
+
             <ul className="mt-5 space-y-2.5 border-t border-border pt-4">
               {p.features.map((f) => (
                 <li key={f} className="flex gap-2 text-[13px]">
@@ -128,6 +140,20 @@ function PricingPage() {
         </Panel>
 
       </div>
+
+      <Panel
+        className="mt-4"
+        title={RETENTION_POLICY.headline}
+        description="Every plan starts with a 7-day free trial"
+        bodyClassName="p-5"
+      >
+        <p className="text-[13.5px] leading-relaxed text-muted-foreground">{RETENTION_POLICY.detail}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button size="sm" asChild>
+            <Link to="/trial">Open my trial plan</Link>
+          </Button>
+        </div>
+      </Panel>
 
       <p className="mt-5 text-[12.5px] text-muted-foreground">
         AI document processing is included as a monthly document allowance — no credits to track.

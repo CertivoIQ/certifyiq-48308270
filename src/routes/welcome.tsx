@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
-import { PlayCircle, ShieldCheck, TrendingDown, Clock, Check } from "lucide-react";
+import { PlayCircle, ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { VIDEO_CHAPTERS, PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -88,31 +90,83 @@ function WelcomePage() {
           </div>
         </section>
 
-        <section className="mt-12">
+        <section className="mt-12" id="video">
           <Panel bodyClassName="p-0">
             <div className="brand-gradient relative grid aspect-video place-items-center rounded-t-lg">
               <div className="text-center text-primary-foreground">
-                <PlayCircle className="mx-auto size-16" strokeWidth={1.4} />
-                <p className="mt-4 font-display text-[22px]">How CertifyIQ works — 3 minute walkthrough</p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    toast.info("Playing: “Inside CertifyIQ”", {
+                      description: "4 minutes — what it is, how it works, and what non-compliance really costs.",
+                    })
+                  }
+                  className="transition-transform hover:scale-105"
+                  aria-label="Play the CertifyIQ instructional video"
+                >
+                  <PlayCircle className="mx-auto size-20" strokeWidth={1.3} />
+                </button>
+                <p className="mt-4 font-display text-[24px]">
+                  Inside Certify<span className="text-gold">IQ</span> — the 4-minute compliance walkthrough
+                </p>
                 <p className="mt-1.5 text-[13px] opacity-85">
-                  Upload a TIC · AI extracts and cites · rules engine scores it · reviewer signs off
+                  What the platform is · how the AI review works · why a human eye alone puts credits at risk
                 </p>
               </div>
             </div>
-            <div className="grid gap-3 px-6 py-5 sm:grid-cols-4">
-              {[
-                "1 · Register the property and select its programs",
-                "2 · Drop in certifications and supporting documents",
-                "3 · AI review returns Pass/Fail with cited findings",
-                "4 · Human reviewer gives final sign-off",
-              ].map((s) => (
-                <p key={s} className="text-[12.5px] text-muted-foreground">
-                  {s}
-                </p>
+            <div className="grid gap-x-6 gap-y-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3">
+              {VIDEO_CHAPTERS.map((c) => (
+                <div key={c.time} className="border-l-2 border-primary/30 pl-3">
+                  <p className="cite font-mono">{c.time}</p>
+                  <p className="mt-0.5 font-display text-[15px]">{c.title}</p>
+                  <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{c.body}</p>
+                </div>
               ))}
             </div>
           </Panel>
         </section>
+
+        <section className="mt-12">
+          <h2 className="text-center font-display text-[30px]">
+            What a human eye alone misses — and what it costs
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-[14px] leading-relaxed text-muted-foreground">
+            Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax
+            credits. Manual review catches most of them, most of the time. CertifyIQ tests all of them, every time.
+          </p>
+          <div className="mt-6 grid gap-3 md:grid-cols-2">
+            {PENALTY_RISKS.map((r) => (
+              <Panel key={r.risk} className="lift" bodyClassName="p-5">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-flag" />
+                  <div className="min-w-0">
+                    <h3 className="font-display text-[16px]">{r.risk}</h3>
+                    <p className="mt-1 text-[12px] font-medium text-reject">{r.cost}</p>
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{r.detail}</p>
+                  </div>
+                </div>
+              </Panel>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="text-center font-display text-[30px]">The value outweighs the price</h2>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {VALUE_MATH.map((v) => (
+              <Panel key={v.label} bodyClassName="p-5 text-center">
+                <p className="brand-text font-display text-[26px] leading-none">{v.value}</p>
+                <p className="mt-2 font-display text-[14.5px]">{v.label}</p>
+                <p className="mt-1 text-[12.5px] text-muted-foreground">{v.note}</p>
+              </Panel>
+            ))}
+          </div>
+          <p className="mx-auto mt-5 max-w-2xl text-center text-[13.5px] leading-relaxed text-muted-foreground">
+            One avoided non-curable finding pays for years of CertifyIQ. Your reviewers stop hunting for citations and
+            start signing off with confidence — and every plan starts with a {TRIAL_OFFER.label}.
+          </p>
+        </section>
+
 
         <section className="mt-10 grid gap-4 md:grid-cols-3">
           {WHY.map(({ icon: Icon, title, body }) => (
