@@ -15,7 +15,9 @@ import {
   Gift,
   Briefcase,
   Shield,
+  CreditCard,
 } from "lucide-react";
+
 import { useState, type ReactNode } from "react";
 import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,7 @@ const NAV = [
   { to: "/trial", label: "My free trial", icon: Gift },
   { to: "/pricing", label: "Plans & pricing", icon: Tag },
   { to: "/security", label: "Security", icon: Shield },
+  { to: "/billing", label: "Account & billing", icon: CreditCard },
 ] as const;
 
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSession } from "@/hooks/use-session";
 import { useSubscription } from "@/hooks/use-subscription";
 import { getStripeEnvironment } from "@/lib/stripe";
-import { createPortalSession } from "@/utils/payments.functions";
-import { ADDON_PRICE_IDS, planKeyToPriceId } from "@/lib/plan-catalog";
+import { createPortalSession, changePlan } from "@/utils/payments.functions";
+import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/plan-catalog";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -42,10 +42,44 @@ function PricingPage() {
   const { subscription, isActive, entitlement, cancelAtPeriodEnd, endsAt } = useSubscription();
   const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
   const [portalBusy, setPortalBusy] = useState(false);
+  const [planBusy, setPlanBusy] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const startCheckout = (priceId: string | null, name: string, quantity?: number) => {
+  const startCheckout = async (priceId: string | null, name: string, quantity?: number) => {
     if (!priceId) {
       toast.error("This plan is not available for self-serve checkout yet.");
+      return;
+    }
+    // Checkout must be tied to an account: without a userId the webhook cannot
+    // provision the plan, so send visitors to sign in and bring them back here.
+    if (!user) {
+      toast.info("Create your account first", {
+        description: "Sign in so we can attach this subscription to your CertifyIQ workspace.",
+      });
+      // Remember where they were so sign-in can bring them straight back.
+      sessionStorage.setItem("certifyiq:after-auth", "/pricing");
+      await navigate({ to: "/auth" });
+      return;
+    }
+    // Existing subscribers switch their current subscription instead of
+    // stacking a second one on top of it.
+    if (isActive && PLAN_PRICE_ID_LIST.includes(priceId) && subscription) {
+      setPlanBusy(priceId);
+      try {
+        const result = await changePlan({
+          data: { priceId, environment: getStripeEnvironment() },
+        });
+        if ("error" in result) throw new Error(result.error);
+        toast.success(`Switching to ${name}`, {
+          description: result.effectiveAt
+            ? `Effective ${new Date(result.effectiveAt).toLocaleDateString()} — your current capacity stays until then.`
+            : "Effective at your next renewal.",
+        });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not change plan");
+      } finally {
+        setPlanBusy(null);
+      }
       return;
     }
     try {
@@ -53,14 +87,15 @@ function PricingPage() {
         priceId,
         label: name,
         ...(quantity ? { quantity } : {}),
-        ...(user?.email ? { customerEmail: user.email } : {}),
-        ...(user?.id ? { userId: user.id } : {}),
+        ...(user.email ? { customerEmail: user.email } : {}),
+        userId: user.id,
         returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Checkout unavailable");
     }
   };
+
 
   const openBillingPortal = async () => {
     setPortalBusy(true);
@@ -164,10 +199,18 @@ function PricingPage() {
             <Button
               className="mt-6 w-full"
               variant={p.featured ? "default" : "outline"}
-              onClick={() => startCheckout(planKeyToPriceId(p.id), p.name)}
+              disabled={
+                planBusy === planKeyToPriceId(p.id) || entitlement?.priceId === planKeyToPriceId(p.id)
+              }
+              onClick={() => void startCheckout(planKeyToPriceId(p.id), p.name)}
             >
-              {p.cta}
+              {entitlement?.priceId === planKeyToPriceId(p.id)
+                ? "Your current plan"
+                : isActive
+                  ? `Switch to ${p.name}`
+                  : p.cta}
             </Button>
+
           </Panel>
         ))}
       </div>
@@ -205,13 +248,14 @@ function PricingPage() {
                   variant="outline"
                   className="mt-2.5"
                   onClick={() =>
-                    startCheckout(
+                    void startCheckout(
                       a.id === "academy-seat"
                         ? ADDON_PRICE_IDS.academySeat
                         : ADDON_PRICE_IDS.academyProperty,
                       a.name,
                     )
                   }
+
                 >
                   Add to my plan
                 </Button>

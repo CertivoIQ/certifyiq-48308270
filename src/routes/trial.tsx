@@ -7,6 +7,10 @@ import { MerlinSays } from "@/components/merlin";
 import { TRIAL } from "@/lib/platform-data";
 import { TRIAL_OFFER, TRIAL_TASKS, TRIAL_INVITES, RETENTION_POLICY, INVITE_ROLES } from "@/lib/trial-data";
 import { Check, Clock, UploadCloud, Link2, Trash2, Send, FileSpreadsheet } from "lucide-react";
+import { useAccount } from "@/hooks/use-account";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { claimCapacity, recordAiDocuments } from "@/utils/entitlements.functions";
+import { formatLimit } from "@/lib/plan-catalog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/trial")({
@@ -33,6 +37,8 @@ export const Route = createFileRoute("/trial")({
 function TrialPage() {
   const [done, setDone] = useState<string[]>(["learn"]);
   const [enterprise, setEnterprise] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const { account, trialDaysLeft, refetch } = useAccount();
   const tasks = TRIAL_TASKS.filter((t) => enterprise || !t.enterpriseOnly);
   const complete = tasks.filter((t) => done.includes(t.id)).length;
 
@@ -42,6 +48,43 @@ function TrialPage() {
       toast.success("Merlin approves", { description: `${title} — checked off your trial plan.` });
       return [...d, id];
     });
+
+  // Uploads go through the server-side entitlement check so trial caps and
+  // paid overages are enforced for real, not just labelled in the UI.
+  const uploadPortfolio = async () => {
+    setUploading(true);
+    try {
+      const rows = 1248;
+      const capacity = await claimCapacity({
+        data: { kind: "property", amount: 1, environment: getStripeEnvironment() },
+      });
+      if ("error" in capacity) throw new Error(capacity.error);
+      if (!capacity.allowed) {
+        toast.error("Portfolio limit reached", {
+          description: capacity.reason ?? "Choose a plan with more capacity to import these properties.",
+        });
+        return;
+      }
+      const metered = await recordAiDocuments({
+        data: { count: 1, environment: getStripeEnvironment() },
+      });
+      if ("error" in metered) {
+        toast.error("Upload blocked", { description: metered.error });
+        return;
+      }
+      toast.success(`Merlin mapped ${rows.toLocaleString()} rows`, {
+        description:
+          metered.billedNow > 0
+            ? `Columns matched. ${metered.billedNow} certification(s) beyond your allowance were added to your next invoice.`
+            : "Columns matched to CertifyIQ fields — confirm the preview to import.",
+      });
+      await refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <AppShell
@@ -65,9 +108,17 @@ function TrialPage() {
       </MerlinSays>
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Trial days left" value={`${TRIAL.daysLeft} of ${TRIAL.daysTotal}`} />
+        <Stat
+          label="Trial days left"
+          value={`${trialDaysLeft ?? TRIAL.daysLeft} of ${TRIAL_OFFER.days}`}
+        />
         <Stat label="Trial steps complete" value={`${complete} of ${tasks.length}`} />
-        <Stat label="Free AI reviews used" value={`${TRIAL.uploadsUsed} of ${TRIAL.uploadsAllowed}`} />
+        <Stat
+          label="Free AI reviews used"
+          value={`${account?.usage.aiDocsUsed ?? 0} of ${
+            account ? formatLimit(account.limits.aiDocs) : TRIAL.uploadsAllowed
+          }`}
+        />
         <Stat label="Post-trial file retention" value={`${TRIAL_OFFER.retentionDays} days`} />
       </div>
 
@@ -128,18 +179,17 @@ function TrialPage() {
               <Button
                 size="sm"
                 className="mt-3"
-                onClick={() =>
-                  toast.success("Merlin mapped 1,248 rows", {
-                    description: "Columns matched to CertifyIQ fields — confirm the preview to import.",
-                  })
-                }
+                disabled={uploading}
+                onClick={() => void uploadPortfolio()}
               >
                 <FileSpreadsheet className="size-4" /> Upload portfolio file
               </Button>
             </div>
             <p className="mt-3 text-[12.5px] text-muted-foreground">
-              Unlimited property records during the trial. AI review of certifications is capped at{" "}
-              {TRIAL.uploadsAllowed} files until you subscribe.
+              Property records during the trial are capped at{" "}
+              {account ? formatLimit(account.limits.properties) : TRIAL.uploadsAllowed}. AI review of certifications is
+              capped at {account ? formatLimit(account.limits.aiDocs) : TRIAL.uploadsAllowed} files until you
+              subscribe.
             </p>
           </Panel>
 

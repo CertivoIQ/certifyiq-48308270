@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 import {
-  ADDON_PRICE_ID_LIST,
+  ADDON_PRICE_IDS,
   FILE_RETENTION_DAYS,
   PLAN_ENTITLEMENTS,
+  isAddonPrice,
 } from "@/lib/plan-catalog";
 
 // Loose typing: this service-role client writes columns across several tables
@@ -72,46 +73,74 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
 
   const plan = PLAN_ENTITLEMENTS[row.price_id];
-  const isAddon = ADDON_PRICE_ID_LIST.includes(row.price_id);
+  const isAddon = isAddonPrice(row.price_id);
   const active = ["active", "trialing", "past_due"].includes(row.status);
 
+  // Merge, never replace: account_access is one row per user shared by the
+  // platform plan and every add-on subscription.
   const { data: existing } = await supabase
     .from("account_access")
-    .select("welcome_sent_at, launchpad_started_at, plan_id, academy_seats")
+    .select("*")
     .eq("user_id", userId)
     .maybeSingle();
 
   const now = new Date().toISOString();
   const access: Record<string, unknown> = {
+    ...(existing ?? {}),
     user_id: userId,
-    status: row.status,
     environment: env,
     updated_at: now,
-    // Paid access ends only when the period ends after a cancellation.
-    access_until: row.cancel_at_period_end ? row.current_period_end : null,
-    // Subscribing clears the trial retention hold — files are kept.
-    files_purge_at: null,
     welcome_sent_at: (existing?.["welcome_sent_at"] as string | null | undefined) ?? now,
     launchpad_started_at: (existing?.["launchpad_started_at"] as string | null | undefined) ?? now,
   };
+  delete access["created_at"];
+  delete access["id"];
 
   if (plan && active) {
+    // Plan purchase / renewal: unlock capacity, clear the trial purge hold.
+    access["status"] = row.status;
     access["plan_id"] = plan.planId;
     access["price_id"] = plan.priceId;
     access["unit_limit"] = plan.unitLimit;
     access["property_limit"] = plan.propertyLimit;
     access["ai_doc_allowance"] = plan.aiDocAllowance;
-  } else if (isAddon) {
-    // Academy add-ons layer on top of whatever platform plan is in place.
-    const seats = Number(subscription.items?.data?.[0]?.quantity ?? 1);
-    access["academy_seats"] = seats;
+    access["access_until"] = row.cancel_at_period_end ? row.current_period_end : null;
+    access["files_purge_at"] = null;
+    access["files_purged_at"] = null;
+  } else if (isAddon && active) {
+    // Add-ons layer on top and must never disturb plan capacity or status.
+    if (row.price_id === ADDON_PRICE_IDS.academySeat) {
+      access["academy_seats"] = Number(subscription.items?.data?.[0]?.quantity ?? 1);
+    } else if (row.price_id === ADDON_PRICE_IDS.academyProperty) {
+      // Property-wide Academy: unlimited seats at one property.
+      access["academy_seats"] = -1;
+    }
   }
 
   await supabase.from("account_access").upsert(access, { onConflict: "user_id" });
 
-  if (!plan || !active) return;
+  // A new billing period resets the metered AI document allowance.
+  if (plan && active && row.current_period_start) {
+    await supabase.from("usage_counters").upsert(
+      {
+        user_id: userId,
+        environment: env,
+        period_start: row.current_period_start,
+        ai_docs_used: 0,
+        ai_docs_billed: 0,
+        properties_used: 0,
+        units_used: 0,
+        period_end: row.current_period_end,
+        updated_at: now,
+      },
+      { onConflict: "user_id,period_start,environment", ignoreDuplicates: true },
+    );
+  }
 
-  // CRM: convert the lead and fire the "new subscriber paid" ticker event.
+  // Only announce and convert the CRM lead on the first plan activation.
+  const firstActivation = plan && active && existing?.["plan_id"] !== plan.planId;
+  if (!firstActivation) return;
+
   const email: string | undefined = subscription.metadata?.email;
   const { data: profile } = await supabase
     .from("profiles")
@@ -132,10 +161,9 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
       const { data: updated } = await supabase
         .from("crm_accounts")
         .update({
-          stage: "closed_won",
+          stage: "won",
           plan: plan.name,
           last_touch: now,
-          trial_ended_on: now,
           updated_at: now,
         })
         .eq("id", accountId)
@@ -166,6 +194,15 @@ async function applyCancellation(subscription: any, env: StripeEnv) {
 
   const userId = subscription.metadata?.userId;
   if (!userId) return;
+
+  // An add-on ending must not revoke the platform plan.
+  if (isAddonPrice(row.price_id)) {
+    await supabase
+      .from("account_access")
+      .update({ academy_seats: 0, updated_at: new Date().toISOString() })
+      .eq("user_id", userId);
+    return;
+  }
 
   const accessEnd = row.current_period_end ?? new Date().toISOString();
   const purgeAt = new Date(
@@ -199,6 +236,22 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       if (session.payment_status === "unpaid") break;
       // One-time purchases (AI document overage) need no entitlement change;
       // subscription fulfilment is handled by customer.subscription.*.
+      break;
+    }
+    case "invoice.payment_failed": {
+      // Dunning: flag the account past_due but never revoke access — Stripe
+      // retries automatically and sends customer.subscription.updated on the
+      // final outcome.
+      const invoice = event.data.object;
+      const subId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
+      if (subId) {
+        const supabase = getSupabase();
+        await supabase
+          .from("subscriptions")
+          .update({ status: "past_due", updated_at: new Date().toISOString() })
+          .eq("stripe_subscription_id", subId)
+          .eq("environment", env);
+      }
       break;
     }
     case "checkout.session.async_payment_succeeded":

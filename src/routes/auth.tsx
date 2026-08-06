@@ -13,6 +13,14 @@ import { verifyAndDisableRecoveryCode } from "@/utils/mfa.functions";
 
 type Mode = "signin" | "signup" | "forgot";
 
+
+/** Where to land after sign-in: the page that bounced the user here, or home. */
+function afterAuthTarget(): "/" | "/pricing" {
+  const saved = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("certifyiq:after-auth") : null;
+  if (saved) sessionStorage.removeItem("certifyiq:after-auth");
+  return saved === "/pricing" ? "/pricing" : "/";
+}
+
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { mode?: Mode } => {
     const mode = search["mode"];
@@ -53,13 +61,13 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/", replace: true });
+      if (data.session) navigate({ to: afterAuthTarget(), replace: true });
     });
   }, [navigate]);
 
   async function proceedAfterMfa() {
     const { data } = await supabase.auth.getSession();
-    if (data.session) navigate({ to: "/", replace: true });
+    if (data.session) navigate({ to: afterAuthTarget(), replace: true });
   }
 
   async function handleMfaVerify() {
@@ -111,7 +119,7 @@ function AuthPage() {
         });
         if (error) throw error;
         if (data.session) {
-          navigate({ to: "/", replace: true });
+          navigate({ to: afterAuthTarget(), replace: true });
           return;
         }
         setSentTo({ kind: "verify", email });
@@ -144,7 +152,7 @@ function AuthPage() {
           return;
         }
 
-        navigate({ to: "/", replace: true });
+        navigate({ to: afterAuthTarget(), replace: true });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");

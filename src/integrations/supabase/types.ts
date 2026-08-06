@@ -22,11 +22,13 @@ export type Database = {
           created_at: string
           environment: string
           files_purge_at: string | null
+          files_purged_at: string | null
           launchpad_started_at: string | null
           plan_id: string | null
           price_id: string | null
           property_limit: number | null
           status: string
+          trial_started_at: string | null
           unit_limit: number | null
           updated_at: string
           user_id: string
@@ -39,11 +41,13 @@ export type Database = {
           created_at?: string
           environment?: string
           files_purge_at?: string | null
+          files_purged_at?: string | null
           launchpad_started_at?: string | null
           plan_id?: string | null
           price_id?: string | null
           property_limit?: number | null
           status?: string
+          trial_started_at?: string | null
           unit_limit?: number | null
           updated_at?: string
           user_id: string
@@ -56,11 +60,13 @@ export type Database = {
           created_at?: string
           environment?: string
           files_purge_at?: string | null
+          files_purged_at?: string | null
           launchpad_started_at?: string | null
           plan_id?: string | null
           price_id?: string | null
           property_limit?: number | null
           status?: string
+          trial_started_at?: string | null
           unit_limit?: number | null
           updated_at?: string
           user_id?: string
@@ -382,6 +388,48 @@ export type Database = {
           status?: string
           stripe_customer_id?: string
           stripe_subscription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usage_counters: {
+        Row: {
+          ai_docs_billed: number
+          ai_docs_used: number
+          created_at: string
+          environment: string
+          id: string
+          period_end: string | null
+          period_start: string
+          properties_used: number
+          units_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_docs_billed?: number
+          ai_docs_used?: number
+          created_at?: string
+          environment?: string
+          id?: string
+          period_end?: string | null
+          period_start?: string
+          properties_used?: number
+          units_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_docs_billed?: number
+          ai_docs_used?: number
+          created_at?: string
+          environment?: string
+          id?: string
+          period_end?: string | null
+          period_start?: string
+          properties_used?: number
+          units_used?: number
           updated_at?: string
           user_id?: string
         }
