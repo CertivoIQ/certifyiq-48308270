@@ -18,6 +18,7 @@ import { Route as RulesRouteImport } from './routes/rules'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
@@ -68,6 +69,11 @@ const AcademyCourseIdRoute = AcademyCourseIdRouteImport.update({
   path: '/academy/$courseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FilesIndexRoute = FilesIndexRouteImport.update({
   id: '/files/',
   path: '/files/',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
+  '/api/chat': typeof ApiChatRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/academy/': typeof AcademyIndexRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
+  '/api/chat': typeof ApiChatRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/academy': typeof AcademyIndexRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/welcome': typeof WelcomeRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
+  '/api/chat': typeof ApiChatRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/academy/': typeof AcademyIndexRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/welcome'
     | '/academy/$courseId'
+    | '/api/chat'
     | '/files/$fileId'
     | '/properties/$propertyId'
     | '/academy/'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/welcome'
     | '/academy/$courseId'
+    | '/api/chat'
     | '/files/$fileId'
     | '/properties/$propertyId'
     | '/academy'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/welcome'
     | '/academy/$courseId'
+    | '/api/chat'
     | '/files/$fileId'
     | '/properties/$propertyId'
     | '/academy/'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   WelcomeRoute: typeof WelcomeRoute
   AcademyCourseIdRoute: typeof AcademyCourseIdRoute
+  ApiChatRoute: typeof ApiChatRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
   PropertiesPropertyIdRoute: typeof PropertiesPropertyIdRoute
   AcademyIndexRoute: typeof AcademyIndexRoute
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcademyCourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/files/': {
       id: '/files/'
       path: '/files'
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   WelcomeRoute: WelcomeRoute,
   AcademyCourseIdRoute: AcademyCourseIdRoute,
+  ApiChatRoute: ApiChatRoute,
   FilesFileIdRoute: FilesFileIdRoute,
   PropertiesPropertyIdRoute: PropertiesPropertyIdRoute,
   AcademyIndexRoute: AcademyIndexRoute,
