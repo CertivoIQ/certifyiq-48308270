@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { getStripeEnvironment } from "@/lib/stripe";
-import { entitlementForPrice } from "@/lib/plan-catalog";
+import { PLAN_PRICE_ID_LIST, entitlementForPrice } from "@/lib/plan-catalog";
 
 /**
  * Current subscription for the signed-in user. UX only — every gated action is
@@ -16,11 +16,14 @@ export function useSubscription() {
     queryKey: ["subscription", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      // Only platform-plan rows define "your subscription" — Academy add-ons
+      // are separate subscriptions and must not shadow the plan.
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", user!.id)
         .eq("environment", getStripeEnvironment())
+        .in("price_id", PLAN_PRICE_ID_LIST)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
