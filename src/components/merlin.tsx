@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, Wand2 } from "lucide-react";
 
 import greeting from "@/assets/merlin-greeting.png";
@@ -79,19 +79,86 @@ const TIPS = [
   "Round income the way the handbook says, not the way the calculator wants.",
 ];
 
+const TRICKS = [
+  { label: "Wand flourish", anim: "animate-merlin-wand", pose: "pointing" as MerlinPose },
+  { label: "Hat tip", anim: "animate-merlin-tip", pose: "greeting" as MerlinPose },
+  { label: "Poof!", anim: "animate-merlin-poof", pose: "thinking" as MerlinPose },
+  { label: "Levitation", anim: "animate-merlin-float", pose: "celebrating" as MerlinPose },
+];
+
+const IDLE_MS = 12000;
+
+function Sparks() {
+  return (
+    <span className="pointer-events-none absolute inset-0">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <span
+          key={i}
+          className="animate-merlin-spark absolute left-1/2 top-1/2 block size-1.5 rounded-full bg-gold"
+          style={
+            {
+              "--sx": `${((i % 3) - 1) * 20}px`,
+              "--sy": `${-18 - (i % 4) * 7}px`,
+              animationDelay: `${i * 0.22}s`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </span>
+  );
+}
+
 /** Floating helper — Merlin follows the user across the app. */
 export function WizardHelper() {
   const [open, setOpen] = useState(false);
   const [tip, setTip] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [trick, setTrick] = useState(0);
+  const [idle, setIdle] = useState(false);
+  const lastActive = useRef(Date.now());
 
   useEffect(() => setMounted(true), []);
+
+  const wake = () => {
+    lastActive.current = Date.now();
+    setIdle(false);
+  };
+
+  // Idle detection while the helper is open.
+  useEffect(() => {
+    if (!open) {
+      setIdle(false);
+      return;
+    }
+    lastActive.current = Date.now();
+    const id = setInterval(() => {
+      setIdle(Date.now() - lastActive.current > IDLE_MS);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [open]);
+
+  // Rotate the magic tricks while open and engaged.
+  useEffect(() => {
+    if (!open || idle) return;
+    const id = setInterval(() => setTrick((t) => t + 1), 2000);
+    return () => clearInterval(id);
+  }, [open, idle]);
+
   if (!mounted) return null;
 
+  const act = TRICKS[trick % TRICKS.length]!;
+
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 print:hidden">
+    <div
+      className="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 print:hidden"
+      onPointerMove={open ? wake : undefined}
+      onKeyDown={open ? wake : undefined}
+    >
       {open && (
-        <div className="pointer-events-auto w-[290px] rounded-xl border border-primary/25 bg-card p-4 shadow-raised">
+        <div
+          className="pointer-events-auto w-[290px] rounded-xl border border-primary/25 bg-card p-4 shadow-raised"
+          onClick={wake}
+        >
           <div className="flex items-start justify-between gap-2">
             <p className="cite flex items-center gap-1 text-[10px] uppercase tracking-[0.16em]">
               <Sparkles className="size-3" /> Merlin's tip
@@ -101,9 +168,19 @@ export function WizardHelper() {
             </button>
           </div>
           <p className="mt-2 text-[13px] leading-relaxed">{TIPS[tip % TIPS.length]}</p>
+          {idle ? (
+            <p className="mt-3 flex items-center gap-1.5 text-[12px] font-medium text-gold">
+              <Wand2 className="size-3.5" /> Still here! Tap the X when you're done with me.
+            </p>
+          ) : (
+            <p className="cite mt-3 text-[10.5px] uppercase tracking-[0.16em]">{act.label}</p>
+          )}
           <button
-            className="mt-3 text-[12px] font-medium text-primary underline-offset-2 hover:underline"
-            onClick={() => setTip((t) => t + 1)}
+            className="mt-2 text-[12px] font-medium text-primary underline-offset-2 hover:underline"
+            onClick={() => {
+              wake();
+              setTip((t) => t + 1);
+            }}
           >
             Another spell, please
           </button>
@@ -111,10 +188,23 @@ export function WizardHelper() {
       )}
       <button
         aria-label="Ask Merlin the compliance wizard"
-        onClick={() => setOpen((o) => !o)}
-        className="pointer-events-auto grid size-16 place-items-center rounded-full border border-primary/30 bg-card shadow-raised transition-transform hover:scale-105"
+        onClick={() => (open ? wake() : setOpen(true))}
+        className={`pointer-events-auto relative grid size-16 place-items-center rounded-full border bg-card shadow-raised transition-transform hover:scale-105 ${
+          idle ? "animate-merlin-fly border-gold/60" : "border-primary/30"
+        }`}
       >
-        <Merlin pose={open ? "pointing" : "greeting"} size="sm" float className="translate-y-0.5" />
+        {open && <Sparks />}
+        <Merlin
+          pose={open ? (idle ? "celebrating" : act.pose) : "greeting"}
+          size="sm"
+          float={!open || idle}
+          className={`translate-y-0.5 ${open && !idle ? act.anim : ""}`}
+        />
+        {open && !idle && (
+          <span className="pointer-events-none absolute inset-0 grid place-items-center">
+            <span className="animate-merlin-orb block size-1.5 rounded-full bg-gold shadow-[0_0_8px_2px_var(--gold)]" />
+          </span>
+        )}
       </button>
     </div>
   );

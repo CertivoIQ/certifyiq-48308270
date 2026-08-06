@@ -16,6 +16,8 @@ import {
 import { useState, type ReactNode } from "react";
 import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
+import { IQText } from "@/components/iq-text";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -32,11 +34,11 @@ const NAV = [
 function Wordmark() {
   return (
     <Link to="/" className="flex items-center gap-2.5">
-      <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-primary-foreground">
+      <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
         IQ
       </span>
       <span className="font-display text-lg leading-none tracking-tight text-sidebar-foreground">
-        Certify<span className="text-sidebar-primary">IQ</span>
+        Certify<span className="text-gold">IQ</span>
       </span>
     </Link>
   );
@@ -143,10 +145,15 @@ export function AppShell({
           <TrialBanner />
           <div className="flex flex-wrap items-end justify-between gap-3 px-4 py-4 sm:px-7">
             <div className="min-w-0">
-              <h1 className="truncate font-display text-[23px] leading-tight sm:text-[27px]">{title}</h1>
+              <h1 className="truncate font-display text-[23px] leading-tight sm:text-[27px]">
+                <IQText>{title}</IQText>
+              </h1>
               {subtitle && <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>}
             </div>
-            {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+            <div className="flex flex-wrap items-center gap-2">
+              {actions}
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-7 sm:py-8">{children}</main>
