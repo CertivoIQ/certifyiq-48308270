@@ -84,9 +84,9 @@ export type LeadStage = "new" | "trialing" | "trial ended" | "negotiation" | "wo
 
 export const STAGE_TONE: Record<LeadStage, "seal" | "flag" | "reject" | "neutral"> = {
   new: "neutral",
-  trialing: "brand",
+  trialing: "seal",
   "trial ended": "flag",
-  negotiation: "brand",
+  negotiation: "neutral",
   won: "seal",
   lost: "reject",
 };
