@@ -129,35 +129,42 @@ export const PLANS = [
   {
     id: "enterprise",
     name: "Enterprise",
-    price: "From $4,999",
+    price: "$4,999",
     cadence: "/month",
-    tagline: "Multi-state operators and owners",
+    tagline: "Multi-state operators and owners — buy online, cancel anytime",
     features: [
       "Unlimited units",
       "Multi-state portfolios",
       "API access · SSO · white labeling",
-      "Dedicated Customer Success Manager",
+      "AI Onboarding & Migration Wizard",
       "Custom integrations",
       "Contractual SLA",
     ],
-    cta: "Talk to sales",
+    cta: "Subscribe now",
     featured: false,
+    selfServe: true,
   },
 ];
 
 export const ADDONS = [
   { name: "Additional state rule packs", price: "$99–$199 / month per state" },
-  { name: "CertifyIQ Academy portal", price: "$49 / user / month or $499 / company / month" },
+  { name: "CertifyIQ Academy add-on", price: "$49 / user / month or $499 / company / month" },
   { name: "API access", price: "$500–$2,000 / month by usage" },
   { name: "High-volume AI document processing", price: "Beyond plan allowance, enterprise only" },
-  { name: "Professional onboarding & migration", price: "Included on Business & Enterprise · $2,500–$10,000 otherwise" },
+  { name: "AI Onboarding & Migration Wizard", price: "Included on every plan — no account rep required" },
 ];
 
 export const ACADEMY_PLANS = [
-  { name: "Individual", price: "$39–79", cadence: "/month", note: "One reviewer, full catalog, CE certificates" },
-  { name: "Company", price: "$1,299–3,499", cadence: "/month", note: "Unlimited seats, manager onboarding tracks, transcripts" },
-  { name: "Enterprise", price: "Custom", cadence: "", note: "State-specific curricula, SSO, custom exams, LMS export" },
+  { id: "academy-individual", name: "Individual", price: "$79", cadence: "/month", note: "One reviewer, full catalog, CE certificates" },
+  { id: "academy-company", name: "Company", price: "$3,499", cadence: "/month", note: "Unlimited seats, manager onboarding tracks, transcripts" },
+  { id: "academy-enterprise", name: "Enterprise", price: "$6,499", cadence: "/month", note: "State-specific curricula, SSO, custom exams, LMS export" },
 ];
+
+export const ACADEMY_ADDONS = [
+  { id: "academy-seat", name: "Academy seat add-on", price: "$49", cadence: "/user / month", note: "Add the Academy to any platform plan, per user" },
+  { id: "academy-company-addon", name: "Academy company add-on", price: "$499", cadence: "/company / month", note: "Unlimited seats for one company on any platform plan" },
+];
+
 
 export const LAUNCHPAD_STEPS = [
   {
