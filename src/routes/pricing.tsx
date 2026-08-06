@@ -199,10 +199,18 @@ function PricingPage() {
             <Button
               className="mt-6 w-full"
               variant={p.featured ? "default" : "outline"}
-              onClick={() => startCheckout(planKeyToPriceId(p.id), p.name)}
+              disabled={
+                planBusy === planKeyToPriceId(p.id) || entitlement?.priceId === planKeyToPriceId(p.id)
+              }
+              onClick={() => void startCheckout(planKeyToPriceId(p.id), p.name)}
             >
-              {p.cta}
+              {entitlement?.priceId === planKeyToPriceId(p.id)
+                ? "Your current plan"
+                : isActive
+                  ? `Switch to ${p.name}`
+                  : p.cta}
             </Button>
+
           </Panel>
         ))}
       </div>
