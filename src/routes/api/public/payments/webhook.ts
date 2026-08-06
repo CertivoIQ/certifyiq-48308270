@@ -220,6 +220,56 @@ async function applyCancellation(subscription: any, env: StripeEnv) {
     .eq("user_id", userId);
 }
 
+/** Recipient + display name for billing emails triggered by an invoice. */
+async function billingRecipient(invoice: any): Promise<{ recipient: string; name?: string | null } | null> {
+  const supabase = getSupabase();
+  const subId = invoice?.subscription ?? invoice?.parent?.subscription_details?.subscription;
+
+  let userId: string | null = null;
+  if (subId) {
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("user_id")
+      .eq("stripe_subscription_id", subId)
+      .maybeSingle();
+    userId = (data?.["user_id"] as string | null | undefined) ?? null;
+  }
+
+  let email: string | null = invoice?.customer_email ?? null;
+  let name: string | null = invoice?.customer_name ?? null;
+  if (userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", userId)
+      .maybeSingle();
+    email = (profile?.["email"] as string | null | undefined) ?? email;
+    name = (profile?.["full_name"] as string | null | undefined) ?? name;
+  }
+
+  if (!email) return null;
+  return { recipient: email, name: name ?? null };
+}
+
+/** Billing notifications must never fail the webhook — log and move on. */
+async function notify(invoice: any, kind: "created" | "paid" | "failed") {
+  try {
+    const ctx = await billingRecipient(invoice);
+    if (!ctx) {
+      console.warn("No recipient for billing email", kind, invoice?.id);
+      return;
+    }
+    const { sendInvoiceCreatedEmail, sendPaymentSucceededEmail, sendPaymentFailedEmail } = await import(
+      "@/lib/billing-emails.server"
+    );
+    if (kind === "created") await sendInvoiceCreatedEmail(invoice, ctx);
+    else if (kind === "paid") await sendPaymentSucceededEmail(invoice, ctx);
+    else await sendPaymentFailedEmail(invoice, ctx);
+  } catch (error) {
+    console.error("Billing email failed", kind, invoice?.id, error);
+  }
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
@@ -238,6 +288,12 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       // subscription fulfilment is handled by customer.subscription.*.
       break;
     }
+    case "invoice.finalized": {
+      // A new invoice exists and the amount is settled — notify the customer.
+      const invoice = event.data.object;
+      if ((invoice.amount_due ?? 0) > 0) await notify(invoice, "created");
+      break;
+    }
     case "invoice.payment_failed": {
       // Dunning: flag the account past_due but never revoke access — Stripe
       // retries automatically and sends customer.subscription.updated on the
@@ -252,16 +308,20 @@ async function handleWebhook(req: Request, env: StripeEnv) {
           .eq("stripe_subscription_id", subId)
           .eq("environment", env);
       }
+      await notify(invoice, "failed");
       break;
     }
+    case "invoice.paid":
+      await notify(event.data.object, "paid");
+      break;
     case "checkout.session.async_payment_succeeded":
     case "checkout.session.async_payment_failed":
-    case "invoice.paid":
       break;
     default:
       console.log("Unhandled payments event:", event.type);
   }
 }
+
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
