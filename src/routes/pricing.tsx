@@ -70,6 +70,17 @@ function PricingPage() {
               <span className={p.featured ? "brand-text" : ""}>{p.price}</span>
               <span className="text-[14px] font-normal text-muted-foreground">{p.cadence}</span>
             </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Pill tone="seal">
+                <Clock className="size-3" /> {TRIAL_OFFER.label}
+              </Pill>
+              <span className="cite">{TRIAL_OFFER.blurb}</span>
+            </div>
+            <p className="mt-1.5 text-[12px] text-muted-foreground">
+              Starts free for {TRIAL_OFFER.days} days on this plan — mass upload your portfolio during the trial and keep
+              everything when you subscribe.
+            </p>
+
             <ul className="mt-5 space-y-2.5 border-t border-border pt-4">
               {p.features.map((f) => (
                 <li key={f} className="flex gap-2 text-[13px]">
