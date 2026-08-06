@@ -145,10 +145,15 @@ export function AppShell({
           <TrialBanner />
           <div className="flex flex-wrap items-end justify-between gap-3 px-4 py-4 sm:px-7">
             <div className="min-w-0">
-              <h1 className="truncate font-display text-[23px] leading-tight sm:text-[27px]">{title}</h1>
+              <h1 className="truncate font-display text-[23px] leading-tight sm:text-[27px]">
+                <IQText>{title}</IQText>
+              </h1>
               {subtitle && <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>}
             </div>
-            {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+            <div className="flex flex-wrap items-center gap-2">
+              {actions}
+              <ThemeToggle />
+            </div>
           </div>
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-7 sm:py-8">{children}</main>
