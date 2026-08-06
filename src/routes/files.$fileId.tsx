@@ -257,27 +257,75 @@ function FileReview() {
         </div>
 
         <div className="space-y-4">
-          <Panel title="Soft approval">
-            <div className="flex items-center gap-2">
-              <Stamp className="size-4 text-slate" />
-              <StatusPill status={approved ? "approved" : file.status} />
-            </div>
-            <ul className="mt-4 space-y-2.5 text-[13px]">
-              {file.programs.map((p) => {
-                const open = file.findings.filter((f) => f.program === p && f.status !== "approved").length;
-                return (
-                  <li key={p} className="flex items-center justify-between gap-3 border-b border-border pb-2.5 last:border-0 last:pb-0">
-                    <span>{p} rule pack</span>
-                    <Pill tone={open === 0 ? "seal" : "flag"}>{open === 0 ? "Clear" : `${open} open`}</Pill>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="mt-4 text-[12.5px] text-muted-foreground">
-              {blocking > 0
-                ? `${blocking} finding(s) must be remediated before this file can be soft approved.`
-                : "All programs clear — reviewer may soft approve and lock the file."}
-            </p>
+          <Panel title="AI review verdict" description="Scored against this property's assigned program rule packs">
+            {(() => {
+              const v = verdictFor(file);
+              const meta = LEVEL_META[v.level];
+              return (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`stamp px-3 py-1.5 text-[13px] ${
+                        meta.tone === "seal" ? "text-seal" : meta.tone === "flag" ? "text-flag" : "text-reject"
+                      }`}
+                    >
+                      {v.verdict}
+                    </span>
+                    <div>
+                      <Pill tone={meta.tone}>{meta.label}</Pill>
+                      <p className="mt-1 font-mono text-[13px]">
+                        {v.score}% · {v.passed}/{v.total} rules passed
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <Meter value={v.score} tone={meta.tone} />
+                  </div>
+                  <p className="mt-3 text-[12.5px] text-muted-foreground">{meta.blurb}</p>
+
+                  <p className="cite mt-5 text-[10.5px] uppercase tracking-[0.14em]">Correction steps</p>
+                  <ol className="mt-2 space-y-2.5">
+                    {correctionSteps(file).map((s, i) => (
+                      <li key={i} className="border-b border-border pb-2.5 text-[12.5px] last:border-0 last:pb-0">
+                        <span className="cite">{s.rule}</span>
+                        <p className="mt-0.5">{s.step}</p>
+                        <p className="mt-0.5 text-muted-foreground">
+                          {s.owner} · due in {s.due}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+
+                  <div className="mt-5 border-t border-border pt-4">
+                    <div className="flex items-center gap-2">
+                      <Stamp className="size-4 text-slate" />
+                      <StatusPill status={approved ? "approved" : file.status} />
+                    </div>
+                    <p className="mt-3 text-[12.5px] text-muted-foreground">
+                      {approved
+                        ? "Final sign-off recorded by Jordan Alvarez, Compliance Reviewer — file locked with full audit trail."
+                        : blocking > 0
+                          ? `${blocking} finding(s) must be corrected before a human can give final approval.`
+                          : "All rules passed — reviewer may give final sign-off."}
+                    </p>
+                    <Button
+                      className="mt-3 w-full"
+                      size="sm"
+                      disabled={approved || blocking > 0}
+                      onClick={() => {
+                        setApproved(true);
+                        toast.success("Final approval signed", {
+                          description: `${file.id} signed off by Jordan Alvarez · ${new Date().toLocaleDateString()}`,
+                        });
+                      }}
+                    >
+                      <ShieldCheck className="size-4" />
+                      {approved ? "Signed off" : "Human final sign-off"}
+                    </Button>
+                  </div>
+                </>
+              );
+            })()}
           </Panel>
 
           <Panel title="Document set">
