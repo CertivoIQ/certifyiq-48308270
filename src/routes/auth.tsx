@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,15 +64,8 @@ function AuthPage() {
     }
   }
 
-  async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) {
-      toast.error("Google sign-in failed");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/", replace: true });
-  }
+
+
 
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-12">
@@ -132,13 +124,8 @@ function AuthPage() {
             </Button>
           </form>
 
-          <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-          </div>
 
-          <Button variant="outline" className="w-full" onClick={google}>
-            Continue with Google
-          </Button>
+
 
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
             {mode === "signin" ? "New to CertifyIQ?" : "Already have an account?"}{" "}
