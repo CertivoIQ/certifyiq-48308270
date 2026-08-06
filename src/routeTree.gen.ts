@@ -28,7 +28,7 @@ import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
-import { Route as ApiPublicPaymentsDebugPricesRouteImport } from './routes/api/public/payments/_debug-prices'
+import { Route as ApiPublicPaymentsDebugPricesRouteImport } from './routes/api/public/payments/debug-prices'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -127,8 +127,8 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
 } as any)
 const ApiPublicPaymentsDebugPricesRoute =
   ApiPublicPaymentsDebugPricesRouteImport.update({
-    id: '/api/public/payments/_debug-prices',
-    path: '/api/public/payments',
+    id: '/api/public/payments/debug-prices',
+    path: '/api/public/payments/debug-prices',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicPaymentsWebhookRoute =
@@ -157,7 +157,7 @@ export interface FileRoutesByFullPath {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
-  '/api/public/payments': typeof ApiPublicPaymentsDebugPricesRoute
+  '/api/public/payments/debug-prices': typeof ApiPublicPaymentsDebugPricesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -179,7 +179,7 @@ export interface FileRoutesByTo {
   '/academy': typeof AcademyIndexRoute
   '/files': typeof FilesIndexRoute
   '/properties': typeof PropertiesIndexRoute
-  '/api/public/payments': typeof ApiPublicPaymentsDebugPricesRoute
+  '/api/public/payments/debug-prices': typeof ApiPublicPaymentsDebugPricesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -203,7 +203,7 @@ export interface FileRoutesById {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
-  '/api/public/payments/_debug-prices': typeof ApiPublicPaymentsDebugPricesRoute
+  '/api/public/payments/debug-prices': typeof ApiPublicPaymentsDebugPricesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -227,7 +227,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
-    | '/api/public/payments'
+    | '/api/public/payments/debug-prices'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -249,7 +249,7 @@ export interface FileRouteTypes {
     | '/academy'
     | '/files'
     | '/properties'
-    | '/api/public/payments'
+    | '/api/public/payments/debug-prices'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -272,7 +272,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
-    | '/api/public/payments/_debug-prices'
+    | '/api/public/payments/debug-prices'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -434,10 +434,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertiesPropertyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/_debug-prices': {
-      id: '/api/public/payments/_debug-prices'
-      path: '/api/public/payments'
-      fullPath: '/api/public/payments'
+    '/api/public/payments/debug-prices': {
+      id: '/api/public/payments/debug-prices'
+      path: '/api/public/payments/debug-prices'
+      fullPath: '/api/public/payments/debug-prices'
       preLoaderRoute: typeof ApiPublicPaymentsDebugPricesRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -487,3 +487,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
