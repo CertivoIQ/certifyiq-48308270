@@ -32,11 +32,11 @@ const NAV = [
 function Wordmark() {
   return (
     <Link to="/" className="flex items-center gap-2.5">
-      <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-primary-foreground">
+      <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
         IQ
       </span>
       <span className="font-display text-lg leading-none tracking-tight text-sidebar-foreground">
-        Certify<span className="text-sidebar-primary">IQ</span>
+        Certify<span className="text-gold">IQ</span>
       </span>
     </Link>
   );
