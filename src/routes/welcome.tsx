@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
-import { PlayCircle, ShieldCheck, TrendingDown, Clock, Check } from "lucide-react";
+import { PlayCircle, ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { VIDEO_CHAPTERS, PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
