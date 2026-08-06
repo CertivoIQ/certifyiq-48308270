@@ -233,7 +233,7 @@ function AuthPage() {
             <div className="mt-5 space-y-4">
               <div className="flex items-center gap-2 rounded-lg border border-gold/30 bg-gold/5 p-3">
                 <KeyRound className="size-4 text-gold" />
-                <p className="text-[13px] text-gold-foreground">
+                <p className="text-[13px] text-gold-ink">
                   Your account requires an authenticator code to sign in.
                 </p>
               </div>
