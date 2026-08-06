@@ -16,6 +16,8 @@ import {
 import { useState, type ReactNode } from "react";
 import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
+import { IQText } from "@/components/iq-text";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
