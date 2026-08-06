@@ -4,8 +4,17 @@ import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, ADDONS, ACADEMY_ADDONS, TRIAL } from "@/lib/platform-data";
 import { TRIAL_OFFER, RETENTION_POLICY } from "@/lib/trial-data";
-import { Check, Sparkles, Clock } from "lucide-react";
+import { Check, Sparkles, Clock, CreditCard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { useSession } from "@/hooks/use-session";
+import { useSubscription } from "@/hooks/use-subscription";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { createPortalSession } from "@/utils/payments.functions";
+import { ADDON_PRICE_IDS, planKeyToPriceId } from "@/lib/plan-catalog";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -29,6 +38,45 @@ export const Route = createFileRoute("/pricing")({
 });
 
 function PricingPage() {
+  const { user } = useSession();
+  const { subscription, isActive, entitlement, cancelAtPeriodEnd, endsAt } = useSubscription();
+  const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
+  const [portalBusy, setPortalBusy] = useState(false);
+
+  const startCheckout = (priceId: string | null, name: string, quantity?: number) => {
+    if (!priceId) {
+      toast.error("This plan is not available for self-serve checkout yet.");
+      return;
+    }
+    try {
+      openCheckout({
+        priceId,
+        label: name,
+        ...(quantity ? { quantity } : {}),
+        ...(user?.email ? { customerEmail: user.email } : {}),
+        ...(user?.id ? { userId: user.id } : {}),
+        returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Checkout unavailable");
+    }
+  };
+
+  const openBillingPortal = async () => {
+    setPortalBusy(true);
+    try {
+      const result = await createPortalSession({
+        data: { returnUrl: `${window.location.origin}/pricing`, environment: getStripeEnvironment() },
+      });
+      if ("error" in result) throw new Error(result.error);
+      window.open(result.url, "_blank");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not open billing");
+    } finally {
+      setPortalBusy(false);
+    }
+  };
+
   return (
     <AppShell
       title="Plans & pricing"
@@ -39,6 +87,29 @@ function PricingPage() {
         </Button>
       }
     >
+      <div className="-mt-1 mb-4 overflow-hidden rounded-lg">
+        <PaymentTestModeBanner />
+      </div>
+
+      {isActive && subscription && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-seal/30 bg-seal-soft px-5 py-4">
+          <div>
+            <p className="font-display text-[16px]">
+              Current plan: {entitlement?.name ?? subscription.price_id}
+            </p>
+            <p className="mt-1 text-[12.5px] text-muted-foreground">
+              {cancelAtPeriodEnd
+                ? `Cancels on ${endsAt?.toLocaleDateString() ?? "period end"} — full access until then, then files are held 14 days.`
+                : "Active. Upgrades and downgrades take effect at your next renewal, so you keep the capacity you already paid for."}
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={openBillingPortal} disabled={portalBusy}>
+            <CreditCard className="size-4" /> Manage billing
+            <ExternalLink className="size-3.5" />
+          </Button>
+        </div>
+      )}
+
       {TRIAL.active && (
         <div className="mb-5 rounded-lg border border-primary/25 bg-accent px-5 py-4">
           <p className="font-display text-[16px] text-accent-foreground">
@@ -93,7 +164,7 @@ function PricingPage() {
             <Button
               className="mt-6 w-full"
               variant={p.featured ? "default" : "outline"}
-              onClick={() => toast.success(`${p.name} selected`, { description: "A specialist will confirm your setup." })}
+              onClick={() => startCheckout(planKeyToPriceId(p.id), p.name)}
             >
               {p.cta}
             </Button>
@@ -129,6 +200,21 @@ function PricingPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2.5"
+                  onClick={() =>
+                    startCheckout(
+                      a.id === "academy-seat"
+                        ? ADDON_PRICE_IDS.academySeat
+                        : ADDON_PRICE_IDS.academyProperty,
+                      a.name,
+                    )
+                  }
+                >
+                  Add to my plan
+                </Button>
               </li>
             ))}
           </ul>
@@ -156,8 +242,18 @@ function PricingPage() {
       </Panel>
 
       <p className="mt-5 text-[12.5px] text-muted-foreground">
-        AI document processing is included as a monthly document allowance — no credits to track.
+        AI document processing is included as a monthly document allowance — no credits to track. Beyond the allowance,
+        extra certifications are billed at $3 per uploaded file on every plan.
       </p>
+
+      <Dialog open={isOpen} onOpenChange={(open) => !open && closeCheckout()}>
+        <DialogContent className="max-w-3xl overflow-y-auto sm:max-h-[88vh]">
+          <DialogHeader>
+            <DialogTitle className="font-display">{label ? `Subscribe — ${label}` : "Checkout"}</DialogTitle>
+          </DialogHeader>
+          {checkoutElement}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
