@@ -27,6 +27,7 @@ import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -117,6 +118,12 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
   path: '/properties/$propertyId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,6 +163,7 @@ export interface FileRoutesByTo {
   '/academy': typeof AcademyIndexRoute
   '/files': typeof FilesIndexRoute
   '/properties': typeof PropertiesIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +185,7 @@ export interface FileRoutesById {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/academy'
     | '/files'
     | '/properties'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -236,6 +248,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,6 +269,7 @@ export interface RootRouteChildren {
   AcademyIndexRoute: typeof AcademyIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -386,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertiesPropertyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -418,17 +439,8 @@ const rootRouteChildren: RootRouteChildren = {
   AcademyIndexRoute: AcademyIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
