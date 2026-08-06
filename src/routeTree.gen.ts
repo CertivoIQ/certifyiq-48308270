@@ -20,6 +20,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
@@ -85,6 +86,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   id: '/crm',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/trial'
     | '/welcome'
+    | '/billing'
     | '/crm'
     | '/security'
     | '/academy/$courseId'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/trial'
     | '/welcome'
+    | '/billing'
     | '/crm'
     | '/security'
     | '/academy/$courseId'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/trial'
     | '/welcome'
+    | '/_authenticated/billing'
     | '/_authenticated/crm'
     | '/_authenticated/security'
     | '/academy/$courseId'
@@ -389,6 +401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/crm': {
       id: '/_authenticated/crm'
       path: '/crm'
@@ -470,11 +489,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
 }

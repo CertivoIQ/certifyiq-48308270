@@ -141,7 +141,7 @@ function BillingPage() {
                     </Pill>
                   )}
                   {trialExpired && !isActive && (
-                    <Pill tone="alarm">
+                    <Pill tone="reject">
                       <AlertTriangle className="size-3" /> Trial ended
                     </Pill>
                   )}
