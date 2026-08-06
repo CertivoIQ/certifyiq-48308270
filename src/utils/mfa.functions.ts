@@ -9,7 +9,8 @@ function generateRawCode() {
   const bytes = randomBytes(6);
   let out = "";
   for (let i = 0; i < bytes.length; i++) {
-    out += RECOVERY_CODE_ALPHABET[bytes[i] % RECOVERY_CODE_ALPHABET.length];
+    const idx = bytes[i]! % RECOVERY_CODE_ALPHABET.length;
+    out += RECOVERY_CODE_ALPHABET[idx];
   }
   return `${out.slice(0, 4)}-${out.slice(4, 8)}-${out.slice(8)}`;
 }
@@ -69,14 +70,16 @@ export const verifyAndDisableRecoveryCode = createServerFn({ method: "POST" })
     if (!row) return { error: "Invalid recovery code" };
     if (row.used_at) return { error: "Recovery code already used" };
 
-    const { data: factors, error: factorError } = await supabaseAdmin.auth.admin.mfa.listFactors(
-      context.userId,
-    );
+    const { data: factorData, error: factorError } = await supabaseAdmin.auth.admin.mfa.listFactors({
+      userId: context.userId,
+    });
     if (factorError) return { error: "Could not list MFA factors" };
 
-    const factorsToRemove = [...(factors?.totp ?? []), ...(factors?.phone ?? [])];
-    for (const factor of factorsToRemove) {
-      const { error } = await supabaseAdmin.auth.admin.mfa.deleteFactor(context.userId, factor.id);
+    for (const factor of factorData?.factors ?? []) {
+      const { error } = await supabaseAdmin.auth.admin.mfa.deleteFactor({
+        id: factor.id,
+        userId: context.userId,
+      });
       if (error) return { error: "Could not disable MFA" };
     }
 
@@ -93,11 +96,11 @@ export const verifyAndDisableRecoveryCode = createServerFn({ method: "POST" })
 export const countRecoveryCodes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const { count, error } = await context.supabase
       .from("user_recovery_codes")
-      .select("id", { count: "exact", head: true })
+      .select("*", { count: "exact", head: true })
       .eq("user_id", context.userId)
       .is("used_at", null);
     if (error) throw error;
-    return { count: data?.length ?? 0 };
+    return { count: count ?? 0 };
   });
