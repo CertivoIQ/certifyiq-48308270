@@ -49,9 +49,13 @@ function Wordmark() {
 }
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const { isStaff } = useIsStaff();
+  const items = isStaff
+    ? [...NAV, { to: "/crm", label: "CertifyIQ CRM", icon: Briefcase } as const]
+    : NAV;
   return (
     <nav className="flex flex-col gap-0.5">
-      {NAV.map(({ to, label, icon: Icon }) => (
+      {items.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
           to={to}
@@ -71,6 +75,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
     </nav>
   );
 }
+
 
 function TrialBanner() {
   if (!TRIAL.active) return null;
