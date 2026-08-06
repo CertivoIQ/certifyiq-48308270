@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { IQText } from "@/components/iq-text";
-import { ShieldCheck, Loader2, MailCheck, KeyRound } from "lucide-react";
+import { Loader2, MailCheck, KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { verifyAndDisableRecoveryCode } from "@/utils/mfa.functions";
 
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Sign in to CertifyIQ to review affordable housing certifications, track findings and access the CertifyIQ CRM Dashboard.",
+          "Sign in to CertifyIQ to review affordable housing certifications, track findings and manage compliance.",
       },
       { property: "og:title", content: "Sign in to CertifyIQ" },
       { property: "og:description", content: "Access your compliance workspace and CertifyIQ staff tools." },
@@ -208,7 +208,7 @@ function AuthPage() {
               ? "Enter the 6-digit code from your authenticator app."
               : mode === "forgot"
                 ? "Enter your work email and we'll send a secure link to choose a new password."
-                : "Compliance workspace, Academy and — for CertifyIQ staff — the CRM Dashboard."}
+                : "Your compliance workspace and CertifyIQ Academy."}
           </p>
 
           {sentTo && !mfaMode && (
