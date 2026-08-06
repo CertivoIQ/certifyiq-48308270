@@ -405,12 +405,6 @@ function AuthPage() {
             </p>
           )}
         </div>
-
-        <p className="mt-4 flex items-start gap-2 text-[12px] text-muted-foreground">
-          <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-gold" />
-          The CertifyIQ CRM Dashboard is restricted to verified @certifyiq.com accounts. Customers, leads and clients
-          never see it.
-        </p>
       </div>
     </div>
   );
