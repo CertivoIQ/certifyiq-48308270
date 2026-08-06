@@ -10,33 +10,154 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CopilotRouteImport } from './routes/copilot'
+import { Route as FindingsRouteImport } from './routes/findings'
+import { Route as RulesRouteImport } from './routes/rules'
+import { Route as FilesIndexRouteImport } from './routes/files.index'
+import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
+import { Route as KnowledgeIndexRouteImport } from './routes/knowledge.index'
+import { Route as KnowledgeCourseIdRouteImport } from './routes/knowledge.$courseId'
+import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
+import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CopilotRoute = CopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindingsRoute = FindingsRouteImport.update({
+  id: '/findings',
+  path: '/findings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RulesRoute = RulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FilesIndexRoute = FilesIndexRouteImport.update({
+  id: '/files/',
+  path: '/files/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FilesFileIdRoute = FilesFileIdRouteImport.update({
+  id: '/files/$fileId',
+  path: '/files/$fileId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeIndexRoute = KnowledgeIndexRouteImport.update({
+  id: '/knowledge/',
+  path: '/knowledge/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeCourseIdRoute = KnowledgeCourseIdRouteImport.update({
+  id: '/knowledge/$courseId',
+  path: '/knowledge/$courseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PropertiesIndexRoute = PropertiesIndexRouteImport.update({
+  id: '/properties/',
+  path: '/properties/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
+  id: '/properties/$propertyId',
+  path: '/properties/$propertyId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/copilot': typeof CopilotRoute
+  '/findings': typeof FindingsRoute
+  '/rules': typeof RulesRoute
+  '/files/$fileId': typeof FilesFileIdRoute
+  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
+  '/properties/$propertyId': typeof PropertiesPropertyIdRoute
+  '/files/': typeof FilesIndexRoute
+  '/knowledge/': typeof KnowledgeIndexRoute
+  '/properties/': typeof PropertiesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/copilot': typeof CopilotRoute
+  '/findings': typeof FindingsRoute
+  '/rules': typeof RulesRoute
+  '/files/$fileId': typeof FilesFileIdRoute
+  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
+  '/properties/$propertyId': typeof PropertiesPropertyIdRoute
+  '/files': typeof FilesIndexRoute
+  '/knowledge': typeof KnowledgeIndexRoute
+  '/properties': typeof PropertiesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/copilot': typeof CopilotRoute
+  '/findings': typeof FindingsRoute
+  '/rules': typeof RulesRoute
+  '/files/$fileId': typeof FilesFileIdRoute
+  '/knowledge/$courseId': typeof KnowledgeCourseIdRoute
+  '/properties/$propertyId': typeof PropertiesPropertyIdRoute
+  '/files/': typeof FilesIndexRoute
+  '/knowledge/': typeof KnowledgeIndexRoute
+  '/properties/': typeof PropertiesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/copilot'
+    | '/findings'
+    | '/rules'
+    | '/files/$fileId'
+    | '/knowledge/$courseId'
+    | '/properties/$propertyId'
+    | '/files/'
+    | '/knowledge/'
+    | '/properties/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/copilot'
+    | '/findings'
+    | '/rules'
+    | '/files/$fileId'
+    | '/knowledge/$courseId'
+    | '/properties/$propertyId'
+    | '/files'
+    | '/knowledge'
+    | '/properties'
+  id:
+    | '__root__'
+    | '/'
+    | '/copilot'
+    | '/findings'
+    | '/rules'
+    | '/files/$fileId'
+    | '/knowledge/$courseId'
+    | '/properties/$propertyId'
+    | '/files/'
+    | '/knowledge/'
+    | '/properties/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CopilotRoute: typeof CopilotRoute
+  FindingsRoute: typeof FindingsRoute
+  RulesRoute: typeof RulesRoute
+  FilesFileIdRoute: typeof FilesFileIdRoute
+  KnowledgeCourseIdRoute: typeof KnowledgeCourseIdRoute
+  PropertiesPropertyIdRoute: typeof PropertiesPropertyIdRoute
+  FilesIndexRoute: typeof FilesIndexRoute
+  KnowledgeIndexRoute: typeof KnowledgeIndexRoute
+  PropertiesIndexRoute: typeof PropertiesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +169,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/copilot': {
+      id: '/copilot'
+      path: '/copilot'
+      fullPath: '/copilot'
+      preLoaderRoute: typeof CopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/findings': {
+      id: '/findings'
+      path: '/findings'
+      fullPath: '/findings'
+      preLoaderRoute: typeof FindingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rules': {
+      id: '/rules'
+      path: '/rules'
+      fullPath: '/rules'
+      preLoaderRoute: typeof RulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/files/': {
+      id: '/files/'
+      path: '/files'
+      fullPath: '/files/'
+      preLoaderRoute: typeof FilesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/files/$fileId': {
+      id: '/files/$fileId'
+      path: '/files/$fileId'
+      fullPath: '/files/$fileId'
+      preLoaderRoute: typeof FilesFileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge/': {
+      id: '/knowledge/'
+      path: '/knowledge'
+      fullPath: '/knowledge/'
+      preLoaderRoute: typeof KnowledgeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge/$courseId': {
+      id: '/knowledge/$courseId'
+      path: '/knowledge/$courseId'
+      fullPath: '/knowledge/$courseId'
+      preLoaderRoute: typeof KnowledgeCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/properties/': {
+      id: '/properties/'
+      path: '/properties'
+      fullPath: '/properties/'
+      preLoaderRoute: typeof PropertiesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/properties/$propertyId': {
+      id: '/properties/$propertyId'
+      path: '/properties/$propertyId'
+      fullPath: '/properties/$propertyId'
+      preLoaderRoute: typeof PropertiesPropertyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CopilotRoute: CopilotRoute,
+  FindingsRoute: FindingsRoute,
+  RulesRoute: RulesRoute,
+  FilesFileIdRoute: FilesFileIdRoute,
+  KnowledgeCourseIdRoute: KnowledgeCourseIdRoute,
+  PropertiesPropertyIdRoute: PropertiesPropertyIdRoute,
+  FilesIndexRoute: FilesIndexRoute,
+  KnowledgeIndexRoute: KnowledgeIndexRoute,
+  PropertiesIndexRoute: PropertiesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
