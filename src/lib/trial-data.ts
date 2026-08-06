@@ -82,7 +82,7 @@ export const TRIAL_INVITES = [
 
 export type LeadStage = "new" | "trialing" | "trial ended" | "negotiation" | "won" | "lost";
 
-export const STAGE_TONE: Record<LeadStage, "seal" | "flag" | "reject" | "neutral" | "brand"> = {
+export const STAGE_TONE: Record<LeadStage, "seal" | "flag" | "reject" | "neutral"> = {
   new: "neutral",
   trialing: "brand",
   "trial ended": "flag",
