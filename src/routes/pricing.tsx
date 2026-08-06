@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSession } from "@/hooks/use-session";
 import { useSubscription } from "@/hooks/use-subscription";
 import { getStripeEnvironment } from "@/lib/stripe";
-import { createPortalSession } from "@/utils/payments.functions";
-import { ADDON_PRICE_IDS, planKeyToPriceId } from "@/lib/plan-catalog";
+import { createPortalSession, changePlan } from "@/utils/payments.functions";
+import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/plan-catalog";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -42,6 +42,8 @@ function PricingPage() {
   const { subscription, isActive, entitlement, cancelAtPeriodEnd, endsAt } = useSubscription();
   const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
   const [portalBusy, setPortalBusy] = useState(false);
+  const [planBusy, setPlanBusy] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const startCheckout = async (priceId: string | null, name: string, quantity?: number) => {
     if (!priceId) {
@@ -54,7 +56,9 @@ function PricingPage() {
       toast.info("Create your account first", {
         description: "Sign in so we can attach this subscription to your CertifyIQ workspace.",
       });
-      await navigate({ to: "/auth", search: { redirect: "/pricing" } });
+      // Remember where they were so sign-in can bring them straight back.
+      sessionStorage.setItem("certifyiq:after-auth", "/pricing");
+      await navigate({ to: "/auth" });
       return;
     }
     // Existing subscribers switch their current subscription instead of
