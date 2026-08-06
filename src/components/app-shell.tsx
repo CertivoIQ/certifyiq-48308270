@@ -20,6 +20,8 @@ import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useIsStaff } from "@/hooks/use-session";
+
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -32,8 +34,8 @@ const NAV = [
   { to: "/launchpad", label: "LaunchPad", icon: Rocket },
   { to: "/trial", label: "My free trial", icon: Gift },
   { to: "/pricing", label: "Plans & pricing", icon: Tag },
-  { to: "/crm", label: "Sales back office", icon: Briefcase },
 ] as const;
+
 
 function Wordmark() {
   return (
@@ -49,9 +51,13 @@ function Wordmark() {
 }
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const { isStaff } = useIsStaff();
+  const items = isStaff
+    ? [...NAV, { to: "/crm", label: "CertifyIQ CRM", icon: Briefcase } as const]
+    : NAV;
   return (
     <nav className="flex flex-col gap-0.5">
-      {NAV.map(({ to, label, icon: Icon }) => (
+      {items.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
           to={to}
@@ -71,6 +77,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
     </nav>
   );
 }
+
 
 function TrialBanner() {
   if (!TRIAL.active) return null;

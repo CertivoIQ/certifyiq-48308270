@@ -10,14 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CopilotRouteImport } from './routes/copilot'
-import { Route as CrmRouteImport } from './routes/crm'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -31,14 +33,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CopilotRoute = CopilotRouteImport.update({
   id: '/copilot',
   path: '/copilot',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmRoute = CrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindingsRoute = FindingsRouteImport.update({
@@ -70,6 +76,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AcademyIndexRoute = AcademyIndexRouteImport.update({
   id: '/academy/',
@@ -109,14 +120,15 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/copilot': typeof CopilotRoute
-  '/crm': typeof CrmRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/crm': typeof AuthenticatedCrmRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -127,14 +139,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/copilot': typeof CopilotRoute
-  '/crm': typeof CrmRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/crm': typeof AuthenticatedCrmRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -146,14 +159,16 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/copilot': typeof CopilotRoute
-  '/crm': typeof CrmRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/files/$fileId': typeof FilesFileIdRoute
@@ -166,14 +181,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/copilot'
-    | '/crm'
     | '/findings'
     | '/launchpad'
     | '/pricing'
     | '/rules'
     | '/trial'
     | '/welcome'
+    | '/crm'
     | '/academy/$courseId'
     | '/api/chat'
     | '/files/$fileId'
@@ -184,14 +200,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/copilot'
-    | '/crm'
     | '/findings'
     | '/launchpad'
     | '/pricing'
     | '/rules'
     | '/trial'
     | '/welcome'
+    | '/crm'
     | '/academy/$courseId'
     | '/api/chat'
     | '/files/$fileId'
@@ -202,14 +219,16 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
     | '/copilot'
-    | '/crm'
     | '/findings'
     | '/launchpad'
     | '/pricing'
     | '/rules'
     | '/trial'
     | '/welcome'
+    | '/_authenticated/crm'
     | '/academy/$courseId'
     | '/api/chat'
     | '/files/$fileId'
@@ -221,8 +240,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   CopilotRoute: typeof CopilotRoute
-  CrmRoute: typeof CrmRoute
   FindingsRoute: typeof FindingsRoute
   LaunchpadRoute: typeof LaunchpadRoute
   PricingRoute: typeof PricingRoute
@@ -247,18 +267,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/copilot': {
       id: '/copilot'
       path: '/copilot'
       fullPath: '/copilot'
       preLoaderRoute: typeof CopilotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm': {
-      id: '/crm'
-      path: '/crm'
-      fullPath: '/crm'
-      preLoaderRoute: typeof CrmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/findings': {
@@ -302,6 +329,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/crm': {
+      id: '/_authenticated/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof AuthenticatedCrmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/academy/': {
       id: '/academy/'
@@ -355,10 +389,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   CopilotRoute: CopilotRoute,
-  CrmRoute: CrmRoute,
   FindingsRoute: FindingsRoute,
   LaunchpadRoute: LaunchpadRoute,
   PricingRoute: PricingRoute,
