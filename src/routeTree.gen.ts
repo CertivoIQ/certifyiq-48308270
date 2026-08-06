@@ -16,6 +16,7 @@ import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
@@ -62,6 +63,11 @@ const LaunchpadRoute = LaunchpadRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RulesRoute = RulesRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/findings'
     | '/launchpad'
     | '/pricing'
+    | '/reset-password'
     | '/rules'
     | '/trial'
     | '/welcome'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/findings'
     | '/launchpad'
     | '/pricing'
+    | '/reset-password'
     | '/rules'
     | '/trial'
     | '/welcome'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/findings'
     | '/launchpad'
     | '/pricing'
+    | '/reset-password'
     | '/rules'
     | '/trial'
     | '/welcome'
@@ -271,6 +283,7 @@ export interface RootRouteChildren {
   FindingsRoute: typeof FindingsRoute
   LaunchpadRoute: typeof LaunchpadRoute
   PricingRoute: typeof PricingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RulesRoute: typeof RulesRoute
   TrialRoute: typeof TrialRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -334,6 +347,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rules': {
@@ -449,6 +469,7 @@ const rootRouteChildren: RootRouteChildren = {
   FindingsRoute: FindingsRoute,
   LaunchpadRoute: LaunchpadRoute,
   PricingRoute: PricingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RulesRoute: RulesRoute,
   TrialRoute: TrialRoute,
   WelcomeRoute: WelcomeRoute,

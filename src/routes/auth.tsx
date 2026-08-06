@@ -6,9 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IQText } from "@/components/iq-text";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2, MailCheck } from "lucide-react";
+
+type Mode = "signin" | "signup" | "forgot";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>): { mode?: Mode } => {
+    const mode = search['mode'];
+    return mode === "signup" || mode === "forgot" || mode === "signin" ? { mode } : {};
+  },
   head: () => ({
     meta: [
       { title: "Sign in — CertifyIQ" },
@@ -28,11 +34,13 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const search = Route.useSearch();
+  const [mode, setMode] = useState<Mode>(search.mode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sentTo, setSentTo] = useState<null | { kind: "verify" | "reset"; email: string }>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -45,16 +53,35 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
         });
         if (error) throw error;
-        toast.success("Check your email", { description: "Confirm your address to finish creating the account." });
+        if (data.session) {
+          navigate({ to: "/", replace: true });
+          return;
+        }
+        setSentTo({ kind: "verify", email });
+        toast.success("Verify your email", { description: "We sent a confirmation link to " + email });
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        setSentTo({ kind: "reset", email });
+        toast.success("Reset link sent", { description: "Check " + email + " for the password reset link." });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (/confirm/i.test(error.message)) {
+            setSentTo({ kind: "verify", email });
+            toast.error("Email not verified", { description: "Confirm your address, or resend the link below." });
+            return;
+          }
+          throw error;
+        }
         navigate({ to: "/", replace: true });
       }
     } catch (err) {
@@ -64,8 +91,30 @@ function AuthPage() {
     }
   }
 
+  async function resendVerification() {
+    setBusy(true);
+    try {
+      const target = sentTo?.email || email;
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: target,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      toast.success("Verification email resent", { description: "New link on its way to " + target });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not resend the email");
+    } finally {
+      setBusy(false);
+    }
+  }
 
-
+  const heading =
+    mode === "signin"
+      ? "Sign in to CertifyIQ"
+      : mode === "signup"
+        ? "Create your CertifyIQ account"
+        : "Reset your CertifyIQ password";
 
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-12">
@@ -81,11 +130,39 @@ function AuthPage() {
 
         <div className="mt-7 rounded-xl border border-border bg-card p-6 shadow-sm">
           <h1 className="font-display text-[22px] leading-tight">
-            <IQText>{mode === "signin" ? "Sign in to CertifyIQ" : "Create your CertifyIQ account"}</IQText>
+            <IQText>{heading}</IQText>
           </h1>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Compliance workspace, Academy and — for CertifyIQ staff — the CRM Dashboard.
+            {mode === "forgot"
+              ? "Enter your work email and we'll send a secure link to choose a new password."
+              : "Compliance workspace, Academy and — for CertifyIQ staff — the CRM Dashboard."}
           </p>
+
+          {sentTo && (
+            <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3.5">
+              <p className="flex items-start gap-2 text-[13px]">
+                <MailCheck className="mt-0.5 size-4 shrink-0 text-seal" />
+                <span>
+                  {sentTo.kind === "verify"
+                    ? "Confirm your email address to activate the account. "
+                    : "Password reset link sent. "}
+                  We emailed <span className="font-medium">{sentTo.email}</span>.
+                </span>
+              </p>
+              {sentTo.kind === "verify" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 w-full"
+                  disabled={busy}
+                  onClick={resendVerification}
+                >
+                  {busy && <Loader2 className="size-4 animate-spin" />}
+                  Resend verification email
+                </Button>
+              )}
+            </div>
+          )}
 
           <form onSubmit={submit} className="mt-5 space-y-3.5">
             {mode === "signup" && (
@@ -106,38 +183,73 @@ function AuthPage() {
                 maxLength={255}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                minLength={8}
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {mode !== "forgot" && (
+              <div className="space-y-1.5">
+                <div className="flex items-baseline justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  {mode === "signin" && (
+                    <button
+                      type="button"
+                      className="text-[12px] font-medium text-primary hover:underline"
+                      onClick={() => {
+                        setSentTo(null);
+                        setMode("forgot");
+                      }}
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={busy}>
               {busy && <Loader2 className="size-4 animate-spin" />}
-              {mode === "signin" ? "Sign in" : "Create account"}
+              {mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
             </Button>
           </form>
 
-
-
-
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
-            {mode === "signin" ? "New to CertifyIQ?" : "Already have an account?"}{" "}
-            <button
-              type="button"
-              className="font-medium text-primary hover:underline"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            >
-              {mode === "signin" ? "Create an account" : "Sign in"}
-            </button>
+            {mode === "forgot" ? (
+              <>
+                Remembered it?{" "}
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={() => {
+                    setSentTo(null);
+                    setMode("signin");
+                  }}
+                >
+                  Back to sign in
+                </button>
+              </>
+            ) : (
+              <>
+                {mode === "signin" ? "New to CertifyIQ?" : "Already have an account?"}{" "}
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={() => {
+                    setSentTo(null);
+                    setMode(mode === "signin" ? "signup" : "signin");
+                  }}
+                >
+                  {mode === "signin" ? "Create an account" : "Sign in"}
+                </button>
+              </>
+            )}
           </p>
         </div>
+
 
         <p className="mt-4 flex items-start gap-2 text-[12px] text-muted-foreground">
           <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-gold" />
