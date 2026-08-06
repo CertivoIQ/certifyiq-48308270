@@ -69,7 +69,7 @@ function CrmPage() {
     >
       <div className="grid gap-3 sm:grid-cols-4">
         {SALES_KPIS.map((k) => (
-          <Stat key={k.label} label={k.label} value={k.value} note={k.note} />
+          <Stat key={k.label} label={k.label} value={k.value} hint={k.note} />
         ))}
       </div>
 

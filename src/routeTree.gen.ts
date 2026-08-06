@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CopilotRouteImport } from './routes/copilot'
+import { Route as CrmRouteImport } from './routes/crm'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -33,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
 const CopilotRoute = CopilotRouteImport.update({
   id: '/copilot',
   path: '/copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmRoute = CrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindingsRoute = FindingsRouteImport.update({
@@ -104,6 +110,7 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
+  '/crm': typeof CrmRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
+  '/crm': typeof CrmRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/copilot': typeof CopilotRoute
+  '/crm': typeof CrmRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/copilot'
+    | '/crm'
     | '/findings'
     | '/launchpad'
     | '/pricing'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/copilot'
+    | '/crm'
     | '/findings'
     | '/launchpad'
     | '/pricing'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/copilot'
+    | '/crm'
     | '/findings'
     | '/launchpad'
     | '/pricing'
@@ -210,6 +222,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CopilotRoute: typeof CopilotRoute
+  CrmRoute: typeof CrmRoute
   FindingsRoute: typeof FindingsRoute
   LaunchpadRoute: typeof LaunchpadRoute
   PricingRoute: typeof PricingRoute
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/copilot'
       fullPath: '/copilot'
       preLoaderRoute: typeof CopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm': {
+      id: '/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof CrmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/findings': {
@@ -338,6 +358,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CopilotRoute: CopilotRoute,
+  CrmRoute: CrmRoute,
   FindingsRoute: FindingsRoute,
   LaunchpadRoute: LaunchpadRoute,
   PricingRoute: PricingRoute,
