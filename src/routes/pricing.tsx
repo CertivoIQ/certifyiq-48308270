@@ -248,13 +248,14 @@ function PricingPage() {
                   variant="outline"
                   className="mt-2.5"
                   onClick={() =>
-                    startCheckout(
+                    void startCheckout(
                       a.id === "academy-seat"
                         ? ADDON_PRICE_IDS.academySeat
                         : ADDON_PRICE_IDS.academyProperty,
                       a.name,
                     )
                   }
+
                 >
                   Add to my plan
                 </Button>
