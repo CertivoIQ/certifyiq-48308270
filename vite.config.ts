@@ -21,10 +21,15 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
+        // parse5 (via @react-email/render) imports entities subpaths that this
+        // installed entities version does not export — map them to real files.
+        "entities/decode": path.resolve(__dirname, "node_modules/entities/lib/esm/decode.js"),
+        "entities/escape": path.resolve(__dirname, "node_modules/entities/lib/esm/escape.js"),
         "entities/lib/decode.js": path.resolve(__dirname, "node_modules/entities/lib/decode.js"),
         "entities/lib/encode.js": path.resolve(__dirname, "node_modules/entities/lib/encode.js"),
-        entities: path.resolve(__dirname, "node_modules/entities"),
+        entities: path.resolve(__dirname, "node_modules/entities/lib/esm/index.js"),
       },
     },
+
   },
 });
