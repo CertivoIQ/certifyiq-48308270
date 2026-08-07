@@ -340,6 +340,12 @@ export function ExplainerVideo() {
   const rafRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Each language has its own generated voiceover, so scene durations are
+  // computed from the real audio length and per-sentence word counts.
+  const SCENES = useMemo(() => getSceneDurations(voiceLang).map((duration) => ({ duration })), [voiceLang]);
+  const TOTAL = useMemo(() => SCENES.reduce((s, x) => s + x.duration, 0), [SCENES]);
+
+
   // Keep voiceover language in sync with UI language when not actively playing.
   useEffect(() => {
     if (!playing) setVoiceLang(uiLang === "es" ? "es" : "en");
