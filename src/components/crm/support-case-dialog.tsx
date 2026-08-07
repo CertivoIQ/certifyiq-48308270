@@ -123,11 +123,10 @@ export function SupportCaseDialog({
         description: d.description.trim() || null,
         status: d.status,
         priority: d.priority,
-        channel: d.channel,
+        source: d.channel,
         account_id: d.account_id || null,
         contact_id: d.contact_id || null,
         assigned_to: d.assigned_to || null,
-        source_email: d.source_email.trim() || null,
         tags: d.tags
           .split(",")
           .map((t) => t.trim())
