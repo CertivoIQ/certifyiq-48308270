@@ -1,6 +1,7 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { PLANS } from '@/lib/platform-data'
 import {
   BRAND,
   Body,
@@ -68,6 +69,23 @@ function StatCard({ value, label, color }: { value: string; label: string; color
     >
       <Text style={{ margin: 0, fontSize: '22px', fontWeight: 700, color }}>{value}</Text>
       <Text style={{ ...small, margin: '4px 0 0' }}>{label}</Text>
+    </Section>
+  )
+}
+
+function PlanRow({ name, price, tagline }: { name: string; price: string; tagline: string }) {
+  return (
+    <Section
+      style={{
+        borderBottom: `1px solid ${BRAND.border}`,
+        padding: '8px 0',
+        margin: 0,
+      }}
+    >
+      <Text style={{ ...text, margin: 0, fontWeight: 600 }}>
+        {name} — <span style={{ color: BRAND.navy }}>{price}/month</span>
+      </Text>
+      <Text style={{ ...small, margin: '2px 0 0' }}>{tagline}</Text>
     </Section>
   )
 }
@@ -152,6 +170,18 @@ const Email = ({
         </Text>
 
         <Hr style={hr} />
+
+        <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
+          PLANS &amp; PRICING
+        </Text>
+        {PLANS.map((p) => (
+          <PlanRow key={p.id} name={p.name} price={p.price} tagline={p.tagline} />
+        ))}
+        <Text style={{ ...small, margin: '10px 0 0' }}>
+          Add-ons: additional state rule packs $99–$199/state/month · CertifyIQ Academy $49/user/month or
+          $499/property/month · API access $500–$2,000/month · AI document processing beyond plan allowance $3 per
+          uploaded certification.
+        </Text>
 
         <Text style={{ ...small, fontWeight: 700, color: BRAND.red, margin: '0 0 12px', letterSpacing: '0.6px' }}>
           THE COST OF NON-COMPLIANCE
