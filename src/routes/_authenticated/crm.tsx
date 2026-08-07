@@ -161,17 +161,8 @@ function CrmDashboard() {
     onError: () => toast.error("Could not queue reminder"),
   });
 
-  if (loading) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-  if (!isStaff) return <Denied />;
-
   return (
-    <CrmShell email={email}>
+    <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Open pipeline ARR" value={money(pipelineArr)} hint={`${rows.length} accounts tracked`} />
         <Stat label="Closed won ARR" value={money(wonArr)} hint={`${byStage.find((b) => b.stage === "won")?.count ?? 0} subscribed`} />
