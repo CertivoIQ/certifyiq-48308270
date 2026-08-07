@@ -22,6 +22,7 @@ import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
@@ -98,6 +99,12 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMarketingKitRoute =
+  AuthenticatedMarketingKitRouteImport.update({
+    id: '/marketing-kit',
+    path: '/marketing-kit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
   id: '/security',
   path: '/security',
@@ -169,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
@@ -221,6 +230,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/billing'
     | '/crm'
+    | '/marketing-kit'
     | '/security'
     | '/academy/$courseId'
     | '/api/chat'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/billing'
     | '/crm'
+    | '/marketing-kit'
     | '/security'
     | '/academy/$courseId'
     | '/api/chat'
@@ -299,6 +311,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/_authenticated/billing'
     | '/_authenticated/crm'
+    | '/_authenticated/marketing-kit'
     | '/_authenticated/security'
     | '/academy/$courseId'
     | '/api/chat'
@@ -429,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing-kit': {
+      id: '/_authenticated/marketing-kit'
+      path: '/marketing-kit'
+      fullPath: '/marketing-kit'
+      preLoaderRoute: typeof AuthenticatedMarketingKitRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/security': {
       id: '/_authenticated/security'
       path: '/security'
@@ -512,12 +532,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
 }
 
