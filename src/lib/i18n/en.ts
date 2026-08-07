@@ -64,6 +64,8 @@ export const en = {
   "welcome.cta.trial": "Start your 7-day trial",
   "welcome.cta.sample": "See a reviewed certification",
   "welcome.video.play": "Play the CertivoIQ instructional video",
+  "welcome.video.label": "CertivoIQ compliance intelligence explainer video",
+  "welcome.video.trialCta": "Start 7 Day Free Trial",
   "welcome.video.toast.title": "Playing: “Inside CertivoIQ”",
   "welcome.video.toast.body": "4 minutes — what it is, how it works, and what non-compliance really costs.",
   "welcome.video.title.pre": "Inside",

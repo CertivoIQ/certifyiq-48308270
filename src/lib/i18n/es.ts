@@ -68,6 +68,8 @@ export const es: Dictionary = {
   "welcome.cta.trial": "Comience su prueba de 7 días",
   "welcome.cta.sample": "Ver una certificación revisada",
   "welcome.video.play": "Reproducir el video instructivo de CertivoIQ",
+  "welcome.video.label": "Video explicativo de inteligencia de cumplimiento de CertivoIQ",
+  "welcome.video.trialCta": "Comience la prueba de 7 días",
   "welcome.video.toast.title": "Reproduciendo: «Dentro de CertivoIQ»",
   "welcome.video.toast.body":
     "4 minutos — qué es, cómo funciona y cuánto cuesta realmente el incumplimiento.",
