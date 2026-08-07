@@ -20,7 +20,9 @@ export const Route = createFileRoute("/copilot")({
         property: "og:description",
         content: "The engine supplies the facts. The copilot explains them, with citations a reviewer can check.",
       },
+      { property: "og:url", content: "https://certivoiq.com/copilot" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/copilot" }],
   }),
   component: CopilotPage,
 });

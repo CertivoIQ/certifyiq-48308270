@@ -18,7 +18,9 @@ export const Route = createFileRoute("/findings")({
         property: "og:description",
         content: "Findings read like an annotated document: rule ID, version, citation and highlighted evidence.",
       },
+      { property: "og:url", content: "https://certivoiq.com/findings" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/findings" }],
   }),
   component: FindingsPage,
 });

@@ -19,7 +19,9 @@ export const Route = createFileRoute("/rules")({
         property: "og:description",
         content: "Every finding permanently records the rule version that produced it — audit-defensible by design.",
       },
+      { property: "og:url", content: "https://certivoiq.com/rules" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/rules" }],
   }),
   component: RulesPage,
 });

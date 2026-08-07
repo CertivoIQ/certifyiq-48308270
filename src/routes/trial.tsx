@@ -29,7 +29,9 @@ export const Route = createFileRoute("/trial")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://certivoiq.com/trial" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/trial" }],
   }),
   component: TrialPage,
 });

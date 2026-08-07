@@ -17,7 +17,9 @@ export const Route = createFileRoute("/properties/")({
         property: "og:description",
         content: "Every property scored for agency-finding probability, with the specific reasons behind each score.",
       },
+      { property: "og:url", content: "https://certivoiq.com/properties" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/properties" }],
   }),
   component: PropertiesPage,
 });

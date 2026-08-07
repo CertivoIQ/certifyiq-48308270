@@ -12,7 +12,7 @@ export const Route = createFileRoute("/academy/$courseId")({
     if (!course) throw notFound();
     return { course };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     if (!loaderData) {
       return { meta: [{ title: "Course unavailable — CertivoIQ Academy" }, { name: "robots", content: "noindex" }] };
     }
@@ -23,7 +23,9 @@ export const Route = createFileRoute("/academy/$courseId")({
         { name: "description", content: c.summary },
         { property: "og:title", content: `${c.title} — CertivoIQ Academy` },
         { property: "og:description", content: c.summary },
+        { property: "og:url", content: `https://certivoiq.com/academy/${params.courseId}` },
       ],
+      links: [{ rel: "canonical", href: `https://certivoiq.com/academy/${params.courseId}` }],
     };
   },
   notFoundComponent: () => (

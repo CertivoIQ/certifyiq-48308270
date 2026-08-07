@@ -22,7 +22,9 @@ export const Route = createFileRoute("/welcome")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://certivoiq.com/welcome" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/welcome" }],
   }),
   component: WelcomePage,
 });

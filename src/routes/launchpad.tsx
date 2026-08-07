@@ -22,7 +22,9 @@ export const Route = createFileRoute("/launchpad")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://certivoiq.com/launchpad" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/launchpad" }],
   }),
   component: LaunchPadPage,
 });

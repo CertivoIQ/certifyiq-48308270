@@ -15,7 +15,7 @@ export const Route = createFileRoute("/files/$fileId")({
     if (!file) throw notFound();
     return { file };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     if (!loaderData) {
       return { meta: [{ title: "Certification unavailable — CertivoIQ" }, { name: "robots", content: "noindex" }] };
     }
@@ -27,7 +27,9 @@ export const Route = createFileRoute("/files/$fileId")({
         { name: "description", content: desc },
         { property: "og:title", content: `${f.id} — Certification Review` },
         { property: "og:description", content: desc },
+        { property: "og:url", content: `https://certivoiq.com/files/${params.fileId}` },
       ],
+      links: [{ rel: "canonical", href: `https://certivoiq.com/files/${params.fileId}` }],
     };
   },
   notFoundComponent: () => (
