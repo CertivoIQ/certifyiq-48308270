@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowLeft } from "lucide-react";
+import { PLANS, ADDONS } from "@/lib/platform-data";
+
 
 export const Route = createFileRoute("/_authenticated/marketing-kit")({
   head: () => ({
@@ -160,6 +162,31 @@ function MarketingKitPage() {
         </section>
 
         <section className="print-avoid-break mt-6">
+          <h3 className="cite font-mono">PLANS &amp; PRICING</h3>
+          <div className="mt-3 divide-y divide-border">
+            {PLANS.map((p) => (
+              <div key={p.id} className="flex items-baseline justify-between gap-4 py-2">
+                <div>
+                  <p className="text-[13px] font-medium">{p.name}</p>
+                  <p className="text-[11.5px] text-muted-foreground">{p.tagline}</p>
+                </div>
+                <p className="whitespace-nowrap font-display text-[15px]">
+                  {p.price}
+                  <span className="text-[11.5px] text-muted-foreground">{p.cadence}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+          <ul className="mt-3 space-y-1">
+            {ADDONS.map((a) => (
+              <li key={a.name} className="text-[11.5px] text-muted-foreground">
+                {a.name} — {a.price}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="print-avoid-break mt-6">
           <h3 className="cite font-mono text-reject">THE COST OF NON-COMPLIANCE</h3>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {RISKS.map((r) => (
@@ -170,6 +197,7 @@ function MarketingKitPage() {
             ))}
           </div>
         </section>
+
 
         <section className="print-avoid-break mt-7 rounded-lg border border-primary/25 bg-accent px-5 py-5 text-center">
           <p className="font-display text-[18px] text-accent-foreground">
