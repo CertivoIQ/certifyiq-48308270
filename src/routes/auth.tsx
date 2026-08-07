@@ -16,8 +16,8 @@ type Mode = "signin" | "signup" | "forgot";
 
 /** Where to land after sign-in: the page that bounced the user here, or home. */
 function afterAuthTarget(): "/" | "/pricing" {
-  const saved = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("certifyiq:after-auth") : null;
-  if (saved) sessionStorage.removeItem("certifyiq:after-auth");
+  const saved = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("certivoiq:after-auth") : null;
+  if (saved) sessionStorage.removeItem("certivoiq:after-auth");
   return saved === "/pricing" ? "/pricing" : "/";
 }
 
@@ -28,14 +28,14 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
-      { title: "Sign in — CertifyIQ" },
+      { title: "Sign in — CertivoIQ" },
       {
         name: "description",
         content:
-          "Sign in to CertifyIQ to review affordable housing certifications, track findings and manage compliance.",
+          "Sign in to CertivoIQ to review affordable housing certifications, track findings and manage compliance.",
       },
-      { property: "og:title", content: "Sign in to CertifyIQ" },
-      { property: "og:description", content: "Access your compliance workspace and CertifyIQ Academy." },
+      { property: "og:title", content: "Sign in to CertivoIQ" },
+      { property: "og:description", content: "Access your compliance workspace and CertivoIQ Academy." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -182,10 +182,10 @@ function AuthPage() {
   const heading = mfaMode
     ? "Two-factor authentication"
     : mode === "signin"
-      ? "Sign in to CertifyIQ"
+      ? "Sign in to CertivoIQ"
       : mode === "signup"
-        ? "Create your CertifyIQ account"
-        : "Reset your CertifyIQ password";
+        ? "Create your CertivoIQ account"
+        : "Reset your CertivoIQ password";
 
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-12">
@@ -195,7 +195,7 @@ function AuthPage() {
             IQ
           </span>
           <span className="font-display text-xl tracking-tight">
-            Certify<span className="text-gold">IQ</span>
+            Certivo<span className="text-gold">IQ</span>
           </span>
         </Link>
 
@@ -208,7 +208,7 @@ function AuthPage() {
               ? "Enter the 6-digit code from your authenticator app."
               : mode === "forgot"
                 ? "Enter your work email and we'll send a secure link to choose a new password."
-                : "Your compliance workspace and CertifyIQ Academy."}
+                : "Your compliance workspace and CertivoIQ Academy."}
           </p>
 
           {sentTo && !mfaMode && (
@@ -389,7 +389,7 @@ function AuthPage() {
                 </>
               ) : (
                 <>
-                  {mode === "signin" ? "New to CertifyIQ?" : "Already have an account?"}{" "}
+                  {mode === "signin" ? "New to CertivoIQ?" : "Already have an account?"}{" "}
                   <button
                     type="button"
                     className="font-medium text-primary hover:underline"

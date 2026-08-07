@@ -42,16 +42,16 @@ import {
 export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({
     meta: [
-      { title: "CertifyIQ CRM Dashboard — Staff Only" },
+      { title: "CertivoIQ CRM Dashboard — Staff Only" },
       {
         name: "description",
         content:
-          "Internal CertifyIQ CRM Dashboard: enterprise and company lead profiles, pipeline by stage, compliance-event marketing campaigns and a live federal news ticker.",
+          "Internal CertivoIQ CRM Dashboard: enterprise and company lead profiles, pipeline by stage, compliance-event marketing campaigns and a live federal news ticker.",
       },
-      { property: "og:title", content: "CertifyIQ CRM Dashboard" },
+      { property: "og:title", content: "CertivoIQ CRM Dashboard" },
       {
         property: "og:description",
-        content: "Staff-only pipeline, account profiles and marketing distribution for CertifyIQ.",
+        content: "Staff-only pipeline, account profiles and marketing distribution for CertivoIQ.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -291,7 +291,7 @@ function CrmDashboard() {
       <Panel
         className="mt-3"
         title="Accounts & decision makers"
-        description="Enterprise and company leads with no active CertifyIQ subscription"
+        description="Enterprise and company leads with no active CertivoIQ subscription"
         bodyClassName="p-0"
       >
         <ul className="divide-y divide-border">

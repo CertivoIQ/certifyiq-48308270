@@ -1,6 +1,6 @@
 /**
  * Single source of truth linking payment-provider price IDs to what a plan
- * unlocks inside CertifyIQ. Price IDs are stable across test and live.
+ * unlocks inside CertivoIQ. Price IDs are stable across test and live.
  */
 
 export type PlanKey = "professional" | "business" | "enterprise" | "enterprise_plus";
@@ -27,7 +27,7 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
   professional_monthly: {
     planId: "professional",
     priceId: "professional_monthly",
-    name: "CertifyIQ Professional",
+    name: "CertivoIQ Professional",
     unitLimit: 500,
     propertyLimit: 5,
     aiDocAllowance: 500,
@@ -36,7 +36,7 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
   business_monthly: {
     planId: "business",
     priceId: "business_monthly",
-    name: "CertifyIQ Business",
+    name: "CertivoIQ Business",
     unitLimit: 10000,
     propertyLimit: 50,
     aiDocAllowance: 10000,
@@ -45,7 +45,7 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
   enterprise_monthly: {
     planId: "enterprise",
     priceId: "enterprise_monthly",
-    name: "CertifyIQ Enterprise",
+    name: "CertivoIQ Enterprise",
     unitLimit: null,
     propertyLimit: null,
     aiDocAllowance: null,
@@ -54,7 +54,7 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
   enterprise_plus_monthly: {
     planId: "enterprise_plus",
     priceId: "enterprise_plus_monthly",
-    name: "CertifyIQ Enterprise Plus",
+    name: "CertivoIQ Enterprise Plus",
     unitLimit: null,
     propertyLimit: null,
     aiDocAllowance: null,

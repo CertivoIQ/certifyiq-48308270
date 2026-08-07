@@ -283,7 +283,7 @@ export function SupportCaseDialog({
               type="email"
               value={d.source_email}
               maxLength={255}
-              placeholder="support@certifyiq.app"
+              placeholder="support@certivoiq.com"
               onChange={(e) => setD({ ...d, source_email: e.target.value })}
             />
           </div>

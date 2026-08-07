@@ -16,13 +16,13 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/trial")({
   head: () => ({
     meta: [
-      { title: "Your 7-Day Free Trial — CertifyIQ" },
+      { title: "Your 7-Day Free Trial — CertivoIQ" },
       {
         name: "description",
         content:
-          "Merlin walks you through your CertifyIQ free trial: learn the platform, review your first certification, mass upload properties, and invite regionals and property managers to finish onboarding.",
+          "Merlin walks you through your CertivoIQ free trial: learn the platform, review your first certification, mass upload properties, and invite regionals and property managers to finish onboarding.",
       },
-      { property: "og:title", content: "Your 7-day CertifyIQ free trial, guided by Merlin" },
+      { property: "og:title", content: "Your 7-day CertivoIQ free trial, guided by Merlin" },
       {
         property: "og:description",
         content: "Mass upload your portfolio during the trial — files are retained 14 days after it ends.",
@@ -76,7 +76,7 @@ function TrialPage() {
         description:
           metered.billedNow > 0
             ? `Columns matched. ${metered.billedNow} certification(s) beyond your allowance were added to your next invoice.`
-            : "Columns matched to CertifyIQ fields — confirm the preview to import.",
+            : "Columns matched to CertivoIQ fields — confirm the preview to import.",
       });
       await refetch();
     } catch (error) {
@@ -88,7 +88,7 @@ function TrialPage() {
 
   return (
     <AppShell
-      title="Your CertifyIQ free trial"
+      title="Your CertivoIQ free trial"
       subtitle={`${TRIAL_OFFER.label} · ${TRIAL.daysLeft} days left · Merlin is your guide`}
       actions={
         <Button size="sm" asChild>

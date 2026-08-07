@@ -6,13 +6,13 @@ import { PROPERTIES, riskBand } from "@/lib/demo-data";
 export const Route = createFileRoute("/properties/")({
   head: () => ({
     meta: [
-      { title: "Properties & Risk Scores — CertifyIQ" },
+      { title: "Properties & Risk Scores — CertivoIQ" },
       {
         name: "description",
         content:
           "Property-level compliance risk scoring across LIHTC, HOTMA, HOME and Section 8, with overdue recertifications and audit dates.",
       },
-      { property: "og:title", content: "Properties & Risk Scores — CertifyIQ" },
+      { property: "og:title", content: "Properties & Risk Scores — CertivoIQ" },
       {
         property: "og:description",
         content: "Every property scored for agency-finding probability, with the specific reasons behind each score.",

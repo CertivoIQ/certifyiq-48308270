@@ -14,13 +14,13 @@ import { ArrowUpRight, TrendingDown } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CertifyIQ — Affordable Housing Compliance Intelligence" },
+      { title: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         name: "description",
         content:
-          "CertifyIQ audits LIHTC, Section 8, HOME and HOTMA certifications with a deterministic rules engine, AI extraction and portfolio risk scoring across all 50 states.",
+          "CertivoIQ audits LIHTC, Section 8, HOME and HOTMA certifications with a deterministic rules engine, AI extraction and portfolio risk scoring across all 50 states.",
       },
-      { property: "og:title", content: "CertifyIQ — Affordable Housing Compliance Intelligence" },
+      { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         property: "og:description",
         content:
@@ -37,7 +37,7 @@ function ExecutiveDashboard() {
 
   return (
     <AppShell
-      title="CertifyIQ Dashboard"
+      title="CertivoIQ Dashboard"
       subtitle="Meridian Housing Partners · 185 properties · 14 states · period ending Aug 6, 2026"
       actions={
         <>

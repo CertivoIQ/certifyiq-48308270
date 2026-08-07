@@ -1,4 +1,4 @@
-// CertifyIQ demo dataset — front-end walkthrough only (no backend yet).
+// CertivoIQ demo dataset — front-end walkthrough only (no backend yet).
 
 export type Status = "approved" | "pending" | "remediation" | "rejected";
 export type Program = "LIHTC" | "HOTMA" | "HOME" | "PBS8";

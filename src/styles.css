@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * CertifyIQ design system — "the ledger, not the dashboard."
+ * CertivoIQ design system — "the ledger, not the dashboard."
  * Institutional, ink-on-paper compliance aesthetic.
  * Status colors (seal / flag / reject) are FIXED brand colors and never invert.
  */
@@ -95,7 +95,7 @@
   /* Merlin's wizard gold — used for the IQ in the wordmark and wizard sparkle */
   --gold: oklch(0.76 0.15 88);
 
-  /* CertifyIQ CRM Dashboard surface — gold, so staff always know which dashboard they're in */
+  /* CertivoIQ CRM Dashboard surface — gold, so staff always know which dashboard they're in */
   --gold-surface: oklch(0.975 0.045 92);
   --gold-ink: oklch(0.34 0.075 78);
   --gold-line: oklch(0.86 0.09 90);
@@ -388,7 +388,7 @@
   }
 }
 
-/* CertifyIQ CRM Dashboard — gold chrome + federal news ticker */
+/* CertivoIQ CRM Dashboard — gold chrome + federal news ticker */
 @keyframes ticker-scroll {
   from {
     transform: translateX(0);

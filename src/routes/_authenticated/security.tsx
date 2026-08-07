@@ -15,15 +15,15 @@ import type { AuthMFAEnrollTOTPResponse } from "@supabase/supabase-js";
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
     meta: [
-      { title: "Security settings — CertifyIQ" },
+      { title: "Security settings — CertivoIQ" },
       {
         name: "description",
-        content: "Manage your CertifyIQ account security, including two-factor authentication and recovery codes.",
+        content: "Manage your CertivoIQ account security, including two-factor authentication and recovery codes.",
       },
-      { property: "og:title", content: "Security settings — CertifyIQ" },
+      { property: "og:title", content: "Security settings — CertivoIQ" },
       {
         property: "og:description",
-        content: "Manage two-factor authentication and recovery codes for your CertifyIQ account.",
+        content: "Manage two-factor authentication and recovery codes for your CertivoIQ account.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -80,7 +80,7 @@ function SecurityPage() {
     try {
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: "CertifyIQ Authenticator",
+        friendlyName: "CertivoIQ Authenticator",
       });
       if (error) throw error;
       setEnrollData(data as AuthMFAEnrollTOTPResponse["data"]);
@@ -189,7 +189,7 @@ function SecurityPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "certifyiq-recovery-codes.txt";
+    a.download = "certivoiq-recovery-codes.txt";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -266,7 +266,7 @@ function SecurityPage() {
             <div>
               <h2 className="font-display text-lg">Why 2FA matters</h2>
               <p className="mt-1 text-[13px] text-muted-foreground">
-                CertifyIQ handles sensitive affordable-housing compliance data. Two-factor authentication keeps your
+                CertivoIQ handles sensitive affordable-housing compliance data. Two-factor authentication keeps your
                 account safe even if your password is compromised.
               </p>
             </div>

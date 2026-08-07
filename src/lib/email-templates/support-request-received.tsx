@@ -32,17 +32,17 @@ const Email = ({
   name,
   caseNumber,
   subject,
-  supportUrl = 'https://certifyiq.app/contact-support',
+  supportUrl = 'https://certivoiq.com/contact-support',
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>{`We received your support request — case ${caseNumber ?? '#'} · CertifyIQ`}</Preview>
+    <Preview>{`We received your support request — case ${caseNumber ?? '#'} · CertivoIQ`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Brand />
         <Heading style={heading}>Thanks for reaching out</Heading>
         <Text style={text}>
-          {name ? `Hi ${name},` : 'Hi there,'} we have received your support request and a CertifyIQ
+          {name ? `Hi ${name},` : 'Hi there,'} we have received your support request and a CertivoIQ
           specialist will review it shortly.
         </Text>
 
@@ -67,7 +67,7 @@ const Email = ({
         </Section>
         <Hr style={hr} />
         <Text style={small}>
-          You are receiving this because you submitted a request through the CertifyIQ support page. Reply to this email to add more details.
+          You are receiving this because you submitted a request through the CertivoIQ support page. Reply to this email to add more details.
         </Text>
       </Container>
     </Body>
@@ -77,12 +77,12 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `We received your support request — case ${data['caseNumber'] ?? '#'} · CertifyIQ`,
+    `We received your support request — case ${data['caseNumber'] ?? '#'} · CertivoIQ`,
   displayName: 'Support request received',
   previewData: {
     name: 'Jordan',
     caseNumber: 'SC-00042',
     subject: 'Question about LIHTC income limits',
-    supportUrl: 'https://certifyiq.app/contact-support',
+    supportUrl: 'https://certivoiq.com/contact-support',
   },
 } satisfies TemplateEntry

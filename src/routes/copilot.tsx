@@ -9,13 +9,13 @@ import { Sparkles, User } from "lucide-react";
 export const Route = createFileRoute("/copilot")({
   head: () => ({
     meta: [
-      { title: "AI Compliance Copilot — CertifyIQ" },
+      { title: "AI Compliance Copilot — CertivoIQ" },
       {
         name: "description",
         content:
           "Ask why a certification failed, get the HUD or IRS citation, household history and recommended remediation — grounded in deterministic engine output.",
       },
-      { property: "og:title", content: "AI Compliance Copilot — CertifyIQ" },
+      { property: "og:title", content: "AI Compliance Copilot — CertivoIQ" },
       {
         property: "og:description",
         content: "The engine supplies the facts. The copilot explains them, with citations a reviewer can check.",
@@ -72,7 +72,7 @@ function CopilotPage() {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "agent",
-      text: "I'm grounded in CertifyIQ's rules engine — I never decide pass or fail, I explain the determination the engine already made and cite the regulation behind it. Ask me about a file, a rule, or a portfolio-wide impact.",
+      text: "I'm grounded in CertivoIQ's rules engine — I never decide pass or fail, I explain the determination the engine already made and cite the regulation behind it. Ask me about a file, a rule, or a portfolio-wide impact.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -99,7 +99,7 @@ function CopilotPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="cite text-[10.5px] uppercase tracking-[0.14em]">
-                    {m.role === "agent" ? "CertifyIQ copilot" : "You"}
+                    {m.role === "agent" ? "CertivoIQ copilot" : "You"}
                   </p>
                   <p className="mt-1 text-[13.5px] leading-relaxed whitespace-pre-line">{m.text}</p>
                   {m.cites && (

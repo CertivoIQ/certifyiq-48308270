@@ -33,7 +33,7 @@ const SIZES = {
   xl: "h-64",
 } as const;
 
-/** Merlin, the CertifyIQ Compliance Wizard. */
+/** Merlin, the CertivoIQ Compliance Wizard. */
 export function Merlin({
   pose = "greeting",
   size = "md",
@@ -48,7 +48,7 @@ export function Merlin({
   return (
     <img
       src={POSES[pose]}
-      alt="Merlin the CertifyIQ compliance wizard"
+      alt="Merlin the CertivoIQ compliance wizard"
       loading="lazy"
       width={768}
       height={1024}

@@ -8,13 +8,13 @@ import { Award, Clock, PlayCircle } from "lucide-react";
 export const Route = createFileRoute("/academy/")({
   head: () => ({
     meta: [
-      { title: "CertifyIQ Academy — Affordable Housing Compliance Training" },
+      { title: "CertivoIQ Academy — Affordable Housing Compliance Training" },
       {
         name: "description",
         content:
           "Train new compliance reviewers to audit certifications: LIHTC, HOTMA, Section 8 and HOME course modules with assessments and certificates of achievement.",
       },
-      { property: "og:title", content: "CertifyIQ Academy — Compliance Training Academy" },
+      { property: "og:title", content: "CertivoIQ Academy — Compliance Training Academy" },
       {
         property: "og:description",
         content: "Structured modules on auditing a certification, with a graded assessment and a printable certificate.",
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/academy/")({
 function KnowledgePage() {
   return (
     <AppShell
-      title="CertifyIQ Academy"
+      title="CertivoIQ Academy"
       subtitle="The compliance academy — how to audit a certification, program by program"
       actions={
         <Button variant="outline" size="sm">

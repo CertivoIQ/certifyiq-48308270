@@ -79,17 +79,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CertifyIQ — Affordable Housing Compliance Intelligence" },
+      { title: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         name: "description",
         content:
-          "CertifyIQ audits LIHTC, Section 8, HOME and HOTMA certifications with a deterministic rules engine, traceable AI extraction and portfolio risk scoring.",
+          "CertivoIQ audits LIHTC, Section 8, HOME and HOTMA certifications with a deterministic rules engine, traceable AI extraction and portfolio risk scoring.",
       },
-      { name: "author", content: "CertifyIQ" },
-      { property: "og:title", content: "CertifyIQ — Affordable Housing Compliance Intelligence" },
+      { name: "author", content: "CertivoIQ" },
+      { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         property: "og:description",
-        content: "Deterministic compliance auditing across all 50 states, plus the CertifyIQ Academy training portal.",
+        content: "Deterministic compliance auditing across all 50 states, plus the CertivoIQ Academy training portal.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

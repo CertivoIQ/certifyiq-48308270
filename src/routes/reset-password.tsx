@@ -11,13 +11,13 @@ import { KeyRound, Loader2 } from "lucide-react";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Set a new password — CertifyIQ" },
+      { title: "Set a new password — CertivoIQ" },
       {
         name: "description",
-        content: "Choose a new password for your CertifyIQ compliance workspace account.",
+        content: "Choose a new password for your CertivoIQ compliance workspace account.",
       },
-      { property: "og:title", content: "Set a new CertifyIQ password" },
-      { property: "og:description", content: "Securely reset the password for your CertifyIQ account." },
+      { property: "og:title", content: "Set a new CertivoIQ password" },
+      { property: "og:description", content: "Securely reset the password for your CertivoIQ account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -82,13 +82,13 @@ function ResetPasswordPage() {
             IQ
           </span>
           <span className="font-display text-xl tracking-tight">
-            Certify<span className="text-gold">IQ</span>
+            Certivo<span className="text-gold">IQ</span>
           </span>
         </Link>
 
         <div className="mt-7 rounded-xl border border-border bg-card p-6 shadow-sm">
           <h1 className="font-display text-[22px] leading-tight">
-            <IQText>Set a new CertifyIQ password</IQText>
+            <IQText>Set a new CertivoIQ password</IQText>
           </h1>
 
           {invalid && !ready ? (

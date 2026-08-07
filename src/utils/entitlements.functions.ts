@@ -149,7 +149,7 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
 
 /**
  * Hard capacity gate for properties and units — blocked past the plan limit
- * with no overage billing, per CertifyIQ's pricing rules.
+ * with no overage billing, per CertivoIQ's pricing rules.
  */
 export const claimCapacity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

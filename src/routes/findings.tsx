@@ -7,13 +7,13 @@ import { FILES, PROPERTIES, PROGRAMS, type Program } from "@/lib/demo-data";
 export const Route = createFileRoute("/findings")({
   head: () => ({
     meta: [
-      { title: "Findings & Remediation — CertifyIQ" },
+      { title: "Findings & Remediation — CertivoIQ" },
       {
         name: "description",
         content:
           "Every compliance finding cited to a versioned rule and anchored to page-level document evidence, with remediation guidance.",
       },
-      { property: "og:title", content: "Findings & Remediation — CertifyIQ" },
+      { property: "og:title", content: "Findings & Remediation — CertivoIQ" },
       {
         property: "og:description",
         content: "Findings read like an annotated document: rule ID, version, citation and highlighted evidence.",

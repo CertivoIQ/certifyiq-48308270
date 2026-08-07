@@ -34,7 +34,7 @@ const NAV = [
   { to: "/findings", label: "Findings", icon: AlertTriangle },
   { to: "/rules", label: "Rule packs", icon: Scale },
   { to: "/copilot", label: "AI Copilot", icon: Sparkles },
-  { to: "/academy", label: "CertifyIQ Academy", icon: GraduationCap },
+  { to: "/academy", label: "CertivoIQ Academy", icon: GraduationCap },
   { to: "/launchpad", label: "LaunchPad", icon: Rocket },
   { to: "/trial", label: "My free trial", icon: Gift },
   { to: "/pricing", label: "Plans & pricing", icon: Tag },
@@ -51,7 +51,7 @@ function Wordmark() {
         IQ
       </span>
       <span className="font-display text-lg leading-none tracking-tight text-sidebar-foreground">
-        Certify<span className="text-gold">IQ</span>
+        Certivo<span className="text-gold">IQ</span>
       </span>
     </Link>
   );
@@ -60,7 +60,7 @@ function Wordmark() {
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { isStaff } = useIsStaff();
   const items = isStaff
-    ? [...NAV, { to: "/crm", label: "CertifyIQ CRM", icon: Briefcase } as const]
+    ? [...NAV, { to: "/crm", label: "CertivoIQ CRM", icon: Briefcase } as const]
     : NAV;
   return (
     <nav className="flex flex-col gap-0.5">

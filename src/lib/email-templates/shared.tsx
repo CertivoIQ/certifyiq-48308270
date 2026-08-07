@@ -26,7 +26,7 @@ export function Brand() {
   return (
     <Section style={{ paddingBottom: '18px' }}>
       <Text style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: BRAND.navy, letterSpacing: '-0.2px' }}>
-        Certify<span style={{ color: BRAND.gold }}>IQ</span>
+        Certivo<span style={{ color: BRAND.gold }}>IQ</span>
       </Text>
       <Text style={{ ...small, marginTop: '2px' }}>Affordable housing compliance platform</Text>
     </Section>
@@ -67,7 +67,7 @@ export function Footer() {
     <>
       <Hr style={hr} />
       <Text style={small}>
-        You are receiving this because you have a CertifyIQ billing account. Manage your plan, payment method and
+        You are receiving this because you have a CertivoIQ billing account. Manage your plan, payment method and
         invoice history any time from your billing page.
       </Text>
     </>

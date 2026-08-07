@@ -7,16 +7,16 @@ import { PLANS, ADDONS } from "@/lib/platform-data";
 export const Route = createFileRoute("/_authenticated/marketing-kit")({
   head: () => ({
     meta: [
-      { title: "CertifyIQ Marketing Kit — Printable Intro One-Pager" },
+      { title: "CertivoIQ Marketing Kit — Printable Intro One-Pager" },
       {
         name: "description",
         content:
-          "Printable CertifyIQ introduction leave-behind for sales agents: platform overview, enterprise benefits, non-compliance risk infographics and the landing page link.",
+          "Printable CertivoIQ introduction leave-behind for sales agents: platform overview, enterprise benefits, non-compliance risk infographics and the landing page link.",
       },
-      { property: "og:title", content: "CertifyIQ Marketing Kit — printable intro one-pager" },
+      { property: "og:title", content: "CertivoIQ Marketing Kit — printable intro one-pager" },
       {
         property: "og:description",
-        content: "Agent-ready, print-optimized CertifyIQ introduction material with infographics and landing page link.",
+        content: "Agent-ready, print-optimized CertivoIQ introduction material with infographics and landing page link.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/marketing-kit")({
   component: MarketingKitPage,
 });
 
-const LANDING = "https://certifyiq.app/welcome";
+const LANDING = "https://certivoiq.com/welcome";
 
 const STATS = [
   { value: "4 min", label: "Average AI review per certification", tone: "navy" },
@@ -36,16 +36,16 @@ const STATS = [
 
 const BARS = [
   { label: "Manual file review", value: "~41 min per certification", pct: 100, color: "var(--print-red)" },
-  { label: "CertifyIQ AI review", value: "~4 min + human sign-off", pct: 12, color: "var(--print-green)" },
+  { label: "CertivoIQ AI review", value: "~4 min + human sign-off", pct: 12, color: "var(--print-green)" },
   { label: "Rule checks applied manually", value: "most items, most of the time", pct: 62, color: "var(--print-amber)" },
-  { label: "Rule checks applied by CertifyIQ", value: "every item, every time", pct: 100, color: "var(--print-green)" },
+  { label: "Rule checks applied by CertivoIQ", value: "every item, every time", pct: 100, color: "var(--print-green)" },
 ];
 
 const BENEFITS = [
   "Portfolio-wide visibility into findings, verdicts and audit readiness across every property and program.",
   "Standardized reviews — identical rule logic applied by every reviewer, in every state.",
   "Higher file throughput without adding compliance headcount.",
-  "CertifyIQ Academy training with Certificates of Achievement for new reviewers.",
+  "CertivoIQ Academy training with Certificates of Achievement for new reviewers.",
   "Merlin, the AI compliance assistant, cites the governing rule the moment a reviewer gets stuck.",
 ];
 
@@ -95,14 +95,14 @@ function MarketingKitPage() {
         <header className="flex items-start justify-between gap-4 border-b border-border pb-5">
           <div>
             <p className="font-display text-[24px] leading-none">
-              Certify<span className="text-gold">IQ</span>
+              Certivo<span className="text-gold">IQ</span>
             </p>
             <p className="mt-1.5 text-[12.5px] text-muted-foreground">
               Affordable housing compliance platform — LIHTC · HOME · Section 8 · HOTMA · RD · Bond
             </p>
           </div>
           <p className="text-right text-[11.5px] leading-snug text-muted-foreground">
-            certifyiq.app/welcome
+            certivoiq.com/welcome
             <br />
             Compliance intelligence for all 50 states
           </p>
@@ -113,7 +113,7 @@ function MarketingKitPage() {
             One missed certification can cost <span className="text-reject">years of tax credits</span>
           </h2>
           <p className="mt-3 text-[13.5px] leading-relaxed text-muted-foreground">
-            CertifyIQ reviews every tenant income certification against the exact rule pack assigned to that property
+            CertivoIQ reviews every tenant income certification against the exact rule pack assigned to that property
             and returns a Pass or Fail score with cited findings and written correction steps — before an auditor ever
             sees the file. A human reviewer keeps final sign-off authority.
           </p>
@@ -134,7 +134,7 @@ function MarketingKitPage() {
         </section>
 
         <section className="print-avoid-break mt-6">
-          <h3 className="cite font-mono">MANUAL REVIEW VS. CERTIFYIQ</h3>
+          <h3 className="cite font-mono">MANUAL REVIEW VS. CERTIVOIQ</h3>
           <div className="mt-3 space-y-3">
             {BARS.map((b) => (
               <div key={b.label}>
@@ -216,7 +216,7 @@ function MarketingKitPage() {
 
         <footer className="mt-6 border-t border-border pt-4">
           <p className="cite">
-            CertifyIQ · hello@certifyiq.app · Leave-behind for agent use — figures reflect platform benchmarks.
+            CertivoIQ · hello@certivoiq.com · Leave-behind for agent use — figures reflect platform benchmarks.
           </p>
         </footer>
       </article>

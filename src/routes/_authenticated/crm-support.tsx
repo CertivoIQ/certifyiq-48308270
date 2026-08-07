@@ -36,12 +36,12 @@ import {
 export const Route = createFileRoute("/_authenticated/crm-support")({
   head: () => ({
     meta: [
-      { title: "CertifyIQ CRM Support — Staff Only" },
+      { title: "CertivoIQ CRM Support — Staff Only" },
       {
         name: "description",
-        content: "Internal CertifyIQ support case queue for staff only.",
+        content: "Internal CertivoIQ support case queue for staff only.",
       },
-      { property: "og:title", content: "CertifyIQ CRM Support" },
+      { property: "og:title", content: "CertivoIQ CRM Support" },
       { property: "og:description", content: "Staff-only support case management." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

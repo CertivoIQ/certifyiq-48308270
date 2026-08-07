@@ -165,7 +165,7 @@ export const PLANS = [
 
 export const ADDONS = [
   { name: "Additional state rule packs", price: "$99–$199 / month per state" },
-  { name: "CertifyIQ Academy add-on", price: "$49 / user / month or $499 / property / month" },
+  { name: "CertivoIQ Academy add-on", price: "$49 / user / month or $499 / property / month" },
   { name: "API access", price: "$500–$2,000 / month by usage" },
   { name: "High-volume AI document processing", price: "$3 per uploaded certification beyond plan allowance" },
   { name: "AI Onboarding & Migration Wizard", price: "Included on every plan — no account rep required" },
@@ -193,7 +193,7 @@ export const ACADEMY_ADDONS = [
 export const LAUNCHPAD_STEPS = [
   {
     id: 1,
-    title: "Welcome to CertifyIQ",
+    title: "Welcome to CertivoIQ",
     lead: "Congratulations on taking the next step toward making compliance easier.",
     detail: "Let's get your organization audit-ready. Estimated setup time: 20–30 minutes.",
     cta: "Start setup",
@@ -209,7 +209,7 @@ export const LAUNCHPAD_STEPS = [
     id: 3,
     title: "Build your portfolio",
     lead: "Upload Excel, CSV or an export from your existing software — or create properties manually.",
-    detail: "AI maps your columns to CertifyIQ fields automatically.",
+    detail: "AI maps your columns to CertivoIQ fields automatically.",
     cta: "Import portfolio",
   },
   {
@@ -258,8 +258,8 @@ export const LAUNCHPAD_STEPS = [
   {
     id: 10,
     title: "Graduation",
-    lead: "You are officially live on CertifyIQ.",
-    detail: "Awarded: CertifyIQ Launch Certified.",
+    lead: "You are officially live on CertivoIQ.",
+    detail: "Awarded: CertivoIQ Launch Certified.",
     cta: "Finish",
   },
 ];

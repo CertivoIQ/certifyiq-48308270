@@ -13,10 +13,10 @@ function Denied() {
         <ShieldAlert className="mx-auto size-9 text-flag" />
         <h1 className="mt-3 font-display text-[21px]">Staff access only</h1>
         <p className="mt-2 text-[13.5px] text-muted-foreground">
-          The CertifyIQ CRM Dashboard is restricted to verified @certifyiq.app accounts.
+          The CertivoIQ CRM Dashboard is restricted to verified @certivoiq.com accounts.
         </p>
         <Button className="mt-5" asChild>
-          <Link to="/">Back to CertifyIQ</Link>
+          <Link to="/">Back to CertivoIQ</Link>
         </Button>
       </div>
     </div>
@@ -55,7 +55,7 @@ export function CrmShell({
           </span>
           <div className="min-w-0">
             <h1 className="truncate font-display text-[20px] leading-tight text-gold-ink sm:text-[24px]">
-              <IQText>CertifyIQ CRM Dashboard</IQText>
+              <IQText>CertivoIQ CRM Dashboard</IQText>
             </h1>
             <p className="cite">Internal · staff only</p>
           </div>

@@ -3,7 +3,7 @@ import { Moon, Sun } from "lucide-react";
 
 type Theme = "light" | "dark";
 
-const KEY = "certifyiq-theme";
+const KEY = "certivoiq-theme";
 
 function apply(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark");

@@ -9,13 +9,13 @@ import { VIDEO_CHAPTERS, PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/tr
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "CertifyIQ — Audit-Ready Affordable Housing Compliance" },
+      { title: "CertivoIQ — Audit-Ready Affordable Housing Compliance" },
       {
         name: "description",
         content:
-          "See how CertifyIQ protects your tax credits: AI reviews every LIHTC, HOME, Section 8 and HOTMA certification, cites the rule, and hands your reviewer the correction steps before an audit does.",
+          "See how CertivoIQ protects your tax credits: AI reviews every LIHTC, HOME, Section 8 and HOTMA certification, cites the rule, and hands your reviewer the correction steps before an audit does.",
       },
-      { property: "og:title", content: "CertifyIQ — Protect your tax credits before the auditor arrives" },
+      { property: "og:title", content: "CertivoIQ — Protect your tax credits before the auditor arrives" },
       {
         property: "og:description",
         content: "Watch the 3-minute demo, then run a full AI compliance review on 3 certifications free for 7 days.",
@@ -31,7 +31,7 @@ const WHY = [
   {
     icon: ShieldCheck,
     title: "Tax credits stay intact",
-    body: "A single uncorrected §42 finding can trigger IRS Form 8823 and put allocated credits at risk. CertifyIQ catches it while it is still curable.",
+    body: "A single uncorrected §42 finding can trigger IRS Form 8823 and put allocated credits at risk. CertivoIQ catches it while it is still curable.",
   },
   {
     icon: TrendingDown,
@@ -54,7 +54,7 @@ function WelcomePage() {
             <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
               IQ
             </span>
-            <span className="font-display text-lg leading-none">Certify<span className="text-gold">IQ</span></span>
+            <span className="font-display text-lg leading-none">Certivo<span className="text-gold">IQ</span></span>
           </Link>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild>
@@ -79,7 +79,7 @@ function WelcomePage() {
             The operating system for <span className="brand-text">affordable housing compliance</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-[15.5px] leading-relaxed text-muted-foreground">
-            CertifyIQ reviews LIHTC, HOME, Section 8 and HOTMA certifications against the rule pack assigned to each
+            CertivoIQ reviews LIHTC, HOME, Section 8 and HOTMA certifications against the rule pack assigned to each
             property, returns a Pass or Fail score with cited findings and correction steps, and routes it to a human for
             final approval.
           </p>
@@ -100,17 +100,17 @@ function WelcomePage() {
                 <button
                   type="button"
                   onClick={() =>
-                    toast.info("Playing: “Inside CertifyIQ”", {
+                    toast.info("Playing: “Inside CertivoIQ”", {
                       description: "4 minutes — what it is, how it works, and what non-compliance really costs.",
                     })
                   }
                   className="transition-transform hover:scale-105"
-                  aria-label="Play the CertifyIQ instructional video"
+                  aria-label="Play the CertivoIQ instructional video"
                 >
                   <PlayCircle className="mx-auto size-20" strokeWidth={1.3} />
                 </button>
                 <p className="mt-4 font-display text-[24px]">
-                  Inside Certify<span className="text-gold">IQ</span> — the 4-minute compliance walkthrough
+                  Inside Certivo<span className="text-gold">IQ</span> — the 4-minute compliance walkthrough
                 </p>
                 <p className="mt-1.5 text-[13px] opacity-85">
                   What the platform is · how the AI review works · why a human eye alone puts credits at risk
@@ -135,7 +135,7 @@ function WelcomePage() {
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-[14px] leading-relaxed text-muted-foreground">
             Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax
-            credits. Manual review catches most of them, most of the time. CertifyIQ tests all of them, every time.
+            credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.
           </p>
           <div className="mt-6 grid gap-3 md:grid-cols-2">
             {PENALTY_RISKS.map((r) => (
@@ -165,7 +165,7 @@ function WelcomePage() {
             ))}
           </div>
           <p className="mx-auto mt-5 max-w-2xl text-center text-[13.5px] leading-relaxed text-muted-foreground">
-            One avoided non-curable finding pays for years of CertifyIQ. Your reviewers stop hunting for citations and
+            One avoided non-curable finding pays for years of CertivoIQ. Your reviewers stop hunting for citations and
             start signing off with confidence — and every plan starts with a {TRIAL_OFFER.label}.
           </p>
         </section>
@@ -202,7 +202,7 @@ function WelcomePage() {
       </main>
 
       <footer className="border-t border-border py-6 text-center">
-        <p className="cite">CertifyIQ · compliance intelligence for all 50 states</p>
+        <p className="cite">CertivoIQ · compliance intelligence for all 50 states</p>
       </footer>
     </div>
   );
