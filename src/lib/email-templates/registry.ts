@@ -22,4 +22,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'invoice-created': invoiceCreatedTemplate,
   'payment-succeeded': paymentSucceededTemplate,
   'payment-failed': paymentFailedTemplate,
+  'intro-cold': introColdTemplate,
 }
+
