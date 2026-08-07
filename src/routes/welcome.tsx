@@ -2,11 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
-import { PlayCircle, ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
-import { VIDEO_CHAPTERS, PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
+import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
+import { PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
+import { ExplainerVideo } from "@/components/explainer-video";
 import { useT, useLanguage } from "@/lib/i18n/provider";
-import { VIDEO_CHAPTERS_ES, PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
+import { PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -42,7 +42,6 @@ const WHY = [
 function WelcomePage() {
   const t = useT();
   const { lang } = useLanguage();
-  const chapters = lang === "es" ? VIDEO_CHAPTERS_ES : VIDEO_CHAPTERS;
   const risks = lang === "es" ? PENALTY_RISKS_ES : PENALTY_RISKS;
   const valueMath = lang === "es" ? VALUE_MATH_ES : VALUE_MATH;
   return (

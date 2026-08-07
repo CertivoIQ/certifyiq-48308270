@@ -2,39 +2,6 @@
  * Spanish copy for the landing-page content lists. Same order and length as
  * the English arrays in `@/lib/trial-data`; the landing page swaps by language.
  */
-export const VIDEO_CHAPTERS_ES = [
-  {
-    time: "0:00",
-    title: "Qué es CertivoIQ",
-    body: "Un solo sistema de registro de cumplimiento para LIHTC, Sección 8, HOME y HOTMA en los 50 estados.",
-  },
-  {
-    time: "0:40",
-    title: "Registrar una propiedad",
-    body: "Elija los programas al registrarla y CertivoIQ asigna el paquete de reglas federal y estatal exacto.",
-  },
-  {
-    time: "1:25",
-    title: "Cargar el expediente",
-    body: "TIC, certificaciones de ingresos, verificaciones, EIV, contratos y documentos de activos: una carpeta a la vez.",
-  },
-  {
-    time: "2:10",
-    title: "La revisión con IA",
-    body: "Cada campo se extrae y se contrasta con cada regla, y se califica Aprobado o No aprobado con su cita.",
-  },
-  {
-    time: "3:05",
-    title: "Correcciones y aprobación",
-    body: "Pasos de corrección ordenados con responsables y fechas límite; una persona conserva la aprobación final.",
-  },
-  {
-    time: "3:50",
-    title: "El día de la auditoría",
-    body: "Hallazgos, plazos y versiones de reglas ya están documentados antes de que el auditor pregunte.",
-  },
-];
-
 export const PENALTY_RISKS_ES = [
   {
     risk: "Ingreso del hogar mal calculado",
