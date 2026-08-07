@@ -63,13 +63,8 @@ export const en = {
     "CertivoIQ reviews LIHTC, HOME, Section 8 and HOTMA certifications against the rule pack assigned to each property, returns a Pass or Fail score with cited findings and correction steps, and routes it to a human for final approval.",
   "welcome.cta.trial": "Start your 7-day trial",
   "welcome.cta.sample": "See a reviewed certification",
-  "welcome.video.play": "Play the CertivoIQ instructional video",
-  "welcome.video.toast.title": "Playing: “Inside CertivoIQ”",
-  "welcome.video.toast.body": "4 minutes — what it is, how it works, and what non-compliance really costs.",
-  "welcome.video.title.pre": "Inside",
-  "welcome.video.title.post": "— the 4-minute compliance walkthrough",
-  "welcome.video.sub":
-    "What the platform is · how the AI review works · why a human eye alone puts credits at risk",
+  "welcome.video.label": "CertivoIQ compliance intelligence explainer video",
+  "welcome.video.trialCta": "Start 7 Day Free Trial",
   "welcome.risks.title": "What a human eye alone misses — and what it costs",
   "welcome.risks.body":
     "Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.",

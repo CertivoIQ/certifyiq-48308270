@@ -304,15 +304,6 @@ export const LANDING_CLICKS = [
  * Landing page instructional video
  * ------------------------------------------------------------------ */
 
-export const VIDEO_CHAPTERS = [
-  { time: "0:00", title: "What CertivoIQ is", body: "One compliance system of record for LIHTC, Section 8, HOME and HOTMA across all 50 states." },
-  { time: "0:40", title: "Register a property", body: "Pick the programs at registration and CertivoIQ assigns the exact federal and state rule pack." },
-  { time: "1:25", title: "Upload the file", body: "TICs, income certifications, verifications, EIVs, leases and asset docs — a folder at a time." },
-  { time: "2:10", title: "The AI review", body: "Every field is extracted and tested against each rule, then scored Pass or Fail with the citation." },
-  { time: "3:05", title: "Corrections & sign-off", body: "Ordered correction steps with owners and due dates — a human reviewer keeps final approval." },
-  { time: "3:50", title: "Audit day", body: "Findings, timelines and rule versions are already documented before the auditor asks." },
-];
-
 export const PENALTY_RISKS = [
   { risk: "Miscalculated household income", cost: "Unit disqualified · credits recaptured", detail: "A single overlooked bonus, self-employment schedule or asset imputation flips a unit out of compliance for the whole year." },
   { risk: "Late or missing recertification", cost: "IRS Form 8823 finding", detail: "Manual calendars slip. One missed annual recert can put an entire building's set-aside in question." },
