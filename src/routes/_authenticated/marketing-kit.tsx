@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowLeft } from "lucide-react";
+import { PLANS, ADDONS } from "@/lib/platform-data";
+
 
 export const Route = createFileRoute("/_authenticated/marketing-kit")({
   head: () => ({
