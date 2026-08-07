@@ -393,6 +393,119 @@ export type Database = {
         }
         Relationships: []
       }
+      support_case_notes: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          case_id: string
+          created_at: string
+          id: string
+          internal: boolean
+          note: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          case_id: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          note: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          note?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_case_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_cases: {
+        Row: {
+          account_id: string | null
+          assigned_to: string | null
+          case_number: string
+          channel: string
+          contact_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          last_response_at: string | null
+          priority: string
+          source_email: string | null
+          status: string
+          subject: string
+          tags: string[] | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          assigned_to?: string | null
+          case_number?: string
+          channel?: string
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_response_at?: string | null
+          priority?: string
+          source_email?: string | null
+          status?: string
+          subject: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          assigned_to?: string | null
+          case_number?: string
+          channel?: string
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_response_at?: string | null
+          priority?: string
+          source_email?: string | null
+          status?: string
+          subject?: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_cases_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "crm_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_cases_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_counters: {
         Row: {
           ai_docs_billed: number
@@ -488,6 +601,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_support_case_number: { Args: never; Returns: string }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
