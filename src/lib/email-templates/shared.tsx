@@ -1,5 +1,6 @@
 import React from 'react'
 import { Body, Container, Head, Heading, Hr, Html, Img, Link, Section, Text } from '@react-email/components'
+import { emailT, type EmailLocale } from './i18n'
 
 export const BRAND = {
   navy: '#131a3a',
