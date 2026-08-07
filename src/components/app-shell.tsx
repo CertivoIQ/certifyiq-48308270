@@ -16,6 +16,7 @@ import {
   Briefcase,
   Shield,
   CreditCard,
+  HelpCircle,
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
