@@ -6,6 +6,7 @@ const contactSchema = z.object({
   email: z.string().email().min(1).max(120),
   subject: z.string().min(1).max(200),
   message: z.string().min(1).max(5000),
+  locale: z.enum(["en", "es"]).optional(),
 });
 
 export const submitContactSupport = createServerFn({ method: "POST" })
@@ -42,6 +43,7 @@ export const submitContactSupport = createServerFn({ method: "POST" })
             name: data.name,
             caseNumber: caseRow.case_number,
             subject: data.subject,
+            locale: data.locale ?? "en",
           },
           idempotencyKey: `support-request-${caseRow.id}`,
         }

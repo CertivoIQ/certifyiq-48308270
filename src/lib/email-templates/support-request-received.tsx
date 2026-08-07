@@ -1,6 +1,7 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { emailT, type EmailLocale } from './i18n'
 import {
   BRAND,
   Body,
@@ -26,6 +27,7 @@ interface Props {
   caseNumber?: string
   subject?: string
   supportUrl?: string
+  locale?: EmailLocale
 }
 
 const Email = ({
@@ -33,56 +35,61 @@ const Email = ({
   caseNumber,
   subject,
   supportUrl = 'https://certivoiq.com/contact-support',
-}: Props) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>{`We received your support request — case ${caseNumber ?? '#'} · CertivoIQ`}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Brand />
-        <Heading style={heading}>Thanks for reaching out</Heading>
-        <Text style={text}>
-          {name ? `Hi ${name},` : 'Hi there,'} we have received your support request and a CertivoIQ
-          specialist will review it shortly.
-        </Text>
+  locale = 'en',
+}: Props) => {
+  const t = (key: Parameters<typeof emailT>[1], vars?: Record<string, string | number>) =>
+    emailT(locale, key, vars)
+  const caseLabel = caseNumber ?? t('support.pending')
 
-        <Section style={{ padding: '14px 16px', backgroundColor: '#f8f9fc', borderRadius: '8px', marginBottom: '20px' }}>
-          <Text style={{ ...text, margin: 0, fontWeight: 600 }}>
-            Case number: {caseNumber ?? 'Pending'}
+  return (
+    <Html lang={locale} dir="ltr">
+      <Head />
+      <Preview>{t('support.preview', { caseNumber: caseNumber ?? '#' })}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Brand locale={locale} />
+          <Heading style={heading}>{t('support.heading')}</Heading>
+          <Text style={text}>
+            {name ? t('support.greeting.named', { name }) : t('support.greeting.plain')}{' '}
+            {t('support.body')}
           </Text>
-          {subject && (
-            <Text style={{ ...text, margin: '6px 0 0 0', color: BRAND.muted }}>
-              Subject: {subject}
+
+          <Section
+            style={{ padding: '14px 16px', backgroundColor: '#f8f9fc', borderRadius: '8px', marginBottom: '20px' }}
+          >
+            <Text style={{ ...text, margin: 0, fontWeight: 600 }}>
+              {t('support.caseNumber', { caseNumber: caseLabel })}
             </Text>
-          )}
-        </Section>
+            {subject && (
+              <Text style={{ ...text, margin: '6px 0 0 0', color: BRAND.muted }}>
+                {t('support.subjectLine', { subject })}
+              </Text>
+            )}
+          </Section>
 
-        <Text style={text}>
-          Most questions are answered within one business day. If you need to add more details,
-          reply to this email and the case will be updated automatically.
-        </Text>
+          <Text style={text}>{t('support.turnaround')}</Text>
 
-        <Section style={{ paddingBottom: '14px' }}>
-          <CtaButton href={supportUrl}>Open support page</CtaButton>
-        </Section>
-        <Hr style={hr} />
-        <Text style={small}>
-          You are receiving this because you submitted a request through the CertivoIQ support page. Reply to this email to add more details.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
-)
+          <Section style={{ paddingBottom: '14px' }}>
+            <CtaButton href={supportUrl}>{t('support.cta')}</CtaButton>
+          </Section>
+          <Hr style={hr} />
+          <Text style={small}>{t('support.footer')}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `We received your support request — case ${data['caseNumber'] ?? '#'} · CertivoIQ`,
+    emailT(data['locale'], 'support.subject', { caseNumber: data['caseNumber'] ?? '#' }),
   displayName: 'Support request received',
   previewData: {
     name: 'Jordan',
     caseNumber: 'SC-00042',
     subject: 'Question about LIHTC income limits',
     supportUrl: 'https://certivoiq.com/contact-support',
+    locale: 'en',
   },
 } satisfies TemplateEntry

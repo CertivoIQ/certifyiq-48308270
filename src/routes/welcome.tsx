@@ -5,6 +5,10 @@ import { PLANS, TRIAL } from "@/lib/platform-data";
 import { PlayCircle, ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { VIDEO_CHAPTERS, PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
+import { useT, useLanguage } from "@/lib/i18n/provider";
+import { VIDEO_CHAPTERS_ES, PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
+import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -30,24 +34,17 @@ export const Route = createFileRoute("/welcome")({
 });
 
 const WHY = [
-  {
-    icon: ShieldCheck,
-    title: "Tax credits stay intact",
-    body: "A single uncorrected §42 finding can trigger IRS Form 8823 and put allocated credits at risk. CertivoIQ catches it while it is still curable.",
-  },
-  {
-    icon: TrendingDown,
-    title: "Fewer audit findings",
-    body: "Every certification is scored Pass or Fail against the exact rule pack assigned to that property, with the correction steps written out.",
-  },
-  {
-    icon: Clock,
-    title: "Minutes, not hours",
-    body: "Reviews drop from ~41 minutes of manual file work to about 4 minutes, with a human keeping final sign-off authority.",
-  },
-];
+  { icon: ShieldCheck, titleKey: "welcome.why.1.title", bodyKey: "welcome.why.1.body" },
+  { icon: TrendingDown, titleKey: "welcome.why.2.title", bodyKey: "welcome.why.2.body" },
+  { icon: Clock, titleKey: "welcome.why.3.title", bodyKey: "welcome.why.3.body" },
+] as const;
 
 function WelcomePage() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const chapters = lang === "es" ? VIDEO_CHAPTERS_ES : VIDEO_CHAPTERS;
+  const risks = lang === "es" ? PENALTY_RISKS_ES : PENALTY_RISKS;
+  const valueMath = lang === "es" ? VALUE_MATH_ES : VALUE_MATH;
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
@@ -60,14 +57,16 @@ function WelcomePage() {
           </Link>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild>
-              <Link to="/contact-support">Contact Support</Link>
+              <Link to="/contact-support">{t("welcome.nav.support")}</Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
-              <Link to="/pricing">Pricing</Link>
+              <Link to="/pricing">{t("welcome.nav.pricing")}</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/">Open the platform</Link>
+              <Link to="/">{t("welcome.nav.open")}</Link>
             </Button>
+            <LanguageToggle />
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -75,22 +74,21 @@ function WelcomePage() {
       <main className="mx-auto max-w-6xl px-5 py-12">
         <section className="text-center">
           <Pill tone="seal">
-            {TRIAL.daysLeft} days left · {TRIAL.uploadsAllowed} free AI certification reviews
+            {t("welcome.pill", { daysLeft: TRIAL.daysLeft, allowed: TRIAL.uploadsAllowed })}
           </Pill>
           <h1 className="mx-auto mt-5 max-w-3xl font-display text-[38px] leading-[1.08] sm:text-[52px]">
-            The operating system for <span className="brand-text">affordable housing compliance</span>
+            {t("welcome.hero.title.pre")}{" "}
+            <span className="brand-text">{t("welcome.hero.title.accent")}</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-[15.5px] leading-relaxed text-muted-foreground">
-            CertivoIQ reviews LIHTC, HOME, Section 8 and HOTMA certifications against the rule pack assigned to each
-            property, returns a Pass or Fail score with cited findings and correction steps, and routes it to a human for
-            final approval.
+            {t("welcome.hero.body")}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" asChild>
-              <Link to="/launchpad">Start your 7-day trial</Link>
+              <Link to="/launchpad">{t("welcome.cta.trial")}</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link to="/files">See a reviewed certification</Link>
+              <Link to="/files">{t("welcome.cta.sample")}</Link>
             </Button>
           </div>
         </section>
@@ -102,25 +100,26 @@ function WelcomePage() {
                 <button
                   type="button"
                   onClick={() =>
-                    toast.info("Playing: “Inside CertivoIQ”", {
-                      description: "4 minutes — what it is, how it works, and what non-compliance really costs.",
+                    toast.info(t("welcome.video.toast.title"), {
+                      description: t("welcome.video.toast.body"),
                     })
                   }
                   className="transition-transform hover:scale-105"
-                  aria-label="Play the CertivoIQ instructional video"
+                  aria-label={t("welcome.video.play")}
                 >
                   <PlayCircle className="mx-auto size-20" strokeWidth={1.3} />
                 </button>
                 <p className="mt-4 font-display text-[24px]">
-                  Inside Certivo<span className="text-gold">IQ</span> — the 4-minute compliance walkthrough
+                  {t("welcome.video.title.pre")} Certivo<span className="text-gold">IQ</span>{" "}
+                  {t("welcome.video.title.post")}
                 </p>
                 <p className="mt-1.5 text-[13px] opacity-85">
-                  What the platform is · how the AI review works · why a human eye alone puts credits at risk
+                  {t("welcome.video.sub")}
                 </p>
               </div>
             </div>
             <div className="grid gap-x-6 gap-y-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3">
-              {VIDEO_CHAPTERS.map((c) => (
+              {chapters.map((c) => (
                 <div key={c.time} className="border-l-2 border-primary/30 pl-3">
                   <p className="cite font-mono">{c.time}</p>
                   <p className="mt-0.5 font-display text-[15px]">{c.title}</p>
@@ -133,14 +132,13 @@ function WelcomePage() {
 
         <section className="mt-12">
           <h2 className="text-center font-display text-[30px]">
-            What a human eye alone misses — and what it costs
+            {t("welcome.risks.title")}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-[14px] leading-relaxed text-muted-foreground">
-            Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax
-            credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.
+            {t("welcome.risks.body")}
           </p>
           <div className="mt-6 grid gap-3 md:grid-cols-2">
-            {PENALTY_RISKS.map((r) => (
+            {risks.map((r) => (
               <Panel key={r.risk} className="lift" bodyClassName="p-5">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0 text-flag" />
@@ -156,9 +154,9 @@ function WelcomePage() {
         </section>
 
         <section className="mt-12">
-          <h2 className="text-center font-display text-[30px]">The Smart Investment That Pays for Itself</h2>
+          <h2 className="text-center font-display text-[30px]">{t("welcome.value.title")}</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {VALUE_MATH.map((v) => (
+            {valueMath.map((v) => (
               <Panel key={v.label} bodyClassName="p-5 text-center">
                 <p className="brand-text font-display text-[26px] leading-none">{v.value}</p>
                 <p className="mt-2 font-display text-[14.5px]">{v.label}</p>
@@ -167,27 +165,27 @@ function WelcomePage() {
             ))}
           </div>
           <p className="mx-auto mt-5 max-w-2xl text-center text-[13.5px] leading-relaxed text-muted-foreground">
-            One avoided non-curable finding pays for years of CertivoIQ. Your reviewers stop hunting for citations and
-            start signing off with confidence — and every plan starts with a {TRIAL_OFFER.label}.
+            {t("welcome.value.body", { offer: TRIAL_OFFER.label })}
           </p>
         </section>
 
 
         <section className="mt-10 grid gap-4 md:grid-cols-3">
-          {WHY.map(({ icon: Icon, title, body }) => (
-            <Panel key={title} className="lift" bodyClassName="p-6">
+          {WHY.map(({ icon: Icon, titleKey, bodyKey }) => (
+            <Panel key={titleKey} className="lift" bodyClassName="p-6">
               <Icon className="size-5 text-primary" />
-              <h2 className="mt-3 font-display text-[18px]">{title}</h2>
-              <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{body}</p>
+              <h2 className="mt-3 font-display text-[18px]">{t(titleKey)}</h2>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{t(bodyKey)}</p>
             </Panel>
           ))}
         </section>
 
         <section className="mt-12 rounded-lg border border-primary/25 bg-accent px-6 py-8 text-center">
-          <h2 className="font-display text-[26px] text-accent-foreground">Your trial ends in {TRIAL.daysLeft} days</h2>
+          <h2 className="font-display text-[26px] text-accent-foreground">
+            {t("welcome.close.title", { daysLeft: TRIAL.daysLeft })}
+          </h2>
           <p className="mx-auto mt-2 max-w-xl text-[13.5px] text-muted-foreground">
-            After the trial, keep unlimited certification reviews, state rule packs and Academy training on the{" "}
-            {PLANS[1]!.name} plan at {PLANS[1]!.price}/month.
+            {t("welcome.close.body", { plan: PLANS[1]!.name, price: PLANS[1]!.price })}
           </p>
           <ul className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-x-5 gap-y-2">
             {PLANS[1]!.features.slice(0, 4).map((f) => (
@@ -198,7 +196,7 @@ function WelcomePage() {
             ))}
           </ul>
           <Button className="mt-6" size="lg" asChild>
-            <Link to="/pricing">Purchase a plan</Link>
+            <Link to="/pricing">{t("welcome.close.cta")}</Link>
           </Button>
         </section>
       </main>

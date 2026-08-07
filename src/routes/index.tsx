@@ -10,6 +10,7 @@ import {
   riskBand,
 } from "@/lib/demo-data";
 import { ArrowUpRight, TrendingDown } from "lucide-react";
+import { useT, useFormatters } from "@/lib/i18n/provider";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,36 +35,38 @@ export const Route = createFileRoute("/")({
 });
 
 function ExecutiveDashboard() {
+  const t = useT();
+  const { number } = useFormatters();
   const ranked = [...PROPERTIES].sort((a, b) => b.risk - a.risk);
   const maxFindings = Math.max(...FINDINGS_BY_PROGRAM.map((f) => f.count));
 
   return (
     <AppShell
-      title="CertivoIQ Dashboard"
-      subtitle="Meridian Housing Partners · 185 properties · 14 states · period ending Aug 6, 2026"
+      title={t("dash.title")}
+      subtitle={t("dash.subtitle")}
       actions={
         <>
           <Button variant="outline" size="sm">
-            Export board packet
+            {t("dash.export")}
           </Button>
           <Button size="sm" asChild>
-            <Link to="/files">Review queue</Link>
+            <Link to="/files">{t("dash.reviewQueue")}</Link>
           </Button>
         </>
       }
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Properties" value={PORTFOLIO.properties} hint={`${PORTFOLIO.units.toLocaleString()} units under management`} />
-        <Stat label="Open findings" value={PORTFOLIO.openFindings} hint="Down 22% over six months" tone="flag" />
-        <Stat label="8823 exposure" value={PORTFOLIO.exposure8823} hint="Units at risk of IRS Form 8823 reporting" tone="reject" />
-        <Stat label="Auto soft-approval" value={`${PORTFOLIO.autoApprovalRate}%`} hint={`${PORTFOLIO.avgReviewMinutes} min average review`} tone="seal" />
+        <Stat label={t("dash.stat.properties")} value={PORTFOLIO.properties} hint={t("dash.stat.properties.hint", { units: number(PORTFOLIO.units) })} />
+        <Stat label={t("dash.stat.openFindings")} value={PORTFOLIO.openFindings} hint={t("dash.stat.openFindings.hint")} tone="flag" />
+        <Stat label={t("dash.stat.exposure")} value={PORTFOLIO.exposure8823} hint={t("dash.stat.exposure.hint")} tone="reject" />
+        <Stat label={t("dash.stat.autoApproval")} value={`${PORTFOLIO.autoApprovalRate}%`} hint={t("dash.stat.autoApproval.hint", { minutes: PORTFOLIO.avgReviewMinutes })} tone="seal" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Panel
           className="lg:col-span-2"
-          title="Risk trajectory"
-          description="Portfolio risk score and open findings, trailing six months"
+          title={t("dash.risk.title")}
+          description={t("dash.risk.desc")}
         >
           <div className="flex items-end gap-2 sm:gap-4">
             {RISK_TREND.map((p) => (
@@ -81,16 +84,16 @@ function ExecutiveDashboard() {
           </div>
           <div className="mt-4 flex items-center gap-2 border-t border-border pt-3 text-[12.5px] text-muted-foreground">
             <TrendingDown className="size-4 text-seal" />
-            Risk score improved 20 points since HOTMA rule pack v2.0 deployment.
+            {t("dash.risk.note")}
           </div>
         </Panel>
 
         <div className="grid gap-4">
-          <Panel title="Program readiness">
+          <Panel title={t("dash.readiness.title")}>
             <div className="space-y-4">
               {[
-                { label: "HOTMA readiness", value: PORTFOLIO.hotmaReadiness, tone: "flag" as const },
-                { label: "NSPIRE readiness", value: PORTFOLIO.nspireReadiness, tone: "seal" as const },
+                { label: t("dash.readiness.hotma"), value: PORTFOLIO.hotmaReadiness, tone: "flag" as const },
+                { label: t("dash.readiness.nspire"), value: PORTFOLIO.nspireReadiness, tone: "seal" as const },
               ].map((r) => (
                 <div key={r.label}>
                   <div className="mb-1.5 flex items-baseline justify-between">
@@ -102,7 +105,7 @@ function ExecutiveDashboard() {
               ))}
             </div>
           </Panel>
-          <Panel title="Findings by program">
+          <Panel title={t("dash.byProgram.title")}>
             <div className="space-y-3">
               {FINDINGS_BY_PROGRAM.map((f) => (
                 <div key={f.program}>
@@ -121,12 +124,12 @@ function ExecutiveDashboard() {
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Panel
           className="lg:col-span-2"
-          title="Highest-risk properties"
-          description="Ranked by predicted probability of agency findings"
+          title={t("dash.topRisk.title")}
+          description={t("dash.topRisk.desc")}
           actions={
             <Button variant="ghost" size="sm" asChild>
               <Link to="/properties">
-                All properties <ArrowUpRight className="size-3.5" />
+                {t("dash.topRisk.all")} <ArrowUpRight className="size-3.5" />
               </Link>
             </Button>
           }
@@ -146,12 +149,12 @@ function ExecutiveDashboard() {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-display text-[15px]">{p.name}</span>
                       <Cite>
-                        {p.city}, {p.state} · {p.units} units · {p.programs.join(" / ")}
+                        {p.city}, {p.state} · {p.units} {t("common.units")} · {p.programs.join(" / ")}
                       </Cite>
                     </span>
                     <Pill tone={band.tone}>{band.label}</Pill>
                     <span className="cite w-full sm:w-auto">
-                      {p.openFindings} findings · {p.overdueRecerts} overdue recerts
+                      {p.openFindings} {t("common.findings")} · {p.overdueRecerts} {t("common.overdueRecerts")}
                     </span>
                   </Link>
                 </li>
@@ -160,14 +163,14 @@ function ExecutiveDashboard() {
           </ul>
         </Panel>
 
-        <Panel title="Upcoming obligations">
+        <Panel title={t("dash.obligations.title")}>
           <ul className="space-y-3.5">
             {[
-              { label: "Recertifications due (30 days)", value: PORTFOLIO.upcomingRecerts, tone: "flag" as const },
-              { label: "Agency audits scheduled", value: PORTFOLIO.upcomingAudits, tone: "neutral" as const },
-              { label: "NSPIRE inspections", value: 7, tone: "neutral" as const },
-              { label: "Interim certifications pending", value: 23, tone: "flag" as const },
-              { label: "Files awaiting soft approval", value: 38, tone: "neutral" as const },
+              { label: t("dash.obligations.recerts"), value: PORTFOLIO.upcomingRecerts, tone: "flag" as const },
+              { label: t("dash.obligations.audits"), value: PORTFOLIO.upcomingAudits, tone: "neutral" as const },
+              { label: t("dash.obligations.nspire"), value: 7, tone: "neutral" as const },
+              { label: t("dash.obligations.interim"), value: 23, tone: "flag" as const },
+              { label: t("dash.obligations.softApproval"), value: 38, tone: "neutral" as const },
             ].map((o) => (
               <li key={o.label} className="flex items-center justify-between gap-3 border-b border-border pb-3 last:border-0 last:pb-0">
                 <span className="text-[13px] text-muted-foreground">{o.label}</span>
