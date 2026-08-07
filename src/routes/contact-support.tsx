@@ -39,13 +39,15 @@ const contactSchema = z.object({
   message: z.string().min(1, "Please enter a message").max(5000),
 });
 
+type ContactForm = { name: string; email: string; subject: string; message: string };
+
 function ContactSupportPage() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<ContactForm>({ name: "", email: "", subject: "", message: "" });
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactForm, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ caseNumber: string; message: string } | null>(null);
 
-  const update = (field: keyof typeof form, value: string) => {
+  const update = (field: keyof ContactForm, value: string) => {
     setForm((f) => ({ ...f, [field]: value }));
     setErrors((e) => ({ ...e, [field]: "" }));
   };
