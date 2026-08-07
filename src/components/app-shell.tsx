@@ -134,23 +134,24 @@ export function AppShell({
   actions?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[248px_1fr]">
       <aside className="hidden flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 lg:sticky lg:top-0 lg:flex lg:h-screen">
         <Wordmark />
         <p className="mt-1.5 pl-[42px] text-[11px] tracking-wide text-sidebar-foreground/55">
-          Compliance intelligence
+          {t("shell.tagline")}
         </p>
         <div className="mt-7 overflow-y-auto">
           <NavLinks />
         </div>
         <div className="mt-auto rounded-lg border border-sidebar-border/70 bg-sidebar-accent/40 p-3">
           <p className="cite text-[10.5px] uppercase tracking-[0.16em] text-sidebar-foreground/60">
-            Rule packs active
+            {t("shell.rulePacksActive")}
           </p>
           <p className="mt-1.5 font-mono text-[12px] text-sidebar-foreground/90">LIHTC · HOTMA · HOME · PBS8</p>
-          <p className="mt-1 font-mono text-[11px] text-sidebar-foreground/55">50 states · 2026.08 build</p>
+          <p className="mt-1 font-mono text-[11px] text-sidebar-foreground/55">{t("shell.statesBuild")}</p>
         </div>
       </aside>
 
@@ -159,7 +160,7 @@ export function AppShell({
           <div className="flex items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 py-2.5 lg:hidden">
             <button
               onClick={() => setOpen((v) => !v)}
-              aria-label="Toggle navigation"
+              aria-label={t("nav.toggle")}
               className="grid size-8 place-items-center rounded-md text-sidebar-foreground"
             >
               {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -181,9 +182,11 @@ export function AppShell({
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {actions}
+              <LanguageToggle />
               <ThemeToggle />
             </div>
           </div>
+
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-7 sm:py-8">{children}</main>
       </div>
