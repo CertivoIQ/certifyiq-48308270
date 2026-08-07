@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { submitContactSupport } from "@/lib/contact-support.functions";
+import { useLanguage } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,8 @@ function ContactSupportPage() {
     setErrors((e) => ({ ...e, [field]: "" }));
   };
 
+  const { lang } = useLanguage();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -71,7 +74,7 @@ function ContactSupportPage() {
 
     setSubmitting(true);
     try {
-      const result = await submitContactSupport({ data: parsed.data });
+      const result = await submitContactSupport({ data: { ...parsed.data, locale: lang } });
       setSubmitted(result);
       setForm({ name: "", email: "", subject: "", message: "" });
       toast.success("Support request submitted", {
