@@ -52,7 +52,7 @@ function Certificate({ course, score }: { course: Course; score: number }) {
         </span>
       </div>
       <p className="mt-6 border-t border-border pt-3 font-mono text-[11px] text-muted-foreground">
-        Credential ID KIQ-{course.id.toUpperCase().slice(0, 6)}-2026-0841 · verifiable at certifyiq.com/verify
+        Credential ID KIQ-{course.id.toUpperCase().slice(0, 6)}-2026-0841 · verifiable at certifyiq.app/verify
       </p>
     </div>
   );

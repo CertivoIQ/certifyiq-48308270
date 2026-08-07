@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export const STAFF_DOMAIN = "certifyiq.com";
+export const STAFF_DOMAIN = "certifyiq.app";
 
 /** Live Supabase session for the browser. */
 export function useSession() {
@@ -27,7 +27,7 @@ export function useSession() {
 
 /**
  * CertifyIQ staff check. The `staff` role is granted server-side by a database
- * trigger only for verified @certifyiq.com accounts, so this can never be
+ * trigger only for verified @certifyiq.app accounts, so this can never be
  * spoofed from the client — RLS enforces the same rule on every CRM table.
  */
 export function useIsStaff() {
