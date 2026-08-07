@@ -19,7 +19,9 @@ export const Route = createFileRoute("/academy/")({
         property: "og:description",
         content: "Structured modules on auditing a certification, with a graded assessment and a printable certificate.",
       },
+      { property: "og:url", content: "https://certivoiq.com/academy" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/academy" }],
   }),
   component: KnowledgePage,
 });

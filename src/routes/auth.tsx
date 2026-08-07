@@ -38,7 +38,9 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Access your compliance workspace and CertivoIQ Academy." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://certivoiq.com/auth" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/auth" }],
   }),
   component: AuthPage,
 });

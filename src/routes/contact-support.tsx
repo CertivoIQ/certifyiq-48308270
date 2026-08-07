@@ -27,7 +27,9 @@ export const Route = createFileRoute("/contact-support")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://certivoiq.com/contact-support" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/contact-support" }],
   }),
   component: ContactSupportPage,
 });

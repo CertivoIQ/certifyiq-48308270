@@ -19,7 +19,9 @@ export const Route = createFileRoute("/files/")({
         property: "og:description",
         content: "Every TIC scored, every finding cited to a versioned rule, ready for reviewer soft approval.",
       },
+      { property: "og:url", content: "https://certivoiq.com/files" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/files" }],
   }),
   component: FilesPage,
 });

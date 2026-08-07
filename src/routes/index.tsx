@@ -26,7 +26,9 @@ export const Route = createFileRoute("/")({
         content:
           "Executive portfolio view: open findings, 8823 exposure, HOTMA and NSPIRE readiness, and property-level risk scores.",
       },
+      { property: "og:url", content: "https://certivoiq.com/" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/" }],
   }),
   component: ExecutiveDashboard,
 });

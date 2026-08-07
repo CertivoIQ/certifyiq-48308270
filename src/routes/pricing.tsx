@@ -32,7 +32,9 @@ export const Route = createFileRoute("/pricing")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://certivoiq.com/pricing" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/pricing" }],
   }),
   component: PricingPage,
 });

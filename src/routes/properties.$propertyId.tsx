@@ -11,7 +11,7 @@ export const Route = createFileRoute("/properties/$propertyId")({
     if (!property) throw notFound();
     return { property, files: FILES.filter((f) => f.propertyId === property.id) };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     if (!loaderData) {
       return { meta: [{ title: "Property unavailable — CertivoIQ" }, { name: "robots", content: "noindex" }] };
     }
@@ -23,7 +23,9 @@ export const Route = createFileRoute("/properties/$propertyId")({
         { name: "description", content: desc },
         { property: "og:title", content: `${property.name} — CertivoIQ` },
         { property: "og:description", content: desc },
+        { property: "og:url", content: `https://certivoiq.com/properties/${params.propertyId}` },
       ],
+      links: [{ rel: "canonical", href: `https://certivoiq.com/properties/${params.propertyId}` }],
     };
   },
   notFoundComponent: () => (

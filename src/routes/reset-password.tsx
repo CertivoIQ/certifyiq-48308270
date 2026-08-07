@@ -20,7 +20,9 @@ export const Route = createFileRoute("/reset-password")({
       { property: "og:description", content: "Securely reset the password for your CertivoIQ account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://certivoiq.com/reset-password" },
     ],
+    links: [{ rel: "canonical", href: "https://certivoiq.com/reset-password" }],
   }),
   component: ResetPasswordPage,
 });
