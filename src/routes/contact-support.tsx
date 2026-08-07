@@ -107,7 +107,7 @@ function ContactSupportPage() {
       </header>
 
       <main className="mx-auto max-w-2xl px-5 py-12">
-        <Pill tone="primary">Support</Pill>
+        <Pill tone="seal">Support</Pill>
         <h1 className="mt-4 font-display text-[34px] leading-tight sm:text-[42px]">
           How can we help?
         </h1>

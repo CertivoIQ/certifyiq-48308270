@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactSupportRouteImport } from './routes/contact-support'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
@@ -49,6 +50,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactSupportRoute = ContactSupportRouteImport.update({
+  id: '/contact-support',
+  path: '/contact-support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CopilotRoute = CopilotRouteImport.update({
@@ -179,6 +185,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/contact-support': typeof ContactSupportRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/contact-support': typeof ContactSupportRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/contact-support': typeof ContactSupportRoute
   '/copilot': typeof CopilotRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/contact-support'
     | '/copilot'
     | '/findings'
     | '/launchpad'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/contact-support'
     | '/copilot'
     | '/findings'
     | '/launchpad'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/contact-support'
     | '/copilot'
     | '/findings'
     | '/launchpad'
@@ -354,6 +366,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ContactSupportRoute: typeof ContactSupportRoute
   CopilotRoute: typeof CopilotRoute
   FindingsRoute: typeof FindingsRoute
   LaunchpadRoute: typeof LaunchpadRoute
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact-support': {
+      id: '/contact-support'
+      path: '/contact-support'
+      fullPath: '/contact-support'
+      preLoaderRoute: typeof ContactSupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/copilot': {
@@ -592,6 +612,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ContactSupportRoute: ContactSupportRoute,
   CopilotRoute: CopilotRoute,
   FindingsRoute: FindingsRoute,
   LaunchpadRoute: LaunchpadRoute,
