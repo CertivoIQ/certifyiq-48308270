@@ -1,6 +1,7 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { emailT, type EmailLocale } from './i18n'
 import { PLANS } from '@/lib/platform-data'
 import {
   BRAND,
@@ -30,6 +31,7 @@ interface Props {
   agentName?: string
   agentTitle?: string
   agentEmail?: string
+  locale?: EmailLocale
 }
 
 /** Infographic: horizontal comparison bars (email-safe, table-free divs with fixed widths). */
@@ -112,117 +114,122 @@ const Email = ({
   agentName = 'The CertivoIQ Team',
   agentTitle,
   agentEmail = 'hello@certivoiq.com',
-}: Props) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>
-      {`Protect ${company ?? 'your'} tax credits — AI compliance review for LIHTC, HOME, Section 8 & HOTMA`}
-    </Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Brand />
+  locale = 'en',
+}: Props) => {
+  const t = (key: Parameters<typeof emailT>[1], vars?: Record<string, string | number>) =>
+    emailT(locale, key, vars)
 
-        <Heading style={heading}>
-          One missed certification can cost{' '}
-          <span style={{ color: BRAND.red }}>years of tax credits</span>
-        </Heading>
-        <Text style={text}>
-          {name ? `Hi ${name},` : 'Hi there,'} CertivoIQ is an AI compliance platform built for affordable housing
-          teams{company ? ` like ${company}` : ''}. Every tenant income certification is reviewed against the exact
-          rule pack assigned to that property — LIHTC §42, HOME, Section 8/PBS8, HOTMA, Rural Development and
-          Tax-Exempt Bond — and returned with a Pass or Fail score, cited findings and written correction steps before
-          an auditor ever sees the file.
-        </Text>
+  return (
+    <Html lang={locale} dir="ltr">
+      <Head />
+      <Preview>{t('intro.preview', { company: company ?? '' })}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Brand locale={locale} />
 
-        <Hr style={hr} />
+          <Heading style={heading}>
+            {t('intro.heading.pre')}{' '}
+            <span style={{ color: BRAND.red }}>{t('intro.heading.accent')}</span>
+          </Heading>
+          <Text style={text}>
+            {name ? t('intro.greeting.named', { name }) : t('intro.greeting.plain')}{' '}
+            {t('intro.body', {
+              company: company ? t('intro.body.company', { company }) : '',
+            })}
+          </Text>
 
-        <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
-          WHAT THE PLATFORM DOES
-        </Text>
-        <Section style={{ paddingBottom: '4px' }}>
-          <StatCard value="4 min" label="Average AI review time per certification" color={BRAND.navy} />
-          <StatCard value="50" label="States covered with maintained rule packs" color={BRAND.navy} />
-          <StatCard value="6" label="Programs: LIHTC, HOME, S8, HOTMA, RD, Bond" color={BRAND.navy} />
-          <StatCard value="100%" label="Files scored, cited and human signed off" color={BRAND.green} />
-        </Section>
+          <Hr style={hr} />
 
-        <Hr style={hr} />
+          <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
+            {t('intro.section.what')}
+          </Text>
+          <Section style={{ paddingBottom: '4px' }}>
+            <StatCard value="4 min" label={t('intro.stat.time')} color={BRAND.navy} />
+            <StatCard value="50" label={t('intro.stat.states')} color={BRAND.navy} />
+            <StatCard value="6" label={t('intro.stat.programs')} color={BRAND.navy} />
+            <StatCard value="100%" label={t('intro.stat.signoff')} color={BRAND.green} />
+          </Section>
 
-        <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
-          MANUAL REVIEW VS. CERTIVOIQ
-        </Text>
-        <Bar label="Manual file review" value="~41 minutes per certification" width="100%" color={BRAND.red} />
-        <Bar label="CertivoIQ AI review" value="~4 minutes, then human sign-off" width="12%" color={BRAND.green} />
-        <Bar label="Rule checks applied manually" value="most items, most of the time" width="62%" color={BRAND.amber} />
-        <Bar label="Rule checks applied by CertivoIQ" value="every item, every time" width="100%" color={BRAND.green} />
+          <Hr style={hr} />
 
-        <Hr style={hr} />
+          <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
+            {t('intro.section.vs')}
+          </Text>
+          <Bar label={t('intro.bar.manual')} value={t('intro.bar.manual.value')} width="100%" color={BRAND.red} />
+          <Bar label={t('intro.bar.ai')} value={t('intro.bar.ai.value')} width="12%" color={BRAND.green} />
+          <Bar
+            label={t('intro.bar.manualChecks')}
+            value={t('intro.bar.manualChecks.value')}
+            width="62%"
+            color={BRAND.amber}
+          />
+          <Bar
+            label={t('intro.bar.aiChecks')}
+            value={t('intro.bar.aiChecks.value')}
+            width="100%"
+            color={BRAND.green}
+          />
 
-        <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
-          HOW ENTERPRISES BENEFIT
-        </Text>
-        <Text style={text}>
-          • Portfolio-wide visibility — findings, verdicts and audit readiness across every property and program.
-          <br />• Standardized reviews — the same rule logic applied by every reviewer, in every state.
-          <br />• Faster file throughput without adding compliance headcount.
-          <br />• CertivoIQ Academy training and Certificates of Achievement to onboard new reviewers.
-          <br />• Merlin, the AI compliance assistant, cites the governing rule the moment a reviewer gets stuck.
-        </Text>
+          <Hr style={hr} />
 
-        <Hr style={hr} />
+          <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
+            {t('intro.section.benefits')}
+          </Text>
+          <Text style={text}>
+            • {t('intro.benefit.1')}
+            <br />• {t('intro.benefit.2')}
+            <br />• {t('intro.benefit.3')}
+            <br />• {t('intro.benefit.4')}
+            <br />• {t('intro.benefit.5')}
+          </Text>
 
-        <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
-          PLANS &amp; PRICING
-        </Text>
-        {PLANS.map((p) => (
-          <PlanRow key={p.id} name={p.name} price={p.price} tagline={p.tagline} />
-        ))}
-        <Text style={{ ...small, margin: '10px 0 0' }}>
-          Add-ons: additional state rule packs $99–$199/state/month · CertivoIQ Academy $49/user/month or
-          $499/property/month · API access $500–$2,000/month · AI document processing beyond plan allowance $3 per
-          uploaded certification.
-        </Text>
+          <Hr style={hr} />
 
-        <Text style={{ ...small, fontWeight: 700, color: BRAND.red, margin: '0 0 12px', letterSpacing: '0.6px' }}>
-          THE COST OF NON-COMPLIANCE
-        </Text>
-        <RiskRow risk="Non-curable §42 findings" cost="IRS Form 8823 filing and recapture of allocated credits" />
-        <RiskRow risk="Failed state agency audit" cost="Repayment agreements, withheld allocations, reputational damage" />
-        <RiskRow risk="Section 8 / TRACS errors" cost="Subsidy repayment and HUD-imposed corrective action" />
-        <RiskRow risk="HOTMA implementation gaps" cost="Systemic recertification errors across an entire portfolio" />
+          <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
+            {t('intro.section.pricing')}
+          </Text>
+          {PLANS.map((p) => (
+            <PlanRow key={p.id} name={p.name} price={t('intro.plan.price', { price: p.price })} tagline={p.tagline} />
+          ))}
+          <Text style={{ ...small, margin: '10px 0 0' }}>{t('intro.addons')}</Text>
 
-        <Hr style={hr} />
+          <Text style={{ ...small, fontWeight: 700, color: BRAND.red, margin: '0 0 12px', letterSpacing: '0.6px' }}>
+            {t('intro.section.risk')}
+          </Text>
+          <RiskRow risk={t('intro.risk.1')} cost={t('intro.risk.1.cost')} />
+          <RiskRow risk={t('intro.risk.2')} cost={t('intro.risk.2.cost')} />
+          <RiskRow risk={t('intro.risk.3')} cost={t('intro.risk.3.cost')} />
+          <RiskRow risk={t('intro.risk.4')} cost={t('intro.risk.4.cost')} />
 
-        <Section style={{ paddingBottom: '14px' }}>
-          <CtaButton href={landingUrl}>See the 4-minute platform walkthrough</CtaButton>
-        </Section>
-        <Text style={small}>
-          Or start free: <Link href={landingUrl}>{landingUrl}</Link> — 7-day trial with 3 full AI certification
-          reviews, no card required.
-        </Text>
+          <Hr style={hr} />
 
-        <Hr style={hr} />
-        <Text style={{ ...text, margin: 0 }}>{agentName}</Text>
-        {agentTitle && <Text style={{ ...small, margin: '2px 0 0' }}>{agentTitle}</Text>}
-        <Text style={{ ...small, margin: '2px 0 0' }}>
-          <Link href={`mailto:${agentEmail}`}>{agentEmail}</Link> · CertivoIQ — compliance intelligence for all 50
-          states
-        </Text>
-        <Text style={{ ...small, marginTop: '14px' }}>
-          You received this introduction because your organization operates affordable housing. Reply with
-          &quot;unsubscribe&quot; and we will not contact you again.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
-)
+          <Section style={{ paddingBottom: '14px' }}>
+            <CtaButton href={landingUrl}>{t('intro.cta')}</CtaButton>
+          </Section>
+          <Text style={small}>
+            {t('intro.startFree')} <Link href={landingUrl}>{landingUrl}</Link>{' '}
+            {t('intro.startFree.detail')}
+          </Text>
+
+          <Hr style={hr} />
+          <Text style={{ ...text, margin: 0 }}>{agentName}</Text>
+          {agentTitle && <Text style={{ ...small, margin: '2px 0 0' }}>{agentTitle}</Text>}
+          <Text style={{ ...small, margin: '2px 0 0' }}>
+            <Link href={`mailto:${agentEmail}`}>{agentEmail}</Link> · {t('intro.signature')}
+          </Text>
+          <Text style={{ ...small, marginTop: '14px' }}>{t('intro.unsubscribe')}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
     data['company']
-      ? `${data['company']}: protect your tax credits before the next audit`
-      : 'Protect your tax credits before the next audit — CertivoIQ',
+      ? emailT(data['locale'], 'intro.subject.company', { company: data['company'] })
+      : emailT(data['locale'], 'intro.subject.generic'),
   displayName: 'Cold intro — CertivoIQ overview',
   previewData: {
     name: 'Dana',
@@ -231,5 +238,6 @@ export const template = {
     agentName: 'Alex Rivera',
     agentTitle: 'Compliance Solutions, CertivoIQ',
     agentEmail: 'alex@certivoiq.com',
+    locale: 'en',
   },
 } satisfies TemplateEntry
