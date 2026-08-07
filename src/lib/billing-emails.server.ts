@@ -28,7 +28,7 @@ function shortDate(unix: number | null | undefined): string | undefined {
 }
 
 function appOrigin(): string {
-  return (process.env['APP_URL'] || 'https://certifyiq.app').replace(/\/$/, '')
+  return (process.env['APP_URL'] || 'https://certivoiq.com').replace(/\/$/, '')
 }
 
 /** Human-readable plan name for the invoice's first line item. */
@@ -37,7 +37,7 @@ function planNameFor(invoice: any): string {
   const priceId =
     line?.price?.lookup_key || line?.price?.metadata?.lovable_external_id || line?.pricing?.price_details?.price
   const plan = priceId ? PLAN_ENTITLEMENTS[priceId] : undefined
-  return plan?.name ?? line?.description ?? 'CertifyIQ subscription'
+  return plan?.name ?? line?.description ?? 'CertivoIQ subscription'
 }
 
 export interface BillingEmailContext {

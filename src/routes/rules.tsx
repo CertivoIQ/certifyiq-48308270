@@ -8,13 +8,13 @@ import { Layers } from "lucide-react";
 export const Route = createFileRoute("/rules")({
   head: () => ({
     meta: [
-      { title: "Rule Packs & Versioning — CertifyIQ" },
+      { title: "Rule Packs & Versioning — CertivoIQ" },
       {
         name: "description",
         content:
           "Versioned LIHTC, HOTMA, HOME and Section 8 rule packs layered core → state → county → PHA → property, with effective dates and citations.",
       },
-      { property: "og:title", content: "Rule Packs & Versioning — CertifyIQ" },
+      { property: "og:title", content: "Rule Packs & Versioning — CertivoIQ" },
       {
         property: "og:description",
         content: "Every finding permanently records the rule version that produced it — audit-defensible by design.",

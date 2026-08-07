@@ -17,13 +17,13 @@ export const Route = createFileRoute("/files/$fileId")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Certification unavailable — CertifyIQ" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Certification unavailable — CertivoIQ" }, { name: "robots", content: "noindex" }] };
     }
     const f = loaderData.file as CertFile;
     const desc = `${f.certType} for ${f.household} (${f.unit}) — ${f.findings.length} findings across ${f.programs.join(", ")}, effective ${f.effective}.`;
     return {
       meta: [
-        { title: `${f.id} — Certification Review — CertifyIQ` },
+        { title: `${f.id} — Certification Review — CertivoIQ` },
         { name: "description", content: desc },
         { property: "og:title", content: `${f.id} — Certification Review` },
         { property: "og:description", content: desc },

@@ -19,13 +19,13 @@ import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/pla
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Plans & Pricing — CertifyIQ Compliance Platform" },
+      { title: "Plans & Pricing — CertivoIQ Compliance Platform" },
       {
         name: "description",
         content:
-          "CertifyIQ pricing: Professional at $999/month for up to 500 units, Business at $4,999/month for up to 10,000 units, Enterprise at $9,999/month, Enterprise Plus at $14,999/month, plus state rule packs, Academy training seats and API add-ons.",
+          "CertivoIQ pricing: Professional at $999/month for up to 500 units, Business at $4,999/month for up to 10,000 units, Enterprise at $9,999/month, Enterprise Plus at $14,999/month, plus state rule packs, Academy training seats and API add-ons.",
       },
-      { property: "og:title", content: "Plans & Pricing — CertifyIQ" },
+      { property: "og:title", content: "Plans & Pricing — CertivoIQ" },
       {
         property: "og:description",
         content: "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits.",
@@ -54,10 +54,10 @@ function PricingPage() {
     // provision the plan, so send visitors to sign in and bring them back here.
     if (!user) {
       toast.info("Create your account first", {
-        description: "Sign in so we can attach this subscription to your CertifyIQ workspace.",
+        description: "Sign in so we can attach this subscription to your CertivoIQ workspace.",
       });
       // Remember where they were so sign-in can bring them straight back.
-      sessionStorage.setItem("certifyiq:after-auth", "/pricing");
+      sessionStorage.setItem("certivoiq:after-auth", "/pricing");
       await navigate({ to: "/auth" });
       return;
     }
@@ -118,7 +118,7 @@ function PricingPage() {
       subtitle="Peace of mind before an audit — priced per portfolio, never per credit"
       actions={
         <Button size="sm" variant="outline" asChild>
-          <Link to="/welcome">Why CertifyIQ</Link>
+          <Link to="/welcome">Why CertivoIQ</Link>
         </Button>
       }
     >
@@ -228,7 +228,7 @@ function PricingPage() {
         </Panel>
 
         <Panel
-          title="CertifyIQ Academy — add-on only"
+          title="CertivoIQ Academy — add-on only"
           description="Training attaches to any platform plan; there is no standalone Academy subscription"
           bodyClassName="p-0"
         >

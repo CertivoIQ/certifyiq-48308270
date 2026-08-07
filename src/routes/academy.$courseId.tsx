@@ -14,14 +14,14 @@ export const Route = createFileRoute("/academy/$courseId")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Course unavailable — CertifyIQ Academy" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Course unavailable — CertivoIQ Academy" }, { name: "robots", content: "noindex" }] };
     }
     const c = loaderData.course as Course;
     return {
       meta: [
-        { title: `${c.title} — CertifyIQ Academy | CertifyIQ` },
+        { title: `${c.title} — CertivoIQ Academy | CertivoIQ` },
         { name: "description", content: c.summary },
-        { property: "og:title", content: `${c.title} — CertifyIQ Academy` },
+        { property: "og:title", content: `${c.title} — CertivoIQ Academy` },
         { property: "og:description", content: c.summary },
       ],
     };
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/academy/$courseId")({
   notFoundComponent: () => (
     <AppShell title="Course not found" subtitle="This course is not in the catalog">
       <Button asChild>
-        <Link to="/academy">Back to CertifyIQ Academy</Link>
+        <Link to="/academy">Back to CertivoIQ Academy</Link>
       </Button>
     </AppShell>
   ),
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/academy/$courseId")({
 function Certificate({ course, score }: { course: Course; score: number }) {
   return (
     <div className="ledger-lines rounded-lg border-2 border-ink bg-card p-7 text-center shadow-raised">
-      <p className="cite text-[10.5px] uppercase tracking-[0.24em]">CertifyIQ · CertifyIQ Academy</p>
+      <p className="cite text-[10.5px] uppercase tracking-[0.24em]">CertivoIQ · CertivoIQ Academy</p>
       <h2 className="mt-4 font-display text-[26px] leading-tight">Certificate of Achievement</h2>
       <p className="mt-4 text-[13px] text-muted-foreground">awarded to</p>
       <p className="mt-1 font-display text-[21px]">Jordan Alvarez, Compliance Reviewer</p>
@@ -52,7 +52,7 @@ function Certificate({ course, score }: { course: Course; score: number }) {
         </span>
       </div>
       <p className="mt-6 border-t border-border pt-3 font-mono text-[11px] text-muted-foreground">
-        Credential ID KIQ-{course.id.toUpperCase().slice(0, 6)}-2026-0841 · verifiable at certifyiq.app/verify
+        Credential ID KIQ-{course.id.toUpperCase().slice(0, 6)}-2026-0841 · verifiable at certivoiq.com/verify
       </p>
     </div>
   );

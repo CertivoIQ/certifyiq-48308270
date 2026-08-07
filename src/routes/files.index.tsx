@@ -8,13 +8,13 @@ import { FILES, PROPERTIES, money, type Status } from "@/lib/demo-data";
 export const Route = createFileRoute("/files/")({
   head: () => ({
     meta: [
-      { title: "Certification Review Queue — CertifyIQ" },
+      { title: "Certification Review Queue — CertivoIQ" },
       {
         name: "description",
         content:
           "AI-assisted review queue for Tenant Income Certifications: extraction confidence, deterministic findings, and soft approval by program.",
       },
-      { property: "og:title", content: "Certification Review Queue — CertifyIQ" },
+      { property: "og:title", content: "Certification Review Queue — CertivoIQ" },
       {
         property: "og:description",
         content: "Every TIC scored, every finding cited to a versioned rule, ready for reviewer soft approval.",

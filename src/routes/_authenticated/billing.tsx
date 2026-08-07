@@ -24,13 +24,13 @@ import {
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
     meta: [
-      { title: "Account & Billing — CertifyIQ" },
+      { title: "Account & Billing — CertivoIQ" },
       {
         name: "description",
         content:
-          "Manage your CertifyIQ plan: see unit, property and AI document usage against your allowance, change plans, update payment details and cancel or resume your subscription.",
+          "Manage your CertivoIQ plan: see unit, property and AI document usage against your allowance, change plans, update payment details and cancel or resume your subscription.",
       },
-      { property: "og:title", content: "Account & Billing — CertifyIQ" },
+      { property: "og:title", content: "Account & Billing — CertivoIQ" },
       {
         property: "og:description",
         content: "Plan capacity, AI document usage and subscription controls in one place.",
@@ -245,7 +245,7 @@ function BillingPage() {
                   <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                     <div>
                       <p className="font-display text-[15px]">
-                        CertifyIQ {p.name} <span className="font-mono text-[12.5px] text-muted-foreground">{p.price}{p.cadence}</span>
+                        CertivoIQ {p.name} <span className="font-mono text-[12.5px] text-muted-foreground">{p.price}{p.cadence}</span>
                       </p>
                       <p className="mt-0.5 text-[12.5px] text-muted-foreground">{p.tagline}</p>
                     </div>
@@ -255,7 +255,7 @@ function BillingPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => switchPlan(priceId, `CertifyIQ ${p.name}`)}
+                        onClick={() => switchPlan(priceId, `CertivoIQ ${p.name}`)}
                         disabled={busy === `plan-${priceId}`}
                       >
                         Switch <ArrowUpRight className="size-3.5" />

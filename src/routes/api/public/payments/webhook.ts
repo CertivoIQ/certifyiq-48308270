@@ -53,7 +53,7 @@ function subscriptionRow(subscription: any, env: StripeEnv) {
 }
 
 /**
- * Purchase side effects, per CertifyIQ's rules:
+ * Purchase side effects, per CertivoIQ's rules:
  *  - unlock plan capacity (units / properties / AI document allowance)
  *  - end the trial and cancel the 14-day file deletion clock
  *  - convert the matching CRM lead to "won" and announce it on the ticker
@@ -177,7 +177,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     kind: "subscriber",
     headline: `New subscriber paid — ${accountName ?? contactEmail ?? "New customer"} on ${plan.name}`,
     detail: `${plan.name} subscription started. Trial converted, file retention hold cleared, LaunchPad onboarding started.`,
-    source: "CertifyIQ Payments",
+    source: "CertivoIQ Payments",
   });
 }
 

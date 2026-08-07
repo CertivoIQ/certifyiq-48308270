@@ -13,15 +13,15 @@ export const Route = createFileRoute("/properties/$propertyId")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Property unavailable — CertifyIQ" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Property unavailable — CertivoIQ" }, { name: "robots", content: "noindex" }] };
     }
     const { property } = loaderData;
     const desc = `${property.name} in ${property.city}, ${property.state} — risk score ${property.risk}, ${property.openFindings} open findings across ${property.programs.join(", ")}.`;
     return {
       meta: [
-        { title: `${property.name} — Compliance Risk — CertifyIQ` },
+        { title: `${property.name} — Compliance Risk — CertivoIQ` },
         { name: "description", content: desc },
-        { property: "og:title", content: `${property.name} — CertifyIQ` },
+        { property: "og:title", content: `${property.name} — CertivoIQ` },
         { property: "og:description", content: desc },
       ],
     };

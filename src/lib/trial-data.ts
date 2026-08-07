@@ -44,7 +44,7 @@ export const TRIAL_TASKS = [
   {
     id: "mass-upload",
     title: "Mass upload your property details",
-    lead: "Excel, CSV or a software export — AI maps the columns to CertifyIQ fields.",
+    lead: "Excel, CSV or a software export — AI maps the columns to CertivoIQ fields.",
     merlin: "One spreadsheet, one poof, a whole portfolio.",
     cta: "Mass upload properties",
     to: "/launchpad" as const,
@@ -305,8 +305,8 @@ export const LANDING_CLICKS = [
  * ------------------------------------------------------------------ */
 
 export const VIDEO_CHAPTERS = [
-  { time: "0:00", title: "What CertifyIQ is", body: "One compliance system of record for LIHTC, Section 8, HOME and HOTMA across all 50 states." },
-  { time: "0:40", title: "Register a property", body: "Pick the programs at registration and CertifyIQ assigns the exact federal and state rule pack." },
+  { time: "0:00", title: "What CertivoIQ is", body: "One compliance system of record for LIHTC, Section 8, HOME and HOTMA across all 50 states." },
+  { time: "0:40", title: "Register a property", body: "Pick the programs at registration and CertivoIQ assigns the exact federal and state rule pack." },
   { time: "1:25", title: "Upload the file", body: "TICs, income certifications, verifications, EIVs, leases and asset docs — a folder at a time." },
   { time: "2:10", title: "The AI review", body: "Every field is extracted and tested against each rule, then scored Pass or Fail with the citation." },
   { time: "3:05", title: "Corrections & sign-off", body: "Ordered correction steps with owners and due dates — a human reviewer keeps final approval." },
@@ -321,12 +321,12 @@ export const PENALTY_RISKS = [
   { risk: "HOTMA asset & income errors", cost: "Repayment agreements + HUD sanctions", detail: "The $50,000 asset limit, imputed returns and de minimis rules changed the math on every file after 2024." },
   { risk: "Student-status and set-aside mistakes", cost: "Unit non-compliance", detail: "Full-time student households and blended LIHTC/HOME/Section 8 set-asides trip up even experienced reviewers." },
   { risk: "Blended-program conflicts", cost: "Findings under two programs at once", detail: "The stricter rule always wins. Human reviewers routinely apply the wrong program's threshold." },
-  { risk: "Inconsistent reviewer judgment", cost: "Unpredictable audit outcomes", detail: "Two reviewers, two answers. CertifyIQ applies the same versioned rule pack to every single file." },
+  { risk: "Inconsistent reviewer judgment", cost: "Unpredictable audit outcomes", detail: "Two reviewers, two answers. CertivoIQ applies the same versioned rule pack to every single file." },
 ];
 
 export const VALUE_MATH = [
   { label: "One recaptured credit unit", value: "$65,000+", note: "Typical credit value lost on a single non-curable finding" },
   { label: "Manual review time", value: "41 min → 4 min", note: "Per certification, with citations written for you" },
   { label: "Reviewer hours saved monthly", value: "~230 hrs", note: "At a 5,000-unit portfolio with quarterly recerts" },
-  { label: "CertifyIQ Business plan", value: "$1,499/mo", note: "Less than one finding. Every month." },
+  { label: "CertivoIQ Business plan", value: "$1,499/mo", note: "Less than one finding. Every month." },
 ];

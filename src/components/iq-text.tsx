@@ -1,6 +1,6 @@
 /**
  * Renders text with every "IQ" highlighted in Merlin's wizard gold.
- * Use anywhere the CertifyIQ wordmark appears in copy or headings.
+ * Use anywhere the CertivoIQ wordmark appears in copy or headings.
  */
 export function IQText({ children, className = "" }: { children: string; className?: string }) {
   const parts = children.split(/(IQ)/g);

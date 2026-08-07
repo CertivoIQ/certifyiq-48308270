@@ -108,10 +108,10 @@ function RiskRow({ risk, cost }: { risk: string; cost: string }) {
 const Email = ({
   name,
   company,
-  landingUrl = 'https://certifyiq.app/welcome',
-  agentName = 'The CertifyIQ Team',
+  landingUrl = 'https://certivoiq.com/welcome',
+  agentName = 'The CertivoIQ Team',
   agentTitle,
-  agentEmail = 'hello@certifyiq.app',
+  agentEmail = 'hello@certivoiq.com',
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -127,7 +127,7 @@ const Email = ({
           <span style={{ color: BRAND.red }}>years of tax credits</span>
         </Heading>
         <Text style={text}>
-          {name ? `Hi ${name},` : 'Hi there,'} CertifyIQ is an AI compliance platform built for affordable housing
+          {name ? `Hi ${name},` : 'Hi there,'} CertivoIQ is an AI compliance platform built for affordable housing
           teams{company ? ` like ${company}` : ''}. Every tenant income certification is reviewed against the exact
           rule pack assigned to that property — LIHTC §42, HOME, Section 8/PBS8, HOTMA, Rural Development and
           Tax-Exempt Bond — and returned with a Pass or Fail score, cited findings and written correction steps before
@@ -149,12 +149,12 @@ const Email = ({
         <Hr style={hr} />
 
         <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
-          MANUAL REVIEW VS. CERTIFYIQ
+          MANUAL REVIEW VS. CERTIVOIQ
         </Text>
         <Bar label="Manual file review" value="~41 minutes per certification" width="100%" color={BRAND.red} />
-        <Bar label="CertifyIQ AI review" value="~4 minutes, then human sign-off" width="12%" color={BRAND.green} />
+        <Bar label="CertivoIQ AI review" value="~4 minutes, then human sign-off" width="12%" color={BRAND.green} />
         <Bar label="Rule checks applied manually" value="most items, most of the time" width="62%" color={BRAND.amber} />
-        <Bar label="Rule checks applied by CertifyIQ" value="every item, every time" width="100%" color={BRAND.green} />
+        <Bar label="Rule checks applied by CertivoIQ" value="every item, every time" width="100%" color={BRAND.green} />
 
         <Hr style={hr} />
 
@@ -165,7 +165,7 @@ const Email = ({
           • Portfolio-wide visibility — findings, verdicts and audit readiness across every property and program.
           <br />• Standardized reviews — the same rule logic applied by every reviewer, in every state.
           <br />• Faster file throughput without adding compliance headcount.
-          <br />• CertifyIQ Academy training and Certificates of Achievement to onboard new reviewers.
+          <br />• CertivoIQ Academy training and Certificates of Achievement to onboard new reviewers.
           <br />• Merlin, the AI compliance assistant, cites the governing rule the moment a reviewer gets stuck.
         </Text>
 
@@ -178,7 +178,7 @@ const Email = ({
           <PlanRow key={p.id} name={p.name} price={p.price} tagline={p.tagline} />
         ))}
         <Text style={{ ...small, margin: '10px 0 0' }}>
-          Add-ons: additional state rule packs $99–$199/state/month · CertifyIQ Academy $49/user/month or
+          Add-ons: additional state rule packs $99–$199/state/month · CertivoIQ Academy $49/user/month or
           $499/property/month · API access $500–$2,000/month · AI document processing beyond plan allowance $3 per
           uploaded certification.
         </Text>
@@ -205,7 +205,7 @@ const Email = ({
         <Text style={{ ...text, margin: 0 }}>{agentName}</Text>
         {agentTitle && <Text style={{ ...small, margin: '2px 0 0' }}>{agentTitle}</Text>}
         <Text style={{ ...small, margin: '2px 0 0' }}>
-          <Link href={`mailto:${agentEmail}`}>{agentEmail}</Link> · CertifyIQ — compliance intelligence for all 50
+          <Link href={`mailto:${agentEmail}`}>{agentEmail}</Link> · CertivoIQ — compliance intelligence for all 50
           states
         </Text>
         <Text style={{ ...small, marginTop: '14px' }}>
@@ -222,14 +222,14 @@ export const template = {
   subject: (data: Record<string, any>) =>
     data['company']
       ? `${data['company']}: protect your tax credits before the next audit`
-      : 'Protect your tax credits before the next audit — CertifyIQ',
-  displayName: 'Cold intro — CertifyIQ overview',
+      : 'Protect your tax credits before the next audit — CertivoIQ',
+  displayName: 'Cold intro — CertivoIQ overview',
   previewData: {
     name: 'Dana',
     company: 'Northgate Housing Partners',
-    landingUrl: 'https://certifyiq.app/welcome',
+    landingUrl: 'https://certivoiq.com/welcome',
     agentName: 'Alex Rivera',
-    agentTitle: 'Compliance Solutions, CertifyIQ',
-    agentEmail: 'alex@certifyiq.app',
+    agentTitle: 'Compliance Solutions, CertivoIQ',
+    agentEmail: 'alex@certivoiq.com',
   },
 } satisfies TemplateEntry

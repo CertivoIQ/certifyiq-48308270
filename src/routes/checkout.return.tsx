@@ -10,13 +10,13 @@ import { getCheckoutSessionStatus } from "@/utils/payments.functions";
 export const Route = createFileRoute("/checkout/return")({
   head: () => ({
     meta: [
-      { title: "Subscription Confirmed — CertifyIQ" },
+      { title: "Subscription Confirmed — CertivoIQ" },
       {
         name: "description",
         content:
-          "Your CertifyIQ subscription is active. Your uploaded certifications are retained and LaunchPad onboarding is ready to begin.",
+          "Your CertivoIQ subscription is active. Your uploaded certifications are retained and LaunchPad onboarding is ready to begin.",
       },
-      { property: "og:title", content: "Subscription Confirmed — CertifyIQ" },
+      { property: "og:title", content: "Subscription Confirmed — CertivoIQ" },
       {
         property: "og:description",
         content: "Plan capacity unlocked, trial files kept, and guided onboarding started.",
@@ -144,7 +144,7 @@ function CheckoutReturn() {
               </Button>
               <Button variant="outline" asChild>
                 <Link to="/academy">
-                  <GraduationCap className="size-4" /> Open CertifyIQ Academy
+                  <GraduationCap className="size-4" /> Open CertivoIQ Academy
                 </Link>
               </Button>
               <Button variant="ghost" asChild>

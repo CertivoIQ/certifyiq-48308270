@@ -13,17 +13,17 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/contact-support")({
   head: () => ({
     meta: [
-      { title: "Contact Support — CertifyIQ" },
+      { title: "Contact Support — CertivoIQ" },
       {
         name: "description",
         content:
-          "Reach the CertifyIQ support team for help with affordable housing compliance, platform questions, or account assistance.",
+          "Reach the CertivoIQ support team for help with affordable housing compliance, platform questions, or account assistance.",
       },
-      { property: "og:title", content: "Contact Support — CertifyIQ" },
+      { property: "og:title", content: "Contact Support — CertivoIQ" },
       {
         property: "og:description",
         content:
-          "Reach the CertifyIQ support team for help with affordable housing compliance, platform questions, or account assistance.",
+          "Reach the CertivoIQ support team for help with affordable housing compliance, platform questions, or account assistance.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -92,7 +92,7 @@ function ContactSupportPage() {
             <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
               IQ
             </span>
-            <span className="font-display text-lg leading-none">Certify<span className="text-gold">IQ</span></span>
+            <span className="font-display text-lg leading-none">Certivo<span className="text-gold">IQ</span></span>
           </Link>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild>
@@ -114,7 +114,7 @@ function ContactSupportPage() {
           How can we help?
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-          Submit a question, issue, or request and a CertifyIQ compliance specialist will respond as soon as possible.
+          Submit a question, issue, or request and a CertivoIQ compliance specialist will respond as soon as possible.
         </p>
 
         <Panel className="mt-8" bodyClassName="p-6 sm:p-8">
@@ -131,7 +131,7 @@ function ContactSupportPage() {
               <div className="mt-6 flex justify-center gap-3">
                 <Button variant="outline" asChild>
                   <Link to="/">
-                    <ArrowLeft className="mr-1.5 size-4" /> Back to CertifyIQ
+                    <ArrowLeft className="mr-1.5 size-4" /> Back to CertivoIQ
                   </Link>
                 </Button>
                 <Button variant="outline" onClick={() => setSubmitted(null)}>

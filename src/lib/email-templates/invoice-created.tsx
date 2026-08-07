@@ -37,24 +37,24 @@ interface Props {
 
 const Email = ({
   name,
-  planName = 'CertifyIQ subscription',
+  planName = 'CertivoIQ subscription',
   amountDue = '$0.00',
   dueDate,
   invoiceNumber,
   periodLabel,
-  billingUrl = 'https://certifyiq.app/billing',
+  billingUrl = 'https://certivoiq.com/billing',
   invoiceUrl,
   pdfUrl,
 }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>{`New CertifyIQ invoice ${invoiceNumber ?? ''} — ${amountDue} due`}</Preview>
+    <Preview>{`New CertivoIQ invoice ${invoiceNumber ?? ''} — ${amountDue} due`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Brand />
         <Heading style={heading}>Your new invoice is ready</Heading>
         <Text style={text}>
-          {name ? `Hi ${name},` : 'Hi there,'} a new invoice has been issued for your CertifyIQ account. No action is
+          {name ? `Hi ${name},` : 'Hi there,'} a new invoice has been issued for your CertivoIQ account. No action is
           needed if your card is on file — it will be charged automatically.
         </Text>
 
@@ -85,16 +85,16 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `New CertifyIQ invoice${data['invoiceNumber'] ? ` ${data['invoiceNumber']}` : ''} — ${data['amountDue'] ?? 'amount due'}`,
+    `New CertivoIQ invoice${data['invoiceNumber'] ? ` ${data['invoiceNumber']}` : ''} — ${data['amountDue'] ?? 'amount due'}`,
   displayName: 'New invoice',
   previewData: {
     name: 'Jordan',
-    planName: 'CertifyIQ Business',
+    planName: 'CertivoIQ Business',
     amountDue: '$1,499.00',
     dueDate: 'September 1, 2026',
     invoiceNumber: 'CIQ-1042',
     periodLabel: 'Aug 1 – Sep 1, 2026',
-    billingUrl: 'https://certifyiq.app/billing',
+    billingUrl: 'https://certivoiq.com/billing',
     invoiceUrl: 'https://invoice.stripe.com/i/example',
     pdfUrl: 'https://invoice.stripe.com/i/example.pdf',
   },
