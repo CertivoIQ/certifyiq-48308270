@@ -58,6 +58,9 @@ function WelcomePage() {
           </Link>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild>
+              <Link to="/contact-support">Contact Support</Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
               <Link to="/pricing">Pricing</Link>
             </Button>
             <Button size="sm" asChild>
