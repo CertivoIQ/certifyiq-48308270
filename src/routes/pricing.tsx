@@ -23,7 +23,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "CertifyIQ pricing: Business at $1,499/month for up to 5,000 units, Enterprise from $4,999/month, plus state rule packs, Academy training seats and API add-ons.",
+          "CertifyIQ pricing: Professional at $999/month for up to 500 units, Business at $4,999/month for up to 10,000 units, Enterprise at $9,999/month, Enterprise Plus at $14,999/month, plus state rule packs, Academy training seats and API add-ons.",
       },
       { property: "og:title", content: "Plans & Pricing — CertifyIQ" },
       {
@@ -157,7 +157,7 @@ function PricingPage() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {PLANS.map((p) => (
           <Panel
             key={p.id}

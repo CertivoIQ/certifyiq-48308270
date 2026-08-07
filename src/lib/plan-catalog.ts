@@ -3,7 +3,7 @@
  * unlocks inside CertifyIQ. Price IDs are stable across test and live.
  */
 
-export type PlanKey = "professional" | "business" | "enterprise";
+export type PlanKey = "professional" | "business" | "enterprise" | "enterprise_plus";
 
 export interface PlanEntitlement {
   planId: PlanKey;
@@ -20,6 +20,7 @@ export const PLAN_PRICE_IDS: Record<PlanKey, string> = {
   professional: "professional_monthly",
   business: "business_monthly",
   enterprise: "enterprise_monthly",
+  enterprise_plus: "enterprise_plus_monthly",
 };
 
 export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
@@ -27,24 +28,33 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
     planId: "professional",
     priceId: "professional_monthly",
     name: "CertifyIQ Professional",
-    unitLimit: 750,
+    unitLimit: 500,
     propertyLimit: 5,
-    aiDocAllowance: 750,
+    aiDocAllowance: 500,
     statePacks: 1,
   },
   business_monthly: {
     planId: "business",
     priceId: "business_monthly",
     name: "CertifyIQ Business",
-    unitLimit: 5000,
+    unitLimit: 10000,
     propertyLimit: 50,
-    aiDocAllowance: 5000,
+    aiDocAllowance: 10000,
     statePacks: null,
   },
   enterprise_monthly: {
     planId: "enterprise",
     priceId: "enterprise_monthly",
     name: "CertifyIQ Enterprise",
+    unitLimit: null,
+    propertyLimit: null,
+    aiDocAllowance: null,
+    statePacks: null,
+  },
+  enterprise_plus_monthly: {
+    planId: "enterprise_plus",
+    priceId: "enterprise_plus_monthly",
+    name: "CertifyIQ Enterprise Plus",
     unitLimit: null,
     propertyLimit: null,
     aiDocAllowance: null,
