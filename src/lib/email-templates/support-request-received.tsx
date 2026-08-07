@@ -65,7 +65,10 @@ const Email = ({
         <Section style={{ paddingBottom: '14px' }}>
           <CtaButton href={supportUrl}>Open support page</CtaButton>
         </Section>
-        <Footer />
+        <Hr style={hr} />
+        <Text style={small}>
+          You are receiving this because you submitted a request through the CertifyIQ support page. Reply to this email to add more details.
+        </Text>
       </Container>
     </Body>
   </Html>
