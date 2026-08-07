@@ -65,6 +65,7 @@ export const Route = createFileRoute("/api/public/crm/support-email")({
 
         if (!accountId) {
           const domain = from.split("@")[1];
+          if (!domain) throw new Error("Invalid sender email");
           const { data: account, error: accountError } = await supabaseAdmin
             .from("crm_accounts")
             .insert({
