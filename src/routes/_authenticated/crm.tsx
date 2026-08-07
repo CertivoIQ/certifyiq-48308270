@@ -18,7 +18,9 @@ import {
   FileText,
   Pencil,
   Globe,
+  Printer,
 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useIsStaff } from "@/hooks/use-session";
 import { Panel, Pill, Stat, Meter } from "@/components/ui-kit";
