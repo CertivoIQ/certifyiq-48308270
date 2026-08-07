@@ -1,16 +1,10 @@
-import { useState, useEffect, useRef, type CSSProperties } from "react";
+import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
 import { Volume2, VolumeX, Play, RotateCcw } from "lucide-react";
-import { VOICEOVER_FILES, type VoiceoverLang } from "@/lib/explainer-voiceover";
+import { VOICEOVER_FILES, getSceneDurations, type VoiceoverLang } from "@/lib/explainer-voiceover";
 import { useLanguage, useT } from "@/lib/i18n/provider";
 
-const SCENES = [
-  { duration: 4200 },
-  { duration: 3800 },
-  { duration: 5500 },
-  { duration: 4200 },
-  { duration: 9000 },
-];
-const TOTAL = SCENES.reduce((s, x) => s + x.duration, 0);
+const BASE_SCENES = [0, 1, 2, 3, 4];
+
 
 const C = {
   bg: "#060B18",
