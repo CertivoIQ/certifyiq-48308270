@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -9,12 +9,9 @@ import {
   Phone,
   Plus,
   Send,
-  Sparkles,
   UserPlus,
   Zap,
-  ShieldAlert,
   Loader2,
-  ArrowLeft,
   FileText,
   Pencil,
   Globe,
@@ -25,9 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsStaff } from "@/hooks/use-session";
 import { Panel, Pill, Stat, Meter } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { IQText } from "@/components/iq-text";
-import { NewsTicker } from "@/components/crm/news-ticker";
+import { CrmShell } from "@/components/crm/crm-shell";
 import { AccountDialog, ContactDialog } from "@/components/crm/account-dialog";
 import { CampaignDialog } from "@/components/crm/campaign-dialog";
 import {
