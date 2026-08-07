@@ -379,7 +379,8 @@ export function ExplainerVideo() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [runId]);
+  }, [runId, TOTAL, SCENES]);
+
 
   const handlePlay = () => {
     const audio = audioRef.current;
