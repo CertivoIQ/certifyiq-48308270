@@ -76,6 +76,7 @@ export const Route = createFileRoute("/api/public/crm/support-email")({
             .select("id")
             .single();
           if (accountError) throw accountError;
+          if (!account) throw new Error("Could not create account");
           accountId = account.id;
         }
 
@@ -91,7 +92,12 @@ export const Route = createFileRoute("/api/public/crm/support-email")({
             .select("id")
             .single();
           if (contactError) throw contactError;
+          if (!newContact) throw new Error("Could not create contact");
           contactId = newContact.id;
+        }
+
+        if (!accountId || !contactId) {
+          return new Response("Could not resolve account or contact", { status: 500 });
         }
 
         const { data: caseRow, error: caseError } = await supabaseAdmin

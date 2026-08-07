@@ -33,6 +33,7 @@ import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
+import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
@@ -156,6 +157,12 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
   path: '/properties/$propertyId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCrmSupportEmailRoute =
+  ApiPublicCrmSupportEmailRouteImport.update({
+    id: '/api/public/crm/support-email',
+    path: '/api/public/crm/support-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -193,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -220,6 +228,7 @@ export interface FileRoutesByTo {
   '/academy': typeof AcademyIndexRoute
   '/files': typeof FilesIndexRoute
   '/properties': typeof PropertiesIndexRoute
+  '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -249,6 +258,7 @@ export interface FileRoutesById {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/academy'
     | '/files'
     | '/properties'
+    | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   id:
@@ -333,6 +345,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -357,6 +370,7 @@ export interface RootRouteChildren {
   AcademyIndexRoute: typeof AcademyIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
+  ApiPublicCrmSupportEmailRoute: typeof ApiPublicCrmSupportEmailRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -531,6 +545,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertiesPropertyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/crm/support-email': {
+      id: '/api/public/crm/support-email'
+      path: '/api/public/crm/support-email'
+      fullPath: '/api/public/crm/support-email'
+      preLoaderRoute: typeof ApiPublicCrmSupportEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -587,6 +608,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcademyIndexRoute: AcademyIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
+  ApiPublicCrmSupportEmailRoute: ApiPublicCrmSupportEmailRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
