@@ -24,24 +24,28 @@ import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 import { useIsStaff } from "@/hooks/use-session";
+import { useT } from "@/lib/i18n/provider";
+import type { TranslationKey } from "@/lib/i18n/en";
 
 
 const NAV = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/properties", label: "Properties", icon: Building2 },
-  { to: "/files", label: "Certifications", icon: FileCheck2 },
-  { to: "/findings", label: "Findings", icon: AlertTriangle },
-  { to: "/rules", label: "Rule packs", icon: Scale },
-  { to: "/copilot", label: "AI Copilot", icon: Sparkles },
-  { to: "/academy", label: "CertivoIQ Academy", icon: GraduationCap },
-  { to: "/launchpad", label: "LaunchPad", icon: Rocket },
-  { to: "/trial", label: "My free trial", icon: Gift },
-  { to: "/pricing", label: "Plans & pricing", icon: Tag },
-  { to: "/security", label: "Security", icon: Shield },
-  { to: "/billing", label: "Account & billing", icon: CreditCard },
-  { to: "/contact-support", label: "Contact Support", icon: HelpCircle },
-] as const;
+  { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/properties", labelKey: "nav.properties", icon: Building2 },
+  { to: "/files", labelKey: "nav.files", icon: FileCheck2 },
+  { to: "/findings", labelKey: "nav.findings", icon: AlertTriangle },
+  { to: "/rules", labelKey: "nav.rules", icon: Scale },
+  { to: "/copilot", labelKey: "nav.copilot", icon: Sparkles },
+  { to: "/academy", labelKey: "nav.academy", icon: GraduationCap },
+  { to: "/launchpad", labelKey: "nav.launchpad", icon: Rocket },
+  { to: "/trial", labelKey: "nav.trial", icon: Gift },
+  { to: "/pricing", labelKey: "nav.pricing", icon: Tag },
+  { to: "/security", labelKey: "nav.security", icon: Shield },
+  { to: "/billing", labelKey: "nav.billing", icon: CreditCard },
+  { to: "/contact-support", labelKey: "nav.support", icon: HelpCircle },
+] as const satisfies readonly { to: string; labelKey: TranslationKey; icon: unknown }[];
+
 
 
 function Wordmark() {
