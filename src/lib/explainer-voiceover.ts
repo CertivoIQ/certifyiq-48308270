@@ -16,25 +16,25 @@ export const VOICEOVER_DURATION_MS = 26_700;
 
 /**
  * Continuous English narration for the 5-scene animated explainer.
- * Spoken at a professional pace; total ~24s.
+ * Spoken at a professional pace with a slight speed boost; total ~21s.
  */
 export const EN_VOICEOVER =
-  "One overlooked Section 42 finding can cost a property sixty-five thousand dollars in recaptured tax credits. " +
-  "Your reviewers are checking every certification by hand across LIHTC, Section 8, HOME, HOTMA and bond programs. " +
-  "CertivoIQ reviews every line item against the rule that governs it, flags missing verifications, incorrect income calculations, and expired safe harbors. " +
-  "It returns cited findings, clear correction steps, and a Pass or Fail score for human final approval. " +
-  "Protect your tax credits before the auditor arrives. Start your seven-day free trial today.";
+  "One uncorrected Section 42 finding: sixty-five thousand dollars gone. " +
+  "Reviewers check every certification by hand across five programs and fifty states. " +
+  "CertivoIQ checks every line against the rule, flags missing verifications and bad income calculations. " +
+  "Cited findings, correction steps, and a Pass or Fail score for human approval. " +
+  "Protect your tax credits. Start your seven-day free trial today.";
 
 /**
  * Continuous Spanish narration for the 5-scene animated explainer.
- * Spoken at a professional pace; total ~24s.
+ * Spoken at a professional pace with a slight speed boost; total ~25s.
  */
 export const ES_VOICEOVER =
-  "Un hallazgo de la Sección 42 pasado por alto puede costarle a una propiedad sesenta y cinco mil dólares en créditos fiscales recapturados. " +
-  "Sus revisores revisan cada certificación manualmente entre los programas LIHTC, Section 8, HOME, HOTMA y Bond. " +
-  "CertivoIQ revisa cada partida contra la regla que la rige, señala verificaciones faltantes, cálculos de ingresos incorrectos y salvaguardas vencidas. " +
-  "Devuelve hallazgos citados, pasos de corrección claros y un resultado de aprobado o no aprobado para la aprobación final humana. " +
-  "Proteja sus créditos fiscales antes de que llegue el auditor. Comience su prueba gratuita de siete días hoy.";
+  "Un hallazgo de la Sección 42 sin corregir: sesenta y cinco mil dólares perdidos. " +
+  "Revisores revisan cada certificación manualmente entre cinco programas y cincuenta estados. " +
+  "CertivoIQ verifica cada partida contra la regla, detecta verificaciones faltantes e ingresos erróneos. " +
+  "Hallazgos citados, correcciones y un resultado para la aprobación humana. " +
+  "Proteja sus créditos fiscales. Prueba gratuita de siete días.";
 
 export const VOICEOVER_SCRIPTS: Record<VoiceoverLang, string> = {
   en: EN_VOICEOVER,
