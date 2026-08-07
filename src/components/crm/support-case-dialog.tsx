@@ -112,7 +112,7 @@ export function SupportCaseDialog({
     }
   }, [open, supportCase]);
 
-  const filteredContacts = supportCase?.account_id
+  const filteredContacts = d.account_id
     ? contacts.filter((c) => c.account_id === d.account_id)
     : contacts;
 
