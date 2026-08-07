@@ -67,16 +67,8 @@ export const es: Dictionary = {
     "CertivoIQ revisa las certificaciones de LIHTC, HOME, Section 8 y HOTMA según el paquete de reglas asignado a cada propiedad, entrega un resultado de Aprobado o No aprobado con hallazgos citados y pasos de corrección, y lo envía a una persona para la aprobación final.",
   "welcome.cta.trial": "Comience su prueba de 7 días",
   "welcome.cta.sample": "Ver una certificación revisada",
-  "welcome.video.play": "Reproducir el video instructivo de CertivoIQ",
   "welcome.video.label": "Video explicativo de inteligencia de cumplimiento de CertivoIQ",
   "welcome.video.trialCta": "Comience la prueba de 7 días",
-  "welcome.video.toast.title": "Reproduciendo: «Dentro de CertivoIQ»",
-  "welcome.video.toast.body":
-    "4 minutos — qué es, cómo funciona y cuánto cuesta realmente el incumplimiento.",
-  "welcome.video.title.pre": "Dentro de",
-  "welcome.video.title.post": "— el recorrido de cumplimiento en 4 minutos",
-  "welcome.video.sub":
-    "Qué es la plataforma · cómo funciona la revisión con IA · por qué revisar solo a mano pone en riesgo los créditos",
   "welcome.risks.title": "Lo que una revisión manual pasa por alto — y lo que cuesta",
   "welcome.risks.body":
     "Cada punto a continuación es una causa real de multas, acuerdos de reembolso, hallazgos en el IRS Form 8823 o recaptura de créditos fiscales. La revisión manual detecta la mayoría, casi siempre. CertivoIQ los verifica todos, siempre.",
