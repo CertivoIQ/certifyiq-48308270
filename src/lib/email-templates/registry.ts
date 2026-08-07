@@ -2,6 +2,8 @@ import type { ComponentType } from 'react'
 import { template as invoiceCreatedTemplate } from './invoice-created'
 import { template as paymentSucceededTemplate } from './payment-succeeded'
 import { template as paymentFailedTemplate } from './payment-failed'
+import { template as introColdTemplate } from './intro-cold'
+
 
 export interface TemplateEntry {
   component: ComponentType<any>
