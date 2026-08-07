@@ -22,6 +22,7 @@ import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
@@ -32,6 +33,7 @@ import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
+import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
@@ -99,6 +101,11 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCrmSupportRoute = AuthenticatedCrmSupportRouteImport.update({
+  id: '/crm-support',
+  path: '/crm-support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMarketingKitRoute =
   AuthenticatedMarketingKitRouteImport.update({
     id: '/marketing-kit',
@@ -150,6 +157,12 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
   path: '/properties/$propertyId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCrmSupportEmailRoute =
+  ApiPublicCrmSupportEmailRouteImport.update({
+    id: '/api/public/crm/support-email',
+    path: '/api/public/crm/support-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -176,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -186,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -202,6 +217,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -212,6 +228,7 @@ export interface FileRoutesByTo {
   '/academy': typeof AcademyIndexRoute
   '/files': typeof FilesIndexRoute
   '/properties': typeof PropertiesIndexRoute
+  '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -230,6 +247,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -240,6 +258,7 @@ export interface FileRoutesById {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -258,6 +277,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/billing'
     | '/crm'
+    | '/crm-support'
     | '/marketing-kit'
     | '/security'
     | '/academy/$courseId'
@@ -268,6 +288,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -284,6 +305,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/billing'
     | '/crm'
+    | '/crm-support'
     | '/marketing-kit'
     | '/security'
     | '/academy/$courseId'
@@ -294,6 +316,7 @@ export interface FileRouteTypes {
     | '/academy'
     | '/files'
     | '/properties'
+    | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   id:
@@ -311,6 +334,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/_authenticated/billing'
     | '/_authenticated/crm'
+    | '/_authenticated/crm-support'
     | '/_authenticated/marketing-kit'
     | '/_authenticated/security'
     | '/academy/$courseId'
@@ -321,6 +345,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -345,6 +370,7 @@ export interface RootRouteChildren {
   AcademyIndexRoute: typeof AcademyIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
+  ApiPublicCrmSupportEmailRoute: typeof ApiPublicCrmSupportEmailRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -442,6 +468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/crm-support': {
+      id: '/_authenticated/crm-support'
+      path: '/crm-support'
+      fullPath: '/crm-support'
+      preLoaderRoute: typeof AuthenticatedCrmSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing-kit': {
       id: '/_authenticated/marketing-kit'
       path: '/marketing-kit'
@@ -512,6 +545,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertiesPropertyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/crm/support-email': {
+      id: '/api/public/crm/support-email'
+      path: '/api/public/crm/support-email'
+      fullPath: '/api/public/crm/support-email'
+      preLoaderRoute: typeof ApiPublicCrmSupportEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -532,6 +572,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
 }
@@ -539,6 +580,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
 }
@@ -566,19 +608,10 @@ const rootRouteChildren: RootRouteChildren = {
   AcademyIndexRoute: AcademyIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
+  ApiPublicCrmSupportEmailRoute: ApiPublicCrmSupportEmailRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

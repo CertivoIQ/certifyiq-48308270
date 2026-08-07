@@ -9,12 +9,9 @@ import {
   Phone,
   Plus,
   Send,
-  Sparkles,
   UserPlus,
   Zap,
-  ShieldAlert,
   Loader2,
-  ArrowLeft,
   FileText,
   Pencil,
   Globe,
@@ -25,9 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsStaff } from "@/hooks/use-session";
 import { Panel, Pill, Stat, Meter } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { IQText } from "@/components/iq-text";
-import { NewsTicker } from "@/components/crm/news-ticker";
+import { CrmShell } from "@/components/crm/crm-shell";
 import { AccountDialog, ContactDialog } from "@/components/crm/account-dialog";
 import { CampaignDialog } from "@/components/crm/campaign-dialog";
 import {
@@ -64,58 +60,6 @@ export const Route = createFileRoute("/_authenticated/crm")({
   }),
   component: CrmDashboard,
 });
-
-function CrmShell({ children, email }: { children: React.ReactNode; email: string | null }) {
-  return (
-    <div className="crm-surface min-h-screen pb-16">
-      <header className="sticky top-0 z-30 border-b border-gold-line bg-gold-surface/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-4 py-3 sm:px-7">
-          <span className="crm-gradient grid size-9 place-items-center rounded-[9px] font-mono text-[13px] font-bold text-gold-ink">
-            IQ
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate font-display text-[20px] leading-tight text-gold-ink sm:text-[24px]">
-              <IQText>CertifyIQ CRM Dashboard</IQText>
-            </h1>
-            <p className="cite">Internal · never visible to customers, leads or clients</p>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            {email && (
-              <span className="hidden rounded-full border border-gold-line bg-background/60 px-3 py-1 font-mono text-[11.5px] text-gold-ink sm:inline">
-                {email}
-              </span>
-            )}
-            <Button size="sm" variant="outline" asChild>
-              <Link to="/">
-                <ArrowLeft className="size-4" /> Product
-              </Link>
-            </Button>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-7 sm:py-8">{children}</div>
-    </div>
-  );
-}
-
-function Denied() {
-  return (
-    <div className="grid min-h-screen place-items-center px-4">
-      <div className="max-w-md rounded-xl border border-border bg-card p-7 text-center">
-        <ShieldAlert className="mx-auto size-9 text-flag" />
-        <h1 className="mt-3 font-display text-[21px]">Staff access only</h1>
-        <p className="mt-2 text-[13.5px] text-muted-foreground">
-          The CertifyIQ CRM Dashboard is restricted to verified @certifyiq.com accounts. If you are a CertifyIQ
-          employee, sign in with your company email.
-        </p>
-        <Button className="mt-5" asChild>
-          <Link to="/">Back to CertifyIQ</Link>
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 function CrmDashboard() {
   const { isStaff, loading, email } = useIsStaff();
@@ -217,17 +161,8 @@ function CrmDashboard() {
     onError: () => toast.error("Could not queue reminder"),
   });
 
-  if (loading) {
-    return (
-      <div className="grid min-h-screen place-items-center">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-  if (!isStaff) return <Denied />;
-
   return (
-    <CrmShell email={email}>
+    <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Open pipeline ARR" value={money(pipelineArr)} hint={`${rows.length} accounts tracked`} />
         <Stat label="Closed won ARR" value={money(wonArr)} hint={`${byStage.find((b) => b.stage === "won")?.count ?? 0} subscribed`} />
@@ -488,13 +423,6 @@ function CrmDashboard() {
           )}
         </ul>
       </Panel>
-
-      <p className="cite mt-4 flex items-center gap-2">
-        <Sparkles className="size-3.5 text-gold" /> Federal affordable housing updates and new paid subscribers stream
-        in the ticker below, refreshed daily.
-      </p>
-
-      <NewsTicker items={news.data ?? []} />
 
       <AccountDialog
         open={accountDialog.open}
