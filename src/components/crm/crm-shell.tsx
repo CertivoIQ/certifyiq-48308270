@@ -13,7 +13,7 @@ function Denied() {
         <ShieldAlert className="mx-auto size-9 text-flag" />
         <h1 className="mt-3 font-display text-[21px]">Staff access only</h1>
         <p className="mt-2 text-[13.5px] text-muted-foreground">
-          The CertifyIQ CRM Dashboard is restricted to verified @certifyiq.com accounts.
+          The CertifyIQ CRM Dashboard is restricted to verified @certifyiq.app accounts.
         </p>
         <Button className="mt-5" asChild>
           <Link to="/">Back to CertifyIQ</Link>

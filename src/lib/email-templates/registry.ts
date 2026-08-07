@@ -3,6 +3,7 @@ import { template as invoiceCreatedTemplate } from './invoice-created'
 import { template as paymentSucceededTemplate } from './payment-succeeded'
 import { template as paymentFailedTemplate } from './payment-failed'
 import { template as introColdTemplate } from './intro-cold'
+import { template as supportRequestReceivedTemplate } from './support-request-received'
 
 
 export interface TemplateEntry {
@@ -23,5 +24,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-succeeded': paymentSucceededTemplate,
   'payment-failed': paymentFailedTemplate,
   'intro-cold': introColdTemplate,
+  'support-request-received': supportRequestReceivedTemplate,
 }
 

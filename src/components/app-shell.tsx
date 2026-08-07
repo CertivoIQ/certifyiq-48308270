@@ -16,6 +16,7 @@ import {
   Briefcase,
   Shield,
   CreditCard,
+  HelpCircle,
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
@@ -39,6 +40,7 @@ const NAV = [
   { to: "/pricing", label: "Plans & pricing", icon: Tag },
   { to: "/security", label: "Security", icon: Shield },
   { to: "/billing", label: "Account & billing", icon: CreditCard },
+  { to: "/contact-support", label: "Contact Support", icon: HelpCircle },
 ] as const;
 
 
