@@ -302,7 +302,15 @@ function CrmDashboard() {
         title="Marketing material templates"
         description="Prebuilt and tied to federal compliance events and rule changes"
         bodyClassName="p-0"
+        actions={
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/marketing-kit">
+              <Printer className="size-4" /> Printable intro one-pager
+            </Link>
+          </Button>
+        }
       >
+
         <ul className="divide-y divide-border">
           {(templates.data ?? []).map((t) => (
             <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5">
