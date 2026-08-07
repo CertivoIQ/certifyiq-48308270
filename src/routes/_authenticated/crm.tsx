@@ -61,58 +61,6 @@ export const Route = createFileRoute("/_authenticated/crm")({
   component: CrmDashboard,
 });
 
-function CrmShell({ children, email }: { children: React.ReactNode; email: string | null }) {
-  return (
-    <div className="crm-surface min-h-screen pb-16">
-      <header className="sticky top-0 z-30 border-b border-gold-line bg-gold-surface/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-4 py-3 sm:px-7">
-          <span className="crm-gradient grid size-9 place-items-center rounded-[9px] font-mono text-[13px] font-bold text-gold-ink">
-            IQ
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate font-display text-[20px] leading-tight text-gold-ink sm:text-[24px]">
-              <IQText>CertifyIQ CRM Dashboard</IQText>
-            </h1>
-            <p className="cite">Internal · never visible to customers, leads or clients</p>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            {email && (
-              <span className="hidden rounded-full border border-gold-line bg-background/60 px-3 py-1 font-mono text-[11.5px] text-gold-ink sm:inline">
-                {email}
-              </span>
-            )}
-            <Button size="sm" variant="outline" asChild>
-              <Link to="/">
-                <ArrowLeft className="size-4" /> Product
-              </Link>
-            </Button>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-7 sm:py-8">{children}</div>
-    </div>
-  );
-}
-
-function Denied() {
-  return (
-    <div className="grid min-h-screen place-items-center px-4">
-      <div className="max-w-md rounded-xl border border-border bg-card p-7 text-center">
-        <ShieldAlert className="mx-auto size-9 text-flag" />
-        <h1 className="mt-3 font-display text-[21px]">Staff access only</h1>
-        <p className="mt-2 text-[13.5px] text-muted-foreground">
-          The CertifyIQ CRM Dashboard is restricted to verified @certifyiq.com accounts. If you are a CertifyIQ
-          employee, sign in with your company email.
-        </p>
-        <Button className="mt-5" asChild>
-          <Link to="/">Back to CertifyIQ</Link>
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 function CrmDashboard() {
   const { isStaff, loading, email } = useIsStaff();
   const qc = useQueryClient();
