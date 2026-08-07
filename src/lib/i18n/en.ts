@@ -65,11 +65,6 @@ export const en = {
   "welcome.cta.sample": "See a reviewed certification",
   "welcome.video.label": "CertivoIQ compliance intelligence explainer video",
   "welcome.video.trialCta": "Start 7 Day Free Trial",
-  "video.play": "Play narration",
-  "video.pause": "Pause",
-  "video.replay": "Replay",
-  "video.switchLanguage": "Switch voiceover language",
-  "video.audioError": "Audio failed to load",
   "welcome.risks.title": "What a human eye alone misses — and what it costs",
   "welcome.risks.body":
     "Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.",

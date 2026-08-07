@@ -1,9 +1,4 @@
-import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
-import { Volume2, VolumeX, Play, RotateCcw } from "lucide-react";
-import { VOICEOVER_FILES, getSceneDurations, type VoiceoverLang } from "@/lib/explainer-voiceover";
-import { useLanguage, useT } from "@/lib/i18n/provider";
-
-
+import { useState, useEffect, useRef, type CSSProperties } from "react";
 
 const C = {
   bg: "#060B18",
@@ -324,103 +319,39 @@ function Scene4() {
 }
 
 const SceneMap = [Scene0, Scene1, Scene2, Scene3, Scene4];
+const SCENE_DURATIONS = [4200, 3800, 5500, 4200, 5000];
+const TOTAL = SCENE_DURATIONS.reduce((s, d) => s + d, 0);
 
 export function ExplainerVideo() {
-  const t = useT();
-  const { lang: uiLang } = useLanguage();
-  const [voiceLang, setVoiceLang] = useState<VoiceoverLang>(uiLang === "es" ? "es" : "en");
-  const [runId, setRunId] = useState(0);
   const [scene, setScene] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [ended, setEnded] = useState(false);
-  const [audioError, setAudioError] = useState(false);
   const startRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Each language has its own generated voiceover, so scene durations are
-  // computed from the real audio length and per-sentence word counts.
-  const SCENES = useMemo(() => getSceneDurations(voiceLang).map((duration) => ({ duration })), [voiceLang]);
-  const TOTAL = useMemo(() => SCENES.reduce((s, x) => s + x.duration, 0), [SCENES]);
-
-
-  // Keep voiceover language in sync with UI language when not actively playing.
   useEffect(() => {
-    if (!playing) setVoiceLang(uiLang === "es" ? "es" : "en");
-  }, [uiLang, playing]);
-
-  // Animation loop. Restarts whenever `runId` changes.
-  useEffect(() => {
-    setElapsed(0);
-    setScene(0);
-    setEnded(false);
     startRef.current = performance.now();
     const tick = (now: number) => {
       const ms = now - (startRef.current ?? now);
-      setElapsed(Math.min(ms, TOTAL));
+      const looped = ms % TOTAL;
+      setElapsed(looped);
       let acc = 0;
-      for (let i = 0; i < SCENES.length; i++) {
-        if (ms < acc + SCENES[i]!.duration) {
+      for (let i = 0; i < SCENE_DURATIONS.length; i++) {
+        if (looped < acc + SCENE_DURATIONS[i]!) {
           setScene(i);
           break;
         }
-        acc += SCENES[i]!.duration;
+        acc += SCENE_DURATIONS[i]!;
       }
-      if (ms < TOTAL) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        setEnded(true);
-        setPlaying(false);
-      }
+      rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [runId, TOTAL, SCENES]);
-
-
-  const handlePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    setAudioError(false);
-    audio.currentTime = 0;
-    setRunId((id) => id + 1);
-    setEnded(false);
-    setPlaying(true);
-    // Start audio after the animation frame has reset so they are in sync.
-    requestAnimationFrame(() => {
-      audio.play().catch((err) => {
-        console.error("Voiceover playback failed", err);
-        setAudioError(true);
-        setPlaying(false);
-      });
-    });
-  };
-
-  const handlePause = () => {
-    const audio = audioRef.current;
-    if (audio) audio.pause();
-    setPlaying(false);
-  };
-
-  const handleAudioEnded = () => {
-    setPlaying(false);
-    setEnded(true);
-  };
-
-  const handleAudioError = () => {
-    setAudioError(true);
-    setPlaying(false);
-  };
+  }, []);
 
   const progress = Math.round((elapsed / TOTAL) * 10000) / 100;
   const Active = SceneMap[scene]!;
-
-  const toggleVoiceLang = () => {
-    setVoiceLang((prev) => (prev === "en" ? "es" : "en"));
-  };
 
   return (
     <section
@@ -433,19 +364,9 @@ export function ExplainerVideo() {
         background: C.bg,
         fontFamily: C.sans,
       }}
-      aria-label={t("welcome.video.label")}
+      aria-label="CertivoIQ compliance intelligence explainer video"
     >
       <style>{css}</style>
-
-      <audio
-        ref={audioRef}
-        src={VOICEOVER_FILES[voiceLang].url}
-        preload="metadata"
-        onEnded={handleAudioEnded}
-        onError={handleAudioError}
-        style={{ display: "none" }}
-        aria-hidden="true"
-      />
 
       {/* Progress bar */}
       <div
@@ -482,87 +403,8 @@ export function ExplainerVideo() {
           boxShadow: "0 2px 10px rgba(37,99,235,0.45)",
         }}
       >
-        {t("welcome.video.trialCta")}
+        Start 7 Day Free Trial
       </a>
-
-      {/* Audio controls */}
-      <div
-        style={{
-          position: "absolute",
-          left: "3%",
-          top: "5.5%",
-          zIndex: 20,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}
-      >
-        <button
-          type="button"
-          onClick={playing ? handlePause : handlePlay}
-          aria-label={playing ? t("video.pause") : ended ? t("video.replay") : t("video.play")}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            borderRadius: 6,
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(6,11,24,0.72)",
-            backdropFilter: "blur(6px)",
-            padding: "6px 12px",
-            fontSize: 12,
-            fontWeight: 600,
-            color: C.white,
-            cursor: "pointer",
-          }}
-        >
-          {playing ? <Volume2 size={14} /> : ended ? <RotateCcw size={14} /> : <Play size={14} />}
-          {playing ? t("video.pause") : ended ? t("video.replay") : t("video.play")}
-        </button>
-        <button
-          type="button"
-          onClick={toggleVoiceLang}
-          aria-label={t("video.switchLanguage")}
-          style={{
-            borderRadius: 6,
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(6,11,24,0.72)",
-            backdropFilter: "blur(6px)",
-            padding: "6px 10px",
-            fontSize: 11,
-            fontWeight: 600,
-            color: C.sky,
-            cursor: "pointer",
-            fontFamily: C.mono,
-            letterSpacing: "0.04em",
-          }}
-        >
-          {VOICEOVER_FILES[voiceLang].display}
-        </button>
-      </div>
-
-      {audioError && (
-        <div
-          style={{
-            position: "absolute",
-            left: "3%",
-            top: "14%",
-            zIndex: 20,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            borderRadius: 6,
-            background: "rgba(248,113,113,0.15)",
-            border: "1px solid rgba(248,113,113,0.35)",
-            padding: "6px 10px",
-            fontSize: 11,
-            color: C.red,
-          }}
-        >
-          <VolumeX size={12} />
-          {t("video.audioError")}
-        </div>
-      )}
 
       {/* Scene stage */}
       <div
