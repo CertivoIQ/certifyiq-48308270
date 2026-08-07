@@ -22,16 +22,17 @@ export const hr = { borderColor: BRAND.border, margin: '24px 0' }
 const rowLabel = { fontSize: '12.5px', color: BRAND.muted, margin: '0 0 2px' }
 const rowValue = { fontSize: '15px', color: BRAND.ink, margin: '0 0 12px', fontWeight: 600 as const }
 
-export function Brand() {
+export function Brand({ locale }: { locale?: EmailLocale } = {}) {
   return (
     <Section style={{ paddingBottom: '18px' }}>
       <Text style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: BRAND.navy, letterSpacing: '-0.2px' }}>
         Certivo<span style={{ color: BRAND.gold }}>IQ</span>
       </Text>
-      <Text style={{ ...small, marginTop: '2px' }}>Affordable housing compliance platform</Text>
+      <Text style={{ ...small, marginTop: '2px' }}>{emailT(locale, 'brand.tagline')}</Text>
     </Section>
   )
 }
+
 
 export function DetailRow({ label, value }: { label: string; value: string }) {
   return (
