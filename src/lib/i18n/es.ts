@@ -69,6 +69,11 @@ export const es: Dictionary = {
   "welcome.cta.sample": "Ver una certificación revisada",
   "welcome.video.label": "Video explicativo de inteligencia de cumplimiento de CertivoIQ",
   "welcome.video.trialCta": "Comience la prueba de 7 días",
+  "video.play": "Reproducir narración",
+  "video.pause": "Pausar",
+  "video.replay": "Repetir",
+  "video.switchLanguage": "Cambiar idioma de narración",
+  "video.audioError": "No se pudo cargar el audio",
   "welcome.risks.title": "Lo que una revisión manual pasa por alto — y lo que cuesta",
   "welcome.risks.body":
     "Cada punto a continuación es una causa real de multas, acuerdos de reembolso, hallazgos en el IRS Form 8823 o recaptura de créditos fiscales. La revisión manual detecta la mayoría, casi siempre. CertivoIQ los verifica todos, siempre.",
