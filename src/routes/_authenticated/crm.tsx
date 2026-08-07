@@ -424,13 +424,6 @@ function CrmDashboard() {
         </ul>
       </Panel>
 
-      <p className="cite mt-4 flex items-center gap-2">
-        <Sparkles className="size-3.5 text-gold" /> Federal affordable housing updates and new paid subscribers stream
-        in the ticker below, refreshed daily.
-      </p>
-
-      <NewsTicker items={news.data ?? []} />
-
       <AccountDialog
         open={accountDialog.open}
         account={accountDialog.account}
