@@ -94,41 +94,9 @@ function WelcomePage() {
         </section>
 
         <section className="mt-12" id="video">
-          <Panel bodyClassName="p-0">
-            <div className="brand-gradient relative grid aspect-video place-items-center rounded-t-lg">
-              <div className="text-center text-primary-foreground">
-                <button
-                  type="button"
-                  onClick={() =>
-                    toast.info(t("welcome.video.toast.title"), {
-                      description: t("welcome.video.toast.body"),
-                    })
-                  }
-                  className="transition-transform hover:scale-105"
-                  aria-label={t("welcome.video.play")}
-                >
-                  <PlayCircle className="mx-auto size-20" strokeWidth={1.3} />
-                </button>
-                <p className="mt-4 font-display text-[24px]">
-                  {t("welcome.video.title.pre")} Certivo<span className="text-gold">IQ</span>{" "}
-                  {t("welcome.video.title.post")}
-                </p>
-                <p className="mt-1.5 text-[13px] opacity-85">
-                  {t("welcome.video.sub")}
-                </p>
-              </div>
-            </div>
-            <div className="grid gap-x-6 gap-y-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3">
-              {chapters.map((c) => (
-                <div key={c.time} className="border-l-2 border-primary/30 pl-3">
-                  <p className="cite font-mono">{c.time}</p>
-                  <p className="mt-0.5 font-display text-[15px]">{c.title}</p>
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{c.body}</p>
-                </div>
-              ))}
-            </div>
-          </Panel>
+          <ExplainerVideo />
         </section>
+
 
         <section className="mt-12">
           <h2 className="text-center font-display text-[30px]">
