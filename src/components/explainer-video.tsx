@@ -1,16 +1,9 @@
-import { useState, useEffect, useRef, type CSSProperties } from "react";
+import { useState, useEffect, useRef, useMemo, type CSSProperties } from "react";
 import { Volume2, VolumeX, Play, RotateCcw } from "lucide-react";
-import { VOICEOVER_FILES, type VoiceoverLang } from "@/lib/explainer-voiceover";
+import { VOICEOVER_FILES, getSceneDurations, type VoiceoverLang } from "@/lib/explainer-voiceover";
 import { useLanguage, useT } from "@/lib/i18n/provider";
 
-const SCENES = [
-  { duration: 4200 },
-  { duration: 3800 },
-  { duration: 5500 },
-  { duration: 4200 },
-  { duration: 9000 },
-];
-const TOTAL = SCENES.reduce((s, x) => s + x.duration, 0);
+
 
 const C = {
   bg: "#060B18",
@@ -346,6 +339,12 @@ export function ExplainerVideo() {
   const rafRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Each language has its own generated voiceover, so scene durations are
+  // computed from the real audio length and per-sentence word counts.
+  const SCENES = useMemo(() => getSceneDurations(voiceLang).map((duration) => ({ duration })), [voiceLang]);
+  const TOTAL = useMemo(() => SCENES.reduce((s, x) => s + x.duration, 0), [SCENES]);
+
+
   // Keep voiceover language in sync with UI language when not actively playing.
   useEffect(() => {
     if (!playing) setVoiceLang(uiLang === "es" ? "es" : "en");
@@ -379,7 +378,8 @@ export function ExplainerVideo() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [runId]);
+  }, [runId, TOTAL, SCENES]);
+
 
   const handlePlay = () => {
     const audio = audioRef.current;

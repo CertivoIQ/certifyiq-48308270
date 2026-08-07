@@ -8,11 +8,29 @@ export const VOICEOVER_FILES: Record<VoiceoverLang, { url: string; display: stri
   es: { url: esAsset.url, display: "Español" },
 };
 
+/** Word counts per scene (English and Spanish share the same scene structure). */
+export const VOICEOVER_SCENE_WORDS = {
+  en: [10, 14, 17, 13, 10],
+  es: [11, 15, 17, 12, 8],
+};
+
 /**
- * Total length of the explainer animation (ms). Keep narration comfortably
- * under this ceiling so the voiceover finishes before the animation loops.
+ * Empirical duration (ms) of each generated voiceover track.
+ * Measured from the final MP3 files; used to keep the animated scenes
+ * in sync with the narration for each language.
  */
-export const VOICEOVER_DURATION_MS = 26_700;
+export const VOICEOVER_DURATION_MS: Record<VoiceoverLang, number> = {
+  en: 21_288,
+  es: 25_224,
+};
+
+/** Compute per-scene durations so each slide lasts as long as its narration segment. */
+export function getSceneDurations(lang: VoiceoverLang): number[] {
+  const words = VOICEOVER_SCENE_WORDS[lang];
+  const total = VOICEOVER_DURATION_MS[lang];
+  const totalWords = words.reduce((a, b) => a + b, 0);
+  return words.map((w) => Math.round((w / totalWords) * total));
+}
 
 /**
  * Continuous English narration for the 5-scene animated explainer.
