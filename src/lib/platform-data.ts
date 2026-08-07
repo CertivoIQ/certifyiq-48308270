@@ -152,10 +152,9 @@ export const PLANS = [
     tagline: "National REITs, multi-state portfolios, custom integrations",
     features: [
       "Everything in Enterprise",
-      "Dedicated account manager",
+      "Unlimited + National REITs, multi-state portfolios, custom integrations",
       "Custom rule pack development",
       "Enterprise-level API throughput",
-      "On-premise deployment option",
       "Custom compliance reporting",
     ],
     cta: "Choose Enterprise Plus",
