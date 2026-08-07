@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "certifyiq"
+const SITE_NAME = "CertifyIQ"
 const SENDER_DOMAIN = "notify.certifyiq.app"
 const ROOT_DOMAIN = "certifyiq.app"
 const FROM_DOMAIN = "certifyiq.app"
