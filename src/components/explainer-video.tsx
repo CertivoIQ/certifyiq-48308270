@@ -3,7 +3,6 @@ import { Volume2, VolumeX, Play, RotateCcw } from "lucide-react";
 import { VOICEOVER_FILES, getSceneDurations, type VoiceoverLang } from "@/lib/explainer-voiceover";
 import { useLanguage, useT } from "@/lib/i18n/provider";
 
-const BASE_SCENES = [0, 1, 2, 3, 4];
 
 
 const C = {
