@@ -76,7 +76,7 @@ export const template = {
   displayName: 'Support request received',
   previewData: {
     name: 'Jordan',
-    caseNumber: 'CS-00042',
+    caseNumber: 'SC-00042',
     subject: 'Question about LIHTC income limits',
     supportUrl: 'https://certifyiq.app/contact-support',
   },
