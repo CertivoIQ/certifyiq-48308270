@@ -1,6 +1,6 @@
-# CertifyIQ 
+# CertivoIQ 
 
-I have uploaded a projuect ive been working on that i need help with creating. Build me a LIHTC, SEC8, HOME, HOTMA affordable housing compliance platform. Where an AI agent calculates TICs, and certifications for accuracy and program compliance. It should be available for all 50 states. It should be called CertifyIQ instead of Certivo. It should have be able to review and soft approve all certifications according to program. It should have a section for new compliance reviewers to learn how to audit a certification. It should b3 called KnowledgeIQ or something similar along those lines. It should provide training on affordable housing programs with certificates of achievement at the end of the module courses. 
+I have uploaded a projuect ive been working on that i need help with creating. Build me a LIHTC, SEC8, HOME, HOTMA affordable housing compliance platform. Where an AI agent calculates TICs, and certifications for accuracy and program compliance. It should be available for all 50 states. It should be called CertivoIQ instead of Certivo. It should have be able to review and soft approve all certifications according to program. It should have a section for new compliance reviewers to learn how to audit a certification. It should b3 called KnowledgeIQ or something similar along those lines. It should provide training on affordable housing programs with certificates of achievement at the end of the module courses. 
 
 What I would like to add
 
@@ -644,7 +644,7 @@ That would provide everything needed for a development team—or AI coding tools
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://certifyiq.lovable.app
+**Live app**: https://certivoiq.lovable.app
 
 ## Build with Lovable
 
