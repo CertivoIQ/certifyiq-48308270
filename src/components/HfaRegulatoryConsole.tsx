@@ -199,6 +199,8 @@ export function AgencySubmissionDetail({ submissionId }: { submissionId: string 
   const disposition = useServerFn(dispositionCorrection);
   const accept = useServerFn(acceptSubmission);
   const ownerRespond = useServerFn(respondToCorrection);
+  const evidenceUpload = useServerFn(uploadCorrectionEvidence);
+  const evidenceDownload = useServerFn(getCorrectionEvidenceDownload);
 
   const detail = useQuery({
     queryKey: ["hfa-submission", submissionId],
