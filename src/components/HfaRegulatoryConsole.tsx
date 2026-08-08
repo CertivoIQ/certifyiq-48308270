@@ -486,14 +486,28 @@ export function AgencySubmissionDetail({ submissionId }: { submissionId: string 
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() =>
-                      disposition({
-                        data: { caseId: c.id, disposition: "Corrective action accepted.", accept: true },
-                      }).then((r) => handle(r, "Correction closed."), (e: Error) => toast.error(e.message))
-                    }
+                    onClick={() => {
+                      if (
+                        files.length > 0 &&
+                        !window.confirm(
+                          "This correction is backed by quarantined, unscanned documentation. Confirm you reviewed that documentation outside CertivoIQ before closing the case.",
+                        )
+                      ) {
+                        return;
+                      }
+                      void disposition({
+                        data: {
+                          caseId: c.id,
+                          disposition: "Corrective action accepted.",
+                          accept: true,
+                          quarantineAcknowledged: files.length > 0,
+                        },
+                      }).then((r) => handle(r, "Correction closed."), (e: Error) => toast.error(e.message));
+                    }}
                   >
                     Accept correction
                   </Button>
+
                   <Button
                     size="sm"
                     variant="ghost"
