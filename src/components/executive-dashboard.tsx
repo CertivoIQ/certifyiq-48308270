@@ -9,6 +9,7 @@ import {
   FINDINGS_BY_PROGRAM,
   riskBand,
 } from "@/lib/demo-data";
+import { DemoDataBanner, DemoWatermark } from "@/lib/demo-tenant";
 import { ArrowUpRight, TrendingDown } from "lucide-react";
 import { useT, useFormatters } from "@/lib/i18n/provider";
 
@@ -33,6 +34,12 @@ export function ExecutiveDashboard({ demo = false }: { demo?: boolean }) {
         </>
       }
     >
+      {demo ? (
+        <div className="mb-4">
+          <DemoDataBanner />
+        </div>
+      ) : null}
+      {demo ? <DemoWatermark /> : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label={t("dash.stat.properties")} value={PORTFOLIO.properties} hint={t("dash.stat.properties.hint", { units: number(PORTFOLIO.units) })} />
         <Stat label={t("dash.stat.openFindings")} value={PORTFOLIO.openFindings} hint={t("dash.stat.openFindings.hint")} tone="flag" />
