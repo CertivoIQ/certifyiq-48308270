@@ -53,13 +53,50 @@ function subscriptionRow(subscription: any, env: StripeEnv) {
 }
 
 /**
+ * Claim a Stripe event id. Returns true only for the first caller, so any
+ * one-time activation side effect runs exactly once per event.
+ */
+async function claimEvent(eventId: string | undefined, eventType: string): Promise<boolean> {
+  if (!eventId) return true;
+  const { error } = await getSupabase()
+    .from("stripe_processed_events")
+    .insert({ event_id: eventId, event_type: eventType });
+  if (error) {
+    // 23505 = unique violation → this event was already applied.
+    if ((error as { code?: string }).code === "23505") return false;
+    console.error("Event ledger write failed", eventId, error);
+  }
+  return true;
+}
+
+/**
+ * First activation of a paid plan: mark the account subscribed and take the
+ * demo dataset away. Demo certifications, findings, properties and dashboard
+ * files are hard-coded mock data (src/lib/demo-data.ts) — there is nothing
+ * persisted per user to delete, so the flag below is what gates the mock
+ * dataset off for this user. Real, user-created data is never touched.
+ * Billing stays per-user; no org/files/storage architecture is introduced.
+ */
+async function activateSubscriber(userId: string, env: StripeEnv, eventId?: string, eventType = "") {
+  if (!(await claimEvent(eventId, eventType))) return;
+  const now = new Date().toISOString();
+  await getSupabase()
+    .from("account_access")
+    .update({ subscribed_at: now, demo_data_cleared_at: now, updated_at: now })
+    .eq("user_id", userId)
+    .is("demo_data_cleared_at", null);
+  console.log("Subscriber activated; demo dataset gated off", userId, env);
+}
+
+/**
  * Purchase side effects, per CertivoIQ's rules:
  *  - unlock plan capacity (units / properties / AI document allowance)
  *  - end the trial and cancel the 14-day file deletion clock
  *  - convert the matching CRM lead to "won" and announce it on the ticker
  *  - queue the welcome email + start the LaunchPad onboarding wizard
  */
-async function applyPurchase(subscription: any, env: StripeEnv) {
+async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: string; type?: string }) {
+
   const supabase = getSupabase();
   const userId = subscription.metadata?.userId;
   if (!userId) {
