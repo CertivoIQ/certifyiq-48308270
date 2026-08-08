@@ -48,7 +48,9 @@ function AcceptInvitation() {
 }
 
 export const Route = createFileRoute("/_authenticated/agency/invitations/accept")({
-  validateSearch: (search: Record<string, unknown>) => ({ token: typeof search.token === "string" ? search.token : "" }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    token: typeof search["token"] === "string" ? (search["token"] as string) : "",
+  }),
   head: () => ({
     meta: [
       { title: "Accept agency invitation — CertivoIQ" },
