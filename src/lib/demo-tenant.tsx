@@ -32,8 +32,9 @@ export function DemoDataBanner() {
   return (
     <div
       role="status"
-      className="bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-950"
+      className="rounded-md border border-flag/40 bg-flag-soft px-4 py-2 text-center text-sm font-semibold text-foreground"
     >
+
       Interactive demonstration · All people, properties, files and results are fictional · Do not
       upload real tenant information
     </div>
