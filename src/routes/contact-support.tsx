@@ -93,7 +93,7 @@ function ContactSupportPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/welcome" className="flex items-center gap-2.5">
             <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
               IQ
             </span>
@@ -107,7 +107,7 @@ function ContactSupportPage() {
               <Link to="/pricing">Pricing</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/">Open the platform</Link>
+              <Link to="/dashboard">Open the platform</Link>
             </Button>
           </div>
         </div>
@@ -135,7 +135,7 @@ function ContactSupportPage() {
               </p>
               <div className="mt-6 flex justify-center gap-3">
                 <Button variant="outline" asChild>
-                  <Link to="/">
+                  <Link to="/welcome">
                     <ArrowLeft className="mr-1.5 size-4" /> Back to CertivoIQ
                   </Link>
                 </Button>

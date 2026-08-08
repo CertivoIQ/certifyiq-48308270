@@ -9,6 +9,8 @@ import { useT, useLanguage } from "@/lib/i18n/provider";
 import { PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useSubscription } from "@/hooks/use-subscription";
+
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/welcome")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://certivoiq.com/welcome" },
+      { name: "robots", content: "index,follow" },
     ],
     links: [{ rel: "canonical", href: "https://certivoiq.com/welcome" }],
   }),
@@ -42,13 +45,15 @@ const WHY = [
 function WelcomePage() {
   const t = useT();
   const { lang } = useLanguage();
+  const { isActive: isSubscriber } = useSubscription();
   const risks = lang === "es" ? PENALTY_RISKS_ES : PENALTY_RISKS;
   const valueMath = lang === "es" ? VALUE_MATH_ES : VALUE_MATH;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/welcome" className="flex items-center gap-2.5">
             <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
               IQ
             </span>
@@ -62,7 +67,7 @@ function WelcomePage() {
               <Link to="/pricing">{t("welcome.nav.pricing")}</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/">{t("welcome.nav.open")}</Link>
+              <Link to="/dashboard">{t("welcome.nav.open")}</Link>
             </Button>
             <LanguageToggle />
             <ThemeToggle />
@@ -84,12 +89,18 @@ function WelcomePage() {
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" asChild>
-              <Link to="/launchpad">{t("welcome.cta.trial")}</Link>
+              <Link to={isSubscriber ? "/dashboard" : "/launchpad"}>
+                {isSubscriber ? t("welcome.nav.open") : t("welcome.cta.trial")}
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/files">{t("welcome.cta.sample")}</Link>
-            </Button>
+            {/* Demo dashboard is for visitors and trial users; subscribers use /dashboard. */}
+            {!isSubscriber && (
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/demo-dashboard">{t("welcome.cta.sample")}</Link>
+              </Button>
+            )}
           </div>
+
         </section>
 
         <section className="mt-12" id="video">

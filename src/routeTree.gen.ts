@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactSupportRouteImport } from './routes/contact-support'
 import { Route as CopilotRouteImport } from './routes/copilot'
+import { Route as DemoDashboardRouteImport } from './routes/demo-dashboard'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -24,6 +25,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
 import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
@@ -62,6 +64,11 @@ const ContactSupportRoute = ContactSupportRouteImport.update({
 const CopilotRoute = CopilotRouteImport.update({
   id: '/copilot',
   path: '/copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoDashboardRoute = DemoDashboardRouteImport.update({
+  id: '/demo-dashboard',
+  path: '/demo-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindingsRoute = FindingsRouteImport.update({
@@ -112,6 +119,11 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
 const AuthenticatedCrmSupportRoute = AuthenticatedCrmSupportRouteImport.update({
   id: '/crm-support',
   path: '/crm-support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMarketingKitRoute =
@@ -199,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact-support': typeof ContactSupportRoute
   '/copilot': typeof CopilotRoute
+  '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
@@ -209,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -230,6 +244,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact-support': typeof ContactSupportRoute
   '/copilot': typeof CopilotRoute
+  '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
@@ -240,6 +255,7 @@ export interface FileRoutesByTo {
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -263,6 +279,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact-support': typeof ContactSupportRoute
   '/copilot': typeof CopilotRoute
+  '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
   '/pricing': typeof PricingRoute
@@ -273,6 +290,7 @@ export interface FileRoutesById {
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
@@ -296,6 +314,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact-support'
     | '/copilot'
+    | '/demo-dashboard'
     | '/findings'
     | '/launchpad'
     | '/pricing'
@@ -306,6 +325,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/crm'
     | '/crm-support'
+    | '/dashboard'
     | '/marketing-kit'
     | '/security'
     | '/academy/$courseId'
@@ -327,6 +347,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact-support'
     | '/copilot'
+    | '/demo-dashboard'
     | '/findings'
     | '/launchpad'
     | '/pricing'
@@ -337,6 +358,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/crm'
     | '/crm-support'
+    | '/dashboard'
     | '/marketing-kit'
     | '/security'
     | '/academy/$courseId'
@@ -359,6 +381,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact-support'
     | '/copilot'
+    | '/demo-dashboard'
     | '/findings'
     | '/launchpad'
     | '/pricing'
@@ -369,6 +392,7 @@ export interface FileRouteTypes {
     | '/_authenticated/billing'
     | '/_authenticated/crm'
     | '/_authenticated/crm-support'
+    | '/_authenticated/dashboard'
     | '/_authenticated/marketing-kit'
     | '/_authenticated/security'
     | '/academy/$courseId'
@@ -392,6 +416,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactSupportRoute: typeof ContactSupportRoute
   CopilotRoute: typeof CopilotRoute
+  DemoDashboardRoute: typeof DemoDashboardRoute
   FindingsRoute: typeof FindingsRoute
   LaunchpadRoute: typeof LaunchpadRoute
   PricingRoute: typeof PricingRoute
@@ -449,6 +474,13 @@ declare module '@tanstack/react-router' {
       path: '/copilot'
       fullPath: '/copilot'
       preLoaderRoute: typeof CopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo-dashboard': {
+      id: '/demo-dashboard'
+      path: '/demo-dashboard'
+      fullPath: '/demo-dashboard'
+      preLoaderRoute: typeof DemoDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/findings': {
@@ -519,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/crm-support'
       fullPath: '/crm-support'
       preLoaderRoute: typeof AuthenticatedCrmSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing-kit': {
@@ -633,6 +672,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
   AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
 }
@@ -641,6 +681,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
   AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
 }
@@ -654,6 +695,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactSupportRoute: ContactSupportRoute,
   CopilotRoute: CopilotRoute,
+  DemoDashboardRoute: DemoDashboardRoute,
   FindingsRoute: FindingsRoute,
   LaunchpadRoute: LaunchpadRoute,
   PricingRoute: PricingRoute,
