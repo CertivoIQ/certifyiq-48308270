@@ -94,7 +94,7 @@ export const template = {
   previewData: {
     name: 'Jordan',
     planName: 'CertivoIQ Business',
-    amountPaid: '$1,499.00',
+    amountPaid: '$4,999.00',
     paidDate: 'August 1, 2026',
     invoiceNumber: 'CIQ-1042',
     periodLabel: 'Aug 1 – Sep 1, 2026',

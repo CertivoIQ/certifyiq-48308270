@@ -41,7 +41,7 @@ const NAV = [
   { to: "/launchpad", labelKey: "nav.launchpad", icon: Rocket },
   { to: "/trial", labelKey: "nav.trial", icon: Gift },
   { to: "/pricing", labelKey: "nav.pricing", icon: Tag },
-  { to: "/security", labelKey: "nav.security", icon: Shield },
+  { to: "/account/security", labelKey: "nav.security", icon: Shield },
   { to: "/billing", labelKey: "nav.billing", icon: CreditCard },
   { to: "/contact-support", labelKey: "nav.support", icon: HelpCircle },
 ] as const satisfies readonly { to: string; labelKey: TranslationKey; icon: unknown }[];

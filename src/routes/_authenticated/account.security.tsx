@@ -12,7 +12,7 @@ import { generateRecoveryCodes, countRecoveryCodes, verifyAndDisableRecoveryCode
 import { Shield, ShieldCheck, ShieldAlert, Loader2, Download, Copy, Check, RotateCcw, Lock, KeyRound } from "lucide-react";
 import type { AuthMFAEnrollTOTPResponse } from "@supabase/supabase-js";
 
-export const Route = createFileRoute("/_authenticated/security")({
+export const Route = createFileRoute("/_authenticated/account/security")({
   head: () => ({
     meta: [
       { title: "Security settings — CertivoIQ" },

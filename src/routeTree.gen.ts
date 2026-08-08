@@ -17,9 +17,11 @@ import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as DemoDashboardRouteImport } from './routes/demo-dashboard'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
+import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as SecurityRouteImport } from './routes/security'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
@@ -27,7 +29,6 @@ import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/cr
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
-import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -36,6 +37,7 @@ import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
+import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
 import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -81,6 +83,11 @@ const LaunchpadRoute = LaunchpadRouteImport.update({
   path: '/launchpad',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -94,6 +101,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RulesRoute = RulesRouteImport.update({
   id: '/rules',
   path: '/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrialRoute = TrialRouteImport.update({
@@ -132,11 +144,6 @@ const AuthenticatedMarketingKitRoute =
     path: '/marketing-kit',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AcademyIndexRoute = AcademyIndexRouteImport.update({
   id: '/academy/',
   path: '/academy/',
@@ -177,6 +184,12 @@ const PropertiesPropertyIdRoute = PropertiesPropertyIdRouteImport.update({
   path: '/properties/$propertyId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccountSecurityRoute =
+  AuthenticatedAccountSecurityRouteImport.update({
+    id: '/account/security',
+    path: '/account/security',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicCrmSupportEmailRoute =
   ApiPublicCrmSupportEmailRouteImport.update({
     id: '/api/public/crm/support-email',
@@ -214,9 +227,11 @@ export interface FileRoutesByFullPath {
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
+  '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
+  '/security': typeof SecurityRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -224,7 +239,6 @@ export interface FileRoutesByFullPath {
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
-  '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -233,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -247,9 +262,11 @@ export interface FileRoutesByTo {
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
+  '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
+  '/security': typeof SecurityRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -257,7 +274,6 @@ export interface FileRoutesByTo {
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
-  '/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -266,6 +282,7 @@ export interface FileRoutesByTo {
   '/academy': typeof AcademyIndexRoute
   '/files': typeof FilesIndexRoute
   '/properties': typeof PropertiesIndexRoute
+  '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -282,9 +299,11 @@ export interface FileRoutesById {
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/launchpad': typeof LaunchpadRoute
+  '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
+  '/security': typeof SecurityRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
@@ -292,7 +311,6 @@ export interface FileRoutesById {
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
-  '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -301,6 +319,7 @@ export interface FileRoutesById {
   '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
+  '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -317,9 +336,11 @@ export interface FileRouteTypes {
     | '/demo-dashboard'
     | '/findings'
     | '/launchpad'
+    | '/methodology'
     | '/pricing'
     | '/reset-password'
     | '/rules'
+    | '/security'
     | '/trial'
     | '/welcome'
     | '/billing'
@@ -327,7 +348,6 @@ export interface FileRouteTypes {
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
-    | '/security'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -336,6 +356,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/account/security'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -350,9 +371,11 @@ export interface FileRouteTypes {
     | '/demo-dashboard'
     | '/findings'
     | '/launchpad'
+    | '/methodology'
     | '/pricing'
     | '/reset-password'
     | '/rules'
+    | '/security'
     | '/trial'
     | '/welcome'
     | '/billing'
@@ -360,7 +383,6 @@ export interface FileRouteTypes {
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
-    | '/security'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -369,6 +391,7 @@ export interface FileRouteTypes {
     | '/academy'
     | '/files'
     | '/properties'
+    | '/account/security'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -384,9 +407,11 @@ export interface FileRouteTypes {
     | '/demo-dashboard'
     | '/findings'
     | '/launchpad'
+    | '/methodology'
     | '/pricing'
     | '/reset-password'
     | '/rules'
+    | '/security'
     | '/trial'
     | '/welcome'
     | '/_authenticated/billing'
@@ -394,7 +419,6 @@ export interface FileRouteTypes {
     | '/_authenticated/crm-support'
     | '/_authenticated/dashboard'
     | '/_authenticated/marketing-kit'
-    | '/_authenticated/security'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -403,6 +427,7 @@ export interface FileRouteTypes {
     | '/academy/'
     | '/files/'
     | '/properties/'
+    | '/_authenticated/account/security'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -419,9 +444,11 @@ export interface RootRouteChildren {
   DemoDashboardRoute: typeof DemoDashboardRoute
   FindingsRoute: typeof FindingsRoute
   LaunchpadRoute: typeof LaunchpadRoute
+  MethodologyRoute: typeof MethodologyRoute
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RulesRoute: typeof RulesRoute
+  SecurityRoute: typeof SecurityRoute
   TrialRoute: typeof TrialRoute
   WelcomeRoute: typeof WelcomeRoute
   AcademyCourseIdRoute: typeof AcademyCourseIdRoute
@@ -497,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LaunchpadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -516,6 +550,13 @@ declare module '@tanstack/react-router' {
       path: '/rules'
       fullPath: '/rules'
       preLoaderRoute: typeof RulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trial': {
@@ -565,13 +606,6 @@ declare module '@tanstack/react-router' {
       path: '/marketing-kit'
       fullPath: '/marketing-kit'
       preLoaderRoute: typeof AuthenticatedMarketingKitRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/security': {
-      id: '/_authenticated/security'
-      path: '/security'
-      fullPath: '/security'
-      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/academy/': {
@@ -630,6 +664,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertiesPropertyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/account/security': {
+      id: '/_authenticated/account/security'
+      path: '/account/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof AuthenticatedAccountSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/crm/support-email': {
       id: '/api/public/crm/support-email'
       path: '/api/public/crm/support-email'
@@ -674,7 +715,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
-  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
+  AuthenticatedAccountSecurityRoute: typeof AuthenticatedAccountSecurityRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -683,7 +724,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
-  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
+  AuthenticatedAccountSecurityRoute: AuthenticatedAccountSecurityRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -698,9 +739,11 @@ const rootRouteChildren: RootRouteChildren = {
   DemoDashboardRoute: DemoDashboardRoute,
   FindingsRoute: FindingsRoute,
   LaunchpadRoute: LaunchpadRoute,
+  MethodologyRoute: MethodologyRoute,
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RulesRoute: RulesRoute,
+  SecurityRoute: SecurityRoute,
   TrialRoute: TrialRoute,
   WelcomeRoute: WelcomeRoute,
   AcademyCourseIdRoute: AcademyCourseIdRoute,
@@ -720,13 +763,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

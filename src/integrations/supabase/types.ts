@@ -427,6 +427,99 @@ export type Database = {
         }
         Relationships: []
       }
+      evidence_manifests: {
+        Row: {
+          certification_id: string | null
+          created_at: string
+          engine_build: string
+          id: string
+          manifest: Json
+          manifest_sha256: string
+          organization_id: string
+          outcome: string
+          property_id: string | null
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          certification_id?: string | null
+          created_at?: string
+          engine_build: string
+          id?: string
+          manifest: Json
+          manifest_sha256: string
+          organization_id: string
+          outcome: string
+          property_id?: string | null
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          certification_id?: string | null
+          created_at?: string
+          engine_build?: string
+          id?: string
+          manifest?: Json
+          manifest_sha256?: string
+          organization_id?: string
+          outcome?: string
+          property_id?: string | null
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pms_connections: {
+        Row: {
+          created_at: string
+          credential_secret_name: string | null
+          entity_mappings: Json
+          id: string
+          last_error: string | null
+          last_successful_sync_at: string | null
+          provider: string
+          records_failed: number
+          records_imported: number
+          records_reconciled: number
+          status: string
+          sync_cursor: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credential_secret_name?: string | null
+          entity_mappings?: Json
+          id?: string
+          last_error?: string | null
+          last_successful_sync_at?: string | null
+          provider: string
+          records_failed?: number
+          records_imported?: number
+          records_reconciled?: number
+          status?: string
+          sync_cursor?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credential_secret_name?: string | null
+          entity_mappings?: Json
+          id?: string
+          last_error?: string | null
+          last_successful_sync_at?: string | null
+          provider?: string
+          records_failed?: number
+          records_imported?: number
+          records_reconciled?: number
+          status?: string
+          sync_cursor?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -445,6 +538,96 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      state_rule_pack_releases: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          effective_from: string
+          id: string
+          limitations: string | null
+          state_code: string
+          status: Database["public"]["Enums"]["coverage_status"]
+          updated_at: string
+          validated_rule_count: number
+          validation_report_id: string | null
+          version: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          effective_from: string
+          id?: string
+          limitations?: string | null
+          state_code: string
+          status?: Database["public"]["Enums"]["coverage_status"]
+          updated_at?: string
+          validated_rule_count?: number
+          validation_report_id?: string | null
+          version: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          effective_from?: string
+          id?: string
+          limitations?: string | null
+          state_code?: string
+          status?: Database["public"]["Enums"]["coverage_status"]
+          updated_at?: string
+          validated_rule_count?: number
+          validation_report_id?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      state_rule_sources: {
+        Row: {
+          authority_name: string
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          program: string
+          published_at: string | null
+          retrieved_at: string
+          source_sha256: string
+          source_url: string
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          authority_name: string
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          program: string
+          published_at?: string | null
+          retrieved_at?: string
+          source_sha256: string
+          source_url: string
+          state_code: string
+          updated_at?: string
+        }
+        Update: {
+          authority_name?: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          program?: string
+          published_at?: string | null
+          retrieved_at?: string
+          source_sha256?: string
+          source_url?: string
+          state_code?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -737,6 +920,11 @@ export type Database = {
     }
     Enums: {
       app_role: "staff" | "user"
+      coverage_status:
+        | "federal_baseline"
+        | "in_review"
+        | "validated"
+        | "suspended"
       crm_account_type: "enterprise" | "company"
       crm_stage:
         | "new"
@@ -873,6 +1061,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["staff", "user"],
+      coverage_status: [
+        "federal_baseline",
+        "in_review",
+        "validated",
+        "suspended",
+      ],
       crm_account_type: ["enterprise", "company"],
       crm_stage: [
         "new",

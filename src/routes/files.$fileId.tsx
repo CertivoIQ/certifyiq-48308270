@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { FILES, PROPERTIES, RULES, money, type CertFile, type Finding } from "@/lib/demo-data";
 import { verdictFor, correctionSteps, LEVEL_META } from "@/lib/platform-data";
+import { coverageForState, isUsableForDetermination } from "@/lib/stateCoverageRegistry";
+import { determineReview, OUTCOME_LABEL } from "@/lib/complianceDecisionAndManifest";
 import { CheckCircle2, CircleAlert, FileText, ShieldCheck, Stamp } from "lucide-react";
 
 export const Route = createFileRoute("/files/$fileId")({
@@ -105,6 +107,22 @@ function FileReview() {
   const [approved, setApproved] = useState(file.status === "approved");
   const blocking = file.findings.filter((f) => f.status !== "approved").length;
 
+  /**
+   * Deterministic gate. If the property's state pack is not validated, a
+   * state-specific rule could change the outcome, so CertivoIQ returns
+   * "Unable to determine" and blocks Pass/Fail and human sign-off.
+   */
+  const statePack = coverageForState(property?.state ?? "");
+  const determination = determineReview({
+    fields: [],
+    failedRuleIds: file.findings.filter((f) => f.status !== "approved").map((f) => f.ruleId),
+    minimumConfidence: 0.85,
+    missingRequiredDocumentIds: [],
+    unresolvedRuleConflicts: [],
+    stateRuleUnvalidated: !isUsableForDetermination(statePack),
+  });
+  const signOffBlocked = approved || blocking > 0 || !determination.signOffAllowed;
+
   const rows = [
     { label: "Annual gross income", value: money(file.annualIncome) },
     { label: "Household size", value: String(file.hhSize) },
@@ -125,7 +143,7 @@ function FileReview() {
           </Button>
           <Button
             size="sm"
-            disabled={approved || blocking > 0}
+            disabled={signOffBlocked}
             onClick={() => {
               setApproved(true);
               toast.success("File soft approved", { description: `${file.id} locked with full audit trail retained.` });
@@ -304,6 +322,21 @@ function FileReview() {
                       <Stamp className="size-4 text-slate" />
                       <StatusPill status={approved ? "approved" : file.status} />
                     </div>
+                    {determination.outcome === "unable_to_determine" ? (
+                      <div className="mt-3 rounded-md border border-flag/40 bg-flag-soft p-3">
+                        <p className="font-display text-[13.5px]">
+                          {OUTCOME_LABEL[determination.outcome]}
+                        </p>
+                        <ul className="mt-1.5 list-disc space-y-1 pl-4 text-[12.5px] text-muted-foreground">
+                          {determination.blockingReasons.map((r) => (
+                            <li key={r}>{r}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-[12px] text-muted-foreground">
+                          No Pass or Fail is issued and sign-off stays locked until these are resolved.
+                        </p>
+                      </div>
+                    ) : null}
                     <p className="mt-3 text-[12.5px] text-muted-foreground">
                       {approved
                         ? "Final sign-off recorded by Jordan Alvarez, Compliance Reviewer — file locked with full audit trail."
@@ -314,7 +347,7 @@ function FileReview() {
                     <Button
                       className="mt-3 w-full"
                       size="sm"
-                      disabled={approved || blocking > 0}
+                      disabled={signOffBlocked}
                       onClick={() => {
                         setApproved(true);
                         toast.success("Final approval signed", {

@@ -95,7 +95,7 @@ export const template = {
   previewData: {
     name: 'Jordan',
     planName: 'CertivoIQ Business',
-    amountDue: '$1,499.00',
+    amountDue: '$4,999.00',
     invoiceNumber: 'CIQ-1042',
     periodLabel: 'Aug 1 – Sep 1, 2026',
     failureReason: 'Your card was declined (insufficient funds)',

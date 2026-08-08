@@ -72,9 +72,9 @@ export const es: Dictionary = {
   "welcome.risks.title": "Lo que una revisión manual pasa por alto — y lo que cuesta",
   "welcome.risks.body":
     "Cada punto a continuación es una causa real de multas, acuerdos de reembolso, hallazgos en el IRS Form 8823 o recaptura de créditos fiscales. La revisión manual detecta la mayoría, casi siempre. CertivoIQ los verifica todos, siempre.",
-  "welcome.value.title": "La inversión inteligente que se paga por sí sola",
+  "welcome.value.title": "Compare CertivoIQ con su costo actual de cumplimiento",
   "welcome.value.body":
-    "Un solo hallazgo no subsanable evitado paga años de CertivoIQ. Sus revisores dejan de buscar citas normativas y firman con confianza — y todos los planes comienzan con una {offer}.",
+    "Ingrese sus propias cifras a continuación. CertivoIQ no estima sus ahorros ni garantiza evitar hallazgos, multas o recaptura de créditos — todos los planes comienzan con una {offer}.",
   "welcome.why.1.title": "Sus créditos fiscales quedan intactos",
   "welcome.why.1.body":
     "Un solo hallazgo §42 sin corregir puede provocar un IRS Form 8823 y poner en riesgo los créditos asignados. CertivoIQ lo detecta cuando aún se puede subsanar.",
