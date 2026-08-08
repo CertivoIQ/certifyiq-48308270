@@ -319,7 +319,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
-      await applyPurchase(event.data.object, env);
+      await applyPurchase(event.data.object, env, event as { id?: string; type?: string });
       break;
     case "customer.subscription.deleted":
       await applyCancellation(event.data.object, env);
