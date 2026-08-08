@@ -70,7 +70,7 @@ export function OwnerSubmissionsPanel() {
       create({
         data: {
           agencyId,
-          organizationId: "self",
+          // The tenant reference is derived server-side; never sent from here.
           propertyId,
           ...(propertyName ? { propertyName } : {}),
           program,

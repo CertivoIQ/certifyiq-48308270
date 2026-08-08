@@ -71,13 +71,21 @@ export const listOwnerSubmissions = createServerFn({ method: "GET" })
     return (data ?? []).map((row) => mapSubmission(row as never));
   });
 
-/** Creates a draft package. Nothing is visible to an agency until it is granted. */
+/**
+ * Creates a draft package. Nothing is visible to an agency until it is granted.
+ *
+ * ORGANIZATION OWNERSHIP: CertivoIQ has no organization/membership model in the
+ * production schema yet, so the tenant reference is derived server-side as
+ * `owner:<userId>` — a stable, per-account placeholder. The literal "self" is
+ * rejected, the client can no longer supply the value, and every row created
+ * this way is safely backfillable once an approved organization model lands
+ * (see `docs/organization-model-proposal.md`).
+ */
 export const createOwnerSubmission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: {
       agencyId: string;
-      organizationId: string;
       propertyId: string;
       propertyName?: string;
       certificationId?: string;
@@ -86,13 +94,13 @@ export const createOwnerSubmission = createServerFn({ method: "POST" })
       preflight: unknown;
     }) => {
       if (!data?.agencyId) throw new Error("Select the agency this package is for.");
-      if (!data.organizationId) throw new Error("An organization is required.");
       if (!data.propertyId) throw new Error("A property is required.");
       if (!data.program) throw new Error("A program is required.");
       if (!data.reportingPeriod) throw new Error("A reporting period is required.");
       return data;
     },
   )
+
   .handler(async ({ data, context }) => {
     const { mapSubmission } = await import("@/lib/hfa-regulatory-map");
     const preflight = (data.preflight ?? {}) as { readinessScore?: number };
@@ -102,7 +110,7 @@ export const createOwnerSubmission = createServerFn({ method: "POST" })
       .insert({
         agency_id: data.agencyId,
         owner_user_id: context.userId,
-        organization_id: data.organizationId,
+        organization_id: `owner:${context.userId}`,
         property_id: data.propertyId,
         property_name: data.propertyName ?? null,
         certification_id: data.certificationId ?? null,
@@ -274,25 +282,13 @@ export const respondToCorrection = createServerFn({ method: "POST" })
     return { ok: true } as const;
   });
 
-export const attachCorrectionEvidence = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { caseId: string; documentRef: string; documentLabel?: string; sha256: string }) => {
-    if (!data?.caseId) throw new Error("A correction case is required.");
-    if (!data.documentRef) throw new Error("A document reference is required.");
-    if (!/^[a-f0-9]{64}$/i.test(data.sha256 ?? "")) throw new Error("A SHA-256 hash is required.");
-    return data;
-  })
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("correction_evidence").insert({
-      correction_case_id: data.caseId,
-      document_ref: data.documentRef,
-      document_label: data.documentLabel ?? null,
-      sha256: data.sha256.toLowerCase(),
-      submitted_by: context.userId,
-    });
-    if (error) throw error;
-    return { ok: true } as const;
-  });
+/**
+ * Correction evidence is no longer accepted from the browser as a hash plus a
+ * free-text reference. Uploads go through
+ * `uploadCorrectionEvidence` in `@/lib/hfa-evidence.functions`, where the server
+ * hashes the bytes itself and stores them in a private bucket.
+ */
+
 
 /* ---------------------------------------------------------------- agency side */
 
