@@ -48,6 +48,8 @@ function WelcomePage() {
   const t = useT();
   const { lang } = useLanguage();
   const { isActive: isSubscriber } = useSubscription();
+  const { state: viewerState } = useViewerState();
+
   const risks = lang === "es" ? PENALTY_RISKS_ES : PENALTY_RISKS;
   const valueMath = lang === "es" ? VALUE_MATH_ES : VALUE_MATH;
 
