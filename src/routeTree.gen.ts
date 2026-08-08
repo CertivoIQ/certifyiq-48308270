@@ -40,6 +40,7 @@ import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$p
 import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
 import { Route as AuthenticatedAgencyIndexRouteImport } from './routes/_authenticated/agency.index'
 import { Route as AuthenticatedAgencySubmissionsIndexRouteImport } from './routes/_authenticated/agency.submissions.index'
+import { Route as AuthenticatedAgencySubmissionsSubmissionIdRouteImport } from './routes/_authenticated/agency.submissions.$submissionId'
 import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -204,6 +205,12 @@ const AuthenticatedAgencySubmissionsIndexRoute =
     path: '/agency/submissions/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAgencySubmissionsSubmissionIdRoute =
+  AuthenticatedAgencySubmissionsSubmissionIdRouteImport.update({
+    id: '/agency/submissions/$submissionId',
+    path: '/agency/submissions/$submissionId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicCrmSupportEmailRoute =
   ApiPublicCrmSupportEmailRouteImport.update({
     id: '/api/public/crm/support-email',
@@ -263,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/properties/': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/agency/': typeof AuthenticatedAgencyIndexRoute
+  '/agency/submissions/$submissionId': typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -300,6 +308,7 @@ export interface FileRoutesByTo {
   '/properties': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/agency': typeof AuthenticatedAgencyIndexRoute
+  '/agency/submissions/$submissionId': typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -339,6 +348,7 @@ export interface FileRoutesById {
   '/properties/': typeof PropertiesIndexRoute
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
   '/_authenticated/agency/': typeof AuthenticatedAgencyIndexRoute
+  '/_authenticated/agency/submissions/$submissionId': typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -378,6 +388,7 @@ export interface FileRouteTypes {
     | '/properties/'
     | '/account/security'
     | '/agency/'
+    | '/agency/submissions/$submissionId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/properties'
     | '/account/security'
     | '/agency'
+    | '/agency/submissions/$submissionId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -453,6 +465,7 @@ export interface FileRouteTypes {
     | '/properties/'
     | '/_authenticated/account/security'
     | '/_authenticated/agency/'
+    | '/_authenticated/agency/submissions/$submissionId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -711,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgencySubmissionsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agency/submissions/$submissionId': {
+      id: '/_authenticated/agency/submissions/$submissionId'
+      path: '/agency/submissions/$submissionId'
+      fullPath: '/agency/submissions/$submissionId'
+      preLoaderRoute: typeof AuthenticatedAgencySubmissionsSubmissionIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/crm/support-email': {
       id: '/api/public/crm/support-email'
       path: '/api/public/crm/support-email'
@@ -757,6 +777,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
   AuthenticatedAccountSecurityRoute: typeof AuthenticatedAccountSecurityRoute
   AuthenticatedAgencyIndexRoute: typeof AuthenticatedAgencyIndexRoute
+  AuthenticatedAgencySubmissionsSubmissionIdRoute: typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   AuthenticatedAgencySubmissionsIndexRoute: typeof AuthenticatedAgencySubmissionsIndexRoute
 }
 
@@ -768,6 +789,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
   AuthenticatedAccountSecurityRoute: AuthenticatedAccountSecurityRoute,
   AuthenticatedAgencyIndexRoute: AuthenticatedAgencyIndexRoute,
+  AuthenticatedAgencySubmissionsSubmissionIdRoute:
+    AuthenticatedAgencySubmissionsSubmissionIdRoute,
   AuthenticatedAgencySubmissionsIndexRoute:
     AuthenticatedAgencySubmissionsIndexRoute,
 }
