@@ -383,12 +383,62 @@ export function AgencySubmissionDetail({ submissionId }: { submissionId: string 
               {files.length > 0 && (
                 <ul className="mt-3 space-y-1 text-[12px] text-muted-foreground">
                   {files.map((f) => (
-                    <li key={f.id}>
-                      {f.documentLabel ?? f.documentRef} · sha256 {f.sha256.slice(0, 12)}…
+                    <li key={f.id} className="flex flex-wrap items-center gap-2">
+                      <span>
+                        {f.documentLabel ?? f.documentRef} · sha256 {f.sha256.slice(0, 12)}…
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          evidenceDownload({ data: { evidenceId: f.id } }).then(
+                            (r) => {
+                              if ("error" in r && r.error) toast.error(r.error);
+                              else if ("url" in r) window.open(r.url, "_blank", "noopener");
+                            },
+                            (e: Error) => toast.error(e.message),
+                          )
+                        }
+                      >
+                        Download
+                      </Button>
                     </li>
                   ))}
+                  <li className="italic">
+                    Uploaded files are hashed and stored by CertivoIQ and held in quarantine — malware
+                    scanning is not yet available, so they are not certified virus-free.
+                  </li>
                 </ul>
               )}
+              {isOwner && c.status !== "accepted" && (
+                <div className="mt-3">
+                  <Label htmlFor={`ev-${c.id}`}>Attach corrective documentation</Label>
+                  <Input
+                    id={`ev-${c.id}`}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.txt,.csv,.docx,.xlsx"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        evidenceUpload({
+                          data: {
+                            caseId: c.id,
+                            fileName: file.name,
+                            contentType: file.type || "application/pdf",
+                            contentBase64: String(reader.result ?? ""),
+                          },
+                        }).then((r) => handle(r, "Evidence attached (quarantined, not scanned)."), (err: Error) =>
+                          toast.error(err.message),
+                        );
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </div>
+              )}
+
               {c.disposition && (
                 <p className="mt-3 text-[13px]">
                   <span className="font-medium">Agency disposition:</span> {c.disposition}
