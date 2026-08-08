@@ -2,7 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Cite, Stat } from "@/components/ui-kit";
-import { RULES, STATE_PACKS, PROGRAMS, type Program } from "@/lib/demo-data";
+import { RULES, PROGRAMS, type Program } from "@/lib/demo-data";
+import {
+  stateCoverage,
+  coverageClaim,
+  isUsableForDetermination,
+  type CoverageStatus,
+} from "@/lib/stateCoverageRegistry";
 import { Layers } from "lucide-react";
 
 export const Route = createFileRoute("/rules")({
@@ -34,20 +40,40 @@ const LAYERS = [
   { name: "Property plugin", detail: "Set-aside election, applicable fraction, unit designations", count: 185 },
 ];
 
+const STATUS_LABEL: Record<CoverageStatus, string> = {
+  federal_baseline: "Federal baseline",
+  in_review: "In review",
+  validated: "Validated",
+  suspended: "Suspended",
+};
+
+const STATUS_TONE: Record<CoverageStatus, "seal" | "flag" | "reject"> = {
+  federal_baseline: "flag",
+  in_review: "flag",
+  validated: "seal",
+  suspended: "reject",
+};
+
 function RulesPage() {
   const [program, setProgram] = useState<Program | "all">("all");
+  const validatedCount = stateCoverage.filter(isUsableForDetermination).length;
   const rows = program === "all" ? RULES : RULES.filter((r) => r.program === program);
 
   return (
     <AppShell
       title="Rule packs"
-      subtitle="Layered, versioned and independently deployable — 50-state coverage"
+      subtitle={coverageClaim()}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Active rules" value="4,017" hint="Across all layers" />
-        <Stat label="State packs" value="50" hint="8 certified, 42 baseline" tone="seal" />
-        <Stat label="Versions in force" value="63" />
-        <Stat label="Superseded versions retained" value="211" hint="Never deleted — findings cite the version of record" />
+        <Stat label="Federal baseline" value="Nationwide" hint="Applies in every jurisdiction" tone="seal" />
+        <Stat
+          label="Validated state packs"
+          value={validatedCount}
+          hint={`${stateCoverage.length - validatedCount} jurisdictions require state-specific review`}
+          tone={validatedCount ? "seal" : "flag"}
+        />
+        <Stat label="Jurisdictions identified" value={stateCoverage.length} hint="Controlling agency identified" />
+        <Stat label="Superseded versions retained" value="All" hint="Never deleted — findings cite the version of record" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
@@ -86,7 +112,7 @@ function RulesPage() {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border text-left">
-                {["State", "Agency", "Rules", "Properties", "Status"].map((h) => (
+                {["State", "Controlling agency", "Validated rules", "Effective", "Status"].map((h) => (
                   <th key={h} className="cite px-5 py-2.5 text-[10.5px] uppercase tracking-[0.14em] font-normal">
                     {h}
                   </th>
@@ -94,17 +120,21 @@ function RulesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {STATE_PACKS.map((s) => (
-                <tr key={s.code} className="hover:bg-muted/40">
+              {stateCoverage.map((pack) => (
+                <tr key={pack.code} className="hover:bg-muted/40">
                   <td className="px-5 py-3">
-                    <span className="font-mono text-[12.5px] font-semibold">{s.code}</span>{" "}
-                    <span className="text-muted-foreground">{s.state}</span>
+                    <span className="font-mono text-[12.5px] font-semibold">{pack.code}</span>{" "}
+                    <span className="text-muted-foreground">{pack.state}</span>
                   </td>
-                  <td className="px-5 py-3 font-mono text-[12.5px]">{s.agency}</td>
-                  <td className="px-5 py-3 font-mono tabular-nums">{s.rules}</td>
-                  <td className="px-5 py-3 font-mono tabular-nums">{s.properties}</td>
+                  <td className="px-5 py-3 text-[12.5px]">
+                    <a className="underline" href={pack.agencyUrl} target="_blank" rel="noreferrer">
+                      {pack.primaryAgency}
+                    </a>
+                  </td>
+                  <td className="px-5 py-3 font-mono tabular-nums">{pack.validatedRuleCount}</td>
+                  <td className="px-5 py-3 font-mono text-[12px]">{pack.effectiveDate ?? "—"}</td>
                   <td className="px-5 py-3">
-                    <Pill tone={s.status === "Certified" ? "seal" : "flag"}>{s.status}</Pill>
+                    <Pill tone={STATUS_TONE[pack.status]}>{STATUS_LABEL[pack.status]}</Pill>
                   </td>
                 </tr>
               ))}
@@ -112,7 +142,10 @@ function RulesPage() {
           </table>
         </div>
         <p className="border-t border-border px-5 py-3 text-[12.5px] text-muted-foreground">
-          Remaining 42 states run the federal baseline pack; state-specific overlays are certified on demand.
+          A state pack becomes usable for a determination only after its controlling sources,
+          effective dates, rules, fixtures, expected results and independent expert approval are
+          stored. Until then CertivoIQ applies the federal baseline only and returns
+          &ldquo;Unable to determine&rdquo; whenever the missing state rule could change the outcome.
         </p>
       </Panel>
 
