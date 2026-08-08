@@ -115,7 +115,7 @@ function FileReview() {
   const statePack = coverageForState(property?.state ?? "");
   const determination = determineReview({
     fields: [],
-    failedRuleIds: file.findings.filter((f) => f.status !== "approved").map((f) => f.ruleId ?? f.rule),
+    failedRuleIds: file.findings.filter((f) => f.status !== "approved").map((f) => f.ruleId),
     minimumConfidence: 0.85,
     missingRequiredDocumentIds: [],
     unresolvedRuleConflicts: [],
