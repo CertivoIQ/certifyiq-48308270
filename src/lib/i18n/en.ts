@@ -24,6 +24,8 @@ export const en = {
   "nav.files": "Certifications",
   "nav.findings": "Findings",
   "nav.rules": "Rule packs",
+  "nav.submissions": "Agency submissions",
+  "nav.agency": "Agency console",
   "nav.copilot": "AI Copilot",
   "nav.academy": "CertivoIQ Academy",
   "nav.launchpad": "LaunchPad",
