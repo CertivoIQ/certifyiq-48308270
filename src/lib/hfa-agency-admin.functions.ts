@@ -288,20 +288,22 @@ export const listAgencyMembers = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("hfa_agency_memberships")
-      .select("user_id, role, suspended_at, invited_at, created_at, profiles:user_id(email, full_name)")
+      .select("user_id, role, suspended_at, invited_at, created_at")
       .eq("agency_id", data.agencyId);
     if (error) throw error;
-    return (rows ?? []).map((r) => {
-      const p = r.profiles as unknown as { email: string | null; full_name: string | null } | null;
-      return {
-        userId: r.user_id,
-        role: r.role as AgencyRole,
-        email: p?.email ?? null,
-        fullName: p?.full_name ?? null,
-        suspendedAt: r.suspended_at,
-        joinedAt: r.created_at,
-      };
-    });
+    const ids = (rows ?? []).map((r) => r.user_id);
+    const profiles = ids.length
+      ? (await supabaseAdmin.from("profiles").select("id, email, full_name").in("id", ids)).data ?? []
+      : [];
+    const byId = new Map(profiles.map((p) => [p.id, p]));
+    return (rows ?? []).map((r) => ({
+      userId: r.user_id,
+      role: r.role as AgencyRole,
+      email: byId.get(r.user_id)?.email ?? null,
+      fullName: byId.get(r.user_id)?.full_name ?? null,
+      suspendedAt: r.suspended_at,
+      joinedAt: r.created_at,
+    }));
   });
 
 /** Role change, suspension, reinstatement and removal — all audited. */
