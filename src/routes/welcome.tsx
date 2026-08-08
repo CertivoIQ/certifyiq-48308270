@@ -105,9 +105,10 @@ function WelcomePage() {
 
         </section>
 
-        <section className="mt-12" id="video">
-          <ExplainerVideo />
+        <section className="mt-12 overflow-hidden rounded-lg" id="video">
+          <CertivoIQVoiceoverVideo accountState={viewerState} />
         </section>
+
 
 
         <section className="mt-12">
