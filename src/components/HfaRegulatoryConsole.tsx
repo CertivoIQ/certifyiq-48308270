@@ -517,7 +517,7 @@ function NoAgencyMembership() {
     <Panel title="Agency access required">
       <p className="text-[13px] text-muted-foreground">
         Your account is not a member of a housing agency workspace. Owners manage their agency packages
-        from <Link className="underline" to="/agency/submissions">My submissions</Link>.
+        from <Link className="underline" to="/submissions">My submissions</Link>.
       </p>
     </Panel>
   );
