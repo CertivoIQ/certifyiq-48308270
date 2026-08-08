@@ -110,7 +110,7 @@ export const createOwnerSubmission = createServerFn({ method: "POST" })
       .insert({
         agency_id: data.agencyId,
         owner_user_id: context.userId,
-        organization_id: data.organizationId,
+        organization_id: `owner:${context.userId}`,
         property_id: data.propertyId,
         property_name: data.propertyName ?? null,
         certification_id: data.certificationId ?? null,
