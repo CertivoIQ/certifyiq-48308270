@@ -78,19 +78,30 @@ export type Database = {
         Row: {
           account_type: Database["public"]["Enums"]["crm_account_type"]
           arr: number
+          corporate_email: string | null
           created_at: string
           created_by: string | null
           hq: string | null
           id: string
+          last_contact_on: string | null
           last_touch: string | null
+          lead_score: number
           linkedin_url: string | null
           name: string
+          next_followup_on: string | null
           notes: string | null
           owner: string | null
+          phone: string | null
           plan: string | null
+          programs: string[]
+          properties: number
           reminders_sent: number
+          responded: boolean
+          role: string | null
           source: string | null
           stage: Database["public"]["Enums"]["crm_stage"]
+          states: string[]
+          territory: string | null
           trial_ended_on: string | null
           units: number
           updated_at: string
@@ -99,19 +110,30 @@ export type Database = {
         Insert: {
           account_type?: Database["public"]["Enums"]["crm_account_type"]
           arr?: number
+          corporate_email?: string | null
           created_at?: string
           created_by?: string | null
           hq?: string | null
           id?: string
+          last_contact_on?: string | null
           last_touch?: string | null
+          lead_score?: number
           linkedin_url?: string | null
           name: string
+          next_followup_on?: string | null
           notes?: string | null
           owner?: string | null
+          phone?: string | null
           plan?: string | null
+          programs?: string[]
+          properties?: number
           reminders_sent?: number
+          responded?: boolean
+          role?: string | null
           source?: string | null
           stage?: Database["public"]["Enums"]["crm_stage"]
+          states?: string[]
+          territory?: string | null
           trial_ended_on?: string | null
           units?: number
           updated_at?: string
@@ -120,25 +142,100 @@ export type Database = {
         Update: {
           account_type?: Database["public"]["Enums"]["crm_account_type"]
           arr?: number
+          corporate_email?: string | null
           created_at?: string
           created_by?: string | null
           hq?: string | null
           id?: string
+          last_contact_on?: string | null
           last_touch?: string | null
+          lead_score?: number
           linkedin_url?: string | null
           name?: string
+          next_followup_on?: string | null
           notes?: string | null
           owner?: string | null
+          phone?: string | null
           plan?: string | null
+          programs?: string[]
+          properties?: number
           reminders_sent?: number
+          responded?: boolean
+          role?: string | null
           source?: string | null
           stage?: Database["public"]["Enums"]["crm_stage"]
+          states?: string[]
+          territory?: string | null
           trial_ended_on?: string | null
           units?: number
           updated_at?: string
           website?: string | null
         }
         Relationships: []
+      }
+      crm_activities: {
+        Row: {
+          account_id: string
+          actor_email: string | null
+          body: string | null
+          campaign_id: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          outcome: string | null
+          subject: string | null
+        }
+        Insert: {
+          account_id: string
+          actor_email?: string | null
+          body?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          outcome?: string | null
+          subject?: string | null
+        }
+        Update: {
+          account_id?: string
+          actor_email?: string | null
+          body?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          outcome?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "crm_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "crm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_campaigns: {
         Row: {
