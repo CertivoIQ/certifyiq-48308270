@@ -26,18 +26,23 @@ import { IQText } from "@/components/iq-text";
 import { CrmShell } from "@/components/crm/crm-shell";
 import { AccountDialog, ContactDialog } from "@/components/crm/account-dialog";
 import { CampaignDialog } from "@/components/crm/campaign-dialog";
+import { LeadsPanel } from "@/components/crm/leads-panel";
+import { PipelinePanel } from "@/components/crm/pipeline-panel";
+import { MailMergeDialog } from "@/components/crm/mail-merge-dialog";
 import {
   STAGES,
   STAGE_TONE,
   money,
   linkTo,
   type Account,
+  type Activity,
   type Campaign,
   type Contact,
   type NewsItem,
   type Stage,
   type Template,
 } from "@/lib/crm";
+
 
 export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({
