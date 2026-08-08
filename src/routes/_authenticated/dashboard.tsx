@@ -21,5 +21,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
-  component: () => <ExecutiveDashboard />,
+  component: DashboardPage,
 });
+
+/** Subscribers get a clean production dashboard; trial users see the sample portfolio. */
+function DashboardPage() {
+  const { showDemoData, loading } = useViewerState();
+  if (loading) return <ExecutiveDashboard demo />;
+  return showDemoData ? <ExecutiveDashboard demo /> : <ProductionDashboard />;
+}
+
