@@ -68,9 +68,9 @@ export const en = {
   "welcome.risks.title": "What a human eye alone misses — and what it costs",
   "welcome.risks.body":
     "Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.",
-  "welcome.value.title": "The Smart Investment That Pays for Itself",
+  "welcome.value.title": "Compare CertivoIQ with your current cost of compliance",
   "welcome.value.body":
-    "One avoided non-curable finding pays for years of CertivoIQ. Your reviewers stop hunting for citations and start signing off with confidence — and every plan starts with a {offer}.",
+    "Enter your own figures below. CertivoIQ does not estimate your savings or guarantee avoidance of findings, penalties or credit recapture — every plan starts with a {offer}.",
   "welcome.why.1.title": "Tax credits stay intact",
   "welcome.why.1.body":
     "A single uncorrected §42 finding can trigger IRS Form 8823 and put allocated credits at risk. CertivoIQ catches it while it is still curable.",
