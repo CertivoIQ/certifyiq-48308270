@@ -53,25 +53,3 @@ export const PENALTY_RISKS_ES = [
   },
 ];
 
-export const VALUE_MATH_ES = [
-  {
-    label: "Una unidad con crédito recuperado",
-    value: "$65,000+",
-    note: "Valor típico del crédito perdido por un solo hallazgo no subsanable",
-  },
-  {
-    label: "Tiempo de revisión manual",
-    value: "41 min → 4 min",
-    note: "Por certificación, con las citas ya redactadas",
-  },
-  {
-    label: "Horas de revisión ahorradas al mes",
-    value: "~230 h",
-    note: "En un portafolio de 5,000 unidades con recertificaciones trimestrales",
-  },
-  {
-    label: "Plan Business de CertivoIQ",
-    value: "$1,499/mes",
-    note: "Menos que un solo hallazgo. Cada mes.",
-  },
-];

@@ -315,9 +315,3 @@ export const PENALTY_RISKS = [
   { risk: "Inconsistent reviewer judgment", cost: "Unpredictable audit outcomes", detail: "Two reviewers, two answers. CertivoIQ applies the same versioned rule pack to every single file." },
 ];
 
-export const VALUE_MATH = [
-  { label: "One recaptured credit unit", value: "$65,000+", note: "Typical credit value lost on a single non-curable finding" },
-  { label: "Manual review time", value: "41 min → 4 min", note: "Per certification, with citations written for you" },
-  { label: "Reviewer hours saved monthly", value: "~230 hrs", note: "At a 5,000-unit portfolio with quarterly recerts" },
-  { label: "CertivoIQ Business plan", value: "$1,499/mo", note: "Less than one finding. Every month." },
-];

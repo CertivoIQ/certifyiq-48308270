@@ -3,12 +3,14 @@ import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
 import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
-import { PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
+import { PENALTY_RISKS, TRIAL_OFFER } from "@/lib/trial-data";
 import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
 import CertivoIQComparisonChart from "@/components/CertivoIQComparisonChart";
+import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
+import { coverageClaim } from "@/lib/stateCoverageRegistry";
 
 import { useT, useLanguage } from "@/lib/i18n/provider";
-import { PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
+import { PENALTY_RISKS_ES } from "@/lib/i18n/marketing-es";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -53,7 +55,7 @@ function WelcomePage() {
   const { state: viewerState } = useViewerState();
 
   const risks = lang === "es" ? PENALTY_RISKS_ES : PENALTY_RISKS;
-  const valueMath = lang === "es" ? VALUE_MATH_ES : VALUE_MATH;
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,19 +142,12 @@ function WelcomePage() {
 
         <section className="mt-12">
           <h2 className="text-center font-display text-[30px]">{t("welcome.value.title")}</h2>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {valueMath.map((v) => (
-              <Panel key={v.label} bodyClassName="p-5 text-center">
-                <p className="brand-text font-display text-[26px] leading-none">{v.value}</p>
-                <p className="mt-2 font-display text-[14.5px]">{v.label}</p>
-                <p className="mt-1 text-[12.5px] text-muted-foreground">{v.note}</p>
-              </Panel>
-            ))}
-          </div>
-          <p className="mx-auto mt-5 max-w-2xl text-center text-[13.5px] leading-relaxed text-muted-foreground">
+          <p className="mx-auto mb-6 mt-3 max-w-2xl text-center text-[13.5px] leading-relaxed text-muted-foreground">
             {t("welcome.value.body", { offer: TRIAL_OFFER.label })}
           </p>
+          <CostComparisonCalculator />
         </section>
+
 
 
         <section className="mt-10 grid gap-4 md:grid-cols-3">
@@ -192,8 +187,17 @@ function WelcomePage() {
       </main>
 
       <footer className="border-t border-border py-6 text-center">
-        <p className="cite">CertivoIQ · compliance intelligence for all 50 states</p>
+        <p className="cite">{coverageClaim()}</p>
+        <div className="mt-2 flex justify-center gap-4 text-[12.5px]">
+          <Link className="underline text-muted-foreground" to="/security">
+            Security &amp; AI data use
+          </Link>
+          <Link className="underline text-muted-foreground" to="/methodology">
+            Methodology
+          </Link>
+        </div>
       </footer>
+
     </div>
   );
 }
