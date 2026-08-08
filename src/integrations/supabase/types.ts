@@ -144,29 +144,47 @@ export type Database = {
       }
       correction_evidence: {
         Row: {
+          byte_size: number | null
           correction_case_id: string
           document_label: string | null
           document_ref: string
           id: string
+          mime_type: string | null
+          scan_status: string
           sha256: string
+          storage_bucket: string | null
+          storage_path: string | null
+          storage_version: string | null
           submitted_at: string
           submitted_by: string
         }
         Insert: {
+          byte_size?: number | null
           correction_case_id: string
           document_label?: string | null
           document_ref: string
           id?: string
+          mime_type?: string | null
+          scan_status?: string
           sha256: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          storage_version?: string | null
           submitted_at?: string
           submitted_by: string
         }
         Update: {
+          byte_size?: number | null
           correction_case_id?: string
           document_label?: string | null
           document_ref?: string
           id?: string
+          mime_type?: string | null
+          scan_status?: string
           sha256?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          storage_version?: string | null
           submitted_at?: string
           submitted_by?: string
         }
@@ -599,23 +617,94 @@ export type Database = {
         }
         Relationships: []
       }
+      hfa_agency_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          agency_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          is_demo: boolean
+          revoked_at: string | null
+          revoked_by: string | null
+          role: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          agency_id: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by: string
+          is_demo?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          agency_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          is_demo?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_agency_invitations_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hfa_agency_memberships: {
         Row: {
           agency_id: string
           created_at: string
+          invited_at: string | null
+          invited_by: string | null
           role: string
+          suspended_at: string | null
+          suspended_by: string | null
           user_id: string
         }
         Insert: {
           agency_id: string
           created_at?: string
+          invited_at?: string | null
+          invited_by?: string | null
           role: string
+          suspended_at?: string | null
+          suspended_by?: string | null
           user_id: string
         }
         Update: {
           agency_id?: string
           created_at?: string
+          invited_at?: string | null
+          invited_by?: string | null
           role?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
           user_id?: string
         }
         Relationships: [
