@@ -5,6 +5,8 @@
   <url><loc>https://certivoiq.com/academy</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://certivoiq.com/launchpad</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://certivoiq.com/rules</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certivoiq.com/security</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certivoiq.com/methodology</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://certivoiq.com/copilot</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://certivoiq.com/trial</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://certivoiq.com/contact-support</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
