@@ -40,6 +40,10 @@ import {
   respondToCorrection,
   startAgencyReview,
 } from "@/lib/hfa-regulatory.functions";
+import {
+  getCorrectionEvidenceDownload,
+  uploadCorrectionEvidence,
+} from "@/lib/hfa-evidence.functions";
 
 /**
  * Regulator-facing workspace. An agency sees only packages an owner explicitly
