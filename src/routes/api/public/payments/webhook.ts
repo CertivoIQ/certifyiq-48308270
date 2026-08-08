@@ -156,6 +156,12 @@ async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: s
 
   await supabase.from("account_access").upsert(access, { onConflict: "user_id" });
 
+  // Verified subscription now active → subscriber, clean production dashboard.
+  if (plan && row.status === "active") {
+    await activateSubscriber(userId, env, event?.id, event?.type ?? "");
+  }
+
+
   // A new billing period resets the metered AI document allowance.
   if (plan && active && row.current_period_start) {
     await supabase.from("usage_counters").upsert(
