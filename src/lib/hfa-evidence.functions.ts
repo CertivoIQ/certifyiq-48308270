@@ -128,16 +128,36 @@ export const uploadCorrectionEvidence = createServerFn({ method: "POST" })
   });
 
 /**
- * Authorized download. The caller must already be able to read the evidence row
- * under RLS (owner, or a member of an agency holding a live grant).
+ * Administrative download of quarantined evidence.
+ *
+ * Every stored file is quarantined (no scanner exists), so a signed URL is a
+ * release of unscanned bytes. Only platform staff performing an explicit
+ * administrative review may obtain one — agency reviewers and owners cannot,
+ * even though RLS lets them see that the record exists. The reviewer must state
+ * a reason, and each release is written to the append-only audit log.
  */
 export const getCorrectionEvidenceDownload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { evidenceId: string }) => {
+  .inputValidator((data: { evidenceId: string; reason?: string }) => {
     if (!data?.evidenceId) throw new Error("An evidence record is required.");
     return data;
   })
   .handler(async ({ data, context }) => {
+    const { data: staff } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "staff",
+    });
+    if (staff !== true) {
+      return {
+        error:
+          "Quarantined evidence cannot be downloaded. Files are stored unscanned; release requires an administrative review by the CertivoIQ platform team.",
+      } as const;
+    }
+    const reason = data.reason?.trim();
+    if (!reason || reason.length < 8) {
+      return { error: "Record the reason for this administrative release (at least 8 characters)." } as const;
+    }
+
     const { data: row, error } = await context.supabase
       .from("correction_evidence")
       .select("id, correction_case_id, storage_bucket, storage_path, document_label, sha256, scan_status, correction_cases!inner(submission_id)")
@@ -158,10 +178,10 @@ export const getCorrectionEvidenceDownload = createServerFn({ method: "POST" })
     const submissionId = (row.correction_cases as unknown as { submission_id: string } | null)?.submission_id ?? null;
     await supabaseAdmin.from("hfa_audit_events").insert({
       actor_id: context.userId,
-      actor_kind: "agency",
+      actor_kind: "platform",
       submission_id: submissionId,
-      action: "correction_evidence.downloaded",
-      detail: { evidenceId: row.id, sha256: row.sha256 } as never,
+      action: "correction_evidence.admin_released",
+      detail: { evidenceId: row.id, sha256: row.sha256, reason, scanStatus: row.scan_status } as never,
     });
 
     return {
@@ -170,5 +190,6 @@ export const getCorrectionEvidenceDownload = createServerFn({ method: "POST" })
       sha256: row.sha256,
       scanStatus: row.scan_status,
       scanned: false,
+      quarantined: true,
     } as const;
   });

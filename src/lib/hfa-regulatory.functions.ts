@@ -465,15 +465,47 @@ export const requestCorrection = createServerFn({ method: "POST" })
     return { ok: true } as const;
   });
 
+/**
+ * Agency disposition. Uploaded documentation is always quarantined (there is no
+ * malware scanner), so quarantined files can never by themselves satisfy a
+ * correction: closing a case that has quarantined evidence requires the
+ * reviewer to acknowledge explicitly that the documentation was inspected
+ * outside the platform. The acknowledgement is stored on the case and audited.
+ */
 export const dispositionCorrection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { caseId: string; disposition: string; accept: boolean }) => {
+  .inputValidator((data: {
+    caseId: string;
+    disposition: string;
+    accept: boolean;
+    quarantineAcknowledged?: boolean;
+  }) => {
     if (!data?.caseId) throw new Error("A correction case is required.");
     if (!data.disposition?.trim()) throw new Error("Record the agency disposition.");
     return data;
   })
   .handler(async ({ data, context }) => {
     const now = new Date().toISOString();
+
+    let acknowledged = false;
+    if (data.accept) {
+      const { data: files, error: filesError } = await context.supabase
+        .from("correction_evidence")
+        .select("id, scan_status")
+        .eq("correction_case_id", data.caseId);
+      if (filesError) throw filesError;
+      const quarantined = (files ?? []).filter((f) => f.scan_status === "quarantined");
+      if (quarantined.length > 0) {
+        if (data.quarantineAcknowledged !== true) {
+          return {
+            error:
+              "This correction is backed by quarantined, unscanned documentation. Confirm that you reviewed it outside the platform before closing the case.",
+          } as const;
+        }
+        acknowledged = true;
+      }
+    }
+
     const { data: row, error } = await context.supabase
       .from("correction_cases")
       .update({
@@ -481,6 +513,8 @@ export const dispositionCorrection = createServerFn({ method: "POST" })
         status: data.accept ? "accepted" : "reopened",
         closed_by: data.accept ? context.userId : null,
         closed_at: data.accept ? now : null,
+        quarantine_ack_by: acknowledged ? context.userId : null,
+        quarantine_ack_at: acknowledged ? now : null,
       })
       .eq("id", data.caseId)
       .select("id, submission_id")
@@ -493,13 +527,18 @@ export const dispositionCorrection = createServerFn({ method: "POST" })
       actor_kind: "agency",
       submission_id: row.submission_id,
       action: data.accept ? "correction.accepted" : "correction.reopened",
-      detail: { caseId: row.id } as never,
+      detail: { caseId: row.id, quarantineAcknowledged: acknowledged, evidenceScanned: false } as never,
     });
 
     return { ok: true } as const;
   });
 
-/** Acceptance is blocked while any correction case is still open. */
+/**
+ * Acceptance is blocked while any correction case is still open, and blocked
+ * when a closed case rests on quarantined documentation that was never
+ * acknowledged as reviewed off-platform. Quarantined files are never counted as
+ * validated evidence of an accepted submission.
+ */
 export const acceptSubmission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { submissionId: string }) => {
@@ -507,14 +546,36 @@ export const acceptSubmission = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { data: open, error: openError } = await context.supabase
+    const { data: cases, error: openError } = await context.supabase
       .from("correction_cases")
-      .select("id")
-      .eq("submission_id", data.submissionId)
-      .in("status", ["open", "owner_responded", "agency_review", "reopened"]);
+      .select("id, status, quarantine_ack_at")
+      .eq("submission_id", data.submissionId);
     if (openError) throw openError;
-    if ((open ?? []).length > 0) {
+    const open = (cases ?? []).filter((c) =>
+      ["open", "owner_responded", "agency_review", "reopened"].includes(c.status),
+    );
+    if (open.length > 0) {
       return { error: "Close every correction case before accepting this submission." } as const;
+    }
+
+    const caseIds = (cases ?? []).map((c) => c.id);
+    let quarantinedCount = 0;
+    if (caseIds.length > 0) {
+      const { data: files, error: filesError } = await context.supabase
+        .from("correction_evidence")
+        .select("id, correction_case_id, scan_status")
+        .in("correction_case_id", caseIds);
+      if (filesError) throw filesError;
+      const quarantined = (files ?? []).filter((f) => f.scan_status === "quarantined");
+      quarantinedCount = quarantined.length;
+      const ackByCase = new Map((cases ?? []).map((c) => [c.id, c.quarantine_ack_at]));
+      const unacknowledged = quarantined.filter((f) => !ackByCase.get(f.correction_case_id));
+      if (unacknowledged.length > 0) {
+        return {
+          error:
+            "This package contains quarantined, unscanned documentation that has not been acknowledged as reviewed off-platform. It cannot be accepted as valid evidence.",
+        } as const;
+      }
     }
 
     const now = new Date().toISOString();
@@ -530,10 +591,13 @@ export const acceptSubmission = createServerFn({ method: "POST" })
     await context.supabase.from("hfa_audit_events").insert({
       actor_id: context.userId,
       actor_kind: "agency",
-      agency_id: row.agency_id,
       submission_id: row.id,
       action: "submission.accepted",
-      detail: { acceptedAt: now } as never,
+      detail: {
+        acceptedAt: now,
+        quarantinedEvidenceCount: quarantinedCount,
+        evidenceScanned: false,
+      } as never,
     });
 
     return { ok: true } as const;
