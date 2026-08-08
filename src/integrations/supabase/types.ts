@@ -93,6 +93,8 @@ export type Database = {
           id: string
           owner_responded_at: string | null
           owner_response: string | null
+          quarantine_ack_at: string | null
+          quarantine_ack_by: string | null
           status: Database["public"]["Enums"]["correction_case_status"]
           submission_id: string
           title: string
@@ -110,6 +112,8 @@ export type Database = {
           id?: string
           owner_responded_at?: string | null
           owner_response?: string | null
+          quarantine_ack_at?: string | null
+          quarantine_ack_by?: string | null
           status?: Database["public"]["Enums"]["correction_case_status"]
           submission_id: string
           title: string
@@ -127,6 +131,8 @@ export type Database = {
           id?: string
           owner_responded_at?: string | null
           owner_response?: string | null
+          quarantine_ack_at?: string | null
+          quarantine_ack_by?: string | null
           status?: Database["public"]["Enums"]["correction_case_status"]
           submission_id?: string
           title?: string
