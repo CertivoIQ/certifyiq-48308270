@@ -71,13 +71,21 @@ export const listOwnerSubmissions = createServerFn({ method: "GET" })
     return (data ?? []).map((row) => mapSubmission(row as never));
   });
 
-/** Creates a draft package. Nothing is visible to an agency until it is granted. */
+/**
+ * Creates a draft package. Nothing is visible to an agency until it is granted.
+ *
+ * ORGANIZATION OWNERSHIP: CertivoIQ has no organization/membership model in the
+ * production schema yet, so the tenant reference is derived server-side as
+ * `owner:<userId>` — a stable, per-account placeholder. The literal "self" is
+ * rejected, the client can no longer supply the value, and every row created
+ * this way is safely backfillable once an approved organization model lands
+ * (see `docs/organization-model-proposal.md`).
+ */
 export const createOwnerSubmission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: {
       agencyId: string;
-      organizationId: string;
       propertyId: string;
       propertyName?: string;
       certificationId?: string;
@@ -86,13 +94,13 @@ export const createOwnerSubmission = createServerFn({ method: "POST" })
       preflight: unknown;
     }) => {
       if (!data?.agencyId) throw new Error("Select the agency this package is for.");
-      if (!data.organizationId) throw new Error("An organization is required.");
       if (!data.propertyId) throw new Error("A property is required.");
       if (!data.program) throw new Error("A program is required.");
       if (!data.reportingPeriod) throw new Error("A reporting period is required.");
       return data;
     },
   )
+
   .handler(async ({ data, context }) => {
     const { mapSubmission } = await import("@/lib/hfa-regulatory-map");
     const preflight = (data.preflight ?? {}) as { readinessScore?: number };
