@@ -393,26 +393,33 @@ export function AgencySubmissionDetail({ submissionId }: { submissionId: string 
                       <span>
                         {f.documentLabel ?? f.documentRef} · sha256 {f.sha256.slice(0, 12)}…
                       </span>
+                      <Pill tone="flag">Quarantined — not scanned</Pill>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          evidenceDownload({ data: { evidenceId: f.id } }).then(
+                        onClick={() => {
+                          const reason = window.prompt(
+                            "Administrative release of an unscanned file. State the review reason (platform staff only):",
+                          );
+                          if (!reason) return;
+                          void evidenceDownload({ data: { evidenceId: f.id, reason } }).then(
                             (r) => {
                               if ("error" in r && r.error) toast.error(r.error);
                               else if ("url" in r) window.open(r.url, "_blank", "noopener");
                             },
                             (e: Error) => toast.error(e.message),
-                          )
-                        }
+                          );
+                        }}
                       >
-                        Download
+                        Request administrative release
                       </Button>
                     </li>
                   ))}
                   <li className="italic">
-                    Uploaded files are hashed and stored by CertivoIQ and held in quarantine — malware
-                    scanning is not yet available, so they are not certified virus-free.
+                    Uploaded files are hashed and stored by CertivoIQ and held in quarantine. Malware
+                    scanning is not available, so these files are never certified virus-free, cannot be
+                    downloaded by agency reviewers or owners, and never count on their own as validated
+                    evidence. Release requires an audited administrative review by the platform team.
                   </li>
                 </ul>
               )}
