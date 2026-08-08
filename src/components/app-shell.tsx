@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listMyAgencies } from "@/lib/hfa-regulatory.functions";
 import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
@@ -66,9 +69,19 @@ function Wordmark() {
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { isStaff } = useIsStaff();
   const t = useT();
-  const items = isStaff
-    ? [...NAV, { to: "/crm", labelKey: "nav.crm", icon: Briefcase } as const]
-    : NAV;
+  const fetchAgencies = useServerFn(listMyAgencies);
+  // Agency console entry point appears only for housing-agency members.
+  const agencies = useQuery({
+    queryKey: ["hfa-agencies"],
+    queryFn: () => fetchAgencies({}),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  const items = [
+    ...NAV,
+    ...(agencies.data?.length ? [{ to: "/agency", labelKey: "nav.agency", icon: Landmark } as const] : []),
+    ...(isStaff ? [{ to: "/crm", labelKey: "nav.crm", icon: Briefcase } as const] : []),
+  ];
   return (
     <nav className="flex flex-col gap-0.5">
       {items.map(({ to, labelKey, icon: Icon }) => (
