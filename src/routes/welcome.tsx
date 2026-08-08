@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
 import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
 import { PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
-import { ExplainerVideo } from "@/components/explainer-video";
+import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
+import CertivoIQComparisonChart from "@/components/CertivoIQComparisonChart";
+
 import { useT, useLanguage } from "@/lib/i18n/provider";
 import { PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
 import { LanguageToggle } from "@/components/language-toggle";
