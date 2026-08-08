@@ -12,6 +12,8 @@ import { PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useViewerState } from "@/hooks/use-viewer-state";
+
 
 
 export const Route = createFileRoute("/welcome")({
