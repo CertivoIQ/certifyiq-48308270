@@ -49,3 +49,151 @@ export function linkTo(url: string | null) {
   if (!url) return null;
   return url.startsWith("http") ? url : `https://${url}`;
 }
+
+export type Activity = Database["public"]["Tables"]["crm_activities"]["Row"];
+
+export const TERRITORIES = ["Northeast", "South", "Midwest", "West"] as const;
+export type Territory = (typeof TERRITORIES)[number];
+
+export const PROGRAM_TAGS = [
+  "LIHTC",
+  "Section 8",
+  "Section 202",
+  "HOME",
+  "HOTMA",
+  "Workforce",
+  "Senior",
+  "Mixed Income",
+  "Supportive",
+  "Rural Development",
+  "Military",
+  "Public Housing",
+  "Student",
+] as const;
+
+export function scoreTone(score: number): "seal" | "flag" | "reject" | "neutral" {
+  if (score >= 85) return "seal";
+  if (score >= 70) return "flag";
+  if (score >= 50) return "neutral";
+  return "reject";
+}
+
+/** Columns exported to / imported from the Google Sheets CRM. */
+export const LEAD_CSV_COLUMNS = [
+  "name",
+  "account_type",
+  "role",
+  "hq",
+  "states",
+  "properties",
+  "units",
+  "programs",
+  "website",
+  "linkedin_url",
+  "corporate_email",
+  "phone",
+  "stage",
+  "plan",
+  "arr",
+  "territory",
+  "lead_score",
+  "owner",
+  "source",
+  "last_contact_on",
+  "next_followup_on",
+  "responded",
+  "reminders_sent",
+  "last_touch",
+  "notes",
+] as const;
+
+export type LeadCsvColumn = (typeof LEAD_CSV_COLUMNS)[number];
+
+const csvCell = (v: unknown) => {
+  if (v === null || v === undefined) return "";
+  const s = Array.isArray(v) ? v.join("; ") : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+export function leadsToCsv(rows: Account[]): string {
+  const head = LEAD_CSV_COLUMNS.join(",");
+  const body = rows.map((r) => LEAD_CSV_COLUMNS.map((c) => csvCell((r as Record<string, unknown>)[c])).join(","));
+  return [head, ...body].join("\n");
+}
+
+/** Minimal RFC-4180 parser — handles quoted fields, embedded commas and newlines. */
+export function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+  const src = text.replace(/\r\n?/g, "\n");
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (quoted) {
+      if (ch === '"') {
+        if (src[i + 1] === '"') {
+          cell += '"';
+          i++;
+        } else quoted = false;
+      } else cell += ch;
+      continue;
+    }
+    if (ch === '"') quoted = true;
+    else if (ch === ",") {
+      row.push(cell);
+      cell = "";
+    } else if (ch === "\n") {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else cell += ch;
+  }
+  if (cell.length || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+}
+
+const NUMERIC = new Set(["properties", "units", "arr", "lead_score", "reminders_sent"]);
+const LISTS = new Set(["states", "programs"]);
+const DATES = new Set(["last_contact_on", "next_followup_on"]);
+
+/** Turns a parsed CSV into crm_accounts upsert payloads. Unknown headers are ignored. */
+export function csvToLeads(text: string): Record<string, unknown>[] {
+  const rows = parseCsv(text);
+  if (!rows.length) return [];
+  const header = rows[0]!.map((h) => h.trim().toLowerCase().replace(/\s+/g, "_"));
+  return rows.slice(1).flatMap((cells) => {
+    const rec: Record<string, unknown> = {};
+    header.forEach((key, i) => {
+      if (!(LEAD_CSV_COLUMNS as readonly string[]).includes(key)) return;
+      const raw = (cells[i] ?? "").trim();
+      if (NUMERIC.has(key)) rec[key] = raw ? Number(raw.replace(/[$,]/g, "")) || 0 : 0;
+      else if (LISTS.has(key)) rec[key] = raw ? raw.split(/[;|]/).map((s) => s.trim()).filter(Boolean) : [];
+      else if (DATES.has(key)) rec[key] = raw || null;
+      else if (key === "responded") rec[key] = /^(true|yes|1)$/i.test(raw);
+      else rec[key] = raw || null;
+    });
+    return rec["name"] ? [rec] : [];
+  });
+}
+
+/** Resolves {{token}} placeholders against a lead row. */
+export function mergeTokens(text: string, account: Account, contactName?: string | null): string {
+  const map: Record<string, string> = {
+    company: account.name,
+    contact: contactName || "there",
+    first_name: (contactName || "there").split(" ")[0] ?? "there",
+    hq: account.hq ?? "",
+    units: Number(account.units ?? 0).toLocaleString(),
+    properties: Number(account.properties ?? 0).toLocaleString(),
+    states: (account.states ?? []).join(", "),
+    programs: (account.programs ?? []).join(", "),
+    plan: account.plan ?? "CertivoIQ",
+    territory: account.territory ?? "",
+  };
+  return text.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, key: string) => map[key.toLowerCase()] ?? m);
+}
