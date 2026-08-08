@@ -85,12 +85,18 @@ function WelcomePage() {
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" asChild>
-              <Link to="/launchpad">{t("welcome.cta.trial")}</Link>
+              <Link to={isSubscriber ? "/dashboard" : "/launchpad"}>
+                {isSubscriber ? t("welcome.nav.open") : t("welcome.cta.trial")}
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/demo-dashboard">{t("welcome.cta.sample")}</Link>
-            </Button>
+            {/* Demo dashboard is for visitors and trial users; subscribers use /dashboard. */}
+            {!isSubscriber && (
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/demo-dashboard">{t("welcome.cta.sample")}</Link>
+              </Button>
+            )}
           </div>
+
         </section>
 
         <section className="mt-12" id="video">
