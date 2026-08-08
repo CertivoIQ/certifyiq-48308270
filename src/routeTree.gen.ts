@@ -40,6 +40,7 @@ import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
 import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
 import { Route as AuthenticatedAgencyIndexRouteImport } from './routes/_authenticated/agency.index'
+import { Route as AuthenticatedAgencyInvitationsAcceptRouteImport } from './routes/_authenticated/agency.invitations.accept'
 import { Route as AuthenticatedAgencySubmissionsIndexRouteImport } from './routes/_authenticated/agency.submissions.index'
 import { Route as AuthenticatedAgencySubmissionsSubmissionIdRouteImport } from './routes/_authenticated/agency.submissions.$submissionId'
 import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
@@ -206,6 +207,12 @@ const AuthenticatedAgencyIndexRoute =
     path: '/agency/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAgencyInvitationsAcceptRoute =
+  AuthenticatedAgencyInvitationsAcceptRouteImport.update({
+    id: '/agency/invitations/accept',
+    path: '/agency/invitations/accept',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAgencySubmissionsIndexRoute =
   AuthenticatedAgencySubmissionsIndexRouteImport.update({
     id: '/agency/submissions/',
@@ -278,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/properties/': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/agency/': typeof AuthenticatedAgencyIndexRoute
+  '/agency/invitations/accept': typeof AuthenticatedAgencyInvitationsAcceptRoute
   '/agency/submissions/$submissionId': typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -317,6 +325,7 @@ export interface FileRoutesByTo {
   '/properties': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/agency': typeof AuthenticatedAgencyIndexRoute
+  '/agency/invitations/accept': typeof AuthenticatedAgencyInvitationsAcceptRoute
   '/agency/submissions/$submissionId': typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -358,6 +367,7 @@ export interface FileRoutesById {
   '/properties/': typeof PropertiesIndexRoute
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
   '/_authenticated/agency/': typeof AuthenticatedAgencyIndexRoute
+  '/_authenticated/agency/invitations/accept': typeof AuthenticatedAgencyInvitationsAcceptRoute
   '/_authenticated/agency/submissions/$submissionId': typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/properties/'
     | '/account/security'
     | '/agency/'
+    | '/agency/invitations/accept'
     | '/agency/submissions/$submissionId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
@@ -438,6 +449,7 @@ export interface FileRouteTypes {
     | '/properties'
     | '/account/security'
     | '/agency'
+    | '/agency/invitations/accept'
     | '/agency/submissions/$submissionId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
@@ -478,6 +490,7 @@ export interface FileRouteTypes {
     | '/properties/'
     | '/_authenticated/account/security'
     | '/_authenticated/agency/'
+    | '/_authenticated/agency/invitations/accept'
     | '/_authenticated/agency/submissions/$submissionId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
@@ -737,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgencyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agency/invitations/accept': {
+      id: '/_authenticated/agency/invitations/accept'
+      path: '/agency/invitations/accept'
+      fullPath: '/agency/invitations/accept'
+      preLoaderRoute: typeof AuthenticatedAgencyInvitationsAcceptRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/agency/submissions/': {
       id: '/_authenticated/agency/submissions/'
       path: '/agency/submissions'
@@ -798,6 +818,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSubmissionsRoute: typeof AuthenticatedSubmissionsRoute
   AuthenticatedAccountSecurityRoute: typeof AuthenticatedAccountSecurityRoute
   AuthenticatedAgencyIndexRoute: typeof AuthenticatedAgencyIndexRoute
+  AuthenticatedAgencyInvitationsAcceptRoute: typeof AuthenticatedAgencyInvitationsAcceptRoute
   AuthenticatedAgencySubmissionsSubmissionIdRoute: typeof AuthenticatedAgencySubmissionsSubmissionIdRoute
   AuthenticatedAgencySubmissionsIndexRoute: typeof AuthenticatedAgencySubmissionsIndexRoute
 }
@@ -811,6 +832,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSubmissionsRoute: AuthenticatedSubmissionsRoute,
   AuthenticatedAccountSecurityRoute: AuthenticatedAccountSecurityRoute,
   AuthenticatedAgencyIndexRoute: AuthenticatedAgencyIndexRoute,
+  AuthenticatedAgencyInvitationsAcceptRoute:
+    AuthenticatedAgencyInvitationsAcceptRoute,
   AuthenticatedAgencySubmissionsSubmissionIdRoute:
     AuthenticatedAgencySubmissionsSubmissionIdRoute,
   AuthenticatedAgencySubmissionsIndexRoute:
