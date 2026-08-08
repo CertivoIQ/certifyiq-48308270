@@ -274,25 +274,13 @@ export const respondToCorrection = createServerFn({ method: "POST" })
     return { ok: true } as const;
   });
 
-export const attachCorrectionEvidence = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { caseId: string; documentRef: string; documentLabel?: string; sha256: string }) => {
-    if (!data?.caseId) throw new Error("A correction case is required.");
-    if (!data.documentRef) throw new Error("A document reference is required.");
-    if (!/^[a-f0-9]{64}$/i.test(data.sha256 ?? "")) throw new Error("A SHA-256 hash is required.");
-    return data;
-  })
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("correction_evidence").insert({
-      correction_case_id: data.caseId,
-      document_ref: data.documentRef,
-      document_label: data.documentLabel ?? null,
-      sha256: data.sha256.toLowerCase(),
-      submitted_by: context.userId,
-    });
-    if (error) throw error;
-    return { ok: true } as const;
-  });
+/**
+ * Correction evidence is no longer accepted from the browser as a hash plus a
+ * free-text reference. Uploads go through
+ * `uploadCorrectionEvidence` in `@/lib/hfa-evidence.functions`, where the server
+ * hashes the bytes itself and stores them in a private bucket.
+ */
+
 
 /* ---------------------------------------------------------------- agency side */
 
