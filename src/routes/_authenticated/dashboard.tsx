@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExecutiveDashboard } from "@/components/executive-dashboard";
+import { ProductionDashboard } from "@/components/production-dashboard";
+import { useViewerState } from "@/hooks/use-viewer-state";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
