@@ -4,12 +4,16 @@ import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
 import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
 import { PENALTY_RISKS, VALUE_MATH, TRIAL_OFFER } from "@/lib/trial-data";
-import { ExplainerVideo } from "@/components/explainer-video";
+import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
+import CertivoIQComparisonChart from "@/components/CertivoIQComparisonChart";
+
 import { useT, useLanguage } from "@/lib/i18n/provider";
 import { PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useViewerState } from "@/hooks/use-viewer-state";
+
 
 
 export const Route = createFileRoute("/welcome")({
@@ -46,6 +50,8 @@ function WelcomePage() {
   const t = useT();
   const { lang } = useLanguage();
   const { isActive: isSubscriber } = useSubscription();
+  const { state: viewerState } = useViewerState();
+
   const risks = lang === "es" ? PENALTY_RISKS_ES : PENALTY_RISKS;
   const valueMath = lang === "es" ? VALUE_MATH_ES : VALUE_MATH;
 
@@ -103,9 +109,10 @@ function WelcomePage() {
 
         </section>
 
-        <section className="mt-12" id="video">
-          <ExplainerVideo />
+        <section className="mt-12 overflow-hidden rounded-lg" id="video">
+          <CertivoIQVoiceoverVideo accountState={viewerState} />
         </section>
+
 
 
         <section className="mt-12">
@@ -157,6 +164,11 @@ function WelcomePage() {
             </Panel>
           ))}
         </section>
+
+        <section className="mt-12 overflow-hidden rounded-lg">
+          <CertivoIQComparisonChart />
+        </section>
+
 
         <section className="mt-12 rounded-lg border border-primary/25 bg-accent px-6 py-8 text-center">
           <h2 className="font-display text-[26px] text-accent-foreground">

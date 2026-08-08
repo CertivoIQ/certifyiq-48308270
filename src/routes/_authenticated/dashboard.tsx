@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExecutiveDashboard } from "@/components/executive-dashboard";
+import { ProductionDashboard } from "@/components/production-dashboard";
+import { useViewerState } from "@/hooks/use-viewer-state";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -18,5 +21,13 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
-  component: () => <ExecutiveDashboard />,
+  component: DashboardPage,
 });
+
+/** Subscribers get a clean production dashboard; trial users see the sample portfolio. */
+function DashboardPage() {
+  const { showDemoData, loading } = useViewerState();
+  if (loading) return <ExecutiveDashboard demo />;
+  return showDemoData ? <ExecutiveDashboard demo /> : <ProductionDashboard />;
+}
+
