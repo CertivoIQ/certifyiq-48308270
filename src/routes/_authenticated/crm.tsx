@@ -121,6 +121,22 @@ function CrmDashboard() {
     },
   });
 
+  const activities = useQuery({
+    queryKey: ["crm", "activities"],
+    enabled: isStaff,
+    queryFn: async (): Promise<Activity[]> => {
+      const { data, error } = await supabase
+        .from("crm_activities")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [mailMergeOpen, setMailMergeOpen] = useState(false);
   const [stage, setStage] = useState<Stage | "all">("all");
   const [openId, setOpenId] = useState<string | null>(null);
   const [accountDialog, setAccountDialog] = useState<{ open: boolean; account: Account | null }>({
@@ -276,6 +292,17 @@ function CrmDashboard() {
         </ul>
       </Panel>
 
+      <div className="mt-4">
+        <LeadsPanel
+          accounts={rows}
+          selected={selectedLeads}
+          onSelectedChange={setSelectedLeads}
+          onMailMerge={() => setMailMergeOpen(true)}
+        />
+      </div>
+
+      <PipelinePanel accounts={rows} activities={activities.data ?? []} />
+
       <div className="mt-5 flex flex-wrap items-center gap-2">
         {(["all", ...STAGES] as const).map((s) => (
           <Button
@@ -428,6 +455,14 @@ function CrmDashboard() {
           )}
         </ul>
       </Panel>
+
+      <MailMergeDialog
+        open={mailMergeOpen}
+        onOpenChange={setMailMergeOpen}
+        accounts={rows.filter((r) => selectedLeads.includes(r.id))}
+        templates={templates.data ?? []}
+        campaigns={campaigns.data ?? []}
+      />
 
       <AccountDialog
         open={accountDialog.open}
