@@ -4,6 +4,7 @@ import { template as paymentSucceededTemplate } from './payment-succeeded'
 import { template as paymentFailedTemplate } from './payment-failed'
 import { template as introColdTemplate } from './intro-cold'
 import { template as supportRequestReceivedTemplate } from './support-request-received'
+import { template as mailMergeTemplate } from './mail-merge'
 
 
 export interface TemplateEntry {
@@ -25,5 +26,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-failed': paymentFailedTemplate,
   'intro-cold': introColdTemplate,
   'support-request-received': supportRequestReceivedTemplate,
+  'mail-merge': mailMergeTemplate,
 }
 
