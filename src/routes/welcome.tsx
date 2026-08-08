@@ -62,7 +62,7 @@ function WelcomePage() {
               <Link to="/pricing">{t("welcome.nav.pricing")}</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/">{t("welcome.nav.open")}</Link>
+              <Link to="/dashboard">{t("welcome.nav.open")}</Link>
             </Button>
             <LanguageToggle />
             <ThemeToggle />
@@ -87,7 +87,7 @@ function WelcomePage() {
               <Link to="/launchpad">{t("welcome.cta.trial")}</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link to="/files">{t("welcome.cta.sample")}</Link>
+              <Link to="/demo-dashboard">{t("welcome.cta.sample")}</Link>
             </Button>
           </div>
         </section>

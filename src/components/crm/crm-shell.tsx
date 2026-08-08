@@ -16,7 +16,7 @@ function Denied() {
           The CertivoIQ CRM Dashboard is restricted to verified @certivoiq.com accounts.
         </p>
         <Button className="mt-5" asChild>
-          <Link to="/">Back to CertivoIQ</Link>
+          <Link to="/dashboard">Back to CertivoIQ</Link>
         </Button>
       </div>
     </div>

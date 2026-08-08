@@ -31,7 +31,7 @@ import type { TranslationKey } from "@/lib/i18n/en";
 
 
 const NAV = [
-  { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
   { to: "/properties", labelKey: "nav.properties", icon: Building2 },
   { to: "/files", labelKey: "nav.files", icon: FileCheck2 },
   { to: "/findings", labelKey: "nav.findings", icon: AlertTriangle },
@@ -50,7 +50,7 @@ const NAV = [
 
 function Wordmark() {
   return (
-    <Link to="/" className="flex items-center gap-2.5">
+    <Link to="/dashboard" className="flex items-center gap-2.5">
       <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
         IQ
       </span>
@@ -74,7 +74,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           key={to}
           to={to}
           onClick={onNavigate}
-          activeOptions={{ exact: to === "/" }}
+          activeOptions={{ exact: to === "/dashboard" }}
           activeProps={{
             className:
               "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]",

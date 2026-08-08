@@ -81,7 +81,7 @@ function LaunchPadPage() {
               {done ? (
                 <>
                   <Button asChild>
-                    <Link to="/">Open my dashboard</Link>
+                    <Link to="/dashboard">Open my dashboard</Link>
                   </Button>
                   <Button variant="outline" onClick={() => setStep(1)}>
                     Restart wizard

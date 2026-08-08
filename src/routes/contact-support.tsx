@@ -107,7 +107,7 @@ function ContactSupportPage() {
               <Link to="/pricing">Pricing</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/">Open the platform</Link>
+              <Link to="/dashboard">Open the platform</Link>
             </Button>
           </div>
         </div>
