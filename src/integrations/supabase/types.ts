@@ -20,6 +20,7 @@ export type Database = {
           access_until: string | null
           ai_doc_allowance: number | null
           created_at: string
+          demo_data_cleared_at: string | null
           environment: string
           files_purge_at: string | null
           files_purged_at: string | null
@@ -28,6 +29,7 @@ export type Database = {
           price_id: string | null
           property_limit: number | null
           status: string
+          subscribed_at: string | null
           trial_started_at: string | null
           unit_limit: number | null
           updated_at: string
@@ -39,6 +41,7 @@ export type Database = {
           access_until?: string | null
           ai_doc_allowance?: number | null
           created_at?: string
+          demo_data_cleared_at?: string | null
           environment?: string
           files_purge_at?: string | null
           files_purged_at?: string | null
@@ -47,6 +50,7 @@ export type Database = {
           price_id?: string | null
           property_limit?: number | null
           status?: string
+          subscribed_at?: string | null
           trial_started_at?: string | null
           unit_limit?: number | null
           updated_at?: string
@@ -58,6 +62,7 @@ export type Database = {
           access_until?: string | null
           ai_doc_allowance?: number | null
           created_at?: string
+          demo_data_cleared_at?: string | null
           environment?: string
           files_purge_at?: string | null
           files_purged_at?: string | null
@@ -66,6 +71,7 @@ export type Database = {
           price_id?: string | null
           property_limit?: number | null
           status?: string
+          subscribed_at?: string | null
           trial_started_at?: string | null
           unit_limit?: number | null
           updated_at?: string
@@ -439,6 +445,24 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      stripe_processed_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          event_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_type?: string | null
         }
         Relationships: []
       }
