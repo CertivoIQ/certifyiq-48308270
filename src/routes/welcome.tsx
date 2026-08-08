@@ -165,6 +165,11 @@ function WelcomePage() {
           ))}
         </section>
 
+        <section className="mt-12 overflow-hidden rounded-lg">
+          <CertivoIQComparisonChart />
+        </section>
+
+
         <section className="mt-12 rounded-lg border border-primary/25 bg-accent px-6 py-8 text-center">
           <h2 className="font-display text-[26px] text-accent-foreground">
             {t("welcome.close.title", { daysLeft: TRIAL.daysLeft })}
