@@ -9,6 +9,8 @@ import { useT, useLanguage } from "@/lib/i18n/provider";
 import { PENALTY_RISKS_ES, VALUE_MATH_ES } from "@/lib/i18n/marketing-es";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useSubscription } from "@/hooks/use-subscription";
+
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -43,8 +45,10 @@ const WHY = [
 function WelcomePage() {
   const t = useT();
   const { lang } = useLanguage();
+  const { isActive: isSubscriber } = useSubscription();
   const risks = lang === "es" ? PENALTY_RISKS_ES : PENALTY_RISKS;
   const valueMath = lang === "es" ? VALUE_MATH_ES : VALUE_MATH;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
