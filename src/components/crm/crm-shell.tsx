@@ -72,7 +72,7 @@ export function CrmShell({
               <Link to="/crm-support">Support</Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
-              <Link to="/">
+              <Link to="/welcome">
                 <ArrowLeft className="size-4" /> Product
               </Link>
             </Button>

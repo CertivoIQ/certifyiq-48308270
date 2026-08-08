@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
         property: "og:description",
         content: "Executive portfolio view of LIHTC, Section 8, HOME and HOTMA compliance risk.",
       },
-      { name: "robots", content: "noindex" },
+      { name: "robots", content: "noindex,nofollow" },
     ],
   }),
   component: () => <ExecutiveDashboard />,

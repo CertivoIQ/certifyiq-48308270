@@ -16,9 +16,8 @@ export const Route = createFileRoute("/demo-dashboard")({
         content: "A sample affordable-housing portfolio showing CertivoIQ findings, readiness and risk scores.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://certivoiq.com/demo-dashboard" },
+      { name: "robots", content: "noindex,nofollow" },
     ],
-    links: [{ rel: "canonical", href: "https://certivoiq.com/demo-dashboard" }],
   }),
   component: () => <ExecutiveDashboard demo />,
 });

@@ -192,7 +192,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center justify-center gap-2.5">
+        <Link to="/welcome" className="flex items-center justify-center gap-2.5">
           <span className="brand-gradient grid size-9 place-items-center rounded-[9px] font-mono text-sm font-bold text-gold">
             IQ
           </span>

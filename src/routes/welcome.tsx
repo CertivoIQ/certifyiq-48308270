@@ -27,6 +27,7 @@ export const Route = createFileRoute("/welcome")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://certivoiq.com/welcome" },
+      { name: "robots", content: "index,follow" },
     ],
     links: [{ rel: "canonical", href: "https://certivoiq.com/welcome" }],
   }),
@@ -48,7 +49,7 @@ function WelcomePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/welcome" className="flex items-center gap-2.5">
             <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
               IQ
             </span>
