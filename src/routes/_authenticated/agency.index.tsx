@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/agency/")({
     ],
   }),
   component: () => (
-    <AppShell>
+    <AppShell title="Agency Regulatory Console" subtitle="Packages explicitly submitted to your agency">
       <AgencyOverview />
     </AppShell>
   ),

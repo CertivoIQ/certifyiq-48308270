@@ -29,7 +29,7 @@ import {
  * an agency until the owner grants it.
  */
 
-const BASE_CHECKS: PreflightCheck[] = [
+const BASE_CHECKS: Omit<PreflightCheck, "satisfied">[] = [
   { id: "tic", label: "Tenant income certification is complete and signed", required: true },
   { id: "income", label: "Third-party income verification attached", required: true },
   { id: "assets", label: "Asset documentation attached", required: true },
@@ -72,7 +72,7 @@ export function OwnerSubmissionsPanel() {
           agencyId,
           organizationId: "self",
           propertyId,
-          propertyName: propertyName || undefined,
+          ...(propertyName ? { propertyName } : {}),
           program,
           reportingPeriod,
           preflight,
