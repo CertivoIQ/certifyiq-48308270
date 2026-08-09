@@ -187,7 +187,7 @@ function CrmDashboard() {
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-200">Revenue command center</p>
-            <h2 className="mt-2 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">Turn verified affordable-housing research into trusted relationships.</h2>
+            <h2 className="mt-2 max-w-2xl font-sans text-3xl font-semibold tracking-tight leading-tight sm:text-4xl">Turn verified affordable-housing research into trusted relationships.</h2>
             <p className="mt-3 max-w-2xl text-sm text-emerald-100/80">Public facts are source-linked. Contacts remain unverified until reviewed by staff, and sales forecasts stay separate from portfolio facts.</p>
           </div>
           <Button className="bg-white text-emerald-950 hover:bg-emerald-50" onClick={() => setAccountDialog({ open: true, account: null })}>
@@ -222,7 +222,7 @@ function CrmDashboard() {
                     <span className="text-xs font-semibold uppercase tracking-wide">{b.stage}</span>
                     <span className="rounded-full bg-white/70 px-2 py-0.5 font-mono text-xs">{b.count}</span>
                   </div>
-                  <p className="mt-3 font-display text-xl">{money(b.arr)}</p>
+                  <p className="mt-3 font-sans text-xl font-semibold">{money(b.arr)}</p>
                   <p className="mt-1 text-[11px] opacity-70">Annualized opportunity value</p>
                 </button>
               );
@@ -244,7 +244,7 @@ function CrmDashboard() {
             {(campaigns.data ?? []).map((c) => (
               <li key={c.id} className="px-5 py-3.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-display text-[14.5px]">{c.name}</span>
+                  <span className="font-sans text-[14.5px] font-semibold">{c.name}</span>
                   <Pill tone={c.status === "draft" ? "neutral" : "seal"}>{c.status}</Pill>
                   <Button
                     size="sm"
@@ -351,10 +351,14 @@ function CrmDashboard() {
             const people = (contacts.data ?? []).filter((c) => c.account_id === a.id);
             return (
               <li key={a.id} className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-emerald-950/20">
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setOpenId(openId === a.id ? null : a.id)}
-                  className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-5 py-5 text-left transition hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") setOpenId(openId === a.id ? null : a.id);
+                  }}
+                  className="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-2 px-5 py-5 text-left transition hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30"
                 >
                   <Building2 className="size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
@@ -378,7 +382,7 @@ function CrmDashboard() {
                     {Number(a.arr) > 0 ? `${money(Number(a.arr))}/yr · ${a.plan ?? "Plan pending"}` : "Research lead · value after qualification"}
                   </span>
                   <span className="cite w-24 text-right">{a.owner ?? "Unassigned"}</span>
-                </button>
+                </div>
 
                 {openId === a.id && (
                   <div className="border-t border-emerald-100 bg-emerald-50/40 px-5 py-4 dark:border-emerald-900 dark:bg-emerald-950/20">
