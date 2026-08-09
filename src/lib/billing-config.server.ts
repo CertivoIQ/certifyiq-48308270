@@ -1,23 +1,57 @@
 /**
- * Production billing must fail closed. Live deployments may not run against a
- * test-mode connection or a missing live price ID.
+ * Server-owned billing configuration.
+ *
+ * The browser may display the active payment environment, but it must never be
+ * allowed to choose which Stripe account a server mutation uses.
  */
 
-import { isPlanPrice } from "@/lib/plan-catalog";
+export type BillingEnvironment = "sandbox" | "live";
 
+function clientToken(): string | undefined {
+  return process.env["VITE_PAYMENTS_CLIENT_TOKEN"]?.trim();
+}
+
+export function resolveBillingEnvironment(): BillingEnvironment {
+  const configured = process.env["PAYMENTS_ENV"]?.trim();
+  if (configured && configured !== "sandbox" && configured !== "live") {
+    throw new Error("PAYMENTS_ENV must be either sandbox or live.");
+  }
+
+  const token = clientToken();
+  const tokenEnvironment = token?.startsWith("pk_live_")
+    ? "live"
+    : token?.startsWith("pk_test_")
+      ? "sandbox"
+      : undefined;
+
+  if (configured && tokenEnvironment && configured !== tokenEnvironment) {
+    throw new Error("The server payment environment does not match the Stripe client token.");
+  }
+  if (configured) return configured;
+  if (tokenEnvironment) return tokenEnvironment;
+
+  if (process.env["NODE_ENV"] === "production") {
+    throw new Error("Production billing is not configured.");
+  }
+  return "sandbox";
+}
+
+/**
+ * Production billing fails closed when the live connector, public token or
+ * webhook verification secret is absent.
+ */
 export function assertLiveBillingConfiguration() {
-  if (process.env["NODE_ENV"] !== "production") return;
+  if (!process.env["STRIPE_LIVE_API_KEY"]) {
+    throw new Error("Production billing requires a live Stripe connection.");
+  }
 
-  const liveConnection = process.env["STRIPE_LIVE_API_KEY"];
-  if (!liveConnection) {
-    throw new Error("Production billing requires a live payments connection.");
+  const token = clientToken();
+  if (!token?.startsWith("pk_live_")) {
+    throw new Error("Production billing requires a live Stripe client token.");
   }
-  const clientToken = process.env["VITE_PAYMENTS_CLIENT_TOKEN"];
-  if (clientToken?.startsWith("pk_test_")) {
-    throw new Error("Production billing detected a test-mode client token.");
-  }
-  if (!isPlanPrice(process.env["STRIPE_BUSINESS_PRICE_ID_LIVE"] ?? "business_monthly")) {
-    throw new Error("Missing live Business price ID.");
+
+  if (!process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]) {
+    throw new Error("Production billing requires a live Stripe webhook secret.");
   }
 }
 
