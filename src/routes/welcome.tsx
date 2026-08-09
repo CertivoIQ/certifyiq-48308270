@@ -5,7 +5,6 @@ import { PLANS, TRIAL } from "@/lib/platform-data";
 import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
 import { PENALTY_RISKS, TRIAL_OFFER } from "@/lib/trial-data";
 import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
-import CertivoIQComparisonChart from "@/components/CertivoIQComparisonChart";
 import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
 import { coverageClaim } from "@/lib/stateCoverageRegistry";
 
@@ -159,11 +158,6 @@ function WelcomePage() {
             </Panel>
           ))}
         </section>
-
-        <section className="mt-12 overflow-hidden rounded-lg">
-          <CertivoIQComparisonChart />
-        </section>
-
 
         <section className="mt-12 rounded-lg border border-primary/25 bg-accent px-6 py-8 text-center">
           <h2 className="font-display text-[26px] text-accent-foreground">
