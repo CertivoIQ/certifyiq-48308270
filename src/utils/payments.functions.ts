@@ -1,219 +1,213 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
-  type StripeEnv,
-  createStripeClient,
-  getStripeErrorMessage,
-} from "@/lib/stripe.server";
+  resolveBillingEnvironment,
+  type BillingEnvironment,
+} from "@/lib/billing-config.server";
+import {
+  ADDON_PRICE_IDS,
+  PLAN_PRICE_ID_LIST,
+  isAddonPrice,
+  isPlanPrice,
+} from "@/lib/plan-catalog";
+import { createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
-type PlanChangeResult = { ok: true; effectiveAt: string | null } | { error: string };
 
 const ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+const ACTIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
 
-/**
- * Seller-country set where Stripe can take on end-to-end compliance
- * (tax filing/remittance, fraud, disputes, transaction support). Buyers
- * outside it fall back to tax calculation and collection only.
- */
-const MANAGED_PAYMENTS_COUNTRIES = new Set([
-  "US", "CA", "BR", "CL", "CO", "AR", "PE", "UY",
-  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
-  "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL",
-  "PL", "PT", "RO", "SK", "SI", "ES", "SE",
-  "GB", "NO", "CH", "IS", "LI",
-  "AU", "NZ", "KR", "MY", "TH", "ID", "PH", "VN",
-  "IN", "HK", "TW",
-  "AE", "SA", "ZA", "IL", "TR", "EG", "NG", "KE",
-  "GI", "BH", "GE", "KZ", "BD", "PK", "LK", "MM", "KH", "LA",
-  "RS", "BA", "ME", "MK", "AL", "MD", "AM",
-]);
-
-function shouldUseComplianceHandling(customerCountry?: string): boolean {
-  if (!customerCountry) return false;
-  return MANAGED_PAYMENTS_COUNTRIES.has(customerCountry.toUpperCase());
+function isSelfServeCheckoutPrice(priceId: string): boolean {
+  return (
+    isPlanPrice(priceId) ||
+    priceId === ADDON_PRICE_IDS.academySeat ||
+    priceId === ADDON_PRICE_IDS.academyProperty
+  );
 }
 
-async function resolveOrCreateCustomer(
-  stripe: ReturnType<typeof createStripeClient>,
-  options: { email?: string; userId?: string },
-): Promise<string> {
-  if (options.userId && !ID_PATTERN.test(options.userId)) {
-    throw new Error("Invalid userId");
+function hasCurrentAccess(status: string, periodEnd: string | null): boolean {
+  if (ACTIVE_STATUSES.has(status)) return !periodEnd || new Date(periodEnd).getTime() > Date.now();
+  return status === "canceled" && !!periodEnd && new Date(periodEnd).getTime() > Date.now();
+}
+
+function applicationOrigin(environment: BillingEnvironment): string {
+  if (environment === "live") {
+    const configured = process.env["PAYMENTS_APP_URL"]?.trim() || "https://certivoiq.com";
+    const url = new URL(configured);
+    if (url.protocol !== "https:") throw new Error("Live payment return URL must use HTTPS.");
+    return url.origin;
   }
-  if (options.userId) {
-    const found = await stripe.customers.search({
-      query: `metadata['userId']:'${options.userId}'`,
-      limit: 1,
-    });
-    if (found.data.length && found.data[0]) return found.data[0].id;
+
+  const request = getRequest();
+  if (!request) return "http://localhost:3000";
+  const url = new URL(request.url);
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("Invalid payment return URL.");
   }
-  if (options.email) {
-    const existing = await stripe.customers.list({ email: options.email, limit: 1 });
-    const customer = existing.data[0];
-    if (customer) {
-      if (options.userId && customer.metadata?.["userId"] !== options.userId) {
-        await stripe.customers.update(customer.id, {
-          metadata: { ...customer.metadata, userId: options.userId },
-        });
-      }
-      return customer.id;
-    }
-  }
-  const created = await stripe.customers.create({
-    ...(options.email && { email: options.email }),
-    ...(options.userId && { metadata: { userId: options.userId } }),
-  });
-  return created.id;
+  return url.origin;
+}
+
+function checkoutReturnUrl(environment: BillingEnvironment): string {
+  return new URL(
+    "/checkout/return?session_id={CHECKOUT_SESSION_ID}",
+    applicationOrigin(environment),
+  ).toString();
+}
+
+function billingReturnUrl(environment: BillingEnvironment): string {
+  return new URL("/billing", applicationOrigin(environment)).toString();
 }
 
 /**
- * Creates an embedded checkout session for a plan or add-on price.
- * The 7-day trial runs inside CertivoIQ (no card required), so checkout is
- * only opened when someone converts or upgrades — no `trial_period_days`.
+ * Creates an embedded Checkout Session for an authenticated CertivoIQ user.
+ * Identity, email, Stripe environment and redirect destination are all derived
+ * on the server; the browser may only choose an allowlisted catalog item.
  */
 export const createCheckoutSession = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: {
-      priceId: string;
-      quantity?: number;
-      customerEmail?: string;
-      userId?: string;
-      customerCountry?: string;
-      returnUrl: string;
-      environment: StripeEnv;
-    }) => {
-      if (!ID_PATTERN.test(data.priceId)) throw new Error("Invalid priceId");
-      if (data.quantity !== undefined && (data.quantity < 1 || data.quantity > 10000)) {
-        throw new Error("Invalid quantity");
-      }
-      return data;
-    },
-  )
-  .handler(async ({ data }): Promise<CheckoutSessionResult> => {
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { priceId: string; quantity?: number }) => {
+    if (!ID_PATTERN.test(data.priceId) || !isSelfServeCheckoutPrice(data.priceId)) {
+      throw new Error("This price is not available for self-serve checkout.");
+    }
+
+    const quantity = data.quantity ?? 1;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 500) {
+      throw new Error("Invalid quantity.");
+    }
+    if (data.priceId !== ADDON_PRICE_IDS.academySeat && quantity !== 1) {
+      throw new Error("Quantity can only be changed for Academy seat subscriptions.");
+    }
+    return { ...data, quantity };
+  })
+  .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
-      const stripe = createStripeClient(data.environment);
+      const environment = resolveBillingEnvironment();
+      const { supabase, userId, claims } = context;
 
-      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-      const stripePrice = prices.data[0];
-      if (!stripePrice) throw new Error("Price not found");
-      const isRecurring = stripePrice.type === "recurring";
+      const { data: subscriptions, error: subscriptionsError } = await supabase
+        .from("subscriptions")
+        .select("stripe_customer_id, price_id, status, current_period_end, created_at")
+        .eq("user_id", userId)
+        .eq("environment", environment)
+        .order("created_at", { ascending: false });
+      if (subscriptionsError) throw subscriptionsError;
 
-      const customerId =
-        data.customerEmail || data.userId
-          ? await resolveOrCreateCustomer(stripe, {
-              ...(data.customerEmail ? { email: data.customerEmail } : {}),
-              ...(data.userId ? { userId: data.userId } : {}),
-            })
-          : undefined;
-
-      let productDescription: string | undefined;
-      if (!isRecurring) {
-        const productId =
-          typeof stripePrice.product === "string" ? stripePrice.product : stripePrice.product.id;
-        const product = await stripe.products.retrieve(productId);
-        productDescription = product.name;
+      const currentPlan = subscriptions?.find(
+        (subscription) =>
+          isPlanPrice(subscription.price_id) &&
+          hasCurrentAccess(subscription.status, subscription.current_period_end),
+      );
+      if (isPlanPrice(data.priceId) && currentPlan) {
+        return {
+          error:
+            "You already have a current plan. Open Manage billing to change it securely.",
+        };
       }
 
-      const managed = shouldUseComplianceHandling(data.customerCountry);
+      const duplicateAddon = subscriptions?.find(
+        (subscription) =>
+          subscription.price_id === data.priceId &&
+          hasCurrentAccess(subscription.status, subscription.current_period_end),
+      );
+      if (isAddonPrice(data.priceId) && duplicateAddon) {
+        return { error: "This add-on is already active on your account." };
+      }
+
+      if (isAddonPrice(data.priceId)) {
+        const { data: access, error: accessError } = await supabase
+          .from("account_access")
+          .select("plan_id, status, environment")
+          .eq("user_id", userId)
+          .eq("environment", environment)
+          .maybeSingle();
+        if (accessError) throw accessError;
+        if (!access?.plan_id || !ACTIVE_STATUSES.has(access.status)) {
+          return { error: "Academy is an add-on. Subscribe to a platform plan first." };
+        }
+      }
+
+      const stripe = createStripeClient(environment);
+      const prices = await stripe.prices.list({
+        lookup_keys: [data.priceId],
+        active: true,
+        limit: 1,
+      });
+      const stripePrice = prices.data[0];
+      if (!stripePrice || stripePrice.type !== "recurring") {
+        return { error: "The selected subscription price is not available." };
+      }
+
+      const customerId = subscriptions?.find(
+        (subscription) => !!subscription.stripe_customer_id,
+      )?.stripe_customer_id;
+      const email = typeof claims?.email === "string" ? claims.email : undefined;
 
       const session = await stripe.checkout.sessions.create({
-        line_items: [{ price: stripePrice.id, quantity: data.quantity || 1 }],
-        mode: isRecurring ? "subscription" : "payment",
+        line_items: [{ price: stripePrice.id, quantity: data.quantity }],
+        mode: "subscription",
         ui_mode: "embedded_page",
-        return_url: data.returnUrl,
-        ...(customerId && { customer: customerId }),
-        ...(!isRecurring && { payment_intent_data: { description: productDescription } }),
+        return_url: checkoutReturnUrl(environment),
+        client_reference_id: userId,
+        allow_promotion_codes: true,
+        automatic_tax: { enabled: true },
+        ...(customerId
+          ? {
+              customer: customerId,
+              customer_update: { address: "auto", name: "auto" },
+            }
+          : email
+            ? { customer_email: email }
+            : {}),
         metadata: {
-          ...(data.userId ? { userId: data.userId } : {}),
-          ...(data.customerCountry ? { customer_country: data.customerCountry } : {}),
-          managed_payments: managed ? "true" : "false",
+          userId,
+          purchaseKey: data.priceId,
         },
-        ...(data.userId && isRecurring
-          ? { subscription_data: { metadata: { userId: data.userId } } }
-          : {}),
-        ...(managed
-          ? { managed_payments: { enabled: true } }
-          : { automatic_tax: { enabled: true } }),
-      } as Parameters<typeof stripe.checkout.sessions.create>[0]);
+        subscription_data: {
+          metadata: {
+            userId,
+            purchaseKey: data.priceId,
+            ...(email ? { email } : {}),
+          },
+        },
+      });
 
-      return { clientSecret: session.client_secret ?? "" };
+      if (!session.client_secret) {
+        throw new Error("Checkout did not return a client secret.");
+      }
+      return { clientSecret: session.client_secret };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
   });
 
-/** Hosted billing portal: cancel, update card, download invoices. */
+/** Hosted billing portal: plan changes, cancellation, cards and invoices. */
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => data)
-  .handler(async ({ data, context }): Promise<PortalSessionResult> => {
+  .inputValidator((data: Record<string, never>) => data)
+  .handler(async ({ context }): Promise<PortalSessionResult> => {
+    const environment = resolveBillingEnvironment();
     const { supabase, userId } = context;
 
     const { data: sub, error: subError } = await supabase
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", userId)
-      .eq("environment", data.environment)
+      .eq("environment", environment)
+      .in("price_id", PLAN_PRICE_ID_LIST)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (subError || !sub?.stripe_customer_id) return { error: "No subscription found" };
+    if (subError || !sub?.stripe_customer_id) return { error: "No subscription found." };
 
     try {
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(environment);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id,
-        ...(data.returnUrl && { return_url: data.returnUrl }),
+        return_url: billingReturnUrl(environment),
       });
       return { url: portal.url };
-    } catch (error) {
-      return { error: getStripeErrorMessage(error) };
-    }
-  });
-
-/**
- * Upgrade or downgrade an existing subscription. Both directions take effect
- * at the next renewal with no mid-cycle proration, so the customer keeps the
- * capacity they already paid for until the current period ends.
- */
-export const changePlan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { priceId: string; environment: StripeEnv }) => {
-    if (!ID_PATTERN.test(data.priceId)) throw new Error("Invalid priceId");
-    return data;
-  })
-  .handler(async ({ data, context }): Promise<PlanChangeResult> => {
-    const { supabase, userId } = context;
-
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("stripe_subscription_id, status, current_period_end")
-      .eq("user_id", userId)
-      .eq("environment", data.environment)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (!sub?.stripe_subscription_id) return { error: "No active subscription to change" };
-
-    try {
-      const stripe = createStripeClient(data.environment);
-      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-      const target = prices.data[0];
-      if (!target) return { error: "Price not found" };
-
-      const current = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
-      const item = current.items.data[0];
-      if (!item) return { error: "Subscription has no billable item" };
-
-      await stripe.subscriptions.update(sub.stripe_subscription_id, {
-        items: [{ id: item.id, price: target.id }],
-        proration_behavior: "none",
-        billing_cycle_anchor: "unchanged",
-      });
-
-      return { ok: true, effectiveAt: sub.current_period_end ?? null };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
@@ -223,37 +217,38 @@ type SessionStatusResult =
   | { status: string; paymentStatus: string; priceId: string | null; provisioned: boolean }
   | { error: string };
 
-/**
- * Verifies a completed checkout session so the confirmation page reflects
- * reality (and can wait for the webhook to provision the account) instead of
- * trusting the presence of a session id in the URL.
- */
+/** Verify that a Checkout Session belongs to the signed-in buyer. */
 export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { sessionId: string; environment: StripeEnv }) => {
-    if (!/^[a-zA-Z0-9_-]+$/.test(data.sessionId)) throw new Error("Invalid sessionId");
+  .inputValidator((data: { sessionId: string }) => {
+    if (!ID_PATTERN.test(data.sessionId)) throw new Error("Invalid sessionId.");
     return data;
   })
   .handler(async ({ data, context }): Promise<SessionStatusResult> => {
     try {
-      const stripe = createStripeClient(data.environment);
+      const environment = resolveBillingEnvironment();
+      const stripe = createStripeClient(environment);
       const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
         expand: ["line_items.data.price"],
       });
 
-      // Only the buyer may inspect their own session.
-      if (session.metadata?.["userId"] && session.metadata["userId"] !== context.userId) {
-        return { error: "This checkout session belongs to another account." };
+      if (
+        session.metadata?.["userId"] !== context.userId ||
+        session.client_reference_id !== context.userId
+      ) {
+        return { error: "This checkout session does not belong to your account." };
       }
 
       const price = session.line_items?.data?.[0]?.price;
       const priceId = price?.lookup_key ?? price?.id ?? null;
 
-      const { data: access } = await context.supabase
+      const { data: access, error: accessError } = await context.supabase
         .from("account_access")
         .select("plan_id, status")
         .eq("user_id", context.userId)
+        .eq("environment", environment)
         .maybeSingle();
+      if (accessError) throw accessError;
 
       return {
         status: session.status ?? "unknown",
@@ -268,24 +263,30 @@ export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
 
 type CancelResult = { ok: true; endsAt: string | null; resumed?: boolean } | { error: string };
 
-/** Cancel at period end (or undo a scheduled cancellation). */
+/** Cancel the platform plan at period end, or undo a scheduled cancellation. */
 export const setCancellation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { cancel: boolean; environment: StripeEnv }) => data)
+  .inputValidator((data: { cancel: boolean }) => {
+    if (typeof data.cancel !== "boolean") throw new Error("Invalid cancellation request.");
+    return data;
+  })
   .handler(async ({ data, context }): Promise<CancelResult> => {
+    const environment = resolveBillingEnvironment();
     const { supabase, userId } = context;
-    const { data: sub } = await supabase
+    const { data: sub, error: subError } = await supabase
       .from("subscriptions")
-      .select("stripe_subscription_id, current_period_end, price_id")
+      .select("stripe_subscription_id, current_period_end")
       .eq("user_id", userId)
-      .eq("environment", data.environment)
+      .eq("environment", environment)
+      .in("price_id", PLAN_PRICE_ID_LIST)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!sub?.stripe_subscription_id) return { error: "No active subscription found" };
+    if (subError) return { error: subError.message };
+    if (!sub?.stripe_subscription_id) return { error: "No active subscription found." };
 
     try {
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(environment);
       await stripe.subscriptions.update(sub.stripe_subscription_id, {
         cancel_at_period_end: data.cancel,
       });
