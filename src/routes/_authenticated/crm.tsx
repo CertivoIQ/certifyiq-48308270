@@ -184,30 +184,51 @@ function CrmDashboard() {
 
   return (
     <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
-      <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Open pipeline ARR" value={money(pipelineArr)} hint={`${rows.length} accounts tracked`} />
+      <section className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-gradient-to-br from-emerald-950 via-emerald-900 to-green-700 p-6 text-white shadow-xl shadow-emerald-950/10 sm:p-8">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-200">Revenue command center</p>
+            <h2 className="mt-2 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">Turn verified affordable-housing research into trusted relationships.</h2>
+            <p className="mt-3 max-w-2xl text-sm text-emerald-100/80">Public facts are source-linked. Contacts remain unverified until reviewed by staff, and sales forecasts stay separate from portfolio facts.</p>
+          </div>
+          <Button className="bg-white text-emerald-950 hover:bg-emerald-50" onClick={() => setAccountDialog({ open: true, account: null })}>
+            <Plus className="size-4" /> Add verified account
+          </Button>
+        </div>
+      </section>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Qualified pipeline ARR" value={money(pipelineArr)} hint={`${rows.filter((r) => Number(r.arr) > 0).length} valued opportunities`} />
         <Stat label="Closed won ARR" value={money(wonArr)} hint={`${byStage.find((b) => b.stage === "won")?.count ?? 0} subscribed`} />
-        <Stat label="Trial ended · reminder due" value={String(trialEnded.length)} hint="Sends 24h after expiry" />
-        <Stat label="Live campaigns" value={String((campaigns.data ?? []).filter((c) => c.status !== "draft").length)} hint={`${(templates.data ?? []).length} templates ready`} />
+        <Stat label="Trial follow-ups" value={String(trialEnded.length)} hint="Reminder due after expiry" />
+        <Stat label="Active campaigns" value={String((campaigns.data ?? []).filter((c) => c.status !== "draft").length)} hint={`${(templates.data ?? []).length} templates ready`} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.15fr]">
         <Panel title="Pipeline by stage" description="Annualized contract value in each stage" bodyClassName="p-5">
-          <ul className="space-y-3.5">
-            {byStage.map((b) => (
-              <li key={b.stage}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-[13px] capitalize">{b.stage}</span>
-                  <span className="font-mono text-[12.5px] text-muted-foreground">
-                    {b.count} · {money(b.arr)}
-                  </span>
-                </div>
-                <div className="mt-1.5">
-                  <Meter value={Math.round((b.arr / maxArr) * 100)} tone={STAGE_TONE[b.stage]} />
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {byStage.map((b) => {
+              const stageColor: Record<Stage, string> = {
+                new: "border-sky-200 bg-sky-50 text-sky-800",
+                trialing: "border-cyan-200 bg-cyan-50 text-cyan-800",
+                "trial ended": "border-amber-200 bg-amber-50 text-amber-900",
+                negotiation: "border-violet-200 bg-violet-50 text-violet-800",
+                won: "border-emerald-200 bg-emerald-50 text-emerald-800",
+                lost: "border-rose-200 bg-rose-50 text-rose-800",
+              };
+              return (
+                <button key={b.stage} type="button" onClick={() => setStage(b.stage)}
+                  className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${stageColor[b.stage]}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-semibold uppercase tracking-wide">{b.stage}</span>
+                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-mono text-xs">{b.count}</span>
+                  </div>
+                  <p className="mt-3 font-display text-xl">{money(b.arr)}</p>
+                  <p className="mt-1 text-[11px] opacity-70">Annualized opportunity value</p>
+                </button>
+              );
+            })}
+          </div>
         </Panel>
 
         <Panel
@@ -334,7 +355,7 @@ function CrmDashboard() {
                 <button
                   type="button"
                   onClick={() => setOpenId(openId === a.id ? null : a.id)}
-                  className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5 text-left hover:bg-muted/50"
+                  className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 text-left transition hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30"
                 >
                   <Building2 className="size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
@@ -353,7 +374,7 @@ function CrmDashboard() {
                 </button>
 
                 {openId === a.id && (
-                  <div className="border-t border-border bg-muted/30 px-5 py-4">
+                  <div className="border-t border-emerald-100 bg-emerald-50/40 px-5 py-4 dark:border-emerald-900 dark:bg-emerald-950/20">
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[12.5px] text-muted-foreground">
                       {linkTo(a.linkedin_url) && (
                         <a
