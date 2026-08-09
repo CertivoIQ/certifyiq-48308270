@@ -12,6 +12,14 @@ export type SupportCaseNote = Database["public"]["Tables"]["support_case_notes"]
 
 export const STAGES: Stage[] = ["new", "trialing", "trial ended", "negotiation", "won", "lost"];
 
+export const OWNERSHIP_VERIFICATION_STATUSES = [
+  "unverified",
+  "partially verified",
+  "verified",
+  "unable to determine",
+] as const;
+export type OwnershipVerificationStatus = (typeof OWNERSHIP_VERIFICATION_STATUSES)[number];
+
 export const STAGE_TONE: Record<Stage, "seal" | "flag" | "reject" | "neutral"> = {
   new: "neutral",
   trialing: "seal",
@@ -90,6 +98,13 @@ export const LEAD_CSV_COLUMNS = [
   "programs",
   "website",
   "linkedin_url",
+  "property_owner_name",
+  "management_company_name",
+  "owner_manager_website",
+  "ownership_verification_status",
+  "ownership_confidence",
+  "ownership_sources",
+  "ownership_verified_at",
   "corporate_email",
   "phone",
   "stage",
@@ -157,9 +172,9 @@ export function parseCsv(text: string): string[][] {
   return rows.filter((r) => r.some((c) => c.trim() !== ""));
 }
 
-const NUMERIC = new Set(["properties", "units", "arr", "lead_score", "reminders_sent"]);
-const LISTS = new Set(["states", "programs"]);
-const DATES = new Set(["last_contact_on", "next_followup_on"]);
+const NUMERIC = new Set(["properties", "units", "arr", "lead_score", "reminders_sent", "ownership_confidence"]);
+const LISTS = new Set(["states", "programs", "ownership_sources"]);
+const DATES = new Set(["last_contact_on", "next_followup_on", "ownership_verified_at"]);
 
 /** Turns a parsed CSV into crm_accounts upsert payloads. Unknown headers are ignored. */
 export function csvToLeads(text: string): Record<string, unknown>[] {
