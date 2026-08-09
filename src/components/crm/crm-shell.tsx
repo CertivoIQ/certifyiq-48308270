@@ -39,7 +39,7 @@ export function CrmShell({
   if (loading) {
     return (
       <div className="grid min-h-screen place-items-center">
-        <div className="size-6 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+        <div className="size-6 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
       </div>
     );
   }
@@ -47,21 +47,21 @@ export function CrmShell({
   if (!isStaff) return <Denied />;
 
   return (
-    <div className="crm-surface min-h-screen pb-16">
-      <header className="sticky top-0 z-30 border-b border-gold-line bg-gold-surface/90 backdrop-blur">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),linear-gradient(to_bottom,#f7fcf9,#eef8f2)] pb-16 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),linear-gradient(to_bottom,#07150f,#0b1f16)]">
+      <header className="sticky top-0 z-30 border-b border-emerald-900/10 bg-white/90 shadow-sm dark:border-emerald-300/10 dark:bg-[#0b1f16]/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-4 py-3 sm:px-7">
-          <span className="crm-gradient grid size-9 place-items-center rounded-[9px] font-mono text-[13px] font-bold text-gold-ink">
+          <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-800 font-mono text-[13px] font-bold text-white shadow-lg shadow-emerald-900/20">
             IQ
           </span>
           <div className="min-w-0">
-            <h1 className="truncate font-display text-[20px] leading-tight text-gold-ink sm:text-[24px]">
+            <h1 className="truncate font-display text-[20px] leading-tight text-emerald-950 dark:text-emerald-50 sm:text-[24px]">
               <IQText>CertivoIQ CRM Dashboard</IQText>
             </h1>
             <p className="cite">Internal · staff only</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             {email && (
-              <span className="hidden rounded-full border border-gold-line bg-background/60 px-3 py-1 font-mono text-[11.5px] text-gold-ink sm:inline">
+              <span className="hidden rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-mono text-[11.5px] text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100 sm:inline">
                 {email}
               </span>
             )}
