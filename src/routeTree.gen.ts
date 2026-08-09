@@ -26,6 +26,7 @@ import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedCrmDocumentsRouteImport } from './routes/_authenticated/crm-documents'
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
@@ -130,6 +131,12 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCrmDocumentsRoute =
+  AuthenticatedCrmDocumentsRouteImport.update({
+    id: '/crm-documents',
+    path: '/crm-documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCrmSupportRoute = AuthenticatedCrmSupportRouteImport.update({
   id: '/crm-support',
   path: '/crm-support',
@@ -250,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRouteWithChildren
+  '/crm-documents': typeof AuthenticatedCrmDocumentsRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
@@ -287,6 +295,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/crm': typeof AuthenticatedCrmRouteWithChildren
+  '/crm-documents': typeof AuthenticatedCrmDocumentsRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
@@ -326,6 +335,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRouteWithChildren
+  '/_authenticated/crm-documents': typeof AuthenticatedCrmDocumentsRoute
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/billing'
     | '/crm'
+    | '/crm-documents'
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/billing'
     | '/crm'
+    | '/crm-documents'
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
@@ -440,6 +452,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/_authenticated/billing'
     | '/_authenticated/crm'
+    | '/_authenticated/crm-documents'
     | '/_authenticated/crm-support'
     | '/_authenticated/dashboard'
     | '/_authenticated/marketing-kit'
@@ -614,6 +627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/crm-documents': {
+      id: '/_authenticated/crm-documents'
+      path: '/crm-documents'
+      fullPath: '/crm-documents'
+      preLoaderRoute: typeof AuthenticatedCrmDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/crm-support': {
       id: '/_authenticated/crm-support'
       path: '/crm-support'
@@ -765,6 +785,7 @@ const AuthenticatedCrmRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRouteWithChildren
+  AuthenticatedCrmDocumentsRoute: typeof AuthenticatedCrmDocumentsRoute
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
@@ -774,6 +795,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRouteWithChildren,
+  AuthenticatedCrmDocumentsRoute: AuthenticatedCrmDocumentsRoute,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
