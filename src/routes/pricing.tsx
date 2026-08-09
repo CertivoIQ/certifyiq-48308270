@@ -12,8 +12,7 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSession } from "@/hooks/use-session";
 import { useSubscription } from "@/hooks/use-subscription";
-import { getStripeEnvironment } from "@/lib/stripe";
-import { createPortalSession, changePlan } from "@/utils/payments.functions";
+import { createPortalSession } from "@/utils/payments.functions";
 import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/plan-catalog";
 
 export const Route = createFileRoute("/pricing")({
@@ -44,7 +43,6 @@ function PricingPage() {
   const { subscription, isActive, entitlement, cancelAtPeriodEnd, endsAt } = useSubscription();
   const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
   const [portalBusy, setPortalBusy] = useState(false);
-  const [planBusy, setPlanBusy] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const startCheckout = async (priceId: string | null, name: string, quantity?: number) => {
@@ -63,25 +61,10 @@ function PricingPage() {
       await navigate({ to: "/auth" });
       return;
     }
-    // Existing subscribers switch their current subscription instead of
-    // stacking a second one on top of it.
+    // Existing subscribers manage plan changes in Stripe's hosted portal.
+    // This avoids an accidental immediate price change or a second plan.
     if (isActive && PLAN_PRICE_ID_LIST.includes(priceId) && subscription) {
-      setPlanBusy(priceId);
-      try {
-        const result = await changePlan({
-          data: { priceId, environment: getStripeEnvironment() },
-        });
-        if ("error" in result) throw new Error(result.error);
-        toast.success(`Switching to ${name}`, {
-          description: result.effectiveAt
-            ? `Effective ${new Date(result.effectiveAt).toLocaleDateString()} — your current capacity stays until then.`
-            : "Effective at your next renewal.",
-        });
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Could not change plan");
-      } finally {
-        setPlanBusy(null);
-      }
+      await openBillingPortal();
       return;
     }
     try {
@@ -89,9 +72,6 @@ function PricingPage() {
         priceId,
         label: name,
         ...(quantity ? { quantity } : {}),
-        ...(user.email ? { customerEmail: user.email } : {}),
-        userId: user.id,
-        returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Checkout unavailable");
@@ -103,7 +83,7 @@ function PricingPage() {
     setPortalBusy(true);
     try {
       const result = await createPortalSession({
-        data: { returnUrl: `${window.location.origin}/pricing`, environment: getStripeEnvironment() },
+        data: {},
       });
       if ("error" in result) throw new Error(result.error);
       window.open(result.url, "_blank");
@@ -202,14 +182,14 @@ function PricingPage() {
               className="mt-6 w-full"
               variant={p.featured ? "default" : "outline"}
               disabled={
-                planBusy === planKeyToPriceId(p.id) || entitlement?.priceId === planKeyToPriceId(p.id)
+                portalBusy || entitlement?.priceId === planKeyToPriceId(p.id)
               }
               onClick={() => void startCheckout(planKeyToPriceId(p.id), p.name)}
             >
               {entitlement?.priceId === planKeyToPriceId(p.id)
                 ? "Your current plan"
                 : isActive
-                  ? `Switch to ${p.name}`
+                  ? "Manage plan"
                   : p.cta}
             </Button>
 
