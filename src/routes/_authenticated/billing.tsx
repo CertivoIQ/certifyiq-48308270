@@ -6,25 +6,11 @@ import { Button } from "@/components/ui/button";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useAccount } from "@/hooks/use-account";
 import { useSubscription } from "@/hooks/use-subscription";
-import {
-  createPortalSession,
-  setCancellation,
-} from "@/utils/payments.functions";
+import { createPortalSession, setCancellation } from "@/utils/payments.functions";
 import { PLANS } from "@/lib/platform-data";
-import {
-  formatLimit,
-  planKeyToPriceId,
-  AI_DOC_OVERAGE_AMOUNT_USD,
-} from "@/lib/plan-catalog";
+import { formatLimit, planKeyToPriceId, AI_DOC_OVERAGE_AMOUNT_USD } from "@/lib/plan-catalog";
 import { toast } from "sonner";
-import {
-  CreditCard,
-  ExternalLink,
-  Clock,
-  AlertTriangle,
-  Undo2,
-  Gauge,
-} from "lucide-react";
+import { CreditCard, ExternalLink, Clock, AlertTriangle, Undo2, Gauge } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
@@ -38,8 +24,7 @@ export const Route = createFileRoute("/_authenticated/billing")({
       { property: "og:title", content: "Account & Billing — CertivoIQ" },
       {
         property: "og:description",
-        content:
-          "Plan capacity, AI document usage and subscription controls in one place.",
+        content: "Plan capacity, AI document usage and subscription controls in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -49,18 +34,9 @@ export const Route = createFileRoute("/_authenticated/billing")({
 });
 
 function UsageBar({ used, limit }: { used: number; limit: number | null }) {
-  const pct =
-    limit === null
-      ? 0
-      : Math.min(100, Math.round((used / Math.max(limit, 1)) * 100));
+  const pct = limit === null ? 0 : Math.min(100, Math.round((used / Math.max(limit, 1)) * 100));
   const tone =
-    limit === null
-      ? "bg-seal"
-      : pct >= 100
-        ? "bg-destructive"
-        : pct >= 80
-          ? "bg-flag"
-          : "bg-seal";
+    limit === null ? "bg-seal" : pct >= 100 ? "bg-destructive" : pct >= 80 ? "bg-flag" : "bg-seal";
   return (
     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
       <div
@@ -72,10 +48,8 @@ function UsageBar({ used, limit }: { used: number; limit: number | null }) {
 }
 
 function BillingPage() {
-  const { account, loading, trialDaysLeft, trialExpired, refetch } =
-    useAccount();
-  const { subscription, isActive, isPastDue, cancelAtPeriodEnd, endsAt } =
-    useSubscription();
+  const { account, loading, trialDaysLeft, trialExpired, refetch } = useAccount();
+  const { subscription, isActive, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
 
   const run = async (key: string, fn: () => Promise<void>) => {
@@ -83,9 +57,7 @@ function BillingPage() {
     try {
       await fn();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong",
-      );
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setBusy(null);
     }
@@ -120,23 +92,16 @@ function BillingPage() {
   const limits = account?.limits;
   const usage = account?.usage;
   const overage =
-    limits?.aiDocs != null && usage
-      ? Math.max(0, usage.aiDocsUsed - limits.aiDocs)
-      : 0;
+    limits?.aiDocs != null && usage ? Math.max(0, usage.aiDocsUsed - limits.aiDocs) : 0;
 
   return (
-    <AppShell
-      title="Account & billing"
-      subtitle="Your plan, capacity and payment details"
-    >
+    <AppShell title="Account & billing" subtitle="Your plan, capacity and payment details">
       <div className="-mt-1 mb-4 overflow-hidden rounded-lg">
         <PaymentTestModeBanner />
       </div>
 
       {loading && (
-        <Panel bodyClassName="p-6 text-[13px] text-muted-foreground">
-          Loading your account…
-        </Panel>
+        <Panel bodyClassName="p-6 text-[13px] text-muted-foreground">Loading your account…</Panel>
       )}
 
       {!loading && account && (
@@ -146,13 +111,11 @@ function BillingPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-display text-[21px]">
-                    {account.planName ??
-                      (account.isTrial ? "Free trial" : "No active plan")}
+                    {account.planName ?? (account.isTrial ? "Free trial" : "No active plan")}
                   </h2>
                   {isPastDue && (
                     <Pill tone="flag">
-                      <AlertTriangle className="size-3" /> Payment failed —
-                      retrying
+                      <AlertTriangle className="size-3" /> Payment failed — retrying
                     </Pill>
                   )}
                   {account.isTrial && !trialExpired && (
@@ -165,9 +128,7 @@ function BillingPage() {
                       <AlertTriangle className="size-3" /> Trial ended
                     </Pill>
                   )}
-                  {cancelAtPeriodEnd && (
-                    <Pill tone="flag">Cancels at period end</Pill>
-                  )}
+                  {cancelAtPeriodEnd && <Pill tone="flag">Cancels at period end</Pill>}
                 </div>
                 <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
                   {isActive &&
@@ -234,11 +195,7 @@ function BillingPage() {
               />
               <Stat
                 label="Academy seats"
-                value={
-                  account.academySeats === -1
-                    ? "Property-wide"
-                    : String(account.academySeats)
-                }
+                value={account.academySeats === -1 ? "Property-wide" : String(account.academySeats)}
               />
             </div>
           </Panel>
@@ -264,10 +221,7 @@ function BillingPage() {
                   : "Within allowance"}
               </Pill>
             </div>
-            <UsageBar
-              used={usage?.aiDocsUsed ?? 0}
-              limit={limits?.aiDocs ?? 0}
-            />
+            <UsageBar used={usage?.aiDocsUsed ?? 0} limit={limits?.aiDocs ?? 0} />
             <p className="cite mt-3">
               Allowance resets at the start of each billing period
               {usage?.periodStart
@@ -303,9 +257,7 @@ function BillingPage() {
                           {p.cadence}
                         </span>
                       </p>
-                      <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-                        {p.tagline}
-                      </p>
+                      <p className="mt-0.5 text-[12.5px] text-muted-foreground">{p.tagline}</p>
                     </div>
                     {current ? (
                       <Pill tone="seal">Current plan</Pill>
@@ -331,8 +283,7 @@ function BillingPage() {
 
           {subscription && (
             <p className="cite mt-4">
-              Subscription {subscription.stripe_subscription_id} · status{" "}
-              {subscription.status}
+              Subscription {subscription.stripe_subscription_id} · status {subscription.status}
               {subscription.current_period_end
                 ? ` · renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
                 : ""}
