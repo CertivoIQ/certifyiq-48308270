@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -36,6 +37,24 @@ export function CrmShell({
   loading?: boolean;
   newsItems?: NewsItem[];
 }) {
+  const federalNews = useQuery({
+    queryKey: ["crm", "official-federal-housing-news"],
+    enabled: isStaff === true,
+    staleTime: 15 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+    retry: 2,
+    queryFn: async (): Promise<{ items: NewsItem[]; fetched_at: string; partial: boolean }> => {
+      const response = await fetch("/api/public/federal-housing-news", { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("Official housing news is temporarily unavailable");
+      return response.json();
+    },
+  });
+
+  const subscriberItems = (newsItems ?? []).filter((item) => item.kind === "subscriber");
+  const tickerItems = [...(federalNews.data?.items ?? []), ...subscriberItems]
+    .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))
+    .slice(0, 24);
+
   if (loading) {
     return (
       <div className="grid min-h-screen place-items-center">
@@ -83,9 +102,9 @@ export function CrmShell({
       <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-7 sm:py-8">{children}</div>
 
       <p className="cite mt-4 flex items-center gap-2 px-4 sm:px-7">
-        Federal affordable housing updates and new paid subscribers stream in the ticker below, refreshed daily.
+        Official HUD Newsroom and Federal Register updates appear below with dates and direct source links; the feed refreshes every 15 minutes.
       </p>
-      <NewsTicker items={newsItems ?? []} />
+      <NewsTicker items={tickerItems} fetchedAt={federalNews.data?.fetched_at} partial={federalNews.data?.partial} />
     </div>
   );
 }
