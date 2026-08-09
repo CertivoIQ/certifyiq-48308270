@@ -36,8 +36,7 @@ function resolvePriceId(item: any): string {
 
 function subscriptionRow(subscription: any, env: StripeEnv) {
   const item = subscription.items?.data?.[0];
-  const periodStart =
-    item?.current_period_start ?? subscription.current_period_start;
+  const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
   return {
     stripe_subscription_id: subscription.id,
@@ -58,10 +57,7 @@ function subscriptionRow(subscription: any, env: StripeEnv) {
  * deliveries are acknowledged without sending a second email or CRM event.
  * A failed handler releases the claim so Stripe can retry it.
  */
-async function claimEvent(
-  eventId: string,
-  eventType: string,
-): Promise<boolean> {
+async function claimEvent(eventId: string, eventType: string): Promise<boolean> {
   const { error } = await getSupabase()
     .from("stripe_processed_events")
     .insert({ event_id: eventId, event_type: eventType });
@@ -75,8 +71,7 @@ async function releaseEvent(eventId: string): Promise<void> {
     .from("stripe_processed_events")
     .delete()
     .eq("event_id", eventId);
-  if (error)
-    console.error("Could not release failed Stripe event", eventId, error);
+  if (error) console.error("Could not release failed Stripe event", eventId, error);
 }
 
 /**
@@ -115,10 +110,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
   const row = subscriptionRow(subscription, env);
   await supabase
     .from("subscriptions")
-    .upsert(
-      { user_id: userId, ...row },
-      { onConflict: "stripe_subscription_id" },
-    );
+    .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
 
   const plan = PLAN_ENTITLEMENTS[row.price_id];
   const isAddon = isAddonPrice(row.price_id);
@@ -138,10 +130,8 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     user_id: userId,
     environment: env,
     updated_at: now,
-    welcome_sent_at:
-      (existing?.["welcome_sent_at"] as string | null | undefined) ?? now,
-    launchpad_started_at:
-      (existing?.["launchpad_started_at"] as string | null | undefined) ?? now,
+    welcome_sent_at: (existing?.["welcome_sent_at"] as string | null | undefined) ?? now,
+    launchpad_started_at: (existing?.["launchpad_started_at"] as string | null | undefined) ?? now,
   };
   delete access["created_at"];
   delete access["id"];
@@ -154,26 +144,20 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     access["unit_limit"] = plan.unitLimit;
     access["property_limit"] = plan.propertyLimit;
     access["ai_doc_allowance"] = plan.aiDocAllowance;
-    access["access_until"] = row.cancel_at_period_end
-      ? row.current_period_end
-      : null;
+    access["access_until"] = row.cancel_at_period_end ? row.current_period_end : null;
     access["files_purge_at"] = null;
     access["files_purged_at"] = null;
   } else if (isAddon && active) {
     // Add-ons layer on top and must never disturb plan capacity or status.
     if (row.price_id === ADDON_PRICE_IDS.academySeat) {
-      access["academy_seats"] = Number(
-        subscription.items?.data?.[0]?.quantity ?? 1,
-      );
+      access["academy_seats"] = Number(subscription.items?.data?.[0]?.quantity ?? 1);
     } else if (row.price_id === ADDON_PRICE_IDS.academyProperty) {
       // Property-wide Academy: unlimited seats at one property.
       access["academy_seats"] = -1;
     }
   }
 
-  await supabase
-    .from("account_access")
-    .upsert(access, { onConflict: "user_id" });
+  await supabase.from("account_access").upsert(access, { onConflict: "user_id" });
 
   // Verified subscription now active → subscriber, clean production dashboard.
   if (plan && row.status === "active") {
@@ -202,8 +186,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
   }
 
   // Only announce and convert the CRM lead on the first plan activation.
-  const firstActivation =
-    plan && active && existing?.["plan_id"] !== plan.planId;
+  const firstActivation = plan && active && existing?.["plan_id"] !== plan.planId;
   if (!firstActivation) return;
 
   const email: string | undefined = subscription.metadata?.email;
@@ -212,8 +195,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     .select("email, full_name")
     .eq("id", userId)
     .maybeSingle();
-  const contactEmail =
-    (profile?.["email"] as string | null | undefined) ?? email ?? null;
+  const contactEmail = (profile?.["email"] as string | null | undefined) ?? email ?? null;
 
   let accountName: string | null = null;
   if (contactEmail) {
@@ -291,9 +273,7 @@ async function billingRecipient(
   invoice: any,
 ): Promise<{ recipient: string; name?: string | null } | null> {
   const supabase = getSupabase();
-  const subId =
-    invoice?.subscription ??
-    invoice?.parent?.subscription_details?.subscription;
+  const subId = invoice?.subscription ?? invoice?.parent?.subscription_details?.subscription;
 
   let userId: string | null = null;
   if (subId) {
@@ -329,11 +309,8 @@ async function notify(invoice: any, kind: "created" | "paid" | "failed") {
       console.warn("No recipient for billing email", kind, invoice?.id);
       return;
     }
-    const {
-      sendInvoiceCreatedEmail,
-      sendPaymentSucceededEmail,
-      sendPaymentFailedEmail,
-    } = await import("@/lib/billing-emails.server");
+    const { sendInvoiceCreatedEmail, sendPaymentSucceededEmail, sendPaymentFailedEmail } =
+      await import("@/lib/billing-emails.server");
     if (kind === "created") await sendInvoiceCreatedEmail(invoice, ctx);
     else if (kind === "paid") await sendPaymentSucceededEmail(invoice, ctx);
     else await sendPaymentFailedEmail(invoice, ctx);
@@ -373,9 +350,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
         // retries automatically and sends customer.subscription.updated on the
         // final outcome.
         const invoice = event.data.object;
-        const subId =
-          invoice.subscription ??
-          invoice.parent?.subscription_details?.subscription;
+        const subId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
         if (subId) {
           const supabase = getSupabase();
           await supabase
@@ -412,10 +387,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
         const rawEnv = new URL(request.url).searchParams.get("env");
         if (rawEnv !== "sandbox" && rawEnv !== "live") {
           console.error("Webhook received with invalid env parameter:", rawEnv);
-          return Response.json(
-            { received: false, error: "invalid env" },
-            { status: 400 },
-          );
+          return Response.json({ received: false, error: "invalid env" }, { status: 400 });
         }
         try {
           await handleWebhook(request, rawEnv);
