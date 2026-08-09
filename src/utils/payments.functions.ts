@@ -1,16 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  resolveBillingEnvironment,
-  type BillingEnvironment,
-} from "@/lib/billing-config.server";
-import {
-  ADDON_PRICE_IDS,
-  PLAN_PRICE_ID_LIST,
-  isAddonPrice,
-  isPlanPrice,
-} from "@/lib/plan-catalog";
+import { resolveBillingEnvironment, type BillingEnvironment } from "@/lib/billing-config.server";
+import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, isAddonPrice, isPlanPrice } from "@/lib/plan-catalog";
 import { createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
@@ -28,22 +20,15 @@ function isSelfServeCheckoutPrice(priceId: string): boolean {
 }
 
 function hasCurrentAccess(status: string, periodEnd: string | null): boolean {
-  if (ACTIVE_STATUSES.has(status))
-    return !periodEnd || new Date(periodEnd).getTime() > Date.now();
-  return (
-    status === "canceled" &&
-    !!periodEnd &&
-    new Date(periodEnd).getTime() > Date.now()
-  );
+  if (ACTIVE_STATUSES.has(status)) return !periodEnd || new Date(periodEnd).getTime() > Date.now();
+  return status === "canceled" && !!periodEnd && new Date(periodEnd).getTime() > Date.now();
 }
 
 function applicationOrigin(environment: BillingEnvironment): string {
   if (environment === "live") {
-    const configured =
-      process.env["PAYMENTS_APP_URL"]?.trim() || "https://certivoiq.com";
+    const configured = process.env["PAYMENTS_APP_URL"]?.trim() || "https://certivoiq.com";
     const url = new URL(configured);
-    if (url.protocol !== "https:")
-      throw new Error("Live payment return URL must use HTTPS.");
+    if (url.protocol !== "https:") throw new Error("Live payment return URL must use HTTPS.");
     return url.origin;
   }
 
@@ -75,10 +60,7 @@ function billingReturnUrl(environment: BillingEnvironment): string {
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { priceId: string; quantity?: number }) => {
-    if (
-      !ID_PATTERN.test(data.priceId) ||
-      !isSelfServeCheckoutPrice(data.priceId)
-    ) {
+    if (!ID_PATTERN.test(data.priceId) || !isSelfServeCheckoutPrice(data.priceId)) {
       throw new Error("This price is not available for self-serve checkout.");
     }
 
@@ -87,9 +69,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       throw new Error("Invalid quantity.");
     }
     if (data.priceId !== ADDON_PRICE_IDS.academySeat && quantity !== 1) {
-      throw new Error(
-        "Quantity can only be changed for Academy seat subscriptions.",
-      );
+      throw new Error("Quantity can only be changed for Academy seat subscriptions.");
     }
     return { ...data, quantity };
   })
@@ -100,9 +80,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from("subscriptions")
-        .select(
-          "stripe_customer_id, price_id, status, current_period_end, created_at",
-        )
+        .select("stripe_customer_id, price_id, status, current_period_end, created_at")
         .eq("user_id", userId)
         .eq("environment", environment)
         .order("created_at", { ascending: false });
@@ -111,25 +89,18 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const currentPlan = subscriptions?.find(
         (subscription) =>
           isPlanPrice(subscription.price_id) &&
-          hasCurrentAccess(
-            subscription.status,
-            subscription.current_period_end,
-          ),
+          hasCurrentAccess(subscription.status, subscription.current_period_end),
       );
       if (isPlanPrice(data.priceId) && currentPlan) {
         return {
-          error:
-            "You already have a current plan. Open Manage billing to change it securely.",
+          error: "You already have a current plan. Open Manage billing to change it securely.",
         };
       }
 
       const duplicateAddon = subscriptions?.find(
         (subscription) =>
           subscription.price_id === data.priceId &&
-          hasCurrentAccess(
-            subscription.status,
-            subscription.current_period_end,
-          ),
+          hasCurrentAccess(subscription.status, subscription.current_period_end),
       );
       if (isAddonPrice(data.priceId) && duplicateAddon) {
         return { error: "This add-on is already active on your account." };
@@ -164,8 +135,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const customerId = subscriptions?.find(
         (subscription) => !!subscription.stripe_customer_id,
       )?.stripe_customer_id;
-      const email =
-        typeof claims?.email === "string" ? claims.email : undefined;
+      const email = typeof claims?.email === "string" ? claims.email : undefined;
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: data.quantity }],
@@ -222,8 +192,7 @@ export const createPortalSession = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (subError || !sub?.stripe_customer_id)
-      return { error: "No subscription found." };
+    if (subError || !sub?.stripe_customer_id) return { error: "No subscription found." };
 
     try {
       const stripe = createStripeClient(environment);
@@ -292,16 +261,13 @@ export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
     }
   });
 
-type CancelResult =
-  | { ok: true; endsAt: string | null; resumed?: boolean }
-  | { error: string };
+type CancelResult = { ok: true; endsAt: string | null; resumed?: boolean } | { error: string };
 
 /** Cancel the platform plan at period end, or undo a scheduled cancellation. */
 export const setCancellation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { cancel: boolean }) => {
-    if (typeof data.cancel !== "boolean")
-      throw new Error("Invalid cancellation request.");
+    if (typeof data.cancel !== "boolean") throw new Error("Invalid cancellation request.");
     return data;
   })
   .handler(async ({ data, context }): Promise<CancelResult> => {
@@ -317,8 +283,7 @@ export const setCancellation = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (subError) return { error: subError.message };
-    if (!sub?.stripe_subscription_id)
-      return { error: "No active subscription found." };
+    if (!sub?.stripe_subscription_id) return { error: "No active subscription found." };
 
     try {
       const stripe = createStripeClient(environment);
