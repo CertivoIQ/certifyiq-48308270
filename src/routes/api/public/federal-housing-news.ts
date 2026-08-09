@@ -49,7 +49,7 @@ async function federalRegisterUpdates(): Promise<FederalNewsItem[]> {
   const params = new URLSearchParams({
     per_page: "50",
     order: "newest",
-    "conditions[agencies][]": "housing-and-urban-development",
+    "conditions[agencies][]": "housing-and-urban-development-department",
   });
   const response = await fetch(`https://www.federalregister.gov/api/v1/documents.json?${params}`, {
     headers: { Accept: "application/json" },
