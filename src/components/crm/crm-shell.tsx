@@ -54,7 +54,7 @@ export function CrmShell({
             IQ
           </span>
           <div className="min-w-0">
-            <h1 className="truncate font-display text-[20px] leading-tight text-emerald-950 dark:text-emerald-50 sm:text-[24px]">
+            <h1 className="truncate font-sans text-[20px] font-semibold tracking-tight leading-tight text-emerald-950 dark:text-emerald-50 sm:text-[24px]">
               <IQText>CertivoIQ CRM Dashboard</IQText>
             </h1>
             <p className="cite">Internal · staff only</p>
