@@ -116,7 +116,7 @@ function CrmAccountProfile() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Pill tone={STAGE_TONE[lead.stage]} className="capitalize">{lead.stage}</Pill>
                   <span className="rounded-full bg-emerald-300/15 px-2.5 py-1 text-[11px] font-medium text-emerald-100">
-                    {lead.source?.startsWith("Verified") ? "Public facts verified" : "Verification needed"}
+                    {lead.ownership_verification_status === "verified" ? "Ownership verified" : lead.ownership_verification_status}
                   </span>
                 </div>
                 <h1 className="mt-3 font-sans text-3xl font-semibold tracking-tight sm:text-4xl">{lead.name}</h1>
@@ -154,6 +154,29 @@ function CrmAccountProfile() {
             ))}
           </div>
 
+          <div className="mt-4">
+            <Panel title="Ownership & management" description="Publicly sourced facts with an explicit verification state">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Property owner</p><p className="mt-1 font-sans font-semibold">{lead.property_owner_name ?? "Unable to determine"}</p></div>
+                <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Management company</p><p className="mt-1 font-sans font-semibold">{lead.management_company_name ?? "Unable to determine"}</p></div>
+                <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Verification</p><p className="mt-1 font-sans font-semibold capitalize">{lead.ownership_verification_status}</p></div>
+                <div><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Confidence</p><p className="mt-1 font-sans font-semibold">{lead.ownership_confidence === null ? "Not scored" : `${lead.ownership_confidence}%`}</p></div>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-emerald-100 pt-4 text-sm dark:border-emerald-900">
+                <span className="text-muted-foreground">Verified {lead.ownership_verified_at ?? "date not recorded"}</span>
+                {linkTo(lead.owner_manager_website) && <a href={linkTo(lead.owner_manager_website)!} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-semibold text-emerald-700 hover:underline">Owner / manager site <ExternalLink className="size-3.5" /></a>}
+              </div>
+              {!!lead.ownership_sources?.length && (
+                <div className="mt-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Verification sources</p>
+                  <ul className="mt-2 space-y-2">
+                    {lead.ownership_sources.map((source) => <li key={source}><a href={linkTo(source) ?? source} target="_blank" rel="noreferrer noopener" className="break-all text-sm font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-900">{source}</a></li>)}
+                  </ul>
+                </div>
+              )}
+            </Panel>
+          </div>
+
           <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
             <Panel title="Verified company & property research" description={lead.source ?? "No verification source recorded"}>
               <div className="whitespace-pre-wrap text-sm leading-7 text-foreground">{lead.notes ? <SourceLinkedText value={lead.notes} /> : "No research notes recorded."}</div>
@@ -171,7 +194,7 @@ function CrmAccountProfile() {
 
             <Panel title="Opportunity snapshot" description="Sales data is separate from public portfolio facts">
               <dl className="space-y-4 text-sm">
-                <div><dt className="text-muted-foreground">Owner</dt><dd className="mt-1 font-semibold">{lead.owner ?? "Unassigned"}</dd></div>
+                <div><dt className="text-muted-foreground">Sales owner</dt><dd className="mt-1 font-semibold">{lead.owner ?? "Unassigned"}</dd></div>
                 <div><dt className="text-muted-foreground">Plan</dt><dd className="mt-1 font-semibold">{lead.plan ?? "Not qualified"}</dd></div>
                 <div><dt className="text-muted-foreground">Next follow-up</dt><dd className="mt-1 inline-flex items-center gap-1.5 font-semibold"><CalendarClock className="size-4 text-emerald-600" /> {lead.next_followup_on ?? "Not scheduled"}</dd></div>
                 <div><dt className="text-muted-foreground">Last touch</dt><dd className="mt-1 font-semibold">{lead.last_touch ?? "No activity yet"}</dd></div>
