@@ -25,9 +25,7 @@ export function resolveBillingEnvironment(): BillingEnvironment {
       : undefined;
 
   if (configured && tokenEnvironment && configured !== tokenEnvironment) {
-    throw new Error(
-      "The server payment environment does not match the Stripe client token.",
-    );
+    throw new Error("The server payment environment does not match the Stripe client token.");
   }
   if (configured === "sandbox" || configured === "live") return configured;
   if (tokenEnvironment) return tokenEnvironment;
@@ -53,9 +51,7 @@ export function assertLiveBillingConfiguration() {
   }
 
   if (!process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]) {
-    throw new Error(
-      "Production billing requires a live Stripe webhook secret.",
-    );
+    throw new Error("Production billing requires a live Stripe webhook secret.");
   }
 }
 
