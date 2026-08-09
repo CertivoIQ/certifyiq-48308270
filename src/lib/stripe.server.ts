@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { assertLiveBillingConfiguration } from "@/lib/billing-config.server";
 
 const getEnv = (key: string): string => {
   const value = process.env[key];
@@ -18,6 +19,8 @@ export function getConnectionApiKey(env: StripeEnv): string {
 
 /** Stripe client whose transport is rewritten through the Lovable connector gateway. */
 export function createStripeClient(env: StripeEnv): Stripe {
+  if (env === "live") assertLiveBillingConfiguration();
+
   const connectionApiKey = getConnectionApiKey(env);
   const lovableApiKey = getEnv("LOVABLE_API_KEY");
 
@@ -77,11 +80,14 @@ export function getStripeErrorMessage(error: unknown): string {
   return "Stripe request failed";
 }
 
-/** Verifies a Stripe webhook signature (HMAC-SHA256 over `timestamp.body`). */
+/**
+ * Verify the raw request body with Stripe's maintained verifier. This supports
+ * signature rotation, timestamp tolerance and timing-safe comparison.
+ */
 export async function verifyWebhook(
   req: Request,
   env: StripeEnv,
-): Promise<{ type: string; data: { object: any } }> {
+): Promise<{ id: string; type: string; data: { object: any } }> {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
   const secret =
@@ -91,34 +97,18 @@ export async function verifyWebhook(
 
   if (!signature || !body) throw new Error("Missing signature or body");
 
-  let timestamp: string | undefined;
-  const v1Signatures: string[] = [];
-  for (const part of signature.split(",")) {
-    const [key, value] = part.split("=", 2);
-    if (key === "t") timestamp = value;
-    if (key === "v1" && value) v1Signatures.push(value);
-  }
-
-  if (!timestamp || v1Signatures.length === 0) throw new Error("Invalid signature format");
-
-  const age = Math.abs(Date.now() / 1000 - Number(timestamp));
-  if (age > 300) throw new Error("Webhook timestamp too old");
-
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
+  const stripe = createStripeClient(env);
+  const event = await stripe.webhooks.constructEventAsync(
+    body,
+    signature,
+    secret,
+    300,
+    Stripe.createSubtleCryptoProvider(),
   );
-  const signed = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(`${timestamp}.${body}`),
-  );
-  const expected = Buffer.from(new Uint8Array(signed)).toString("hex");
 
-  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
-
-  return JSON.parse(body);
+  return {
+    id: event.id,
+    type: event.type,
+    data: { object: event.data.object },
+  };
 }
