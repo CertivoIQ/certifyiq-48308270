@@ -28,15 +28,22 @@ function isSelfServeCheckoutPrice(priceId: string): boolean {
 }
 
 function hasCurrentAccess(status: string, periodEnd: string | null): boolean {
-  if (ACTIVE_STATUSES.has(status)) return !periodEnd || new Date(periodEnd).getTime() > Date.now();
-  return status === "canceled" && !!periodEnd && new Date(periodEnd).getTime() > Date.now();
+  if (ACTIVE_STATUSES.has(status))
+    return !periodEnd || new Date(periodEnd).getTime() > Date.now();
+  return (
+    status === "canceled" &&
+    !!periodEnd &&
+    new Date(periodEnd).getTime() > Date.now()
+  );
 }
 
 function applicationOrigin(environment: BillingEnvironment): string {
   if (environment === "live") {
-    const configured = process.env["PAYMENTS_APP_URL"]?.trim() || "https://certivoiq.com";
+    const configured =
+      process.env["PAYMENTS_APP_URL"]?.trim() || "https://certivoiq.com";
     const url = new URL(configured);
-    if (url.protocol !== "https:") throw new Error("Live payment return URL must use HTTPS.");
+    if (url.protocol !== "https:")
+      throw new Error("Live payment return URL must use HTTPS.");
     return url.origin;
   }
 
@@ -68,7 +75,10 @@ function billingReturnUrl(environment: BillingEnvironment): string {
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { priceId: string; quantity?: number }) => {
-    if (!ID_PATTERN.test(data.priceId) || !isSelfServeCheckoutPrice(data.priceId)) {
+    if (
+      !ID_PATTERN.test(data.priceId) ||
+      !isSelfServeCheckoutPrice(data.priceId)
+    ) {
       throw new Error("This price is not available for self-serve checkout.");
     }
 
@@ -77,7 +87,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       throw new Error("Invalid quantity.");
     }
     if (data.priceId !== ADDON_PRICE_IDS.academySeat && quantity !== 1) {
-      throw new Error("Quantity can only be changed for Academy seat subscriptions.");
+      throw new Error(
+        "Quantity can only be changed for Academy seat subscriptions.",
+      );
     }
     return { ...data, quantity };
   })
@@ -88,7 +100,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from("subscriptions")
-        .select("stripe_customer_id, price_id, status, current_period_end, created_at")
+        .select(
+          "stripe_customer_id, price_id, status, current_period_end, created_at",
+        )
         .eq("user_id", userId)
         .eq("environment", environment)
         .order("created_at", { ascending: false });
@@ -97,7 +111,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const currentPlan = subscriptions?.find(
         (subscription) =>
           isPlanPrice(subscription.price_id) &&
-          hasCurrentAccess(subscription.status, subscription.current_period_end),
+          hasCurrentAccess(
+            subscription.status,
+            subscription.current_period_end,
+          ),
       );
       if (isPlanPrice(data.priceId) && currentPlan) {
         return {
@@ -109,7 +126,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const duplicateAddon = subscriptions?.find(
         (subscription) =>
           subscription.price_id === data.priceId &&
-          hasCurrentAccess(subscription.status, subscription.current_period_end),
+          hasCurrentAccess(
+            subscription.status,
+            subscription.current_period_end,
+          ),
       );
       if (isAddonPrice(data.priceId) && duplicateAddon) {
         return { error: "This add-on is already active on your account." };
@@ -124,7 +144,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           .maybeSingle();
         if (accessError) throw accessError;
         if (!access?.plan_id || !ACTIVE_STATUSES.has(access.status)) {
-          return { error: "Academy is an add-on. Subscribe to a platform plan first." };
+          return {
+            error: "Academy is an add-on. Subscribe to a platform plan first.",
+          };
         }
       }
 
@@ -142,7 +164,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const customerId = subscriptions?.find(
         (subscription) => !!subscription.stripe_customer_id,
       )?.stripe_customer_id;
-      const email = typeof claims?.email === "string" ? claims.email : undefined;
+      const email =
+        typeof claims?.email === "string" ? claims.email : undefined;
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: data.quantity }],
@@ -199,7 +222,8 @@ export const createPortalSession = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (subError || !sub?.stripe_customer_id) return { error: "No subscription found." };
+    if (subError || !sub?.stripe_customer_id)
+      return { error: "No subscription found." };
 
     try {
       const stripe = createStripeClient(environment);
@@ -214,7 +238,12 @@ export const createPortalSession = createServerFn({ method: "POST" })
   });
 
 type SessionStatusResult =
-  | { status: string; paymentStatus: string; priceId: string | null; provisioned: boolean }
+  | {
+      status: string;
+      paymentStatus: string;
+      priceId: string | null;
+      provisioned: boolean;
+    }
   | { error: string };
 
 /** Verify that a Checkout Session belongs to the signed-in buyer. */
@@ -236,7 +265,9 @@ export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
         session.metadata?.["userId"] !== context.userId ||
         session.client_reference_id !== context.userId
       ) {
-        return { error: "This checkout session does not belong to your account." };
+        return {
+          error: "This checkout session does not belong to your account.",
+        };
       }
 
       const price = session.line_items?.data?.[0]?.price;
@@ -261,13 +292,16 @@ export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
     }
   });
 
-type CancelResult = { ok: true; endsAt: string | null; resumed?: boolean } | { error: string };
+type CancelResult =
+  | { ok: true; endsAt: string | null; resumed?: boolean }
+  | { error: string };
 
 /** Cancel the platform plan at period end, or undo a scheduled cancellation. */
 export const setCancellation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { cancel: boolean }) => {
-    if (typeof data.cancel !== "boolean") throw new Error("Invalid cancellation request.");
+    if (typeof data.cancel !== "boolean")
+      throw new Error("Invalid cancellation request.");
     return data;
   })
   .handler(async ({ data, context }): Promise<CancelResult> => {
@@ -283,7 +317,8 @@ export const setCancellation = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (subError) return { error: subError.message };
-    if (!sub?.stripe_subscription_id) return { error: "No active subscription found." };
+    if (!sub?.stripe_subscription_id)
+      return { error: "No active subscription found." };
 
     try {
       const stripe = createStripeClient(environment);
