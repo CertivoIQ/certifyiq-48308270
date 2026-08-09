@@ -38,6 +38,8 @@ import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
 import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
+import { Route as ApiPublicFederalHousingNewsRouteImport } from './routes/api/public/federal-housing-news'
+import { Route as AuthenticatedCrmAccountsAccountIdRouteImport } from './routes/_authenticated/crm.accounts.$accountId'
 import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -190,6 +192,18 @@ const AuthenticatedAccountSecurityRoute =
     path: '/account/security',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicFederalHousingNewsRoute =
+  ApiPublicFederalHousingNewsRouteImport.update({
+    id: '/api/public/federal-housing-news',
+    path: '/api/public/federal-housing-news',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedCrmAccountsAccountIdRoute =
+  AuthenticatedCrmAccountsAccountIdRouteImport.update({
+    id: '/accounts/$accountId',
+    path: '/accounts/$accountId',
+    getParentRoute: () => AuthenticatedCrmRoute,
+  } as any)
 const ApiPublicCrmSupportEmailRoute =
   ApiPublicCrmSupportEmailRouteImport.update({
     id: '/api/public/crm/support-email',
@@ -235,7 +249,7 @@ export interface FileRoutesByFullPath {
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
-  '/crm': typeof AuthenticatedCrmRoute
+  '/crm': typeof AuthenticatedCrmRouteWithChildren
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
@@ -248,6 +262,8 @@ export interface FileRoutesByFullPath {
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
+  '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -270,7 +286,7 @@ export interface FileRoutesByTo {
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/billing': typeof AuthenticatedBillingRoute
-  '/crm': typeof AuthenticatedCrmRoute
+  '/crm': typeof AuthenticatedCrmRouteWithChildren
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
@@ -283,6 +299,8 @@ export interface FileRoutesByTo {
   '/files': typeof FilesIndexRoute
   '/properties': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
+  '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -307,7 +325,7 @@ export interface FileRoutesById {
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
-  '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/crm': typeof AuthenticatedCrmRouteWithChildren
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
@@ -320,6 +338,8 @@ export interface FileRoutesById {
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
+  '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/_authenticated/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -357,6 +377,8 @@ export interface FileRouteTypes {
     | '/files/'
     | '/properties/'
     | '/account/security'
+    | '/api/public/federal-housing-news'
+    | '/crm/accounts/$accountId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -392,6 +414,8 @@ export interface FileRouteTypes {
     | '/files'
     | '/properties'
     | '/account/security'
+    | '/api/public/federal-housing-news'
+    | '/crm/accounts/$accountId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -428,6 +452,8 @@ export interface FileRouteTypes {
     | '/files/'
     | '/properties/'
     | '/_authenticated/account/security'
+    | '/api/public/federal-housing-news'
+    | '/_authenticated/crm/accounts/$accountId'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -459,6 +485,7 @@ export interface RootRouteChildren {
   AcademyIndexRoute: typeof AcademyIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
+  ApiPublicFederalHousingNewsRoute: typeof ApiPublicFederalHousingNewsRoute
   ApiPublicCrmSupportEmailRoute: typeof ApiPublicCrmSupportEmailRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -671,6 +698,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/federal-housing-news': {
+      id: '/api/public/federal-housing-news'
+      path: '/api/public/federal-housing-news'
+      fullPath: '/api/public/federal-housing-news'
+      preLoaderRoute: typeof ApiPublicFederalHousingNewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/crm/accounts/$accountId': {
+      id: '/_authenticated/crm/accounts/$accountId'
+      path: '/accounts/$accountId'
+      fullPath: '/crm/accounts/$accountId'
+      preLoaderRoute: typeof AuthenticatedCrmAccountsAccountIdRouteImport
+      parentRoute: typeof AuthenticatedCrmRoute
+    }
     '/api/public/crm/support-email': {
       id: '/api/public/crm/support-email'
       path: '/api/public/crm/support-email'
@@ -709,9 +750,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedCrmRouteChildren {
+  AuthenticatedCrmAccountsAccountIdRoute: typeof AuthenticatedCrmAccountsAccountIdRoute
+}
+
+const AuthenticatedCrmRouteChildren: AuthenticatedCrmRouteChildren = {
+  AuthenticatedCrmAccountsAccountIdRoute:
+    AuthenticatedCrmAccountsAccountIdRoute,
+}
+
+const AuthenticatedCrmRouteWithChildren =
+  AuthenticatedCrmRoute._addFileChildren(AuthenticatedCrmRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
-  AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedCrmRoute: typeof AuthenticatedCrmRouteWithChildren
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
@@ -720,7 +773,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
-  AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedCrmRoute: AuthenticatedCrmRouteWithChildren,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
@@ -754,6 +807,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcademyIndexRoute: AcademyIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
+  ApiPublicFederalHousingNewsRoute: ApiPublicFederalHousingNewsRoute,
   ApiPublicCrmSupportEmailRoute: ApiPublicCrmSupportEmailRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
@@ -763,3 +817,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
