@@ -1,0 +1,72 @@
+name: Release gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "agent/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Check changed-file formatting
+        run: >-
+          npx prettier --check
+          .github/workflows/release-gate.yml
+          src/components/crm/crm-shell.tsx
+          vite.config.ts
+          src/components/StripeEmbeddedCheckout.tsx
+          src/hooks/useStripeCheckout.tsx
+          src/lib/billing-config.server.ts
+          src/lib/stripe.server.ts
+          src/routes/_authenticated/billing.tsx
+          src/routes/api/public/payments/webhook.ts
+          src/routes/checkout.return.tsx
+          src/routes/pricing.tsx
+          src/utils/payments.functions.ts
+          package.json
+          package-lock.json
+
+      - name: Lint changed TypeScript files
+        run: >-
+          npx eslint
+          src/components/crm/crm-shell.tsx
+          vite.config.ts
+          src/components/StripeEmbeddedCheckout.tsx
+          src/hooks/useStripeCheckout.tsx
+          src/lib/billing-config.server.ts
+          src/lib/stripe.server.ts
+          src/routes/_authenticated/billing.tsx
+          src/routes/api/public/payments/webhook.ts
+          src/routes/checkout.return.tsx
+          src/routes/pricing.tsx
+          src/utils/payments.functions.ts
+          --rule '@typescript-eslint/no-explicit-any: off'
+
+      - name: Build production bundle
+        run: npm run build
