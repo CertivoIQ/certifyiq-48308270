@@ -4,7 +4,6 @@ import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Rocket, GraduationCap, Loader2, AlertTriangle, CreditCard } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getStripeEnvironment } from "@/lib/stripe";
 import { getCheckoutSessionStatus } from "@/utils/payments.functions";
 
 export const Route = createFileRoute("/checkout/return")({
@@ -47,7 +46,7 @@ function CheckoutReturn() {
     },
     queryFn: async () => {
       const result = await getCheckoutSessionStatus({
-        data: { sessionId: sessionId!, environment: getStripeEnvironment() },
+        data: { sessionId: sessionId! },
       });
       return result;
     },
