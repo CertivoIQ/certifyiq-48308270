@@ -20,7 +20,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useIsStaff } from "@/hooks/use-session";
-import { Panel, Pill, Stat, Meter } from "@/components/ui-kit";
+import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
 import { CrmShell } from "@/components/crm/crm-shell";
@@ -157,7 +157,6 @@ function CrmDashboard() {
     const group = rows.filter((r) => r.stage === s);
     return { stage: s, count: group.length, arr: group.reduce((a, r) => a + Number(r.arr ?? 0), 0) };
   });
-  const maxArr = Math.max(...byStage.map((b) => b.arr), 1);
   const pipelineArr = rows.filter((r) => r.stage !== "lost" && r.stage !== "won").reduce((a, r) => a + Number(r.arr), 0);
   const wonArr = rows.filter((r) => r.stage === "won").reduce((a, r) => a + Number(r.arr), 0);
   const trialEnded = rows.filter((r) => r.stage === "trial ended");
@@ -184,30 +183,51 @@ function CrmDashboard() {
 
   return (
     <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
-      <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Open pipeline ARR" value={money(pipelineArr)} hint={`${rows.length} accounts tracked`} />
+      <section className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-gradient-to-br from-emerald-950 via-emerald-900 to-green-700 p-6 text-white shadow-xl shadow-emerald-950/10 sm:p-8">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-200">Revenue command center</p>
+            <h2 className="mt-2 max-w-2xl font-sans text-3xl font-semibold tracking-tight leading-tight sm:text-4xl">Turn verified affordable-housing research into trusted relationships.</h2>
+            <p className="mt-3 max-w-2xl text-sm text-emerald-100/80">Public facts are source-linked. Contacts remain unverified until reviewed by staff, and sales forecasts stay separate from portfolio facts.</p>
+          </div>
+          <Button className="bg-white text-emerald-950 hover:bg-emerald-50" onClick={() => setAccountDialog({ open: true, account: null })}>
+            <Plus className="size-4" /> Add verified account
+          </Button>
+        </div>
+      </section>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Qualified pipeline ARR" value={money(pipelineArr)} hint={`${rows.filter((r) => Number(r.arr) > 0).length} valued opportunities`} />
         <Stat label="Closed won ARR" value={money(wonArr)} hint={`${byStage.find((b) => b.stage === "won")?.count ?? 0} subscribed`} />
-        <Stat label="Trial ended · reminder due" value={String(trialEnded.length)} hint="Sends 24h after expiry" />
-        <Stat label="Live campaigns" value={String((campaigns.data ?? []).filter((c) => c.status !== "draft").length)} hint={`${(templates.data ?? []).length} templates ready`} />
+        <Stat label="Trial follow-ups" value={String(trialEnded.length)} hint="Reminder due after expiry" />
+        <Stat label="Active campaigns" value={String((campaigns.data ?? []).filter((c) => c.status !== "draft").length)} hint={`${(templates.data ?? []).length} templates ready`} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.15fr]">
         <Panel title="Pipeline by stage" description="Annualized contract value in each stage" bodyClassName="p-5">
-          <ul className="space-y-3.5">
-            {byStage.map((b) => (
-              <li key={b.stage}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-[13px] capitalize">{b.stage}</span>
-                  <span className="font-mono text-[12.5px] text-muted-foreground">
-                    {b.count} · {money(b.arr)}
-                  </span>
-                </div>
-                <div className="mt-1.5">
-                  <Meter value={Math.round((b.arr / maxArr) * 100)} tone={STAGE_TONE[b.stage]} />
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {byStage.map((b) => {
+              const stageColor: Record<Stage, string> = {
+                new: "border-sky-200 bg-sky-50 text-sky-800",
+                trialing: "border-cyan-200 bg-cyan-50 text-cyan-800",
+                "trial ended": "border-amber-200 bg-amber-50 text-amber-900",
+                negotiation: "border-violet-200 bg-violet-50 text-violet-800",
+                won: "border-emerald-200 bg-emerald-50 text-emerald-800",
+                lost: "border-rose-200 bg-rose-50 text-rose-800",
+              };
+              return (
+                <button key={b.stage} type="button" onClick={() => setStage(b.stage)}
+                  className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${stageColor[b.stage]}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-semibold uppercase tracking-wide">{b.stage}</span>
+                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-mono text-xs">{b.count}</span>
+                  </div>
+                  <p className="mt-3 font-sans text-xl font-semibold">{money(b.arr)}</p>
+                  <p className="mt-1 text-[11px] opacity-70">Annualized opportunity value</p>
+                </button>
+              );
+            })}
+          </div>
         </Panel>
 
         <Panel
@@ -224,7 +244,7 @@ function CrmDashboard() {
             {(campaigns.data ?? []).map((c) => (
               <li key={c.id} className="px-5 py-3.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-display text-[14.5px]">{c.name}</span>
+                  <span className="font-sans text-[14.5px] font-semibold">{c.name}</span>
                   <Pill tone={c.status === "draft" ? "neutral" : "seal"}>{c.status}</Pill>
                   <Button
                     size="sm"
@@ -322,23 +342,35 @@ function CrmDashboard() {
 
       <Panel
         className="mt-3"
-        title="Accounts & decision makers"
-        description="Enterprise and company leads with no active CertivoIQ subscription"
+        title="Verified accounts & decision makers"
+        description="Company names open a dedicated lead profile; public facts include their source and verification date"
         bodyClassName="p-0"
       >
-        <ul className="divide-y divide-border">
+        <ul className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((a) => {
             const people = (contacts.data ?? []).filter((c) => c.account_id === a.id);
             return (
-              <li key={a.id}>
-                <button
-                  type="button"
+              <li key={a.id} className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-emerald-950/20">
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setOpenId(openId === a.id ? null : a.id)}
-                  className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5 text-left hover:bg-muted/50"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") setOpenId(openId === a.id ? null : a.id);
+                  }}
+                  className="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-2 px-5 py-5 text-left transition hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30"
                 >
                   <Building2 className="size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-medium">{a.name}</p>
+                    <Link
+                      to="/crm/accounts/$accountId"
+                      params={{ accountId: a.id }}
+                      onClick={(event) => event.stopPropagation()}
+                      className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-emerald-950 underline-offset-4 hover:text-emerald-700 hover:underline dark:text-emerald-100"
+                    >
+                      {a.name}
+                      <Globe className="size-3.5 opacity-60" />
+                    </Link>
                     <p className="cite">
                       {Number(a.units).toLocaleString()} units · {a.hq ?? "—"} · {a.source ?? "—"}
                     </p>
@@ -346,14 +378,14 @@ function CrmDashboard() {
                   <Pill tone={STAGE_TONE[a.stage]} className="capitalize">
                     {a.stage}
                   </Pill>
-                  <span className="font-mono text-[12.5px] text-muted-foreground">
-                    {money(Number(a.arr))}/yr · {a.plan ?? "—"}
+                  <span className="w-full rounded-lg bg-emerald-50 px-3 py-2 font-mono text-[12px] text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+                    {Number(a.arr) > 0 ? `${money(Number(a.arr))}/yr · ${a.plan ?? "Plan pending"}` : "Research lead · value after qualification"}
                   </span>
                   <span className="cite w-24 text-right">{a.owner ?? "Unassigned"}</span>
-                </button>
+                </div>
 
                 {openId === a.id && (
-                  <div className="border-t border-border bg-muted/30 px-5 py-4">
+                  <div className="border-t border-emerald-100 bg-emerald-50/40 px-5 py-4 dark:border-emerald-900 dark:bg-emerald-950/20">
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[12.5px] text-muted-foreground">
                       {linkTo(a.linkedin_url) && (
                         <a
