@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const apiKey = process.env.ELEVENLABS_API_KEY;
 const voiceId = process.env.ELEVENLABS_VOICE_ID;
-const modelId = process.env.ELEVENLABS_MODEL_ID ?? "eleven_v3";
+const modelId = process.env.ELEVENLABS_MODEL_ID ?? "eleven_multilingual_v2";
 
 if (!apiKey) {
   throw new Error(
@@ -65,9 +65,9 @@ for (let index = 0; index < scenes.length; index += 1) {
       apply_text_normalization: "on",
       seed: 2048,
       voice_settings: {
-        stability: 0.5,
+        stability: 0.45,
         similarity_boost: 0.75,
-        style: 0.15,
+        style: 0,
         use_speaker_boost: true,
         speed: 0.94,
       },
