@@ -14,8 +14,7 @@ function Denied() {
         <ShieldAlert className="mx-auto size-9 text-flag" />
         <h1 className="mt-3 font-display text-[21px]">Staff access only</h1>
         <p className="mt-2 text-[13.5px] text-muted-foreground">
-          The CertivoIQ CRM Dashboard is restricted to verified @certivoiq.com
-          accounts.
+          The CertivoIQ CRM Dashboard is restricted to verified @certivoiq.com accounts.
         </p>
         <Button className="mt-5" asChild>
           <Link to="/dashboard">Back to CertivoIQ</Link>
@@ -52,15 +51,12 @@ export function CrmShell({
       const response = await fetch("/api/public/federal-housing-news", {
         headers: { Accept: "application/json" },
       });
-      if (!response.ok)
-        throw new Error("Official housing news is temporarily unavailable");
+      if (!response.ok) throw new Error("Official housing news is temporarily unavailable");
       return response.json();
     },
   });
 
-  const subscriberItems = (newsItems ?? []).filter(
-    (item) => item.kind === "subscriber",
-  );
+  const subscriberItems = (newsItems ?? []).filter((item) => item.kind === "subscriber");
   const tickerItems = [...(federalNews.data?.items ?? []), ...subscriberItems]
     .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))
     .slice(0, 24);
@@ -112,18 +108,16 @@ export function CrmShell({
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-7 sm:py-8">
-        {children}
-      </div>
+      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-7 sm:py-8">{children}</div>
 
       <p className="cite mt-4 flex items-center gap-2 px-4 sm:px-7">
-        Official HUD Newsroom and Federal Register updates appear below with
-        dates and direct source links; the feed refreshes every 15 minutes.
+        Official HUD Newsroom and Federal Register updates appear below with dates and direct source
+        links; the feed refreshes every 15 minutes.
       </p>
       <NewsTicker
         items={tickerItems}
-        fetchedAt={federalNews.data?.fetched_at}
-        partial={federalNews.data?.partial}
+        fetchedAt={federalNews.data?.fetched_at ?? null}
+        partial={federalNews.data?.partial ?? false}
       />
     </div>
   );
