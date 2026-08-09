@@ -217,14 +217,21 @@ export type Database = {
           last_touch: string | null
           lead_score: number
           linkedin_url: string | null
+          management_company_name: string | null
           name: string
           next_followup_on: string | null
           notes: string | null
           owner: string | null
+          owner_manager_website: string | null
+          ownership_confidence: number | null
+          ownership_sources: string[]
+          ownership_verification_status: string
+          ownership_verified_at: string | null
           phone: string | null
           plan: string | null
           programs: string[]
           properties: number
+          property_owner_name: string | null
           reminders_sent: number
           responded: boolean
           role: string | null
@@ -249,14 +256,21 @@ export type Database = {
           last_touch?: string | null
           lead_score?: number
           linkedin_url?: string | null
+          management_company_name?: string | null
           name: string
           next_followup_on?: string | null
           notes?: string | null
           owner?: string | null
+          owner_manager_website?: string | null
+          ownership_confidence?: number | null
+          ownership_sources?: string[]
+          ownership_verification_status?: string
+          ownership_verified_at?: string | null
           phone?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
+          property_owner_name?: string | null
           reminders_sent?: number
           responded?: boolean
           role?: string | null
@@ -281,14 +295,21 @@ export type Database = {
           last_touch?: string | null
           lead_score?: number
           linkedin_url?: string | null
+          management_company_name?: string | null
           name?: string
           next_followup_on?: string | null
           notes?: string | null
           owner?: string | null
+          owner_manager_website?: string | null
+          ownership_confidence?: number | null
+          ownership_sources?: string[]
+          ownership_verification_status?: string
+          ownership_verified_at?: string | null
           phone?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
+          property_owner_name?: string | null
           reminders_sent?: number
           responded?: boolean
           role?: string | null
