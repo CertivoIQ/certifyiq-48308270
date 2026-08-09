@@ -63,7 +63,8 @@ export const Route = createFileRoute("/_authenticated/crm-documents")({
       { title: "Marketing Documents — CertivoIQ CRM" },
       {
         name: "description",
-        content: "Staff-only CertivoIQ marketing document and outreach template library.",
+        content:
+          "Staff-only CertivoIQ marketing document and outreach template library.",
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -86,7 +87,9 @@ function formatDate(value: string) {
 }
 
 function categoryLabel(value: string) {
-  return CATEGORIES.find((category) => category.value === value)?.label ?? "Other";
+  return (
+    CATEGORIES.find((category) => category.value === value)?.label ?? "Other"
+  );
 }
 
 function CrmDocumentsPage() {
@@ -119,7 +122,10 @@ function CrmDocumentsPage() {
     queryKey: ["crm", "templates"],
     enabled: isStaff,
     queryFn: async (): Promise<Template[]> => {
-      const { data, error } = await supabase.from("crm_templates").select("*").order("name");
+      const { data, error } = await supabase
+        .from("crm_templates")
+        .select("*")
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -143,33 +149,44 @@ function CrmDocumentsPage() {
     mutationFn: async () => {
       if (!uploadFile) throw new Error("Choose a file to upload");
       if (!uploadForm.name.trim()) throw new Error("Document name is required");
-      if (uploadFile.size > MAX_BYTES) throw new Error("Files must be 25 MB or smaller");
+      if (uploadFile.size > MAX_BYTES)
+        throw new Error("Files must be 25 MB or smaller");
       if (!ACCEPTED_TYPES.has(uploadFile.type)) {
-        throw new Error("Use PDF, PowerPoint, Word, Excel, CSV, text, PNG, JPG, or WebP");
+        throw new Error(
+          "Use PDF, PowerPoint, Word, Excel, CSV, text, PNG, JPG, or WebP",
+        );
       }
 
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData.user) throw new Error("Your session has expired");
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+      if (authError || !authData.user)
+        throw new Error("Your session has expired");
 
-      const safeFileName = uploadFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120);
+      const safeFileName = uploadFile.name
+        .replace(/[^a-zA-Z0-9._-]+/g, "-")
+        .slice(-120);
       const storagePath = `${authData.user.id}/${crypto.randomUUID()}-${safeFileName}`;
-      const { error: storageError } = await supabase.storage.from(BUCKET).upload(storagePath, uploadFile, {
-        cacheControl: "3600",
-        contentType: uploadFile.type,
-        upsert: false,
-      });
+      const { error: storageError } = await supabase.storage
+        .from(BUCKET)
+        .upload(storagePath, uploadFile, {
+          cacheControl: "3600",
+          contentType: uploadFile.type,
+          upsert: false,
+        });
       if (storageError) throw storageError;
 
-      const { error: insertError } = await supabase.from("crm_documents").insert({
-        name: uploadForm.name.trim(),
-        description: uploadForm.description.trim() || null,
-        category: uploadForm.category,
-        storage_path: storagePath,
-        file_name: uploadFile.name,
-        mime_type: uploadFile.type,
-        size_bytes: uploadFile.size,
-        created_by: authData.user.id,
-      });
+      const { error: insertError } = await supabase
+        .from("crm_documents")
+        .insert({
+          name: uploadForm.name.trim(),
+          description: uploadForm.description.trim() || null,
+          category: uploadForm.category,
+          storage_path: storagePath,
+          file_name: uploadFile.name,
+          mime_type: uploadFile.type,
+          size_bytes: uploadFile.size,
+          created_by: authData.user.id,
+        });
 
       if (insertError) {
         await supabase.storage.from(BUCKET).remove([storagePath]);
@@ -183,13 +200,15 @@ function CrmDocumentsPage() {
       setUploadForm({ name: "", description: "", category: "other" });
       toast.success("Marketing document added");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Upload failed"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Upload failed"),
   });
 
   const filteredDocuments = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return (documents.data ?? []).filter((document) => {
-      const matchesCategory = category === "all" || document.category === category;
+      const matchesCategory =
+        category === "all" || document.category === category;
       const matchesSearch =
         !needle ||
         document.name.toLowerCase().includes(needle) ||
@@ -211,9 +230,11 @@ function CrmDocumentsPage() {
   }, [search, templates.data]);
 
   const downloadDocument = async (document: CrmDocument) => {
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(document.storage_path, 60, {
-      download: document.file_name,
-    });
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(document.storage_path, 60, {
+        download: document.file_name,
+      });
     if (error || !data?.signedUrl) {
       toast.error("Could not create a secure download link");
       return;
@@ -222,7 +243,12 @@ function CrmDocumentsPage() {
   };
 
   return (
-    <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
+    <CrmShell
+      email={email}
+      isStaff={isStaff}
+      loading={loading}
+      newsItems={news.data ?? []}
+    >
       <section className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-gradient-to-br from-emerald-950 via-emerald-900 to-green-700 p-6 text-white shadow-xl shadow-emerald-950/10 sm:p-8">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
@@ -233,11 +259,15 @@ function CrmDocumentsPage() {
               Documents, templates, and outreach in one place.
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-emerald-100/80">
-              Uploaded files stay private. Staff downloads use short-lived links, while email templates connect directly to the CRM composer.
+              Uploaded files stay private. Staff downloads use short-lived
+              links, while email templates connect directly to the CRM composer.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button className="bg-white text-emerald-950 hover:bg-emerald-50" asChild>
+            <Button
+              className="bg-white text-emerald-950 hover:bg-emerald-50"
+              asChild
+            >
               <Link to="/crm">
                 <Mail className="size-4" /> Compose from CRM
               </Link>
@@ -253,9 +283,21 @@ function CrmDocumentsPage() {
       </section>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <LibraryStat label="Stored documents" value={String(documents.data?.length ?? 0)} icon={<FolderOpen className="size-5" />} />
-        <LibraryStat label="Email templates" value={String(templates.data?.length ?? 0)} icon={<Mail className="size-5" />} />
-        <LibraryStat label="Maximum file size" value="25 MB" icon={<FileArchive className="size-5" />} />
+        <LibraryStat
+          label="Stored documents"
+          value={String(documents.data?.length ?? 0)}
+          icon={<FolderOpen className="size-5" />}
+        />
+        <LibraryStat
+          label="Email templates"
+          value={String(templates.data?.length ?? 0)}
+          icon={<Mail className="size-5" />}
+        />
+        <LibraryStat
+          label="Maximum file size"
+          value="25 MB"
+          icon={<FileArchive className="size-5" />}
+        />
       </div>
 
       <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-emerald-900/10 bg-white p-4 shadow-sm dark:bg-emerald-950/20 sm:flex-row">
@@ -301,8 +343,12 @@ function CrmDocumentsPage() {
                   <FileText className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-sans text-[14px] font-semibold">CertivoIQ intro one-pager</p>
-                  <p className="mt-1 text-[12px] text-muted-foreground">Built-in · printable / save as PDF</p>
+                  <p className="font-sans text-[14px] font-semibold">
+                    CertivoIQ intro one-pager
+                  </p>
+                  <p className="mt-1 text-[12px] text-muted-foreground">
+                    Built-in · printable / save as PDF
+                  </p>
                   <Button className="mt-3" size="sm" variant="outline" asChild>
                     <Link to="/marketing-kit">
                       <ExternalLink className="size-3.5" /> Open
@@ -313,23 +359,36 @@ function CrmDocumentsPage() {
             </li>
 
             {filteredDocuments.map((document) => (
-              <li key={document.id} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <li
+                key={document.id}
+                className="rounded-xl border border-border bg-card p-4 shadow-sm"
+              >
                 <div className="flex items-start gap-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
                     <FileText className="size-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-sans text-[14px] font-semibold">{document.name}</p>
+                    <p className="truncate font-sans text-[14px] font-semibold">
+                      {document.name}
+                    </p>
                     <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-emerald-700">
                       {categoryLabel(document.category)}
                     </p>
                     {document.description && (
-                      <p className="mt-2 line-clamp-2 text-[12.5px] text-muted-foreground">{document.description}</p>
+                      <p className="mt-2 line-clamp-2 text-[12.5px] text-muted-foreground">
+                        {document.description}
+                      </p>
                     )}
                     <p className="mt-2 text-[11.5px] text-muted-foreground">
-                      {formatBytes(document.size_bytes)} · {formatDate(document.created_at)}
+                      {formatBytes(document.size_bytes)} ·{" "}
+                      {formatDate(document.created_at)}
                     </p>
-                    <Button className="mt-3" size="sm" variant="outline" onClick={() => downloadDocument(document)}>
+                    <Button
+                      className="mt-3"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadDocument(document)}
+                    >
                       <Download className="size-3.5" /> Secure download
                     </Button>
                   </div>
@@ -339,7 +398,8 @@ function CrmDocumentsPage() {
 
             {!documents.isLoading && !filteredDocuments.length && (
               <li className="rounded-xl border border-dashed border-emerald-300 p-6 text-center text-[13px] text-muted-foreground sm:col-span-2">
-                No uploaded documents match this view. The built-in one-pager remains available above.
+                No uploaded documents match this view. The built-in one-pager
+                remains available above.
               </li>
             )}
           </ul>
@@ -353,11 +413,16 @@ function CrmDocumentsPage() {
           <ul className="divide-y divide-border">
             {filteredTemplates.map((template) => (
               <li key={template.id} className="p-4">
-                <p className="font-sans text-[14px] font-semibold">{template.name}</p>
-                <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-emerald-700">
-                  {template.category} · {template.compliance_event ?? "evergreen"}
+                <p className="font-sans text-[14px] font-semibold">
+                  {template.name}
                 </p>
-                <p className="mt-2 line-clamp-2 text-[12.5px] text-muted-foreground">{template.subject}</p>
+                <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-emerald-700">
+                  {template.category} ·{" "}
+                  {template.compliance_event ?? "evergreen"}
+                </p>
+                <p className="mt-2 line-clamp-2 text-[12.5px] text-muted-foreground">
+                  {template.subject}
+                </p>
                 <Button className="mt-3" size="sm" variant="outline" asChild>
                   <Link to="/crm">
                     <Send className="size-3.5" /> Use in CRM
@@ -366,7 +431,9 @@ function CrmDocumentsPage() {
               </li>
             ))}
             {!templates.isLoading && !filteredTemplates.length && (
-              <li className="p-6 text-center text-[13px] text-muted-foreground">No email templates match your search.</li>
+              <li className="p-6 text-center text-[13px] text-muted-foreground">
+                No email templates match your search.
+              </li>
             )}
           </ul>
         </Panel>
@@ -377,7 +444,8 @@ function CrmDocumentsPage() {
           <DialogHeader>
             <DialogTitle>Add a marketing document</DialogTitle>
             <DialogDescription>
-              Files are stored in a private bucket and downloaded through a 60-second signed link.
+              Files are stored in a private bucket and downloaded through a
+              60-second signed link.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -391,11 +459,16 @@ function CrmDocumentsPage() {
                   const file = event.target.files?.[0] ?? null;
                   setUploadFile(file);
                   if (file && !uploadForm.name) {
-                    setUploadForm((current) => ({ ...current, name: file.name.replace(/\.[^.]+$/, "") }));
+                    setUploadForm((current) => ({
+                      ...current,
+                      name: file.name.replace(/\.[^.]+$/, ""),
+                    }));
                   }
                 }}
               />
-              <p className="text-[11.5px] text-muted-foreground">PDF, Office, CSV, text, or image · 25 MB maximum</p>
+              <p className="text-[11.5px] text-muted-foreground">
+                PDF, Office, CSV, text, or image · 25 MB maximum
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="crm-document-name">Display name</Label>
@@ -403,7 +476,9 @@ function CrmDocumentsPage() {
                 id="crm-document-name"
                 value={uploadForm.name}
                 maxLength={160}
-                onChange={(event) => setUploadForm({ ...uploadForm, name: event.target.value })}
+                onChange={(event) =>
+                  setUploadForm({ ...uploadForm, name: event.target.value })
+                }
               />
             </div>
             <div className="space-y-1.5">
@@ -411,7 +486,9 @@ function CrmDocumentsPage() {
               <select
                 id="crm-document-category"
                 value={uploadForm.category}
-                onChange={(event) => setUploadForm({ ...uploadForm, category: event.target.value })}
+                onChange={(event) =>
+                  setUploadForm({ ...uploadForm, category: event.target.value })
+                }
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-[13px]"
               >
                 {CATEGORIES.map((item) => (
@@ -427,7 +504,12 @@ function CrmDocumentsPage() {
                 id="crm-document-description"
                 rows={3}
                 value={uploadForm.description}
-                onChange={(event) => setUploadForm({ ...uploadForm, description: event.target.value })}
+                onChange={(event) =>
+                  setUploadForm({
+                    ...uploadForm,
+                    description: event.target.value,
+                  })
+                }
                 placeholder="When staff should use this file"
               />
             </div>
@@ -437,7 +519,8 @@ function CrmDocumentsPage() {
               Cancel
             </Button>
             <Button onClick={() => upload.mutate()} disabled={upload.isPending}>
-              <Upload className="size-4" /> {upload.isPending ? "Uploading..." : "Upload document"}
+              <Upload className="size-4" />{" "}
+              {upload.isPending ? "Uploading..." : "Upload document"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -458,10 +541,14 @@ function LibraryStat({
   return (
     <div className="rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-sm dark:bg-emerald-950/20">
       <div className="flex items-center justify-between text-emerald-700">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.15em]">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.15em]">
+          {label}
+        </p>
         {icon}
       </div>
-      <p className="mt-3 font-sans text-2xl font-semibold text-emerald-950 dark:text-emerald-50">{value}</p>
+      <p className="mt-3 font-sans text-2xl font-semibold text-emerald-950 dark:text-emerald-50">
+        {value}
+      </p>
     </div>
   );
 }
