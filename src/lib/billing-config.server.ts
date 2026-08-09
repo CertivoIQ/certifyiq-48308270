@@ -29,7 +29,7 @@ export function resolveBillingEnvironment(): BillingEnvironment {
       "The server payment environment does not match the Stripe client token.",
     );
   }
-  if (configured) return configured;
+  if (configured === "sandbox" || configured === "live") return configured;
   if (tokenEnvironment) return tokenEnvironment;
 
   if (process.env["NODE_ENV"] === "production") {
