@@ -14,7 +14,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { STAGES, type Account, type AccountType, type Stage } from "@/lib/crm";
+import {
+  OWNERSHIP_VERIFICATION_STATUSES,
+  STAGES,
+  type Account,
+  type AccountType,
+  type OwnershipVerificationStatus,
+  type Stage,
+} from "@/lib/crm";
 
 type Draft = {
   name: string;
@@ -27,6 +34,13 @@ type Draft = {
   arr: string;
   plan: string;
   owner: string;
+  property_owner_name: string;
+  management_company_name: string;
+  owner_manager_website: string;
+  ownership_verification_status: OwnershipVerificationStatus;
+  ownership_confidence: string;
+  ownership_sources: string;
+  ownership_verified_at: string;
   source: string;
   last_touch: string;
   notes: string;
@@ -43,6 +57,13 @@ const empty: Draft = {
   arr: "",
   plan: "Enterprise",
   owner: "Unassigned",
+  property_owner_name: "",
+  management_company_name: "",
+  owner_manager_website: "",
+  ownership_verification_status: "unverified",
+  ownership_confidence: "",
+  ownership_sources: "",
+  ownership_verified_at: "",
   source: "Manually created",
   last_touch: "Never contacted",
   notes: "",
@@ -60,6 +81,13 @@ function toDraft(a: Account): Draft {
     arr: String(a.arr ?? ""),
     plan: a.plan ?? "",
     owner: a.owner ?? "",
+    property_owner_name: a.property_owner_name ?? "",
+    management_company_name: a.management_company_name ?? "",
+    owner_manager_website: a.owner_manager_website ?? "",
+    ownership_verification_status: a.ownership_verification_status as OwnershipVerificationStatus,
+    ownership_confidence: String(a.ownership_confidence ?? ""),
+    ownership_sources: (a.ownership_sources ?? []).join("\n"),
+    ownership_verified_at: a.ownership_verified_at ?? "",
     source: a.source ?? "",
     last_touch: a.last_touch ?? "",
     notes: a.notes ?? "",
@@ -97,11 +125,21 @@ export function AccountDialog({
         arr: Number(d.arr) || 0,
         plan: d.plan.trim() || null,
         owner: d.owner.trim() || null,
+        property_owner_name: d.property_owner_name.trim() || null,
+        management_company_name: d.management_company_name.trim() || null,
+        owner_manager_website: d.owner_manager_website.trim() || null,
+        ownership_verification_status: d.ownership_verification_status,
+        ownership_confidence: d.ownership_confidence.trim() === "" ? null : Number(d.ownership_confidence),
+        ownership_sources: d.ownership_sources.split(/\n/).map((value) => value.trim()).filter(Boolean),
+        ownership_verified_at: d.ownership_verified_at || null,
         source: d.source.trim() || null,
         last_touch: d.last_touch.trim() || null,
         notes: d.notes.trim() || null,
       };
       if (!payload.name) throw new Error("Account name is required");
+      if (payload.ownership_confidence !== null && (payload.ownership_confidence < 0 || payload.ownership_confidence > 100)) {
+        throw new Error("Ownership confidence must be between 0 and 100");
+      }
       if (account) {
         const { error } = await supabase.from("crm_accounts").update(payload).eq("id", account.id);
         if (error) throw error;
@@ -189,8 +227,42 @@ export function AccountDialog({
             <Label>Sales owner</Label>
             <Input value={d.owner} maxLength={80} onChange={(e) => setD({ ...d, owner: e.target.value })} />
           </div>
+          <div className="sm:col-span-2 mt-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+            <h3 className="font-sans text-sm font-semibold text-emerald-950 dark:text-emerald-50">Ownership & management verification</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Record public facts separately from the internal sales owner. Use “Unable to determine” when reliable sources do not establish an answer.</p>
+          </div>
           <div className={field}>
-            <Label>Source</Label>
+            <Label>Property owner</Label>
+            <Input value={d.property_owner_name} maxLength={240} onChange={(e) => setD({ ...d, property_owner_name: e.target.value })} />
+          </div>
+          <div className={field}>
+            <Label>Management company</Label>
+            <Input value={d.management_company_name} maxLength={240} onChange={(e) => setD({ ...d, management_company_name: e.target.value })} />
+          </div>
+          <div className={`${field} sm:col-span-2`}>
+            <Label>Owner / manager website</Label>
+            <Input value={d.owner_manager_website} maxLength={300} placeholder="https://…" onChange={(e) => setD({ ...d, owner_manager_website: e.target.value })} />
+          </div>
+          <div className={field}>
+            <Label>Verification status</Label>
+            <select className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm capitalize" value={d.ownership_verification_status} onChange={(e) => setD({ ...d, ownership_verification_status: e.target.value as OwnershipVerificationStatus })}>
+              {OWNERSHIP_VERIFICATION_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </div>
+          <div className={field}>
+            <Label>Confidence (0–100)</Label>
+            <Input value={d.ownership_confidence} type="number" min={0} max={100} onChange={(e) => setD({ ...d, ownership_confidence: e.target.value })} />
+          </div>
+          <div className={field}>
+            <Label>Verification date</Label>
+            <Input value={d.ownership_verified_at} type="date" onChange={(e) => setD({ ...d, ownership_verified_at: e.target.value })} />
+          </div>
+          <div className={`${field} sm:col-span-2`}>
+            <Label>Verification sources</Label>
+            <Textarea rows={3} value={d.ownership_sources} placeholder="One public source URL per line" onChange={(e) => setD({ ...d, ownership_sources: e.target.value })} />
+          </div>
+          <div className={field}>
+            <Label>Lead source</Label>
             <Input value={d.source} maxLength={160} onChange={(e) => setD({ ...d, source: e.target.value })} />
           </div>
           <div className={`${field} sm:col-span-2`}>
