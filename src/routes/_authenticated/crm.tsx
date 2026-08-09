@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Building2,
@@ -16,6 +16,7 @@ import {
   Pencil,
   Globe,
   Printer,
+  FolderOpen,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -68,8 +69,6 @@ export const Route = createFileRoute("/_authenticated/crm")({
 
 function CrmDashboard() {
   const { isStaff, loading, email } = useIsStaff();
-  const qc = useQueryClient();
-
   const accounts = useQuery({
     queryKey: ["crm", "accounts"],
     enabled: isStaff,
@@ -161,26 +160,6 @@ function CrmDashboard() {
   const wonArr = rows.filter((r) => r.stage === "won").reduce((a, r) => a + Number(r.arr), 0);
   const trialEnded = rows.filter((r) => r.stage === "trial ended");
 
-  const remind = useMutation({
-    mutationFn: async (account: Account) => {
-      const { error } = await supabase
-        .from("crm_accounts")
-        .update({
-          reminders_sent: (account.reminders_sent ?? 0) + 1,
-          last_touch: "Trial reminder email sent",
-        })
-        .eq("id", account.id);
-      if (error) throw error;
-    },
-    onSuccess: (_d, account) => {
-      qc.invalidateQueries({ queryKey: ["crm", "accounts"] });
-      toast.success("Reminder email queued", {
-        description: `${account.name} — sends with a one-click trial restore link.`,
-      });
-    },
-    onError: () => toast.error("Could not queue reminder"),
-  });
-
   return (
     <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
       <section className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-gradient-to-br from-emerald-950 via-emerald-900 to-green-700 p-6 text-white shadow-xl shadow-emerald-950/10 sm:p-8">
@@ -190,9 +169,22 @@ function CrmDashboard() {
             <h2 className="mt-2 max-w-2xl font-sans text-3xl font-semibold tracking-tight leading-tight sm:text-4xl">Turn verified affordable-housing research into trusted relationships.</h2>
             <p className="mt-3 max-w-2xl text-sm text-emerald-100/80">Public facts are source-linked. Contacts remain unverified until reviewed by staff, and sales forecasts stay separate from portfolio facts.</p>
           </div>
-          <Button className="bg-white text-emerald-950 hover:bg-emerald-50" onClick={() => setAccountDialog({ open: true, account: null })}>
-            <Plus className="size-4" /> Add verified account
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              className="bg-white text-emerald-950 hover:bg-emerald-50"
+              onClick={() => document.getElementById("crm-leads")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              <Mail className="size-4" /> Compose email
+            </Button>
+            <Button className="border border-white/30 bg-white/10 text-white hover:bg-white/20" asChild>
+              <Link to="/crm-documents">
+                <FolderOpen className="size-4" /> Documents
+              </Link>
+            </Button>
+            <Button className="border border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setAccountDialog({ open: true, account: null })}>
+              <Plus className="size-4" /> Add verified account
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -281,11 +273,18 @@ function CrmDashboard() {
         description="Prebuilt and tied to federal compliance events and rule changes"
         bodyClassName="p-0"
         actions={
-          <Button size="sm" variant="outline" asChild>
-            <Link to="/marketing-kit">
-              <Printer className="size-4" /> Printable intro one-pager
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/crm-documents">
+                <FolderOpen className="size-4" /> Document library
+              </Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/marketing-kit">
+                <Printer className="size-4" /> Printable one-pager
+              </Link>
+            </Button>
+          </div>
         }
       >
 
@@ -312,7 +311,7 @@ function CrmDashboard() {
         </ul>
       </Panel>
 
-      <div className="mt-4">
+      <div id="crm-leads" className="mt-4 scroll-mt-24">
         <LeadsPanel
           accounts={rows}
           selected={selectedLeads}
@@ -454,8 +453,14 @@ function CrmDashboard() {
                     </ul>
 
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <Button size="sm" onClick={() => remind.mutate(a)} disabled={remind.isPending}>
-                        <Send className="size-4" /> Send trial reminder
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedLeads([a.id]);
+                          setMailMergeOpen(true);
+                        }}
+                      >
+                        <Mail className="size-4" /> Compose email
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setContactDialog(a)}>
                         <UserPlus className="size-4" /> Add contact
