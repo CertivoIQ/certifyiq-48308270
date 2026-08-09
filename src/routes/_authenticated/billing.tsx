@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useAccount } from "@/hooks/use-account";
 import { useSubscription } from "@/hooks/use-subscription";
-import { getStripeEnvironment } from "@/lib/stripe";
-import { createPortalSession, changePlan, setCancellation } from "@/utils/payments.functions";
+import { createPortalSession, setCancellation } from "@/utils/payments.functions";
 import { PLANS } from "@/lib/platform-data";
 import { formatLimit, planKeyToPriceId, AI_DOC_OVERAGE_AMOUNT_USD } from "@/lib/plan-catalog";
 import { toast } from "sonner";
@@ -16,7 +15,6 @@ import {
   ExternalLink,
   Clock,
   AlertTriangle,
-  ArrowUpRight,
   Undo2,
   Gauge,
 } from "lucide-react";
@@ -56,7 +54,6 @@ function BillingPage() {
   const { account, loading, trialDaysLeft, trialExpired, refetch } = useAccount();
   const { subscription, isActive, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
-  const env = getStripeEnvironment();
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -72,28 +69,15 @@ function BillingPage() {
   const openPortal = () =>
     run("portal", async () => {
       const result = await createPortalSession({
-        data: { returnUrl: `${window.location.origin}/billing`, environment: env },
+        data: {},
       });
       if ("error" in result) throw new Error(result.error);
       window.open(result.url, "_blank");
     });
 
-  const switchPlan = (priceId: string | null, name: string) =>
-    run(`plan-${priceId}`, async () => {
-      if (!priceId) throw new Error("That plan is not available for self-serve changes.");
-      const result = await changePlan({ data: { priceId, environment: env } });
-      if ("error" in result) throw new Error(result.error);
-      toast.success(`Switching to ${name}`, {
-        description: result.effectiveAt
-          ? `Takes effect ${new Date(result.effectiveAt).toLocaleDateString()} — you keep your current capacity until then.`
-          : "Takes effect at your next renewal.",
-      });
-      await refetch();
-    });
-
   const toggleCancel = (cancel: boolean) =>
     run("cancel", async () => {
-      const result = await setCancellation({ data: { cancel, environment: env } });
+      const result = await setCancellation({ data: { cancel } });
       if ("error" in result) throw new Error(result.error);
       toast.success(
         cancel
@@ -234,7 +218,7 @@ function BillingPage() {
           <Panel
             className="mt-4"
             title="Change your plan"
-            description="Upgrades and downgrades apply at your next renewal — no proration, no lost capacity"
+            description="Plan changes are completed securely in Stripe’s hosted customer portal"
             bodyClassName="p-0"
           >
             <ul className="divide-y divide-border">
@@ -255,10 +239,10 @@ function BillingPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => switchPlan(priceId, `CertivoIQ ${p.name}`)}
-                        disabled={busy === `plan-${priceId}`}
+                        onClick={openPortal}
+                        disabled={busy === "portal"}
                       >
-                        Switch <ArrowUpRight className="size-3.5" />
+                        Manage plan <ExternalLink className="size-3.5" />
                       </Button>
                     ) : (
                       <Button size="sm" variant="outline" asChild>
