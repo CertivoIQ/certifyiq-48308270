@@ -2,7 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Rocket, GraduationCap, Loader2, AlertTriangle, CreditCard } from "lucide-react";
+import {
+  CheckCircle2,
+  Rocket,
+  GraduationCap,
+  Loader2,
+  AlertTriangle,
+  CreditCard,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCheckoutSessionStatus } from "@/utils/payments.functions";
 
@@ -18,14 +25,20 @@ export const Route = createFileRoute("/checkout/return")({
       { property: "og:title", content: "Subscription Confirmed — CertivoIQ" },
       {
         property: "og:description",
-        content: "Plan capacity unlocked, trial files kept, and guided onboarding started.",
+        content:
+          "Plan capacity unlocked, trial files kept, and guided onboarding started.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { session_id?: string | undefined } => ({
-    session_id: typeof search["session_id"] === "string" ? search["session_id"] : undefined,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { session_id?: string | undefined } => ({
+    session_id:
+      typeof search["session_id"] === "string"
+        ? search["session_id"]
+        : undefined,
   }),
   component: CheckoutReturn,
 });
@@ -54,7 +67,8 @@ function CheckoutReturn() {
 
   const failed = !!data && "error" in data;
   const paid = !!data && !("error" in data) && data.paymentStatus !== "unpaid";
-  const pending = !!data && !("error" in data) && data.paymentStatus === "unpaid";
+  const pending =
+    !!data && !("error" in data) && data.paymentStatus === "unpaid";
 
   return (
     <AppShell title="Checkout" subtitle="Payment confirmation">
@@ -62,10 +76,12 @@ function CheckoutReturn() {
         {!sessionId && (
           <>
             <Pill tone="neutral">No checkout session</Pill>
-            <h1 className="mt-4 font-display text-[26px]">Nothing to confirm here</h1>
+            <h1 className="mt-4 font-display text-[26px]">
+              Nothing to confirm here
+            </h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              We couldn't find a checkout to confirm. If you just paid, open your billing page to check your plan
-              status.
+              We couldn't find a checkout to confirm. If you just paid, open
+              your billing page to check your plan status.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild>
@@ -82,7 +98,8 @@ function CheckoutReturn() {
 
         {sessionId && isLoading && (
           <p className="flex items-center gap-2 text-[13.5px] text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Confirming your payment with the payment provider…
+            <Loader2 className="size-4 animate-spin" /> Confirming your payment
+            with the payment provider…
           </p>
         )}
 
@@ -91,10 +108,12 @@ function CheckoutReturn() {
             <Pill tone="reject">
               <AlertTriangle className="size-3" /> Could not confirm
             </Pill>
-            <h1 className="mt-4 font-display text-[26px]">We couldn't confirm this payment</h1>
+            <h1 className="mt-4 font-display text-[26px]">
+              We couldn't confirm this payment
+            </h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              {(data as { error: string }).error} Your card has not been charged twice — check your billing page before
-              retrying.
+              {(data as { error: string }).error} Your card has not been charged
+              twice — check your billing page before retrying.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild>
@@ -114,10 +133,13 @@ function CheckoutReturn() {
             <Pill tone="flag">
               <Loader2 className="size-3 animate-spin" /> Payment processing
             </Pill>
-            <h1 className="mt-4 font-display text-[26px]">Your payment is settling</h1>
+            <h1 className="mt-4 font-display text-[26px]">
+              Your payment is settling
+            </h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              Some payment methods take a little longer to clear. We'll unlock your plan capacity automatically the
-              moment it settles — no need to pay again.
+              Some payment methods take a little longer to clear. We'll unlock
+              your plan capacity automatically the moment it settles — no need
+              to pay again.
             </p>
           </>
         )}
@@ -127,10 +149,13 @@ function CheckoutReturn() {
             <Pill tone="seal">
               <CheckCircle2 className="size-3" /> Payment received
             </Pill>
-            <h1 className="mt-4 font-display text-[26px]">You're audit-ready — subscription active</h1>
+            <h1 className="mt-4 font-display text-[26px]">
+              You're audit-ready — subscription active
+            </h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              Your plan capacity is unlocked, every certification you uploaded during the trial has been kept (the
-              14-day deletion hold is cleared), and your guided onboarding has started.
+              Your plan capacity is unlocked, every certification you uploaded
+              during the trial has been kept (the 14-day deletion hold is
+              cleared), and your guided onboarding has started.
               {!("error" in data!) && !data!.provisioned
                 ? " Final provisioning is finishing up — refresh billing in a few seconds if limits still look old."
                 : ""}
