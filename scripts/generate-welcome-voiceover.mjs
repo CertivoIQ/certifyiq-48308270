@@ -6,10 +6,14 @@ const voiceId = process.env.ELEVENLABS_VOICE_ID;
 const modelId = process.env.ELEVENLABS_MODEL_ID ?? "eleven_v3";
 
 if (!apiKey) {
-  throw new Error("ELEVENLABS_API_KEY is required. Store it as a secret; never commit it.");
+  throw new Error(
+    "ELEVENLABS_API_KEY is required. Store it as a secret; never commit it.",
+  );
 }
 if (!voiceId) {
-  throw new Error("ELEVENLABS_VOICE_ID is required. Copy it from ElevenLabs My Voices.");
+  throw new Error(
+    "ELEVENLABS_VOICE_ID is required. Copy it from ElevenLabs My Voices.",
+  );
 }
 
 const scenes = [
@@ -46,8 +50,7 @@ for (let index = 0; index < scenes.length; index += 1) {
   const scene = scenes[index];
   const previousText = scenes[index - 1]?.text;
   const nextText = scenes[index + 1]?.text;
-  const endpoint =
-    `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`;
+  const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`;
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -75,12 +78,16 @@ for (let index = 0; index < scenes.length; index += 1) {
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`ElevenLabs failed for ${scene.file}: ${response.status} ${detail}`);
+    throw new Error(
+      `ElevenLabs failed for ${scene.file}: ${response.status} ${detail}`,
+    );
   }
 
   const audio = Buffer.from(await response.arrayBuffer());
   await writeFile(resolve(outputDirectory, scene.file), audio);
-  process.stdout.write(`Generated ${scene.file} (${audio.length.toLocaleString()} bytes)\n`);
+  process.stdout.write(
+    `Generated ${scene.file} (${audio.length.toLocaleString()} bytes)\n`,
+  );
 }
 
 process.stdout.write(`Welcome narration generated with model ${modelId}.\n`);
