@@ -7,13 +7,22 @@ import { TRIAL_OFFER, RETENTION_POLICY } from "@/lib/trial-data";
 import { Check, Sparkles, Clock, CreditCard, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSession } from "@/hooks/use-session";
 import { useSubscription } from "@/hooks/use-subscription";
 import { createPortalSession } from "@/utils/payments.functions";
-import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/plan-catalog";
+import {
+  ADDON_PRICE_IDS,
+  PLAN_PRICE_ID_LIST,
+  planKeyToPriceId,
+} from "@/lib/plan-catalog";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -27,7 +36,8 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:title", content: "Plans & Pricing — CertivoIQ" },
       {
         property: "og:description",
-        content: "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits.",
+        content:
+          "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -40,12 +50,18 @@ export const Route = createFileRoute("/pricing")({
 
 function PricingPage() {
   const { user } = useSession();
-  const { subscription, isActive, entitlement, cancelAtPeriodEnd, endsAt } = useSubscription();
-  const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
+  const { subscription, isActive, entitlement, cancelAtPeriodEnd, endsAt } =
+    useSubscription();
+  const { openCheckout, closeCheckout, isOpen, checkoutElement, label } =
+    useStripeCheckout();
   const [portalBusy, setPortalBusy] = useState(false);
   const navigate = useNavigate();
 
-  const startCheckout = async (priceId: string | null, name: string, quantity?: number) => {
+  const startCheckout = async (
+    priceId: string | null,
+    name: string,
+    quantity?: number,
+  ) => {
     if (!priceId) {
       toast.error("This plan is not available for self-serve checkout yet.");
       return;
@@ -54,7 +70,8 @@ function PricingPage() {
     // provision the plan, so send visitors to sign in and bring them back here.
     if (!user) {
       toast.info("Create your account first", {
-        description: "Sign in so we can attach this subscription to your CertivoIQ workspace.",
+        description:
+          "Sign in so we can attach this subscription to your CertivoIQ workspace.",
       });
       // Remember where they were so sign-in can bring them straight back.
       sessionStorage.setItem("certivoiq:after-auth", "/pricing");
@@ -74,10 +91,11 @@ function PricingPage() {
         ...(quantity ? { quantity } : {}),
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Checkout unavailable");
+      toast.error(
+        error instanceof Error ? error.message : "Checkout unavailable",
+      );
     }
   };
-
 
   const openBillingPortal = async () => {
     setPortalBusy(true);
@@ -88,7 +106,9 @@ function PricingPage() {
       if ("error" in result) throw new Error(result.error);
       window.open(result.url, "_blank");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not open billing");
+      toast.error(
+        error instanceof Error ? error.message : "Could not open billing",
+      );
     } finally {
       setPortalBusy(false);
     }
@@ -120,7 +140,12 @@ function PricingPage() {
                 : "Active. Upgrades and downgrades take effect at your next renewal, so you keep the capacity you already paid for."}
             </p>
           </div>
-          <Button size="sm" variant="outline" onClick={openBillingPortal} disabled={portalBusy}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={openBillingPortal}
+            disabled={portalBusy}
+          >
             <CreditCard className="size-4" /> Manage billing
             <ExternalLink className="size-3.5" />
           </Button>
@@ -133,8 +158,9 @@ function PricingPage() {
             You have {TRIAL.daysLeft} days left in your free trial
           </p>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Trials include up to {TRIAL.uploadsAllowed} tenant certification uploads with a full AI compliance review,
-            findings and corrective measures. Choose a plan to keep unlimited reviews.
+            Trials include up to {TRIAL.uploadsAllowed} tenant certification
+            uploads with a full AI compliance review, findings and corrective
+            measures. Choose a plan to keep unlimited reviews.
           </p>
         </div>
       )}
@@ -154,10 +180,14 @@ function PricingPage() {
                 </Pill>
               )}
             </div>
-            <p className="mt-1 text-[12.5px] text-muted-foreground">{p.tagline}</p>
+            <p className="mt-1 text-[12.5px] text-muted-foreground">
+              {p.tagline}
+            </p>
             <p className="mt-4 font-display text-[34px] leading-none">
               <span className={p.featured ? "brand-text" : ""}>{p.price}</span>
-              <span className="text-[14px] font-normal text-muted-foreground">{p.cadence}</span>
+              <span className="text-[14px] font-normal text-muted-foreground">
+                {p.cadence}
+              </span>
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Pill tone="seal">
@@ -166,8 +196,9 @@ function PricingPage() {
               <span className="cite">{TRIAL_OFFER.blurb}</span>
             </div>
             <p className="mt-1.5 text-[12px] text-muted-foreground">
-              Starts free for {TRIAL_OFFER.days} days on this plan — mass upload your portfolio during the trial and keep
-              everything when you subscribe.
+              Starts free for {TRIAL_OFFER.days} days on this plan — mass upload
+              your portfolio during the trial and keep everything when you
+              subscribe.
             </p>
 
             <ul className="mt-5 space-y-2.5 border-t border-border pt-4">
@@ -192,18 +223,26 @@ function PricingPage() {
                   ? "Manage plan"
                   : p.cta}
             </Button>
-
           </Panel>
         ))}
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Premium add-ons" description="Recurring revenue layered on any plan" bodyClassName="p-0">
+        <Panel
+          title="Premium add-ons"
+          description="Recurring revenue layered on any plan"
+          bodyClassName="p-0"
+        >
           <ul className="divide-y divide-border">
             {ADDONS.map((a) => (
-              <li key={a.name} className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-3.5">
+              <li
+                key={a.name}
+                className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-3.5"
+              >
                 <span className="text-[13.5px]">{a.name}</span>
-                <span className="font-mono text-[12.5px] text-muted-foreground">{a.price}</span>
+                <span className="font-mono text-[12.5px] text-muted-foreground">
+                  {a.price}
+                </span>
               </li>
             ))}
           </ul>
@@ -224,7 +263,9 @@ function PricingPage() {
                     <span className="text-muted-foreground">{a.cadence}</span>
                   </span>
                 </div>
-                <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
+                <p className="mt-1 text-[12.5px] text-muted-foreground">
+                  {a.note}
+                </p>
                 <Button
                   size="sm"
                   variant="outline"
@@ -237,7 +278,6 @@ function PricingPage() {
                       a.name,
                     )
                   }
-
                 >
                   Add to my plan
                 </Button>
@@ -250,7 +290,6 @@ function PricingPage() {
             </Button>
           </div>
         </Panel>
-
       </div>
 
       <Panel
@@ -259,7 +298,9 @@ function PricingPage() {
         description="Every plan starts with a 7-day free trial"
         bodyClassName="p-5"
       >
-        <p className="text-[13.5px] leading-relaxed text-muted-foreground">{RETENTION_POLICY.detail}</p>
+        <p className="text-[13.5px] leading-relaxed text-muted-foreground">
+          {RETENTION_POLICY.detail}
+        </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button size="sm" asChild>
             <Link to="/trial">Open my trial plan</Link>
@@ -268,14 +309,17 @@ function PricingPage() {
       </Panel>
 
       <p className="mt-5 text-[12.5px] text-muted-foreground">
-        AI document processing is included as a monthly document allowance — no credits to track. Beyond the allowance,
-        extra certifications are billed at $3 per uploaded file on every plan.
+        AI document processing is included as a monthly document allowance — no
+        credits to track. Beyond the allowance, extra certifications are billed
+        at $3 per uploaded file on every plan.
       </p>
 
       <Dialog open={isOpen} onOpenChange={(open) => !open && closeCheckout()}>
         <DialogContent className="max-w-3xl overflow-y-auto sm:max-h-[88vh]">
           <DialogHeader>
-            <DialogTitle className="font-display">{label ? `Subscribe — ${label}` : "Checkout"}</DialogTitle>
+            <DialogTitle className="font-display">
+              {label ? `Subscribe — ${label}` : "Checkout"}
+            </DialogTitle>
           </DialogHeader>
           {checkoutElement}
         </DialogContent>
