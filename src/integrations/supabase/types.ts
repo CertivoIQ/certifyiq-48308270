@@ -97,7 +97,14 @@ export type Database = {
           next_followup_on: string | null
           notes: string | null
           owner: string | null
+          owner_manager_website: string | null
+          ownership_confidence: number | null
+          ownership_sources: string[]
+          ownership_verification_status: string
+          ownership_verified_at: string | null
           phone: string | null
+          property_owner_name: string | null
+          management_company_name: string | null
           plan: string | null
           programs: string[]
           properties: number
@@ -129,7 +136,14 @@ export type Database = {
           next_followup_on?: string | null
           notes?: string | null
           owner?: string | null
+          owner_manager_website?: string | null
+          ownership_confidence?: number | null
+          ownership_sources?: string[]
+          ownership_verification_status?: string
+          ownership_verified_at?: string | null
           phone?: string | null
+          property_owner_name?: string | null
+          management_company_name?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
@@ -161,7 +175,14 @@ export type Database = {
           next_followup_on?: string | null
           notes?: string | null
           owner?: string | null
+          owner_manager_website?: string | null
+          ownership_confidence?: number | null
+          ownership_sources?: string[]
+          ownership_verification_status?: string
+          ownership_verified_at?: string | null
           phone?: string | null
+          property_owner_name?: string | null
+          management_company_name?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
