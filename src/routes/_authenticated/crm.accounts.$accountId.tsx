@@ -11,7 +11,6 @@ import {
   MapPin,
   Phone,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 
 import { CrmShell } from "@/components/crm/crm-shell";
