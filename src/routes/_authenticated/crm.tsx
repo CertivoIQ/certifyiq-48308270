@@ -20,7 +20,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useIsStaff } from "@/hooks/use-session";
-import { Panel, Pill, Stat, Meter } from "@/components/ui-kit";
+import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
 import { CrmShell } from "@/components/crm/crm-shell";
@@ -157,7 +157,6 @@ function CrmDashboard() {
     const group = rows.filter((r) => r.stage === s);
     return { stage: s, count: group.length, arr: group.reduce((a, r) => a + Number(r.arr ?? 0), 0) };
   });
-  const maxArr = Math.max(...byStage.map((b) => b.arr), 1);
   const pipelineArr = rows.filter((r) => r.stage !== "lost" && r.stage !== "won").reduce((a, r) => a + Number(r.arr), 0);
   const wonArr = rows.filter((r) => r.stage === "won").reduce((a, r) => a + Number(r.arr), 0);
   const trialEnded = rows.filter((r) => r.stage === "trial ended");
@@ -343,8 +342,8 @@ function CrmDashboard() {
 
       <Panel
         className="mt-3"
-        title="Accounts & decision makers"
-        description="Enterprise and company leads with no active CertivoIQ subscription"
+        title="Verified accounts & decision makers"
+        description="Company names open a dedicated lead profile; public facts include their source and verification date"
         bodyClassName="p-0"
       >
         <ul className="divide-y divide-border">
@@ -359,7 +358,15 @@ function CrmDashboard() {
                 >
                   <Building2 className="size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-medium">{a.name}</p>
+                    <Link
+                      to="/crm/accounts/$accountId"
+                      params={{ accountId: a.id }}
+                      onClick={(event) => event.stopPropagation()}
+                      className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-emerald-950 underline-offset-4 hover:text-emerald-700 hover:underline dark:text-emerald-100"
+                    >
+                      {a.name}
+                      <Globe className="size-3.5 opacity-60" />
+                    </Link>
                     <p className="cite">
                       {Number(a.units).toLocaleString()} units · {a.hq ?? "—"} · {a.source ?? "—"}
                     </p>
