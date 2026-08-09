@@ -80,6 +80,130 @@ export type Database = {
         }
         Relationships: []
       }
+      correction_cases: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          created_by: string
+          detail: string | null
+          disposition: string | null
+          due_at: string
+          finding_ref: string
+          id: string
+          owner_responded_at: string | null
+          owner_response: string | null
+          quarantine_ack_at: string | null
+          quarantine_ack_by: string | null
+          status: Database["public"]["Enums"]["correction_case_status"]
+          submission_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by: string
+          detail?: string | null
+          disposition?: string | null
+          due_at: string
+          finding_ref: string
+          id?: string
+          owner_responded_at?: string | null
+          owner_response?: string | null
+          quarantine_ack_at?: string | null
+          quarantine_ack_by?: string | null
+          status?: Database["public"]["Enums"]["correction_case_status"]
+          submission_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          created_by?: string
+          detail?: string | null
+          disposition?: string | null
+          due_at?: string
+          finding_ref?: string
+          id?: string
+          owner_responded_at?: string | null
+          owner_response?: string | null
+          quarantine_ack_at?: string | null
+          quarantine_ack_by?: string | null
+          status?: Database["public"]["Enums"]["correction_case_status"]
+          submission_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "correction_cases_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      correction_evidence: {
+        Row: {
+          byte_size: number | null
+          correction_case_id: string
+          document_label: string | null
+          document_ref: string
+          id: string
+          mime_type: string | null
+          scan_status: string
+          sha256: string
+          storage_bucket: string | null
+          storage_path: string | null
+          storage_version: string | null
+          submitted_at: string
+          submitted_by: string
+        }
+        Insert: {
+          byte_size?: number | null
+          correction_case_id: string
+          document_label?: string | null
+          document_ref: string
+          id?: string
+          mime_type?: string | null
+          scan_status?: string
+          sha256: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          storage_version?: string | null
+          submitted_at?: string
+          submitted_by: string
+        }
+        Update: {
+          byte_size?: number | null
+          correction_case_id?: string
+          document_label?: string | null
+          document_ref?: string
+          id?: string
+          mime_type?: string | null
+          scan_status?: string
+          sha256?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          storage_version?: string | null
+          submitted_at?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "correction_evidence_correction_case_id_fkey"
+            columns: ["correction_case_id"]
+            isOneToOne: false
+            referencedRelation: "correction_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_accounts: {
         Row: {
           account_type: Database["public"]["Enums"]["crm_account_type"]
@@ -93,6 +217,7 @@ export type Database = {
           last_touch: string | null
           lead_score: number
           linkedin_url: string | null
+          management_company_name: string | null
           name: string
           next_followup_on: string | null
           notes: string | null
@@ -103,11 +228,10 @@ export type Database = {
           ownership_verification_status: string
           ownership_verified_at: string | null
           phone: string | null
-          property_owner_name: string | null
-          management_company_name: string | null
           plan: string | null
           programs: string[]
           properties: number
+          property_owner_name: string | null
           reminders_sent: number
           responded: boolean
           role: string | null
@@ -132,6 +256,7 @@ export type Database = {
           last_touch?: string | null
           lead_score?: number
           linkedin_url?: string | null
+          management_company_name?: string | null
           name: string
           next_followup_on?: string | null
           notes?: string | null
@@ -142,11 +267,10 @@ export type Database = {
           ownership_verification_status?: string
           ownership_verified_at?: string | null
           phone?: string | null
-          property_owner_name?: string | null
-          management_company_name?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
+          property_owner_name?: string | null
           reminders_sent?: number
           responded?: boolean
           role?: string | null
@@ -171,6 +295,7 @@ export type Database = {
           last_touch?: string | null
           lead_score?: number
           linkedin_url?: string | null
+          management_company_name?: string | null
           name?: string
           next_followup_on?: string | null
           notes?: string | null
@@ -181,11 +306,10 @@ export type Database = {
           ownership_verification_status?: string
           ownership_verified_at?: string | null
           phone?: string | null
-          property_owner_name?: string | null
-          management_company_name?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
+          property_owner_name?: string | null
           reminders_sent?: number
           responded?: boolean
           role?: string | null
@@ -489,6 +613,308 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      hfa_agencies: {
+        Row: {
+          authority_scope: Json
+          created_at: string
+          id: string
+          is_demo: boolean
+          name: string
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          authority_scope?: Json
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          name: string
+          state_code: string
+          updated_at?: string
+        }
+        Update: {
+          authority_scope?: Json
+          created_at?: string
+          id?: string
+          is_demo?: boolean
+          name?: string
+          state_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hfa_agency_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          agency_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          is_demo: boolean
+          revoked_at: string | null
+          revoked_by: string | null
+          role: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          agency_id: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by: string
+          is_demo?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          agency_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          is_demo?: boolean
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_agency_invitations_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hfa_agency_memberships: {
+        Row: {
+          agency_id: string
+          created_at: string
+          invited_at: string | null
+          invited_by: string | null
+          role: string
+          suspended_at: string | null
+          suspended_by: string | null
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_agency_memberships_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hfa_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_kind: string
+          agency_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+          submission_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_kind: string
+          agency_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          submission_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_kind?: string
+          agency_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          submission_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_audit_events_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_audit_events_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hfa_submission_grants: {
+        Row: {
+          agency_id: string
+          granted_at: string
+          granted_by: string
+          revoked_at: string | null
+          submission_id: string
+        }
+        Insert: {
+          agency_id: string
+          granted_at?: string
+          granted_by: string
+          revoked_at?: string | null
+          submission_id: string
+        }
+        Update: {
+          agency_id?: string
+          granted_at?: string
+          granted_by?: string
+          revoked_at?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_submission_grants_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_submission_grants_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hfa_submissions: {
+        Row: {
+          accepted_at: string | null
+          agency_id: string
+          certification_id: string | null
+          created_at: string
+          evidence_manifest_id: string | null
+          id: string
+          organization_id: string
+          owner_user_id: string
+          preflight: Json
+          previous_submission_id: string | null
+          program: string
+          property_id: string
+          property_name: string | null
+          readiness_score: number | null
+          reporting_period: string
+          status: Database["public"]["Enums"]["hfa_submission_status"]
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          agency_id: string
+          certification_id?: string | null
+          created_at?: string
+          evidence_manifest_id?: string | null
+          id?: string
+          organization_id: string
+          owner_user_id: string
+          preflight?: Json
+          previous_submission_id?: string | null
+          program: string
+          property_id: string
+          property_name?: string | null
+          readiness_score?: number | null
+          reporting_period: string
+          status?: Database["public"]["Enums"]["hfa_submission_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          agency_id?: string
+          certification_id?: string | null
+          created_at?: string
+          evidence_manifest_id?: string | null
+          id?: string
+          organization_id?: string
+          owner_user_id?: string
+          preflight?: Json
+          previous_submission_id?: string | null
+          program?: string
+          property_id?: string
+          property_name?: string | null
+          readiness_score?: number | null
+          reporting_period?: string
+          status?: Database["public"]["Enums"]["hfa_submission_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_submissions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_submissions_evidence_manifest_id_fkey"
+            columns: ["evidence_manifest_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_manifests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_submissions_previous_submission_id_fkey"
+            columns: ["previous_submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pms_connections: {
         Row: {
@@ -926,9 +1352,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agency_can_review_submission: {
+        Args: { _submission_id: string; _user_id: string }
+        Returns: boolean
+      }
+      agency_can_view_submission: {
+        Args: { _submission_id: string; _user_id: string }
+        Returns: boolean
+      }
       generate_support_case_number: { Args: never; Returns: string }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
+        Returns: boolean
+      }
+      has_agency_role: {
+        Args: { _agency_id: string; _roles: string[]; _user_id: string }
         Returns: boolean
       }
       has_role: {
@@ -938,9 +1376,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_agency_member: {
+        Args: { _agency_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "staff" | "user"
+      correction_case_status:
+        | "open"
+        | "owner_responded"
+        | "agency_review"
+        | "accepted"
+        | "reopened"
       coverage_status:
         | "federal_baseline"
         | "in_review"
@@ -954,6 +1402,13 @@ export type Database = {
         | "negotiation"
         | "won"
         | "lost"
+      hfa_submission_status:
+        | "draft"
+        | "submitted"
+        | "in_review"
+        | "correction_required"
+        | "accepted"
+        | "withdrawn"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1082,6 +1537,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["staff", "user"],
+      correction_case_status: [
+        "open",
+        "owner_responded",
+        "agency_review",
+        "accepted",
+        "reopened",
+      ],
       coverage_status: [
         "federal_baseline",
         "in_review",
@@ -1096,6 +1558,14 @@ export const Constants = {
         "negotiation",
         "won",
         "lost",
+      ],
+      hfa_submission_status: [
+        "draft",
+        "submitted",
+        "in_review",
+        "correction_required",
+        "accepted",
+        "withdrawn",
       ],
     },
   },
