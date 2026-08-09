@@ -28,13 +28,17 @@ export function createStripeClient(env: StripeEnv): Stripe {
     apiVersion: "2026-03-25.dahlia",
     httpClient: Stripe.createFetchHttpClient((input, init) => {
       const stripeUrl = input instanceof Request ? input.url : input.toString();
-      const gatewayUrl = stripeUrl.replace("https://api.stripe.com", GATEWAY_STRIPE_BASE);
+      const gatewayUrl = stripeUrl.replace(
+        "https://api.stripe.com",
+        GATEWAY_STRIPE_BASE,
+      );
       return fetch(gatewayUrl, {
         ...init,
         headers: {
           ...Object.fromEntries(
             new Headers(
-              init?.headers ?? (input instanceof Request ? input.headers : undefined),
+              init?.headers ??
+                (input instanceof Request ? input.headers : undefined),
             ).entries(),
           ),
           "X-Connection-Api-Key": connectionApiKey,
