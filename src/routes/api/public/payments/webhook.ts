@@ -21,6 +21,10 @@ function getSupabase() {
   return _supabase;
 }
 
+function assertDatabaseWrite(error: { message: string } | null, operation: string): void {
+  if (error) throw new Error(`${operation}: ${error.message}`);
+}
+
 function isoFromUnix(seconds: number | null | undefined): string | null {
   return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
@@ -84,11 +88,12 @@ async function releaseEvent(eventId: string): Promise<void> {
  */
 async function activateSubscriber(userId: string, env: StripeEnv) {
   const now = new Date().toISOString();
-  await getSupabase()
+  const { error } = await getSupabase()
     .from("account_access")
     .update({ subscribed_at: now, demo_data_cleared_at: now, updated_at: now })
     .eq("user_id", userId)
     .is("demo_data_cleared_at", null);
+  assertDatabaseWrite(error, "Could not record subscriber activation");
   console.log("Subscriber activated; demo dataset gated off", userId, env);
 }
 
@@ -108,9 +113,10 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
   }
 
   const row = subscriptionRow(subscription, env);
-  await supabase
+  const { error: subscriptionError } = await supabase
     .from("subscriptions")
     .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
+  assertDatabaseWrite(subscriptionError, "Could not store Stripe subscription");
 
   const plan = PLAN_ENTITLEMENTS[row.price_id];
   const isAddon = isAddonPrice(row.price_id);
@@ -157,7 +163,10 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     }
   }
 
-  await supabase.from("account_access").upsert(access, { onConflict: "user_id" });
+  const { error: accessError } = await supabase
+    .from("account_access")
+    .upsert(access, { onConflict: "user_id" });
+  assertDatabaseWrite(accessError, "Could not provision account access");
 
   // Verified subscription now active → subscriber, clean production dashboard.
   if (plan && row.status === "active") {
@@ -166,7 +175,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
 
   // A new billing period resets the metered AI document allowance.
   if (plan && active && row.current_period_start) {
-    await supabase.from("usage_counters").upsert(
+    const { error: usageError } = await supabase.from("usage_counters").upsert(
       {
         user_id: userId,
         environment: env,
@@ -183,6 +192,7 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
         ignoreDuplicates: true,
       },
     );
+    assertDatabaseWrite(usageError, "Could not initialize billing-period usage");
   }
 
   // Only announce and convert the CRM lead on the first plan activation.
@@ -221,12 +231,13 @@ async function applyPurchase(subscription: any, env: StripeEnv) {
     }
   }
 
-  await supabase.from("crm_news").insert({
+  const { error: crmNewsError } = await supabase.from("crm_news").insert({
     kind: "subscriber",
     headline: `New subscriber paid — ${accountName ?? contactEmail ?? "New customer"} on ${plan.name}`,
     detail: `${plan.name} subscription started. Trial converted, file retention hold cleared, LaunchPad onboarding started.`,
     source: "CertivoIQ Payments",
   });
+  if (crmNewsError) console.error("Could not record subscriber CRM event", crmNewsError);
 }
 
 /** Cancellation: access runs to the period end, then a 14-day file hold. */
@@ -234,21 +245,23 @@ async function applyCancellation(subscription: any, env: StripeEnv) {
   const supabase = getSupabase();
   const row = subscriptionRow(subscription, env);
 
-  await supabase
+  const { error: subscriptionError } = await supabase
     .from("subscriptions")
     .update({ ...row, status: "canceled" })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
+  assertDatabaseWrite(subscriptionError, "Could not store subscription cancellation");
 
   const userId = subscription.metadata?.userId;
   if (!userId) return;
 
   // An add-on ending must not revoke the platform plan.
   if (isAddonPrice(row.price_id)) {
-    await supabase
+    const { error: addonError } = await supabase
       .from("account_access")
       .update({ academy_seats: 0, updated_at: new Date().toISOString() })
       .eq("user_id", userId);
+    assertDatabaseWrite(addonError, "Could not remove canceled Academy access");
     return;
   }
 
@@ -257,7 +270,7 @@ async function applyCancellation(subscription: any, env: StripeEnv) {
     new Date(accessEnd).getTime() + FILE_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
 
-  await supabase
+  const { error: accessError } = await supabase
     .from("account_access")
     .update({
       status: "canceled",
@@ -266,6 +279,7 @@ async function applyCancellation(subscription: any, env: StripeEnv) {
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId);
+  assertDatabaseWrite(accessError, "Could not schedule canceled-account retention");
 }
 
 /** Recipient + display name for billing emails triggered by an invoice. */
@@ -353,7 +367,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
         const subId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
         if (subId) {
           const supabase = getSupabase();
-          await supabase
+          const { error: paymentFailureError } = await supabase
             .from("subscriptions")
             .update({
               status: "past_due",
@@ -361,6 +375,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
             })
             .eq("stripe_subscription_id", subId)
             .eq("environment", env);
+          assertDatabaseWrite(paymentFailureError, "Could not store failed-payment status");
         }
         await notify(invoice, "failed");
         break;
