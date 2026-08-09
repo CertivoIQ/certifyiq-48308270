@@ -88,6 +88,9 @@ export function CrmShell({
               <Link to="/crm">Pipeline</Link>
             </Button>
             <Button size="sm" variant="ghost" asChild>
+              <Link to="/crm-documents">Documents</Link>
+            </Button>
+            <Button size="sm" variant="ghost" asChild>
               <Link to="/crm-support">Support</Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
