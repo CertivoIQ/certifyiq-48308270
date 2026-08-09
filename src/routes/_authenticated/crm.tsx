@@ -346,15 +346,15 @@ function CrmDashboard() {
         description="Company names open a dedicated lead profile; public facts include their source and verification date"
         bodyClassName="p-0"
       >
-        <ul className="divide-y divide-border">
+        <ul className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((a) => {
             const people = (contacts.data ?? []).filter((c) => c.account_id === a.id);
             return (
-              <li key={a.id}>
+              <li key={a.id} className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-emerald-950/20">
                 <button
                   type="button"
                   onClick={() => setOpenId(openId === a.id ? null : a.id)}
-                  className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 text-left transition hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30"
+                  className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-5 py-5 text-left transition hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30"
                 >
                   <Building2 className="size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
@@ -374,8 +374,8 @@ function CrmDashboard() {
                   <Pill tone={STAGE_TONE[a.stage]} className="capitalize">
                     {a.stage}
                   </Pill>
-                  <span className="font-mono text-[12.5px] text-muted-foreground">
-                    {money(Number(a.arr))}/yr · {a.plan ?? "—"}
+                  <span className="w-full rounded-lg bg-emerald-50 px-3 py-2 font-mono text-[12px] text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
+                    {Number(a.arr) > 0 ? `${money(Number(a.arr))}/yr · ${a.plan ?? "Plan pending"}` : "Research lead · value after qualification"}
                   </span>
                   <span className="cite w-24 text-right">{a.owner ?? "Unassigned"}</span>
                 </button>
