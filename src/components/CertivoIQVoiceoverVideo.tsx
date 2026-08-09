@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+} from "react";
 import {
   AlertTriangle,
   BarChart3,
@@ -238,7 +244,10 @@ export default function CertivoIQVoiceoverVideo({
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
               CertivoIQ in about 60 seconds
             </p>
-            <h2 id="certivo-video-title" className="mt-2 text-2xl font-semibold sm:text-3xl">
+            <h2
+              id="certivo-video-title"
+              className="mt-2 text-2xl font-semibold sm:text-3xl"
+            >
               Watch a certification become an audit-ready decision
             </h2>
           </div>
@@ -271,7 +280,10 @@ export default function CertivoIQVoiceoverVideo({
           />
 
           <div className="relative grid h-full items-center gap-7 p-7 pb-32 md:grid-cols-[.9fr_1.1fr] md:p-11 md:pb-32">
-            <div key={`copy-${scene}`} className="animate-in fade-in slide-in-from-left-4 duration-500">
+            <div
+              key={`copy-${scene}`}
+              className="animate-in fade-in slide-in-from-left-4 duration-500"
+            >
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-300">
                 {current.eyebrow}
               </p>
@@ -282,13 +294,19 @@ export default function CertivoIQVoiceoverVideo({
                 {current.body}
               </p>
             </div>
-            <div key={`visual-${scene}`} className="animate-in fade-in zoom-in-95 duration-500">
+            <div
+              key={`visual-${scene}`}
+              className="animate-in fade-in zoom-in-95 duration-500"
+            >
               <Visual />
             </div>
           </div>
 
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent px-5 pb-5 pt-12">
-            <div className="mb-4 grid grid-cols-6 gap-2" aria-label={`Scene ${scene + 1} of ${scenes.length}`}>
+            <div
+              className="mb-4 grid grid-cols-6 gap-2"
+              aria-label={`Scene ${scene + 1} of ${scenes.length}`}
+            >
               {scenes.map((item, index) => (
                 <button
                   key={item.title}
@@ -319,7 +337,11 @@ export default function CertivoIQVoiceoverVideo({
                   className="grid h-11 w-11 place-items-center rounded-full bg-white text-slate-950"
                   aria-label={playing ? "Pause video" : "Play video"}
                 >
-                  {playing ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
+                  {playing ? (
+                    <Pause className="h-5 w-5" />
+                  ) : (
+                    <Play className="ml-0.5 h-5 w-5" />
+                  )}
                 </button>
                 <button
                   type="button"
@@ -335,7 +357,11 @@ export default function CertivoIQVoiceoverVideo({
                   className="grid h-10 w-10 place-items-center rounded-full text-slate-300 hover:bg-white/10"
                   aria-label={muted ? "Unmute narration" : "Mute narration"}
                 >
-                  {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                  {muted ? (
+                    <VolumeX className="h-5 w-5" />
+                  ) : (
+                    <Volume2 className="h-5 w-5" />
+                  )}
                 </button>
               </div>
               <span className="text-right text-xs font-medium text-slate-400">
@@ -355,7 +381,9 @@ export default function CertivoIQVoiceoverVideo({
             onTimeUpdate={(event) => {
               const audio = event.currentTarget;
               if (Number.isFinite(audio.duration) && audio.duration > 0) {
-                setSceneProgress(Math.min(audio.currentTime / audio.duration, 1));
+                setSceneProgress(
+                  Math.min(audio.currentTime / audio.duration, 1),
+                );
               }
             }}
             onError={() => {
@@ -367,12 +395,15 @@ export default function CertivoIQVoiceoverVideo({
 
         {audioError && (
           <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
-            The narration track is temporarily unavailable. The complete transcript remains available below.
+            The narration track is temporarily unavailable. The complete
+            transcript remains available below.
           </p>
         )}
 
         <details className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4 text-sm text-slate-300">
-          <summary className="cursor-pointer font-semibold text-white">Read video transcript</summary>
+          <summary className="cursor-pointer font-semibold text-white">
+            Read video transcript
+          </summary>
           <ol className="mt-3 list-decimal space-y-2 pl-5">
             {transcript.map((line) => (
               <li key={line}>{line}</li>
@@ -384,11 +415,19 @@ export default function CertivoIQVoiceoverVideo({
   );
 }
 
-function StageCard({ children, label }: { children: React.ReactNode; label: string }) {
+function StageCard({
+  children,
+  label,
+}: {
+  children: React.ReactNode;
+  label: string;
+}) {
   return (
     <div className="relative mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-white/15 bg-slate-900/85 p-5 shadow-2xl">
       <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+          {label}
+        </span>
         <span className="flex gap-1.5" aria-hidden="true">
           <span className="size-2 rounded-full bg-cyan-300" />
           <span className="size-2 rounded-full bg-amber-300" />
@@ -433,7 +472,11 @@ function ExtractVisual() {
           <div className="h-3 w-28 rounded bg-slate-300" />
           <div className="mt-5 space-y-3">
             {[72, 94, 82, 88, 64].map((width, index) => (
-              <div key={width} className="relative h-2 rounded bg-slate-200" style={{ width: `${width}%` }}>
+              <div
+                key={width}
+                className="relative h-2 rounded bg-slate-200"
+                style={{ width: `${width}%` }}
+              >
                 {(index === 1 || index === 3) && (
                   <span className="absolute -inset-1 rounded bg-cyan-300/45" />
                 )}
@@ -449,8 +492,13 @@ function ExtractVisual() {
             ["Verification age", "42 days"],
             ["Confidence", "98.7%"],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-              <p className="text-[10px] uppercase tracking-wide text-slate-500">{label}</p>
+            <div
+              key={label}
+              className="rounded-lg border border-white/10 bg-white/[0.04] p-3"
+            >
+              <p className="text-[10px] uppercase tracking-wide text-slate-500">
+                {label}
+              </p>
               <p className="mt-1 text-sm font-semibold text-white">{value}</p>
             </div>
           ))}
@@ -465,18 +513,25 @@ function RulesVisual() {
     <StageCard label="Versioned rule engine">
       <div className="relative min-h-56">
         <div className="absolute inset-y-4 left-0 flex w-36 flex-col justify-around">
-          {["LIHTC", "HOME", "SECTION 8", "HOTMA", "STATE PACK"].map((program) => (
-            <span key={program} className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-semibold text-slate-300">
-              {program}
-            </span>
-          ))}
+          {["LIHTC", "HOME", "SECTION 8", "HOTMA", "STATE PACK"].map(
+            (program) => (
+              <span
+                key={program}
+                className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-semibold text-slate-300"
+              >
+                {program}
+              </span>
+            ),
+          )}
         </div>
         <div className="absolute left-40 right-28 top-1/2 h-px bg-gradient-to-r from-cyan-300/10 via-cyan-300 to-cyan-300/10">
           <span className="certivo-flow absolute -top-1.5 size-3 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(34,211,238,.9)]" />
         </div>
         <div className="absolute right-0 top-1/2 grid size-24 -translate-y-1/2 place-items-center rounded-2xl border border-cyan-300/30 bg-cyan-300/10 text-center">
           <ShieldCheck className="size-9 text-cyan-300" />
-          <span className="text-[10px] font-semibold text-cyan-100">RULE DECISION</span>
+          <span className="text-[10px] font-semibold text-cyan-100">
+            RULE DECISION
+          </span>
         </div>
       </div>
     </StageCard>
@@ -491,19 +546,31 @@ function FindingsVisual() {
           <AlertTriangle className="mt-0.5 size-5 shrink-0 text-rose-300" />
           <div>
             <p className="font-semibold text-white">Verification is expired</p>
-            <p className="mt-1 text-xs leading-relaxed text-slate-400">Third-party income verification exceeds the permitted age.</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">
+              Third-party income verification exceeds the permitted age.
+            </p>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-cyan-300">Authority</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-cyan-300">
+              Authority
+            </p>
             <p className="mt-2 text-sm text-white">Rule version 2026.08</p>
-            <p className="mt-1 text-xs text-slate-400">Source page and citation attached</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Source page and citation attached
+            </p>
           </div>
           <div className="rounded-xl border border-amber-300/25 bg-amber-300/10 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-200">Correction</p>
-            <p className="mt-2 text-sm text-white">Obtain a current verification</p>
-            <p className="mt-1 text-xs text-slate-400">Recalculate before approval</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+              Correction
+            </p>
+            <p className="mt-2 text-sm text-white">
+              Obtain a current verification
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Recalculate before approval
+            </p>
           </div>
         </div>
       </div>
@@ -521,8 +588,12 @@ function ApprovalVisual() {
               <UserCheck className="size-6 text-blue-300" />
             </span>
             <div>
-              <p className="font-semibold text-white">Compliance specialist review</p>
-              <p className="mt-1 text-xs text-slate-400">All corrections acknowledged</p>
+              <p className="font-semibold text-white">
+                Compliance specialist review
+              </p>
+              <p className="mt-1 text-xs text-slate-400">
+                All corrections acknowledged
+              </p>
             </div>
           </div>
           <div className="mt-5 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3">
@@ -548,7 +619,9 @@ function PortfolioVisual() {
         <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-slate-500">Readiness trend</p>
+              <p className="text-[10px] uppercase tracking-wide text-slate-500">
+                Readiness trend
+              </p>
               <p className="mt-1 text-2xl font-semibold text-white">94%</p>
             </div>
             <BarChart3 className="size-6 text-cyan-300" />
@@ -558,7 +631,10 @@ function PortfolioVisual() {
               <span
                 key={height}
                 className="certivo-rise flex-1 rounded-t bg-gradient-to-t from-blue-600 to-cyan-300"
-                style={{ height: `${height}%`, animationDelay: `${index * 90}ms` }}
+                style={{
+                  height: `${height}%`,
+                  animationDelay: `${index * 90}ms`,
+                }}
               />
             ))}
           </div>
@@ -569,8 +645,13 @@ function PortfolioVisual() {
             ["Corrections due", "4"],
             ["Audit-ready files", "185"],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
-              <p className="text-[10px] uppercase tracking-wide text-slate-500">{label}</p>
+            <div
+              key={label}
+              className="rounded-xl border border-white/10 bg-white/[0.04] p-3"
+            >
+              <p className="text-[10px] uppercase tracking-wide text-slate-500">
+                {label}
+              </p>
               <p className="mt-1 text-xl font-semibold text-white">{value}</p>
             </div>
           ))}
