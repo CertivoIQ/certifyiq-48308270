@@ -53,20 +53,25 @@ function subscriptionRow(subscription: any, env: StripeEnv) {
 }
 
 /**
- * Claim a Stripe event id. Returns true only for the first caller, so any
- * one-time activation side effect runs exactly once per event.
+ * Claim a signed Stripe event before applying any side effect. Duplicate
+ * deliveries are acknowledged without sending a second email or CRM event.
+ * A failed handler releases the claim so Stripe can retry it.
  */
-async function claimEvent(eventId: string | undefined, eventType: string): Promise<boolean> {
-  if (!eventId) return true;
+async function claimEvent(eventId: string, eventType: string): Promise<boolean> {
   const { error } = await getSupabase()
     .from("stripe_processed_events")
     .insert({ event_id: eventId, event_type: eventType });
-  if (error) {
-    // 23505 = unique violation → this event was already applied.
-    if ((error as { code?: string }).code === "23505") return false;
-    console.error("Event ledger write failed", eventId, error);
-  }
-  return true;
+  if (!error) return true;
+  if ((error as { code?: string }).code === "23505") return false;
+  throw new Error(`Could not claim Stripe event ${eventId}: ${error.message}`);
+}
+
+async function releaseEvent(eventId: string): Promise<void> {
+  const { error } = await getSupabase()
+    .from("stripe_processed_events")
+    .delete()
+    .eq("event_id", eventId);
+  if (error) console.error("Could not release failed Stripe event", eventId, error);
 }
 
 /**
@@ -77,8 +82,7 @@ async function claimEvent(eventId: string | undefined, eventType: string): Promi
  * dataset off for this user. Real, user-created data is never touched.
  * Billing stays per-user; no org/files/storage architecture is introduced.
  */
-async function activateSubscriber(userId: string, env: StripeEnv, eventId?: string, eventType = "") {
-  if (!(await claimEvent(eventId, eventType))) return;
+async function activateSubscriber(userId: string, env: StripeEnv) {
   const now = new Date().toISOString();
   await getSupabase()
     .from("account_access")
@@ -95,7 +99,7 @@ async function activateSubscriber(userId: string, env: StripeEnv, eventId?: stri
  *  - convert the matching CRM lead to "won" and announce it on the ticker
  *  - queue the welcome email + start the LaunchPad onboarding wizard
  */
-async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: string; type?: string }) {
+async function applyPurchase(subscription: any, env: StripeEnv) {
 
   const supabase = getSupabase();
   const userId = subscription.metadata?.userId;
@@ -158,7 +162,7 @@ async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: s
 
   // Verified subscription now active → subscriber, clean production dashboard.
   if (plan && row.status === "active") {
-    await activateSubscriber(userId, env, event?.id, event?.type ?? "");
+    await activateSubscriber(userId, env);
   }
 
 
@@ -315,11 +319,13 @@ async function notify(invoice: any, kind: "created" | "paid" | "failed") {
 
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
+  if (!(await claimEvent(event.id, event.type))) return;
 
-  switch (event.type) {
+  try {
+    switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
-      await applyPurchase(event.data.object, env, event as { id?: string; type?: string });
+      await applyPurchase(event.data.object, env);
       break;
     case "customer.subscription.deleted":
       await applyCancellation(event.data.object, env);
@@ -362,6 +368,10 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     default:
       console.log("Unhandled payments event:", event.type);
+    }
+  } catch (error) {
+    await releaseEvent(event.id);
+    throw error;
   }
 }
 
@@ -373,7 +383,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
         const rawEnv = new URL(request.url).searchParams.get("env");
         if (rawEnv !== "sandbox" && rawEnv !== "live") {
           console.error("Webhook received with invalid env parameter:", rawEnv);
-          return Response.json({ received: true, ignored: "invalid env" });
+          return Response.json({ received: false, error: "invalid env" }, { status: 400 });
         }
         try {
           await handleWebhook(request, rawEnv);
