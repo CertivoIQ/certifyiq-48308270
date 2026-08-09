@@ -124,23 +124,8 @@ export default function CertivoIQVoiceoverVideo({
   const overallProgress = ((scene + sceneProgress) / scenes.length) * 100;
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.muted = muted;
-  }, [muted]);
-
-  useEffect(() => {
     setSceneProgress(0);
     setAudioError(false);
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.load();
-    if (playing) {
-      void audio.play().catch(() => {
-        setPlaying(false);
-        setAudioError(true);
-      });
-    }
   }, [scene]);
 
   const togglePlayback = async () => {
@@ -372,8 +357,15 @@ export default function CertivoIQVoiceoverVideo({
             src={current.audioSrc}
             preload="metadata"
             muted={muted}
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
+            autoPlay={playing}
+            onCanPlay={(event) => {
+              if (playing) {
+                void event.currentTarget.play().catch(() => {
+                  setPlaying(false);
+                  setAudioError(true);
+                });
+              }
+            }}
             onEnded={handleEnded}
             onTimeUpdate={(event) => {
               const audio = event.currentTarget;
