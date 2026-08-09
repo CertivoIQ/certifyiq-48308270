@@ -30,6 +30,22 @@ export const Route = createFileRoute("/_authenticated/crm/accounts/$accountId")(
   component: CrmAccountProfile,
 });
 
+function SourceLinkedText({ value }: { value: string }) {
+  return (
+    <>
+      {value.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
+        part.startsWith("http") ? (
+          <a key={`${part}-${index}`} href={part} target="_blank" rel="noreferrer noopener" className="font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-4 hover:text-emerald-900">
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 function CrmAccountProfile() {
   const { accountId } = Route.useParams();
   const { isStaff, loading, email } = useIsStaff();
@@ -140,7 +156,7 @@ function CrmAccountProfile() {
 
           <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
             <Panel title="Verified company & property research" description={lead.source ?? "No verification source recorded"}>
-              <div className="whitespace-pre-wrap text-sm leading-7 text-foreground">{lead.notes || "No research notes recorded."}</div>
+              <div className="whitespace-pre-wrap text-sm leading-7 text-foreground">{lead.notes ? <SourceLinkedText value={lead.notes} /> : "No research notes recorded."}</div>
               {linkTo(lead.website) && (
                 <a href={linkTo(lead.website)!} target="_blank" rel="noreferrer noopener" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:underline">
                   Open primary source <ExternalLink className="size-3.5" />
