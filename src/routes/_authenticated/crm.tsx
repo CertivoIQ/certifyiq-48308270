@@ -44,7 +44,6 @@ import {
   type Template,
 } from "@/lib/crm";
 
-
 export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({
     meta: [
@@ -57,7 +56,8 @@ export const Route = createFileRoute("/_authenticated/crm")({
       { property: "og:title", content: "CertivoIQ CRM Dashboard" },
       {
         property: "og:description",
-        content: "Staff-only pipeline, account profiles and marketing distribution for CertivoIQ.",
+        content:
+          "Staff-only pipeline, account profiles and marketing distribution for CertivoIQ.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -73,7 +73,10 @@ function CrmDashboard() {
     queryKey: ["crm", "accounts"],
     enabled: isStaff,
     queryFn: async (): Promise<Account[]> => {
-      const { data, error } = await supabase.from("crm_accounts").select("*").order("arr", { ascending: false });
+      const { data, error } = await supabase
+        .from("crm_accounts")
+        .select("*")
+        .order("arr", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -82,7 +85,10 @@ function CrmDashboard() {
     queryKey: ["crm", "contacts"],
     enabled: isStaff,
     queryFn: async (): Promise<Contact[]> => {
-      const { data, error } = await supabase.from("crm_contacts").select("*").order("name");
+      const { data, error } = await supabase
+        .from("crm_contacts")
+        .select("*")
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -91,7 +97,10 @@ function CrmDashboard() {
     queryKey: ["crm", "campaigns"],
     enabled: isStaff,
     queryFn: async (): Promise<Campaign[]> => {
-      const { data, error } = await supabase.from("crm_campaigns").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("crm_campaigns")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -100,7 +109,10 @@ function CrmDashboard() {
     queryKey: ["crm", "templates"],
     enabled: isStaff,
     queryFn: async (): Promise<Template[]> => {
-      const { data, error } = await supabase.from("crm_templates").select("*").order("name");
+      const { data, error } = await supabase
+        .from("crm_templates")
+        .select("*")
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -138,7 +150,10 @@ function CrmDashboard() {
   const [mailMergeOpen, setMailMergeOpen] = useState(false);
   const [stage, setStage] = useState<Stage | "all">("all");
   const [openId, setOpenId] = useState<string | null>(null);
-  const [accountDialog, setAccountDialog] = useState<{ open: boolean; account: Account | null }>({
+  const [accountDialog, setAccountDialog] = useState<{
+    open: boolean;
+    account: Account | null;
+  }>({
     open: false,
     account: null,
   });
@@ -150,38 +165,73 @@ function CrmDashboard() {
   }>({ open: false, campaign: null, templateId: null });
 
   const rows = accounts.data ?? [];
-  const filtered = useMemo(() => (stage === "all" ? rows : rows.filter((r) => r.stage === stage)), [rows, stage]);
+  const filtered = useMemo(
+    () => (stage === "all" ? rows : rows.filter((r) => r.stage === stage)),
+    [rows, stage],
+  );
 
   const byStage = STAGES.map((s) => {
     const group = rows.filter((r) => r.stage === s);
-    return { stage: s, count: group.length, arr: group.reduce((a, r) => a + Number(r.arr ?? 0), 0) };
+    return {
+      stage: s,
+      count: group.length,
+      arr: group.reduce((a, r) => a + Number(r.arr ?? 0), 0),
+    };
   });
-  const pipelineArr = rows.filter((r) => r.stage !== "lost" && r.stage !== "won").reduce((a, r) => a + Number(r.arr), 0);
-  const wonArr = rows.filter((r) => r.stage === "won").reduce((a, r) => a + Number(r.arr), 0);
+  const pipelineArr = rows
+    .filter((r) => r.stage !== "lost" && r.stage !== "won")
+    .reduce((a, r) => a + Number(r.arr), 0);
+  const wonArr = rows
+    .filter((r) => r.stage === "won")
+    .reduce((a, r) => a + Number(r.arr), 0);
   const trialEnded = rows.filter((r) => r.stage === "trial ended");
 
   return (
-    <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
+    <CrmShell
+      email={email}
+      isStaff={isStaff}
+      loading={loading}
+      newsItems={news.data ?? []}
+    >
       <section className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-gradient-to-br from-emerald-950 via-emerald-900 to-green-700 p-6 text-white shadow-xl shadow-emerald-950/10 sm:p-8">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-200">Revenue command center</p>
-            <h2 className="mt-2 max-w-2xl font-sans text-3xl font-semibold tracking-tight leading-tight sm:text-4xl">Turn verified affordable-housing research into trusted relationships.</h2>
-            <p className="mt-3 max-w-2xl text-sm text-emerald-100/80">Public facts are source-linked. Contacts remain unverified until reviewed by staff, and sales forecasts stay separate from portfolio facts.</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-200">
+              Revenue command center
+            </p>
+            <h2 className="mt-2 max-w-2xl font-sans text-3xl font-semibold tracking-tight leading-tight sm:text-4xl">
+              Turn verified affordable-housing research into trusted
+              relationships.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm text-emerald-100/80">
+              Public facts are source-linked. Contacts remain unverified until
+              reviewed by staff, and sales forecasts stay separate from
+              portfolio facts.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
               className="bg-white text-emerald-950 hover:bg-emerald-50"
-              onClick={() => document.getElementById("crm-leads")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() =>
+                document
+                  .getElementById("crm-leads")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
             >
               <Mail className="size-4" /> Compose email
             </Button>
-            <Button className="border border-white/30 bg-white/10 text-white hover:bg-white/20" asChild>
+            <Button
+              className="border border-white/30 bg-white/10 text-white hover:bg-white/20"
+              asChild
+            >
               <Link to="/crm-documents">
                 <FolderOpen className="size-4" /> Documents
               </Link>
             </Button>
-            <Button className="border border-white/30 bg-white/10 text-white hover:bg-white/20" onClick={() => setAccountDialog({ open: true, account: null })}>
+            <Button
+              className="border border-white/30 bg-white/10 text-white hover:bg-white/20"
+              onClick={() => setAccountDialog({ open: true, account: null })}
+            >
               <Plus className="size-4" /> Add verified account
             </Button>
           </div>
@@ -189,14 +239,36 @@ function CrmDashboard() {
       </section>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Qualified pipeline ARR" value={money(pipelineArr)} hint={`${rows.filter((r) => Number(r.arr) > 0).length} valued opportunities`} />
-        <Stat label="Closed won ARR" value={money(wonArr)} hint={`${byStage.find((b) => b.stage === "won")?.count ?? 0} subscribed`} />
-        <Stat label="Trial follow-ups" value={String(trialEnded.length)} hint="Reminder due after expiry" />
-        <Stat label="Active campaigns" value={String((campaigns.data ?? []).filter((c) => c.status !== "draft").length)} hint={`${(templates.data ?? []).length} templates ready`} />
+        <Stat
+          label="Qualified pipeline ARR"
+          value={money(pipelineArr)}
+          hint={`${rows.filter((r) => Number(r.arr) > 0).length} valued opportunities`}
+        />
+        <Stat
+          label="Closed won ARR"
+          value={money(wonArr)}
+          hint={`${byStage.find((b) => b.stage === "won")?.count ?? 0} subscribed`}
+        />
+        <Stat
+          label="Trial follow-ups"
+          value={String(trialEnded.length)}
+          hint="Reminder due after expiry"
+        />
+        <Stat
+          label="Active campaigns"
+          value={String(
+            (campaigns.data ?? []).filter((c) => c.status !== "draft").length,
+          )}
+          hint={`${(templates.data ?? []).length} templates ready`}
+        />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.15fr]">
-        <Panel title="Pipeline by stage" description="Annualized contract value in each stage" bodyClassName="p-5">
+        <Panel
+          title="Pipeline by stage"
+          description="Annualized contract value in each stage"
+          bodyClassName="p-5"
+        >
           <div className="grid gap-2 sm:grid-cols-2">
             {byStage.map((b) => {
               const stageColor: Record<Stage, string> = {
@@ -208,14 +280,26 @@ function CrmDashboard() {
                 lost: "border-rose-200 bg-rose-50 text-rose-800",
               };
               return (
-                <button key={b.stage} type="button" onClick={() => setStage(b.stage)}
-                  className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${stageColor[b.stage]}`}>
+                <button
+                  key={b.stage}
+                  type="button"
+                  onClick={() => setStage(b.stage)}
+                  className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${stageColor[b.stage]}`}
+                >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-semibold uppercase tracking-wide">{b.stage}</span>
-                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-mono text-xs">{b.count}</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide">
+                      {b.stage}
+                    </span>
+                    <span className="rounded-full bg-white/70 px-2 py-0.5 font-mono text-xs">
+                      {b.count}
+                    </span>
                   </div>
-                  <p className="mt-3 font-sans text-xl font-semibold">{money(b.arr)}</p>
-                  <p className="mt-1 text-[11px] opacity-70">Annualized opportunity value</p>
+                  <p className="mt-3 font-sans text-xl font-semibold">
+                    {money(b.arr)}
+                  </p>
+                  <p className="mt-1 text-[11px] opacity-70">
+                    Annualized opportunity value
+                  </p>
                 </button>
               );
             })}
@@ -227,7 +311,16 @@ function CrmDashboard() {
           description="Built from compliance-event templates and distributed to non-subscribers"
           bodyClassName="p-0"
           actions={
-            <Button size="sm" onClick={() => setCampaignDialog({ open: true, campaign: null, templateId: null })}>
+            <Button
+              size="sm"
+              onClick={() =>
+                setCampaignDialog({
+                  open: true,
+                  campaign: null,
+                  templateId: null,
+                })
+              }
+            >
               <Plus className="size-4" /> New campaign
             </Button>
           }
@@ -236,23 +329,36 @@ function CrmDashboard() {
             {(campaigns.data ?? []).map((c) => (
               <li key={c.id} className="px-5 py-3.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-sans text-[14.5px] font-semibold">{c.name}</span>
-                  <Pill tone={c.status === "draft" ? "neutral" : "seal"}>{c.status}</Pill>
+                  <span className="font-sans text-[14.5px] font-semibold">
+                    {c.name}
+                  </span>
+                  <Pill tone={c.status === "draft" ? "neutral" : "seal"}>
+                    {c.status}
+                  </Pill>
                   <Button
                     size="sm"
                     variant="ghost"
                     className="ml-auto"
-                    onClick={() => setCampaignDialog({ open: true, campaign: c, templateId: null })}
+                    onClick={() =>
+                      setCampaignDialog({
+                        open: true,
+                        campaign: c,
+                        templateId: null,
+                      })
+                    }
                   >
                     <Pencil className="size-3.5" /> Edit
                   </Button>
                 </div>
                 <p className="cite mt-1">
-                  {c.compliance_event ?? "General outreach"} · {c.audience ?? "All non-subscribers"}
+                  {c.compliance_event ?? "General outreach"} ·{" "}
+                  {c.audience ?? "All non-subscribers"}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[12px] text-muted-foreground">
                   <span>{c.sent} sent</span>
-                  <span>{c.sent ? Math.round((c.opened / c.sent) * 100) : 0}% opened</span>
+                  <span>
+                    {c.sent ? Math.round((c.opened / c.sent) * 100) : 0}% opened
+                  </span>
                   <span className="text-primary">{c.clicked} clicked</span>
                   <span className="text-seal">{c.converted} subscribed</span>
                 </div>
@@ -287,22 +393,34 @@ function CrmDashboard() {
           </div>
         }
       >
-
         <ul className="divide-y divide-border">
           {(templates.data ?? []).map((t) => (
-            <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5">
+            <li
+              key={t.id}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5"
+            >
               <FileText className="size-4 shrink-0 text-gold" />
               <div className="min-w-0 flex-1">
                 <p className="text-[13.5px] font-medium">{t.name}</p>
                 <p className="cite">
                   {t.category ?? "email"} · {t.compliance_event ?? "evergreen"}
                 </p>
-                {t.subject && <p className="mt-1 text-[12.5px] text-muted-foreground">Subject: {t.subject}</p>}
+                {t.subject && (
+                  <p className="mt-1 text-[12.5px] text-muted-foreground">
+                    Subject: {t.subject}
+                  </p>
+                )}
               </div>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setCampaignDialog({ open: true, campaign: null, templateId: t.id })}
+                onClick={() =>
+                  setCampaignDialog({
+                    open: true,
+                    campaign: null,
+                    templateId: t.id,
+                  })
+                }
               >
                 <Send className="size-4" /> Use & distribute
               </Button>
@@ -334,7 +452,11 @@ function CrmDashboard() {
             {s}
           </Button>
         ))}
-        <Button size="sm" className="ml-auto" onClick={() => setAccountDialog({ open: true, account: null })}>
+        <Button
+          size="sm"
+          className="ml-auto"
+          onClick={() => setAccountDialog({ open: true, account: null })}
+        >
           <Plus className="size-4" /> New account profile
         </Button>
       </div>
@@ -347,15 +469,21 @@ function CrmDashboard() {
       >
         <ul className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((a) => {
-            const people = (contacts.data ?? []).filter((c) => c.account_id === a.id);
+            const people = (contacts.data ?? []).filter(
+              (c) => c.account_id === a.id,
+            );
             return (
-              <li key={a.id} className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-emerald-950/20">
+              <li
+                key={a.id}
+                className="overflow-hidden rounded-2xl border border-emerald-900/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-emerald-950/20"
+              >
                 <div
                   role="button"
                   tabIndex={0}
                   onClick={() => setOpenId(openId === a.id ? null : a.id)}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") setOpenId(openId === a.id ? null : a.id);
+                    if (event.key === "Enter" || event.key === " ")
+                      setOpenId(openId === a.id ? null : a.id);
                   }}
                   className="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-2 px-5 py-5 text-left transition hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30"
                 >
@@ -371,16 +499,21 @@ function CrmDashboard() {
                       <Globe className="size-3.5 opacity-60" />
                     </Link>
                     <p className="cite">
-                      {Number(a.units).toLocaleString()} units · {a.hq ?? "—"} · {a.source ?? "—"}
+                      {Number(a.units).toLocaleString()} units · {a.hq ?? "—"} ·{" "}
+                      {a.source ?? "—"}
                     </p>
                   </div>
                   <Pill tone={STAGE_TONE[a.stage]} className="capitalize">
                     {a.stage}
                   </Pill>
                   <span className="w-full rounded-lg bg-emerald-50 px-3 py-2 font-mono text-[12px] text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
-                    {Number(a.arr) > 0 ? `${money(Number(a.arr))}/yr · ${a.plan ?? "Plan pending"}` : "Research lead · value after qualification"}
+                    {Number(a.arr) > 0
+                      ? `${money(Number(a.arr))}/yr · ${a.plan ?? "Plan pending"}`
+                      : "Research lead · value after qualification"}
                   </span>
-                  <span className="cite w-24 text-right">{a.owner ?? "Unassigned"}</span>
+                  <span className="cite w-24 text-right">
+                    {a.owner ?? "Unassigned"}
+                  </span>
                 </div>
 
                 {openId === a.id && (
@@ -407,7 +540,9 @@ function CrmDashboard() {
                         </a>
                       )}
                       <span>Last touch: {a.last_touch ?? "—"}</span>
-                      {a.trial_ended_on && <span>Trial ended: {a.trial_ended_on}</span>}
+                      {a.trial_ended_on && (
+                        <span>Trial ended: {a.trial_ended_on}</span>
+                      )}
                       <span>{a.reminders_sent ?? 0} reminder emails sent</span>
                     </div>
 
@@ -419,18 +554,23 @@ function CrmDashboard() {
 
                     <ul className="mt-3 grid gap-3 sm:grid-cols-2">
                       {people.map((c) => (
-                        <li key={c.id} className="rounded-lg border border-border bg-card px-4 py-3">
+                        <li
+                          key={c.id}
+                          className="rounded-lg border border-border bg-card px-4 py-3"
+                        >
                           <p className="font-display text-[14.5px]">{c.name}</p>
                           <p className="cite">{c.title ?? "—"}</p>
                           <div className="mt-2 space-y-1 text-[12.5px]">
                             {c.email && (
                               <p className="flex items-center gap-1.5">
-                                <Mail className="size-3.5 text-muted-foreground" /> {c.email}
+                                <Mail className="size-3.5 text-muted-foreground" />{" "}
+                                {c.email}
                               </p>
                             )}
                             {c.phone && (
                               <p className="flex items-center gap-1.5">
-                                <Phone className="size-3.5 text-muted-foreground" /> {c.phone}
+                                <Phone className="size-3.5 text-muted-foreground" />{" "}
+                                {c.phone}
                               </p>
                             )}
                             {linkTo(c.linkedin_url) && (
@@ -440,15 +580,20 @@ function CrmDashboard() {
                                 rel="noreferrer noopener"
                                 className="flex items-center gap-1.5 text-primary hover:underline"
                               >
-                                <Linkedin className="size-3.5" /> LinkedIn profile
+                                <Linkedin className="size-3.5" /> LinkedIn
+                                profile
                               </a>
                             )}
-                            {c.notes && <p className="text-muted-foreground">{c.notes}</p>}
+                            {c.notes && (
+                              <p className="text-muted-foreground">{c.notes}</p>
+                            )}
                           </div>
                         </li>
                       ))}
                       {!people.length && (
-                        <li className="text-[13px] text-muted-foreground">No contacts yet on this account.</li>
+                        <li className="text-[13px] text-muted-foreground">
+                          No contacts yet on this account.
+                        </li>
                       )}
                     </ul>
 
@@ -462,13 +607,19 @@ function CrmDashboard() {
                       >
                         <Mail className="size-4" /> Compose email
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setContactDialog(a)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setContactDialog(a)}
+                      >
                         <UserPlus className="size-4" /> Add contact
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setAccountDialog({ open: true, account: a })}
+                        onClick={() =>
+                          setAccountDialog({ open: true, account: a })
+                        }
                       >
                         <Pencil className="size-4" /> Edit profile
                       </Button>
@@ -476,7 +627,11 @@ function CrmDashboard() {
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          setCampaignDialog({ open: true, campaign: null, templateId: templates.data?.[0]?.id ?? null })
+                          setCampaignDialog({
+                            open: true,
+                            campaign: null,
+                            templateId: templates.data?.[0]?.id ?? null,
+                          })
                         }
                       >
                         <Zap className="size-4" /> Add to campaign
@@ -488,7 +643,9 @@ function CrmDashboard() {
             );
           })}
           {!filtered.length && (
-            <li className="px-5 py-6 text-[13px] text-muted-foreground">No accounts in this stage.</li>
+            <li className="px-5 py-6 text-[13px] text-muted-foreground">
+              No accounts in this stage.
+            </li>
           )}
         </ul>
       </Panel>
@@ -504,7 +661,12 @@ function CrmDashboard() {
       <AccountDialog
         open={accountDialog.open}
         account={accountDialog.account}
-        onOpenChange={(open) => setAccountDialog({ open, account: open ? accountDialog.account : null })}
+        onOpenChange={(open) =>
+          setAccountDialog({
+            open,
+            account: open ? accountDialog.account : null,
+          })
+        }
       />
       {contactDialog && (
         <ContactDialog
@@ -519,7 +681,9 @@ function CrmDashboard() {
         campaign={campaignDialog.campaign}
         presetTemplateId={campaignDialog.templateId}
         templates={templates.data ?? []}
-        onOpenChange={(open) => setCampaignDialog({ open, campaign: null, templateId: null })}
+        onOpenChange={(open) =>
+          setCampaignDialog({ open, campaign: null, templateId: null })
+        }
       />
     </CrmShell>
   );
