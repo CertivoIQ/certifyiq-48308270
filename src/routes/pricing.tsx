@@ -15,6 +15,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { createPortalSession, changePlan, addAddonToSubscription } from "@/utils/payments.functions";
 import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/plan-catalog";
+import type { StripeEnv } from "@/lib/stripe.server";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
