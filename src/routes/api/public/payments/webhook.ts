@@ -34,8 +34,18 @@ function resolvePriceId(item: any): string {
   );
 }
 
+function planItem(subscription: any): any {
+  // A subscription may have multiple items (plan + add-ons). The plan item is
+  // the recurring price that matches a known platform plan; fall back to the
+  // first item if there is no plan item (e.g. add-on-only subscriptions).
+  return (
+    subscription.items?.data?.find((it: any) => isPlanPrice(resolvePriceId(it))) ||
+    subscription.items?.data?.[0]
+  );
+}
+
 function subscriptionRow(subscription: any, env: StripeEnv) {
-  const item = subscription.items?.data?.[0];
+  const item = planItem(subscription);
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
   return {
@@ -50,6 +60,24 @@ function subscriptionRow(subscription: any, env: StripeEnv) {
     environment: env,
     updated_at: new Date().toISOString(),
   };
+}
+
+function collectAddonEntitlements(subscription: any): Partial<Record<string, unknown>> {
+  const updates: Partial<Record<string, unknown>> = {};
+  const items = subscription.items?.data ?? [];
+
+  for (const item of items) {
+    const priceId = resolvePriceId(item);
+    if (isPlanPrice(priceId)) continue;
+
+    if (priceId === ADDON_PRICE_IDS.academySeat) {
+      updates.academy_seats = Number(item.quantity ?? 1);
+    } else if (priceId === ADDON_PRICE_IDS.academyProperty) {
+      updates.academy_seats = -1;
+    }
+  }
+
+  return updates;
 }
 
 /**
