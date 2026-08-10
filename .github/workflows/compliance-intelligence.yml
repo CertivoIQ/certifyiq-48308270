@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Domain tests
-        run: bun test scripts/test-compliance-intelligence.mjs
+        run: node --test scripts/test-compliance-intelligence.mjs
       - name: Lint
         run: bun run lint
       - name: Production build
