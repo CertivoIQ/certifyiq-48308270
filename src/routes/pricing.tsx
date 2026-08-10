@@ -252,7 +252,11 @@ function PricingPage() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Premium add-ons" description="Recurring revenue layered on any plan" bodyClassName="p-0">
+        <Panel
+          title="Self-serve add-ons"
+          description="Purchased instantly with your plan — billed on your next renewal"
+          bodyClassName="p-0"
+        >
           <ul className="divide-y divide-border">
             {ADDONS.map((a) => (
               <li key={a.name} className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-3.5">
@@ -262,6 +266,7 @@ function PricingPage() {
             ))}
           </ul>
         </Panel>
+
 
         <Panel
           title="CertivoIQ Academy — add-on only"
