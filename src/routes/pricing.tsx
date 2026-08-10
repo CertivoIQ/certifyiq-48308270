@@ -90,9 +90,12 @@ function PricingPage() {
     if (isActive && subscription && !PLAN_PRICE_ID_LIST.includes(priceId)) {
       setAddonBusy(priceId);
       try {
-        const result = await addAddonToSubscription({
-          data: { priceId, quantity, environment: getStripeEnvironment() },
-        });
+        const addonPayload: { priceId: string; environment: StripeEnv; quantity?: number } = {
+          priceId,
+          environment: getStripeEnvironment(),
+        };
+        if (quantity) addonPayload.quantity = quantity;
+        const result = await addAddonToSubscription({ data: addonPayload });
         if ("error" in result) throw new Error(result.error);
         toast.success(`${name} added to your plan`, {
           description: result.effectiveAt
