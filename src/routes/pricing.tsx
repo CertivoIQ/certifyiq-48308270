@@ -86,6 +86,26 @@ function PricingPage() {
       }
       return;
     }
+    // Add-ons attach to the existing active subscription and are billed on the next renewal.
+    if (isActive && subscription && !PLAN_PRICE_ID_LIST.includes(priceId)) {
+      setAddonBusy(priceId);
+      try {
+        const result = await addAddonToSubscription({
+          data: { priceId, quantity, environment: getStripeEnvironment() },
+        });
+        if ("error" in result) throw new Error(result.error);
+        toast.success(`${name} added to your plan`, {
+          description: result.effectiveAt
+            ? `Billing begins on your next renewal (${new Date(result.effectiveAt).toLocaleDateString()}).`
+            : "Billing begins on your next renewal.",
+        });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not add add-on");
+      } finally {
+        setAddonBusy(null);
+      }
+      return;
+    }
     try {
       openCheckout({
         priceId,
