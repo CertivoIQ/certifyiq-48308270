@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - agent/compliance-intelligence-suite
+      - fix/pricing-production-banner
+      - feat/pricing-comparison-table
   pull_request:
     branches:
       - main
