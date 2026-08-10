@@ -23,6 +23,25 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - name: Diagnose repository and runtime
+        run: |
+          set -e
+          echo "=== CERTIVOIQ CI ENVIRONMENT ==="
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
+          echo "GITHUB_WORKFLOW_SHA=$GITHUB_WORKFLOW_SHA"
+          git rev-parse HEAD
+          git status --short
+          node --version
+          bun --version
+          echo "=== FILE CHECKSUMS ==="
+          sha256sum package.json
+          sha256sum bun.lock
+          echo "=== PACKAGE MANIFEST ==="
+          cat package.json
+          echo "=== LOCKFILE HEADER ==="
+          head -20 bun.lock
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Domain tests
