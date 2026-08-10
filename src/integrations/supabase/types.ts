@@ -80,6 +80,249 @@ export type Database = {
         }
         Relationships: []
       }
+      certification_facts: {
+        Row: {
+          confidence: number
+          created_at: string
+          extraction_provider: string
+          field_name: string
+          field_value: Json | null
+          human_verified: boolean
+          id: string
+          item_id: string
+          organization_id: string
+          required_for_decision: boolean
+          source_document_ref: string
+          source_page: number | null
+          source_snippet: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          extraction_provider: string
+          field_name: string
+          field_value?: Json | null
+          human_verified?: boolean
+          id?: string
+          item_id: string
+          organization_id: string
+          required_for_decision?: boolean
+          source_document_ref: string
+          source_page?: number | null
+          source_snippet?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          extraction_provider?: string
+          field_name?: string
+          field_value?: Json | null
+          human_verified?: boolean
+          id?: string
+          item_id?: string
+          organization_id?: string
+          required_for_decision?: boolean
+          source_document_ref?: string
+          source_page?: number | null
+          source_snippet?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certification_facts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "certification_import_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certification_import_items: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          error_message: string | null
+          extracted_data: Json
+          extraction_provider: string | null
+          id: string
+          job_id: string
+          mime_type: string
+          original_file_name: string
+          processed_at: string | null
+          sha256: string | null
+          size_bytes: number
+          status: string
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          error_message?: string | null
+          extracted_data?: Json
+          extraction_provider?: string | null
+          id?: string
+          job_id: string
+          mime_type: string
+          original_file_name: string
+          processed_at?: string | null
+          sha256?: string | null
+          size_bytes: number
+          status?: string
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          error_message?: string | null
+          extracted_data?: Json
+          extraction_provider?: string | null
+          id?: string
+          job_id?: string
+          mime_type?: string
+          original_file_name?: string
+          processed_at?: string | null
+          sha256?: string | null
+          size_bytes?: number
+          status?: string
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certification_import_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "certification_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certification_import_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          duplicate_files: number
+          error_count: number
+          finding_count: number
+          id: string
+          processed_files: number
+          source_name: string
+          status: string
+          total_files: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          duplicate_files?: number
+          error_count?: number
+          finding_count?: number
+          id?: string
+          processed_files?: number
+          source_name: string
+          status?: string
+          total_files?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          duplicate_files?: number
+          error_count?: number
+          finding_count?: number
+          id?: string
+          processed_files?: number
+          source_name?: string
+          status?: string
+          total_files?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      compliance_findings: {
+        Row: {
+          blocking_reasons: Json
+          created_at: string
+          engine_build: string
+          evidence_refs: Json
+          explanation: string
+          id: string
+          item_id: string
+          jurisdiction: string
+          organization_id: string
+          review_state: string
+          rule_id: string
+          rule_pack_id: string
+          rule_pack_version: string
+          rule_version: string
+          severity: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocking_reasons?: Json
+          created_at?: string
+          engine_build: string
+          evidence_refs?: Json
+          explanation: string
+          id?: string
+          item_id: string
+          jurisdiction: string
+          organization_id: string
+          review_state?: string
+          rule_id: string
+          rule_pack_id: string
+          rule_pack_version: string
+          rule_version: string
+          severity?: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocking_reasons?: Json
+          created_at?: string
+          engine_build?: string
+          evidence_refs?: Json
+          explanation?: string
+          id?: string
+          item_id?: string
+          jurisdiction?: string
+          organization_id?: string
+          review_state?: string
+          rule_id?: string
+          rule_pack_id?: string
+          rule_pack_version?: string
+          rule_version?: string
+          severity?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_findings_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "certification_import_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       correction_cases: {
         Row: {
           closed_at: string | null
@@ -655,6 +898,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      finding_reviews: {
+        Row: {
+          created_at: string
+          decision: string
+          finding_id: string
+          id: string
+          reason: string | null
+          reviewer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          finding_id: string
+          id?: string
+          reason?: string | null
+          reviewer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          finding_id?: string
+          id?: string
+          reason?: string | null
+          reviewer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finding_reviews_finding_id_fkey"
+            columns: ["finding_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_findings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hfa_agencies: {
         Row: {
