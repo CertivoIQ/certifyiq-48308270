@@ -122,8 +122,8 @@ export function CrmShell({
       </p>
       <NewsTicker
         items={tickerItems}
-        fetchedAt={federalNews.data?.fetched_at}
-        partial={federalNews.data?.partial}
+        fetchedAt={federalNews.data?.fetched_at ?? null}
+        partial={federalNews.data?.partial ?? false}
       />
     </div>
   );
