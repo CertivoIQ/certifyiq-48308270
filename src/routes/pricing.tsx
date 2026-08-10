@@ -262,51 +262,49 @@ function PricingPage() {
           bodyClassName="p-0"
         >
           <ul className="divide-y divide-border">
-            {ACADEMY_ADDONS.map((a) => (
-              <li key={a.name} className="px-5 py-3.5">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-display text-[15px]">{a.name}</span>
-                  <span className="font-mono text-[13px]">
-                    {a.price}
-                    <span className="text-muted-foreground">{a.cadence}</span>
-                  </span>
-                </div>
-                <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
-                {a.id === "academy-seat" && (
+            {ACADEMY_ADDONS.map((a) => {
+              const isSeat = a.id === "academy-seat";
+              const priceId = isSeat ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty;
+              const quantity = isSeat ? academySeats : academyProperties;
+              const setQuantity = isSeat ? setAcademySeats : setAcademyProperties;
+              const label = isSeat ? "Seats" : "Properties";
+
+              return (
+                <li key={a.name} className="px-5 py-3.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-display text-[15px]">{a.name}</span>
+                    <span className="font-mono text-[13px]">
+                      {a.price}
+                      <span className="text-muted-foreground">{a.cadence}</span>
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
                   <div className="mt-2.5 flex items-center gap-2">
-                    <label htmlFor="academy-seats" className="text-[12.5px] text-muted-foreground">
-                      Seats
+                    <label htmlFor={`qty-${a.id}`} className="text-[12.5px] text-muted-foreground">
+                      {label}
                     </label>
                     <input
-                      id="academy-seats"
+                      id={`qty-${a.id}`}
                       type="number"
                       min={1}
                       max={100}
-                      value={academySeats}
-                      onChange={(e) => setAcademySeats(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
                       className="h-8 w-20 rounded-md border border-input bg-background px-2 text-[12.5px]"
                     />
                   </div>
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-2.5"
-                  disabled={addonBusy === (a.id === "academy-seat" ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty)}
-                  onClick={() =>
-                    void startCheckout(
-                      a.id === "academy-seat" ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty,
-                      a.name,
-                      a.id === "academy-seat" ? academySeats : 1,
-                    )
-                  }
-                >
-                  {addonBusy === (a.id === "academy-seat" ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty)
-                    ? "Adding..."
-                    : "Add to my plan"}
-                </Button>
-              </li>
-            ))}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2.5"
+                    disabled={addonBusy === priceId}
+                    onClick={() => void startCheckout(priceId, a.name, quantity)}
+                  >
+                    {addonBusy === priceId ? "Adding..." : "Add to my plan"}
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
           <div className="border-t border-border px-5 py-4">
             <Button size="sm" variant="outline" asChild>
