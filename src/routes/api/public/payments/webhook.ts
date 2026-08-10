@@ -173,14 +173,13 @@ async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: s
     access["access_until"] = row.cancel_at_period_end ? row.current_period_end : null;
     access["files_purge_at"] = null;
     access["files_purged_at"] = null;
-  } else if (isAddon && active) {
-    // Add-ons layer on top and must never disturb plan capacity or status.
-    if (row.price_id === ADDON_PRICE_IDS.academySeat) {
-      access["academy_seats"] = Number(subscription.items?.data?.[0]?.quantity ?? 1);
-    } else if (row.price_id === ADDON_PRICE_IDS.academyProperty) {
-      // Property-wide Academy: unlimited seats at one property.
-      access["academy_seats"] = -1;
-    }
+  }
+
+  // Merge add-on entitlements from all items on the subscription. Add-ons are
+  // attached to the same subscription as the plan and billed at the next cycle.
+  const addonEntitlements = collectAddonEntitlements(subscription);
+  for (const [key, value] of Object.entries(addonEntitlements)) {
+    access[key] = value;
   }
 
   await supabase.from("account_access").upsert(access, { onConflict: "user_id" });
