@@ -1,7 +1,7 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
-import type { TemplateEntry } from './registry'
-import { emailT, type EmailLocale } from './i18n'
+import type { EmailTemplateData, TemplateEntry } from './registry'
+import { emailT, localeOf, type EmailLocale } from './i18n'
 import {
   BRAND,
   Body,
@@ -82,8 +82,8 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
-    emailT(data['locale'], 'support.subject', { caseNumber: data['caseNumber'] ?? '#' }),
+  subject: (data: EmailTemplateData) =>
+    emailT(localeOf(data), 'support.subject', { caseNumber: String(data['caseNumber'] ?? '#') }),
   displayName: 'Support request received',
   previewData: {
     name: 'Jordan',

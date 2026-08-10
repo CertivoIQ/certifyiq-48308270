@@ -1,6 +1,6 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
-import type { TemplateEntry } from './registry'
+import type { EmailTemplateData, TemplateEntry } from './registry'
 import {
   Body,
   Container,
@@ -84,7 +84,7 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
+  subject: (data: EmailTemplateData) =>
     `New CertivoIQ invoice${data['invoiceNumber'] ? ` ${data['invoiceNumber']}` : ''} — ${data['amountDue'] ?? 'amount due'}`,
   displayName: 'New invoice',
   previewData: {

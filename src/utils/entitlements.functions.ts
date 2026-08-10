@@ -19,7 +19,7 @@ export interface AccountState {
     aiDocs: number | null;
   };
   usage: {
-    periodStart: string | null;
+    periodStart: string;
     aiDocsUsed: number;
     aiDocsBilled: number;
     propertiesUsed: number;
@@ -121,7 +121,7 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: writeError } = await (supabaseAdmin as any)
+    const { error: writeError } = await supabaseAdmin
       .from("usage_counters")
       .upsert(
         {
@@ -192,7 +192,7 @@ export const claimCapacity = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await (supabaseAdmin as any).from("usage_counters").upsert(
+    await supabaseAdmin.from("usage_counters").upsert(
       {
         user_id: userId,
         environment: data.environment,

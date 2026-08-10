@@ -163,6 +163,12 @@ const es: Record<EmailKey, string> = {
 
 const DICTS: Record<EmailLocale, Record<string, string>> = { en, es }
 
+/** Narrows a loosely-typed template payload's `locale` field. */
+export function localeOf(data: Record<string, unknown>): EmailLocale | undefined {
+  const value = data['locale']
+  return value === 'en' || value === 'es' ? value : undefined
+}
+
 export function emailT(locale: EmailLocale | undefined, key: EmailKey, vars?: Record<string, string | number>) {
   const template = DICTS[locale ?? 'en']?.[key] ?? en[key]
   if (!vars) return template

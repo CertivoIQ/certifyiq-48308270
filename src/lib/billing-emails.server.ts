@@ -1,5 +1,6 @@
 import { sendTemplateEmail } from '@/lib/email-templates/send-email'
 import { PLAN_ENTITLEMENTS } from '@/lib/plan-catalog'
+import type { StripeInvoiceLike } from '@/lib/stripe-webhook-types'
 
 const ZERO_DECIMAL = new Set([
   'bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf',
@@ -32,10 +33,10 @@ function appOrigin(): string {
 }
 
 /** Human-readable plan name for the invoice's first line item. */
-function planNameFor(invoice: any): string {
+function planNameFor(invoice: StripeInvoiceLike): string {
   const line = invoice?.lines?.data?.[0]
   const priceId =
-    line?.price?.lookup_key || line?.price?.metadata?.lovable_external_id || line?.pricing?.price_details?.price
+    line?.price?.lookup_key || line?.price?.metadata?.['lovable_external_id'] || line?.pricing?.price_details?.price
   const plan = priceId ? PLAN_ENTITLEMENTS[priceId] : undefined
   return plan?.name ?? line?.description ?? 'CertivoIQ subscription'
 }
@@ -46,7 +47,7 @@ export interface BillingEmailContext {
 }
 
 /** Shared props every billing email renders from a Stripe invoice. */
-function baseProps(invoice: any, ctx: BillingEmailContext) {
+function baseProps(invoice: StripeInvoiceLike, ctx: BillingEmailContext) {
   const line = invoice?.lines?.data?.[0]
   const start = line?.period?.start ?? invoice?.period_start
   const end = line?.period?.end ?? invoice?.period_end
@@ -65,7 +66,7 @@ function baseProps(invoice: any, ctx: BillingEmailContext) {
 }
 
 /** A new invoice was finalized — tell the customer what is coming. */
-export async function sendInvoiceCreatedEmail(invoice: any, ctx: BillingEmailContext) {
+export async function sendInvoiceCreatedEmail(invoice: StripeInvoiceLike, ctx: BillingEmailContext) {
   return sendTemplateEmail('invoice-created', ctx.recipient, {
     templateData: {
       ...baseProps(invoice, ctx),
@@ -79,7 +80,7 @@ export async function sendInvoiceCreatedEmail(invoice: any, ctx: BillingEmailCon
 }
 
 /** Payment settled — receipt style confirmation. */
-export async function sendPaymentSucceededEmail(invoice: any, ctx: BillingEmailContext) {
+export async function sendPaymentSucceededEmail(invoice: StripeInvoiceLike, ctx: BillingEmailContext) {
   const line = invoice?.lines?.data?.[0]
   const nextRenewal = formatDate(line?.period?.end ?? invoice?.period_end)
   return sendTemplateEmail('payment-succeeded', ctx.recipient, {
@@ -96,7 +97,7 @@ export async function sendPaymentSucceededEmail(invoice: any, ctx: BillingEmailC
 }
 
 /** Payment declined — dunning notice with a direct path to fix the card. */
-export async function sendPaymentFailedEmail(invoice: any, ctx: BillingEmailContext) {
+export async function sendPaymentFailedEmail(invoice: StripeInvoiceLike, ctx: BillingEmailContext) {
   const attempt = invoice?.last_finalization_error?.message ?? invoice?.last_payment_error?.message
   return sendTemplateEmail('payment-failed', ctx.recipient, {
     templateData: {
