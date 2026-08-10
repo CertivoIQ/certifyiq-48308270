@@ -1,9 +1,8 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
-import type { TemplateEntry } from './registry'
+import type { EmailTemplateData, TemplateEntry } from './registry'
 import { emailT, type EmailLocale } from './i18n'
 import {
-import type { EmailTemplateData } from './registry'
   BRAND,
   Body,
   Container,
