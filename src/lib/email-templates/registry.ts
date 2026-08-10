@@ -7,14 +7,14 @@ import { template as supportRequestReceivedTemplate } from './support-request-re
 import { template as mailMergeTemplate } from './mail-merge'
 
 
-/** Loose template props: templates read only the keys they declare. */
-export type TemplateData = Record<string, unknown>
+/** Values a rendered email template may receive (scalars only). */
+export type EmailTemplateData = Record<string, string | number | boolean | null | undefined>
 
 export interface TemplateEntry {
-  component: ComponentType<never>
-  subject: string | ((data: TemplateData) => string)
+  component: ComponentType<EmailTemplateData>
+  subject: string | ((data: EmailTemplateData) => string)
   displayName?: string
-  previewData?: TemplateData
+  previewData?: EmailTemplateData
   /** Fixed recipient — overrides caller-provided recipientEmail when set. */
   to?: string
 }
