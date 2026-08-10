@@ -1,5 +1,5 @@
-import type { StripeWebhookEventLike } from "@/lib/stripe-webhook-types";
 import Stripe from "stripe";
+import type { StripeWebhookObject } from "@/lib/stripe-webhook-types";
 
 const getEnv = (key: string): string => {
   const value = process.env[key];
@@ -82,7 +82,7 @@ export function getStripeErrorMessage(error: unknown): string {
 export async function verifyWebhook(
   req: Request,
   env: StripeEnv,
-): Promise<StripeWebhookEventLike> {
+): Promise<{ type: string; data: { object: StripeWebhookObject } }> {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
   const secret =
