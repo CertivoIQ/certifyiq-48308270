@@ -29,7 +29,7 @@ export interface AccountState {
     aiDocs: number | null;
   };
   usage: {
-    periodStart: string | null;
+    periodStart: string;
     aiDocsUsed: number;
     aiDocsBilled: number;
     propertiesUsed: number;
