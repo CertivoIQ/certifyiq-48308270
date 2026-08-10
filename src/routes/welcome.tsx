@@ -48,6 +48,14 @@ const WHY = [
   { icon: Clock, titleKey: "welcome.why.3.title", bodyKey: "welcome.why.3.body" },
 ] as const;
 
+const WORKFLOW = [
+  { icon: Upload, labelKey: "welcome.workflow.upload" },
+  { icon: ScanLine, labelKey: "welcome.workflow.extract" },
+  { icon: CheckCircle, labelKey: "welcome.workflow.check" },
+  { icon: FileText, labelKey: "welcome.workflow.evidence" },
+  { icon: Flag, labelKey: "welcome.workflow.findings" },
+] as const;
+
 function WelcomePage() {
   const t = useT();
   const { lang } = useLanguage();
