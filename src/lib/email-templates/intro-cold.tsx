@@ -4,6 +4,7 @@ import type { TemplateEntry } from './registry'
 import { emailT, type EmailLocale } from './i18n'
 import { PLANS } from '@/lib/platform-data'
 import {
+import type { EmailTemplateData } from './registry'
   BRAND,
   Body,
   Container,
@@ -226,7 +227,7 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
+  subject: (data: EmailTemplateData) =>
     data['company']
       ? emailT(data['locale'], 'intro.subject.company', { company: data['company'] })
       : emailT(data['locale'], 'intro.subject.generic'),

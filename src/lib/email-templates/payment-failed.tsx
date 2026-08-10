@@ -2,6 +2,7 @@ import React from 'react'
 import { Preview } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 import {
+import type { EmailTemplateData } from './registry'
   BRAND,
   Body,
   Container,
@@ -89,7 +90,7 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
+  subject: (data: EmailTemplateData) =>
     `Action needed: your CertivoIQ payment of ${data['amountDue'] ?? 'your invoice'} failed`,
   displayName: 'Payment failed',
   previewData: {
