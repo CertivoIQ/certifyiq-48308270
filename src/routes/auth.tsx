@@ -59,7 +59,7 @@ function AuthPage() {
   const [mfaMode, setMfaMode] = useState(false);
   const [recoveryMode, setRecoveryMode] = useState(false);
 
-  const useRecoveryCode = useServerFn(verifyAndDisableRecoveryCode);
+  const submitRecoveryCode = useServerFn(verifyAndDisableRecoveryCode);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -98,7 +98,7 @@ function AuthPage() {
     if (!mfaCode) return;
     setBusy(true);
     try {
-      const result = await useRecoveryCode({ data: { code: mfaCode } });
+      const result = await submitRecoveryCode({ data: { code: mfaCode } });
       if ("error" in result) throw new Error(result.error);
       toast.success("MFA disabled with recovery code");
       await proceedAfterMfa();
