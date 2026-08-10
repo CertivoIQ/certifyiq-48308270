@@ -8,6 +8,8 @@ import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
+type EmailPreviewProps = Record<string, string>
+
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<never>> = {
   signup: SignupEmail,
   invite: InviteEmail,
@@ -28,7 +30,7 @@ const ROOT_DOMAIN = "certivoiq.com"
 // even if the project's domain has changed since the template was scaffolded.
 const SAMPLE_PROJECT_URL = "https://certivoiq.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
-const SAMPLE_DATA: Record<string, object> = {
+const SAMPLE_DATA: Record<string, EmailPreviewProps> = {
   signup: {
     siteName: SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
@@ -99,9 +101,12 @@ export const Route = createFileRoute("/lovable/email/auth/preview")({
           )
         }
 
-        const sampleData = SAMPLE_DATA[type] || {}
+        const sampleData: EmailPreviewProps = SAMPLE_DATA[type] ?? {}
         const html = await render(
-          React.createElement(EmailTemplate, sampleData as never),
+          React.createElement(
+            EmailTemplate as React.ComponentType<EmailPreviewProps>,
+            sampleData,
+          ),
         )
 
         return new Response(html, {
