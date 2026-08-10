@@ -1,15 +1,22 @@
 import { useMemo, useState } from 'react';
 import { Archive, Building2, ClipboardCheck, FileCheck2, Gauge, History, Plug, Send, ShieldCheck, UploadCloud } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { FEATURE_NAMES } from '@/lib/compliance-intelligence.mjs';
 
-const features = [
+const features: Array<{ name: string; description: string; icon: LucideIcon }> = [
   { name: FEATURE_NAMES.massReview, description: 'Upload certification files in bulk for classification, duplicate detection, historical comparison, and findings review.', icon: UploadCloud },
   { name: FEATURE_NAMES.auditSimulator, description: 'Run evidence-backed federal or state audit simulations before a real reviewer arrives.', icon: ClipboardCheck },
   { name: FEATURE_NAMES.portfolioCommandCenter, description: 'See property-by-property readiness, risk, findings, and open corrective actions.', icon: Building2 },
   { name: FEATURE_NAMES.submissionCenter, description: 'Prepare authority submission packages after mandatory human approval.', icon: Send },
   { name: FEATURE_NAMES.pmsHub, description: 'Connect normalized property and certification data from supported PMS providers.', icon: Plug },
   { name: FEATURE_NAMES.evidenceIntelligence, description: 'Keep findings tied to the evidence that supports the compliance decision.', icon: FileCheck2 },
+];
+
+const summaryCards: Array<{ label: string; icon: LucideIcon }> = [
+  { label: 'Certification History Intelligence™', icon: History },
+  { label: 'Audit Readiness Score™', icon: Gauge },
+  { label: 'Compliance Approval Center™', icon: ShieldCheck },
 ];
 
 export function ComplianceIntelligenceSuite() {
@@ -79,7 +86,7 @@ export function ComplianceIntelligenceSuite() {
         {message && <p className="mt-3 text-sm text-muted-foreground" role="status">{message}</p>}
       </section>
       <section className="grid gap-4 md:grid-cols-3">
-        {[['Certification History Intelligence™', History], ['Audit Readiness Score™', Gauge], ['Compliance Approval Center™', ShieldCheck]].map(([label, Icon]) => <div key={String(label)} className="rounded-2xl border bg-card p-5"><Icon className="mb-3 h-5 w-5 text-primary" /><div className="font-medium">{label as string}</div><p className="mt-1 text-sm text-muted-foreground">Built into the compliance workflow and preserved with the audit trail.</p></div>)}
+        {summaryCards.map(({ label, icon: Icon }) => <div key={label} className="rounded-2xl border bg-card p-5"><Icon className="mb-3 h-5 w-5 text-primary" /><div className="font-medium">{label}</div><p className="mt-1 text-sm text-muted-foreground">Built into the compliance workflow and preserved with the audit trail.</p></div>)}
       </section>
     </main>
   );
