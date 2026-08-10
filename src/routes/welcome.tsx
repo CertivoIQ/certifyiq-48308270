@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
-import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
+import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle, ChevronRight, Upload, ScanLine, CheckCircle, FileText, Flag } from "lucide-react";
 import { PENALTY_RISKS, TRIAL_OFFER } from "@/lib/trial-data";
 import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
 import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
@@ -20,16 +20,17 @@ import { useViewerState } from "@/hooks/use-viewer-state";
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "CertivoIQ — Audit-Ready Affordable Housing Compliance" },
+      { title: "CertivoIQ — Find compliance problems before the auditor does." },
       {
         name: "description",
         content:
-          "See how CertivoIQ protects your tax credits: AI reviews every LIHTC, HOME, Section 8 and HOTMA certification, cites the rule, and hands your reviewer the correction steps before an audit does.",
+          "CertivoIQ uses AI to extract evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
       },
-      { property: "og:title", content: "CertivoIQ — Protect your tax credits before the auditor arrives" },
+      { property: "og:title", content: "CertivoIQ — Find compliance problems before the auditor does." },
       {
         property: "og:description",
-        content: "Watch the 3-minute demo, then run a full AI compliance review on 3 certifications free for 7 days.",
+        content:
+          "CertivoIQ uses AI to extract evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -45,6 +46,14 @@ const WHY = [
   { icon: ShieldCheck, titleKey: "welcome.why.1.title", bodyKey: "welcome.why.1.body" },
   { icon: TrendingDown, titleKey: "welcome.why.2.title", bodyKey: "welcome.why.2.body" },
   { icon: Clock, titleKey: "welcome.why.3.title", bodyKey: "welcome.why.3.body" },
+] as const;
+
+const WORKFLOW = [
+  { icon: Upload, labelKey: "welcome.workflow.upload" },
+  { icon: ScanLine, labelKey: "welcome.workflow.extract" },
+  { icon: CheckCircle, labelKey: "welcome.workflow.check" },
+  { icon: FileText, labelKey: "welcome.workflow.evidence" },
+  { icon: Flag, labelKey: "welcome.workflow.findings" },
 ] as const;
 
 function WelcomePage() {
@@ -87,20 +96,16 @@ function WelcomePage() {
           <Pill tone="seal">
             {t("welcome.pill", { daysLeft: TRIAL.daysLeft, allowed: TRIAL.uploadsAllowed })}
           </Pill>
-          <h1 className="mx-auto mt-5 max-w-3xl font-display text-[38px] leading-[1.08] sm:text-[52px]">
-            {t("welcome.hero.title.pre")}{" "}
-            <span className="brand-text">{t("welcome.hero.title.accent")}</span>
+          <h1 className="mx-auto mt-5 max-w-4xl font-display text-[38px] leading-[1.08] sm:text-[56px]">
+            {t("welcome.hero.title")}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-[15.5px] leading-relaxed text-muted-foreground">
-            {t("welcome.hero.body")}
+            {t("welcome.hero.subtitle")}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" asChild>
-              <Link to={isSubscriber ? "/dashboard" : "/launchpad"}>
-                {isSubscriber ? t("welcome.nav.open") : t("welcome.cta.trial")}
-              </Link>
+              <Link to={isSubscriber ? "/dashboard" : "/launchpad"}>{t("welcome.hero.cta")}</Link>
             </Button>
-            {/* Demo dashboard is for visitors and trial users; subscribers use /dashboard. */}
             {!isSubscriber && (
               <Button size="lg" variant="outline" asChild>
                 <Link to="/demo-dashboard">{t("welcome.cta.sample")}</Link>
@@ -108,6 +113,19 @@ function WelcomePage() {
             )}
           </div>
 
+          <div className="mt-10" aria-label="CertivoIQ review workflow">
+            <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2 sm:gap-3">
+              {WORKFLOW.map(({ icon: Icon, labelKey }, i) => (
+                <div key={labelKey} className="flex items-center gap-2 sm:gap-3">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-ledger">
+                    <Icon className="size-4 text-primary" />
+                    <span className="text-[12.5px] font-medium">{t(labelKey)}</span>
+                  </div>
+                  {i < WORKFLOW.length - 1 && <ChevronRight className="size-4 text-muted-foreground" />}
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section className="mt-12 overflow-hidden rounded-lg" id="video">

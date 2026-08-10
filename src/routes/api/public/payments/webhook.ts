@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 import {
   ADDON_PRICE_IDS,
@@ -10,19 +10,52 @@ import {
 } from "@/lib/plan-catalog";
 import type {
   StripeInvoiceLike,
-  StripeSubscriptionItemLike,
+  StripeLineItemLike,
   StripeSubscriptionLike,
 } from "@/lib/stripe-webhook-types";
 
 // Loose typing: this service-role client writes columns across several tables
 // and must not be constrained by the generated single-table row types.
-let _supabase: SupabaseClient | null = null;
+/**
+ * Loose service-role database surface: this webhook writes columns across
+ * several tables and must not be constrained by the generated single-table
+ * row types.
+ */
+type DbRow = Record<string, unknown>;
+interface DbError {
+  code?: string;
+  message?: string;
+}
+interface DbQuery extends PromiseLike<{ data: DbRow | DbRow[] | null; error: DbError | null }> {
+  select(columns?: string): DbQuery;
+  eq(column: string, value: unknown): DbQuery;
+  is(column: string, value: unknown): DbQuery;
+  order(column: string, options?: { ascending?: boolean }): DbQuery;
+  limit(count: number): DbQuery;
+  maybeSingle(): PromiseLike<{ data: DbRow | null; error: DbError | null }>;
+  single(): PromiseLike<{ data: DbRow | null; error: DbError | null }>;
+}
+interface DbTable {
+  select(columns?: string): DbQuery;
+  insert(values: DbRow | DbRow[]): DbQuery;
+  update(values: DbRow): DbQuery;
+  upsert(
+    values: DbRow | DbRow[],
+    options?: { onConflict?: string; ignoreDuplicates?: boolean },
+  ): DbQuery;
+  delete(): DbQuery;
+}
+interface LooseDb {
+  from(table: string): DbTable;
+}
+
+let _supabase: LooseDb | null = null;
 function getSupabase() {
   if (!_supabase) {
     _supabase = createClient(
       process.env["SUPABASE_URL"]!,
       process.env["SUPABASE_SERVICE_ROLE_KEY"]!,
-    );
+    ) as unknown as LooseDb;
   }
   return _supabase;
 }
@@ -31,21 +64,21 @@ function isoFromUnix(seconds: number | null | undefined): string | null {
   return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
 
-function resolvePriceId(item: StripeSubscriptionItemLike | undefined): string {
+function resolvePriceId(item: StripeLineItemLike | null | undefined): string {
   return (
     item?.price?.lookup_key ||
-    item?.price?.metadata?.["lovable_external_id"] ||
+    item?.price?.metadata?.['lovable_external_id'] ||
     item?.price?.id ||
     "unknown"
   );
 }
 
-function planItem(subscription: StripeSubscriptionLike): StripeSubscriptionItemLike | undefined {
+function planItem(subscription: StripeSubscriptionLike): StripeLineItemLike | undefined {
   // A subscription may have multiple items (plan + add-ons). The plan item is
   // the recurring price that matches a known platform plan; fall back to the
   // first item if there is no plan item (e.g. add-on-only subscriptions).
   return (
-    subscription.items?.data?.find((it) => isPlanPrice(resolvePriceId(it))) ||
+    subscription.items?.data?.find((it: StripeLineItemLike) => isPlanPrice(resolvePriceId(it))) ||
     subscription.items?.data?.[0]
   );
 }
@@ -59,7 +92,7 @@ function subscriptionRow(subscription: StripeSubscriptionLike, env: StripeEnv) {
     stripe_customer_id: subscription.customer,
     product_id: String(item?.price?.product ?? "unknown"),
     price_id: resolvePriceId(item),
-    status: subscription.status ?? "incomplete",
+    status: subscription.status ?? "",
     current_period_start: isoFromUnix(periodStart),
     current_period_end: isoFromUnix(periodEnd),
     cancel_at_period_end: subscription.cancel_at_period_end || false,
@@ -132,7 +165,7 @@ async function activateSubscriber(userId: string, env: StripeEnv, eventId?: stri
 async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEnv, event?: { id?: string; type?: string }) {
 
   const supabase = getSupabase();
-  const userId = subscription.metadata?.["userId"];
+  const userId = subscription.metadata?.['userId'];
   if (!userId) {
     console.error("Subscription has no userId metadata:", subscription.id);
     return;
@@ -216,7 +249,7 @@ async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEn
   const firstActivation = plan && active && existing?.["plan_id"] !== plan.planId;
   if (!firstActivation) return;
 
-  const email: string | undefined = subscription.metadata?.["email"];
+  const email: string | undefined = subscription.metadata?.['email'];
   const { data: profile } = await supabase
     .from("profiles")
     .select("email, full_name")
@@ -267,7 +300,7 @@ async function applyCancellation(subscription: StripeSubscriptionLike, env: Stri
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
 
-  const userId = subscription.metadata?.["userId"];
+  const userId = subscription.metadata?.['userId'];
   if (!userId) return;
 
   // An add-on ending must not revoke the platform plan.
@@ -358,7 +391,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "checkout.session.completed": {
       const session = event.data.object;
-      if (session.payment_status === "unpaid") break;
+      if (session['payment_status'] === "unpaid") break;
       // One-time purchases (AI document overage) need no entitlement change;
       // subscription fulfilment is handled by customer.subscription.*.
       break;

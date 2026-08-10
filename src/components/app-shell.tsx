@@ -94,8 +94,6 @@ function TrialBanner() {
   );
 }
 
-
-
 export function AppShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string | undefined; actions?: ReactNode | undefined }) {
   const { session } = useSession();
   const [open, setOpen] = useState(false);

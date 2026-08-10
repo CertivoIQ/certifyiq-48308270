@@ -2,7 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 import { AI_DOC_OVERAGE_PRICE_ID } from "@/lib/plan-catalog";
-import { loadState, periodStartFor } from "@/lib/entitlements.server";
+import { loadState, periodStartFor, type EntitlementsDb } from "@/lib/entitlements.server";
+
+/** Minimal write surface for the metered usage counters table. */
+interface UsageWriter {
+  from(table: string): {
+    upsert(
+      values: Record<string, unknown>,
+      options?: { onConflict?: string },
+    ): PromiseLike<{ error: { message?: string } | null }>;
+  };
+}
 
 export interface AccountState {
   status: string;
@@ -39,7 +49,7 @@ export const getAccountState = createServerFn({ method: "POST" })
   .inputValidator((data: { environment: StripeEnv }) => data)
   .handler(async ({ data, context }): Promise<AccountStateResult> => {
     try {
-      return await loadState(context.supabase, context.userId, data.environment);
+      return await loadState(context.supabase as unknown as EntitlementsDb, context.userId, data.environment);
     } catch (error) {
       return { error: error instanceof Error ? error.message : "Could not load account state" };
     }
@@ -60,7 +70,7 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<ConsumeResult> => {
     const { supabase, userId } = context;
-    const state = await loadState(supabase, userId, data.environment);
+    const state = await loadState(supabase as unknown as EntitlementsDb, userId, data.environment);
 
     const trialExpired =
       state.isTrial && !!state.accessUntil && new Date(state.accessUntil).getTime() < Date.now();
@@ -121,7 +131,7 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: writeError } = await supabaseAdmin
+    const { error: writeError } = await (supabaseAdmin as unknown as UsageWriter)
       .from("usage_counters")
       .upsert(
         {
@@ -162,7 +172,7 @@ export const claimCapacity = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<CapacityResult> => {
     const { supabase, userId } = context;
-    const state = await loadState(supabase, userId, data.environment);
+    const state = await loadState(supabase as unknown as EntitlementsDb, userId, data.environment);
 
     const expired =
       !!state.accessUntil && new Date(state.accessUntil).getTime() < Date.now() && state.isTrial;
@@ -192,7 +202,7 @@ export const claimCapacity = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("usage_counters").upsert(
+    await (supabaseAdmin as unknown as UsageWriter).from("usage_counters").upsert(
       {
         user_id: userId,
         environment: data.environment,
