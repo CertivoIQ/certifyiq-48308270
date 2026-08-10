@@ -37,11 +37,5 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
-  {
-    // Formatting is not enforced by lint on this branch; keep substantive rules on.
-    files: ["**/*.{js,mjs,cjs,ts,tsx}"],
-    rules: {
-      "prettier/prettier": "off",
-    },
-  },
+  { rules: { "prettier/prettier": "off" } },
 );
