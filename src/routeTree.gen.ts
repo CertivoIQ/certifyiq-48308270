@@ -24,12 +24,17 @@ import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as AuthenticatedAuditSimulatorRouteImport } from './routes/_authenticated/audit-simulator'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as AuthenticatedComplianceIntelligenceRouteImport } from './routes/_authenticated/compliance-intelligence'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedCrmDocumentsRouteImport } from './routes/_authenticated/crm-documents'
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
+import { Route as AuthenticatedPmsHubRouteImport } from './routes/_authenticated/pms-hub'
+import { Route as AuthenticatedPortfolioComplianceRouteImport } from './routes/_authenticated/portfolio-compliance'
+import { Route as AuthenticatedSubmissionCenterRouteImport } from './routes/_authenticated/submission-center'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -121,11 +126,23 @@ const WelcomeRoute = WelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAuditSimulatorRoute =
+  AuthenticatedAuditSimulatorRouteImport.update({
+    id: '/audit-simulator',
+    path: '/audit-simulator',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedComplianceIntelligenceRoute =
+  AuthenticatedComplianceIntelligenceRouteImport.update({
+    id: '/compliance-intelligence',
+    path: '/compliance-intelligence',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   id: '/crm',
   path: '/crm',
@@ -151,6 +168,23 @@ const AuthenticatedMarketingKitRoute =
   AuthenticatedMarketingKitRouteImport.update({
     id: '/marketing-kit',
     path: '/marketing-kit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPmsHubRoute = AuthenticatedPmsHubRouteImport.update({
+  id: '/pms-hub',
+  path: '/pms-hub',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPortfolioComplianceRoute =
+  AuthenticatedPortfolioComplianceRouteImport.update({
+    id: '/portfolio-compliance',
+    path: '/portfolio-compliance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSubmissionCenterRoute =
+  AuthenticatedSubmissionCenterRouteImport.update({
+    id: '/submission-center',
+    path: '/submission-center',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AcademyIndexRoute = AcademyIndexRouteImport.update({
@@ -255,12 +289,17 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
   '/billing': typeof AuthenticatedBillingRoute
+  '/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
   '/crm': typeof AuthenticatedCrmRouteWithChildren
   '/crm-documents': typeof AuthenticatedCrmDocumentsRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
+  '/pms-hub': typeof AuthenticatedPmsHubRoute
+  '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
+  '/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -293,12 +332,17 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
   '/billing': typeof AuthenticatedBillingRoute
+  '/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
   '/crm': typeof AuthenticatedCrmRouteWithChildren
   '/crm-documents': typeof AuthenticatedCrmDocumentsRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
+  '/pms-hub': typeof AuthenticatedPmsHubRoute
+  '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
+  '/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -333,12 +377,17 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/_authenticated/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
+  '/_authenticated/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRouteWithChildren
   '/_authenticated/crm-documents': typeof AuthenticatedCrmDocumentsRoute
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
+  '/_authenticated/pms-hub': typeof AuthenticatedPmsHubRoute
+  '/_authenticated/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
+  '/_authenticated/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/academy/$courseId': typeof AcademyCourseIdRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -373,12 +422,17 @@ export interface FileRouteTypes {
     | '/security'
     | '/trial'
     | '/welcome'
+    | '/audit-simulator'
     | '/billing'
+    | '/compliance-intelligence'
     | '/crm'
     | '/crm-documents'
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
+    | '/pms-hub'
+    | '/portfolio-compliance'
+    | '/submission-center'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -411,12 +465,17 @@ export interface FileRouteTypes {
     | '/security'
     | '/trial'
     | '/welcome'
+    | '/audit-simulator'
     | '/billing'
+    | '/compliance-intelligence'
     | '/crm'
     | '/crm-documents'
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
+    | '/pms-hub'
+    | '/portfolio-compliance'
+    | '/submission-center'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -450,12 +509,17 @@ export interface FileRouteTypes {
     | '/security'
     | '/trial'
     | '/welcome'
+    | '/_authenticated/audit-simulator'
     | '/_authenticated/billing'
+    | '/_authenticated/compliance-intelligence'
     | '/_authenticated/crm'
     | '/_authenticated/crm-documents'
     | '/_authenticated/crm-support'
     | '/_authenticated/dashboard'
     | '/_authenticated/marketing-kit'
+    | '/_authenticated/pms-hub'
+    | '/_authenticated/portfolio-compliance'
+    | '/_authenticated/submission-center'
     | '/academy/$courseId'
     | '/api/chat'
     | '/checkout/return'
@@ -613,11 +677,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/audit-simulator': {
+      id: '/_authenticated/audit-simulator'
+      path: '/audit-simulator'
+      fullPath: '/audit-simulator'
+      preLoaderRoute: typeof AuthenticatedAuditSimulatorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/billing': {
       id: '/_authenticated/billing'
       path: '/billing'
       fullPath: '/billing'
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/compliance-intelligence': {
+      id: '/_authenticated/compliance-intelligence'
+      path: '/compliance-intelligence'
+      fullPath: '/compliance-intelligence'
+      preLoaderRoute: typeof AuthenticatedComplianceIntelligenceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/crm': {
@@ -653,6 +731,27 @@ declare module '@tanstack/react-router' {
       path: '/marketing-kit'
       fullPath: '/marketing-kit'
       preLoaderRoute: typeof AuthenticatedMarketingKitRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pms-hub': {
+      id: '/_authenticated/pms-hub'
+      path: '/pms-hub'
+      fullPath: '/pms-hub'
+      preLoaderRoute: typeof AuthenticatedPmsHubRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portfolio-compliance': {
+      id: '/_authenticated/portfolio-compliance'
+      path: '/portfolio-compliance'
+      fullPath: '/portfolio-compliance'
+      preLoaderRoute: typeof AuthenticatedPortfolioComplianceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/submission-center': {
+      id: '/_authenticated/submission-center'
+      path: '/submission-center'
+      fullPath: '/submission-center'
+      preLoaderRoute: typeof AuthenticatedSubmissionCenterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/academy/': {
@@ -783,22 +882,33 @@ const AuthenticatedCrmRouteWithChildren =
   AuthenticatedCrmRoute._addFileChildren(AuthenticatedCrmRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAuditSimulatorRoute: typeof AuthenticatedAuditSimulatorRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
+  AuthenticatedComplianceIntelligenceRoute: typeof AuthenticatedComplianceIntelligenceRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRouteWithChildren
   AuthenticatedCrmDocumentsRoute: typeof AuthenticatedCrmDocumentsRoute
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
+  AuthenticatedPmsHubRoute: typeof AuthenticatedPmsHubRoute
+  AuthenticatedPortfolioComplianceRoute: typeof AuthenticatedPortfolioComplianceRoute
+  AuthenticatedSubmissionCenterRoute: typeof AuthenticatedSubmissionCenterRoute
   AuthenticatedAccountSecurityRoute: typeof AuthenticatedAccountSecurityRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAuditSimulatorRoute: AuthenticatedAuditSimulatorRoute,
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
+  AuthenticatedComplianceIntelligenceRoute:
+    AuthenticatedComplianceIntelligenceRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRouteWithChildren,
   AuthenticatedCrmDocumentsRoute: AuthenticatedCrmDocumentsRoute,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
+  AuthenticatedPmsHubRoute: AuthenticatedPmsHubRoute,
+  AuthenticatedPortfolioComplianceRoute: AuthenticatedPortfolioComplianceRoute,
+  AuthenticatedSubmissionCenterRoute: AuthenticatedSubmissionCenterRoute,
   AuthenticatedAccountSecurityRoute: AuthenticatedAccountSecurityRoute,
 }
 
@@ -839,3 +949,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
