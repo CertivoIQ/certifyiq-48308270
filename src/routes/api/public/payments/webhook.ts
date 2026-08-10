@@ -16,7 +16,7 @@ import type {
 
 // Loose typing: this service-role client writes columns across several tables
 // and must not be constrained by the generated single-table row types.
-let _supabase: SupabaseClient<any, any, any> | null = null;
+let _supabase: SupabaseClient | null = null;
 function getSupabase() {
   if (!_supabase) {
     _supabase = createClient(
