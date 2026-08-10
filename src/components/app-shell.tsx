@@ -55,6 +55,47 @@ function Wordmark() {
   );
 }
 
+function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const { isStaff } = useIsStaff();
+  const t = useT();
+  const items = isStaff ? [...NAV, { to: "/crm", labelKey: "nav.crm", icon: Briefcase } as const] : NAV;
+  return (
+    <nav className="flex flex-col gap-0.5">
+      {items.map(({ to, labelKey, icon: Icon }) => (
+        <Link
+          key={to}
+          to={to}
+          onClick={onNavigate}
+          activeOptions={{ exact: to === "/dashboard" }}
+          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]" }}
+          inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent/55" }}
+          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors"
+        >
+          <Icon className="size-4 shrink-0" strokeWidth={1.9} />
+          {t(labelKey)}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function TrialBanner() {
+  const t = useT();
+  if (!TRIAL.active) return null;
+  return (
+    <div className="brand-gradient flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 text-primary-foreground sm:px-7">
+      <Clock className="size-4 shrink-0" />
+      <p className="text-[12.5px] font-medium">{t("shell.trial.status", { daysLeft: TRIAL.daysLeft, daysTotal: TRIAL.daysTotal, used: TRIAL.uploadsUsed, allowed: TRIAL.uploadsAllowed })}</p>
+      <div className="ml-auto flex items-center gap-2">
+        <Button size="sm" variant="secondary" asChild><Link to="/welcome">{t("shell.trial.watchDemo")}</Link></Button>
+        <Button size="sm" className="border border-primary-foreground/40 bg-primary-foreground/10 hover:bg-primary-foreground/20" asChild><Link to="/pricing">{t("shell.trial.upgrade")}</Link></Button>
+      </div>
+    </div>
+  );
+}
+
+
+
 export function AppShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string | undefined; actions?: ReactNode | undefined }) {
   const { session } = useSession();
   const [open, setOpen] = useState(false);
