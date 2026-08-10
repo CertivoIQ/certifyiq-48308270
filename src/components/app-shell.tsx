@@ -102,7 +102,7 @@ function TrialBanner() {
   );
 }
 
-function PublicShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string; actions?: ReactNode }) {
+function PublicShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string | undefined; actions?: ReactNode | undefined }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-background">

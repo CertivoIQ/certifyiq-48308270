@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { render } from '@react-email/render'
 import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
-import { TEMPLATES } from './registry'
+import { TEMPLATES, type TemplateData } from './registry'
 
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
 
@@ -19,7 +19,7 @@ export type SendTemplateEmailResult =
   | { sent: false; reason: 'recipient_suppressed' }
 
 export interface SendTemplateEmailOptions {
-  templateData?: Record<string, any>
+  templateData?: TemplateData
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string
   replyTo?: string
@@ -57,7 +57,7 @@ export async function sendTemplateEmail(
   }
 
   const templateData = options.templateData ?? {}
-  const element = React.createElement(template.component, templateData)
+  const element = React.createElement(template.component, templateData as never)
   const html = await render(element)
   const text = await render(element, { plainText: true })
   const subject =

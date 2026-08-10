@@ -4,6 +4,20 @@ import type { LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { FEATURE_NAMES } from '@/lib/compliance-intelligence.mjs';
 
+/**
+ * Narrow view of the Supabase client for the import tables, which are written
+ * with loosely-shaped rows and are not part of the generated table types.
+ */
+type ImportRow = Record<string, string | number | null>;
+interface SupabaseLike {
+  from(table: string): {
+    insert(row: ImportRow): {
+      select(columns: string): { single(): Promise<{ data: { id: string } | null; error: Error | null }> };
+      then: Promise<{ error: Error | null }>['then'];
+    } & Promise<{ error: Error | null }>;
+  };
+}
+
 const features: Array<{ name: string; description: string; icon: LucideIcon }> = [
   { name: FEATURE_NAMES.massReview, description: 'Upload certification files in bulk for classification, duplicate detection, historical comparison, and findings review.', icon: UploadCloud },
   { name: FEATURE_NAMES.auditSimulator, description: 'Run evidence-backed federal or state audit simulations before a real reviewer arrives.', icon: ClipboardCheck },
@@ -33,14 +47,15 @@ export function ComplianceIntelligenceSuite() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Please sign in before importing certifications.');
       const userId = user.id;
-      const db = supabase as any;
+      const db = supabase as unknown as SupabaseLike;
       const { data: job, error } = await db.from('certification_import_jobs').insert({
         user_id: userId,
         created_by: userId,
-        source_name: files.length === 1 ? files[0].name : `${files.length} certification files`,
+        source_name: files.length === 1 ? (files[0]?.name ?? 'certification file') : `${files.length} certification files`,
         total_files: files.length,
       }).select('id').single();
       if (error) throw error;
+      if (!job) throw new Error('The certification import could not be created.');
       for (const file of files) {
         const path = `${userId}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
         const { error: uploadError } = await supabase.storage.from('certification-imports').upload(path, file, { upsert: false });

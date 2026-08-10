@@ -84,7 +84,7 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
+  subject: (data: Record<string, unknown>) =>
     `New CertivoIQ invoice${data['invoiceNumber'] ? ` ${data['invoiceNumber']}` : ''} — ${data['amountDue'] ?? 'amount due'}`,
   displayName: 'New invoice',
   previewData: {
