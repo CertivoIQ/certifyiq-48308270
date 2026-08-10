@@ -72,9 +72,9 @@ function collectAddonEntitlements(subscription: any): Partial<Record<string, unk
     if (isPlanPrice(priceId)) continue;
 
     if (priceId === ADDON_PRICE_IDS.academySeat) {
-      updates.academy_seats = Number(item.quantity ?? 1);
+      updates["academy_seats"] = Number(item.quantity ?? 1);
     } else if (priceId === ADDON_PRICE_IDS.academyProperty) {
-      updates.academy_seats = -1;
+      updates["academy_seats"] = -1;
     }
   }
 
