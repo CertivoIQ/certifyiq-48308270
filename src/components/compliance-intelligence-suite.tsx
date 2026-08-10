@@ -25,23 +25,22 @@ export function ComplianceIntelligenceSuite() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Please sign in before importing certifications.');
-      const orgId = user.user_metadata?.organization_id;
-      if (!orgId) throw new Error('Your account is not associated with an organization.');
+      const userId = user.id;
       const db = supabase as any;
       const { data: job, error } = await db.from('certification_import_jobs').insert({
-        organization_id: orgId,
-        created_by: user.id,
+        user_id: userId,
+        created_by: userId,
         source_name: files.length === 1 ? files[0].name : `${files.length} certification files`,
         total_files: files.length,
       }).select('id').single();
       if (error) throw error;
       for (const file of files) {
-        const path = `${orgId}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const path = `${userId}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
         const { error: uploadError } = await supabase.storage.from('certification-imports').upload(path, file, { upsert: false });
         if (uploadError) throw uploadError;
         const { error: itemError } = await db.from('certification_import_items').insert({
           job_id: job.id,
-          organization_id: orgId,
+          user_id: userId,
           storage_path: path,
           original_file_name: file.name,
           mime_type: file.type || 'application/octet-stream',
@@ -70,29 +69,15 @@ export function ComplianceIntelligenceSuite() {
           <div className="rounded-xl border bg-muted/40 px-4 py-3 text-sm"><div className="font-medium">Audit Readiness Score™</div><div className="mt-1 text-muted-foreground">Calculated from findings and evidence coverage.</div></div>
         </div>
       </section>
-
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {features.map(({ name, description, icon: Icon }) => (
-          <article key={name} className="rounded-2xl border bg-card p-5 shadow-sm">
-            <Icon className="mb-4 h-6 w-6 text-primary" />
-            <h2 className="font-semibold">{name}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
-          </article>
-        ))}
+        {features.map(({ name, description, icon: Icon }) => <article key={name} className="rounded-2xl border bg-card p-5 shadow-sm"><Icon className="mb-4 h-6 w-6 text-primary" /><h2 className="font-semibold">{name}</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p></article>)}
       </section>
-
       <section className="rounded-2xl border bg-card p-6 shadow-sm">
         <div className="flex items-center gap-3"><Archive className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">Mass Certification Review™</h2><p className="text-sm text-muted-foreground">Bulk upload historical certifications for secure, tenant-scoped processing.</p></div></div>
-        <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30">
-          <UploadCloud className="h-8 w-8 text-muted-foreground" />
-          <span className="mt-3 font-medium">Choose certification files</span>
-          <span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, WEBP, or ZIP • up to 50 MB each</span>
-          <input className="sr-only" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.zip" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} />
-        </label>
+        <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30"><UploadCloud className="h-8 w-8 text-muted-foreground" /><span className="mt-3 font-medium">Choose certification files</span><span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, WEBP, or ZIP • up to 50 MB each</span><input className="sr-only" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.zip" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
         {files.length > 0 && <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 p-3 text-sm"><span>{files.length} file{files.length === 1 ? '' : 's'} selected • {(totalBytes / 1024 / 1024).toFixed(1)} MB</span><button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50" disabled={uploading} onClick={queueImport}>{uploading ? 'Queueing…' : 'Start Review'}</button></div>}
         {message && <p className="mt-3 text-sm text-muted-foreground" role="status">{message}</p>}
       </section>
-
       <section className="grid gap-4 md:grid-cols-3">
         {[['Certification History Intelligence™', History], ['Audit Readiness Score™', Gauge], ['Compliance Approval Center™', ShieldCheck]].map(([label, Icon]) => <div key={String(label)} className="rounded-2xl border bg-card p-5"><Icon className="mb-3 h-5 w-5 text-primary" /><div className="font-medium">{label as string}</div><p className="mt-1 text-sm text-muted-foreground">Built into the compliance workflow and preserved with the audit trail.</p></div>)}
       </section>
