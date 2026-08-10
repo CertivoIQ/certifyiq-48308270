@@ -6,6 +6,7 @@ import {
   FILE_RETENTION_DAYS,
   PLAN_ENTITLEMENTS,
   isAddonPrice,
+  isPlanPrice,
 } from "@/lib/plan-catalog";
 
 // Loose typing: this service-role client writes columns across several tables
