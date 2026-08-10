@@ -1,19 +1,24 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import type { StripeEnv } from "@/lib/stripe.server";
 import { TRIAL_ENTITLEMENT, entitlementForPrice } from "@/lib/plan-catalog";
 import type { AccountState } from "@/utils/entitlements.functions";
 
 /** Current billing period start, used as the usage-counter bucket key. */
-export function periodStartFor(access: Record<string, any> | null, sub: Record<string, any> | null): string {
-  const fromSub = sub?.["current_period_start"] as string | null | undefined;
+export function periodStartFor(
+  access: { trial_started_at?: string | null } | null,
+  sub: { current_period_start?: string | null } | null,
+): string {
+  const fromSub = sub?.current_period_start;
   if (fromSub) return new Date(fromSub).toISOString();
-  const trialStart = access?.["trial_started_at"] as string | null | undefined;
+  const trialStart = access?.trial_started_at;
   if (trialStart) return new Date(trialStart).toISOString();
   const d = new Date();
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
 }
 
 export async function loadState(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   userId: string,
   environment: StripeEnv,
 ): Promise<AccountState> {
@@ -31,7 +36,7 @@ export async function loadState(
     .order("created_at", { ascending: false });
 
   const planSub =
-    (subs ?? []).find((s: any) => !!entitlementForPrice(s.price_id)) ?? null;
+    (subs ?? []).find((s) => !!entitlementForPrice(s.price_id)) ?? null;
   const entitlement = entitlementForPrice(planSub?.price_id ?? access?.["price_id"]);
   const isTrial = (access?.["status"] ?? "trialing") === "trialing" && !entitlement;
 
