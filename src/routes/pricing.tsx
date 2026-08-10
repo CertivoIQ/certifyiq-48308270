@@ -271,21 +271,38 @@ function PricingPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
+                {a.id === "academy-seat" && (
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <label htmlFor="academy-seats" className="text-[12.5px] text-muted-foreground">
+                      Seats
+                    </label>
+                    <input
+                      id="academy-seats"
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={academySeats}
+                      onChange={(e) => setAcademySeats(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
+                      className="h-8 w-20 rounded-md border border-input bg-background px-2 text-[12.5px]"
+                    />
+                  </div>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
                   className="mt-2.5"
+                  disabled={addonBusy === (a.id === "academy-seat" ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty)}
                   onClick={() =>
                     void startCheckout(
-                      a.id === "academy-seat"
-                        ? ADDON_PRICE_IDS.academySeat
-                        : ADDON_PRICE_IDS.academyProperty,
+                      a.id === "academy-seat" ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty,
                       a.name,
+                      a.id === "academy-seat" ? academySeats : 1,
                     )
                   }
-
                 >
-                  Add to my plan
+                  {addonBusy === (a.id === "academy-seat" ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty)
+                    ? "Adding..."
+                    : "Add to my plan"}
                 </Button>
               </li>
             ))}
