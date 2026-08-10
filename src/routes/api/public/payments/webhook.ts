@@ -139,7 +139,6 @@ async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: s
     .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
 
   const plan = PLAN_ENTITLEMENTS[row.price_id];
-  const isAddon = isAddonPrice(row.price_id);
   const active = ["active", "trialing", "past_due"].includes(row.status);
 
   // Merge, never replace: account_access is one row per user shared by the
