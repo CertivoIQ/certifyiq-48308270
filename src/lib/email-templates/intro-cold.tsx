@@ -1,7 +1,7 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
 import type { TemplateEntry } from './registry'
-import { emailT, type EmailLocale } from './i18n'
+import { emailT, type EmailLocale, localeOf } from './i18n'
 import { PLANS } from '@/lib/platform-data'
 import {
   BRAND,
@@ -226,10 +226,10 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
+  subject: (data: Record<string, unknown>) =>
     data['company']
-      ? emailT(data['locale'], 'intro.subject.company', { company: data['company'] })
-      : emailT(data['locale'], 'intro.subject.generic'),
+      ? emailT(localeOf(data['locale']), 'intro.subject.company', { company: String(data['company']) })
+      : emailT(localeOf(data['locale']), 'intro.subject.generic'),
   displayName: 'Cold intro — CertivoIQ overview',
   previewData: {
     name: 'Dana',

@@ -89,7 +89,7 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
+  subject: (data: Record<string, unknown>) =>
     `Action needed: your CertivoIQ payment of ${data['amountDue'] ?? 'your invoice'} failed`,
   displayName: 'Payment failed',
   previewData: {

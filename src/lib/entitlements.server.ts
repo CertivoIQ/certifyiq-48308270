@@ -2,8 +2,23 @@ import type { StripeEnv } from "@/lib/stripe.server";
 import { TRIAL_ENTITLEMENT, entitlementForPrice } from "@/lib/plan-catalog";
 import type { AccountState } from "@/utils/entitlements.functions";
 
+/** Minimal read surface used by entitlement loading. */
+type DbRow = Record<string, unknown>;
+interface DbRead extends PromiseLike<{ data: DbRow[] | null }> {
+  select(columns: string): DbRead;
+  eq(column: string, value: unknown): DbRead;
+  order(column: string, options?: { ascending?: boolean }): DbRead;
+  maybeSingle(): PromiseLike<{ data: DbRow | null }>;
+}
+export interface EntitlementsDb {
+  from(table: string): DbRead;
+}
+
 /** Current billing period start, used as the usage-counter bucket key. */
-export function periodStartFor(access: Record<string, any> | null, sub: Record<string, any> | null): string {
+export function periodStartFor(
+  access: Record<string, unknown> | null,
+  sub: Record<string, unknown> | null,
+): string {
   const fromSub = sub?.["current_period_start"] as string | null | undefined;
   if (fromSub) return new Date(fromSub).toISOString();
   const trialStart = access?.["trial_started_at"] as string | null | undefined;
@@ -13,7 +28,7 @@ export function periodStartFor(access: Record<string, any> | null, sub: Record<s
 }
 
 export async function loadState(
-  supabase: any,
+  supabase: EntitlementsDb,
   userId: string,
   environment: StripeEnv,
 ): Promise<AccountState> {
@@ -31,8 +46,10 @@ export async function loadState(
     .order("created_at", { ascending: false });
 
   const planSub =
-    (subs ?? []).find((s: any) => !!entitlementForPrice(s.price_id)) ?? null;
-  const entitlement = entitlementForPrice(planSub?.price_id ?? access?.["price_id"]);
+    (subs ?? []).find((s) => !!entitlementForPrice(String(s["price_id"] ?? ""))) ?? null;
+  const entitlement = entitlementForPrice(
+    (planSub?.["price_id"] as string | undefined) ?? (access?.["price_id"] as string | undefined),
+  );
   const isTrial = (access?.["status"] ?? "trialing") === "trialing" && !entitlement;
 
   const periodStart = periodStartFor(access, planSub);

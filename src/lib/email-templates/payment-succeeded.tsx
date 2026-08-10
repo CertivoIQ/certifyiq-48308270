@@ -89,7 +89,7 @@ const Email = ({
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) => `Payment received — ${data['amountPaid'] ?? 'thank you'} · CertivoIQ`,
+  subject: (data: Record<string, unknown>) => `Payment received — ${data['amountPaid'] ?? 'thank you'} · CertivoIQ`,
   displayName: 'Payment succeeded',
   previewData: {
     name: 'Jordan',
