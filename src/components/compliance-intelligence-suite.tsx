@@ -3,6 +3,7 @@ import { Archive, Building2, ClipboardCheck, FileCheck2, Gauge, History, Plug, S
 import type { LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { FEATURE_NAMES } from '@/lib/compliance-intelligence.mjs';
+import { CertificationReviewPanel } from '@/components/certification-review-panel';
 
 /**
  * Narrow view of the Supabase client for the import tables, which are written
@@ -100,6 +101,7 @@ export function ComplianceIntelligenceSuite() {
         {files.length > 0 && <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 p-3 text-sm"><span>{files.length} file{files.length === 1 ? '' : 's'} selected • {(totalBytes / 1024 / 1024).toFixed(1)} MB</span><button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50" disabled={uploading} onClick={queueImport}>{uploading ? 'Queueing…' : 'Start Review'}</button></div>}
         {message && <p className="mt-3 text-sm text-muted-foreground" role="status">{message}</p>}
       </section>
+      <CertificationReviewPanel />
       <section className="grid gap-4 md:grid-cols-3">
         {summaryCards.map(({ label, icon: Icon }) => <div key={label} className="rounded-2xl border bg-card p-5"><Icon className="mb-3 h-5 w-5 text-primary" /><div className="font-medium">{label}</div><p className="mt-1 text-sm text-muted-foreground">Built into the compliance workflow and preserved with the audit trail.</p></div>)}
       </section>

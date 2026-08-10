@@ -11,7 +11,8 @@
     "generate:welcome-voiceover": "node scripts/generate-welcome-voiceover.mjs",
     "test:compliance": "node --test scripts/test-compliance-intelligence.mjs",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
