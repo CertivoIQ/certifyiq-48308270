@@ -20,16 +20,17 @@ import { useViewerState } from "@/hooks/use-viewer-state";
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "CertivoIQ — Your 24/7 Compliance Analyst" },
+      { title: "CertivoIQ — Find compliance problems before the auditor does." },
       {
         name: "description",
         content:
-          "One Analyst. Every Property. 24/7. CertivoIQ continuously analyzes affordable housing compliance, surfaces potential findings, and helps teams stay audit-ready.",
+          "CertivoIQ uses AI to extract evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
       },
-      { property: "og:title", content: "CertivoIQ — One Analyst. Every Property. 24/7." },
+      { property: "og:title", content: "CertivoIQ — Find compliance problems before the auditor does." },
       {
         property: "og:description",
-        content: "Your 24/7 Compliance Analyst for certification intelligence, audit readiness, and portfolio compliance visibility.",
+        content:
+          "CertivoIQ uses AI to extract evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
