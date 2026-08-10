@@ -56,7 +56,7 @@ function SecurityPage() {
 
   const generateCodes = useServerFn(generateRecoveryCodes);
   const getRecoveryCount = useServerFn(countRecoveryCodes);
-  const useRecoveryCode = useServerFn(verifyAndDisableRecoveryCode);
+  const submitRecoveryCode = useServerFn(verifyAndDisableRecoveryCode);
 
   const refresh = async () => {
     const [{ data: factorsData }, { data: aalData }] = await Promise.all([
@@ -161,7 +161,7 @@ function SecurityPage() {
     if (!disableCode) return;
     setEnrolling(true);
     try {
-      const result = await useRecoveryCode({ data: { code: disableCode } });
+      const result = await submitRecoveryCode({ data: { code: disableCode } });
       if ("error" in result) throw new Error(result.error);
       await refresh();
       setDisableMode(false);
