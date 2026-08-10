@@ -13,7 +13,7 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSession } from "@/hooks/use-session";
 import { useSubscription } from "@/hooks/use-subscription";
 import { getStripeEnvironment } from "@/lib/stripe";
-import { createPortalSession, changePlan } from "@/utils/payments.functions";
+import { createPortalSession, changePlan, addAddonToSubscription } from "@/utils/payments.functions";
 import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/plan-catalog";
 
 export const Route = createFileRoute("/pricing")({
