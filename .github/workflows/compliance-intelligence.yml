@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - agent/compliance-intelligence-suite
+      - sync/lovable-staging-fd7
   pull_request:
     branches:
       - main
