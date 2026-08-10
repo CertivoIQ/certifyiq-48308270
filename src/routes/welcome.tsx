@@ -96,45 +96,36 @@ function WelcomePage() {
           <Pill tone="seal">
             {t("welcome.pill", { daysLeft: TRIAL.daysLeft, allowed: TRIAL.uploadsAllowed })}
           </Pill>
-          <h1 className="mx-auto mt-5 max-w-3xl font-display text-[38px] leading-[1.08] sm:text-[52px]">
-            {t("welcome.hero.title.pre")}{" "}
-            <span className="brand-text">{t("welcome.hero.title.accent")}</span>
+          <h1 className="mx-auto mt-5 max-w-4xl font-display text-[38px] leading-[1.08] sm:text-[56px]">
+            {t("welcome.hero.title")}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-[15.5px] leading-relaxed text-muted-foreground">
-            {t("welcome.hero.body")}
+            {t("welcome.hero.subtitle")}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" asChild>
-              <Link to={isSubscriber ? "/dashboard" : "/launchpad"}>
-                {isSubscriber ? t("welcome.nav.open") : t("welcome.cta.trial")}
-              </Link>
+              <Link to={isSubscriber ? "/dashboard" : "/launchpad"}>{t("welcome.hero.cta")}</Link>
             </Button>
-            {/* Demo dashboard is for visitors and trial users; subscribers use /dashboard. */}
             {!isSubscriber && (
               <Button size="lg" variant="outline" asChild>
                 <Link to="/demo-dashboard">{t("welcome.cta.sample")}</Link>
               </Button>
             )}
           </div>
-        </section>
 
-        <section className="mt-10 rounded-xl border border-primary/20 bg-accent/50 px-6 py-10 text-center sm:px-10" aria-labelledby="analyst-positioning">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">CertivoIQ</p>
-          <h2 id="analyst-positioning" className="mx-auto mt-3 max-w-4xl font-display text-[34px] leading-tight sm:text-[48px]">
-            One Analyst. Every Property. 24/7.
-          </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-[17px] font-medium leading-relaxed text-foreground">
-            Your portfolio doesn&apos;t need more spreadsheets. It needs intelligence.
-          </p>
-          <p className="mx-auto mt-3 max-w-3xl text-[14.5px] leading-relaxed text-muted-foreground">
-            CertivoIQ acts as your 24/7 Compliance Analyst—continuously monitoring certifications, surfacing potential findings, tracking audit readiness, and helping your team focus human expertise where it matters most.
-          </p>
-          <p className="mx-auto mt-4 max-w-3xl text-[13px] font-medium text-foreground">
-            Scale compliance capacity without scaling administrative burden. Turn compliance capacity into profitability.
-          </p>
-          <p className="mx-auto mt-3 max-w-3xl text-[12px] text-muted-foreground">
-            AI-powered compliance intelligence. Human-approved decisions.
-          </p>
+          <div className="mt-10" aria-label="CertivoIQ review workflow">
+            <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2 sm:gap-3">
+              {WORKFLOW.map(({ icon: Icon, labelKey }, i) => (
+                <div key={labelKey} className="flex items-center gap-2 sm:gap-3">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-ledger">
+                    <Icon className="size-4 text-primary" />
+                    <span className="text-[12.5px] font-medium">{t(labelKey)}</span>
+                  </div>
+                  {i < WORKFLOW.length - 1 && <ChevronRight className="size-4 text-muted-foreground" />}
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section className="mt-12 overflow-hidden rounded-lg" id="video">
