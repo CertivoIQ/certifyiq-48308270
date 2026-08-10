@@ -111,6 +111,13 @@ function PricingPage() {
       }
       return;
     }
+    // Add-ons cannot be purchased alone — they must attach to an active plan.
+    if (!isActive && !PLAN_PRICE_ID_LIST.includes(priceId)) {
+      toast.info("Choose a plan first", {
+        description: "Add-ons attach to an active CertivoIQ subscription. Select a plan above, then add Academy seats or properties.",
+      });
+      return;
+    }
     try {
       openCheckout({
         priceId,
