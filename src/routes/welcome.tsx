@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, TRIAL } from "@/lib/platform-data";
-import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle } from "lucide-react";
+import { ShieldCheck, TrendingDown, Clock, Check, AlertTriangle, ChevronRight, Upload, ScanLine, CheckCircle, FileText, Flag } from "lucide-react";
 import { PENALTY_RISKS, TRIAL_OFFER } from "@/lib/trial-data";
 import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
 import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
