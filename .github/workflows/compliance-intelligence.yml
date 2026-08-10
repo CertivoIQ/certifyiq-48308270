@@ -1,0 +1,30 @@
+name: CertivoIQ Compliance Intelligence CI
+
+on:
+  push:
+    branches:
+      - agent/compliance-intelligence-suite
+  pull_request:
+    branches:
+      - main
+      - agent/compliance-intelligence-suite
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Domain tests
+        run: node --test scripts/test-compliance-intelligence.mjs
+      - name: Lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
