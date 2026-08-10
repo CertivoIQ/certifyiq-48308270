@@ -83,7 +83,7 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (data: EmailTemplateData) =>
-    emailT(data['locale'], 'support.subject', { caseNumber: data['caseNumber'] ?? '#' }),
+    emailT(localeOf(data), 'support.subject', { caseNumber: data['caseNumber'] ?? '#' }),
   displayName: 'Support request received',
   previewData: {
     name: 'Jordan',

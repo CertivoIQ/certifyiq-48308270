@@ -228,8 +228,8 @@ export const template = {
   component: Email,
   subject: (data: EmailTemplateData) =>
     data['company']
-      ? emailT(data['locale'], 'intro.subject.company', { company: data['company'] })
-      : emailT(data['locale'], 'intro.subject.generic'),
+      ? emailT(localeOf(data), 'intro.subject.company', { company: data['company'] })
+      : emailT(localeOf(data), 'intro.subject.generic'),
   displayName: 'Cold intro — CertivoIQ overview',
   previewData: {
     name: 'Dana',
