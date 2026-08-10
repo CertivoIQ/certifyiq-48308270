@@ -45,6 +45,8 @@ function PricingPage() {
   const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
   const [portalBusy, setPortalBusy] = useState(false);
   const [planBusy, setPlanBusy] = useState<string | null>(null);
+  const [addonBusy, setAddonBusy] = useState<string | null>(null);
+  const [academySeats, setAcademySeats] = useState(1);
   const navigate = useNavigate();
 
   const startCheckout = async (priceId: string | null, name: string, quantity?: number) => {
