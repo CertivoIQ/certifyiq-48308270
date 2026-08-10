@@ -1,64 +1,73 @@
 /**
- * Minimal structural shapes for the Stripe objects this app reads from
- * webhooks. Only the fields actually used are declared — Stripe payloads
- * carry more, and these types intentionally stay narrow.
+ * Structural types for the Stripe webhook payloads this app consumes.
+ * Deliberately loose (all fields optional) because Stripe sends different
+ * shapes per API version and event type; behaviour is unchanged, these types
+ * only describe the fields the handlers already read.
  */
 
 export interface StripePriceLike {
-  id?: string;
-  product?: string | { id?: string };
-  lookup_key?: string | null;
-  metadata?: Record<string, string> | null;
+  id?: string
+  lookup_key?: string | null
+  product?: string | null
+  metadata?: Record<string, string> | null
 }
 
-export interface StripeLineItemLike {
-  description?: string | null;
-  quantity?: number | null;
-  price?: StripePriceLike | null;
-  pricing?: { price_details?: { price?: string } | null } | null;
-  period?: { start?: number | null; end?: number | null } | null;
-  current_period_start?: number | null;
-  current_period_end?: number | null;
+export interface StripeSubscriptionItemLike {
+  price?: StripePriceLike | null
+  quantity?: number | null
+  current_period_start?: number | null
+  current_period_end?: number | null
 }
 
 export interface StripeSubscriptionLike {
-  id: string;
-  customer?: string | null;
-  status?: string;
-  cancel_at_period_end?: boolean | null;
-  current_period_start?: number | null;
-  current_period_end?: number | null;
-  items?: { data?: StripeLineItemLike[] } | null;
-  metadata?: Record<string, string> | null;
+  id?: string
+  customer?: string | null
+  status?: string
+  cancel_at_period_end?: boolean | null
+  current_period_start?: number | null
+  current_period_end?: number | null
+  items?: { data?: StripeSubscriptionItemLike[] } | null
+  metadata?: Record<string, string> | null
+}
+
+export interface StripeInvoiceLineLike {
+  description?: string | null
+  price?: StripePriceLike | null
+  pricing?: { price_details?: { price?: string | null } | null } | null
+  period?: { start?: number | null; end?: number | null } | null
 }
 
 export interface StripeInvoiceLike {
-  id?: string;
-  number?: string | null;
-  currency?: string | null;
-  amount_due?: number | null;
-  amount_paid?: number | null;
-  amount_remaining?: number | null;
-  attempt_count?: number | null;
-  created?: number | null;
-  due_date?: number | null;
-  next_payment_attempt?: number | null;
-  period_start?: number | null;
-  period_end?: number | null;
-  customer_email?: string | null;
-  customer_name?: string | null;
-  hosted_invoice_url?: string | null;
-  invoice_pdf?: string | null;
-  subscription?: string | null;
-  parent?: { subscription_details?: { subscription?: string | null } | null } | null;
-  status_transitions?: { paid_at?: number | null } | null;
-  last_finalization_error?: { message?: string | null } | null;
-  last_payment_error?: { message?: string | null } | null;
-  lines?: { data?: StripeLineItemLike[] } | null;
+  id?: string
+  number?: string | null
+  currency?: string | null
+  amount_due?: number | null
+  amount_paid?: number | null
+  amount_remaining?: number | null
+  attempt_count?: number | null
+  created?: number | null
+  due_date?: number | null
+  next_payment_attempt?: number | null
+  period_start?: number | null
+  period_end?: number | null
+  hosted_invoice_url?: string | null
+  invoice_pdf?: string | null
+  customer_email?: string | null
+  customer_name?: string | null
+  status_transitions?: { paid_at?: number | null } | null
+  last_finalization_error?: { message?: string | null } | null
+  last_payment_error?: { message?: string | null } | null
+  subscription?: string | null
+  parent?: { subscription_details?: { subscription?: string | null } | null } | null
+  lines?: { data?: StripeInvoiceLineLike[] } | null
 }
 
-export interface StripeWebhookEventLike {
-  id?: string;
-  type: string;
-  data: { object: StripeInvoiceLike & StripeSubscriptionLike & Record<string, unknown> };
+export interface StripeCheckoutSessionLike {
+  id?: string
+  payment_status?: string | null
 }
+
+/** Union of every event object shape the webhook route branches on. */
+export type StripeWebhookObject = StripeSubscriptionLike &
+  StripeInvoiceLike &
+  StripeCheckoutSessionLike
