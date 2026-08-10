@@ -3,6 +3,7 @@ name: CertivoIQ Compliance Intelligence CI
 on:
   push:
     branches:
+      - main
       - agent/compliance-intelligence-suite
       - fix/pricing-production-banner
       - feat/pricing-comparison-table
@@ -11,6 +12,7 @@ on:
     branches:
       - main
       - agent/compliance-intelligence-suite
+  workflow_dispatch:
 
 jobs:
   validate:
