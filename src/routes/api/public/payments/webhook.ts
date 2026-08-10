@@ -6,6 +6,7 @@ import {
   FILE_RETENTION_DAYS,
   PLAN_ENTITLEMENTS,
   isAddonPrice,
+  isPlanPrice,
 } from "@/lib/plan-catalog";
 
 // Loose typing: this service-role client writes columns across several tables
@@ -34,8 +35,18 @@ function resolvePriceId(item: any): string {
   );
 }
 
+function planItem(subscription: any): any {
+  // A subscription may have multiple items (plan + add-ons). The plan item is
+  // the recurring price that matches a known platform plan; fall back to the
+  // first item if there is no plan item (e.g. add-on-only subscriptions).
+  return (
+    subscription.items?.data?.find((it: any) => isPlanPrice(resolvePriceId(it))) ||
+    subscription.items?.data?.[0]
+  );
+}
+
 function subscriptionRow(subscription: any, env: StripeEnv) {
-  const item = subscription.items?.data?.[0];
+  const item = planItem(subscription);
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
   return {
@@ -50,6 +61,24 @@ function subscriptionRow(subscription: any, env: StripeEnv) {
     environment: env,
     updated_at: new Date().toISOString(),
   };
+}
+
+function collectAddonEntitlements(subscription: any): Partial<Record<string, unknown>> {
+  const updates: Partial<Record<string, unknown>> = {};
+  const items = subscription.items?.data ?? [];
+
+  for (const item of items) {
+    const priceId = resolvePriceId(item);
+    if (isPlanPrice(priceId)) continue;
+
+    if (priceId === ADDON_PRICE_IDS.academySeat) {
+      updates["academy_seats"] = Number(item.quantity ?? 1);
+    } else if (priceId === ADDON_PRICE_IDS.academyProperty) {
+      updates["academy_seats"] = -1;
+    }
+  }
+
+  return updates;
 }
 
 /**
@@ -110,7 +139,6 @@ async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: s
     .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
 
   const plan = PLAN_ENTITLEMENTS[row.price_id];
-  const isAddon = isAddonPrice(row.price_id);
   const active = ["active", "trialing", "past_due"].includes(row.status);
 
   // Merge, never replace: account_access is one row per user shared by the
@@ -144,14 +172,13 @@ async function applyPurchase(subscription: any, env: StripeEnv, event?: { id?: s
     access["access_until"] = row.cancel_at_period_end ? row.current_period_end : null;
     access["files_purge_at"] = null;
     access["files_purged_at"] = null;
-  } else if (isAddon && active) {
-    // Add-ons layer on top and must never disturb plan capacity or status.
-    if (row.price_id === ADDON_PRICE_IDS.academySeat) {
-      access["academy_seats"] = Number(subscription.items?.data?.[0]?.quantity ?? 1);
-    } else if (row.price_id === ADDON_PRICE_IDS.academyProperty) {
-      // Property-wide Academy: unlimited seats at one property.
-      access["academy_seats"] = -1;
-    }
+  }
+
+  // Merge add-on entitlements from all items on the subscription. Add-ons are
+  // attached to the same subscription as the plan and billed at the next cycle.
+  const addonEntitlements = collectAddonEntitlements(subscription);
+  for (const [key, value] of Object.entries(addonEntitlements)) {
+    access[key] = value;
   }
 
   await supabase.from("account_access").upsert(access, { onConflict: "user_id" });

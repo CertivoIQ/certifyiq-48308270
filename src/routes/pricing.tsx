@@ -13,8 +13,9 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useSession } from "@/hooks/use-session";
 import { useSubscription } from "@/hooks/use-subscription";
 import { getStripeEnvironment } from "@/lib/stripe";
-import { createPortalSession, changePlan } from "@/utils/payments.functions";
+import { createPortalSession, changePlan, addAddonToSubscription } from "@/utils/payments.functions";
 import { ADDON_PRICE_IDS, PLAN_PRICE_ID_LIST, planKeyToPriceId } from "@/lib/plan-catalog";
+import type { StripeEnv } from "@/lib/stripe.server";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -45,6 +46,9 @@ function PricingPage() {
   const { openCheckout, closeCheckout, isOpen, checkoutElement, label } = useStripeCheckout();
   const [portalBusy, setPortalBusy] = useState(false);
   const [planBusy, setPlanBusy] = useState<string | null>(null);
+  const [addonBusy, setAddonBusy] = useState<string | null>(null);
+  const [academySeats, setAcademySeats] = useState(1);
+  const [academyProperties, setAcademyProperties] = useState(1);
   const navigate = useNavigate();
 
   const startCheckout = async (priceId: string | null, name: string, quantity?: number) => {
@@ -82,6 +86,36 @@ function PricingPage() {
       } finally {
         setPlanBusy(null);
       }
+      return;
+    }
+    // Add-ons attach to the existing active subscription and are billed on the next renewal.
+    if (isActive && subscription && !PLAN_PRICE_ID_LIST.includes(priceId)) {
+      setAddonBusy(priceId);
+      try {
+        const addonPayload: { priceId: string; environment: StripeEnv; quantity?: number } = {
+          priceId,
+          environment: getStripeEnvironment(),
+        };
+        if (quantity) addonPayload.quantity = quantity;
+        const result = await addAddonToSubscription({ data: addonPayload });
+        if ("error" in result) throw new Error(result.error);
+        toast.success(`${name} added to your plan`, {
+          description: result.effectiveAt
+            ? `Billing begins on your next renewal (${new Date(result.effectiveAt).toLocaleDateString()}).`
+            : "Billing begins on your next renewal.",
+        });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not add add-on");
+      } finally {
+        setAddonBusy(null);
+      }
+      return;
+    }
+    // Add-ons cannot be purchased alone — they must attach to an active plan.
+    if (!isActive && !PLAN_PRICE_ID_LIST.includes(priceId)) {
+      toast.info("Choose a plan first", {
+        description: "Add-ons attach to an active CertivoIQ subscription. Select a plan above, then add Academy seats or properties.",
+      });
       return;
     }
     try {
@@ -235,34 +269,49 @@ function PricingPage() {
           bodyClassName="p-0"
         >
           <ul className="divide-y divide-border">
-            {ACADEMY_ADDONS.map((a) => (
-              <li key={a.name} className="px-5 py-3.5">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-display text-[15px]">{a.name}</span>
-                  <span className="font-mono text-[13px]">
-                    {a.price}
-                    <span className="text-muted-foreground">{a.cadence}</span>
-                  </span>
-                </div>
-                <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-2.5"
-                  onClick={() =>
-                    void startCheckout(
-                      a.id === "academy-seat"
-                        ? ADDON_PRICE_IDS.academySeat
-                        : ADDON_PRICE_IDS.academyProperty,
-                      a.name,
-                    )
-                  }
+            {ACADEMY_ADDONS.map((a) => {
+              const isSeat = a.id === "academy-seat";
+              const priceId = isSeat ? ADDON_PRICE_IDS.academySeat : ADDON_PRICE_IDS.academyProperty;
+              const quantity = isSeat ? academySeats : academyProperties;
+              const setQuantity = isSeat ? setAcademySeats : setAcademyProperties;
+              const label = isSeat ? "Seats" : "Properties";
 
-                >
-                  Add to my plan
-                </Button>
-              </li>
-            ))}
+              return (
+                <li key={a.name} className="px-5 py-3.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-display text-[15px]">{a.name}</span>
+                    <span className="font-mono text-[13px]">
+                      {a.price}
+                      <span className="text-muted-foreground">{a.cadence}</span>
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <label htmlFor={`qty-${a.id}`} className="text-[12.5px] text-muted-foreground">
+                      {label}
+                    </label>
+                    <input
+                      id={`qty-${a.id}`}
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
+                      className="h-8 w-20 rounded-md border border-input bg-background px-2 text-[12.5px]"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2.5"
+                    disabled={addonBusy === priceId}
+                    onClick={() => void startCheckout(priceId, a.name, quantity)}
+                  >
+                    {addonBusy === priceId ? "Adding..." : "Add to my plan"}
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
           <div className="border-t border-border px-5 py-4">
             <Button size="sm" variant="outline" asChild>
@@ -285,6 +334,35 @@ function PricingPage() {
             <Link to="/trial">Open my trial plan</Link>
           </Button>
         </div>
+      </Panel>
+
+      <Panel className="mt-4" title="Billing FAQ" description="How charges and plan changes work" bodyClassName="p-5">
+        <dl className="grid gap-4 text-[13px]">
+          <div>
+            <dt className="font-semibold">Add-ons and billing timing</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              Add-ons attach to your existing subscription and are billed on your next regular renewal — no separate charge today. Think of it as buy-now, pay-later on the next cycle.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Plan upgrades and downgrades</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              Plan changes take effect at your next renewal with no mid-cycle proration, so your current capacity stays active until then.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Cancellation</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              You keep access until the end of your paid period. After the period ends, uploaded files are retained for 14 days, then permanently removed.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">AI document overages</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              Every plan includes a monthly AI document allowance. Files uploaded beyond that allowance are billed at $3 per certification regardless of plan.
+            </dd>
+          </div>
+        </dl>
       </Panel>
 
       <p className="mt-5 text-[12.5px] text-muted-foreground">

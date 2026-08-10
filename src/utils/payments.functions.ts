@@ -298,3 +298,52 @@ export const setCancellation = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
+
+/** Add an add-on to the current subscription. Billed at the next billing cycle with no mid-cycle charge. */
+export const addAddonToSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      priceId: string;
+      quantity?: number;
+      environment: StripeEnv;
+    }) => {
+      if (!ID_PATTERN.test(data.priceId)) throw new Error("Invalid priceId");
+      if (data.quantity !== undefined && (data.quantity < 1 || data.quantity > 10000)) {
+        throw new Error("Invalid quantity");
+      }
+      return data;
+    },
+  )
+  .handler(
+    async ({ data, context }): Promise<{ ok: true; effectiveAt: string | null } | { error: string }> => {
+      const { supabase, userId } = context;
+
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("stripe_subscription_id, current_period_end, status")
+        .eq("user_id", userId)
+        .eq("environment", data.environment)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!sub?.stripe_subscription_id) return { error: "No active subscription to add this add-on to" };
+
+      try {
+        const stripe = createStripeClient(data.environment);
+        const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
+        const target = prices.data[0];
+        if (!target) return { error: "Add-on price not found" };
+
+        await stripe.subscriptions.update(sub.stripe_subscription_id, {
+          items: [{ price: target.id, quantity: data.quantity ?? 1 }],
+          proration_behavior: "none",
+          billing_cycle_anchor: "unchanged",
+        });
+
+        return { ok: true, effectiveAt: sub.current_period_end ?? null };
+      } catch (error) {
+        return { error: getStripeErrorMessage(error) };
+      }
+    },
+  );
