@@ -152,12 +152,8 @@ function PricingPage() {
     <PublicShell
       title="Plans & pricing"
       subtitle="Peace of mind before an audit — priced per portfolio, never per credit"
-      actions={
-        <Button size="sm" variant="outline" asChild>
-          <Link to="/welcome">Why CertivoIQ</Link>
-        </Button>
-      }
     >
+
       <div className="-mt-1 mb-4 overflow-hidden rounded-lg">
         <PaymentTestModeBanner />
       </div>
