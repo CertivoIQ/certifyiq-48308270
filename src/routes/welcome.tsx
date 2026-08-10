@@ -20,16 +20,16 @@ import { useViewerState } from "@/hooks/use-viewer-state";
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "CertivoIQ — Audit-Ready Affordable Housing Compliance" },
+      { title: "CertivoIQ — Your 24/7 Compliance Analyst" },
       {
         name: "description",
         content:
-          "See how CertivoIQ protects your tax credits: AI reviews every LIHTC, HOME, Section 8 and HOTMA certification, cites the rule, and hands your reviewer the correction steps before an audit does.",
+          "One Analyst. Every Property. 24/7. CertivoIQ continuously analyzes affordable housing compliance, surfaces potential findings, and helps teams stay audit-ready.",
       },
-      { property: "og:title", content: "CertivoIQ — Protect your tax credits before the auditor arrives" },
+      { property: "og:title", content: "CertivoIQ — One Analyst. Every Property. 24/7." },
       {
         property: "og:description",
-        content: "Watch the 3-minute demo, then run a full AI compliance review on 3 certifications free for 7 days.",
+        content: "Your 24/7 Compliance Analyst for certification intelligence, audit readiness, and portfolio compliance visibility.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -107,7 +107,25 @@ function WelcomePage() {
               </Button>
             )}
           </div>
+        </section>
 
+        <section className="mt-10 rounded-xl border border-primary/20 bg-accent/50 px-6 py-10 text-center sm:px-10" aria-labelledby="analyst-positioning">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">CertivoIQ</p>
+          <h2 id="analyst-positioning" className="mx-auto mt-3 max-w-4xl font-display text-[34px] leading-tight sm:text-[48px]">
+            One Analyst. Every Property. 24/7.
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-[17px] font-medium leading-relaxed text-foreground">
+            Your portfolio doesn&apos;t need more spreadsheets. It needs intelligence.
+          </p>
+          <p className="mx-auto mt-3 max-w-3xl text-[14.5px] leading-relaxed text-muted-foreground">
+            CertivoIQ acts as your 24/7 Compliance Analyst—continuously monitoring certifications, surfacing potential findings, tracking audit readiness, and helping your team focus human expertise where it matters most.
+          </p>
+          <p className="mx-auto mt-4 max-w-3xl text-[13px] font-medium text-foreground">
+            Scale compliance capacity without scaling administrative burden. Turn compliance capacity into profitability.
+          </p>
+          <p className="mx-auto mt-3 max-w-3xl text-[12px] text-muted-foreground">
+            AI-powered compliance intelligence. Human-approved decisions.
+          </p>
         </section>
 
         <section className="mt-12 overflow-hidden rounded-lg" id="video">
