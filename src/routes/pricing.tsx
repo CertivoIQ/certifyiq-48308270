@@ -324,8 +324,50 @@ function PricingPage() {
             </Button>
           </div>
         </Panel>
-
       </div>
+
+      <Panel
+        className="mt-4"
+        title="Contact-sales add-ons — custom quote"
+        description="Not available through self-serve checkout; our team scopes and provisions these for you"
+        bodyClassName="p-0"
+      >
+        <ul className="divide-y divide-border">
+          {SALES_ASSISTED_ADDONS.map((a) => (
+            <li key={a.id} className="px-5 py-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <span className="font-display text-[15px]">{a.name}</span>
+                <span className="font-mono text-[13px]">
+                  {a.price}
+                  <span className="text-muted-foreground">{a.cadence}</span>
+                </span>
+              </div>
+              <p className="mt-1 text-[12.5px] text-muted-foreground">{a.note}</p>
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <Pill tone="seal">Sales-assisted</Pill>
+                <Button size="sm" variant="outline" asChild>
+                  <a
+                    href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(a.subject)}`}
+                  >
+                    <Mail className="size-4" /> Contact Sales
+                  </a>
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="border-t border-border px-5 py-4">
+          <p className="text-[12.5px] text-muted-foreground">
+            These add-ons are quoted individually and billed through your existing CertivoIQ agreement — they are not
+            purchased with a card at checkout. Email{" "}
+            <a className="underline" href={`mailto:${SALES_EMAIL}`}>
+              {SALES_EMAIL}
+            </a>{" "}
+            and we will confirm scope and pricing.
+          </p>
+        </div>
+      </Panel>
+
 
       <Panel
         className="mt-4"
