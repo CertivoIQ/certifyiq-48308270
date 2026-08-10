@@ -330,6 +330,35 @@ function PricingPage() {
         </div>
       </Panel>
 
+      <Panel className="mt-4" title="Billing FAQ" description="How charges and plan changes work" bodyClassName="p-5">
+        <dl className="grid gap-4 text-[13px]">
+          <div>
+            <dt className="font-semibold">Add-ons and billing timing</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              Add-ons attach to your existing subscription and are billed on your next regular renewal — no separate charge today. Think of it as buy-now, pay-later on the next cycle.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Plan upgrades and downgrades</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              Plan changes take effect at your next renewal with no mid-cycle proration, so your current capacity stays active until then.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Cancellation</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              You keep access until the end of your paid period. After the period ends, uploaded files are retained for 14 days, then permanently removed.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">AI document overages</dt>
+            <dd className="mt-0.5 text-muted-foreground">
+              Every plan includes a monthly AI document allowance. Files uploaded beyond that allowance are billed at $3 per certification regardless of plan.
+            </dd>
+          </div>
+        </dl>
+      </Panel>
+
       <p className="mt-5 text-[12.5px] text-muted-foreground">
         AI document processing is included as a monthly document allowance — no credits to track. Beyond the allowance,
         extra certifications are billed at $3 per uploaded file on every plan.
