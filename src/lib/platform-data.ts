@@ -164,11 +164,36 @@ export const PLANS = [
 ];
 
 export const ADDONS = [
-  { name: "Additional state rule packs", price: "$99–$199 / month per state" },
   { name: "CertivoIQ Academy add-on", price: "$49 / user / month or $499 / property / month" },
-  { name: "API access", price: "$500–$2,000 / month by usage" },
   { name: "High-volume AI document processing", price: "$3 per uploaded certification beyond plan allowance" },
   { name: "AI Onboarding & Migration Wizard", price: "Included on every plan — no account rep required" },
+];
+
+/** Sales email already used for CertivoIQ outreach — no new address invented. */
+export const SALES_EMAIL = "sales@certivoiq.com";
+
+/**
+ * Custom add-ons that are quoted and provisioned by our team.
+ * These intentionally have no Stripe price and are never sold through
+ * self-serve checkout.
+ */
+export const SALES_ASSISTED_ADDONS = [
+  {
+    id: "state-rule-packs",
+    name: "Additional state rule packs",
+    price: "$99–$199",
+    cadence: " / month per state",
+    note: "Scoped to the states you operate in; pricing depends on the agency rule set and update cadence.",
+    subject: "CertivoIQ — additional state rule packs",
+  },
+  {
+    id: "api-access",
+    name: "API access",
+    price: "$500–$2,000",
+    cadence: " / month by usage",
+    note: "Programmatic certification submission and findings retrieval, priced by monthly call volume.",
+    subject: "CertivoIQ — API access",
+  },
 ];
 
 export const ACADEMY_ADDONS = [
