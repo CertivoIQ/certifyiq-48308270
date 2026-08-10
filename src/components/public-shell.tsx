@@ -27,8 +27,8 @@ export function PublicShell({
 }: {
   children: ReactNode;
   title: string;
-  subtitle?: string;
-  actions?: ReactNode;
+  subtitle?: string | undefined;
+  actions?: ReactNode | undefined;
 }) {
   return (
     <div className="min-h-screen bg-background">
