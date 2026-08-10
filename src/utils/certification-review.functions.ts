@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { PackRelease, StateCoverage } from "@/lib/stateCoverageRegistry";
 
 /**
  * The live compliance vertical slice.
@@ -115,13 +116,13 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     }
 
     // --- versioned rule pack selection -----------------------------------
-    let statePack: registry.StateCoverage | undefined;
+    let statePack: StateCoverage | undefined;
     if (jurisdiction !== "US") {
       const { data: releases } = await supabase
         .from("state_rule_pack_releases")
         .select("state_code, status, effective_from, approved_at, approved_by, validated_rule_count, limitations")
         .eq("state_code", jurisdiction);
-      const packs = registry.applyReleases((releases ?? []) as registry.PackRelease[]);
+      const packs = registry.applyReleases((releases ?? []) as PackRelease[]);
       statePack = registry.coverageForState(jurisdiction, packs);
       if (statePack && !registry.isUsableForDetermination(statePack)) statePack = undefined;
     }
