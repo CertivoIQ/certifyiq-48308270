@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Building2,
@@ -25,7 +25,8 @@ import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
-import { useIsStaff } from "@/hooks/use-session";
+import { useIsStaff, useSession } from "@/hooks/use-session";
+import { PublicShell } from "@/components/public-shell";
 import { useT } from "@/lib/i18n/provider";
 import type { TranslationKey } from "@/lib/i18n/en";
 
@@ -54,90 +55,16 @@ function Wordmark() {
   );
 }
 
-function PublicWordmark() {
-  return (
-    <Link to="/welcome" className="flex items-center gap-2.5">
-      <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">IQ</span>
-      <span className="font-display text-lg leading-none tracking-tight">Certivo<span className="text-gold">IQ</span></span>
-    </Link>
-  );
-}
-
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-  const { isStaff } = useIsStaff();
-  const t = useT();
-  const items = isStaff ? [...NAV, { to: "/crm", labelKey: "nav.crm", icon: Briefcase } as const] : NAV;
-  return (
-    <nav className="flex flex-col gap-0.5">
-      {items.map(({ to, labelKey, icon: Icon }) => (
-        <Link
-          key={to}
-          to={to}
-          onClick={onNavigate}
-          activeOptions={{ exact: to === "/dashboard" }}
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]" }}
-          inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent/55" }}
-          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors"
-        >
-          <Icon className="size-4 shrink-0" strokeWidth={1.9} />
-          {t(labelKey)}
-        </Link>
-      ))}
-    </nav>
-  );
-}
-
-function TrialBanner() {
-  const t = useT();
-  if (!TRIAL.active) return null;
-  return (
-    <div className="brand-gradient flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 text-primary-foreground sm:px-7">
-      <Clock className="size-4 shrink-0" />
-      <p className="text-[12.5px] font-medium">{t("shell.trial.status", { daysLeft: TRIAL.daysLeft, daysTotal: TRIAL.daysTotal, used: TRIAL.uploadsUsed, allowed: TRIAL.uploadsAllowed })}</p>
-      <div className="ml-auto flex items-center gap-2">
-        <Button size="sm" variant="secondary" asChild><Link to="/welcome">{t("shell.trial.watchDemo")}</Link></Button>
-        <Button size="sm" className="border border-primary-foreground/40 bg-primary-foreground/10 hover:bg-primary-foreground/20" asChild><Link to="/pricing">{t("shell.trial.upgrade")}</Link></Button>
-      </div>
-    </div>
-  );
-}
-
-function PublicShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string; actions?: ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-          <PublicWordmark />
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" asChild><Link to="/welcome">Why CertivoIQ</Link></Button>
-            <Button size="sm" variant="outline" asChild><Link to="/contact-support">Contact</Link></Button>
-            <Button size="sm" asChild><Link to="/auth">Sign in</Link></Button>
-            <LanguageToggle />
-            <ThemeToggle />
-            {actions}
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
-        <div className="mb-7">
-          <h1 className="font-display text-[28px] leading-tight sm:text-[34px]"><IQText>{title}</IQText></h1>
-          {subtitle && <p className="mt-1.5 text-[13.5px] text-muted-foreground">{subtitle}</p>}
-        </div>
-        {children}
-      </main>
-      <footer className="border-t border-border py-6 text-center">
-        <p className="cite text-[12px] text-muted-foreground">CertivoIQ — One Analyst. Every Property. 24/7.</p>
-      </footer>
-    </div>
-  );
-}
-
-export function AppShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string; actions?: ReactNode }) {
-  const location = useLocation();
+export function AppShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string | undefined; actions?: ReactNode | undefined }) {
+  const { session } = useSession();
   const [open, setOpen] = useState(false);
   const t = useT();
 
-  if (location.pathname === "/pricing") {
+  // Authentication boundary for navigation: the portfolio sidebar is only for a
+  // signed-in user inside the trial/paid application workspace. Anyone without a
+  // session (public visitor, marketing traffic, SSR/prerender) gets the public
+  // marketing shell instead — the nav is never rendered, not merely hidden.
+  if (!session) {
     return <PublicShell title={title} subtitle={subtitle} actions={actions}>{children}</PublicShell>;
   }
 

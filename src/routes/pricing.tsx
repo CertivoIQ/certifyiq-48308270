@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell } from "@/components/app-shell";
+import { PublicShell } from "@/components/public-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { PLANS, ADDONS, ACADEMY_ADDONS, TRIAL, SALES_ASSISTED_ADDONS, SALES_EMAIL } from "@/lib/platform-data";
@@ -149,7 +149,7 @@ function PricingPage() {
   };
 
   return (
-    <AppShell
+    <PublicShell
       title="Plans & pricing"
       subtitle="Peace of mind before an audit — priced per portfolio, never per credit"
       actions={
@@ -425,6 +425,6 @@ function PricingPage() {
           {checkoutElement}
         </DialogContent>
       </Dialog>
-    </AppShell>
+    </PublicShell>
   );
 }
