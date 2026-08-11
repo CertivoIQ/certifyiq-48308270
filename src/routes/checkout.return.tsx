@@ -14,12 +14,12 @@ export const Route = createFileRoute("/checkout/return")({
       {
         name: "description",
         content:
-          "Your CertivoIQ subscription is active. Your uploaded certifications are retained and LaunchPad onboarding is ready to begin.",
+          "Your CertivoIQ subscription is active. Your certification reviews are retained and LaunchPad onboarding is ready to begin.",
       },
       { property: "og:title", content: "Subscription Confirmed — CertivoIQ" },
       {
         property: "og:description",
-        content: "Plan capacity unlocked, trial files kept, and guided onboarding started.",
+        content: "Plan capacity unlocked and guided onboarding started.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -130,8 +130,8 @@ function CheckoutReturn() {
             </Pill>
             <h1 className="mt-4 font-display text-[26px]">You're audit-ready — subscription active</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              Your plan capacity is unlocked, every certification you uploaded during the trial has been kept (the
-              14-day deletion hold is cleared), and your guided onboarding has started.
+              Your plan capacity is unlocked and your FREE certification review files have been kept. Your guided
+              onboarding has started.
               {!("error" in data!) && !data!.provisioned
                 ? " Final provisioning is finishing up — refresh billing in a few seconds if limits still look old."
                 : ""}
