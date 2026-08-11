@@ -26,17 +26,17 @@ import {
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "CertivoIQ — One Analyst. Every Property. 24/7." },
+      { title: "CertivoIQ — Find compliance risk before the auditor does." },
       {
         name: "description",
         content:
-          "AI-powered compliance intelligence for affordable housing. CertivoIQ extracts evidence, applies deterministic rules, and keeps human approval at the center.",
+          "AI-powered compliance intelligence for affordable housing. Upload certification files, surface traceable findings, and keep human approval at the center.",
       },
-      { property: "og:title", content: "CertivoIQ — One Analyst. Every Property. 24/7." },
+      { property: "og:title", content: "CertivoIQ — Find compliance risk before the auditor does." },
       {
         property: "og:description",
         content:
-          "Scale compliance capacity without scaling administrative burden. AI-powered compliance intelligence. Human-approved decisions.",
+          "Upload certification files, surface traceable compliance findings, and review the evidence before a missed issue becomes an expensive problem.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -97,7 +97,7 @@ function WelcomePage() {
           </nav>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild><Link to="/auth">Sign in</Link></Button>
-            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Start free review</Link></Button>
+            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Free compliance review</Link></Button>
             <LanguageToggle />
             <ThemeToggle />
           </div>
@@ -110,19 +110,24 @@ function WelcomePage() {
             <div>
               <Pill tone="seal">AI-powered compliance intelligence · human-approved decisions</Pill>
               <h1 className="mt-6 max-w-4xl font-display text-[48px] leading-[.98] tracking-[-0.035em] sm:text-[64px] lg:text-[76px]">
-                ONE ANALYST.<br />EVERY PROPERTY.<br /><span className="text-gold">24/7.</span>
+                FIND COMPLIANCE RISK<br />BEFORE THE <span className="text-gold">AUDITOR.</span>
               </h1>
               <p className="mt-7 max-w-2xl text-[18px] leading-8 text-muted-foreground">
-                Your portfolio doesn't need more spreadsheets. It needs intelligence. CertivoIQ turns certification files into traceable compliance findings so your team can identify risk before a missed issue becomes an expensive compliance problem.
+                Upload a certification file and let CertivoIQ read the evidence, evaluate the applicable rules, and surface traceable findings your team can investigate before a missed issue becomes an expensive compliance problem.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Run my free compliance review <ArrowRight className="ml-2 size-4" /></Link></Button>
                 <Button size="lg" variant="outline" asChild><a href="#how-it-works">See how it works</a></Button>
               </div>
               <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> No phone call required</span>
+                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> No sales call required</span>
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> Human approval stays in control</span>
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> Start with {TRIAL.uploadsAllowed} free reviews</span>
+              </div>
+              <div className="mt-8 grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="rounded-lg border border-border bg-card px-3 py-3"><p className="font-mono text-[10px] text-gold">01 · UPLOAD</p><p className="mt-1 text-[12px] font-medium">Bring one certification file</p></div>
+                <div className="rounded-lg border border-border bg-card px-3 py-3"><p className="font-mono text-[10px] text-gold">02 · ANALYZE</p><p className="mt-1 text-[12px] font-medium">Get findings tied to evidence</p></div>
+                <div className="rounded-lg border border-border bg-card px-3 py-3"><p className="font-mono text-[10px] text-gold">03 · DECIDE</p><p className="mt-1 text-[12px] font-medium">Your team reviews and approves</p></div>
               </div>
             </div>
 
