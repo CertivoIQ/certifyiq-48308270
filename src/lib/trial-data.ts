@@ -1,27 +1,14 @@
 /* ------------------------------------------------------------------ *
- * Free trial, data retention, and the sales back office (demo data)
+ * FREE review program and the sales back office (demo data)
  * ------------------------------------------------------------------ */
 
-export const TRIAL_OFFER = {
-  days: 7,
+export const FREE_REVIEW_OFFER = {
+  reviews: 3,
   label: "3 FREE certification reviews",
-  blurb: "No card charged for 7 days · cancel any time",
-  retentionDays: 14,
+  blurb: "No card required. Use your 3 FREE reviews when you're ready.",
 };
 
-export const RETENTION_POLICY = {
-  headline: "Your trial uploads are kept for 14 days after the trial ends",
-  detail:
-    "If you subscribe during the trial, everything you uploaded carries straight into your live portfolio. If you don't, all properties, residents, certifications and AI review results stay parked for 14 days. On the 15th day after the trial ends they are permanently deleted and would need to be re-uploaded.",
-  timeline: [
-    { day: "Day 0–7", label: "Free trial", note: "Full AI review, mass property upload, Merlin guidance." },
-    { day: "Day 8", label: "Trial ends", note: "Automated reminder email goes out 24 hours later." },
-    { day: "Day 8–21", label: "14-day grace hold", note: "Files retained, read-only. Subscribe to restore instantly." },
-    { day: "Day 22", label: "Permanent deletion", note: "All trial data purged — re-upload required." },
-  ],
-};
-
-/** Merlin's guided trial checklist. */
+/** Merlin's guided FREE-review checklist. */
 export const TRIAL_TASKS = [
   {
     id: "learn",
@@ -53,7 +40,7 @@ export const TRIAL_TASKS = [
   {
     id: "delegate",
     title: "Send onboarding links to your team",
-    lead: "Enterprise trials can invite regionals and property managers to upload their own property details.",
+    lead: "Enterprise customers can invite regionals and property managers to upload their own property details.",
     merlin: "Delegation is the strongest magic there is.",
     cta: "Send invite links",
     to: "/launchpad" as const,
@@ -140,7 +127,7 @@ export const LEADS: Lead[] = [
     source: "Webinar · HOTMA readiness",
     trialEnded: "Yesterday",
     remindersSent: 1,
-    lastTouch: "Reminder email sent 24h after trial end",
+    lastTouch: "FREE review follow-up sent",
     contacts: [
       { name: "Alicia Trent", title: "SVP Asset Management", email: "atrent@verdantpartners.com", phone: "(404) 555-0113", linkedin: "linkedin.com/in/alicia-trent" },
       { name: "Bo Randall", title: "VP of Property Management", email: "brandall@verdantpartners.com", phone: "(404) 555-0170", linkedin: "linkedin.com/in/bo-randall" },
@@ -240,17 +227,21 @@ export const PIPELINE_STAGES: LeadStage[] = ["new", "trialing", "trial ended", "
 
 export const SALES_KPIS = [
   { label: "Open pipeline", value: "$1.94M", note: "Annualized · 38 active opportunities" },
-  { label: "Active trials", value: "23", note: "9 enterprise · 14 business" },
-  { label: "Trial → paid conversion", value: "41%", note: "+6 pts vs last quarter" },
+  { label: "FREE review leads", value: "23", note: "9 enterprise · 14 business" },
+  { label: "FREE review → paid conversion", value: "41%", note: "+6 pts vs last quarter" },
   { label: "Auto-populated leads", value: "612", note: "Non-subscribing companies in market" },
 ];
 
+/**
+ * Marketing campaigns for the 3 FREE review acquisition funnel.
+ * These replace the former seven-day trial and expiry campaign language.
+ */
 export const EMAIL_CAMPAIGNS = [
   {
-    id: "trial-end-24h",
-    name: "Trial ended — 24 hour reminder",
-    trigger: "Automated · 24 hours after trial expiry",
-    audience: "Trial accounts without a subscription",
+    id: "free-review-follow-up",
+    name: "3 FREE reviews — first follow-up",
+    trigger: "Automated · after a FREE review lead is captured",
+    audience: "FREE review leads without a subscription",
     sent: 184,
     opened: 121,
     clicked: 67,
@@ -258,10 +249,10 @@ export const EMAIL_CAMPAIGNS = [
     automated: true,
   },
   {
-    id: "grace-day-7",
-    name: "Grace period — 7 days of retention left",
-    trigger: "Automated · day 7 of the 14-day hold",
-    audience: "Expired trials with retained files",
+    id: "free-review-remaining",
+    name: "3 FREE reviews — remaining review reminder",
+    trigger: "Automated · after a customer has unused FREE reviews",
+    audience: "FREE review leads with remaining review capacity",
     sent: 96,
     opened: 58,
     clicked: 31,
@@ -269,10 +260,10 @@ export const EMAIL_CAMPAIGNS = [
     automated: true,
   },
   {
-    id: "purge-warning",
-    name: "Final notice — files delete tomorrow",
-    trigger: "Automated · day 13 of the hold",
-    audience: "Expired trials with retained files",
+    id: "free-review-complete",
+    name: "FREE review complete — plan recommendation",
+    trigger: "Automated · after a FREE certification review is completed",
+    audience: "FREE review leads ready for a plan recommendation",
     sent: 64,
     opened: 47,
     clicked: 26,
@@ -293,11 +284,11 @@ export const EMAIL_CAMPAIGNS = [
 ];
 
 export const LANDING_CLICKS = [
-  { company: "Verdant Housing Partners", person: "Bo Randall", title: "VP of Property Management", campaign: "Trial ended — 24 hour reminder", page: "/welcome", when: "18 min ago", visits: 3 },
+  { company: "Verdant Housing Partners", person: "Bo Randall", title: "VP of Property Management", campaign: "FREE review follow-up", page: "/welcome", when: "18 min ago", visits: 3 },
   { company: "Sunbelt Equity Housing", person: "Jen Whitlow", title: "VP of Property Management", campaign: "VP outbound", page: "/pricing", when: "1 hr ago", visits: 2 },
-  { company: "Cascade Affordable Communities", person: "Devon Pike", title: "VP Compliance & Risk", campaign: "Grace period reminder", page: "/welcome", when: "3 hrs ago", visits: 5 },
+  { company: "Cascade Affordable Communities", person: "Devon Pike", title: "VP Compliance & Risk", campaign: "FREE review reminder", page: "/welcome", when: "3 hrs ago", visits: 5 },
   { company: "Keystone Bridge Management", person: "Rosalind Fahey", title: "VP of Property Management", campaign: "VP outbound", page: "/welcome", when: "Yesterday", visits: 1 },
-  { company: "Lakeshore Property Trust", person: "Grant Petrosian", title: "VP of Property Management", campaign: "Final notice", page: "/pricing", when: "2 days ago", visits: 4 },
+  { company: "Lakeshore Property Trust", person: "Grant Petrosian", title: "VP of Property Management", campaign: "FREE review complete", page: "/pricing", when: "2 days ago", visits: 4 },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -314,4 +305,3 @@ export const PENALTY_RISKS = [
   { risk: "Blended-program conflicts", cost: "Findings under two programs at once", detail: "The stricter rule always wins. Human reviewers routinely apply the wrong program's threshold." },
   { risk: "Inconsistent reviewer judgment", cost: "Unpredictable audit outcomes", detail: "Two reviewers, two answers. CertivoIQ applies the same versioned rule pack to every single file." },
 ];
-
