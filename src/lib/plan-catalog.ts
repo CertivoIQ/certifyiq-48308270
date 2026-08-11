@@ -87,12 +87,11 @@ export function formatLimit(value: number | null): string {
   return value === null ? "Unlimited" : value.toLocaleString();
 }
 
-/** Free trial capacity, provisioned in the database on email verification. */
-export const TRIAL_DAYS = 7;
-export const TRIAL_ENTITLEMENT = {
+/** FREE review capacity. No card, countdown, or subscription trial is attached. */
+export const FREE_REVIEW_ENTITLEMENT = {
   unitLimit: 250,
   propertyLimit: 3,
-  aiDocAllowance: 25,
+  aiDocAllowance: 3,
 } as const;
 
 /** Every recurring plan price, used to tell plans apart from add-ons. */
