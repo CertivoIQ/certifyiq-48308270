@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { StripeEnv } from "@/lib/stripe.server";
-import { TRIAL_ENTITLEMENT, entitlementForPrice } from "@/lib/plan-catalog";
+import { FREE_REVIEW_ENTITLEMENT, entitlementForPrice } from "@/lib/plan-catalog";
 import type { AccountState } from "@/utils/entitlements.functions";
 
 /** Supabase client surface used by entitlement reads/writes. */
@@ -62,16 +62,16 @@ export async function loadState(
     filesPurgeAt: (access?.["files_purge_at"] as string | null) ?? null,
     academySeats: Number(access?.["academy_seats"] ?? 0),
     limits: {
-      units: entitlement ? entitlement.unitLimit : isTrial ? TRIAL_ENTITLEMENT.unitLimit : 0,
+      units: entitlement ? entitlement.unitLimit : isTrial ? FREE_REVIEW_ENTITLEMENT.unitLimit : 0,
       properties: entitlement
         ? entitlement.propertyLimit
         : isTrial
-          ? TRIAL_ENTITLEMENT.propertyLimit
+          ? FREE_REVIEW_ENTITLEMENT.propertyLimit
           : 0,
       aiDocs: entitlement
         ? entitlement.aiDocAllowance
         : isTrial
-          ? TRIAL_ENTITLEMENT.aiDocAllowance
+          ? FREE_REVIEW_ENTITLEMENT.aiDocAllowance
           : 0,
     },
     usage: {
