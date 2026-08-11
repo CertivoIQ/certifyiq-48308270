@@ -14,8 +14,6 @@ export function periodStartFor(
 ): string {
   const fromSub = sub?.current_period_start;
   if (fromSub) return new Date(fromSub).toISOString();
-  const trialStart = access?.trial_started_at;
-  if (trialStart) return new Date(trialStart).toISOString();
   const d = new Date();
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
 }
@@ -58,8 +56,10 @@ export async function loadState(
     priceId: entitlement?.priceId ?? null,
     planName: entitlement?.name ?? null,
     isTrial,
-    accessUntil: (access?.["access_until"] as string | null) ?? null,
-    filesPurgeAt: (access?.["files_purge_at"] as string | null) ?? null,
+    // The FREE review program has no calendar expiration. Paid plans retain
+    // their normal access dates from account_access.
+    accessUntil: isTrial ? null : ((access?.["access_until"] as string | null) ?? null),
+    filesPurgeAt: isTrial ? null : ((access?.["files_purge_at"] as string | null) ?? null),
     academySeats: Number(access?.["academy_seats"] ?? 0),
     limits: {
       units: entitlement ? entitlement.unitLimit : isTrial ? FREE_REVIEW_ENTITLEMENT.unitLimit : 0,
