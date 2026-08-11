@@ -5,11 +5,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
 import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
-import { TRIAL } from "@/lib/platform-data";
 import { coverageClaim } from "@/lib/stateCoverageRegistry";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useViewerState } from "@/hooks/use-viewer-state";
-import { useT } from "@/lib/i18n/provider";
 import {
   ArrowRight,
   Check,
@@ -22,6 +20,8 @@ import {
   Workflow,
   XCircle,
 } from "lucide-react";
+
+const FREE_REVIEW_COUNT = 3;
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -77,7 +77,6 @@ const FLOW = [
 ] as const;
 
 function WelcomePage() {
-  const t = useT();
   const { isActive: isSubscriber } = useSubscription();
   const { state: viewerState } = useViewerState();
 
@@ -97,7 +96,7 @@ function WelcomePage() {
           </nav>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild><Link to="/auth">Sign in</Link></Button>
-            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Free compliance review</Link></Button>
+            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications</Link></Button>
             <LanguageToggle />
             <ThemeToggle />
           </div>
@@ -116,13 +115,13 @@ function WelcomePage() {
                 Upload a certification file and let CertivoIQ read the evidence, evaluate the applicable rules, and surface traceable findings your team can investigate before a missed issue becomes an expensive compliance problem.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Run my free compliance review <ArrowRight className="ml-2 size-4" /></Link></Button>
+                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications <ArrowRight className="ml-2 size-4" /></Link></Button>
                 <Button size="lg" variant="outline" asChild><a href="#how-it-works">See how it works</a></Button>
               </div>
               <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-muted-foreground">
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> No sales call required</span>
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> Human approval stays in control</span>
-                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> Start with {TRIAL.uploadsAllowed} free reviews</span>
+                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-seal" /> Start with {FREE_REVIEW_COUNT} FREE reviews</span>
               </div>
               <div className="mt-8 grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-border bg-card px-3 py-3"><p className="font-mono text-[10px] text-gold">01 · UPLOAD</p><p className="mt-1 text-[12px] font-medium">Bring one certification file</p></div>
@@ -231,7 +230,7 @@ function WelcomePage() {
               <h2 className="mt-2 max-w-3xl font-display text-[28px] leading-tight sm:text-[34px]">One missed compliance finding can cost more than the system that helps you catch it.</h2>
               <p className="mt-2 max-w-3xl text-[13px] leading-6 text-muted-foreground">CertivoIQ is built to surface missing evidence, inconsistencies, and exceptions while your team still has time to investigate and resolve them.</p>
             </div>
-            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>See my risk first <ArrowRight className="ml-2 size-4" /></Link></Button>
+            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications <ArrowRight className="ml-2 size-4" /></Link></Button>
           </div>
         </section>
 
@@ -239,9 +238,9 @@ function WelcomePage() {
           <div className="rounded-2xl border border-gold/25 bg-accent px-6 py-10 text-center sm:px-10">
             <Pill tone="seal">Start without a sales call</Pill>
             <h2 className="mx-auto mt-4 max-w-3xl font-display text-[34px] leading-tight sm:text-[46px]">Find the compliance issues your current process can miss.</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {TRIAL.uploadsAllowed} FREE certification reviews. Bring your own files, inspect the evidence trail, and decide whether CertivoIQ deserves a place in your compliance workflow.</p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Run my free compliance review <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
-            <p className="mt-4 text-[11px] text-muted-foreground">{t("welcome.pill", { daysLeft: TRIAL.daysLeft, allowed: TRIAL.uploadsAllowed })}</p>
+            <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {FREE_REVIEW_COUNT} FREE certification reviews. Bring your own files, inspect the evidence trail, and decide whether CertivoIQ deserves a place in your compliance workflow.</p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
+            <p className="mt-4 text-[11px] text-muted-foreground">3 FREE certification reviews. No countdown.</p>
           </div>
         </section>
       </main>
