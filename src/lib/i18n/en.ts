@@ -27,7 +27,7 @@ export const en = {
   "nav.copilot": "AI Copilot",
   "nav.academy": "CertivoIQ Academy",
   "nav.launchpad": "LaunchPad",
-  "nav.trial": "My free certification reviews",
+  "nav.trial": "My FREE certification reviews",
   "nav.pricing": "Plans & pricing",
   "nav.security": "Security",
   "nav.billing": "Account & billing",
@@ -55,26 +55,26 @@ export const en = {
   "welcome.nav.support": "Contact Support",
   "welcome.nav.pricing": "Pricing",
   "welcome.nav.open": "Open the platform",
-  "welcome.pill": "{allowed} free certification reviews",
+  "welcome.pill": "{allowed} FREE certification reviews",
   "welcome.hero.title": "Find compliance problems before the auditor does.",
   "welcome.hero.subtitle":
     "CertivoIQ uses AI to extract evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
-  "welcome.hero.cta": "Review 3 files free",
+  "welcome.hero.cta": "Review 3 files FREE",
   "welcome.workflow.upload": "Upload",
   "welcome.workflow.extract": "Extract",
   "welcome.workflow.check": "Check",
   "welcome.workflow.evidence": "Evidence",
   "welcome.workflow.findings": "Findings",
-  "welcome.cta.trial": "Run 3 free certification reviews",
+  "welcome.cta.trial": "Run 3 FREE certification reviews",
   "welcome.cta.sample": "See a reviewed certification",
   "welcome.video.label": "CertivoIQ compliance intelligence explainer video",
-  "welcome.video.trialCta": "Run 3 Free Certification Reviews",
+  "welcome.video.trialCta": "Run 3 FREE Certification Reviews",
   "welcome.risks.title": "What a human eye alone misses — and what it costs",
   "welcome.risks.body":
     "Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.",
   "welcome.value.title": "Compare CertivoIQ with your current cost of compliance",
   "welcome.value.body":
-    "Enter your own figures below. CertivoIQ does not estimate your savings or guarantee avoidance of findings, penalties or credit recapture — start with 3 free certification reviews.",
+    "Enter your own figures below. CertivoIQ does not estimate your savings or guarantee avoidance of findings, penalties or credit recapture — start with 3 FREE certification reviews.",
   "welcome.why.1.title": "Tax credits stay intact",
   "welcome.why.1.body":
     "A single uncorrected §42 finding can trigger IRS Form 8823 and put allocated credits at risk. CertivoIQ catches it while it is still curable.",
@@ -84,10 +84,10 @@ export const en = {
   "welcome.why.3.title": "Minutes, not hours",
   "welcome.why.3.body":
     "Reviews drop from ~41 minutes of manual file work to about 4 minutes, with a human keeping final sign-off authority.",
-  "welcome.close.title": "Use your 3 free certification reviews",
+  "welcome.close.title": "Use your 3 FREE certification reviews",
   "welcome.close.body":
     "Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow.",
-  "welcome.close.cta": "Run free reviews",
+  "welcome.close.cta": "Run FREE reviews",
 
   // ---- dashboard ----
   "dash.title": "CertivoIQ Dashboard",

@@ -4,7 +4,7 @@
 
 export const TRIAL_OFFER = {
   days: 7,
-  label: "7-day free trial",
+  label: "3 FREE certification reviews",
   blurb: "No card charged for 7 days · cancel any time",
   retentionDays: 14,
 };

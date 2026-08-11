@@ -239,7 +239,7 @@ function WelcomePage() {
           <div className="rounded-2xl border border-gold/25 bg-accent px-6 py-10 text-center sm:px-10">
             <Pill tone="seal">Start without a sales call</Pill>
             <h2 className="mx-auto mt-4 max-w-3xl font-display text-[34px] leading-tight sm:text-[46px]">Find the compliance issues your current process can miss.</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {TRIAL.uploadsAllowed} free certification reviews. Bring your own files, inspect the evidence trail, and decide whether CertivoIQ deserves a place in your compliance workflow.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {TRIAL.uploadsAllowed} FREE certification reviews. Bring your own files, inspect the evidence trail, and decide whether CertivoIQ deserves a place in your compliance workflow.</p>
             <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Run my free compliance review <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
             <p className="mt-4 text-[11px] text-muted-foreground">{t("welcome.pill", { daysLeft: TRIAL.daysLeft, allowed: TRIAL.uploadsAllowed })}</p>
           </div>

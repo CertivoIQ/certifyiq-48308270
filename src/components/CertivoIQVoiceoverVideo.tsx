@@ -247,7 +247,7 @@ export default function CertivoIQVoiceoverVideo({
                 href={trialHref}
                 className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
               >
-                Start 7-day trial
+                Start with 3 FREE certification reviews
               </a>
             )}
           </div>

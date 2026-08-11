@@ -70,7 +70,7 @@ async function resolveOrCreateCustomer(
 
 /**
  * Creates an embedded checkout session for a plan or add-on price.
- * The 7-day trial runs inside CertivoIQ (no card required), so checkout is
+ * The 3 FREE certification reviews runs inside CertivoIQ (no card required), so checkout is
  * only opened when someone converts or upgrades — no `trial_period_days`.
  */
 export const createCheckoutSession = createServerFn({ method: "POST" })

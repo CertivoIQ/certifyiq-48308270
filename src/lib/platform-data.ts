@@ -105,7 +105,7 @@ export const PLANS = [
     cadence: "/month",
     tagline: "Small owners (1–500 units)",
     features: ["Up to 500 units", "1 state rule pack", "AI document review", "Compliance knowledge base", "Email support"],
-    cta: "Start 7-day trial",
+    cta: "Start with 3 FREE certification reviews",
     featured: false,
   },
   {

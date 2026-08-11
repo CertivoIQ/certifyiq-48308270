@@ -16,7 +16,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/trial")({
   head: () => ({
     meta: [
-      { title: "Your 3 Free Certification Reviews — CertivoIQ" },
+      { title: "Your 3 FREE Certification Reviews — CertivoIQ" },
       {
         name: "description",
         content:
@@ -81,13 +81,13 @@ function TrialPage() {
 
   return (
     <AppShell
-      title="Your 3 free certification reviews"
+      title="Your 3 FREE certification reviews"
       subtitle={`${TRIAL.uploadsAllowed} real files · cited findings · human approval · Merlin is your guide`}
       actions={<Button size="sm" asChild><Link to="/pricing">Choose a plan</Link></Button>}
     >
       <MerlinSays pose="greeting" size="lg" className="mb-5">
         <p>
-          Welcome! You have <strong>{TRIAL.uploadsAllowed} free certification reviews</strong> to test the real CertivoIQ workflow on your own files. I’ll help you see what the AI extracts, which rules apply, what it finds, and what your reviewer should do next.
+          Welcome! You have <strong>{TRIAL.uploadsAllowed} FREE certification reviews</strong> to test the real CertivoIQ workflow on your own files. I’ll help you see what the AI extracts, which rules apply, what it finds, and what your reviewer should do next.
         </p>
         <p className="mt-2 text-muted-foreground">No countdown. Use the reviews when you're ready, then choose a plan if CertivoIQ earns a place in your workflow.</p>
       </MerlinSays>

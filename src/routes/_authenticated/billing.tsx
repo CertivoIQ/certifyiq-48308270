@@ -153,7 +153,7 @@ function BillingPage() {
                   {isActive && cancelAtPeriodEnd &&
                     `Full access until ${endsAt?.toLocaleDateString() ?? "period end"}. After that your certifications are held for 14 days, then permanently deleted.`}
                   {!isActive && account.isTrial && !trialExpired &&
-                    "Your 7-day trial includes a capped portfolio and AI document allowance. Subscribe any time — everything you uploaded is kept."}
+                    "Your 3 FREE certification reviews includes a capped portfolio and AI document allowance. Subscribe any time — everything you uploaded is kept."}
                   {!isActive && trialExpired &&
                     `Your trial has ended. Files are held until ${account.filesPurgeAt ? new Date(account.filesPurgeAt).toLocaleDateString() : "14 days after trial end"}, then permanently deleted.`}
                 </p>

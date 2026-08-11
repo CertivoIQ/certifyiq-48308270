@@ -28,7 +28,7 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:title", content: "Plans & Pricing — CertivoIQ" },
       {
         property: "og:description",
-        content: "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits. Start with 3 free certification reviews.",
+        content: "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits. Start with 3 FREE certification reviews.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -151,13 +151,13 @@ function PricingPage() {
       <div className="mb-5 rounded-lg border border-primary/25 bg-accent px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-display text-[17px] text-accent-foreground">Start with 3 free certification reviews</p>
+            <p className="font-display text-[17px] text-accent-foreground">Start with 3 FREE certification reviews</p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow. No countdown or 7-day trial.
+              Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow. No countdown or 3 FREE certification reviews.
             </p>
           </div>
           <Button size="sm" asChild>
-            <Link to="/trial">Run 3 free reviews</Link>
+            <Link to="/trial">Run 3 FREE reviews</Link>
           </Button>
         </div>
       </div>
@@ -203,7 +203,7 @@ function PricingPage() {
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Pill tone="seal">
-                <Sparkles className="size-3" /> 3 free certification reviews
+                <Sparkles className="size-3" /> 3 FREE certification reviews
               </Pill>
               <span className="cite">Proof of value before you choose a paid plan.</span>
             </div>
@@ -354,7 +354,7 @@ function PricingPage() {
       <Panel
         className="mt-4"
         title="Start with proof, then scale"
-        description="Three free certification reviews — no countdown or 7-day trial"
+        description="Three FREE certification reviews — no countdown or 3 FREE certification reviews"
         bodyClassName="p-5"
       >
         <p className="text-[13.5px] leading-relaxed text-muted-foreground">
@@ -362,7 +362,7 @@ function PricingPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button size="sm" asChild>
-            <Link to="/trial">Run 3 free certification reviews</Link>
+            <Link to="/trial">Run 3 FREE certification reviews</Link>
           </Button>
         </div>
       </Panel>
