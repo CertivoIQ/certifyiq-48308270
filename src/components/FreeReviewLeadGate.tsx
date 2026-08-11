@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Building2, CheckCircle2, Mail, ShieldCheck, Users } from "lucide-react";
+import { Building2, Mail, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { captureFreeReviewLead, getFreeReviewLead } from "@/lib/free-review-lead
 const field = "space-y-1.5";
 const splitList = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean);
 
-export function FreeReviewLeadGate({ children }: { children: React.ReactNode }) {
+export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const getLead = useServerFn(getFreeReviewLead);
   const captureLead = useServerFn(captureFreeReviewLead);
