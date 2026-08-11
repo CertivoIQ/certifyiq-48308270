@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/homepage-conversion-pass.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -25,22 +26,21 @@ jobs:
           p = Path('src/routes/welcome.tsx')
           s = p.read_text()
 
-          replacements = {
-              "Your portfolio doesn't need more spreadsheets. It needs intelligence. CertivoIQ turns certification files into traceable compliance findings so your team can review risk before it becomes an audit problem.":
-              "Your portfolio doesn't need more spreadsheets. It needs intelligence. CertivoIQ turns certification files into traceable compliance findings so your team can identify risk before a missed issue becomes an expensive compliance problem.",
-              "Review my files free":
-              "Run my free compliance review",
-              "See what CertivoIQ catches in your files.":
-              "Find the compliance issues your current process can miss.",
-              "Start my free review":
-              "Run my free compliance review",
-          }
-          for old, new in replacements.items():
-              if old not in s:
-                  raise SystemExit(f'Missing expected text: {old}')
-              s = s.replace(old, new, 1)
+          replacements = [
+              (
+                  "Your portfolio doesn't need more spreadsheets. It needs intelligence. CertivoIQ turns certification files into traceable compliance findings so your team can review risk before it becomes an audit problem.",
+                  "Your portfolio doesn't need more spreadsheets. It needs intelligence. CertivoIQ turns certification files into traceable compliance findings so your team can identify risk before a missed issue becomes an expensive compliance problem.",
+              ),
+              ("Review my files free", "Run my free compliance review"),
+              ("Start my free review", "Run my free compliance review"),
+              ("See what CertivoIQ catches in your files.", "Find the compliance issues your current process can miss."),
+          ]
 
-          marker = '''        <section id="value" className="mx-auto max-w-7xl px-5 py-20 lg:px-8">'''
+          for old, new in replacements:
+              if old in s:
+                  s = s.replace(old, new, 1)
+
+          marker = '        <section id="value" className="mx-auto max-w-7xl px-5 py-20 lg:px-8">'
           insert = '''        <section className="border-y border-border bg-muted/20">
           <div className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[1fr_auto] lg:items-center lg:px-8">
             <div>
@@ -53,9 +53,11 @@ jobs:
         </section>
 
 '''
-          if marker not in s:
-              raise SystemExit('Value section marker not found')
-          s = s.replace(marker, insert + marker, 1)
+          if 'Why act before the audit?' not in s:
+              if marker not in s:
+                  raise SystemExit('Value section marker not found')
+              s = s.replace(marker, insert + marker, 1)
+
           p.write_text(s)
           PY
 
@@ -64,6 +66,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/routes/welcome.tsx
-          git diff --cached --quiet && exit 0
+          if git diff --cached --quiet; then
+            echo 'Homepage already contains the conversion pass; nothing to commit.'
+            exit 0
+          fi
           git commit -m 'feat: sharpen homepage conversion path'
-          git push
+          git push origin HEAD:main
