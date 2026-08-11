@@ -12,13 +12,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { verifyAndDisableRecoveryCode } from "@/utils/mfa.functions";
 
 type Mode = "signin" | "signup" | "forgot";
-
+type AuthTarget = "/" | "/pricing" | "/launchpad";
 
 /** Where to land after sign-in: the page that bounced the user here, or home. */
-function afterAuthTarget(): "/" | "/pricing" {
+function afterAuthTarget(): AuthTarget {
   const saved = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("certivoiq:after-auth") : null;
   if (saved) sessionStorage.removeItem("certivoiq:after-auth");
-  return saved === "/pricing" ? "/pricing" : "/";
+  if (saved === "/pricing" || saved === "/launchpad") return saved;
+  return "/";
 }
 
 export const Route = createFileRoute("/auth")({
