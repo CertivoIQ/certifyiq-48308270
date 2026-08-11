@@ -27,7 +27,7 @@ export const en = {
   "nav.copilot": "AI Copilot",
   "nav.academy": "CertivoIQ Academy",
   "nav.launchpad": "LaunchPad",
-  "nav.trial": "My free trial",
+  "nav.trial": "My free certification reviews",
   "nav.pricing": "Plans & pricing",
   "nav.security": "Security",
   "nav.billing": "Account & billing",
@@ -39,10 +39,9 @@ export const en = {
   "shell.tagline": "Compliance intelligence",
   "shell.rulePacksActive": "Rule packs active",
   "shell.statesBuild": "50 states · 2026.08 build",
-  "shell.trial.status":
-    "Free trial · {daysLeft} of {daysTotal} days left · {used}/{allowed} trial certification reviews used",
+  "shell.trial.status": "Free certification reviews · {used}/{allowed} reviews used",
   "shell.trial.watchDemo": "Watch the demo",
-  "shell.trial.upgrade": "Upgrade now",
+  "shell.trial.upgrade": "Choose a plan",
 
   // ---- errors ----
   "error.notFound.title": "Page not found",
@@ -56,7 +55,7 @@ export const en = {
   "welcome.nav.support": "Contact Support",
   "welcome.nav.pricing": "Pricing",
   "welcome.nav.open": "Open the platform",
-  "welcome.pill": "{daysLeft} days left · {allowed} free AI certification reviews",
+  "welcome.pill": "{allowed} free certification reviews",
   "welcome.hero.title": "Find compliance problems before the auditor does.",
   "welcome.hero.subtitle":
     "CertivoIQ uses AI to extract evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
@@ -66,16 +65,16 @@ export const en = {
   "welcome.workflow.check": "Check",
   "welcome.workflow.evidence": "Evidence",
   "welcome.workflow.findings": "Findings",
-  "welcome.cta.trial": "Start your 7-day trial",
+  "welcome.cta.trial": "Run 3 free certification reviews",
   "welcome.cta.sample": "See a reviewed certification",
   "welcome.video.label": "CertivoIQ compliance intelligence explainer video",
-  "welcome.video.trialCta": "Start 7 Day Free Trial",
+  "welcome.video.trialCta": "Run 3 Free Certification Reviews",
   "welcome.risks.title": "What a human eye alone misses — and what it costs",
   "welcome.risks.body":
     "Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.",
   "welcome.value.title": "Compare CertivoIQ with your current cost of compliance",
   "welcome.value.body":
-    "Enter your own figures below. CertivoIQ does not estimate your savings or guarantee avoidance of findings, penalties or credit recapture — every plan starts with a {offer}.",
+    "Enter your own figures below. CertivoIQ does not estimate your savings or guarantee avoidance of findings, penalties or credit recapture — start with 3 free certification reviews.",
   "welcome.why.1.title": "Tax credits stay intact",
   "welcome.why.1.body":
     "A single uncorrected §42 finding can trigger IRS Form 8823 and put allocated credits at risk. CertivoIQ catches it while it is still curable.",
@@ -85,15 +84,14 @@ export const en = {
   "welcome.why.3.title": "Minutes, not hours",
   "welcome.why.3.body":
     "Reviews drop from ~41 minutes of manual file work to about 4 minutes, with a human keeping final sign-off authority.",
-  "welcome.close.title": "Your trial ends in {daysLeft} days",
+  "welcome.close.title": "Use your 3 free certification reviews",
   "welcome.close.body":
-    "After the trial, keep unlimited certification reviews, state rule packs and Academy training on the {plan} plan at {price}/month.",
-  "welcome.close.cta": "Purchase a plan",
+    "Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow.",
+  "welcome.close.cta": "Run free reviews",
 
   // ---- dashboard ----
   "dash.title": "CertivoIQ Dashboard",
-  "dash.subtitle":
-    "Meridian Housing Partners · 185 properties · 14 states · period ending Aug 6, 2026",
+  "dash.subtitle": "Meridian Housing Partners · 185 properties · 14 states · period ending Aug 6, 2026",
   "dash.export": "Export board packet",
   "dash.reviewQueue": "Review queue",
   "dash.stat.properties": "Properties",
@@ -123,13 +121,11 @@ export const en = {
 
   // ---- property correspondence language ----
   "property.language.label": "Correspondence language",
-  "property.language.help":
-    "Emails and printed notices for this property are sent in this language.",
+  "property.language.help": "Emails and printed notices for this property are sent in this language.",
   "property.language.saved": "Correspondence language updated",
 
   // ---- merlin ----
-  "merlin.greeting":
-    "Greetings! I am Merlin, your compliance wizard. Ask me about any LIHTC, HOME, Section 8 or HOTMA rule and I will cite it for you.",
+  "merlin.greeting": "Greetings! I am Merlin, your compliance wizard. Ask me about any LIHTC, HOME, Section 8 or HOTMA rule and I will cite it for you.",
   "merlin.placeholder": "Ask Merlin about a compliance rule…",
   "merlin.open": "Chat with Merlin",
 } as const;
