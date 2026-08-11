@@ -38,6 +38,8 @@ type Scene = {
   Visual: ComponentType;
 };
 
+const NARRATION_PLAYBACK_RATE = 1.15;
+
 const scenes: Scene[] = [
   {
     eyebrow: "1 · Upload",
@@ -131,6 +133,7 @@ export default function CertivoIQVoiceoverVideo({
   const togglePlayback = async () => {
     const audio = audioRef.current;
     if (!audio) return;
+    audio.playbackRate = NARRATION_PLAYBACK_RATE;
     if (playing) {
       audio.pause();
       setPlaying(false);
@@ -156,6 +159,7 @@ export default function CertivoIQVoiceoverVideo({
     }
     if (!audio) return;
     audio.currentTime = 0;
+    audio.playbackRate = NARRATION_PLAYBACK_RATE;
     try {
       await audio.play();
       setPlaying(true);
@@ -168,6 +172,7 @@ export default function CertivoIQVoiceoverVideo({
   const chooseScene = (index: number) => {
     if (index === scene && audioRef.current) {
       audioRef.current.currentTime = 0;
+      audioRef.current.playbackRate = NARRATION_PLAYBACK_RATE;
       setSceneProgress(0);
       if (playing) void audioRef.current.play();
       return;
@@ -347,7 +352,7 @@ export default function CertivoIQVoiceoverVideo({
                 </button>
               </div>
               <span className="text-right text-xs font-medium text-slate-400">
-                Natural female narration · ElevenLabs · ~{totalSeconds} sec
+                Natural female narration · ElevenLabs · 1.15× speed · ~51 sec
               </span>
             </div>
           </div>
@@ -358,7 +363,11 @@ export default function CertivoIQVoiceoverVideo({
             preload="metadata"
             muted={muted}
             autoPlay={playing}
+            onLoadedMetadata={(event) => {
+              event.currentTarget.playbackRate = NARRATION_PLAYBACK_RATE;
+            }}
             onCanPlay={(event) => {
+              event.currentTarget.playbackRate = NARRATION_PLAYBACK_RATE;
               if (playing) {
                 void event.currentTarget.play().catch(() => {
                   setPlaying(false);
