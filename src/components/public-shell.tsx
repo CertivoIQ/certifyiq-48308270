@@ -26,7 +26,7 @@ export function PublicShell({
   actions,
 }: {
   children: ReactNode;
-  title: string;
+  title?: string | undefined;
   subtitle?: string | undefined;
   actions?: ReactNode | undefined;
 }) {
@@ -47,10 +47,12 @@ export function PublicShell({
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
-        <div className="mb-7">
-          <h1 className="font-display text-[28px] leading-tight sm:text-[34px]"><IQText>{title}</IQText></h1>
-          {subtitle && <p className="mt-1.5 text-[13.5px] text-muted-foreground">{subtitle}</p>}
-        </div>
+        {(title || subtitle) && (
+          <div className="mb-7">
+            {title && <h1 className="font-display text-[28px] leading-tight sm:text-[34px]"><IQText>{title}</IQText></h1>}
+            {subtitle && <p className="mt-1.5 text-[13.5px] text-muted-foreground">{subtitle}</p>}
+          </div>
+        )}
         {children}
       </main>
       <footer className="border-t border-border py-6 text-center">
