@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Archive, Building2, ClipboardCheck, FileCheck2, Gauge, History, Plug, Send, ShieldCheck, UploadCloud } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSubscription } from '@/hooks/use-subscription';
 import { FEATURE_NAMES } from '@/lib/compliance-intelligence.mjs';
 import { CertificationReviewPanel } from '@/components/certification-review-panel';
 import { FreeReviewLeadGate } from '@/components/FreeReviewLeadGate';
@@ -36,6 +37,7 @@ const summaryCards: Array<{ label: string; icon: LucideIcon }> = [
 ];
 
 export function ComplianceIntelligenceSuite() {
+  const { isActive: hasPaidSubscription, loading: subscriptionLoading } = useSubscription();
   const [files, setFiles] = useState<File[]>([]);
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -43,8 +45,12 @@ export function ComplianceIntelligenceSuite() {
 
   async function queueImport() {
     if (!files.length || uploading) return;
+    if (!hasPaidSubscription && files.length > 1) {
+      setMessage('Mass Certification Review requires a paid CertivoIQ subscription. Your 3 FREE reviews are available one certification at a time.');
+      return;
+    }
     setUploading(true);
-    setMessage('Preparing your Mass Certification Review…');
+    setMessage(hasPaidSubscription ? 'Preparing your Mass Certification Review…' : 'Preparing your FREE certification review…');
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Please sign in before importing certifications.');
@@ -73,13 +79,17 @@ export function ComplianceIntelligenceSuite() {
         if (itemError) throw itemError;
       }
       setFiles([]);
-      setMessage(`Queued ${files.length} file${files.length === 1 ? '' : 's'} for Mass Certification Review.`);
+      setMessage(hasPaidSubscription
+        ? `Queued ${files.length} file${files.length === 1 ? '' : 's'} for Mass Certification Review.`
+        : 'Your FREE certification review has been queued.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'The certification import could not be queued.');
     } finally {
       setUploading(false);
     }
   }
+
+  const paidMassUpload = hasPaidSubscription;
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-8 p-6 md:p-10">
@@ -98,9 +108,17 @@ export function ComplianceIntelligenceSuite() {
       </section>
       <FreeReviewLeadGate>
         <section className="rounded-2xl border bg-card p-6 shadow-sm">
-          <div className="flex items-center gap-3"><Archive className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">Mass Certification Review™</h2><p className="text-sm text-muted-foreground">Bulk upload historical certifications for secure, tenant-scoped processing.</p></div></div>
-          <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30"><UploadCloud className="h-8 w-8 text-muted-foreground" /><span className="mt-3 font-medium">Choose certification files</span><span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, WEBP, or ZIP • up to 50 MB each</span><input className="sr-only" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.zip" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
-          {files.length > 0 && <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 p-3 text-sm"><span>{files.length} file{files.length === 1 ? '' : 's'} selected • {(totalBytes / 1024 / 1024).toFixed(1)} MB</span><button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50" disabled={uploading} onClick={queueImport}>{uploading ? 'Queueing…' : 'Start Review'}</button></div>}
+          <div className="flex items-center gap-3"><Archive className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">{paidMassUpload ? 'Mass Certification Review™' : '3 FREE Certification Reviews'}</h2><p className="text-sm text-muted-foreground">{paidMassUpload ? 'Bulk upload historical certifications for secure, tenant-scoped processing.' : 'Review your 3 FREE certifications one at a time. Mass upload is available after you subscribe to a paid CertivoIQ plan.'}</p></div></div>
+
+          {!subscriptionLoading && !paidMassUpload && (
+            <div className="mt-5 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+              <p className="font-medium">Mass upload is a paid feature.</p>
+              <p className="mt-1 text-muted-foreground">Your FREE reviews are still available. Upload one certification at a time now, or <a className="font-medium text-primary underline underline-offset-4" href="/pricing">view plans and subscribe</a> to unlock Mass Certification Review™.</p>
+            </div>
+          )}
+
+          <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30"><UploadCloud className="h-8 w-8 text-muted-foreground" /><span className="mt-3 font-medium">{paidMassUpload ? 'Choose certification files' : 'Choose one certification file'}</span><span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, WEBP, or ZIP • up to 50 MB each</span><input className="sr-only" type="file" multiple={paidMassUpload} accept=".pdf,.png,.jpg,.jpeg,.webp,.zip" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
+          {files.length > 0 && <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 p-3 text-sm"><span>{files.length} file{files.length === 1 ? '' : 's'} selected • {(totalBytes / 1024 / 1024).toFixed(1)} MB</span><button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50" disabled={uploading || (!paidMassUpload && files.length > 1)} onClick={queueImport}>{uploading ? 'Queueing…' : paidMassUpload ? 'Start Mass Review' : 'Start FREE Review'}</button></div>}
           {message && <p className="mt-3 text-sm text-muted-foreground" role="status">{message}</p>}
         </section>
         <CertificationReviewPanel />
