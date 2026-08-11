@@ -21,57 +21,65 @@ export function periodStartFor(
 }
 
 export async function loadState(
-  db: EntitlementsDb,
+  supabase: SupabaseClient<Database>,
   userId: string,
   environment: StripeEnv,
-) {
-  const { data: access, error: accessError } = await db
+): Promise<AccountState> {
+  const { data: access } = await supabase
     .from("account_access")
     .select("*")
     .eq("user_id", userId)
     .maybeSingle();
-  if (accessError) throw accessError;
 
-  const { data: subscription, error: subscriptionError } = await db
+  const { data: subs } = await supabase
     .from("subscriptions")
     .select("*")
     .eq("user_id", userId)
-    .maybeSingle();
-  if (subscriptionError) throw subscriptionError;
+    .eq("environment", environment)
+    .order("created_at", { ascending: false });
 
-  const periodStart = periodStartFor(access, subscription);
-  const { data: usage, error: usageError } = await db
-    .from("ai_document_usage")
+  const planSub =
+    (subs ?? []).find((s) => !!entitlementForPrice(s.price_id)) ?? null;
+  const entitlement = entitlementForPrice(planSub?.price_id ?? access?.["price_id"]);
+  const isTrial = (access?.["status"] ?? "trialing") === "trialing" && !entitlement;
+
+  const periodStart = periodStartFor(access, planSub);
+  const { data: usage } = await supabase
+    .from("usage_counters")
     .select("*")
     .eq("user_id", userId)
+    .eq("environment", environment)
     .eq("period_start", periodStart)
     .maybeSingle();
-  if (usageError) throw usageError;
-
-  const plan = entitlementForPrice(subscription?.price_id ?? null, environment) ?? TRIAL_ENTITLEMENT;
-  const isTrial = !!access?.is_trial;
-  const status = subscription?.status ?? (isTrial ? "trialing" : "none");
 
   return {
-    status,
-    planId: subscription?.plan_id ?? null,
-    priceId: subscription?.price_id ?? null,
-    planName: plan?.name ?? null,
+    status: (access?.["status"] as string) ?? "none",
+    planId: (entitlement?.planId ?? null) as string | null,
+    priceId: entitlement?.priceId ?? null,
+    planName: entitlement?.name ?? null,
     isTrial,
-    accessUntil: access?.access_until ?? null,
-    filesPurgeAt: access?.files_purge_at ?? null,
-    academySeats: plan?.academySeats ?? 0,
+    accessUntil: (access?.["access_until"] as string | null) ?? null,
+    filesPurgeAt: (access?.["files_purge_at"] as string | null) ?? null,
+    academySeats: Number(access?.["academy_seats"] ?? 0),
     limits: {
-      units: plan?.units ?? null,
-      properties: plan?.properties ?? null,
-      aiDocs: plan?.aiDocs ?? null,
+      units: entitlement ? entitlement.unitLimit : isTrial ? TRIAL_ENTITLEMENT.unitLimit : 0,
+      properties: entitlement
+        ? entitlement.propertyLimit
+        : isTrial
+          ? TRIAL_ENTITLEMENT.propertyLimit
+          : 0,
+      aiDocs: entitlement
+        ? entitlement.aiDocAllowance
+        : isTrial
+          ? TRIAL_ENTITLEMENT.aiDocAllowance
+          : 0,
     },
     usage: {
       periodStart,
-      aiDocsUsed: usage?.documents_used ?? 0,
-      aiDocsBilled: usage?.documents_billed ?? 0,
-      propertiesUsed: usage?.properties_used ?? 0,
-      unitsUsed: usage?.units_used ?? 0,
+      aiDocsUsed: Number(usage?.["ai_docs_used"] ?? 0),
+      aiDocsBilled: Number(usage?.["ai_docs_billed"] ?? 0),
+      propertiesUsed: Number(usage?.["properties_used"] ?? 0),
+      unitsUsed: Number(usage?.["units_used"] ?? 0),
     },
-  } satisfies AccountState;
+  };
 }
