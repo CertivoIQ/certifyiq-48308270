@@ -174,8 +174,3 @@ export function emailT(locale: EmailLocale | undefined, key: EmailKey, vars?: Re
   if (!vars) return template
   return template.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m))
 }
-
-/** Narrows arbitrary template data into a supported email locale. */
-export function localeOf(value: unknown): EmailLocale | undefined {
-  return value === 'es' || value === 'en' ? value : undefined
-}
