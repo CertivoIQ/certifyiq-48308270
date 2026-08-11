@@ -9,7 +9,6 @@ export type EntitlementsDb = SupabaseClient<Database>;
 
 /** Current billing period start, used as the usage-counter bucket key. */
 export function periodStartFor(
-  access: { trial_started_at?: string | null } | null,
   sub: { current_period_start?: string | null } | null,
 ): string {
   const fromSub = sub?.current_period_start;
@@ -41,7 +40,7 @@ export async function loadState(
   const entitlement = entitlementForPrice(planSub?.price_id ?? access?.["price_id"]);
   const isTrial = (access?.["status"] ?? "trialing") === "trialing" && !entitlement;
 
-  const periodStart = periodStartFor(access, planSub);
+  const periodStart = periodStartFor(planSub);
   const { data: usage } = await supabase
     .from("usage_counters")
     .select("*")
