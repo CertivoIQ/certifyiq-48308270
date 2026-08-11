@@ -71,8 +71,15 @@ export const ADDON_PRICE_IDS = {
 
 export const ADDON_PRICE_ID_LIST: string[] = Object.values(ADDON_PRICE_IDS);
 
-/** Files are held for 14 days after access ends, then permanently deleted. */
-export const FILE_RETENTION_DAYS = 14;
+/** FREE review capacity. No card or subscription trial is attached. */
+export const FREE_REVIEW_ENTITLEMENT = {
+  unitLimit: 0,
+  propertyLimit: 0,
+  aiDocAllowance: 3,
+} as const;
+
+/** Every recurring plan price, used to tell plans apart from add-ons. */
+export const PLAN_PRICE_ID_LIST: string[] = Object.values(PLAN_PRICE_IDS);
 
 export function entitlementForPrice(priceId: string | null | undefined): PlanEntitlement | null {
   if (!priceId) return null;
@@ -86,16 +93,6 @@ export function planKeyToPriceId(plan: string): string | null {
 export function formatLimit(value: number | null): string {
   return value === null ? "Unlimited" : value.toLocaleString();
 }
-
-/** FREE review capacity. No card, countdown, or subscription trial is attached. */
-export const FREE_REVIEW_ENTITLEMENT = {
-  unitLimit: 250,
-  propertyLimit: 3,
-  aiDocAllowance: 3,
-} as const;
-
-/** Every recurring plan price, used to tell plans apart from add-ons. */
-export const PLAN_PRICE_ID_LIST: string[] = Object.values(PLAN_PRICE_IDS);
 
 export function isPlanPrice(priceId: string | null | undefined): boolean {
   return !!priceId && PLAN_PRICE_ID_LIST.includes(priceId);
