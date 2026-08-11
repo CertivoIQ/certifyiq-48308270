@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
+import { Link } from '@tanstack/react-router';
 import { AlertTriangle, CheckCircle2, FileSearch, HelpCircle, PlayCircle, XCircle } from 'lucide-react';
 import {
   getCertificationReview,
@@ -8,6 +9,7 @@ import {
   recordFindingDecision,
   runCertificationReview,
 } from '@/utils/certification-review.functions';
+import { useAccount } from '@/hooks/use-account';
 
 /**
  * Live review panel for the compliance vertical slice: run extraction + the
@@ -28,6 +30,7 @@ export function CertificationReviewPanel() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [jurisdiction, setJurisdiction] = useState('US');
   const [notice, setNotice] = useState('');
+  const { account } = useAccount();
 
   const listItems = useServerFn(listCertificationItems);
   const getReview = useServerFn(getCertificationReview);
@@ -68,6 +71,11 @@ export function CertificationReviewPanel() {
     },
     onError: (error: Error) => setNotice(error.message),
   });
+
+  const freeReviewsRemaining =
+    account?.isTrial && account.limits.aiDocs !== null
+      ? Math.max(0, account.limits.aiDocs - account.usage.aiDocsUsed)
+      : null;
 
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-sm">
@@ -126,6 +134,24 @@ export function CertificationReviewPanel() {
         <p className="mt-4 rounded-lg bg-muted/50 p-3 text-sm" role="status">
           {notice}
         </p>
+      )}
+
+      {review.data && (
+        <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-4">
+          {freeReviewsRemaining !== null ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">{freeReviewsRemaining} FREE certification review{freeReviewsRemaining === 1 ? '' : 's'} remaining</p>
+                <p className="mt-1 text-sm text-muted-foreground">Use the remaining reviews to validate CertivoIQ on your own files, then scale to your full portfolio.</p>
+              </div>
+              {freeReviewsRemaining === 0 && (
+                <Link to="/pricing" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
+                  Choose your plan
+                </Link>
+              )}
+            </div>
+          ) : null}
+        </div>
       )}
 
       {review.data && review.data.findings.length > 0 && (
