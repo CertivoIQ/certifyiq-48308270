@@ -57,8 +57,9 @@ export const getAccountState = createServerFn({ method: "POST" })
 
 /**
  * Meters AI document processing. Documents inside the plan allowance are free;
- * anything beyond it is billed at $3 per certification onto the next invoice.
- * Accounts with no plan and an expired trial are blocked outright.
+ * anything beyond a paid plan allowance is billed at $3 per certification onto
+ * the next invoice. The FREE review program is capped at exactly three
+ * certifications and never creates an overage charge.
  */
 export const recordAiDocuments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -72,13 +73,9 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const state = await loadState(supabase as unknown as EntitlementsDb, userId, data.environment);
 
-    const trialExpired =
-      state.isTrial && !!state.accessUntil && new Date(state.accessUntil).getTime() < Date.now();
-    if (state.status === "none" || trialExpired || (!state.planId && !state.isTrial)) {
+    if (state.status === "none" || (!state.planId && !state.isTrial)) {
       return {
-        error: trialExpired
-          ? "Your free trial has ended. Choose a plan to keep reviewing certifications."
-          : "No active plan. Choose a plan to process certifications.",
+        error: "No active plan. Choose a plan to process certifications.",
         blocked: true,
       };
     }
@@ -87,16 +84,16 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
     const before = state.usage.aiDocsUsed;
     const after = before + data.count;
 
-    // Trials are capped hard — no overage billing without a card on file.
+    // FREE reviews are a hard three-certification allowance — never overage bill.
     if (state.isTrial && allowance !== null && after > allowance) {
       return {
-        error: `Trials include ${allowance} AI document reviews. Choose a plan to keep going.`,
+        error: `Your 3 FREE certification reviews have been used. Choose a plan to keep reviewing certifications.`,
         blocked: true,
       };
     }
 
     let billedNow = 0;
-    if (allowance !== null && after > allowance) {
+    if (!state.isTrial && allowance !== null && after > allowance) {
       const overageTotal = after - allowance;
       billedNow = overageTotal - state.usage.aiDocsBilled;
     }
@@ -124,7 +121,6 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
           quantity: billedNow,
           description: `AI document processing beyond plan allowance (${billedNow} certifications)`,
         } as Parameters<typeof stripe.invoiceItems.create>[0]);
-
       } catch (error) {
         return { error: getStripeErrorMessage(error), blocked: true };
       }
@@ -158,8 +154,8 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
   });
 
 /**
- * Hard capacity gate for properties and units — blocked past the plan limit
- * with no overage billing, per CertivoIQ's pricing rules.
+ * Hard capacity gate for properties and units. FREE reviews do not include
+ * portfolio capacity; mass/property imports require a paid plan.
  */
 export const claimCapacity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -174,16 +170,16 @@ export const claimCapacity = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const state = await loadState(supabase as unknown as EntitlementsDb, userId, data.environment);
 
-    const expired =
-      !!state.accessUntil && new Date(state.accessUntil).getTime() < Date.now() && state.isTrial;
-    if (state.status === "none" || expired) {
+    if (state.status === "none") {
+      return { allowed: false, used: 0, limit: 0, reason: "No active plan." };
+    }
+
+    if (state.isTrial) {
       return {
         allowed: false,
         used: 0,
         limit: 0,
-        reason: expired
-          ? "Your free trial has ended. Choose a plan to add more."
-          : "No active plan.",
+        reason: "Portfolio capacity and mass imports require a paid CertivoIQ plan. Your 3 FREE reviews are reserved for certification review.",
       };
     }
 
