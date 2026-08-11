@@ -1,0 +1,8 @@
+/* Public-facing welcome video privacy: keep production narration metadata and transcript out of the customer UI. */
+section[aria-labelledby="certivo-video-title"] details {
+  display: none !important;
+}
+
+section[aria-labelledby="certivo-video-title"] .absolute.inset-x-0 > div:last-child > span {
+  display: none !important;
+}
