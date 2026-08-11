@@ -52,6 +52,11 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     const engine = await import("@/lib/compliance-rule-engine.mjs");
     const { hashJson, sha256Hex } = await import("@/lib/complianceDecisionAndManifest");
     const registry = await import("@/lib/stateCoverageRegistry");
+    // Evidence, findings and manifests are written with the service role: end users
+    // hold read-only rights on those tables so they can never tamper with a
+    // determination or forge a verification flag. Ownership is already proven by
+    // the RLS-scoped read of the import item above.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // --- extraction -------------------------------------------------------
     const download = await supabase.storage.from("certification-imports").download(item.storage_path);
@@ -94,9 +99,9 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       }
     }
 
-    await supabase.from("certification_facts").delete().eq("item_id", item.id);
+    await supabaseAdmin.from("certification_facts").delete().eq("item_id", item.id);
     if (result.facts.length) {
-      const { error: factError } = await supabase.from("certification_facts").insert(
+      const { error: factError } = await supabaseAdmin.from("certification_facts").insert(
         result.facts.map((fact) => ({
           item_id: item.id,
           user_id: userId,
@@ -145,8 +150,8 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         : {}),
     });
 
-    await supabase.from("compliance_findings").delete().eq("item_id", item.id);
-    const { data: insertedFindings, error: findingError } = await supabase
+    await supabaseAdmin.from("compliance_findings").delete().eq("item_id", item.id);
+    const { data: insertedFindings, error: findingError } = await supabaseAdmin
       .from("compliance_findings")
       .insert(
         evaluation.findings.map((finding) => ({
@@ -199,7 +204,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       },
     };
     const manifestSha256 = await hashJson(manifest);
-    const { error: manifestError } = await supabase.from("evidence_manifests").insert({
+    const { error: manifestError } = await supabaseAdmin.from("evidence_manifests").insert({
       review_id: item.id,
       user_id: userId,
       organization_id: organizationId,
@@ -312,7 +317,10 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
       } as const;
     }
 
-    const { error: reviewError } = await supabase.from("finding_reviews").insert({
+    // Reviewer decisions are append-only and service-role written, so a user
+    // cannot fabricate an approval trail directly through the Data API.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: reviewError } = await supabaseAdmin.from("finding_reviews").insert({
       finding_id: finding.id,
       user_id: userId,
       reviewer_id: userId,
@@ -321,7 +329,7 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
     });
     if (reviewError) throw reviewError;
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from("compliance_findings")
       .update({ review_state: data.decision })
       .eq("id", finding.id);

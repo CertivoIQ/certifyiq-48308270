@@ -8,7 +8,7 @@ export interface FreeReviewLeadInput {
   ownerName: string;
   ownerTitle: string;
   email: string;
-  phone?: string;
+  phone?: string | undefined;
   units: number;
   properties: number;
   hq: string;
@@ -113,7 +113,7 @@ export const captureFreeReviewLead = createServerFn({ method: "POST" })
 
     const accountPayload = {
       name: data.companyName,
-      account_type: data.units > 10_000 ? "enterprise" : "company",
+      account_type: (data.units > 10_000 ? "enterprise" : "company") as "enterprise" | "company",
       units: data.units,
       properties: data.properties,
       hq: data.hq,

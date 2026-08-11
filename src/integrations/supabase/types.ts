@@ -1675,21 +1675,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      agency_can_review_submission: {
-        Args: { _submission_id: string; _user_id: string }
-        Returns: boolean
-      }
-      agency_can_view_submission: {
-        Args: { _submission_id: string; _user_id: string }
-        Returns: boolean
-      }
       generate_support_case_number: { Args: never; Returns: string }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
-        Returns: boolean
-      }
-      has_agency_role: {
-        Args: { _agency_id: string; _roles: string[]; _user_id: string }
         Returns: boolean
       }
       has_role: {
@@ -1697,10 +1685,6 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
-        Returns: boolean
-      }
-      is_agency_member: {
-        Args: { _agency_id: string; _user_id: string }
         Returns: boolean
       }
     }
