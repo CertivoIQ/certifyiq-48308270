@@ -76,6 +76,15 @@ const FLOW = [
   { icon: ShieldCheck, label: "Human approves" },
 ] as const;
 
+const EXECUTIVE_OUTCOMES = [
+  { title: "See the risk earlier", detail: "Surface missing evidence, inconsistencies, and exceptions while your team still has time to investigate." },
+  { title: "Defend the decision", detail: "Keep the finding connected to the source evidence, rule version, and reviewer action." },
+  { title: "Standardize review", detail: "Apply the same deterministic rule logic across properties, teams, and certification files." },
+  { title: "Scale capacity", detail: "Give compliance leaders more review capacity without turning the workflow into another administrative burden." },
+] as const;
+
+const PROGRAMS = ["LIHTC (IRC §42)", "Project-Based Section 8", "HOME", "HOTMA income & asset provisions"] as const;
+
 function WelcomePage() {
   const { isActive: isSubscriber } = useSubscription();
   const { state: viewerState } = useViewerState();
@@ -91,6 +100,7 @@ function WelcomePage() {
           <nav className="hidden items-center gap-1 md:flex">
             <a href="#how-it-works" className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground">How it works</a>
             <a href="#evidence" className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground">Evidence</a>
+            <a href="#leaders" className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground">For portfolio leaders</a>
             <a href="#value" className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground">Value</a>
             <Link to="/pricing" className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground">Pricing</Link>
           </nav>
@@ -208,6 +218,41 @@ function WelcomePage() {
               </div>
             </div>
             <div className="rounded-2xl border border-background/10 bg-background/5 p-4"><CertivoIQVoiceoverVideo accountState={viewerState} /></div>
+          </div>
+        </section>
+
+        <section id="leaders" className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-start">
+            <div>
+              <Pill tone="seal">For portfolio leaders</Pill>
+              <h2 className="mt-4 font-display text-[38px] leading-tight sm:text-[50px]">A clearer view of compliance risk across the portfolio.</h2>
+              <p className="mt-4 text-[15px] leading-7 text-muted-foreground">Built for owners, operators, compliance leaders, and property-management teams who need a defensible review process without adding another layer of administrative work.</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications <ArrowRight className="ml-2 size-4" /></Link></Button>
+                <Button size="lg" variant="outline" asChild><Link to="/methodology">See the methodology</Link></Button>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {EXECUTIVE_OUTCOMES.map((item) => (
+                <Panel key={item.title} bodyClassName="p-5">
+                  <Check className="size-5 text-gold" />
+                  <h3 className="mt-4 font-display text-lg">{item.title}</h3>
+                  <p className="mt-1.5 text-[12.5px] leading-5 text-muted-foreground">{item.detail}</p>
+                </Panel>
+              ))}
+            </div>
+          </div>
+          <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[.16em] text-gold">Program scope</p>
+                <p className="mt-2 font-display text-lg">Built around the federal program rules your team already works with.</p>
+              </div>
+              <Link className="text-[12.5px] font-semibold underline" to="/methodology">Review supported programs</Link>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {PROGRAMS.map((program) => <Pill key={program} tone="neutral">{program}</Pill>)}
+            </div>
           </div>
         </section>
 
