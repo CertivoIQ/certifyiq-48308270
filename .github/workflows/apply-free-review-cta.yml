@@ -1,0 +1,34 @@
+name: Apply FREE review CTA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/apply-free-review-cta.mjs"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Apply CTA patch
+        run: bun scripts/apply-free-review-cta.mjs
+      - name: Commit CTA patch
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/CertivoIQVoiceoverVideo.tsx
+          git commit -m "feat: add 3 FREE certification review CTA below video"
+          git push
