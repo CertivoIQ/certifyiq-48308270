@@ -153,11 +153,11 @@ function PricingPage() {
           <div>
             <p className="font-display text-[17px] text-accent-foreground">Start with 3 FREE certification reviews</p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow. No countdown or 3 FREE certification reviews.
+              Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow.
             </p>
           </div>
           <Button size="sm" asChild>
-            <Link to="/trial">Run 3 FREE reviews</Link>
+            <Link to="/trial">Review Your 3 FREE Certifications</Link>
           </Button>
         </div>
       </div>
@@ -354,7 +354,7 @@ function PricingPage() {
       <Panel
         className="mt-4"
         title="Start with proof, then scale"
-        description="Three FREE certification reviews — no countdown or 3 FREE certification reviews"
+        description="Three FREE certification reviews"
         bodyClassName="p-5"
       >
         <p className="text-[13.5px] leading-relaxed text-muted-foreground">
@@ -362,7 +362,7 @@ function PricingPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button size="sm" asChild>
-            <Link to="/trial">Run 3 FREE certification reviews</Link>
+            <Link to="/trial">Review Your 3 FREE Certifications</Link>
           </Button>
         </div>
       </Panel>
