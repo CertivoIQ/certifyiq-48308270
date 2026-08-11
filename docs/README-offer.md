@@ -1,1 +1,0 @@
-The current public CTA is 3 free certification reviews.
