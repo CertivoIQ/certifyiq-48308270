@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { FEATURE_NAMES } from '@/lib/compliance-intelligence.mjs';
 import { CertificationReviewPanel } from '@/components/certification-review-panel';
+import { FreeReviewLeadGate } from '@/components/FreeReviewLeadGate';
 
 /**
  * Narrow view of the Supabase client for the import tables, which are written
@@ -95,13 +96,15 @@ export function ComplianceIntelligenceSuite() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {features.map(({ name, description, icon: Icon }) => <article key={name} className="rounded-2xl border bg-card p-5 shadow-sm"><Icon className="mb-4 h-6 w-6 text-primary" /><h2 className="font-semibold">{name}</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p></article>)}
       </section>
-      <section className="rounded-2xl border bg-card p-6 shadow-sm">
-        <div className="flex items-center gap-3"><Archive className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">Mass Certification Review™</h2><p className="text-sm text-muted-foreground">Bulk upload historical certifications for secure, tenant-scoped processing.</p></div></div>
-        <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30"><UploadCloud className="h-8 w-8 text-muted-foreground" /><span className="mt-3 font-medium">Choose certification files</span><span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, WEBP, or ZIP • up to 50 MB each</span><input className="sr-only" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.zip" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
-        {files.length > 0 && <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 p-3 text-sm"><span>{files.length} file{files.length === 1 ? '' : 's'} selected • {(totalBytes / 1024 / 1024).toFixed(1)} MB</span><button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50" disabled={uploading} onClick={queueImport}>{uploading ? 'Queueing…' : 'Start Review'}</button></div>}
-        {message && <p className="mt-3 text-sm text-muted-foreground" role="status">{message}</p>}
-      </section>
-      <CertificationReviewPanel />
+      <FreeReviewLeadGate>
+        <section className="rounded-2xl border bg-card p-6 shadow-sm">
+          <div className="flex items-center gap-3"><Archive className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">Mass Certification Review™</h2><p className="text-sm text-muted-foreground">Bulk upload historical certifications for secure, tenant-scoped processing.</p></div></div>
+          <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30"><UploadCloud className="h-8 w-8 text-muted-foreground" /><span className="mt-3 font-medium">Choose certification files</span><span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, WEBP, or ZIP • up to 50 MB each</span><input className="sr-only" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.zip" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
+          {files.length > 0 && <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 p-3 text-sm"><span>{files.length} file{files.length === 1 ? '' : 's'} selected • {(totalBytes / 1024 / 1024).toFixed(1)} MB</span><button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50" disabled={uploading} onClick={queueImport}>{uploading ? 'Queueing…' : 'Start Review'}</button></div>}
+          {message && <p className="mt-3 text-sm text-muted-foreground" role="status">{message}</p>}
+        </section>
+        <CertificationReviewPanel />
+      </FreeReviewLeadGate>
       <section className="grid gap-4 md:grid-cols-3">
         {summaryCards.map(({ label, icon: Icon }) => <div key={label} className="rounded-2xl border bg-card p-5"><Icon className="mb-3 h-5 w-5 text-primary" /><div className="font-medium">{label}</div><p className="mt-1 text-sm text-muted-foreground">Built into the compliance workflow and preserved with the audit trail.</p></div>)}
       </section>
