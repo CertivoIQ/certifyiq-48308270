@@ -113,10 +113,10 @@ function WelcomePage() {
                 ONE ANALYST.<br />EVERY PROPERTY.<br /><span className="text-gold">24/7.</span>
               </h1>
               <p className="mt-7 max-w-2xl text-[18px] leading-8 text-muted-foreground">
-                Your portfolio doesn't need more spreadsheets. It needs intelligence. CertivoIQ turns certification files into traceable compliance findings so your team can review risk before it becomes an audit problem.
+                Your portfolio doesn't need more spreadsheets. It needs intelligence. CertivoIQ turns certification files into traceable compliance findings so your team can identify risk before a missed issue becomes an expensive compliance problem.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Review my files free <ArrowRight className="ml-2 size-4" /></Link></Button>
+                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Run my free compliance review <ArrowRight className="ml-2 size-4" /></Link></Button>
                 <Button size="lg" variant="outline" asChild><a href="#how-it-works">See how it works</a></Button>
               </div>
               <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-muted-foreground">
@@ -219,12 +219,23 @@ function WelcomePage() {
           </div>
         </section>
 
+        <section className="border-y border-border bg-muted/20">
+          <div className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[1fr_auto] lg:items-center lg:px-8">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-gold">Why act before the audit?</p>
+              <h2 className="mt-2 max-w-3xl font-display text-[28px] leading-tight sm:text-[34px]">One missed compliance finding can cost more than the system that helps you catch it.</h2>
+              <p className="mt-2 max-w-3xl text-[13px] leading-6 text-muted-foreground">CertivoIQ is built to surface missing evidence, inconsistencies, and exceptions while your team still has time to investigate and resolve them.</p>
+            </div>
+            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>See my risk first <ArrowRight className="ml-2 size-4" /></Link></Button>
+          </div>
+        </section>
+
         <section className="mx-auto max-w-7xl px-5 pb-20 lg:px-8">
           <div className="rounded-2xl border border-gold/25 bg-accent px-6 py-10 text-center sm:px-10">
             <Pill tone="seal">Start without a sales call</Pill>
-            <h2 className="mx-auto mt-4 max-w-3xl font-display text-[34px] leading-tight sm:text-[46px]">See what CertivoIQ catches in your files.</h2>
+            <h2 className="mx-auto mt-4 max-w-3xl font-display text-[34px] leading-tight sm:text-[46px]">Find the compliance issues your current process can miss.</h2>
             <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {TRIAL.uploadsAllowed} free certification reviews. Bring your own files, inspect the evidence trail, and decide whether CertivoIQ deserves a place in your compliance workflow.</p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Start my free review <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
+            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/launchpad"}>Run my free compliance review <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
             <p className="mt-4 text-[11px] text-muted-foreground">{t("welcome.pill", { daysLeft: TRIAL.daysLeft, allowed: TRIAL.uploadsAllowed })}</p>
           </div>
         </section>
