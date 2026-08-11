@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { FreeReviewLeadGate } from "@/components/FreeReviewLeadGate";
@@ -13,8 +13,20 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { claimCapacity, recordAiDocuments } from "@/utils/entitlements.functions";
 import { formatLimit } from "@/lib/plan-catalog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/trial")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem("certivoiq:after-auth", "/trial");
+      }
+      throw redirect({ to: "/auth", search: { mode: "signin" } });
+    }
+    return { user: data.user };
+  },
   head: () => ({
     meta: [
       { title: "Your 3 FREE Certification Reviews — CertivoIQ" },
@@ -91,7 +103,7 @@ function TrialPage() {
           <p>
             Welcome! You have <strong>{TRIAL.uploadsAllowed} FREE certification reviews</strong> to test the real CertivoIQ workflow on your own files. I’ll help you see what the AI extracts, which rules apply, what it finds, and what your reviewer should do next.
           </p>
-          <p className="mt-2 text-muted-foreground">No countdown. Use the reviews when you're ready, then choose a plan if CertivoIQ earns a place in your workflow.</p>
+          <p className="mt-2 text-muted-foreground">Use your reviews when you're ready, then choose a plan if CertivoIQ earns a place in your workflow.</p>
         </MerlinSays>
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -118,7 +130,7 @@ function TrialPage() {
                       <p className="mt-1 text-[13px] text-muted-foreground">{t.lead}</p>
                       <p className="mt-1.5 text-[12.5px] italic text-gold">“{t.merlin}”</p>
                     </div>
-                    <Button size="sm" variant="outline" asChild><Link to={t.to}>{t.cta}</Link></Button>
+                    <Button size="sm" variant="outline" asChild><Link to={t.id === "upload-cert" ? "/compliance-intelligence" : t.to}>{t.id === "upload-cert" ? "Upload a certification" : t.cta}</Link></Button>
                   </li>
                 );
               })}
@@ -155,10 +167,10 @@ function TrialPage() {
           </ul>
         </Panel>
 
-        <Panel className="mt-4" title="What happens next" description="No trial countdown or expiration message — the offer is based on review usage" bodyClassName="p-5">
+        <Panel className="mt-4" title="What happens next" description="Your review allowance is based on usage" bodyClassName="p-5">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-border px-4 py-3"><p className="cite">01 · REVIEW</p><p className="mt-1 font-display text-[14.5px]">Run up to 3 real certifications</p><p className="mt-1 text-[12.5px] text-muted-foreground">See evidence, rules, findings and corrections.</p></div>
-            <div className="rounded-lg border border-border px-4 py-3"><p className="cite">02 · DECIDE</p><p className="mt-1 font-display text-[14.5px]">Judge the value on your own work</p><p className="mt-1 text-[12.5px] text-muted-foreground">No sales call required and no artificial urgency.</p></div>
+            <div className="rounded-lg border border-border px-4 py-3"><p className="cite">02 · DECIDE</p><p className="mt-1 font-display text-[14.5px]">Judge the value on your own work</p><p className="mt-1 text-[12.5px] text-muted-foreground">No sales call required. Choose the plan that fits your portfolio.</p></div>
             <div className="rounded-lg border border-border px-4 py-3"><p className="cite">03 · SCALE</p><p className="mt-1 font-display text-[14.5px]">Choose a plan when you're ready</p><p className="mt-1 text-[12.5px] text-muted-foreground">Move from proof-of-value to portfolio-wide compliance intelligence.</p></div>
           </div>
           <Button className="mt-4" asChild><Link to="/pricing">View plans</Link></Button>
