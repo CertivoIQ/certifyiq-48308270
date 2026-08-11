@@ -28,7 +28,7 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
     hq: "",
     states: "",
     programs: "",
-    marketingConsent: true,
+    marketingConsent: false,
   });
 
   const save = useMutation({
