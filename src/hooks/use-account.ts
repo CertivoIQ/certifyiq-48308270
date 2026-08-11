@@ -37,17 +37,15 @@ export function useAccount() {
   }, [user?.id, queryClient]);
 
   const account = query.data ?? null;
-  const trialEndsAt = account?.isTrial && account.accessUntil ? new Date(account.accessUntil) : null;
-  const trialDaysLeft = trialEndsAt
-    ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000))
-    : null;
 
   return {
     account,
     loading: !ready || (!!user && query.isLoading),
     refetch: query.refetch,
-    trialEndsAt,
-    trialDaysLeft,
-    trialExpired: !!trialEndsAt && trialEndsAt.getTime() < Date.now(),
+    // FREE review access has no calendar countdown. These legacy fields remain
+    // for compatibility with existing consumers but are intentionally inert.
+    trialEndsAt: null,
+    trialDaysLeft: null,
+    trialExpired: false,
   };
 }
