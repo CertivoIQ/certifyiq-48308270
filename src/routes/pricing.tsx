@@ -2,9 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PublicShell } from "@/components/public-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { PLANS, ADDONS, ACADEMY_ADDONS, TRIAL, SALES_ASSISTED_ADDONS, SALES_EMAIL } from "@/lib/platform-data";
-import { TRIAL_OFFER, RETENTION_POLICY } from "@/lib/trial-data";
-import { Check, Sparkles, Clock, CreditCard, ExternalLink, Mail } from "lucide-react";
+import { PLANS, ADDONS, ACADEMY_ADDONS, SALES_ASSISTED_ADDONS, SALES_EMAIL } from "@/lib/platform-data";
+import { Check, Sparkles, CreditCard, ExternalLink, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -29,7 +28,7 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:title", content: "Plans & Pricing — CertivoIQ" },
       {
         property: "og:description",
-        content: "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits.",
+        content: "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits. Start with 3 free certification reviews.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -56,19 +55,14 @@ function PricingPage() {
       toast.error("This plan is not available for self-serve checkout yet.");
       return;
     }
-    // Checkout must be tied to an account: without a userId the webhook cannot
-    // provision the plan, so send visitors to sign in and bring them back here.
     if (!user) {
       toast.info("Create your account first", {
         description: "Sign in so we can attach this subscription to your CertivoIQ workspace.",
       });
-      // Remember where they were so sign-in can bring them straight back.
       sessionStorage.setItem("certivoiq:after-auth", "/pricing");
       await navigate({ to: "/auth" });
       return;
     }
-    // Existing subscribers switch their current subscription instead of
-    // stacking a second one on top of it.
     if (isActive && PLAN_PRICE_ID_LIST.includes(priceId) && subscription) {
       setPlanBusy(priceId);
       try {
@@ -88,7 +82,6 @@ function PricingPage() {
       }
       return;
     }
-    // Add-ons attach to the existing active subscription and are billed on the next renewal.
     if (isActive && subscription && !PLAN_PRICE_ID_LIST.includes(priceId)) {
       setAddonBusy(priceId);
       try {
@@ -111,7 +104,6 @@ function PricingPage() {
       }
       return;
     }
-    // Add-ons cannot be purchased alone — they must attach to an active plan.
     if (!isActive && !PLAN_PRICE_ID_LIST.includes(priceId)) {
       toast.info("Choose a plan first", {
         description: "Add-ons attach to an active CertivoIQ subscription. Select a plan above, then add Academy seats or properties.",
@@ -131,7 +123,6 @@ function PricingPage() {
       toast.error(error instanceof Error ? error.message : "Checkout unavailable");
     }
   };
-
 
   const openBillingPortal = async () => {
     setPortalBusy(true);
@@ -153,9 +144,22 @@ function PricingPage() {
       title="Plans & pricing"
       subtitle="Peace of mind before an audit — priced per portfolio, never per credit"
     >
-
       <div className="-mt-1 mb-4 overflow-hidden rounded-lg">
         <PaymentTestModeBanner />
+      </div>
+
+      <div className="mb-5 rounded-lg border border-primary/25 bg-accent px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-[17px] text-accent-foreground">Start with 3 free certification reviews</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow. No countdown or 7-day trial.
+            </p>
+          </div>
+          <Button size="sm" asChild>
+            <Link to="/trial">Run 3 free reviews</Link>
+          </Button>
+        </div>
       </div>
 
       {isActive && subscription && (
@@ -174,18 +178,6 @@ function PricingPage() {
             <CreditCard className="size-4" /> Manage billing
             <ExternalLink className="size-3.5" />
           </Button>
-        </div>
-      )}
-
-      {TRIAL.active && (
-        <div className="mb-5 rounded-lg border border-primary/25 bg-accent px-5 py-4">
-          <p className="font-display text-[16px] text-accent-foreground">
-            You have {TRIAL.daysLeft} days left in your free trial
-          </p>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Trials include up to {TRIAL.uploadsAllowed} tenant certification uploads with a full AI compliance review,
-            findings and corrective measures. Choose a plan to keep unlimited reviews.
-          </p>
         </div>
       )}
 
@@ -211,13 +203,12 @@ function PricingPage() {
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Pill tone="seal">
-                <Clock className="size-3" /> {TRIAL_OFFER.label}
+                <Sparkles className="size-3" /> 3 free certification reviews
               </Pill>
-              <span className="cite">{TRIAL_OFFER.blurb}</span>
+              <span className="cite">Proof of value before you choose a paid plan.</span>
             </div>
             <p className="mt-1.5 text-[12px] text-muted-foreground">
-              Starts free for {TRIAL_OFFER.days} days on this plan — mass upload your portfolio during the trial and keep
-              everything when you subscribe.
+              Start with three real certification reviews, see the evidence and findings on your own files, then choose the plan that fits your portfolio.
             </p>
 
             <ul className="mt-5 space-y-2.5 border-t border-border pt-4">
@@ -242,7 +233,6 @@ function PricingPage() {
                   ? `Switch to ${p.name}`
                   : p.cta}
             </Button>
-
           </Panel>
         ))}
       </div>
@@ -262,7 +252,6 @@ function PricingPage() {
             ))}
           </ul>
         </Panel>
-
 
         <Panel
           title="CertivoIQ Academy — add-on only"
@@ -342,9 +331,7 @@ function PricingPage() {
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <Pill tone="seal">Sales-assisted</Pill>
                 <Button size="sm" variant="outline" asChild>
-                  <a
-                    href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(a.subject)}`}
-                  >
+                  <a href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(a.subject)}`}>
                     <Mail className="size-4" /> Contact Sales
                   </a>
                 </Button>
@@ -364,17 +351,18 @@ function PricingPage() {
         </div>
       </Panel>
 
-
       <Panel
         className="mt-4"
-        title={RETENTION_POLICY.headline}
-        description="Every plan starts with a 7-day free trial"
+        title="Start with proof, then scale"
+        description="Three free certification reviews — no countdown or 7-day trial"
         bodyClassName="p-5"
       >
-        <p className="text-[13.5px] leading-relaxed text-muted-foreground">{RETENTION_POLICY.detail}</p>
+        <p className="text-[13.5px] leading-relaxed text-muted-foreground">
+          Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform earns a place in your compliance workflow. When you are ready, choose the plan that fits your portfolio.
+        </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button size="sm" asChild>
-            <Link to="/trial">Open my trial plan</Link>
+            <Link to="/trial">Run 3 free certification reviews</Link>
           </Button>
         </div>
       </Panel>
