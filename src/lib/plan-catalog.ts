@@ -71,6 +71,9 @@ export const ADDON_PRICE_IDS = {
 
 export const ADDON_PRICE_ID_LIST: string[] = Object.values(ADDON_PRICE_IDS);
 
+/** Files are held for 14 days after paid access ends, then permanently deleted. */
+export const FILE_RETENTION_DAYS = 14;
+
 /** FREE review capacity. No card or subscription trial is attached. */
 export const FREE_REVIEW_ENTITLEMENT = {
   unitLimit: 0,
