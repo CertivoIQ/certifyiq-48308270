@@ -1,12 +1,24 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Meter } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { LAUNCHPAD_STEPS, AUDIT_JOURNEY, COACH_TIPS } from "@/lib/platform-data";
+import { supabase } from "@/integrations/supabase/client";
 import { Check, GraduationCap, Rocket, UploadCloud } from "lucide-react";
 
 export const Route = createFileRoute("/launchpad")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem("certivoiq:after-auth", "/launchpad");
+      }
+      throw redirect({ to: "/auth", search: { mode: "signin" } });
+    }
+    return { user: data.user };
+  },
   head: () => ({
     meta: [
       { title: "CertivoIQ LaunchPad — Guided Setup to Audit-Ready" },
