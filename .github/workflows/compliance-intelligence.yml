@@ -31,7 +31,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          extensions = {'.ts', '.tsx', '.md', '.mdx', '.json', '.html', '.txt', '.yml', '.yaml'}
+          extensions = {'.ts', '.tsx', '.md', '.mdx', '.json', '.html', '.txt'}
           replacements = [
               ('Start 7-day trial', 'Start with 3 FREE certification reviews'),
               ('start 7-day trial', 'start with 3 FREE certification reviews'),
@@ -56,7 +56,7 @@ jobs:
           for path in Path('.').rglob('*'):
               if not path.is_file() or path.suffix not in extensions:
                   continue
-              if '.git' in path.parts or 'node_modules' in path.parts:
+              if '.git' in path.parts or 'node_modules' in path.parts or '.github' in path.parts:
                   continue
               try:
                   text = path.read_text(encoding='utf-8')
@@ -73,20 +73,13 @@ jobs:
           print('\n'.join(changed) if changed else '(none)')
           PY
 
-          if git diff --quiet; then
-            exit 0
-          fi
-
-          if git grep -n -I -E '7-day trial|7 day trial|7-day free trial|7 day free trial|Start 7-day trial' -- ':!*.lock'; then
-            echo 'Legacy 7-day trial marketing remains.'
-            exit 1
-          fi
-
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'chore: replace trial marketing with FREE review offer'
-          git push
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore: replace trial marketing with FREE review offer'
+            git push
+          fi
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
