@@ -1,0 +1,1 @@
+CertivoIQ public offer: 3 free certification reviews. Legacy 7-day trial messaging is retired from public media.
