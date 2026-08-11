@@ -5,8 +5,7 @@ import { FreeReviewLeadGate } from "@/components/FreeReviewLeadGate";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { MerlinSays } from "@/components/merlin";
-import { TRIAL } from "@/lib/platform-data";
-import { TRIAL_TASKS, TRIAL_INVITES, INVITE_ROLES } from "@/lib/trial-data";
+import { FREE_REVIEW_OFFER, TRIAL_TASKS, TRIAL_INVITES, INVITE_ROLES } from "@/lib/trial-data";
 import { Check, Clock, UploadCloud, Link2, Send, FileSpreadsheet } from "lucide-react";
 import { useAccount } from "@/hooks/use-account";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -33,9 +32,9 @@ export const Route = createFileRoute("/trial")({
       {
         name: "description",
         content:
-          "Use three free CertivoIQ certification reviews to see extracted evidence, rule evaluation, cited findings and correction steps on your own files.",
+          "Use three FREE CertivoIQ certification reviews to see extracted evidence, rule evaluation, cited findings and correction steps on your own files.",
       },
-      { property: "og:title", content: "Your 3 Free CertivoIQ Certification Reviews" },
+      { property: "og:title", content: "Your 3 FREE CertivoIQ Certification Reviews" },
       {
         property: "og:description",
         content: "Run three real certification files through CertivoIQ before choosing a paid plan.",
@@ -57,23 +56,29 @@ function TrialPage() {
   const tasks = TRIAL_TASKS.filter((t) => enterprise || !t.enterpriseOnly);
   const complete = tasks.filter((t) => done.includes(t.id)).length;
   const reviewsUsed = account?.usage.aiDocsUsed ?? 0;
-  const reviewsAllowed = account ? formatLimit(account.limits.aiDocs) : TRIAL.uploadsAllowed;
+  const reviewsAllowed = account ? formatLimit(account.limits.aiDocs) : FREE_REVIEW_OFFER.reviews;
 
   const toggle = (id: string, title: string) =>
     setDone((d) => {
       if (d.includes(id)) return d.filter((x) => x !== id);
-      toast.success("Merlin approves", { description: `${title} — checked off your free review plan.` });
+      toast.success("Merlin approves", { description: `${title} — checked off your FREE review plan.` });
       return [...d, id];
     });
 
   const uploadPortfolio = async () => {
+    if (!account?.planId) {
+      toast.info("Portfolio imports require a paid plan", {
+        description: "Your 3 FREE reviews are reserved for certification review. Choose a plan to import portfolio data.",
+      });
+      return;
+    }
     setUploading(true);
     try {
       const rows = 1248;
       const capacity = await claimCapacity({ data: { kind: "property", amount: 1, environment: getStripeEnvironment() } });
       if ("error" in capacity) throw new Error(capacity.error);
       if (!capacity.allowed) {
-        toast.error("Portfolio limit reached", { description: capacity.reason ?? "Choose a plan with more capacity to import these properties." });
+        toast.error("Portfolio import blocked", { description: capacity.reason ?? "Choose a plan with more capacity to import these properties." });
         return;
       }
       const metered = await recordAiDocuments({ data: { count: 1, environment: getStripeEnvironment() } });
@@ -82,7 +87,7 @@ function TrialPage() {
         return;
       }
       toast.success(`Merlin mapped ${rows.toLocaleString()} rows`, {
-        description: metered.billedNow > 0 ? `Columns matched. ${metered.billedNow} certification(s) beyond your allowance were added to your next invoice.` : "Columns matched to CertivoIQ fields — confirm the preview to import.",
+        description: metered.billedNow > 0 ? `${metered.billedNow} certification(s) beyond your allowance were added to your next invoice.` : "Columns matched to CertivoIQ fields — confirm the preview to import.",
       });
       await refetch();
     } catch (error) {
@@ -95,21 +100,21 @@ function TrialPage() {
   return (
     <AppShell
       title="Your 3 FREE certification reviews"
-      subtitle={`${TRIAL.uploadsAllowed} real files · cited findings · human approval · Merlin is your guide`}
+      subtitle={`${FREE_REVIEW_OFFER.reviews} real files · cited findings · human approval · Merlin is your guide`}
       actions={<Button size="sm" asChild><Link to="/pricing">Choose a plan</Link></Button>}
     >
       <FreeReviewLeadGate>
         <MerlinSays pose="greeting" size="lg" className="mb-5">
           <p>
-            Welcome! You have <strong>{TRIAL.uploadsAllowed} FREE certification reviews</strong> to test the real CertivoIQ workflow on your own files. I’ll help you see what the AI extracts, which rules apply, what it finds, and what your reviewer should do next.
+            Welcome! You have <strong>{FREE_REVIEW_OFFER.reviews} FREE certification reviews</strong> to test the real CertivoIQ workflow on your own files. I’ll help you see what the AI extracts, which rules apply, what it finds, and what your reviewer should do next.
           </p>
           <p className="mt-2 text-muted-foreground">Use your reviews when you're ready, then choose a plan if CertivoIQ earns a place in your workflow.</p>
         </MerlinSays>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat label="Free reviews available" value={`${Math.max(0, Number(reviewsAllowed) - reviewsUsed)}`} />
+          <Stat label="FREE reviews available" value={`${Math.max(0, Number(reviewsAllowed) - reviewsUsed)}`} />
           <Stat label="Review steps complete" value={`${complete} of ${tasks.length}`} />
-          <Stat label="Free AI reviews used" value={`${reviewsUsed} of ${reviewsAllowed}`} />
+          <Stat label="FREE AI reviews used" value={`${reviewsUsed} of ${reviewsAllowed}`} />
         </div>
 
         <div className="mt-4 flex items-center gap-2">
@@ -118,7 +123,7 @@ function TrialPage() {
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-          <Panel title="Merlin's free-review plan" description="Work top to bottom — nothing here takes longer than a coffee" bodyClassName="p-0">
+          <Panel title="Merlin's FREE-review plan" description="Work top to bottom — nothing here takes longer than a coffee" bodyClassName="p-0">
             <ul className="divide-y divide-border">
               {tasks.map((t) => {
                 const isDone = done.includes(t.id);
@@ -138,14 +143,14 @@ function TrialPage() {
           </Panel>
 
           <div className="space-y-4">
-            <Panel title="Portfolio import" description="Optional setup for teams that want to see the broader workflow" bodyClassName="p-5">
+            <Panel title="Portfolio import" description="Available after you choose a paid plan" bodyClassName="p-5">
               <div className="rounded-lg border border-dashed border-primary/40 bg-accent/60 px-4 py-6 text-center">
                 <UploadCloud className="mx-auto size-7 text-primary" strokeWidth={1.6} />
-                <p className="mt-2 font-display text-[15px]">Drop your rent roll or property export</p>
+                <p className="mt-2 font-display text-[15px]">Import your rent roll or property export</p>
                 <p className="cite mt-1">XLSX · CSV · Yardi / RealPage / MRI exports</p>
-                <Button size="sm" className="mt-3" disabled={uploading} onClick={() => void uploadPortfolio()}><FileSpreadsheet className="size-4" /> Upload portfolio file</Button>
+                <Button size="sm" className="mt-3" disabled={uploading || !account?.planId} onClick={() => void uploadPortfolio()}><FileSpreadsheet className="size-4" /> {account?.planId ? "Upload portfolio file" : "Choose a plan to import"}</Button>
               </div>
-              <p className="mt-3 text-[12.5px] text-muted-foreground">Property records are subject to your account capacity. AI certification review is limited to {reviewsAllowed} free reviews until you choose a paid plan.</p>
+              <p className="mt-3 text-[12.5px] text-muted-foreground">Portfolio capacity and mass imports are paid-plan capabilities. Your FREE allowance is reserved for three certification reviews.</p>
             </Panel>
 
             <Panel title="Delegate onboarding" description="Enterprise workspaces can send secure upload links instead of doing it all themselves" bodyClassName="p-5">
@@ -167,7 +172,7 @@ function TrialPage() {
           </ul>
         </Panel>
 
-        <Panel className="mt-4" title="What happens next" description="Your review allowance is based on usage" bodyClassName="p-5">
+        <Panel className="mt-4" title="What happens next" description="Your FREE review allowance is based on usage" bodyClassName="p-5">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-border px-4 py-3"><p className="cite">01 · REVIEW</p><p className="mt-1 font-display text-[14.5px]">Run up to 3 real certifications</p><p className="mt-1 text-[12.5px] text-muted-foreground">See evidence, rules, findings and corrections.</p></div>
             <div className="rounded-lg border border-border px-4 py-3"><p className="cite">02 · DECIDE</p><p className="mt-1 font-display text-[14.5px]">Judge the value on your own work</p><p className="mt-1 text-[12.5px] text-muted-foreground">No sales call required. Choose the plan that fits your portfolio.</p></div>
