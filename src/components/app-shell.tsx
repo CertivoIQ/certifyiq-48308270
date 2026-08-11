@@ -11,7 +11,6 @@ import {
   Tag,
   Menu,
   X,
-  Clock,
   Gift,
   Briefcase,
   Shield,
@@ -20,7 +19,6 @@ import {
 } from "lucide-react";
 
 import { useState, type ReactNode } from "react";
-import { TRIAL } from "@/lib/platform-data";
 import { Button } from "@/components/ui/button";
 import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -79,30 +77,14 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function TrialBanner() {
-  const t = useT();
-  if (!TRIAL.active) return null;
-  return (
-    <div className="brand-gradient flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 text-primary-foreground sm:px-7">
-      <Clock className="size-4 shrink-0" />
-      <p className="text-[12.5px] font-medium">{t("shell.trial.status", { daysLeft: TRIAL.daysLeft, daysTotal: TRIAL.daysTotal, used: TRIAL.uploadsUsed, allowed: TRIAL.uploadsAllowed })}</p>
-      <div className="ml-auto flex items-center gap-2">
-        <Button size="sm" variant="secondary" asChild><Link to="/welcome">{t("shell.trial.watchDemo")}</Link></Button>
-        <Button size="sm" className="border border-primary-foreground/40 bg-primary-foreground/10 hover:bg-primary-foreground/20" asChild><Link to="/pricing">{t("shell.trial.upgrade")}</Link></Button>
-      </div>
-    </div>
-  );
-}
-
 export function AppShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string | undefined; actions?: ReactNode | undefined }) {
   const { session } = useSession();
   const [open, setOpen] = useState(false);
   const t = useT();
 
   // Authentication boundary for navigation: the portfolio sidebar is only for a
-  // signed-in user inside the trial/paid application workspace. Anyone without a
-  // session (public visitor, marketing traffic, SSR/prerender) gets the public
-  // marketing shell instead — the nav is never rendered, not merely hidden.
+  // signed-in user inside the CertivoIQ application workspace. Anyone without a
+  // session gets the public marketing shell instead.
   if (!session) {
     return <PublicShell title={title} subtitle={subtitle} actions={actions}>{children}</PublicShell>;
   }
@@ -126,7 +108,6 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
             <Wordmark />
           </div>
           {open && <div className="border-b border-sidebar-border bg-sidebar px-4 py-3 lg:hidden"><NavLinks onNavigate={() => setOpen(false)} /></div>}
-          <TrialBanner />
           <div className="flex flex-wrap items-end justify-between gap-3 px-4 py-4 sm:px-7">
             <div className="min-w-0">
               <h1 className="truncate font-display text-[23px] leading-tight sm:text-[27px]"><IQText>{title}</IQText></h1>
