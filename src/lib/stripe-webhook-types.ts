@@ -71,3 +71,6 @@ export interface StripeCheckoutSessionLike {
 export type StripeWebhookObject = StripeSubscriptionLike &
   StripeInvoiceLike &
   StripeCheckoutSessionLike
+
+/** Alias kept for webhook code that refers to subscription items as line items. */
+export type StripeLineItemLike = StripeSubscriptionItemLike;

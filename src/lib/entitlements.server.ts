@@ -4,6 +4,9 @@ import type { StripeEnv } from "@/lib/stripe.server";
 import { TRIAL_ENTITLEMENT, entitlementForPrice } from "@/lib/plan-catalog";
 import type { AccountState } from "@/utils/entitlements.functions";
 
+/** Supabase client surface used by entitlement reads/writes. */
+export type EntitlementsDb = SupabaseClient<Database>;
+
 /** Current billing period start, used as the usage-counter bucket key. */
 export function periodStartFor(
   access: { trial_started_at?: string | null } | null,
