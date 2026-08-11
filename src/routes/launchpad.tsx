@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Meter } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { LAUNCHPAD_STEPS, AUDIT_JOURNEY, COACH_TIPS } from "@/lib/platform-data";
-import { Check, GraduationCap, Rocket } from "lucide-react";
+import { Check, GraduationCap, Rocket, UploadCloud } from "lucide-react";
 
 export const Route = createFileRoute("/launchpad")({
   head: () => ({
@@ -81,6 +81,11 @@ function LaunchPadPage() {
               {done ? (
                 <>
                   <Button asChild>
+                    <Link to="/compliance-intelligence">
+                      <UploadCloud className="size-4" /> Upload Your Certification
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild>
                     <Link to="/dashboard">Open my dashboard</Link>
                   </Button>
                   <Button variant="outline" onClick={() => setStep(1)}>
