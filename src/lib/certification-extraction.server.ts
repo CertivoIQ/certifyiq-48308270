@@ -1,5 +1,5 @@
+import { inflateSync } from "node:zlib";
 import { generateText } from "ai";
-import pdfParse from "pdf-parse";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 
@@ -112,23 +112,188 @@ export function extractFactsFromText(text: string, documentRef: string): Extract
   return { provider: "deterministic-text", facts, missingFields };
 }
 
+function decodePdfString(bytes: Uint8Array): string {
+  if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
+    const codeUnits: number[] = [];
+    for (let i = 2; i + 1 < bytes.length; i += 2) codeUnits.push((bytes[i] << 8) | bytes[i + 1]);
+    return String.fromCharCode(...codeUnits);
+  }
+  return new TextDecoder("windows-1252").decode(bytes);
+}
+
+function decodeLiteralPdfString(source: string): string {
+  const out: number[] = [];
+  for (let i = 0; i < source.length; i += 1) {
+    const char = source[i];
+    if (char !== "\\") {
+      out.push(source.charCodeAt(i) & 0xff);
+      continue;
+    }
+    const next = source[++i] ?? "";
+    const escapes: Record<string, number> = {
+      n: 10,
+      r: 13,
+      t: 9,
+      b: 8,
+      f: 12,
+      "(": 40,
+      ")": 41,
+      "\\": 92,
+    };
+    if (next in escapes) {
+      out.push(escapes[next]!);
+      continue;
+    }
+    if (/^[0-7]$/.test(next)) {
+      let octal = next;
+      for (let count = 0; count < 2 && /^[0-7]$/.test(source[i + 1] ?? ""); count += 1) octal += source[++i];
+      out.push(parseInt(octal, 8));
+      continue;
+    }
+    out.push(next.charCodeAt(0) & 0xff);
+  }
+  return decodePdfString(new Uint8Array(out));
+}
+
+function readPdfLiteralString(source: string, start: number): { value: string; end: number } | null {
+  if (source[start] !== "(") return null;
+  let depth = 1;
+  let escaped = false;
+  let end = start + 1;
+  for (; end < source.length; end += 1) {
+    const char = source[end]!;
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === "(") depth += 1;
+    if (char === ")") {
+      depth -= 1;
+      if (depth === 0) break;
+    }
+  }
+  if (depth !== 0) return null;
+  return { value: decodeLiteralPdfString(source.slice(start + 1, end)), end: end + 1 };
+}
+
+function readPdfHexString(source: string, start: number): { value: string; end: number } | null {
+  if (source[start] !== "<" || source[start + 1] === "<") return null;
+  const end = source.indexOf(">", start + 1);
+  if (end === -1) return null;
+  const hex = source.slice(start + 1, end).replace(/\s/g, "");
+  const padded = hex.length % 2 ? `${hex}0` : hex;
+  const bytes = new Uint8Array(Math.floor(padded.length / 2));
+  for (let i = 0; i < bytes.length; i += 1) bytes[i] = parseInt(padded.slice(i * 2, i * 2 + 2), 16) || 0;
+  return { value: decodePdfString(bytes), end: end + 1 };
+}
+
+function extractTextOperators(stream: Uint8Array): string {
+  const source = new TextDecoder("windows-1252").decode(stream);
+  let output = "";
+  let i = 0;
+  while (i < source.length) {
+    const char = source[i];
+    if (char === "(") {
+      const token = readPdfLiteralString(source, i);
+      if (!token) break;
+      let cursor = token.end;
+      while (/\s/.test(source[cursor] ?? "")) cursor += 1;
+      if (source.slice(cursor, cursor + 2) === "Tj") {
+        output += `${token.value} `;
+        i = cursor + 2;
+        continue;
+      }
+      i = token.end;
+      continue;
+    }
+    if (char === "<" && source[i + 1] !== "<") {
+      const token = readPdfHexString(source, i);
+      if (!token) break;
+      let cursor = token.end;
+      while (/\s/.test(source[cursor] ?? "")) cursor += 1;
+      if (source.slice(cursor, cursor + 2) === "Tj") {
+        output += `${token.value} `;
+        i = cursor + 2;
+        continue;
+      }
+      i = token.end;
+      continue;
+    }
+    if (char === "[") {
+      let cursor = i + 1;
+      const parts: string[] = [];
+      while (cursor < source.length && source[cursor] !== "]") {
+        while (/\s/.test(source[cursor] ?? "")) cursor += 1;
+        if (source[cursor] === "(") {
+          const token = readPdfLiteralString(source, cursor);
+          if (!token) break;
+          parts.push(token.value);
+          cursor = token.end;
+        } else if (source[cursor] === "<" && source[cursor + 1] !== "<") {
+          const token = readPdfHexString(source, cursor);
+          if (!token) break;
+          parts.push(token.value);
+          cursor = token.end;
+        } else {
+          cursor += 1;
+        }
+      }
+      cursor += 1;
+      while (/\s/.test(source[cursor] ?? "")) cursor += 1;
+      if (source.slice(cursor, cursor + 2) === "TJ") output += `${parts.join("")} `;
+      i = cursor + 2;
+      continue;
+    }
+    i += 1;
+  }
+  return output.replace(/[ \t]+/g, " ").trim();
+}
+
+function extractPdfStreams(bytes: ArrayBuffer): Uint8Array[] {
+  const source = Buffer.from(bytes);
+  const streams: Uint8Array[] = [];
+  let cursor = 0;
+  while (cursor < source.length) {
+    const streamIndex = source.indexOf(Buffer.from("stream"), cursor);
+    if (streamIndex === -1) break;
+    const objectStart = source.lastIndexOf(Buffer.from("obj"), streamIndex);
+    const dictionaryStart = objectStart === -1 ? Math.max(0, streamIndex - 2000) : objectStart;
+    const dictionary = source.subarray(dictionaryStart, streamIndex).toString("latin1");
+    let dataStart = streamIndex + 6;
+    if (source[dataStart] === 13 && source[dataStart + 1] === 10) dataStart += 2;
+    else if (source[dataStart] === 10 || source[dataStart] === 13) dataStart += 1;
+    const endStream = source.indexOf(Buffer.from("endstream"), dataStart);
+    if (endStream === -1) break;
+    let data = source.subarray(dataStart, endStream);
+    try {
+      if (/\/FlateDecode\b/.test(dictionary)) data = inflateSync(data);
+      streams.push(new Uint8Array(data));
+    } catch {
+      // Ignore malformed/non-text streams and continue with other page streams.
+    }
+    cursor = endStream + 9;
+  }
+  return streams;
+}
+
 /**
- * Extract machine-readable text from a PDF while preserving explicit page
- * markers so evidence citations continue to point to the correct page.
+ * Dependency-free PDF text extraction. It handles the common machine-readable
+ * PDF case (including Flate-compressed content streams) without changing the
+ * production lockfile or consuming Lovable build credits.
  */
 export async function extractTextFromPdf(bytes: ArrayBuffer): Promise<string> {
-  const buffer = Buffer.from(bytes);
-  const parsed = await pdfParse(buffer, {
-    pagerender: async (pageData) => {
-      const textContent = await pageData.getTextContent();
-      const strings = textContent.items
-        .map((item) => ("str" in item ? item.str : ""))
-        .filter(Boolean);
-      return `page ${pageData.pageIndex + 1}\n${strings.join(" ")}\n`;
-    },
-  });
-
-  return parsed.text.trim();
+  const streams = extractPdfStreams(bytes);
+  const pages = streams
+    .map((stream, index) => {
+      const text = extractTextOperators(stream);
+      return text ? `page ${index + 1}\n${text}` : "";
+    })
+    .filter(Boolean);
+  return pages.join("\n").trim();
 }
 
 /**
