@@ -115,7 +115,7 @@ export function extractFactsFromText(text: string, documentRef: string): Extract
 function decodePdfString(bytes: Uint8Array): string {
   if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
     const codeUnits: number[] = [];
-    for (let i = 2; i + 1 < bytes.length; i += 2) codeUnits.push((bytes[i] << 8) | bytes[i + 1]);
+    for (let i = 2; i + 1 < bytes.length; i += 2) codeUnits.push(((bytes[i] ?? 0) << 8) | (bytes[i + 1] ?? 0));
     return String.fromCharCode(...codeUnits);
   }
   return new TextDecoder("windows-1252").decode(bytes);
