@@ -12,7 +12,8 @@
     "test:compliance": "node --test scripts/test-compliance-intelligence.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs"
+    "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs",
+    "test:ocr": "node scripts/test-ocr-sidecar.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
