@@ -1,4 +1,5 @@
 import { generateText } from "ai";
+import pdfParse from "pdf-parse";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 
@@ -7,11 +8,11 @@ import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
  *
  * Extraction proposes facts with a citation (document ref, page, snippet) and a
  * confidence. It never decides compliance; the deterministic rule engine does.
- * Two providers exist behind one interface:
- *  - `deterministic-text`: parses labelled values out of a text/CSV certification
- *    export. Fully reproducible, used for tests and fixtures.
- *  - `lovable-ai`: Lovable AI Gateway extraction for text documents, verified
- *    against the source text so a hallucinated value cannot become a fact.
+ * Providers:
+ *  - `deterministic-text`: parses labelled values out of text/CSV exports and
+ *    machine-readable PDFs. Fully reproducible, used for tests and fixtures.
+ *  - `lovable-ai`: Lovable AI Gateway extraction for extracted document text,
+ *    verified against the source text so a hallucinated value cannot become a fact.
  */
 
 export type ExtractionProviderName = "deterministic-text" | "lovable-ai";
@@ -112,7 +113,54 @@ export function extractFactsFromText(text: string, documentRef: string): Extract
 }
 
 /**
- * AI extraction for text documents. Every returned value must appear verbatim
+ * Extract machine-readable text from a PDF while preserving explicit page
+ * markers so evidence citations continue to point to the correct page.
+ */
+export async function extractTextFromPdf(bytes: ArrayBuffer): Promise<string> {
+  const buffer = Buffer.from(bytes);
+  const parsed = await pdfParse(buffer, {
+    pagerender: async (pageData) => {
+      const textContent = await pageData.getTextContent();
+      const strings = textContent.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .filter(Boolean);
+      return `page ${pageData.pageIndex + 1}\n${strings.join(" ")}\n`;
+    },
+  });
+
+  return parsed.text.trim();
+}
+
+/**
+ * Normalized document-to-text boundary used by the review server function.
+ * PDFs are now first-class inputs. Image-only/scanned PDFs intentionally return
+ * an actionable error rather than producing ungrounded compliance facts.
+ */
+export async function extractDocumentText(
+  bytes: ArrayBuffer,
+  mimeType: string,
+  fileName: string,
+): Promise<{ text: string; provider: ExtractionProviderName; documentKind: "pdf" | "text" }> {
+  const isPdf = /application\/pdf/i.test(mimeType) || /\.pdf$/i.test(fileName);
+  if (isPdf) {
+    const text = await extractTextFromPdf(bytes);
+    if (!text) {
+      throw new Error(
+        "This PDF appears to be image-only or scanned and contains no machine-readable text. OCR extraction is required before this certification can be reviewed.",
+      );
+    }
+    return { text, provider: "deterministic-text", documentKind: "pdf" };
+  }
+
+  return {
+    text: new TextDecoder().decode(bytes),
+    provider: "deterministic-text",
+    documentKind: "text",
+  };
+}
+
+/**
+ * AI extraction for extracted document text. Every returned value must appear
  * in the source text, otherwise it is discarded rather than trusted.
  */
 export async function extractFactsWithAi(
@@ -155,7 +203,6 @@ export async function extractFactsWithAi(
     const value = normalizeValue(field, String(candidate.value ?? ""));
     if (value === null) continue;
     const snippet = typeof candidate.snippet === "string" ? candidate.snippet.trim() : "";
-    // Grounding check: an unverifiable snippet means the fact is not evidence-backed.
     if (!snippet || !haystack.includes(snippet.toLowerCase().slice(0, 40))) continue;
     facts.push({
       field,
@@ -181,5 +228,5 @@ export async function extractFactsWithAi(
 const TEXT_MIME = /^(text\/|application\/(json|csv))/i;
 
 export function isTextExtractable(mimeType: string, fileName: string): boolean {
-  return TEXT_MIME.test(mimeType) || /\.(txt|csv|json|md)$/i.test(fileName);
+  return TEXT_MIME.test(mimeType) || /\.(txt|csv|json|md|pdf)$/i.test(fileName) || /application\/pdf/i.test(mimeType);
 }
