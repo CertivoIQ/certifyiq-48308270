@@ -65,9 +65,26 @@ export function ComplianceIntelligenceSuite() {
       if (error) throw error;
       if (!job) throw new Error('The certification import could not be created.');
       for (const file of files) {
+        if (file.size > MAX_UPLOAD_BYTES) throw new Error('Each certification file must be 50 MB or smaller.');
         const path = `${userId}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
         const { error: uploadError } = await supabase.storage.from('certification-imports').upload(path, file, { upsert: false });
         if (uploadError) throw uploadError;
+
+        // Scanned/image-only and mixed PDFs are prepared here, inside the
+        // customer's own session, so they continue into the normal review
+        // pipeline instead of being rejected. Fully machine-readable PDFs are
+        // left untouched.
+        if (isPdfFile(file)) {
+          setMessage('Preparing certification for review…');
+          const prepared = await prepareCertificationForReview(file, setMessage);
+          if (prepared.sidecar) {
+            const { error: sidecarError } = await supabase.storage
+              .from('certification-imports')
+              .upload(sidecarPathFor(path), new Blob([JSON.stringify(prepared.sidecar)], { type: 'application/json' }), { upsert: true });
+            if (sidecarError) throw sidecarError;
+          }
+        }
+
         const { error: itemError } = await db.from('certification_import_items').insert({
           job_id: job.id,
           user_id: userId,
@@ -78,6 +95,7 @@ export function ComplianceIntelligenceSuite() {
         });
         if (itemError) throw itemError;
       }
+
       setFiles([]);
       setMessage(hasPaidSubscription
         ? `Queued ${files.length} file${files.length === 1 ? '' : 's'} for Mass Certification Review.`
