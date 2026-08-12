@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { composeSidecarText, pageNeedsOcr, provenanceIndex, sidecarPathFor, OCR_SIDECAR_VERSION } from './src/lib/ocr-sidecar.mjs';
+import { composeSidecarText, pageNeedsOcr, provenanceIndex, sidecarPathFor, OCR_SIDECAR_VERSION } from '../src/lib/ocr-sidecar.mjs';
 
 const tests = [];
 const test = (name, fn) => tests.push([name, fn]);
