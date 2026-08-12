@@ -86,16 +86,14 @@ export const US_STATES = [
 ];
 
 /* ------------------------------------------------------------------ *
- * Trial · pricing · LaunchPad · success coach
+ * FREE reviews · pricing · LaunchPad · success coach
  * ------------------------------------------------------------------ */
 
-export const TRIAL = {
-  active: true,
-  daysTotal: 7,
-  daysLeft: 5,
-  uploadsAllowed: 3,
-  uploadsUsed: 1,
-};
+export const FREE_REVIEWS = {
+  count: 3,
+  label: "3 FREE certification reviews",
+  noCardRequired: true,
+} as const;
 
 export const PLANS = [
   {
@@ -103,8 +101,8 @@ export const PLANS = [
     name: "Professional",
     price: "$999",
     cadence: "/month",
-    tagline: "Small owners (1–500 units)",
-    features: ["Up to 500 units", "1 state rule pack", "AI document review", "Compliance knowledge base", "Email support"],
+    tagline: "Small owners (up to 500 units)",
+    features: ["Up to 500 units", "1 state rule pack", "Unlimited properties", "AI document review", "Compliance knowledge base", "Email support"],
     cta: "Choose Professional",
     featured: false,
   },
@@ -213,8 +211,6 @@ export const ACADEMY_ADDONS = [
   },
 ];
 
-
-
 export const LAUNCHPAD_STEPS = [
   {
     id: 1,
@@ -278,7 +274,6 @@ export const LAUNCHPAD_STEPS = [
     lead: "No phone call, no account rep — Merlin reviews your setup right here.",
     detail: "He re-checks portfolio coverage, rule pack assignment, document completeness and team roles, then hands you a punch list.",
     cta: "Run readiness review",
-
   },
   {
     id: 10,
