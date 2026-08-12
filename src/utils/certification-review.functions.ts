@@ -76,7 +76,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     let ocrDocument: Awaited<ReturnType<typeof extraction.loadOcrDocument>> = null;
     const sidecarDownload = await supabase.storage
       .from("certification-imports")
-      .download(extraction.sidecarPath(item.storage_path));
+      .download(extraction.sidecarPathFor(item.storage_path));
     if (sidecarDownload.data) {
       try {
         ocrDocument = extraction.loadOcrDocument(JSON.parse(await sidecarDownload.data.text()));
