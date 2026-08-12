@@ -8,7 +8,7 @@ export default function CertivoIQVoiceoverVideo(props: Props) {
   const showFreeReviewCta = props.accountState !== "subscriber";
 
   return (
-    <div className="min-w-0 max-w-full overflow-hidden [&_details]:hidden [&_.aspect-video]:min-h-0 [&_.aspect-video]:w-full [&_.aspect-video]:max-w-full [&_.aspect-video]:overflow-hidden [&_.text-right.text-xs.font-medium.text-slate-400]:hidden [&_p.mt-3.rounded-lg]:hidden">
+    <div className="min-w-0 max-w-full overflow-x-hidden overflow-y-visible [&_details]:hidden [&_.aspect-video]:min-h-0 [&_.aspect-video]:w-full [&_.aspect-video]:max-w-full [&_.aspect-video]:overflow-hidden [&_.aspect-video>div.relative.grid]:min-w-0 [&_.aspect-video>div.relative.grid]:max-w-full [&_.aspect-video>div.relative.grid>div]:min-w-0 [&_.aspect-video>div.relative.grid>div:nth-child(2)]:order-first [&_.aspect-video>div.relative.grid]:md:grid-cols-[1.1fr_.9fr] [&_.aspect-video>div.relative.grid>div:nth-child(2)]:md:order-first [&_.aspect-video>div.absolute.inset-x-0.bottom-0]:max-w-full [&_.aspect-video>div.absolute.inset-x-0.bottom-0]:overflow-hidden [&_.aspect-video>div.absolute.inset-x-0.bottom-0_.grid.grid-cols-6]:hidden [&_.text-right.text-xs.font-medium.text-slate-400]:hidden [&_p.mt-3.rounded-lg]:hidden">
       <BaseVoiceoverVideo {...props} />
       {showFreeReviewCta && (
         <div className="max-w-full overflow-hidden bg-slate-950 px-5 pb-8 text-white sm:px-8">
