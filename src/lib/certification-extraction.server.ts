@@ -15,7 +15,7 @@ import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
  *    verified against the source text so a hallucinated value cannot become a fact.
  */
 
-export type ExtractionProviderName = "deterministic-text" | "lovable-ai";
+export type ExtractionProviderName = "deterministic-text" | "lovable-ai" | "ocr-tesseract";
 
 export const EXTRACTION_FIELDS = [
   "tenant_signature_date",
