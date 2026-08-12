@@ -34,14 +34,20 @@ export function useSubscription() {
 
   useEffect(() => {
     if (!user) return;
+
+    // Realtime channels can briefly remain registered while React is cleaning
+    // up an effect (notably during StrictMode/dev remounts). A unique topic
+    // prevents a second .on() from being attached to an already-subscribed
+    // channel, which can otherwise throw and blank the application.
     const channel = supabase
-      .channel(`subscriptions-${user.id}`)
+      .channel(`subscriptions-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
         () => void query.refetch(),
       )
       .subscribe();
+
     return () => void supabase.removeChannel(channel);
   }, [user?.id]);
 
