@@ -147,7 +147,7 @@ const Email = ({
             <StatCard value="4 min" label={t('intro.stat.time')} color={BRAND.navy} />
             <StatCard value="50" label={t('intro.stat.states')} color={BRAND.navy} />
             <StatCard value="6" label={t('intro.stat.programs')} color={BRAND.navy} />
-            <StatCard value="100%" label={t('intro.stat.signoff')} color={BRAND.green} />
+            <StatCard value="HUMAN" label={t('intro.stat.signoff')} color={BRAND.green} />
           </Section>
 
           <Hr style={hr} />
