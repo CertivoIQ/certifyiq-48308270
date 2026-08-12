@@ -2,6 +2,17 @@ import { inflateSync } from "node:zlib";
 import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
+import {
+  composeSidecarText,
+  provenanceIndex,
+  sidecarPathFor,
+  type OcrSidecar,
+  type PageProvenance,
+} from "@/lib/ocr-sidecar.mjs";
+
+export { sidecarPathFor };
+export type { PageProvenance };
+
 
 /**
  * Extraction provider boundary — server only.
@@ -15,7 +26,7 @@ import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
  *    verified against the source text so a hallucinated value cannot become a fact.
  */
 
-export type ExtractionProviderName = "deterministic-text" | "lovable-ai";
+export type ExtractionProviderName = "deterministic-text" | "lovable-ai" | "ocr-tesseract";
 
 export const EXTRACTION_FIELDS = [
   "tenant_signature_date",
@@ -67,8 +78,19 @@ function normalizeValue(field: ExtractionField, raw: string): string | number | 
   return Number.isFinite(numeric) ? numeric : null;
 }
 
-/** Deterministic label parser. Same input always yields the same facts. */
-export function extractFactsFromText(text: string, documentRef: string): ExtractionResult {
+/**
+ * Deterministic label parser. Same input always yields the same facts.
+ *
+ * `pageProvenance` is supplied when the text came from an OCR sidecar: each fact
+ * is then stamped with the provider ("ocr-tesseract") and the confidence the OCR
+ * engine actually reported for that page, so the audit trail records that the
+ * evidence was OCR-derived.
+ */
+export function extractFactsFromText(
+  text: string,
+  documentRef: string,
+  pageProvenance?: Map<number, PageProvenance>,
+): ExtractionResult {
   const lines = text.split(/\r?\n/);
   const facts: ExtractedFact[] = [];
   const missingFields: ExtractionField[] = [];
@@ -91,16 +113,18 @@ export function extractFactsFromText(text: string, documentRef: string): Extract
         if (separatorIndex === -1) continue;
         const value = normalizeValue(field, line.slice(separatorIndex + 1));
         if (value === null) continue;
+        const factPage = pageOfLine[index] ?? 1;
+        const provenance = pageProvenance?.get(factPage);
         found = {
           field,
           value,
           sourceDocumentRef: documentRef,
-          page: pageOfLine[index] ?? 1,
+          page: factPage,
           snippet: line.trim().slice(0, 300),
-          confidence: 0.99,
+          confidence: provenance ? provenance.confidence : 0.99,
           humanVerified: false,
           requiredForDecision: true,
-          provider: "deterministic-text",
+          provider: provenance?.provider ?? "deterministic-text",
         };
         break;
       }
@@ -109,13 +133,15 @@ export function extractFactsFromText(text: string, documentRef: string): Extract
     else missingFields.push(field);
   }
 
-  return { provider: "deterministic-text", facts, missingFields };
+  const ocrDerived = facts.some((fact) => fact.provider === "ocr-tesseract");
+  return { provider: ocrDerived ? "ocr-tesseract" : "deterministic-text", facts, missingFields };
 }
+
 
 function decodePdfString(bytes: Uint8Array): string {
   if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
     const codeUnits: number[] = [];
-    for (let i = 2; i + 1 < bytes.length; i += 2) codeUnits.push((bytes[i] << 8) | bytes[i + 1]);
+    for (let i = 2; i + 1 < bytes.length; i += 2) codeUnits.push(((bytes[i] ?? 0) << 8) | (bytes[i + 1] ?? 0));
     return String.fromCharCode(...codeUnits);
   }
   return new TextDecoder("windows-1252").decode(bytes);
@@ -394,4 +420,36 @@ const TEXT_MIME = /^(text\/|application\/(json|csv))/i;
 
 export function isTextExtractable(mimeType: string, fileName: string): boolean {
   return TEXT_MIME.test(mimeType) || /\.(txt|csv|json|md|pdf)$/i.test(fileName) || /application\/pdf/i.test(mimeType);
+}
+
+export type OcrDocument = {
+  text: string;
+  provider: ExtractionProviderName;
+  documentKind: "pdf-ocr";
+  pageProvenance: Map<number, PageProvenance>;
+  ocrPageCount: number;
+  textPageCount: number;
+  skippedPageCount: number;
+  ocrEngines: string[];
+};
+
+/**
+ * Consume the OCR sidecar produced during upload. Page-level provenance is kept
+ * so every fact can cite the source PDF, the page number, and the fact that the
+ * page text came from OCR. Returns null when the sidecar carries no usable page
+ * text, so the caller fails safe instead of producing findings without evidence.
+ */
+export function loadOcrDocument(sidecar: unknown): OcrDocument | null {
+  const composed = composeSidecarText(sidecar as OcrSidecar);
+  if (!composed.text.trim() || composed.ocrPageCount === 0) return null;
+  return {
+    text: composed.text,
+    provider: "ocr-tesseract",
+    documentKind: "pdf-ocr",
+    pageProvenance: provenanceIndex(composed.pages),
+    ocrPageCount: composed.ocrPageCount,
+    textPageCount: composed.textPageCount,
+    skippedPageCount: composed.skippedPageCount,
+    ocrEngines: [...new Set(composed.pages.map((page) => page.engine).filter((engine): engine is string => !!engine))],
+  };
 }

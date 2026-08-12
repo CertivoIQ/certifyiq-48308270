@@ -50,11 +50,13 @@ export function CertificationReviewPanel() {
     mutationFn: async (itemId: string) =>
       runReview({ data: { itemId, ...(jurisdiction === 'US' ? {} : { jurisdiction }), useAi: true } }),
     onSuccess: async (result) => {
-      setNotice(
-        'error' in result && result.error
-          ? result.error
-          : `Reviewed with ${result.rulePack.id}@${result.rulePack.version} · ${result.counts.pass} pass · ${result.counts.fail} fail · ${result.counts.unableToDetermine} undetermined`,
-      );
+      if ('error' in result && result.error) setNotice(result.error);
+      else if ('rulePack' in result && result.rulePack && result.counts) {
+        setNotice(
+          `Reviewed with ${result.rulePack.id}@${result.rulePack.version} · ${result.counts.pass} pass · ${result.counts.fail} fail · ${result.counts.unableToDetermine} undetermined`,
+        );
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['certification-review'] });
       await queryClient.invalidateQueries({ queryKey: ['certification-items'] });
     },
