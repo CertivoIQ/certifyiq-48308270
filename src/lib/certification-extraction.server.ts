@@ -421,3 +421,35 @@ const TEXT_MIME = /^(text\/|application\/(json|csv))/i;
 export function isTextExtractable(mimeType: string, fileName: string): boolean {
   return TEXT_MIME.test(mimeType) || /\.(txt|csv|json|md|pdf)$/i.test(fileName) || /application\/pdf/i.test(mimeType);
 }
+
+export type OcrDocument = {
+  text: string;
+  provider: ExtractionProviderName;
+  documentKind: "pdf-ocr";
+  pageProvenance: Map<number, PageProvenance>;
+  ocrPageCount: number;
+  textPageCount: number;
+  skippedPageCount: number;
+  ocrEngines: string[];
+};
+
+/**
+ * Consume the OCR sidecar produced during upload. Page-level provenance is kept
+ * so every fact can cite the source PDF, the page number, and the fact that the
+ * page text came from OCR. Returns null when the sidecar carries no usable page
+ * text, so the caller fails safe instead of producing findings without evidence.
+ */
+export function loadOcrDocument(sidecar: unknown): OcrDocument | null {
+  const composed = composeSidecarText(sidecar as OcrSidecar);
+  if (!composed.text.trim() || composed.ocrPageCount === 0) return null;
+  return {
+    text: composed.text,
+    provider: "ocr-tesseract",
+    documentKind: "pdf-ocr",
+    pageProvenance: provenanceIndex(composed.pages),
+    ocrPageCount: composed.ocrPageCount,
+    textPageCount: composed.textPageCount,
+    skippedPageCount: composed.skippedPageCount,
+    ocrEngines: [...new Set(composed.pages.map((page) => page.engine).filter((engine): engine is string => !!engine))],
+  };
+}
