@@ -226,6 +226,17 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         statePackApplied: evaluation.statePackApplied,
         extractionProvider: result.provider,
         documentKind,
+        // OCR provenance for the audit trail: which pages were OCR-derived and
+        // with which engine. Absent for machine-readable documents.
+        ocr: ocrDocument
+          ? {
+              engines: ocrDocument.ocrEngines,
+              ocrPageCount: ocrDocument.ocrPageCount,
+              textPageCount: ocrDocument.textPageCount,
+              skippedPageCount: ocrDocument.skippedPageCount,
+            }
+          : null,
+
       },
     };
     const manifestSha256 = await hashJson(manifest);
