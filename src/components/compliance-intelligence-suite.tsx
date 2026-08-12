@@ -6,6 +6,9 @@ import { useSubscription } from '@/hooks/use-subscription';
 import { FEATURE_NAMES } from '@/lib/compliance-intelligence.mjs';
 import { CertificationReviewPanel } from '@/components/certification-review-panel';
 import { FreeReviewLeadGate } from '@/components/FreeReviewLeadGate';
+import { MAX_UPLOAD_BYTES, sidecarPathFor } from '@/lib/ocr-sidecar.mjs';
+import { isPdfFile, prepareCertificationForReview } from '@/lib/pdf-ocr';
+
 
 /**
  * Narrow view of the Supabase client for the import tables, which are written
