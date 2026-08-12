@@ -51,7 +51,7 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
     onSuccess: async (result) => {
       await qc.invalidateQueries({ queryKey: ["free-review-lead"] });
       toast.success("You're cleared for 3 FREE certification reviews", {
-        description: `CRM lead captured. Recommended plan: ${result.plan}.`,
+        description: `Recommended plan: ${result.plan}.`,
       });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save your company information"),
@@ -66,7 +66,7 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
   return (
     <Panel
       title="Tell us about your company before your 3 FREE reviews"
-      description="This one-time step creates your warm lead in our CRM and lets us recommend the right plan for your portfolio. Your certification files remain yours."
+      description="This one-time step lets us recommend the right plan for your portfolio. Your certification files remain yours."
       bodyClassName="p-5"
     >
       <div className="grid gap-4 lg:grid-cols-2">
@@ -74,7 +74,6 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
           <div>
             <p className="font-medium">Required before any FREE certification upload</p>
-            <p className="mt-1 text-sm text-muted-foreground">We use these details to personalize your CRM record, calculate the best-fit plan, and populate recipient fields in future email outreach.</p>
           </div>
         </div>
 
@@ -129,7 +128,7 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
         </div>
 
         <div className="lg:col-span-2 grid gap-3 sm:grid-cols-3 rounded-lg border border-border p-4 text-sm">
-          <div className="flex gap-2"><Building2 className="size-4 text-primary" /><span>CRM company record</span></div>
+          <div className="flex gap-2"><Building2 className="size-4 text-primary" /><span>Company profile</span></div>
           <div className="flex gap-2"><Users className="size-4 text-primary" /><span>Primary decision-maker contact</span></div>
           <div className="flex gap-2"><Mail className="size-4 text-primary" /><span>Personalized email fields</span></div>
         </div>
