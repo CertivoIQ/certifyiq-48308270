@@ -66,7 +66,7 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
   return (
     <Panel
       title="Tell us about your company before your 3 FREE reviews"
-      description="This one-time step creates your warm lead in our CRM and lets us recommend the right plan for your portfolio. Your certification files remain yours."
+      description="This one-time step lets us recommend the right plan for your portfolio. Your certification files remain yours."
       bodyClassName="p-5"
     >
       <div className="grid gap-4 lg:grid-cols-2">
