@@ -74,7 +74,6 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
           <div>
             <p className="font-medium">Required before any FREE certification upload</p>
-            <p className="mt-1 text-sm text-muted-foreground">We use these details to personalize your CRM record, calculate the best-fit plan, and populate recipient fields in future email outreach.</p>
           </div>
         </div>
 
