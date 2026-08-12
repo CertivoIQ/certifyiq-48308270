@@ -8,15 +8,15 @@ export default function CertivoIQVoiceoverVideo(props: Props) {
   const showFreeReviewCta = props.accountState !== "subscriber";
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full overflow-hidden [&_details]:hidden [&_.aspect-video]:min-h-0 [&_.aspect-video]:w-full [&_.aspect-video]:max-w-full [&_.aspect-video]:overflow-hidden [&_.text-right.text-xs.font-medium.text-slate-400]:hidden [&_p.mt-3.rounded-lg]:hidden">
       <BaseVoiceoverVideo {...props} />
       {showFreeReviewCta && (
-        <div className="bg-slate-950 px-5 pb-8 text-white sm:px-8">
+        <div className="max-w-full overflow-hidden bg-slate-950 px-5 pb-8 text-white sm:px-8">
           <div className="mx-auto max-w-7xl border-t border-white/10 pt-5">
             <div className="flex justify-center">
               <a
                 href={trialHref}
-                className="inline-flex items-center justify-center rounded-lg bg-cyan-300 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-300/10 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="inline-flex max-w-full items-center justify-center rounded-lg bg-cyan-300 px-6 py-3 text-center text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-300/10 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
               >
                 Review Your 3 FREE Certifications
               </a>
