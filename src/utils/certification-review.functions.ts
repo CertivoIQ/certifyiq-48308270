@@ -70,24 +70,49 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     const bytes = await download.data.arrayBuffer();
     const documentSha256 = await sha256Hex(bytes);
 
+    // OCR sidecar produced during upload for scanned/image-only or mixed PDFs.
+    // It is preferred only when it actually contains OCR'd pages; a fully
+    // machine-readable PDF keeps the untouched server-side text path.
+    let ocrDocument: Awaited<ReturnType<typeof extraction.loadOcrDocument>> = null;
+    const sidecarDownload = await supabase.storage
+      .from("certification-imports")
+      .download(extraction.sidecarPath(item.storage_path));
+    if (sidecarDownload.data) {
+      try {
+        ocrDocument = extraction.loadOcrDocument(JSON.parse(await sidecarDownload.data.text()));
+      } catch {
+        // An unreadable sidecar never becomes evidence; fall back to PDF text.
+        ocrDocument = null;
+      }
+    }
+
     let documentText: string;
-    let documentKind: "pdf" | "text";
-    try {
-      const extractedDocument = await extraction.extractDocumentText(bytes, item.mime_type, item.original_file_name);
-      documentText = extractedDocument.text;
-      documentKind = extractedDocument.documentKind;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "The certification document could not be extracted.";
-      await supabase
-        .from("certification_import_items")
-        .update({ status: "failed", error_message: message, sha256: documentSha256 })
-        .eq("id", item.id);
-      return { error: message } as const;
+    let documentKind: "pdf" | "text" | "pdf-ocr";
+    if (ocrDocument) {
+      documentText = ocrDocument.text;
+      documentKind = ocrDocument.documentKind;
+    } else {
+      try {
+        const extractedDocument = await extraction.extractDocumentText(bytes, item.mime_type, item.original_file_name);
+        documentText = extractedDocument.text;
+        documentKind = extractedDocument.documentKind;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "The certification document could not be extracted.";
+        await supabase
+          .from("certification_import_items")
+          .update({ status: "failed", error_message: message, sha256: documentSha256 })
+          .eq("id", item.id);
+        return { error: message } as const;
+      }
     }
 
     const apiKey = process.env["LOVABLE_API_KEY"];
-    let result = extraction.extractFactsFromText(documentText, item.original_file_name);
-    if (data.useAi && apiKey) {
+    let result = extraction.extractFactsFromText(
+      documentText,
+      item.original_file_name,
+      ...(ocrDocument ? ([ocrDocument.pageProvenance] as const) : ([] as const)),
+    );
+    if (data.useAi && apiKey && !ocrDocument) {
       try {
         const aiResult = await extraction.extractFactsWithAi(documentText, item.original_file_name, apiKey);
         // Keep whichever provider produced more evidence-backed facts.
@@ -96,6 +121,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         // Extraction stays deterministic when the gateway is unavailable.
       }
     }
+
 
     await supabaseAdmin.from("certification_facts").delete().eq("item_id", item.id);
     if (result.facts.length) {
