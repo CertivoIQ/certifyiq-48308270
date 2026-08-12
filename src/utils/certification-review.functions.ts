@@ -70,28 +70,26 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     const bytes = await download.data.arrayBuffer();
     const documentSha256 = await sha256Hex(bytes);
 
-    if (!extraction.isTextExtractable(item.mime_type, item.original_file_name)) {
+    let documentText: string;
+    let documentKind: "pdf" | "text";
+    try {
+      const extractedDocument = await extraction.extractDocumentText(bytes, item.mime_type, item.original_file_name);
+      documentText = extractedDocument.text;
+      documentKind = extractedDocument.documentKind;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "The certification document could not be extracted.";
       await supabase
         .from("certification_import_items")
-        .update({
-          status: "failed",
-          error_message:
-            "Automated extraction currently supports text or CSV certification exports. PDF and image extraction is not enabled for this file.",
-          sha256: documentSha256,
-        })
+        .update({ status: "failed", error_message: message, sha256: documentSha256 })
         .eq("id", item.id);
-      return {
-        error:
-          "Automated extraction currently supports text or CSV certification exports. Upload a text export for this file.",
-      } as const;
+      return { error: message } as const;
     }
 
-    const text = new TextDecoder().decode(bytes);
     const apiKey = process.env["LOVABLE_API_KEY"];
-    let result = extraction.extractFactsFromText(text, item.original_file_name);
+    let result = extraction.extractFactsFromText(documentText, item.original_file_name);
     if (data.useAi && apiKey) {
       try {
-        const aiResult = await extraction.extractFactsWithAi(text, item.original_file_name, apiKey);
+        const aiResult = await extraction.extractFactsWithAi(documentText, item.original_file_name, apiKey);
         // Keep whichever provider produced more evidence-backed facts.
         if (aiResult.facts.length > result.facts.length) result = aiResult;
       } catch {
@@ -201,6 +199,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         rulePackVersion: evaluation.rulePackVersion,
         statePackApplied: evaluation.statePackApplied,
         extractionProvider: result.provider,
+        documentKind,
       },
     };
     const manifestSha256 = await hashJson(manifest);
