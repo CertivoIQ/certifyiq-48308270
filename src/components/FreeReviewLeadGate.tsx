@@ -128,7 +128,7 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
         </div>
 
         <div className="lg:col-span-2 grid gap-3 sm:grid-cols-3 rounded-lg border border-border p-4 text-sm">
-          <div className="flex gap-2"><Building2 className="size-4 text-primary" /><span>CRM company record</span></div>
+          <div className="flex gap-2"><Building2 className="size-4 text-primary" /><span>Company profile</span></div>
           <div className="flex gap-2"><Users className="size-4 text-primary" /><span>Primary decision-maker contact</span></div>
           <div className="flex gap-2"><Mail className="size-4 text-primary" /><span>Personalized email fields</span></div>
         </div>
