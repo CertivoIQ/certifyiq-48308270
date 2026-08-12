@@ -29,7 +29,7 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
     priceId: "professional_monthly",
     name: "CertivoIQ Professional",
     unitLimit: 500,
-    propertyLimit: 5,
+    propertyLimit: null,
     aiDocAllowance: 500,
     statePacks: 1,
   },
