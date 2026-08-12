@@ -2,6 +2,17 @@ import { inflateSync } from "node:zlib";
 import { generateText } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
+import {
+  composeSidecarText,
+  provenanceIndex,
+  sidecarPathFor,
+  type OcrSidecar,
+  type PageProvenance,
+} from "@/lib/ocr-sidecar.mjs";
+
+export { sidecarPathFor };
+export type { PageProvenance };
+
 
 /**
  * Extraction provider boundary — server only.
