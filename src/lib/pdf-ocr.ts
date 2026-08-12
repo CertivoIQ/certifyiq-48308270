@@ -133,6 +133,6 @@ export async function prepareCertificationForReview(
       },
     };
   } finally {
-    await pdf.destroy().catch(() => undefined);
+    await pdf.cleanup();
   }
 }
