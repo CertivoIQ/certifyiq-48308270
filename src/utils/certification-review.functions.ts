@@ -112,7 +112,13 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       item.original_file_name,
       ...(ocrDocument ? ([ocrDocument.pageProvenance] as const) : ([] as const)),
     );
-    if (data.useAi && apiKey && !ocrDocument) {
+
+    // Fast path: the deterministic extractor is the preferred provider and the
+    // compliance engine is deterministic. Only pay the latency cost of the AI
+    // extraction fallback when required evidence is actually missing. This keeps
+    // complete machine-readable certifications on the fast path while preserving
+    // AI-assisted recovery for documents whose labels/layouts need it.
+    if (data.useAi && apiKey && !ocrDocument && result.missingFields.length > 0) {
       try {
         const aiResult = await extraction.extractFactsWithAi(documentText, item.original_file_name, apiKey);
         // Keep whichever provider produced more evidence-backed facts.
