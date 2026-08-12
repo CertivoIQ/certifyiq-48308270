@@ -67,8 +67,19 @@ function normalizeValue(field: ExtractionField, raw: string): string | number | 
   return Number.isFinite(numeric) ? numeric : null;
 }
 
-/** Deterministic label parser. Same input always yields the same facts. */
-export function extractFactsFromText(text: string, documentRef: string): ExtractionResult {
+/**
+ * Deterministic label parser. Same input always yields the same facts.
+ *
+ * `pageProvenance` is supplied when the text came from an OCR sidecar: each fact
+ * is then stamped with the provider ("ocr-tesseract") and the confidence the OCR
+ * engine actually reported for that page, so the audit trail records that the
+ * evidence was OCR-derived.
+ */
+export function extractFactsFromText(
+  text: string,
+  documentRef: string,
+  pageProvenance?: Map<number, PageProvenance>,
+): ExtractionResult {
   const lines = text.split(/\r?\n/);
   const facts: ExtractedFact[] = [];
   const missingFields: ExtractionField[] = [];
@@ -91,16 +102,18 @@ export function extractFactsFromText(text: string, documentRef: string): Extract
         if (separatorIndex === -1) continue;
         const value = normalizeValue(field, line.slice(separatorIndex + 1));
         if (value === null) continue;
+        const factPage = pageOfLine[index] ?? 1;
+        const provenance = pageProvenance?.get(factPage);
         found = {
           field,
           value,
           sourceDocumentRef: documentRef,
-          page: pageOfLine[index] ?? 1,
+          page: factPage,
           snippet: line.trim().slice(0, 300),
-          confidence: 0.99,
+          confidence: provenance ? provenance.confidence : 0.99,
           humanVerified: false,
           requiredForDecision: true,
-          provider: "deterministic-text",
+          provider: provenance?.provider ?? "deterministic-text",
         };
         break;
       }
@@ -109,8 +122,10 @@ export function extractFactsFromText(text: string, documentRef: string): Extract
     else missingFields.push(field);
   }
 
-  return { provider: "deterministic-text", facts, missingFields };
+  const ocrDerived = facts.some((fact) => fact.provider === "ocr-tesseract");
+  return { provider: ocrDerived ? "ocr-tesseract" : "deterministic-text", facts, missingFields };
 }
+
 
 function decodePdfString(bytes: Uint8Array): string {
   if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
