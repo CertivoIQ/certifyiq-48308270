@@ -2,40 +2,45 @@
 
 ## Core positioning
 
-**One Analyst. Every Property. 24/7.**
+**The compliance intelligence infrastructure for affordable housing.**
 
-**CertivoIQ — Your 24/7 Compliance Analyst.**
+## Primary tagline
+
+**FIND COMPLIANCE RISK BEFORE THE AUDITOR.**
+
+## Brand palette
+
+- Dark Blue `#012447`
+- Navy `#082B56`
+- White `#FFFFFF`
+- Subtle Yellow `#FEC229` (accent only; "IQ" always in yellow)
+
+No green anywhere in public brand surfaces.
+
+## Call to action standard
+
+1. **TRY CERTIVOIQ FOR FREE**
+2. **3 FREE CERTIFICATION REVIEWS**
+3. **NO CREDIT CARD REQUIRED**
 
 ## Central website message
 
-**Your portfolio doesn't need more spreadsheets. It needs intelligence.**
+Your portfolio doesn't need more spreadsheets. It needs compliance intelligence.
 
-CertivoIQ acts as a 24/7 Compliance Analyst—continuously monitoring certifications, surfacing potential findings, tracking audit readiness, and helping teams focus human expertise where it matters most.
-
-**Scale compliance capacity without scaling administrative burden.**
-
-**Turn compliance capacity into profitability.**
-
-**AI-powered compliance intelligence. Human-approved decisions.**
+Scale compliance capacity without scaling administrative burden.
 
 ## Feature messaging
 
-- **Certification Intelligence™** — Your 24/7 certification reviewer.
-- **Audit Simulator™** — Find potential problems before the auditor does.
+- **Certification Intelligence™** — Continuous certification review.
+- **Audit Simulator™** — Surface potential problems before the auditor does.
 - **Audit Readiness Score™** — Know your readiness before the auditor arrives.
 - **Portfolio Compliance Command Center™** — One view of compliance across every property.
-- **PMS Integration Hub™** — Keep your compliance analyst connected to property data.
-- **Certification Submission Center™** — Move approved certifications from review to submission with a human approval gate.
+- **PMS Integration Hub™** — Keep compliance connected to property data.
+- **Certification Submission Center™** — Move reviewed certifications from review to submission.
 
-## Campaign themes
+## Messaging rules
 
-- Your portfolio just hired a Compliance Analyst.
-- What if your Compliance Analyst never clocked out?
-- Scale your portfolio—not your compliance headcount.
-- More properties. Less administrative workload.
-- Your Compliance Analyst doesn't sleep. Your team can.
-- Before the auditor finds it, your Compliance Analyst does.
-
-## Positioning guardrail
-
-CertivoIQ should not be marketed as replacing compliance professionals or as making final legal/compliance determinations autonomously. It is an AI-powered intelligence layer that performs continuous monitoring and analysis while final decisions remain human-approved.
+- Do not use "AI", "artificial intelligence", or model/vendor names in customer-facing positioning or visuals.
+- Do not use "human review", "human approval model", "human-approved decisions", or similar positioning language.
+- Never claim guaranteed avoidance of penalties, fines, findings, or credit recapture.
+- Never describe unsupported product features or fabricated traction, savings, or customer counts.
