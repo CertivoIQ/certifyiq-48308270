@@ -6,6 +6,9 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export type FindingStatus = "PASS" | "FAIL" | "UNABLE_TO_DETERMINE";
   export type EvidenceStatus = "RESOLVED" | "CONFLICTING" | "NOT_DETERMINED";
   export type RuleEvaluationStatus = "EVALUATED" | "BLOCKED";
+  export type CalculationStatus = "PASS" | "FAIL" | "NOT_EVALUATED";
+  export type DeterminationStatus =
+    "PASS" | "FAIL" | "PENDING" | "NOT_DETERMINED";
   export type ReviewDecision =
     "approved" | "remediation_requested" | "unable_to_determine";
 
@@ -22,6 +25,12 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export const RULE_EVALUATION_STATUS: {
     evaluated: "EVALUATED";
     blocked: "BLOCKED";
+  };
+  export const DETERMINATION_STATUS: {
+    pass: "PASS";
+    fail: "FAIL";
+    pending: "PENDING";
+    notDetermined: "NOT_DETERMINED";
   };
 
   export interface ExtractedFact {
@@ -135,5 +144,39 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     minimumConfidence?: number;
   }): EvaluationResult;
 
+  export interface ComplianceRecord {
+    schemaVersion: "1.0";
+    engineBuild: string;
+    fact: {
+      evidence: Array<{
+        name: string;
+        source: string | null;
+        page: number | null;
+        snippet: string | null;
+        confidence: number;
+        humanVerified: boolean;
+      }>;
+    };
+    rule: {
+      id: string;
+      version: string;
+      packId: string;
+      packVersion: string;
+      jurisdiction: string;
+      citation: string;
+    };
+    calculation: {
+      status: CalculationStatus;
+      evaluationStatus: RuleEvaluationStatus;
+    };
+    evidenceStatus: EvidenceStatus;
+    determinationStatus: DeterminationStatus;
+    blockingReasons: string[];
+    explanation: string;
+  }
+
+  export function createComplianceRecord(
+    finding: EngineFinding,
+  ): ComplianceRecord;
   export function signOffAllowed(result: EvaluationResult): boolean;
 }
