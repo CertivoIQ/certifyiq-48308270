@@ -230,11 +230,11 @@ function WelcomePage() {
         <section id="leaders" className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-start">
             <div>
-              <Pill tone="seal">For portfolio leaders</Pill>
+              <Pill tone="neutral">For portfolio leaders</Pill>
               <h2 className="mt-4 font-display text-[38px] leading-tight sm:text-[50px]">A clearer view of compliance risk across the portfolio.</h2>
               <p className="mt-4 text-[15px] leading-7 text-muted-foreground">Built for owners, operators, compliance leaders, and property-management teams who need a defensible review process without adding another layer of administrative work.</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications <ArrowRight className="ml-2 size-4" /></Link></Button>
+                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE <ArrowRight className="ml-2 size-4" /></Link></Button>
                 <Button size="lg" variant="outline" asChild><Link to="/methodology">See the methodology</Link></Button>
               </div>
             </div>
@@ -265,7 +265,7 @@ function WelcomePage() {
         <section id="value" className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
             <div>
-              <Pill tone="seal">The business case</Pill>
+              <Pill tone="neutral">The business case</Pill>
               <h2 className="mt-4 font-display text-[38px] leading-tight sm:text-[48px]">Scale compliance capacity without scaling administrative burden.</h2>
               <p className="mt-4 text-[15px] leading-7 text-muted-foreground">Use your own staffing and portfolio numbers to see the operational opportunity. CertivoIQ does not promise that automation eliminates jobs or guarantees avoided findings.</p>
               <div className="mt-6 rounded-xl border border-border bg-card p-5"><div className="flex items-start gap-3"><Sparkles className="mt-0.5 size-5 text-gold" /><div><p className="font-display text-lg">Turn compliance capacity into profitability.</p><p className="mt-1.5 text-[12.5px] leading-5 text-muted-foreground">Give your existing team more review capacity, better visibility, and a clearer path from risk to resolution.</p></div></div></div>
@@ -281,24 +281,24 @@ function WelcomePage() {
               <h2 className="mt-2 max-w-3xl font-display text-[28px] leading-tight sm:text-[34px]">One missed compliance finding can cost more than the system that helps you catch it.</h2>
               <p className="mt-2 max-w-3xl text-[13px] leading-6 text-muted-foreground">CertivoIQ is built to surface missing evidence, inconsistencies, and exceptions while your team still has time to investigate and resolve them.</p>
             </div>
-            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications <ArrowRight className="ml-2 size-4" /></Link></Button>
+            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE <ArrowRight className="ml-2 size-4" /></Link></Button>
           </div>
         </section>
 
         <section className="mx-auto max-w-7xl px-5 pb-20 lg:px-8">
           <div className="rounded-2xl border border-gold/25 bg-accent px-6 py-10 text-center sm:px-10">
-            <Pill tone="seal">Start without a sales call</Pill>
+            <Pill tone="neutral">Start without a sales call</Pill>
             <h2 className="mx-auto mt-4 max-w-3xl font-display text-[34px] leading-tight sm:text-[46px]">Find the compliance issues your current process can miss.</h2>
             <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {FREE_REVIEW_COUNT} FREE certification reviews. Bring your own files, inspect the evidence trail, and decide whether CertivoIQ deserves a place in your compliance workflow.</p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>Review Your 3 FREE Certifications <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
+            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
           </div>
         </section>
       </main>
 
       <footer className="border-t border-border py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 text-center sm:flex-row sm:text-left lg:px-8">
-          <div><p className="font-display text-sm">Certivo<span className="text-gold">IQ</span></p><p className="mt-1 text-[11px] text-muted-foreground">ONE ANALYST. EVERY PROPERTY. 24/7.</p></div>
-          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/security">Security &amp; AI data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
+          <div><p className="font-display text-sm">Certivo<span className="text-gold">IQ</span></p><p className="mt-1 text-[11px] text-muted-foreground">FIND COMPLIANCE RISK BEFORE THE AUDITOR.</p></div>
+          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
         </div>
         <p className="cite mt-4 text-center">{coverageClaim()}</p>
       </footer>
