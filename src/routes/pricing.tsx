@@ -28,7 +28,7 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:title", content: "Plans & Pricing — CertivoIQ" },
       {
         property: "og:description",
-        content: "Simple per-portfolio pricing with AI document processing allowances instead of confusing credits. Start with 3 FREE certification reviews.",
+        content: "Simple per-portfolio pricing with document processing allowances instead of confusing credits. Start with 3 FREE certification reviews.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -388,16 +388,16 @@ function PricingPage() {
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">AI document overages</dt>
+            <dt className="font-semibold">Document processing overages</dt>
             <dd className="mt-0.5 text-muted-foreground">
-              Every plan includes a monthly AI document allowance. Files uploaded beyond that allowance are billed at $3 per certification regardless of plan.
+              Every plan includes a monthly document processing allowance. Files uploaded beyond that allowance are billed at $3 per certification regardless of plan.
             </dd>
           </div>
         </dl>
       </Panel>
 
       <p className="mt-5 text-[12.5px] text-muted-foreground">
-        AI document processing is included as a monthly document allowance — no credits to track. Beyond the allowance,
+        Document processing is included as a monthly allowance — no credits to track. Beyond the allowance,
         extra certifications are billed at $3 per uploaded file on every plan.
       </p>
 
