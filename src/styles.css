@@ -83,17 +83,17 @@
 :root {
   --radius: 0.625rem;
 
-  /* Core palette — vivid indigo/teal on cool paper */
-  --ink: oklch(0.27 0.055 268);
+  /* Core brand palette — Dark Blue #012447, Navy #082B56, White, Subtle Yellow #FEC229 */
+  --ink: #012447;
   --paper: oklch(0.985 0.005 265);
   --slate: oklch(0.55 0.033 265);
 
-  --brand: oklch(0.55 0.196 268);
-  --brand-glow: oklch(0.66 0.16 235);
-  --brand-soft: oklch(0.955 0.03 268);
+  --brand: #082B56;
+  --brand-glow: #012447;
+  --brand-soft: oklch(0.955 0.03 262);
 
-  /* Merlin's wizard gold — used for the IQ in the wordmark and wizard sparkle */
-  --gold: oklch(0.76 0.15 88);
+  /* Subtle yellow — used for the IQ in the wordmark and brand accents */
+  --gold: #FEC229;
 
   /* CertivoIQ CRM Dashboard surface — gold, so staff always know which dashboard they're in */
   --gold-surface: oklch(0.975 0.045 92);
