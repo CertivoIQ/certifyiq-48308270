@@ -427,7 +427,7 @@ function StageCard({
           {label}
         </span>
         <span className="flex gap-1.5" aria-hidden="true">
-          <span className="size-2 rounded-full bg-cyan-300" />
+          <span className="size-2 rounded-full bg-[#FEC229]" />
           <span className="size-2 rounded-full bg-amber-300" />
           <span className="size-2 rounded-full bg-[#FEC229]" />
         </span>
@@ -451,7 +451,7 @@ function UploadVisual() {
           <div className="mt-3 h-2 w-full rounded bg-white/10" />
           <div className="mt-2 h-2 w-3/5 rounded bg-white/10" />
         </div>
-        <div className="relative z-10 grid size-32 place-items-center rounded-3xl border border-[#FEC229]/40 bg-cyan-300/10 shadow-[0_0_70px_rgba(34,211,238,.18)]">
+        <div className="relative z-10 grid size-32 place-items-center rounded-3xl border border-[#FEC229]/40 bg-[#FEC229]/10 shadow-[0_0_70px_rgba(254,194,41,.18)]">
           <Upload className="size-14 text-[#FEC229]" strokeWidth={1.5} />
         </div>
         <div className="absolute inset-x-8 bottom-1 h-2 overflow-hidden rounded-full bg-white/10">
@@ -476,12 +476,12 @@ function ExtractVisual() {
                 style={{ width: `${width}%` }}
               >
                 {(index === 1 || index === 3) && (
-                  <span className="absolute -inset-1 rounded bg-cyan-300/45" />
+                  <span className="absolute -inset-1 rounded bg-[#FEC229]/45" />
                 )}
               </div>
             ))}
           </div>
-          <span className="certivo-scan absolute inset-x-2 top-3 h-px bg-cyan-500 shadow-[0_0_12px_rgba(6,182,212,.9)]" />
+          <span className="certivo-scan absolute inset-x-2 top-3 h-px bg-[#FEC229] shadow-[0_0_12px_rgba(254,194,41,.9)]" />
         </div>
         <div className="space-y-2.5">
           {[
@@ -522,10 +522,10 @@ function RulesVisual() {
             ),
           )}
         </div>
-        <div className="absolute left-40 right-28 top-1/2 h-px bg-gradient-to-r from-cyan-300/10 via-cyan-300 to-cyan-300/10">
-          <span className="certivo-flow absolute -top-1.5 size-3 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(34,211,238,.9)]" />
+        <div className="absolute left-40 right-28 top-1/2 h-px bg-gradient-to-r from-[#FEC229]/10 via-[#FEC229] to-[#FEC229]/10">
+          <span className="certivo-flow absolute -top-1.5 size-3 rounded-full bg-[#FEC229] shadow-[0_0_16px_rgba(254,194,41,.9)]" />
         </div>
-        <div className="absolute right-0 top-1/2 grid size-24 -translate-y-1/2 place-items-center rounded-2xl border border-[#FEC229]/30 bg-cyan-300/10 text-center">
+        <div className="absolute right-0 top-1/2 grid size-24 -translate-y-1/2 place-items-center rounded-2xl border border-[#FEC229]/30 bg-[#FEC229]/10 text-center">
           <ShieldCheck className="size-9 text-[#FEC229]" />
           <span className="text-[10px] font-semibold text-white">
             RULE DECISION
@@ -578,7 +578,7 @@ function FindingsVisual() {
 
 function ApprovalVisual() {
   return (
-    <StageCard label="Human decision record">
+    <StageCard label="Decision record">
       <div className="grid min-h-56 place-items-center">
         <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-white/[0.04] p-5">
           <div className="flex items-center gap-4">
@@ -594,9 +594,9 @@ function ApprovalVisual() {
               </p>
             </div>
           </div>
-          <div className="mt-5 rounded-xl border border-emerald-300/30 bg-[#FEC229]/10 px-4 py-3">
-            <p className="flex items-center gap-2 text-sm font-semibold text-emerald-200">
-              <CheckCircle2 className="size-4" /> Human approval recorded
+          <div className="mt-5 rounded-xl border border-[#FEC229]/30 bg-[#FEC229]/10 px-4 py-3">
+            <p className="flex items-center gap-2 text-sm font-semibold text-[#FEC229]">
+              <CheckCircle2 className="size-4" /> Sign-off recorded
             </p>
           </div>
           <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
@@ -628,7 +628,7 @@ function PortfolioVisual() {
             {bars.map((height, index) => (
               <span
                 key={height}
-                className="certivo-rise flex-1 rounded-t bg-gradient-to-t from-blue-600 to-cyan-300"
+                className="certivo-rise flex-1 rounded-t bg-gradient-to-t from-[#082B56] to-[#FEC229]"
                 style={{
                   height: `${height}%`,
                   animationDelay: `${index * 90}ms`,
