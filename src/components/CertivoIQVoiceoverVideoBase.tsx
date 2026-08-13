@@ -82,11 +82,11 @@ const scenes: Scene[] = [
     Visual: FindingsVisual,
   },
   {
-    eyebrow: "5 · Human approval",
-    title: "Keep compliance professionals in control",
-    body: "CertivoIQ prepares the review; an authorized human makes and records the final decision.",
+    eyebrow: "5 · Reviewer sign-off",
+    title: "Keep your compliance team in control",
+    body: "CertivoIQ prepares the review; your authorized staff make and record the decision.",
     narration:
-      "CertivoIQ prepares the review, while an authorized compliance professional keeps final approval authority and a complete record of every action.",
+      "CertivoIQ prepares the review, while your compliance team keeps sign-off authority and a complete record of every action.",
     audioSrc: "/audio/welcome/scene-05-approval.mp3",
     fallbackSeconds: 9,
     Visual: ApprovalVisual,
@@ -191,7 +191,7 @@ export default function CertivoIQVoiceoverVideo({
 
   return (
     <section
-      className={`bg-slate-950 px-5 py-8 text-white sm:px-8 ${className}`}
+      className={`bg-[#012447] px-5 py-8 text-white sm:px-8 ${className}`}
       aria-labelledby="certivo-video-title"
     >
       <style>{`
@@ -228,7 +228,7 @@ export default function CertivoIQVoiceoverVideo({
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#FEC229]">
               CertivoIQ in about 60 seconds
             </p>
             <h2
@@ -242,7 +242,7 @@ export default function CertivoIQVoiceoverVideo({
             {(accountState === "visitor" || accountState === "trial") && (
               <a
                 href={demoDashboardHref}
-                className="rounded-lg border border-cyan-300 px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/10"
+                className="rounded-lg border border-[#FEC229] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#FEC229]/10"
               >
                 Demo Dashboard
               </a>
@@ -250,18 +250,18 @@ export default function CertivoIQVoiceoverVideo({
             {accountState === "visitor" && (
               <a
                 href={trialHref}
-                className="rounded-lg bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
+                className="rounded-lg bg-[#FEC229] px-4 py-2.5 text-sm font-semibold text-[#012447] transition hover:bg-[#ffd35c]"
               >
-                Start with 3 FREE certification reviews
+                TRY CERTIVOIQ FOR FREE
               </a>
             )}
           </div>
         </div>
 
-        <div className="relative isolate aspect-video min-h-[430px] overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_75%_25%,rgba(34,211,238,.20),transparent_34%),linear-gradient(135deg,#0f172a,#020617)] shadow-2xl">
+        <div className="relative isolate aspect-video min-h-[430px] overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_75%_25%,rgba(254,194,41,.18),transparent_34%),linear-gradient(135deg,#082B56,#012447)] shadow-2xl">
           <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] [background-size:36px_36px]" />
           <div
-            className="absolute inset-y-0 left-0 bg-cyan-300/5 transition-[width] duration-300"
+            className="absolute inset-y-0 left-0 bg-[#FEC229]/5 transition-[width] duration-300"
             style={{ width: `${overallProgress}%` }}
             aria-hidden="true"
           />
@@ -271,7 +271,7 @@ export default function CertivoIQVoiceoverVideo({
               key={`copy-${scene}`}
               className="animate-in fade-in slide-in-from-left-4 duration-500"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-300">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#FEC229]">
                 {current.eyebrow}
               </p>
               <h3 className="mt-4 max-w-2xl text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
@@ -289,7 +289,7 @@ export default function CertivoIQVoiceoverVideo({
             </div>
           </div>
 
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent px-5 pb-5 pt-12">
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#012447] via-[#012447]/95 to-transparent px-5 pb-5 pt-12">
             <div
               className="mb-4 grid grid-cols-6 gap-2"
               aria-label={`Scene ${scene + 1} of ${scenes.length}`}
@@ -303,7 +303,7 @@ export default function CertivoIQVoiceoverVideo({
                   aria-label={`Go to scene ${index + 1}: ${item.title}`}
                 >
                   <span
-                    className="block h-full origin-left rounded-full bg-cyan-300 transition-transform duration-300"
+                    className="block h-full origin-left rounded-full bg-[#FEC229] transition-transform duration-300"
                     style={{
                       transform:
                         index < scene
@@ -321,7 +321,7 @@ export default function CertivoIQVoiceoverVideo({
                 <button
                   type="button"
                   onClick={togglePlayback}
-                  className="grid h-11 w-11 place-items-center rounded-full bg-white text-slate-950"
+                  className="grid h-11 w-11 place-items-center rounded-full bg-white text-[#012447]"
                   aria-label={playing ? "Pause video" : "Play video"}
                 >
                   {playing ? (
@@ -427,9 +427,9 @@ function StageCard({
           {label}
         </span>
         <span className="flex gap-1.5" aria-hidden="true">
-          <span className="size-2 rounded-full bg-cyan-300" />
+          <span className="size-2 rounded-full bg-[#FEC229]" />
           <span className="size-2 rounded-full bg-amber-300" />
-          <span className="size-2 rounded-full bg-emerald-300" />
+          <span className="size-2 rounded-full bg-[#FEC229]" />
         </span>
       </div>
       {children}
@@ -447,15 +447,15 @@ function UploadVisual() {
           <div className="mt-2 h-2 w-4/5 rounded bg-white/10" />
         </div>
         <div className="certivo-float absolute right-5 top-8 w-36 rotate-[7deg] rounded-xl border border-white/15 bg-slate-800 p-3 opacity-70">
-          <div className="h-2 w-16 rounded bg-cyan-300/60" />
+          <div className="h-2 w-16 rounded bg-[#FEC229]/60" />
           <div className="mt-3 h-2 w-full rounded bg-white/10" />
           <div className="mt-2 h-2 w-3/5 rounded bg-white/10" />
         </div>
-        <div className="relative z-10 grid size-32 place-items-center rounded-3xl border border-cyan-300/40 bg-cyan-300/10 shadow-[0_0_70px_rgba(34,211,238,.18)]">
-          <Upload className="size-14 text-cyan-300" strokeWidth={1.5} />
+        <div className="relative z-10 grid size-32 place-items-center rounded-3xl border border-[#FEC229]/40 bg-[#FEC229]/10 shadow-[0_0_70px_rgba(254,194,41,.18)]">
+          <Upload className="size-14 text-[#FEC229]" strokeWidth={1.5} />
         </div>
         <div className="absolute inset-x-8 bottom-1 h-2 overflow-hidden rounded-full bg-white/10">
-          <span className="block h-full w-4/5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" />
+          <span className="block h-full w-4/5 rounded-full bg-gradient-to-r from-[#FEC229] to-[#082B56]" />
         </div>
       </div>
     </StageCard>
@@ -464,7 +464,7 @@ function UploadVisual() {
 
 function ExtractVisual() {
   return (
-    <StageCard label="Document intelligence">
+    <StageCard label="Evidence extraction">
       <div className="grid min-h-56 gap-4 sm:grid-cols-[1.05fr_.95fr]">
         <div className="relative overflow-hidden rounded-xl border border-white/15 bg-white p-4 text-slate-900">
           <div className="h-3 w-28 rounded bg-slate-300" />
@@ -476,12 +476,12 @@ function ExtractVisual() {
                 style={{ width: `${width}%` }}
               >
                 {(index === 1 || index === 3) && (
-                  <span className="absolute -inset-1 rounded bg-cyan-300/45" />
+                  <span className="absolute -inset-1 rounded bg-[#FEC229]/45" />
                 )}
               </div>
             ))}
           </div>
-          <span className="certivo-scan absolute inset-x-2 top-3 h-px bg-cyan-500 shadow-[0_0_12px_rgba(6,182,212,.9)]" />
+          <span className="certivo-scan absolute inset-x-2 top-3 h-px bg-[#FEC229] shadow-[0_0_12px_rgba(254,194,41,.9)]" />
         </div>
         <div className="space-y-2.5">
           {[
@@ -522,12 +522,12 @@ function RulesVisual() {
             ),
           )}
         </div>
-        <div className="absolute left-40 right-28 top-1/2 h-px bg-gradient-to-r from-cyan-300/10 via-cyan-300 to-cyan-300/10">
-          <span className="certivo-flow absolute -top-1.5 size-3 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(34,211,238,.9)]" />
+        <div className="absolute left-40 right-28 top-1/2 h-px bg-gradient-to-r from-[#FEC229]/10 via-[#FEC229] to-[#FEC229]/10">
+          <span className="certivo-flow absolute -top-1.5 size-3 rounded-full bg-[#FEC229] shadow-[0_0_16px_rgba(254,194,41,.9)]" />
         </div>
-        <div className="absolute right-0 top-1/2 grid size-24 -translate-y-1/2 place-items-center rounded-2xl border border-cyan-300/30 bg-cyan-300/10 text-center">
-          <ShieldCheck className="size-9 text-cyan-300" />
-          <span className="text-[10px] font-semibold text-cyan-100">
+        <div className="absolute right-0 top-1/2 grid size-24 -translate-y-1/2 place-items-center rounded-2xl border border-[#FEC229]/30 bg-[#FEC229]/10 text-center">
+          <ShieldCheck className="size-9 text-[#FEC229]" />
+          <span className="text-[10px] font-semibold text-white">
             RULE DECISION
           </span>
         </div>
@@ -551,7 +551,7 @@ function FindingsVisual() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-cyan-300">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#FEC229]">
               Authority
             </p>
             <p className="mt-2 text-sm text-white">Rule version 2026.08</p>
@@ -578,7 +578,7 @@ function FindingsVisual() {
 
 function ApprovalVisual() {
   return (
-    <StageCard label="Human decision record">
+    <StageCard label="Decision record">
       <div className="grid min-h-56 place-items-center">
         <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-white/[0.04] p-5">
           <div className="flex items-center gap-4">
@@ -594,9 +594,9 @@ function ApprovalVisual() {
               </p>
             </div>
           </div>
-          <div className="mt-5 rounded-xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3">
-            <p className="flex items-center gap-2 text-sm font-semibold text-emerald-200">
-              <CheckCircle2 className="size-4" /> Human approval recorded
+          <div className="mt-5 rounded-xl border border-[#FEC229]/30 bg-[#FEC229]/10 px-4 py-3">
+            <p className="flex items-center gap-2 text-sm font-semibold text-[#FEC229]">
+              <CheckCircle2 className="size-4" /> Sign-off recorded
             </p>
           </div>
           <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
@@ -622,13 +622,13 @@ function PortfolioVisual() {
               </p>
               <p className="mt-1 text-2xl font-semibold text-white">94%</p>
             </div>
-            <BarChart3 className="size-6 text-cyan-300" />
+            <BarChart3 className="size-6 text-[#FEC229]" />
           </div>
           <div className="mt-6 flex h-24 items-end gap-2">
             {bars.map((height, index) => (
               <span
                 key={height}
-                className="certivo-rise flex-1 rounded-t bg-gradient-to-t from-blue-600 to-cyan-300"
+                className="certivo-rise flex-1 rounded-t bg-gradient-to-t from-[#082B56] to-[#FEC229]"
                 style={{
                   height: `${height}%`,
                   animationDelay: `${index * 90}ms`,

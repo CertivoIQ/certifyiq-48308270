@@ -36,7 +36,7 @@ export const en = {
   "nav.toggle": "Toggle navigation",
 
   // ---- shell ----
-  "shell.tagline": "Compliance intelligence",
+  "shell.tagline": "Compliance intelligence infrastructure",
   "shell.rulePacksActive": "Rule packs active",
   "shell.statesBuild": "50 states · 2026.08 build",
   "shell.trial.status": "Free certification reviews · {used}/{allowed} reviews used",
@@ -56,20 +56,20 @@ export const en = {
   "welcome.nav.pricing": "Pricing",
   "welcome.nav.open": "Open the platform",
   "welcome.pill": "{allowed} FREE certification reviews",
-  "welcome.hero.title": "Find compliance problems before the auditor does.",
+  "welcome.hero.title": "FIND COMPLIANCE RISK BEFORE THE AUDITOR.",
   "welcome.hero.subtitle":
-    "CertivoIQ uses AI to extract evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
-  "welcome.hero.cta": "Review Your 3 FREE Certifications",
+    "CertivoIQ extracts evidence from affordable-housing certification files, applies versioned compliance rules deterministically, and shows exactly why each finding was raised.",
+  "welcome.hero.cta": "TRY CERTIVOIQ FOR FREE",
   "welcome.workflow.upload": "Upload",
   "welcome.workflow.extract": "Extract",
   "welcome.workflow.check": "Check",
   "welcome.workflow.evidence": "Evidence",
   "welcome.workflow.findings": "Findings",
-  "welcome.cta.trial": "Review Your 3 FREE Certifications",
+  "welcome.cta.trial": "TRY CERTIVOIQ FOR FREE",
   "welcome.cta.sample": "See a reviewed certification",
   "welcome.video.label": "CertivoIQ compliance intelligence explainer video",
-  "welcome.video.trialCta": "Review Your 3 FREE Certifications",
-  "welcome.risks.title": "What a human eye alone misses — and what it costs",
+  "welcome.video.trialCta": "TRY CERTIVOIQ FOR FREE",
+  "welcome.risks.title": "What manual review alone can miss — and what it costs",
   "welcome.risks.body":
     "Every item below is a real source of fines, repayment agreements, IRS Form 8823 findings or recaptured tax credits. Manual review catches most of them, most of the time. CertivoIQ tests all of them, every time.",
   "welcome.value.title": "Compare CertivoIQ with your current cost of compliance",
@@ -83,11 +83,11 @@ export const en = {
     "Every certification is scored Pass or Fail against the exact rule pack assigned to that property, with the correction steps written out.",
   "welcome.why.3.title": "Minutes, not hours",
   "welcome.why.3.body":
-    "Reviews drop from ~41 minutes of manual file work to about 4 minutes, with a human keeping final sign-off authority.",
+    "Reviews drop from ~41 minutes of manual file work to about 4 minutes, with your reviewers keeping sign-off authority.",
   "welcome.close.title": "Use your 3 FREE certification reviews",
   "welcome.close.body":
     "Run three real certification files through CertivoIQ, inspect the evidence trail, and decide whether the platform belongs in your compliance workflow.",
-  "welcome.close.cta": "Review Your 3 FREE Certifications",
+  "welcome.close.cta": "TRY CERTIVOIQ FOR FREE",
 
   // ---- dashboard ----
   "dash.title": "CertivoIQ Dashboard",

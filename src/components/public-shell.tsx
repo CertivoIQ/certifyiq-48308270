@@ -56,7 +56,7 @@ export function PublicShell({
         {children}
       </main>
       <footer className="border-t border-border py-6 text-center">
-        <p className="cite text-[12px] text-muted-foreground">CertivoIQ — One Analyst. Every Property. 24/7.</p>
+        <p className="cite text-[12px] text-muted-foreground">CertivoIQ — Find compliance risk before the auditor.</p>
       </footer>
     </div>
   );

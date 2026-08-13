@@ -10,7 +10,7 @@ const rows: Array<{
   appfolio: [Availability, string];
 }> = [
   {
-    capability: "AI certification-file review",
+    capability: "Certification-file review",
     benefit: "Finds document-level compliance issues before final approval",
     certivo: ["yes", "Purpose-built review with Pass/Fail findings"],
     resman: ["partial", "Workflow guardrails and critical-point error checks"],
@@ -45,17 +45,17 @@ const rows: Array<{
     appfolio: ["yes", "Accounting, leasing, maintenance, resident, and portfolio tools"],
   },
   {
-    capability: "Human-controlled final approval",
-    benefit: "Keeps accountable experts in the decision loop",
-    certivo: ["yes", "AI review routes to a human for final sign-off"],
+    capability: "Reviewer-controlled approval workflow",
+    benefit: "Keeps accountable staff in the decision workflow",
+    certivo: ["yes", "Findings route to your reviewers for sign-off"],
     resman: ["yes", "Customizable approval workflows and centralized review"],
     appfolio: ["partial", "Customizable permissions and workflow automation"],
   },
 ];
 
 const tone: Record<Availability, string> = {
-  yes: "bg-emerald-50 text-emerald-800 ring-emerald-200",
-  partial: "bg-amber-50 text-amber-900 ring-amber-200",
+  yes: "bg-[#082B56]/[0.06] text-[#012447] ring-[#082B56]/25",
+  partial: "bg-[#FEC229]/15 text-[#5c4300] ring-[#FEC229]/60",
   "not-public": "bg-slate-50 text-slate-600 ring-slate-200",
 };
 
@@ -77,7 +77,7 @@ export default function CertivoIQComparisonChart() {
     <section className="bg-white px-5 py-16 text-slate-950 sm:px-8" aria-labelledby="comparison-title">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
-          <div className="flex items-center gap-2 text-cyan-700"><ShieldCheck className="h-5 w-5" /><span className="text-sm font-semibold uppercase tracking-[0.16em]">Platform comparison</span></div>
+          <div className="flex items-center gap-2 text-[#082B56]"><ShieldCheck className="h-5 w-5" /><span className="text-sm font-semibold uppercase tracking-[0.16em]">Platform comparison</span></div>
           <h2 id="comparison-title" className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Specialized compliance intelligence or an all-in-one PMS?</h2>
           <p className="mt-4 text-base leading-7 text-slate-600">CertivoIQ is positioned as a certification-review and compliance-intelligence layer. ResMan and AppFolio publicly position broader property-management suites with affordable-housing capabilities.</p>
         </div>
@@ -85,11 +85,11 @@ export default function CertivoIQComparisonChart() {
         <div className="mt-9 overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
           <table className="min-w-[1050px] border-collapse text-left">
             <caption className="sr-only">Feature and benefit comparison for CertivoIQ, ResMan, and AppFolio</caption>
-            <thead className="bg-slate-950 text-white">
+            <thead className="bg-[#012447] text-white">
               <tr>
                 <th className="w-[18%] p-4 font-semibold">Capability</th>
                 <th className="w-[22%] p-4 font-semibold">Enterprise benefit</th>
-                <th className="w-[20%] p-4 font-semibold text-cyan-300">CertivoIQ</th>
+                <th className="w-[20%] p-4 font-semibold text-[#FEC229]">CertivoIQ</th>
                 <th className="w-[20%] p-4 font-semibold">ResMan</th>
                 <th className="w-[20%] p-4 font-semibold">AppFolio</th>
               </tr>
@@ -110,8 +110,8 @@ export default function CertivoIQComparisonChart() {
 
         <p className="mt-4 text-xs leading-5 text-slate-500">Comparison reflects publicly described capabilities reviewed August 8, 2026. “Not publicly documented” is not a claim that a feature is unavailable. Confirm current scope, packaging, integrations, and pricing with each vendor before purchasing.</p>
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium">
-          <a className="text-cyan-700 underline underline-offset-4" href="https://www.myresman.com/solutions/affordable-compliance/" target="_blank" rel="noreferrer">ResMan affordable compliance source</a>
-          <a className="text-cyan-700 underline underline-offset-4" href="https://www.appfolio.com/markets/affordable-housing" target="_blank" rel="noreferrer">AppFolio affordable housing source</a>
+          <a className="text-[#082B56] underline underline-offset-4" href="https://www.myresman.com/solutions/affordable-compliance/" target="_blank" rel="noreferrer">ResMan affordable compliance source</a>
+          <a className="text-[#082B56] underline underline-offset-4" href="https://www.appfolio.com/markets/affordable-housing" target="_blank" rel="noreferrer">AppFolio affordable housing source</a>
         </div>
       </div>
     </section>

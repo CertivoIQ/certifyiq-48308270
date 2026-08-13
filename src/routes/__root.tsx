@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "CertivoIQ audits LIHTC, Section 8, HOME and HOTMA certifications with a deterministic rules engine, traceable AI extraction and portfolio risk scoring.",
+          "The compliance intelligence infrastructure for affordable housing. CertivoIQ reviews LIHTC, Section 8, HOME and HOTMA certifications with a deterministic rules engine, traceable evidence and portfolio risk scoring.",
       },
       { name: "author", content: "CertivoIQ" },
       { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },

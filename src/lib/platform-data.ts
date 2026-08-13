@@ -15,7 +15,7 @@ export const LEVEL_META: Record<
     label: "Compliant",
     tone: "seal",
     verdict: "Pass",
-    blurb: "All program rules satisfied. Ready for human final sign-off.",
+    blurb: "All program rules satisfied. Ready for reviewer sign-off.",
   },
   corrections: {
     label: "Corrections required",
@@ -52,12 +52,12 @@ export function verdictFor(file: CertFile): Verdict {
   return { level, verdict: LEVEL_META[level].verdict, score, passed, total, critical, curable };
 }
 
-/** Ordered correction steps the AI hands to the reviewer. */
+/** Ordered correction steps handed to the reviewer. */
 export function correctionSteps(file: CertFile) {
   const open = file.findings.filter((f) => f.status !== "approved");
   if (open.length === 0) {
     return [
-      { rule: "—", step: "No corrections outstanding — proceed to human final sign-off.", owner: "Reviewer", due: "Today" },
+      { rule: "—", step: "No corrections outstanding — proceed to reviewer sign-off.", owner: "Reviewer", due: "Today" },
     ];
   }
   return open.map((f, i) => ({
@@ -104,7 +104,7 @@ export const PLANS = [
     price: "$999",
     cadence: "/month",
     tagline: "Small owners (1–500 units)",
-    features: ["Up to 500 units", "1 state rule pack", "AI document review", "Compliance knowledge base", "Email support"],
+    features: ["Up to 500 units", "1 state rule pack", "Certification document review", "Compliance knowledge base", "Email support"],
     cta: "Choose Professional",
     featured: false,
   },
@@ -118,7 +118,7 @@ export const PLANS = [
       "Up to 10,000 units",
       "Multi-property portfolios",
       "State rule packs included",
-      "AI document processing (10,000 docs/mo)",
+      "Document processing (10,000 docs/mo)",
       "Customer Success Wizard",
       "Compliance knowledge base",
       "Priority support",
@@ -136,7 +136,7 @@ export const PLANS = [
       "Unlimited units",
       "Multi-state portfolios",
       "API access · SSO · white labeling",
-      "AI Onboarding & Migration Wizard",
+      "Guided Onboarding & Migration Wizard",
       "Custom integrations",
       "Contractual SLA",
     ],
@@ -165,8 +165,8 @@ export const PLANS = [
 
 export const ADDONS = [
   { name: "CertivoIQ Academy add-on", price: "$49 / user / month or $499 / property / month" },
-  { name: "High-volume AI document processing", price: "$3 per uploaded certification beyond plan allowance" },
-  { name: "AI Onboarding & Migration Wizard", price: "Included on every plan — no account rep required" },
+  { name: "High-volume document processing", price: "$3 per uploaded certification beyond plan allowance" },
+  { name: "Guided Onboarding & Migration Wizard", price: "Included on every plan — no account rep required" },
 ];
 
 /** Sales email already used for CertivoIQ outreach — no new address invented. */
@@ -234,7 +234,7 @@ export const LAUNCHPAD_STEPS = [
     id: 3,
     title: "Build your portfolio",
     lead: "Upload Excel, CSV or an export from your existing software — or create properties manually.",
-    detail: "AI maps your columns to CertivoIQ fields automatically.",
+    detail: "CertivoIQ maps your columns to platform fields automatically.",
     cta: "Import portfolio",
   },
   {
@@ -248,12 +248,12 @@ export const LAUNCHPAD_STEPS = [
     id: 5,
     title: "Upload documents",
     lead: "Drop the entire folder. Literally — thousands of PDFs.",
-    detail: "AI sorts income certifications, leases, verifications, EIVs, utility allowances and asset documents.",
+    detail: "CertivoIQ sorts income certifications, leases, verifications, EIVs, utility allowances and asset documents.",
     cta: "Upload documents",
   },
   {
     id: 6,
-    title: "AI reviews everything",
+    title: "CertivoIQ reviews everything",
     lead: "Reviewing files — 842 of 1,102.",
     detail: "Missing files · duplicate documents · possible income discrepancies · expired forms · missing signatures.",
     cta: "See what we found",
