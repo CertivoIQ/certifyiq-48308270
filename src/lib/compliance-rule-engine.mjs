@@ -431,3 +431,70 @@ export const REVIEW_DECISIONS = Object.freeze([
   "remediation_requested",
   "unable_to_determine",
 ]);
+
+export const DETERMINATION_STATUS = Object.freeze({
+  pass: "PASS",
+  fail: "FAIL",
+  pending: "PENDING",
+  notDetermined: "NOT_DETERMINED",
+});
+
+/**
+ * Convert one deterministic rule finding into the stable machine-readable
+ * record persisted by CertivoIQ. Evidence gates the calculation: a blocked
+ * rule never reports a PASS or FAIL calculation.
+ */
+export function createComplianceRecord(finding) {
+  if (!finding?.ruleId)
+    throw new TypeError("A deterministic rule finding is required.");
+
+  const blocked =
+    finding.ruleEvaluationStatus === RULE_EVALUATION_STATUS.blocked;
+  const calculationStatus = blocked
+    ? "NOT_EVALUATED"
+    : finding.status === FINDING_STATUS.pass
+      ? "PASS"
+      : finding.status === FINDING_STATUS.fail
+        ? "FAIL"
+        : "NOT_EVALUATED";
+  const determinationStatus = blocked
+    ? finding.evidenceStatus === EVIDENCE_STATUS.conflicting
+      ? DETERMINATION_STATUS.notDetermined
+      : DETERMINATION_STATUS.pending
+    : calculationStatus === "PASS"
+      ? DETERMINATION_STATUS.pass
+      : calculationStatus === "FAIL"
+        ? DETERMINATION_STATUS.fail
+        : DETERMINATION_STATUS.notDetermined;
+
+  return {
+    schemaVersion: "1.0",
+    engineBuild: finding.engineBuild,
+    fact: {
+      evidence: finding.evidenceRefs.map((reference) => ({
+        name: reference.field,
+        source: reference.documentRef,
+        page: reference.page,
+        snippet: reference.snippet,
+        confidence: reference.confidence,
+        humanVerified: reference.humanVerified,
+      })),
+    },
+    rule: {
+      id: finding.ruleId,
+      version: finding.ruleVersion,
+      packId: finding.rulePackId,
+      packVersion: finding.rulePackVersion,
+      jurisdiction: finding.jurisdiction,
+      citation: finding.citation,
+    },
+    calculation: {
+      status: calculationStatus,
+      evaluationStatus: finding.ruleEvaluationStatus,
+    },
+    evidenceStatus: finding.evidenceStatus,
+    determinationStatus,
+    blockingReasons: [...finding.blockingReasons],
+    explanation: finding.explanation,
+  };
+}
