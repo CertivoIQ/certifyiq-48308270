@@ -4,6 +4,7 @@ import {
   ENGINE_BUILD,
   FEDERAL_LIHTC_PACK,
   FINDING_STATUS,
+  createComplianceRecord,
   evaluateCertification,
   isStatePackUsable,
   signOffAllowed,
@@ -252,6 +253,91 @@ test("Test #12: conflicting multi-source income evidence blocks the rule engine"
         finding.explanation,
         /prevents this rule from being evaluated/i,
       );
+    },
+  );
+});
+
+test("structured compliance records keep evidence, calculation, and determination states separate", async (t) => {
+  const baseFacts = extract(CERTIFICATION_TEXT).filter(
+    (fact) =>
+      fact.field !== "household_annual_income" &&
+      fact.field !== "income_limit_60_pct",
+  );
+  const fact = (field, value, sourceDocumentRef) => ({
+    field,
+    value,
+    sourceDocumentRef,
+    page: 1,
+    snippet: `${field}: ${value}`,
+    confidence: 0.99,
+    humanVerified: true,
+    requiredForDecision: true,
+    provider: "deterministic-text",
+  });
+  const incomeFinding = (incomeFacts, includeLimit = true) =>
+    evaluateCertification({
+      facts: [
+        ...baseFacts,
+        ...incomeFacts,
+        ...(includeLimit
+          ? [fact("income_limit_60_pct", 45000, "rule-2026-001.json")]
+          : []),
+      ],
+    }).findings.find((finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-60");
+
+  await t.test("sufficient passing evidence creates PASS", () => {
+    const record = createComplianceRecord(
+      incomeFinding([
+        fact("household_annual_income", 42000, "employment-verification.pdf"),
+      ]),
+    );
+    assert.equal(record.schemaVersion, "1.0");
+    assert.equal(record.evidenceStatus, "RESOLVED");
+    assert.equal(record.calculation.status, "PASS");
+    assert.equal(record.calculation.evaluationStatus, "EVALUATED");
+    assert.equal(record.determinationStatus, "PASS");
+    assert.equal(record.rule.id, "LIHTC-INCOME-LIMIT-60");
+    assert.equal(record.fact.evidence.length, 2);
+  });
+
+  await t.test("sufficient failing evidence creates FAIL", () => {
+    const record = createComplianceRecord(
+      incomeFinding([
+        fact("household_annual_income", 48000, "employment-verification.pdf"),
+      ]),
+    );
+    assert.equal(record.evidenceStatus, "RESOLVED");
+    assert.equal(record.calculation.status, "FAIL");
+    assert.equal(record.determinationStatus, "FAIL");
+  });
+
+  await t.test("missing evidence creates PENDING without a calculation", () => {
+    const record = createComplianceRecord(
+      incomeFinding(
+        [fact("household_annual_income", 42000, "employment-verification.pdf")],
+        false,
+      ),
+    );
+    assert.equal(record.evidenceStatus, "NOT_DETERMINED");
+    assert.equal(record.calculation.status, "NOT_EVALUATED");
+    assert.equal(record.calculation.evaluationStatus, "BLOCKED");
+    assert.equal(record.determinationStatus, "PENDING");
+  });
+
+  await t.test(
+    "conflicting evidence creates NOT_DETERMINED without a calculation",
+    () => {
+      const record = createComplianceRecord(
+        incomeFinding([
+          fact("household_annual_income", 42000, "employment-verification.pdf"),
+          fact("household_annual_income", 46000, "paystub.pdf"),
+        ]),
+      );
+      assert.equal(record.evidenceStatus, "CONFLICTING");
+      assert.equal(record.calculation.status, "NOT_EVALUATED");
+      assert.equal(record.calculation.evaluationStatus, "BLOCKED");
+      assert.equal(record.determinationStatus, "NOT_DETERMINED");
+      assert.equal(record.fact.evidence.length, 3);
     },
   );
 });
