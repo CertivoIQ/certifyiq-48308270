@@ -177,4 +177,21 @@ export const createHfaSubmissionDraft = createServerFn({ method: "POST" })
       manifestSha256: manifest.manifest_sha256,
       existing: false,
     } as const;
+  });export const listHfaDestinationOptions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+
+    const { data, error } = await supabaseAdmin
+      .from("hfa_agencies")
+      .select("id, name, state_code")
+      .eq("is_demo", false)
+      .order("state_code")
+      .order("name");
+
+    if (error) throw error;
+
+    return data ?? [];
   });
