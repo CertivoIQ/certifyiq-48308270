@@ -436,3 +436,67 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
       manifestSha256: manifest.manifest_sha256,
     } as const;
   });
+export const getSubmissionAuthority = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { itemId: string }) => {
+    if (!data?.itemId || data.itemId.length > 100) {
+      throw new Error("A certification item id is required.");
+    }
+
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    const [itemResult, findingsResult, manifestResult] = await Promise.all([
+      supabase
+        .from("certification_import_items")
+        .select("id, status")
+        .eq("id", data.itemId)
+        .maybeSingle(),
+
+      supabase
+        .from("compliance_findings")
+        .select("id, status")
+        .eq("item_id", data.itemId),
+
+      supabase
+        .from("evidence_manifests")
+        .select("manifest_sha256, created_at")
+        .eq("review_id", data.itemId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (itemResult.error) throw itemResult.error;
+    if (findingsResult.error) throw findingsResult.error;
+    if (manifestResult.error) throw manifestResult.error;
+
+    const findings = findingsResult.data ?? [];
+    const findingIds = findings.map((finding) => finding.id);
+
+    const reviewsResult = findingIds.length
+      ? await supabase
+          .from("finding_reviews")
+          .select(
+            "finding_id, decision, reason, reviewer_id, created_at, manifest_sha256",
+          )
+          .in("finding_id", findingIds)
+          .order("created_at", { ascending: false })
+      : { data: [], error: null };
+
+    if (reviewsResult.error) throw reviewsResult.error;
+
+    const authority = evaluateSubmissionAuthority({
+      item: itemResult.data,
+      findings,
+      reviews: reviewsResult.data ?? [],
+      manifest: manifestResult.data,
+    });
+
+    return {
+      itemId: data.itemId,
+      ...authority,
+    } as const;
+  });
