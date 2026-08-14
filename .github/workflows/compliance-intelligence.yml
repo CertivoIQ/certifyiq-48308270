@@ -122,7 +122,7 @@ jobs:
           head -20 bun.lock
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      - name: Full compliance, HFA authority, SupportIQ, and launch tests
+      - name: Full compliance, HFA authority, SupportIQ, language, and launch tests
         run: |
           set -e
           bun run test:compliance
@@ -132,6 +132,7 @@ jobs:
           node --test scripts/test-hfa-submit-transition.mjs
           node --test scripts/test-delivery-receipt.mjs
           node --test scripts/test-support-triage.mjs
+          node --test scripts/test-customer-facing-language.mjs
           node --test scripts/test-launch-readiness.mjs
       - name: Lint
         run: bun run lint
