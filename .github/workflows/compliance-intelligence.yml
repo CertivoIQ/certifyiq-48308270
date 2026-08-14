@@ -59,6 +59,10 @@ jobs:
                   'Coverage for all 50 states',
                   'Nationwide federal baseline; state-specific packs require validation',
               ),
+              (
+                  '<Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link>',
+                  '<Link className="underline" to="/privacy">Privacy</Link><Link className="underline" to="/terms">Terms</Link><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link>',
+              ),
           ]
 
           changed = []
