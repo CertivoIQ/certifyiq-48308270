@@ -6,7 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { loadEnv } from "vite";
-import path from "node:path";
+
 
 // Server routes need non-VITE_ env vars (service role key, API keys) in process.env.
 const serverEnv = loadEnv(process.env['NODE_ENV'] ?? "development", process.cwd(), "");
@@ -19,17 +19,5 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    resolve: {
-      alias: {
-        // parse5 (via @react-email/render) imports entities subpaths that this
-        // installed entities version does not export — map them to real files.
-        "entities/decode": path.resolve(__dirname, "node_modules/entities/lib/esm/decode.js"),
-        "entities/escape": path.resolve(__dirname, "node_modules/entities/lib/esm/escape.js"),
-        "entities/lib/decode.js": path.resolve(__dirname, "node_modules/entities/lib/decode.js"),
-        "entities/lib/encode.js": path.resolve(__dirname, "node_modules/entities/lib/encode.js"),
-        entities: path.resolve(__dirname, "node_modules/entities/lib/esm/index.js"),
-      },
-    },
-
   },
 });
