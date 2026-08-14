@@ -57,6 +57,12 @@ export function PublicShell({
       </main>
       <footer className="border-t border-border py-6 text-center">
         <p className="cite text-[12px] text-muted-foreground">CertivoIQ — Find compliance risk before the auditor.</p>
+        <nav className="mt-2 flex items-center justify-center gap-4 text-[12px] text-muted-foreground" aria-label="Legal and support links">
+          <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+          <Link to="/terms" className="hover:text-foreground">Terms</Link>
+          <Link to="/security" className="hover:text-foreground">Security</Link>
+          <Link to="/contact-support" className="hover:text-foreground">Support</Link>
+        </nav>
       </footer>
     </div>
   );
