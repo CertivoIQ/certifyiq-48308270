@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { resolveRoutineSupportRequest } from "../src/lib/support-routine-replies.mjs";
 import {
   SUPPORT_DISPOSITION,
   SUPPORT_PRIORITY,
@@ -117,4 +118,28 @@ test("routine plan resolves without human notification", () => {
   assert.equal(plan.notifyHuman, false);
   assert.equal(plan.createCase, false);
   assert.ok(plan.permittedActions.includes("answer_from_approved_docs"));
+});
+
+test("routine upload question receives a deterministic self-service reply", () => {
+  const reply = resolveRoutineSupportRequest("How do I upload a certification?");
+  assert.match(reply, /certification review upload workflow/i);
+  assert.match(reply, /human approval/i);
+});
+
+test("NOT_DETERMINED explanation remains a blocking-state explanation", () => {
+  const reply = resolveRoutineSupportRequest("What does NOT_DETERMINED mean?");
+  assert.match(reply, /blocking state/i);
+  assert.match(reply, /not a pass or fail/i);
+});
+
+test("submission guidance does not imply external delivery", () => {
+  const reply = resolveRoutineSupportRequest("How does submission work?");
+  assert.match(reply, /does not by itself mean/i);
+  assert.match(reply, /external housing authority/i);
+});
+
+test("routine billing navigation escalates disputes instead of promising refunds", () => {
+  const reply = resolveRoutineSupportRequest("Where is my invoice?");
+  assert.match(reply, /Billing/i);
+  assert.match(reply, /human review/i);
 });
