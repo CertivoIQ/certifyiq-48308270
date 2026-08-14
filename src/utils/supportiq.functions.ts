@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { resolveRoutineSupportRequest } from "@/lib/support-routine-replies.mjs";
 import {
   SUPPORT_PRIORITY,
   buildSupportActionPlan,
@@ -44,10 +45,11 @@ export const triageSupportRequest = createServerFn({ method: "POST" })
 
     if (!actionPlan.createCase) {
       return {
-        status: "AUTO_RESOLUTION_ELIGIBLE",
+        status: "AUTO_RESOLVED",
         classification,
         actionPlan,
         caseCreated: false,
+        reply: resolveRoutineSupportRequest(data.message),
       } as const;
     }
 
@@ -85,5 +87,9 @@ export const triageSupportRequest = createServerFn({ method: "POST" })
       actionPlan,
       caseCreated: true,
       supportCase,
+      reply:
+        classification.priority === SUPPORT_PRIORITY.security
+          ? "I created an immediate security/privacy escalation. Do not include additional sensitive resident data unless an authorized human reviewer requests it."
+          : `I created support case ${supportCase.case_number} for human review.`,
     } as const;
   });
