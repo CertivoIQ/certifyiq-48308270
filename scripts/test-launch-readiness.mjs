@@ -8,6 +8,8 @@ const requiredFiles = [
   "src/routes/index.tsx",
   "src/routes/welcome.tsx",
   "src/routes/pricing.tsx",
+  "src/routes/privacy.tsx",
+  "src/routes/terms.tsx",
   "src/routes/security.tsx",
   "src/routes/methodology.tsx",
   "src/routes/contact-support.tsx",
@@ -70,6 +72,15 @@ test("SupportIQ remains authenticated and human-gated for risky support", () => 
   assert.match(triage, /P1_BILLING/);
   assert.match(triage, /P2_COMPLIANCE_REVIEW/);
   assert.match(triage, /approve_certification/);
+});
+
+test("privacy and terms are public and discoverable", () => {
+  const shell = read("src/components/public-shell.tsx");
+  const sitemap = read("public/sitemap.xml");
+  assert.match(shell, /to=["']\/privacy["']/);
+  assert.match(shell, /to=["']\/terms["']/);
+  assert.match(sitemap, /certivoiq\.com\/privacy/);
+  assert.match(sitemap, /certivoiq\.com\/terms/);
 });
 
 test("sitemap leads with public marketing and excludes authenticated dashboard", () => {
