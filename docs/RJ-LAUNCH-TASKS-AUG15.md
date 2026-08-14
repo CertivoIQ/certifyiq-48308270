@@ -75,6 +75,15 @@ Complete the remaining founder-specific filing inputs:
 - adopt operating agreement;
 - open company banking/accounting.
 
+### 8. Submit the public site for search indexing
+The launch audit did not find `certivoiq.com` in public search results yet. After the production release:
+- verify the domain in Google Search Console;
+- submit `https://certivoiq.com/sitemap.xml`;
+- request indexing for `/welcome`, `/pricing`, `/privacy`, `/terms`, `/security`, and `/methodology`;
+- optionally repeat through Bing Webmaster Tools.
+
+This is a discoverability task, not a blocker for the site to function on launch day.
+
 ## LAUNCH POSITIONING — USE THIS
 
 Launch as **Early Access / Founding Customer Launch** until production integrations and jurisdiction-specific rule packs have been independently validated.
