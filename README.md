@@ -1,666 +1,100 @@
-# CertivoIQ 
+# CertivoIQ
 
-I have uploaded a projuect ive been working on that i need help with creating. Build me a LIHTC, SEC8, HOME, HOTMA affordable housing compliance platform. Where an AI agent calculates TICs, and certifications for accuracy and program compliance. It should be available for all 50 states. It should be called CertivoIQ instead of Certivo. It should have be able to review and soft approve all certifications according to program. It should have a section for new compliance reviewers to learn how to audit a certification. It should b3 called KnowledgeIQ or something similar along those lines. It should provide training on affordable housing programs with certificates of achievement at the end of the module courses. 
+**AI Compliance Intelligence for Affordable Housing**
 
-What I would like to add
+CertivoIQ is an affordable-housing compliance intelligence platform being built to help owners, management companies, compliance teams, and housing agencies review certification evidence, apply deterministic program rules, identify findings, document human decisions, and maintain defensible audit trails.
 
-1. HOTMA Compliance Engine
+## Mission
 
-The specification mentions HOTMA, but I would expand it into its own engine.
+Reduce preventable affordable-housing compliance errors by combining traceable document intelligence, deterministic rules, human approval controls, and portfolio-level risk visibility.
 
-Instead of:
+## Product Principles
 
-Section 8 Rules
+- **Evidence before conclusions.** Findings should trace to source evidence.
+- **Deterministic compliance decisions.** AI may assist with extraction and explanation; authoritative rule outcomes should be reproducible.
+- **Human authority.** High-impact certification and regulatory actions remain subject to authorized human review.
+- **Fail closed.** Missing, stale, conflicting, or unauthorized evidence must not silently become a compliance approval.
+- **Versioned rules.** Findings should retain the rule version and authority used at decision time.
+- **Auditable delivery.** Internal submission status must remain distinct from verified external delivery.
 
-we should have
+## Intended Compliance Scope
 
-HOTMA Rules Engine
+CertivoIQ is being designed for layered affordable-housing compliance workflows including LIHTC, HUD/Section 8, HOME, HOTMA, state housing finance agency requirements, and related property-specific controls. Regulatory coverage must be treated as versioned and jurisdiction-specific; the repository should not imply that every jurisdiction or integration is production-ready until it has been implemented and verified.
 
+## Core Platform Capabilities
 
+### Compliance Intelligence
+- Certification evidence ingestion and structured extraction
+- Evidence confidence and human verification
+- Multi-source conflict detection
+- Deterministic PASS / FAIL / NOT_DETERMINED outcomes
+- Rule citations, effective dates, versions, and revision history
+- Finding remediation and approval history
 
-Income exclusions
+### HFA Submission Authority
+- Human-approved certification authority
+- Immutable evidence-manifest concepts
+- Destination authorization controls
+- Duplicate and stale-submission protection
+- Separation of internal `submitted` state from verified external delivery
+- External delivery receipt foundation
 
+### Portfolio Intelligence
+- Property and portfolio audit-readiness concepts
+- Finding trends and recurrence analysis
+- Risk indicators and training-intervention concepts
+- Executive visibility into compliance exposure
 
+### KnowledgeIQ Vision
+- Affordable-housing compliance training
+- Reviewer education and guided audit workflows
+- Program-specific learning modules and achievement records
 
-Asset calculations
+## Verification Status
 
+The GitHub CI gate runs the compliance intelligence, vertical-slice, certification-authority, transmission-authority, HFA submit-transition, and external-delivery-receipt test suites, followed by lint and a production build. Production claims should be based on implemented and tested behavior, not roadmap items.
 
+## Technology
 
-Hardship determinations
+- TypeScript / React
+- TanStack Start / Router
+- Tailwind CSS
+- Supabase-backed application services
+- Deterministic compliance domain modules
+- GitHub Actions CI
 
+See `package.json` and the source tree for the current implementation rather than relying on older architectural proposals.
 
+## Security and Compliance Posture
 
-Safe Harbor verification
+CertivoIQ is designed around least privilege, explicit authority, auditability, evidence provenance, and human approval for consequential actions. Security, privacy, AI data-use, retention, and regulatory representations require continuing legal and technical review before enterprise deployment.
 
+## Intellectual Property
 
+Copyright (c) 2026 CertivoIQ. All rights reserved.
 
-Asset threshold rules
+This repository is proprietary and confidential unless a separate written license states otherwise. No permission is granted to copy, modify, distribute, sublicense, reverse engineer, or create derivative commercial products from proprietary CertivoIQ source code, documentation, rule packages, workflows, or original interface assets except as expressly authorized in writing.
 
-
-
-Medical deduction rules
-
-
-
-Interim certifications
-
-
-
-EIV reconciliation
-
-
-
-Over-income monitoring
-
-This becomes a separate rules package that can evolve independently.
-
-2. Multi-State Rule Packs
-
-Right now everything assumes Tennessee.
-
-Instead build:
-
-Core Rule Engine
-
-
-
-↓
-
-
-
-State Plugin
-
-
-
-↓
-
-
-
-County Plugin
-
-
-
-↓
-
-
-
-PHA Plugin
-
-
-
-↓
-
-
-
-Property Plugin
-
-Then Certivo can support
-
-Tennessee
-
-Georgia
-
-Alabama
-
-Texas
-
-Florida
-
-California
-
-without rewriting the application.
-
-3. HUD Rule Versioning
-
-One of the biggest weaknesses in affordable housing software is that rules change.
-
-I'd build:
-
-Rule Version
-
-
-
-Effective Date
-
-
-
-Expiration Date
-
-
-
-Authority
-
-
-
-Superseded By
-
-
-
-Citation
-
-
-
-Revision History
-
-Every finding should permanently record
-
-Which rule version produced the finding.
-
-That makes audits far more defensible.
-
-4. AI Extraction Confidence
-
-Instead of extracting values only:
-
-Income
-
-
-
-$38,440
-
-
-
-Confidence 99.3%
-
-
-
-Source:
-
-
-
-Paystub Page 2
-
-
-
-Coordinates
-
-
-
-x,y
-
-
-
-Image snippet
-
-
-
-OCR text
-
-
-
-Human verified?
-
-Every extracted field becomes traceable.
-
-5. Document Intelligence
-
-Rather than simply storing PDFs:
-
-Lease
-
-
-
-↓
-
-
-
-Pages
-
-
-
-↓
-
-
-
-Paragraphs
-
-
-
-↓
-
-
-
-Fields
-
-
-
-↓
-
-
-
-Evidence
-
-Every compliance finding should reference the exact evidence.
-
-Example:
-
-LIHTC-005
-
-
-
-Student Rule
-
-
-
-Evidence
-
-
-
-Lease.pdf
-
-
-
-Page 14
-
-
-
-Paragraph 3
-
-
-
-Highlighted
-
-Auditors love this.
-
-6. Compliance Knowledge Graph
-
-I'd create relationships like
-
-Tenant
-
-
-
-↓
-
-
-
-Unit
-
-
-
-↓
-
-
-
-Property
-
-
-
-↓
-
-
-
-Owner
-
-
-
-↓
-
-
-
-Program
-
-
-
-↓
-
-
-
-Funding Source
-
-
-
-↓
-
-
-
-Recert
-
-
-
-↓
-
-
-
-Inspection
-
-
-
-↓
-
-
-
-Violation
-
-
-
-↓
-
-
-
-Letter
-
-
-
-↓
-
-
-
-Corrective Action
-
-This enables impact analysis.
-
-Example:
-
-"Show every household affected by HOTMA medical deduction changes."
-
-7. AI Copilot
-
-Instead of AI only writing letters:
-
-The compliance specialist should be able to ask:
-
-Why did this fail?
-
-Explain LIHTC-004.
-
-Show the HUD citation.
-
-Has this household failed before?
-
-Recommend remediation.
-
-The deterministic engine supplies facts.
-
-The AI explains them.
-
-8. Compliance Timeline
-
-Imagine a timeline like GitHub history.
-
-Move In
-
-
-
-↓
-
-
-
-Initial Certification
-
-
-
-↓
-
-
-
-Verification
-
-
-
-↓
-
-
-
-Finding
-
-
-
-↓
-
-
-
-Correction
-
-
-
-↓
-
-
-
-Approval
-
-
-
-↓
-
-
-
-Interim
-
-
-
-↓
-
-
-
-HOTMA Change
-
-
-
-↓
-
-
-
-Audit
-
-
-
-↓
-
-
-
-8823 Risk
-
-
-
-↓
-
-
-
-Recertification
-
-One screen.
-
-Everything.
-
-9. Risk Scoring
-
-Instead of simply
-
-PASS
-
-FAIL
-
-I'd calculate
-
-Property Risk Score
-
-
-
-87
-
-
-
-Medium Risk
-
-
-
-High probability of THDA findings
-
-
-
-Reasons
-
-
-
-17 overdue recerts
-
-
-
-5 missing EIVs
-
-
-
-3 NAUR violations
-
-
-
-2 HOTMA discrepancies
-
-Management immediately knows where to focus.
-
-10. Executive Dashboard
-
-For ownership groups:
-
-Portfolio
-
-
-
-185 Properties
-
-
-
-↓
-
-
-
-2,400 Units
-
-
-
-↓
-
-
-
-Open Findings
-
-
-
-↓
-
-
-
-Upcoming Recerts
-
-
-
-↓
-
-
-
-Upcoming Audits
-
-
-
-↓
-
-
-
-8823 Exposure
-
-
-
-↓
-
-
-
-HOTMA Readiness
-
-
-
-↓
-
-
-
-NSPIRE Readiness
-
-Technology Stack
-
-Based on your specification, I would recommend:
-
-Frontend: React + Next.js + TypeScript
-
-UI: Tailwind CSS + shadcn/ui
-
-Backend: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
-
-Rules Engine: Python microservice (matching your reference implementation) or a TypeScript port with identical deterministic behavior
-
-AI: OpenAI for OCR post-processing, extraction, summaries, and letter drafting
-
-OCR: Azure Document Intelligence or Google Document AI for high-accuracy document extraction
-
-Search: PostgreSQL + pgvector for semantic search across compliance documents
-
-Background Jobs: Supabase Edge Functions + scheduled jobs
-
-Notifications: Resend (email) and Twilio (SMS)
-
-Reporting: PDF generation with digitally signed audit reports
-
-Development Roadmap
-
-I would organize development into phases:
-
-Platform Foundation – authentication, organizations, properties, units, users, tenant files, document storage, and audit logging.
-
-AI Document Pipeline – OCR, document classification, structured extraction, confidence scoring, and human verification.
-
-Deterministic Compliance Engine – LIHTC, HOME, Project-Based Section 8, HOTMA, and layered-program rules with versioned rule packages.
-
-Compliance Operations – findings, remediation workflow, approvals, recertification tracking, audit scheduling, notifications, and letter generation.
-
-Enterprise Features – portfolio dashboards, risk analytics, executive reporting, THOMAS export, NSPIRE tracking, API integrations, and AI compliance copilot.
-
-I can help you build this as a production-grade SaaS. My recommendation is to treat your uploaded specification as the functional requirements document and work together to produce a complete enterprise package consisting of:
-
-System Architecture Document
-
-Database Design Specification
-
-REST/GraphQL API Specification
-
-AI Extraction Specification
-
-Rules Engine Specification
-
-HOTMA Rule Pack
-
-HOME Rule Pack
-
-LIHTC Rule Pack
-
-Section 8 Rule Pack
-
-UI/UX Design System
-
-Development Sprint Plan (20–30 sprints)
-
-Comprehensive testing strategy with compliance scenarios and regulatory regression tests
-
-That would provide everything needed for a development team—or AI coding tools—to build Certivo into a scalable, enterprise-ready affordable housing compliance platform.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://certivoiq.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/8decd012-111f-4da0-92f4-244de600f8b7).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Third-party and open-source components remain subject to their respective licenses. Contributors and contractors should have written confidentiality and intellectual-property assignment agreements in place.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+git clone <repository-url>
+cd certifyiq-48308270
+bun install --frozen-lockfile
+bun run test:compliance
+bun run test:slice
+bun run lint
+bun run build
 ```
+
+Additional authority and delivery tests are executed by `.github/workflows/compliance-intelligence.yml`.
+
+## Legal Notice
+
+CertivoIQ is software intended to assist trained housing-compliance professionals. It is not a substitute for legal advice, agency determinations, owner policy, or required human review. Regulatory authorities and program requirements control where they conflict with software output.
+
+## Confidentiality
+
+Investor, customer, and diligence access to non-public technical materials should be provided under appropriate confidentiality terms. Do not publish secrets, production credentials, resident PII, protected tenant records, or trade-secret rule implementation details in public repositories or marketing materials.
