@@ -8,7 +8,7 @@ export const Route = createFileRoute("/demo-dashboard")({
       {
         name: "description",
         content:
-          "Explore a live sample CertivoIQ portfolio: AI-reviewed LIHTC, Section 8, HOME and HOTMA certifications, findings and risk scoring — no signup required.",
+          "Explore a live sample CertivoIQ portfolio: reviewed LIHTC, Section 8, HOME and HOTMA certifications, findings and risk scoring — no signup required.",
       },
       { property: "og:title", content: "CertivoIQ Demo Dashboard" },
       {

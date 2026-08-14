@@ -14,7 +14,7 @@ const rows: Array<{
     benefit: "Finds document-level compliance issues before final approval",
     certivo: ["yes", "Purpose-built review with Pass/Fail findings"],
     resman: ["partial", "Workflow guardrails and critical-point error checks"],
-    appfolio: ["partial", "AI workflows and certification milestone monitoring"],
+    appfolio: ["partial", "Automated workflows and certification milestone monitoring"],
   },
   {
     capability: "Cited findings and correction steps",

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/marketing-kit")({
 const LANDING = "https://certivoiq.com/welcome";
 
 const STATS = [
-  { value: "4 min", label: "Average AI review per certification", tone: "navy" },
+  { value: "4 min", label: "Average review per certification", tone: "navy" },
   { value: "50", label: "States with maintained rule packs", tone: "navy" },
   { value: "6", label: "Programs: LIHTC · HOME · S8 · HOTMA · RD · Bond", tone: "navy" },
   { value: "100%", label: "Files scored, cited, human signed off", tone: "green" },
@@ -28,7 +28,7 @@ const STATS = [
 
 const BARS = [
   { label: "Manual file review", value: "~41 min per certification", pct: 100, color: "var(--print-red)" },
-  { label: "CertivoIQ AI review", value: "~4 min + human sign-off", pct: 12, color: "var(--print-green)" },
+  { label: "CertivoIQ certification review", value: "~4 min + human sign-off", pct: 12, color: "var(--print-green)" },
   { label: "Rule checks applied manually", value: "most items, most of the time", pct: 62, color: "var(--print-amber)" },
   { label: "Rule checks applied by CertivoIQ", value: "every item, every time", pct: 100, color: "var(--print-green)" },
 ];
@@ -38,7 +38,7 @@ const BENEFITS = [
   "Standardized reviews — identical rule logic applied by every reviewer, in every state.",
   "Higher file throughput without adding compliance headcount.",
   "CertivoIQ Academy training with Certificates of Achievement for new reviewers.",
-  "Merlin, the AI compliance assistant, cites the governing rule the moment a reviewer gets stuck.",
+  "Merlin, the compliance assistant, cites the governing rule the moment a reviewer gets stuck.",
 ];
 
 const RISKS = [
@@ -78,7 +78,7 @@ function MarketingKitPage() {
         <section className="print-avoid-break mt-6"><h3 className="cite font-mono">HOW ENTERPRISES BENEFIT</h3><ul className="mt-3 space-y-2">{BENEFITS.map((b) => <li key={b} className="flex gap-2 text-[13px] leading-relaxed"><span className="mt-[7px] size-1.5 shrink-0 rounded-full bg-gold" />{b}</li>)}</ul></section>
         <section className="print-avoid-break mt-6"><h3 className="cite font-mono">PLANS &amp; PRICING</h3><div className="mt-3 divide-y divide-border">{PLANS.map((p) => <div key={p.id} className="flex items-baseline justify-between gap-4 py-2"><div><p className="text-[13px] font-medium">{p.name}</p><p className="text-[11.5px] text-muted-foreground">{p.tagline}</p></div><p className="whitespace-nowrap font-display text-[15px]">{p.price}<span className="text-[11.5px] text-muted-foreground">{p.cadence}</span></p></div>)}</div><ul className="mt-3 space-y-1">{ADDONS.map((a) => <li key={a.name} className="text-[11.5px] text-muted-foreground">{a.name} — {a.price}</li>)}</ul></section>
         <section className="print-avoid-break mt-6"><h3 className="cite font-mono text-reject">THE COST OF NON-COMPLIANCE</h3><div className="mt-3 grid gap-3 sm:grid-cols-2">{RISKS.map((r) => <div key={r.risk} className="border-l-2 border-reject pl-3"><p className="text-[13px] font-medium">{r.risk}</p><p className="mt-0.5 text-[12px] text-reject">{r.cost}</p></div>)}</div></section>
-        <section className="print-avoid-break mt-7 rounded-lg border border-primary/25 bg-accent px-5 py-5 text-center"><p className="font-display text-[18px] text-accent-foreground">Watch the 4-minute walkthrough, then run 3 full AI certification reviews free</p><p className="mt-1.5 text-[13px] text-muted-foreground">No card required · use the reviews when you're ready</p><p className="mt-3 font-mono text-[14px] font-semibold">{LANDING}</p><Button className="no-print mt-4" asChild><a href={LANDING} target="_blank" rel="noreferrer">Open the landing page</a></Button></section>
+        <section className="print-avoid-break mt-7 rounded-lg border border-primary/25 bg-accent px-5 py-5 text-center"><p className="font-display text-[18px] text-accent-foreground">Watch the 4-minute walkthrough, then run 3 full certification reviews free</p><p className="mt-1.5 text-[13px] text-muted-foreground">No card required · use the reviews when you're ready</p><p className="mt-3 font-mono text-[14px] font-semibold">{LANDING}</p><Button className="no-print mt-4" asChild><a href={LANDING} target="_blank" rel="noreferrer">Open the landing page</a></Button></section>
         <footer className="mt-6 border-t border-border pt-4"><p className="cite">CertivoIQ · hello@certivoiq.com · Leave-behind for agent use — figures reflect platform benchmarks.</p></footer>
       </article>
     </div>

@@ -28,12 +28,12 @@ export const Route = createFileRoute("/_authenticated/billing")({
       {
         name: "description",
         content:
-          "Manage your CertivoIQ plan: see unit, property and AI document usage against your allowance, change plans, update payment details and cancel or resume your subscription.",
+          "Manage your CertivoIQ plan: see unit, property and document processing usage against your allowance, change plans, update payment details and cancel or resume your subscription.",
       },
       { property: "og:title", content: "Account & Billing — CertivoIQ" },
       {
         property: "og:description",
-        content: "Plan capacity, AI document usage and subscription controls in one place.",
+        content: "Plan capacity, document processing usage and subscription controls in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -153,7 +153,7 @@ function BillingPage() {
                   {isActive && cancelAtPeriodEnd &&
                     `Full access until ${endsAt?.toLocaleDateString() ?? "period end"}. After that your certifications are held for 14 days, then permanently deleted.`}
                   {!isActive && account.isTrial && !trialExpired &&
-                    "Your 3 FREE certification reviews includes a capped portfolio and AI document allowance. Subscribe any time — everything you uploaded is kept."}
+                    "Your 3 FREE certification reviews includes a capped portfolio and document processing allowance. Subscribe any time — everything you uploaded is kept."}
                   {!isActive && trialExpired &&
                     `Your trial has ended. Files are held until ${account.filesPurgeAt ? new Date(account.filesPurgeAt).toLocaleDateString() : "14 days after trial end"}, then permanently deleted.`}
                 </p>
@@ -202,7 +202,7 @@ function BillingPage() {
 
           <Panel
             className="mt-4"
-            title="AI document processing this period"
+            title="Document processing this period"
             description={`Included in your plan allowance; extra certifications are billed at $${AI_DOC_OVERAGE_AMOUNT_USD} each`}
             bodyClassName="p-5"
           >

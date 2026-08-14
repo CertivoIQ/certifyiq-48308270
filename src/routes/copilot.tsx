@@ -9,16 +9,16 @@ import { Sparkles, User } from "lucide-react";
 export const Route = createFileRoute("/copilot")({
   head: () => ({
     meta: [
-      { title: "AI Compliance Copilot — CertivoIQ" },
+      { title: "Compliance Assistant — CertivoIQ" },
       {
         name: "description",
         content:
           "Ask why a certification failed, get the HUD or IRS citation, household history and recommended remediation — grounded in deterministic engine output.",
       },
-      { property: "og:title", content: "AI Compliance Copilot — CertivoIQ" },
+      { property: "og:title", content: "Compliance Assistant — CertivoIQ" },
       {
         property: "og:description",
-        content: "The engine supplies the facts. The copilot explains them, with citations a reviewer can check.",
+        content: "The engine supplies the facts. The Compliance Assistant explains them, with citations a reviewer can check.",
       },
       { property: "og:url", content: "https://certivoiq.com/copilot" },
     ],
@@ -86,7 +86,7 @@ function CopilotPage() {
   }
 
   return (
-    <AppShell title="AI compliance copilot" subtitle="Deterministic facts in, plain-language explanation out — every answer cited">
+    <AppShell title="Compliance Assistant" subtitle="Deterministic facts in, plain-language explanation out — every answer cited">
       <div className="grid gap-4 lg:grid-cols-[1fr_290px]">
         <Panel bodyClassName="p-0">
           <div className="space-y-5 p-5">
@@ -101,7 +101,7 @@ function CopilotPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="cite text-[10.5px] uppercase tracking-[0.14em]">
-                    {m.role === "agent" ? "CertivoIQ copilot" : "You"}
+                    {m.role === "agent" ? "CertivoIQ Compliance Assistant" : "You"}
                   </p>
                   <p className="mt-1 text-[13.5px] leading-relaxed whitespace-pre-line">{m.text}</p>
                   {m.cites && (
@@ -153,7 +153,7 @@ function CopilotPage() {
           </Panel>
           <Panel title="Guardrails">
             <ul className="space-y-2.5 text-[12.5px] text-muted-foreground">
-              <li>The copilot never issues a PASS/FAIL determination.</li>
+              <li>The Compliance Assistant never issues a PASS/FAIL determination.</li>
               <li>Every claim resolves to a rule version, a citation, or an extracted field with a source page.</li>
               <li>Answers are logged to the audit trail alongside the file they reference.</li>
             </ul>

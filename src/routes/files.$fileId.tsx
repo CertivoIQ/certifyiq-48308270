@@ -203,7 +203,7 @@ function FileReview() {
 
             <TabsContent value="extraction" className="mt-4">
               <Panel
-                title="AI extraction with confidence"
+                title="Document extraction confidence"
                 description="Every value traced to its source document, page and OCR text — human verification tracked"
                 bodyClassName="p-0"
               >
@@ -278,7 +278,7 @@ function FileReview() {
         </div>
 
         <div className="space-y-4">
-          <Panel title="AI review verdict" description="Scored against this property's assigned program rule packs">
+          <Panel title="Compliance review verdict" description="Scored against this property's assigned program rule packs">
             {(() => {
               const v = verdictFor(file);
               const meta = LEVEL_META[v.level];
@@ -375,9 +375,9 @@ function FileReview() {
             </ul>
           </Panel>
 
-          <Panel title="Ask the copilot">
+          <Panel title="Ask the compliance assistant">
             <p className="text-[13px] text-muted-foreground">
-              The deterministic engine supplies the facts; the copilot explains them in plain language with citations.
+              The deterministic engine supplies the facts; the Compliance Assistant explains them in plain language with citations.
             </p>
             <Button className="mt-3 w-full" variant="outline" size="sm" asChild>
               <Link to="/copilot">Why did this fail?</Link>

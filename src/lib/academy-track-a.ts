@@ -262,7 +262,7 @@ export const TRACK_A: AcademyCourse[] = [
         minutes: 50,
         topics: ["Queue design", "Escalation paths", "Soft approval"],
         lesson:
-          "A central queue with automated triage lets specialists handle only the exceptions. AI pre-review can soft-approve clean files and route anything with a critical finding straight to a manager for human final sign-off.",
+          "A central queue with automated triage lets specialists handle only the exceptions. automated pre-review can soft-approve clean files and route anything with a critical finding straight to a manager for human final sign-off.",
       },
       {
         title: "Audit and monitoring calendars",
@@ -280,7 +280,7 @@ export const TRACK_A: AcademyCourse[] = [
         explain: "Reviews must be reproducible against the rules in effect at the time.",
       },
       {
-        q: "Which file should bypass AI soft approval and go to a human manager?",
+        q: "Which file should bypass automated soft approval and go to a human manager?",
         options: ["A clean recertification", "A file with an open critical finding", "A studio unit file", "A file with no assets"],
         answer: 1,
         explain: "Critical findings always require human review before any approval.",
