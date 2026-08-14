@@ -137,7 +137,7 @@ function WelcomePage() {
               <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-muted-foreground">
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> No sales call required</span>
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Findings tied to source evidence</span>
-                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Coverage for all 50 states</span>
+                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Nationwide federal baseline; state-specific packs require validation</span>
               </div>
               <div className="mt-8 grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-border bg-card px-3 py-3"><p className="font-mono text-[10px] text-gold">01 · UPLOAD</p><p className="mt-1 text-[12px] font-medium">Bring one certification file</p></div>
@@ -300,7 +300,7 @@ function WelcomePage() {
       <footer className="border-t border-border py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 text-center sm:flex-row sm:text-left lg:px-8">
           <div><p className="font-display text-sm">Certivo<span className="text-gold">IQ</span></p><p className="mt-1 text-[11px] text-muted-foreground">FIND COMPLIANCE RISK BEFORE THE AUDITOR.</p></div>
-          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
+          <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/privacy">Privacy</Link><Link className="underline" to="/terms">Terms</Link><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
         </div>
         <p className="cite mt-4 text-center">{coverageClaim()}</p>
       </footer>

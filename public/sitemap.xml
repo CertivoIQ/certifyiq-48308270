@@ -7,6 +7,8 @@
   <url><loc>https://certivoiq.com/rules</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://certivoiq.com/security</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://certivoiq.com/methodology</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://certivoiq.com/privacy</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://certivoiq.com/terms</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://certivoiq.com/copilot</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://certivoiq.com/trial</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://certivoiq.com/contact-support</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>

@@ -90,7 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         property: "og:description",
-        content: "Deterministic compliance auditing across all 50 states, plus the CertivoIQ Academy training portal.",
+        content: "Deterministic federal-baseline compliance auditing nationwide, with state-specific rule packs activated only after validation, plus the CertivoIQ Academy training portal.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
