@@ -56,7 +56,7 @@ export const getAccountState = createServerFn({ method: "POST" })
   });
 
 /**
- * Meters AI document processing. Documents inside the plan allowance are free;
+ * Meters document processing. Documents inside the plan allowance are free;
  * anything beyond a paid plan allowance is billed at $3 per certification onto
  * the next invoice. The FREE review program is capped at exactly three
  * certifications and never creates an overage charge.
@@ -119,7 +119,7 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
           customer: sub.stripe_customer_id,
           pricing: { price: price.id },
           quantity: billedNow,
-          description: `AI document processing beyond plan allowance (${billedNow} certifications)`,
+          description: `Document processing beyond plan allowance (${billedNow} certifications)`,
         } as Parameters<typeof stripe.invoiceItems.create>[0]);
       } catch (error) {
         return { error: getStripeErrorMessage(error), blocked: true };

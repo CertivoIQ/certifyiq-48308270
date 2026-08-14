@@ -13,7 +13,7 @@ export const Route = createFileRoute("/files/")({
       {
         name: "description",
         content:
-          "AI-assisted review queue for Tenant Income Certifications: extraction confidence, deterministic findings, and soft approval by program.",
+          "Automated review queue for Tenant Income Certifications: extraction confidence, deterministic findings, and soft approval by program.",
       },
       { property: "og:title", content: "Certification Review Queue — CertivoIQ" },
       {
@@ -42,7 +42,7 @@ function FilesPage() {
   return (
     <AppShell
       title="Certification review queue"
-      subtitle="Deterministic rule evaluation with AI extraction — reviewer soft-approves by program"
+      subtitle="Deterministic rule evaluation with document extraction — reviewer soft-approves by program"
       actions={
         <Button size="sm" variant="outline">
           Import documents

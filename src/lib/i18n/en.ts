@@ -24,7 +24,7 @@ export const en = {
   "nav.files": "Certifications",
   "nav.findings": "Findings",
   "nav.rules": "Rule packs",
-  "nav.copilot": "AI Copilot",
+  "nav.copilot": "Compliance Assistant",
   "nav.academy": "CertivoIQ Academy",
   "nav.launchpad": "LaunchPad",
   "nav.trial": "My FREE certification reviews",

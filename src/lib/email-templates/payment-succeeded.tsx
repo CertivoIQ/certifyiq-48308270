@@ -59,7 +59,7 @@ const Email = ({
         <Heading style={heading}>Thank you — your payment went through</Heading>
         <Text style={text}>
           {name ? `Hi ${name},` : 'Hi there,'} we received your payment and your CertivoIQ account is fully active. Your
-          plan capacity and AI document allowance are available right away.
+          plan capacity and document processing allowance are available right away.
         </Text>
 
         <Hr style={hr} />

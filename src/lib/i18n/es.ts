@@ -27,7 +27,7 @@ export const es: Dictionary = {
   "nav.files": "Certificaciones",
   "nav.findings": "Hallazgos",
   "nav.rules": "Paquetes de reglas",
-  "nav.copilot": "Copiloto de IA",
+  "nav.copilot": "Asistente de Cumplimiento",
   "nav.academy": "CertivoIQ Academy",
   "nav.launchpad": "LaunchPad",
   "nav.trial": "Mis revisiones de certificación gratuitas",

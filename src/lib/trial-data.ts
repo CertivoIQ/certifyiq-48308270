@@ -22,7 +22,7 @@ export const TRIAL_TASKS = [
   {
     id: "upload-cert",
     title: "Upload your first certification",
-    lead: "Drop a TIC, income certification or recert packet. AI scores it Pass/Fail with cited rules.",
+    lead: "Drop a TIC, income certification or recert packet. CertivoIQ evaluates it with cited rules.",
     merlin: "Give me your ugliest file. I love a challenge.",
     cta: "Upload a certification",
     to: "/files" as const,
@@ -31,7 +31,7 @@ export const TRIAL_TASKS = [
   {
     id: "mass-upload",
     title: "Mass upload your property details",
-    lead: "Excel, CSV or a software export — AI maps the columns to CertivoIQ fields.",
+    lead: "Excel, CSV or a software export — CertivoIQ maps the columns to the appropriate fields.",
     merlin: "One spreadsheet, one poof, a whole portfolio.",
     cta: "Mass upload properties",
     to: "/launchpad" as const,

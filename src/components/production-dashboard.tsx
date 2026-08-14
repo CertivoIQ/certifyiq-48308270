@@ -27,7 +27,7 @@ export function ProductionDashboard() {
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label={t("dash.stat.properties")} value={0} hint="No properties added yet" />
-        <Stat label={t("dash.stat.openFindings")} value={0} hint="Findings appear after your first AI review" />
+        <Stat label={t("dash.stat.openFindings")} value={0} hint="Findings appear after your first certification review" />
         <Stat label={t("dash.stat.exposure")} value="$0" hint="Exposure is calculated from real findings" />
         <Stat label={t("dash.stat.autoApproval")} value="—" hint="Available once reviews are completed" />
       </div>

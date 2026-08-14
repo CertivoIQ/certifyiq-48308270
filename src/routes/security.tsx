@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck } from "lucide-react";
 
 /**
- * Public Security and AI Data Use center.
+ * Public Security and Data Use center.
  *
  * Every published claim must exist in `publishedSecurityFacts` with an
  * evidence link, a verification date and a named owner. Sections with no
@@ -33,7 +33,7 @@ const SECTIONS: Section[] = [
   { id: "authentication", heading: "Authentication, MFA, SSO and session controls", intent: "Sign-in methods, multi-factor enrollment, recovery codes and session lifetime." },
   { id: "audit-logs", heading: "Audit logs", intent: "What is recorded for review actions, sign-off, exports and administrative changes, and how long it is kept." },
   { id: "retention", heading: "Retention, deletion, trial data and backups", intent: "Retention windows, deletion requests, trial-upload purge timing and backup handling." },
-  { id: "ai", heading: "AI providers, model use, training policy and human review", intent: "Which models perform extraction, whether customer content is used for training, and where a human decision is required." },
+  { id: "ai", heading: "Processing providers, system use, training policy and human review", intent: "Which models perform extraction, whether customer content is used for training, and where a human decision is required." },
   { id: "subprocessors", heading: "Subprocessors and hosting regions", intent: "The processors involved in delivering the service and the regions where data is processed." },
   { id: "incident", heading: "Incident response and contact", intent: "How incidents are triaged, who is notified, and the timeline commitments once documented." },
   { id: "vulnerability", heading: "Vulnerability reporting", intent: "How to report a suspected vulnerability and what response to expect." },
@@ -44,13 +44,13 @@ const SECTIONS: Section[] = [
 export const Route = createFileRoute("/security")({
   head: () => ({
     meta: [
-      { title: "Security & AI Data Use — CertivoIQ" },
+      { title: "Security & Data Use — CertivoIQ" },
       {
         name: "description",
         content:
-          "How CertivoIQ handles compliance data: tenant isolation, authentication, retention, AI model use, subprocessors, incident response and vulnerability reporting.",
+          "How CertivoIQ handles compliance data: tenant isolation, authentication, retention, automated processing, subprocessors, incident response and vulnerability reporting.",
       },
-      { property: "og:title", content: "Security & AI Data Use — CertivoIQ" },
+      { property: "og:title", content: "Security & Data Use — CertivoIQ" },
       {
         property: "og:description",
         content: "Verified statements only. CertivoIQ publishes no security certification it has not formally achieved.",
@@ -89,7 +89,7 @@ function SecurityCenterPage() {
 
       <main className="mx-auto max-w-4xl px-5 py-12">
         <ShieldCheck className="size-6 text-primary" />
-        <h1 className="mt-3 font-display text-[34px] leading-tight">Security &amp; AI Data Use</h1>
+        <h1 className="mt-3 font-display text-[34px] leading-tight">Security &amp; Data Use</h1>
         <p className="mt-4 text-[14.5px] leading-relaxed text-muted-foreground">
           This page publishes only statements that have been technically and legally verified, each
           with an evidence reference, a verification date and an accountable owner. Where a section

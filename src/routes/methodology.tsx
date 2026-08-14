@@ -19,12 +19,12 @@ export const Route = createFileRoute("/methodology")({
       {
         name: "description",
         content:
-          "How CertivoIQ reaches a compliance outcome: AI extraction, deterministic calculation, confidence policy, rule sourcing and versioning, and the definitions of Pass, Fail and Unable to determine.",
+          "How CertivoIQ reaches a compliance outcome: document extraction, deterministic calculation, confidence policy, rule sourcing and versioning, and the definitions of Pass, Fail and Unable to determine.",
       },
       { property: "og:title", content: "Calculation & Validation Methodology — CertivoIQ" },
       {
         property: "og:description",
-        content: "Deterministic code decides; AI only extracts. Every determination carries its rule versions and source hashes.",
+        content: "Deterministic code decides; automated processing only extracts. Every determination carries its rule versions and source hashes.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://certivoiq.com/methodology" },
@@ -80,7 +80,7 @@ function MethodologyPage() {
             </span>
           </Link>
           <Button size="sm" variant="outline" asChild>
-            <Link to="/security">Security &amp; AI data use</Link>
+            <Link to="/security">Security &amp; Data Use</Link>
           </Button>
         </div>
       </header>
@@ -96,7 +96,7 @@ function MethodologyPage() {
         <div className="mt-8 space-y-3">
           <Section id="division-of-labor" title="Division of labor">
             <p>
-              AI performs document extraction and classification only: it reads a certification
+              Automated processing performs document extraction and classification only: it reads a certification
               packet and proposes field values with a confidence score and a page reference.
               Deterministic code performs every calculation and every rule evaluation. No language
               model decides a compliance outcome.

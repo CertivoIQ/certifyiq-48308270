@@ -25,7 +25,7 @@ export const Route = createFileRoute("/launchpad")({
       {
         name: "description",
         content:
-          "A guided 10-step wizard that takes a new operator from signup to audit-ready: organization setup, portfolio import, resident and document uploads, AI review and team invites.",
+          "A guided 10-step wizard that takes a new operator from signup to audit-ready: organization setup, portfolio import, resident and document uploads, certification review and team invites.",
       },
       { property: "og:title", content: "CertivoIQ LaunchPad — Your guided path from signup to audit-ready" },
       {
