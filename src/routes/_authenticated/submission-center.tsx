@@ -18,6 +18,8 @@ import {
   listHfaDestinationOptions,
 } from "@/utils/hfa-submission.functions";
 
+import { authorizeAndSubmitHfaDraft } from "@/utils/hfa-submit.functions";
+
 export const Route = createFileRoute("/_authenticated/submission-center")({
   component: SubmissionCenterPage,
 });
@@ -51,9 +53,11 @@ function SubmissionCenterPage() {
   const [loadingDestinations, setLoadingDestinations] = useState(true);
   const [loadingAuthority, setLoadingAuthority] = useState(false);
   const [preparingDraft, setPreparingDraft] = useState(false);
+  const [submittingDraft, setSubmittingDraft] = useState(false);
 
   const [message, setMessage] = useState("");
   const [draftId, setDraftId] = useState("");
+  const [submittedId, setSubmittedId] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -241,6 +245,52 @@ function SubmissionCenterPage() {
       );
     } finally {
       setPreparingDraft(false);
+    }
+  }
+
+
+  async function authorizeSubmission() {
+    if (!draftId) {
+      setMessage("Prepare a submission draft before authorizing it.");
+      return;
+    }
+
+    try {
+      setSubmittingDraft(true);
+      setMessage("");
+      setSubmittedId("");
+
+      const result = await authorizeAndSubmitHfaDraft({
+        data: {
+          submissionId: draftId,
+        },
+      });
+
+      if (result.status === "BLOCKED") {
+        if ("reason" in result && result.reason) {
+          setMessage(result.reason);
+        } else {
+          setMessage(
+            "The submission could not be authorized because transmission requirements are not satisfied.",
+          );
+        }
+
+        return;
+      }
+
+      setSubmittedId(result.submissionId);
+
+      setMessage(
+        `Submission ${result.submissionId} is now authorized and available to the granted HFA in CertivoIQ. No external delivery was executed.`,
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "The submission could not be authorized.",
+      );
+    } finally {
+      setSubmittingDraft(false);
     }
   }
 
@@ -457,9 +507,63 @@ function SubmissionCenterPage() {
         </button>
 
         {draftId && (
-          <p className="mt-4 break-all text-xs text-muted-foreground">
-            Draft ID: {draftId}
-          </p>
+          <div className="mt-6 rounded-lg border p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+
+              <div>
+                <p className="font-medium">
+                  Submission draft prepared
+                </p>
+
+                <p className="break-all text-xs text-muted-foreground">
+                  Draft ID: {draftId}
+                </p>
+              </div>
+            </div>
+
+            {!submittedId && (
+              <>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Authorizing the submission grants the selected HFA
+                  access to this package inside CertivoIQ and moves it
+                  from draft to submitted. This action does not perform
+                  external delivery.
+                </p>
+
+                <button
+                  disabled={submittingDraft}
+                  onClick={() => void authorizeSubmission()}
+                  className="mt-4 inline-flex items-center gap-2 rounded-md border px-4 py-2 font-medium disabled:opacity-50"
+                >
+                  {submittingDraft ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+
+                  Authorize & Submit
+                </button>
+              </>
+            )}
+
+            {submittedId && (
+              <div className="mt-4 rounded-md border p-3">
+                <p className="font-medium">
+                  Submission authorized
+                </p>
+
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  Submission ID: {submittedId}
+                </p>
+
+                <p className="mt-2 text-sm text-muted-foreground">
+                  The selected HFA can now access the granted package
+                  inside CertivoIQ. External delivery has not occurred.
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
         {message && (
