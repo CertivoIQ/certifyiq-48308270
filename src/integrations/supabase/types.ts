@@ -905,6 +905,7 @@ export type Database = {
           decision: string
           finding_id: string
           id: string
+          manifest_sha256: string | null
           reason: string | null
           reviewer_id: string
           user_id: string
@@ -914,6 +915,7 @@ export type Database = {
           decision: string
           finding_id: string
           id?: string
+          manifest_sha256?: string | null
           reason?: string | null
           reviewer_id: string
           user_id: string
@@ -923,6 +925,7 @@ export type Database = {
           decision?: string
           finding_id?: string
           id?: string
+          manifest_sha256?: string | null
           reason?: string | null
           reviewer_id?: string
           user_id?: string
