@@ -35,13 +35,15 @@ Recognized revenue is intentionally below exit ARR in this simplified scenario b
 
 ## Illustrative operating model
 
-| Year | Revenue | Gross profit | Operating expense | Illustrative operating result |
+| Year | Revenue | Gross profit | Operating expense | EBITDA / operating contribution |
 | --- | ---: | ---: | ---: | ---: |
-| 1 | $300,000 | $210,000 | $650,000 | -$440,000 |
-| 2 | $1,550,000 | $1,162,500 | $1,300,000 | -$137,500 |
-| 3 | $5,000,000 | $3,900,000 | $2,600,000 | $1,300,000 |
-| 4 | $12,750,000 | $10,200,000 | $5,500,000 | $4,700,000 |
-| 5 | $26,500,000 | $21,730,000 | $10,000,000 | $11,730,000 |
+| 1 | $300,000 | $210,000 | $425,000 | -$215,000 |
+| 2 | $1,550,000 | $1,162,500 | $1,100,000 | $62,500 |
+| 3 | $5,000,000 | $3,900,000 | $2,800,000 | $1,100,000 |
+| 4 | $12,750,000 | $10,200,000 | $6,500,000 | $3,700,000 |
+| 5 | $26,500,000 | $21,730,000 | $12,000,000 | $9,730,000 |
+
+The detailed workbook also includes a 10% illustrative commission reserve on recognized revenue and a 5% planning contingency reserve on positive operating contribution. These are planning inputs, not accounting conclusions or tax advice.
 
 The model assumes disciplined automation but still budgets for security, engineering, compliance expertise, customer success, insurance, legal/accounting, infrastructure, and enterprise sales activity. A credible enterprise company should not model these functions as permanently free.
 
