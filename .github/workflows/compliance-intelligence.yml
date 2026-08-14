@@ -109,13 +109,15 @@ jobs:
           head -20 bun.lock
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      - name: Domain tests
+      - name: Full compliance and HFA authority tests
         run: |
-          if grep -q '"test:compliance"' package.json; then
-            bun run test:compliance
-          else
-            echo "Compliance Intelligence test script is not present on this branch; skipping domain tests."
-          fi
+          set -e
+          bun run test:compliance
+          bun run test:slice
+          node --test scripts/test-certification-authority.mjs
+          node --test scripts/test-transmission-authority.mjs
+          node --test scripts/test-hfa-submit-transition.mjs
+          node --test scripts/test-delivery-receipt.mjs
       - name: Lint
         run: bun run lint
       - name: Production build
