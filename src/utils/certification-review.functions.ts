@@ -333,49 +333,106 @@ export const listCertificationItems = createServerFn({ method: "GET" })
 /** Human sign-off. Recorded append-only; a determination is never auto-approved. */
 export const recordFindingDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { findingId: string; decision: ReviewDecisionInput; reason?: string }) => {
-    if (!data?.findingId) throw new Error("A finding id is required.");
-    if (!["approved", "remediation_requested", "unable_to_determine"].includes(data.decision)) {
-      throw new Error("Unsupported reviewer decision.");
-    }
-    if (data.reason && data.reason.length > 2000) throw new Error("The reason is too long.");
-    return data;
-  })
+  .inputValidator(
+    (data: {
+      findingId: string;
+      decision: ReviewDecisionInput;
+      reason?: string;
+    }) => {
+      if (!data?.findingId) {
+        throw new Error("A finding id is required.");
+      }
+
+      if (
+        ![
+          "approved",
+          "remediation_requested",
+          "unable_to_determine",
+        ].includes(data.decision)
+      ) {
+        throw new Error("Unsupported reviewer decision.");
+      }
+
+      if (data.reason && data.reason.length > 2000) {
+        throw new Error("The reason is too long.");
+      }
+
+      return data;
+    },
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
     const { data: finding, error } = await supabase
       .from("compliance_findings")
-      .select("id, status")
+      .select("id, item_id, status")
       .eq("id", data.findingId)
       .maybeSingle();
-    if (error) throw error;
-    if (!finding) return { error: "That finding is not available." } as const;
 
-    // Guardrail: an undetermined finding cannot be approved as compliant.
-    if (finding.status === "UNABLE_TO_DETERMINE" && data.decision === "approved") {
+    if (error) throw error;
+
+    if (!finding) {
+      return {
+        error: "That finding is not available.",
+      } as const;
+    }
+
+    const { data: manifest, error: manifestError } = await supabase
+      .from("evidence_manifests")
+      .select("manifest_sha256")
+      .eq("review_id", finding.item_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (manifestError) throw manifestError;
+
+    if (!manifest?.manifest_sha256) {
+      return {
+        error:
+          "A current evidence manifest is required before a human decision can be recorded.",
+      } as const;
+    }
+
+    if (
+      finding.status === "UNABLE_TO_DETERMINE" &&
+      data.decision === "approved"
+    ) {
       return {
         error:
           "This finding is undetermined because required evidence is missing. Resolve the blocking reasons before approving.",
       } as const;
     }
 
-    // Reviewer decisions are append-only and service-role written, so a user
-    // cannot fabricate an approval trail directly through the Data API.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: reviewError } = await supabaseAdmin.from("finding_reviews").insert({
-      finding_id: finding.id,
-      user_id: userId,
-      reviewer_id: userId,
-      decision: data.decision,
-      reason: data.reason ?? null,
-    });
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+
+    const { error: reviewError } = await supabaseAdmin
+      .from("finding_reviews")
+      .insert({
+        finding_id: finding.id,
+        user_id: userId,
+        reviewer_id: userId,
+        decision: data.decision,
+        reason: data.reason ?? null,
+        manifest_sha256: manifest.manifest_sha256,
+      });
+
     if (reviewError) throw reviewError;
 
     const { error: updateError } = await supabaseAdmin
       .from("compliance_findings")
-      .update({ review_state: data.decision })
+      .update({
+        review_state: data.decision,
+      })
       .eq("id", finding.id);
+
     if (updateError) throw updateError;
 
-    return { findingId: finding.id, decision: data.decision } as const;
+    return {
+      findingId: finding.id,
+      decision: data.decision,
+      manifestSha256: manifest.manifest_sha256,
+    } as const;
   });
