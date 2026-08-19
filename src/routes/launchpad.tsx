@@ -5,7 +5,7 @@ import { Panel, Pill, Meter } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { LAUNCHPAD_STEPS, AUDIT_JOURNEY, COACH_TIPS } from "@/lib/platform-data";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, GraduationCap, Rocket, UploadCloud } from "lucide-react";
+import { Check, Rocket, UploadCloud } from "lucide-react";
 
 export const Route = createFileRoute("/launchpad")({
   ssr: false,
@@ -25,12 +25,12 @@ export const Route = createFileRoute("/launchpad")({
       {
         name: "description",
         content:
-          "A guided 10-step wizard that takes a new operator from signup to audit-ready: organization setup, portfolio import, resident and document uploads, certification review and team invites.",
+          "A guided setup wizard that takes a new operator from signup to audit-ready: organization setup, portfolio import, resident and document uploads, certification review and team invites.",
       },
       { property: "og:title", content: "CertivoIQ LaunchPad — Your guided path from signup to audit-ready" },
       {
         property: "og:description",
-        content: "Ten steps, 20–30 minutes, ending in CertivoIQ Launch Certified.",
+        content: "Guided onboarding from account setup to a live CertivoIQ compliance workspace.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -43,7 +43,16 @@ export const Route = createFileRoute("/launchpad")({
 
 function LaunchPadPage() {
   const [step, setStep] = useState(1);
-  const current = LAUNCHPAD_STEPS[step - 1]!;
+  const sourceStep = LAUNCHPAD_STEPS[step - 1]!;
+  const current = sourceStep.id === 10
+    ? {
+        ...sourceStep,
+        title: "Go live",
+        lead: "Your CertivoIQ workspace is ready.",
+        detail: "Finish setup and begin using CertivoIQ for live compliance review and portfolio oversight.",
+        cta: "Finish setup",
+      }
+    : sourceStep;
   const pct = Math.round(((step - 1) / LAUNCHPAD_STEPS.length) * 100);
   const done = step > LAUNCHPAD_STEPS.length;
 
@@ -59,13 +68,13 @@ function LaunchPadPage() {
             <div className="flex items-center gap-2">
               <Rocket className="size-4 text-primary" />
               <span className="cite text-[10.5px] uppercase tracking-[0.16em]">
-                {done ? "Graduation" : `Step ${step} of ${LAUNCHPAD_STEPS.length}`}
+                {done ? "Setup complete" : `Step ${step} of ${LAUNCHPAD_STEPS.length}`}
               </span>
             </div>
             <h2 className="mt-3 font-display text-[26px] leading-tight">
               {done ? <span className="brand-text">You are officially live on CertivoIQ</span> : current.title}
             </h2>
-            <p className="mt-2 text-[14.5px]">{done ? "Awarded: CertivoIQ Launch Certified." : current.lead}</p>
+            <p className="mt-2 text-[14.5px]">{done ? "Your CertivoIQ workspace is ready for live use." : current.lead}</p>
             <p className="mt-2 text-[13px] text-muted-foreground">
               {done
                 ? "Your Smart Success Coach now checks in for the next 90 days."
@@ -113,11 +122,11 @@ function LaunchPadPage() {
           {done && (
             <Panel bodyClassName="p-7">
               <div className="rounded-lg border-2 border-primary/40 p-6 text-center">
-                <GraduationCap className="mx-auto size-7 text-primary" />
+                <Rocket className="mx-auto size-7 text-primary" />
                 <p className="cite mt-3 text-[10.5px] uppercase tracking-[0.24em]">CertivoIQ LaunchPad</p>
-                <h3 className="mt-3 font-display text-[24px]">Launch Certified</h3>
+                <h3 className="mt-3 font-display text-[24px]">Setup complete</h3>
                 <p className="mt-2 text-[13px] text-muted-foreground">
-                  Meridian Housing Partners · onboarding completed Aug 6, 2026
+                  Your workspace is configured and ready for operational use.
                 </p>
               </div>
             </Panel>
