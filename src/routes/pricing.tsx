@@ -46,7 +46,6 @@ const INCLUDED_FEATURES = [
   "Recurring-finding and property training-risk intelligence",
   "Mass document and certification processing",
   "Evidence manifests, reporting and audit trails",
-  "CertivoIQ Academy and platform training capabilities",
   "API, SSO and supported integration capabilities",
   "All current and future generally available platform features",
 ] as const;
@@ -97,10 +96,7 @@ function PricingPage() {
   };
 
   return (
-    <PublicShell
-      title="Simple annual pricing"
-      subtitle="One platform. One price. Every capability."
-    >
+    <PublicShell title="Simple annual pricing" subtitle="One platform. One price. Every capability.">
       <div className="-mt-1 mb-4 overflow-hidden rounded-lg">
         <PaymentTestModeBanner />
       </div>
