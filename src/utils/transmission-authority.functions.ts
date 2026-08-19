@@ -125,7 +125,7 @@ export const getTransmissionAuthority = createServerFn({ method: "GET" })
       ? await supabase
           .from("finding_reviews")
           .select(
-            "finding_id, decision, reason, reviewer_id, created_at, manifest_sha256",
+            "finding_id, decision, reason, reviewer_id, created_at, manifest_sha256, expires_at, revoked_at",
           )
           .in("finding_id", findingIds)
           .order("created_at", { ascending: false })
