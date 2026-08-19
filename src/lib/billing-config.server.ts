@@ -1,9 +1,9 @@
 /**
  * Production billing must fail closed. Live deployments may not run against a
- * test-mode connection or a missing live price ID.
+ * test-mode connection or a missing unified annual platform price.
  */
 
-import { isPlanPrice } from "@/lib/plan-catalog";
+import { PLATFORM_PRICE_ID } from "@/lib/plan-catalog";
 
 export function assertLiveBillingConfiguration() {
   if (process.env["NODE_ENV"] !== "production") return;
@@ -16,8 +16,10 @@ export function assertLiveBillingConfiguration() {
   if (clientToken?.startsWith("pk_test_")) {
     throw new Error("Production billing detected a test-mode client token.");
   }
-  if (!isPlanPrice(process.env["STRIPE_BUSINESS_PRICE_ID_LIVE"] ?? "business_monthly")) {
-    throw new Error("Missing live Business price ID.");
+
+  const configuredPrice = process.env["STRIPE_PLATFORM_PRICE_ID_LIVE"] ?? PLATFORM_PRICE_ID;
+  if (configuredPrice !== PLATFORM_PRICE_ID) {
+    throw new Error("Missing live CertivoIQ annual platform price ID.");
   }
 }
 
