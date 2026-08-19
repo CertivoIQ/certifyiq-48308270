@@ -54,8 +54,17 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
   ),
 };
 
-/** All platform capabilities are included in the annual subscription. */
-export const ADDON_PRICE_IDS = {} as const;
+/**
+ * Historical lookup keys are retained for webhook compatibility only.
+ * Customer-facing Academy/training products and document overage products are retired.
+ */
+export const ADDON_PRICE_IDS = {
+  academySeat: "academy_seat_monthly",
+  academyProperty: "academy_property_monthly",
+  aiDocOverage: "ai_document_overage_each",
+} as const;
+
+/** No add-on is purchasable under the unified annual platform model. */
 export const ADDON_PRICE_ID_LIST: string[] = [];
 
 /** Files are held for 14 days after paid access ends, then permanently deleted. */
@@ -94,5 +103,5 @@ export function isAddonPrice(_priceId: string | null | undefined): boolean {
 }
 
 /** No per-document overage fee under the flat annual platform subscription. */
-export const AI_DOC_OVERAGE_PRICE_ID = null;
+export const AI_DOC_OVERAGE_PRICE_ID = ADDON_PRICE_IDS.aiDocOverage;
 export const AI_DOC_OVERAGE_AMOUNT_USD = 0;
