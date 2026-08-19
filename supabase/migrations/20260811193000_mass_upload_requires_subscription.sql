@@ -2,7 +2,7 @@
 -- Mass Certification Review (2+ files in one job) requires an active paid platform subscription.
 -- Enforce this at the database/storage layer so the restriction cannot be bypassed by the client.
 
-alter table public.certification_import_jobs drop policy if exists "users manage import jobs";
+drop policy if exists "users manage import jobs" on public.certification_import_jobs;
 create policy "users manage import jobs"
   on public.certification_import_jobs
   for all to authenticated
@@ -16,7 +16,7 @@ create policy "users manage import jobs"
     )
   );
 
-alter table public.certification_import_items drop policy if exists "users manage import items";
+drop policy if exists "users manage import items" on public.certification_import_items;
 create policy "users manage import items"
   on public.certification_import_items
   for all to authenticated
@@ -36,7 +36,7 @@ create policy "users manage import items"
     )
   );
 
-alter table storage.objects drop policy if exists "users manage import storage";
+drop policy if exists "users manage import storage" on storage.objects;
 create policy "users manage import storage"
   on storage.objects
   for all to authenticated
@@ -59,3 +59,5 @@ create policy "users manage import storage"
       )
     )
   );
+
+
