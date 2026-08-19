@@ -104,3 +104,84 @@ test("duplicate delivery of the same package is blocked", () => {
   assert.equal(result.externallyDelivered, false);
   assert.equal(result.priorReceiptId, "RECEIPT-001");
 });
+test("delivered receipt includes deterministic SHA-256 integrity hash", () => {
+  const result = validateDeliveryReceipt({
+    ...base,
+    receipt,
+  });
+
+  assert.equal(result.status, "DELIVERED");
+  assert.equal(result.externallyDelivered, true);
+  assert.match(result.receiptSha256, /^[a-f0-9]{64}$/);
+});
+
+test("receipt with mismatched supplied integrity hash is rejected as tampered", () => {
+  const result = validateDeliveryReceipt({
+    ...base,
+    receipt: {
+      ...receipt,
+      integritySha256:
+        "0000000000000000000000000000000000000000000000000000000000000000",
+    },
+  });
+
+  assert.equal(result.status, "TAMPERED_RECEIPT");
+  assert.equal(result.externallyDelivered, false);
+});
+
+test("previously recorded receipt id with changed contents is rejected as tampered", () => {
+  const originalResult = validateDeliveryReceipt({
+    ...base,
+    receipt,
+  });
+
+  const result = validateDeliveryReceipt({
+    ...base,
+    receipt: {
+      ...receipt,
+      deliveredAt: "2026-08-14T09:00:00Z",
+    },
+    priorReceipts: [
+      {
+        submissionId: "SUB-001",
+        agencyId: "HFA-TN",
+        manifestSha256: "manifest-v1",
+        adapter: "test-adapter",
+        status: "DELIVERED",
+        receiptId: "RECEIPT-001",
+        receiptSha256: originalResult.receiptSha256,
+      },
+    ],
+  });
+
+  assert.equal(result.status, "TAMPERED_RECEIPT");
+  assert.equal(result.externallyDelivered, false);
+  assert.equal(result.receiptId, "RECEIPT-001");
+});
+
+test("identical previously recorded receipt still resolves as duplicate delivery", () => {
+  const originalResult = validateDeliveryReceipt({
+    ...base,
+    receipt,
+  });
+
+  const result = validateDeliveryReceipt({
+    ...base,
+    receipt,
+    priorReceipts: [
+      {
+        submissionId: "SUB-001",
+        agencyId: "HFA-TN",
+        manifestSha256: "manifest-v1",
+        adapter: "test-adapter",
+        status: "DELIVERED",
+        receiptId: "RECEIPT-001",
+        receiptSha256: originalResult.receiptSha256,
+      },
+    ],
+  });
+
+  assert.equal(result.status, "DUPLICATE_DELIVERY");
+  assert.equal(result.externallyDelivered, false);
+  assert.equal(result.priorReceiptId, "RECEIPT-001");
+});

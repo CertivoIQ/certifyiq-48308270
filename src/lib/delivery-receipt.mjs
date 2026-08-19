@@ -1,9 +1,29 @@
+﻿import { createHash } from "node:crypto";
+
 export const DELIVERY_STATUS = Object.freeze({
   delivered: "DELIVERED",
   rejected: "REJECTED",
   invalidReceipt: "INVALID_RECEIPT",
+  tamperedReceipt: "TAMPERED_RECEIPT",
   duplicate: "DUPLICATE_DELIVERY",
 });
+
+export function receiptSha256(receipt) {
+  if (!receipt) return null;
+
+  const canonical = JSON.stringify({
+    receiptId: receipt.receiptId ?? null,
+    submissionId: receipt.submissionId ?? null,
+    agencyId: receipt.agencyId ?? null,
+    manifestSha256: receipt.manifestSha256 ?? null,
+    accepted: receipt.accepted ?? null,
+    deliveredAt: receipt.deliveredAt ?? null,
+  });
+
+  return createHash("sha256")
+    .update(canonical, "utf8")
+    .digest("hex");
+}
 
 export function validateDeliveryReceipt({
   submissionId,
@@ -54,6 +74,42 @@ export function validateDeliveryReceipt({
     };
   }
 
+  const computedReceiptSha256 = receiptSha256(receipt);
+
+  if (
+    receipt.integritySha256 &&
+    receipt.integritySha256 !== computedReceiptSha256
+  ) {
+    return {
+      status: DELIVERY_STATUS.tamperedReceipt,
+      externallyDelivered: false,
+      receiptId: receipt.receiptId,
+      reason:
+        "The transport receipt integrity hash does not match the receipt contents.",
+    };
+  }
+
+  const priorSameReceiptId = priorReceipts.find(
+    (existing) =>
+      existing.receiptId === receipt.receiptId,
+  );
+
+  if (
+    priorSameReceiptId?.receiptSha256 &&
+    priorSameReceiptId.receiptSha256 !== computedReceiptSha256
+  ) {
+    return {
+      status: DELIVERY_STATUS.tamperedReceipt,
+      externallyDelivered: false,
+      receiptId: receipt.receiptId,
+      expectedReceiptSha256:
+        priorSameReceiptId.receiptSha256,
+      computedReceiptSha256,
+      reason:
+        "A previously recorded receipt id now has different receipt contents.",
+    };
+  }
+
   const duplicate = priorReceipts.find(
     (existing) =>
       existing.submissionId === submissionId &&
@@ -81,6 +137,7 @@ export function validateDeliveryReceipt({
     manifestSha256,
     adapter,
     receiptId: receipt.receiptId,
+    receiptSha256: computedReceiptSha256,
     deliveredAt: receipt.deliveredAt,
   };
 }
