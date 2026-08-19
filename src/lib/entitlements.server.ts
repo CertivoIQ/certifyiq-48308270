@@ -4,10 +4,8 @@ import type { StripeEnv } from "@/lib/stripe.server";
 import { FREE_REVIEW_ENTITLEMENT, entitlementForPrice } from "@/lib/plan-catalog";
 import type { AccountState } from "@/utils/entitlements.functions";
 
-/** Supabase client surface used by entitlement reads/writes. */
 export type EntitlementsDb = SupabaseClient<Database>;
 
-/** Current billing period start, used as the usage-counter bucket key. */
 export function periodStartFor(
   sub: { current_period_start?: string | null } | null,
 ): string {
@@ -35,8 +33,7 @@ export async function loadState(
     .eq("environment", environment)
     .order("created_at", { ascending: false });
 
-  const planSub =
-    (subs ?? []).find((s) => !!entitlementForPrice(s.price_id)) ?? null;
+  const planSub = (subs ?? []).find((s) => !!entitlementForPrice(s.price_id)) ?? null;
   const entitlement = entitlementForPrice(planSub?.price_id ?? access?.["price_id"]);
   const isTrial = (access?.["status"] ?? "trialing") === "trialing" && !entitlement;
 
@@ -55,11 +52,10 @@ export async function loadState(
     priceId: entitlement?.priceId ?? null,
     planName: entitlement?.name ?? null,
     isTrial,
-    // The FREE review program has no calendar expiration. Paid plans retain
-    // their normal access dates from account_access.
     accessUntil: isTrial ? null : ((access?.["access_until"] as string | null) ?? null),
     filesPurgeAt: isTrial ? null : ((access?.["files_purge_at"] as string | null) ?? null),
-    academySeats: Number(access?.["academy_seats"] ?? 0),
+    // Customer-facing Academy/training products are retired.
+    academySeats: 0,
     limits: {
       units: entitlement ? entitlement.unitLimit : isTrial ? FREE_REVIEW_ENTITLEMENT.unitLimit : 0,
       properties: entitlement
