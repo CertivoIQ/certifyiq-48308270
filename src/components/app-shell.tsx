@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   Scale,
   Sparkles,
-  GraduationCap,
   Rocket,
   Tag,
   Menu,
@@ -35,7 +34,6 @@ const NAV = [
   { to: "/findings", labelKey: "nav.findings", icon: AlertTriangle },
   { to: "/rules", labelKey: "nav.rules", icon: Scale },
   { to: "/copilot", labelKey: "nav.copilot", icon: Sparkles },
-  { to: "/academy", labelKey: "nav.academy", icon: GraduationCap },
   { to: "/launchpad", labelKey: "nav.launchpad", icon: Rocket },
   { to: "/trial", labelKey: "nav.trial", icon: Gift },
   { to: "/pricing", labelKey: "nav.pricing", icon: Tag },
@@ -82,9 +80,6 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
   const [open, setOpen] = useState(false);
   const t = useT();
 
-  // Authentication boundary for navigation: the portfolio sidebar is only for a
-  // signed-in user inside the CertivoIQ application workspace. Anyone without a
-  // session gets the public marketing shell instead.
   if (!session) {
     return <PublicShell title={title} subtitle={subtitle} actions={actions}>{children}</PublicShell>;
   }
