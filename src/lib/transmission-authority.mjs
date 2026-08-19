@@ -1,3 +1,7 @@
+﻿import {
+  evaluateTransmissionToken,
+} from "./transmission-token.mjs";
+
 export const TRANSMISSION_AUTHORITY = Object.freeze({
   allowed: "ALLOWED",
   blocked: "BLOCKED",
@@ -10,6 +14,7 @@ export const TRANSMISSION_STATUS = Object.freeze({
   unauthorizedDestination: "UNAUTHORIZED_DESTINATION",
   duplicateTransmission: "DUPLICATE_TRANSMISSION",
   incompletePackage: "INCOMPLETE_TRANSMISSION_PACKAGE",
+  tokenRequired: "TRANSMISSION_TOKEN_REQUIRED",
 });
 
 export function evaluateTransmissionAuthority({
@@ -19,6 +24,9 @@ export function evaluateTransmissionAuthority({
   destination,
   grant,
   priorSubmissions = [],
+  token = null,
+  submissionId = null,
+  evaluatedAt = new Date().toISOString(),
 } = {}) {
   if (
     submissionAuthority?.submissionAuthority !== "ALLOWED" ||
@@ -77,6 +85,23 @@ export function evaluateTransmissionAuthority({
     };
   }
 
+  const tokenResult = evaluateTransmissionToken({
+    token,
+    submissionId,
+    manifestSha256: manifest.manifest_sha256,
+    destinationAgencyId: destination.agencyId,
+    evaluatedAt,
+  });
+
+  if (!tokenResult.authorized) {
+    return {
+      transmissionAuthority: TRANSMISSION_AUTHORITY.blocked,
+      transmissionStatus: TRANSMISSION_STATUS.tokenRequired,
+      tokenStatus: tokenResult.tokenStatus,
+      reason: tokenResult.reason,
+    };
+  }
+
   const duplicate = priorSubmissions.find(
     (submission) =>
       submission.agency_id === destination.agencyId &&
@@ -100,5 +125,6 @@ export function evaluateTransmissionAuthority({
     evidenceManifestId: manifest.id,
     manifestSha256: manifest.manifest_sha256,
     destinationAgencyId: destination.agencyId,
+    transmissionTokenId: tokenResult.tokenId,
   };
 }
