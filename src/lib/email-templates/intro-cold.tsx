@@ -2,7 +2,6 @@ import React from 'react'
 import { Preview } from '@react-email/components'
 import type { EmailTemplateData, TemplateEntry } from './registry'
 import { emailT, localeOf, type EmailLocale } from './i18n'
-import { PLANS } from '@/lib/platform-data'
 import {
   BRAND,
   Body,
@@ -34,21 +33,13 @@ interface Props {
   locale?: EmailLocale
 }
 
-/** Infographic: horizontal comparison bars (email-safe, table-free divs with fixed widths). */
 function Bar({ label, value, width, color }: { label: string; value: string; width: string; color: string }) {
   return (
     <Section style={{ paddingBottom: '10px' }}>
       <Text style={{ ...small, color: BRAND.ink, margin: '0 0 4px', fontWeight: 600 }}>
         {label} — {value}
       </Text>
-      <Section
-        style={{
-          backgroundColor: '#eef0f6',
-          borderRadius: '6px',
-          height: '12px',
-          width: '100%',
-        }}
-      >
+      <Section style={{ backgroundColor: '#eef0f6', borderRadius: '6px', height: '12px', width: '100%' }}>
         <Section style={{ backgroundColor: color, borderRadius: '6px', height: '12px', width }} />
       </Section>
     </Section>
@@ -57,50 +48,16 @@ function Bar({ label, value, width, color }: { label: string; value: string; wid
 
 function StatCard({ value, label, color }: { value: string; label: string; color: string }) {
   return (
-    <Section
-      style={{
-        display: 'inline-block',
-        width: '160px',
-        verticalAlign: 'top',
-        border: `1px solid ${BRAND.border}`,
-        borderRadius: '10px',
-        padding: '14px 12px',
-        margin: '0 6px 10px 0',
-        textAlign: 'center' as const,
-      }}
-    >
+    <Section style={{ display: 'inline-block', width: '160px', verticalAlign: 'top', border: `1px solid ${BRAND.border}`, borderRadius: '10px', padding: '14px 12px', margin: '0 6px 10px 0', textAlign: 'center' as const }}>
       <Text style={{ margin: 0, fontSize: '22px', fontWeight: 700, color }}>{value}</Text>
       <Text style={{ ...small, margin: '4px 0 0' }}>{label}</Text>
     </Section>
   )
 }
 
-function PlanRow({ name, price, tagline }: { name: string; price: string; tagline: string }) {
-  return (
-    <Section
-      style={{
-        borderBottom: `1px solid ${BRAND.border}`,
-        padding: '8px 0',
-        margin: 0,
-      }}
-    >
-      <Text style={{ ...text, margin: 0, fontWeight: 600 }}>
-        {name} — <span style={{ color: BRAND.navy }}>{price}/month</span>
-      </Text>
-      <Text style={{ ...small, margin: '2px 0 0' }}>{tagline}</Text>
-    </Section>
-  )
-}
-
 function RiskRow({ risk, cost }: { risk: string; cost: string }) {
   return (
-    <Section
-      style={{
-        borderLeft: `3px solid ${BRAND.red}`,
-        padding: '2px 0 2px 12px',
-        margin: '0 0 12px',
-      }}
-    >
+    <Section style={{ borderLeft: `3px solid ${BRAND.red}`, padding: '2px 0 2px 12px', margin: '0 0 12px' }}>
       <Text style={{ ...text, margin: 0, fontWeight: 600 }}>{risk}</Text>
       <Text style={{ ...small, margin: '2px 0 0', color: BRAND.red }}>{cost}</Text>
     </Section>
@@ -133,9 +90,7 @@ const Email = ({
           </Heading>
           <Text style={text}>
             {name ? t('intro.greeting.named', { name }) : t('intro.greeting.plain')}{' '}
-            {t('intro.body', {
-              company: company ? t('intro.body.company', { company }) : '',
-            })}
+            {t('intro.body', { company: company ? t('intro.body.company', { company }) : '' })}
           </Text>
 
           <Hr style={hr} />
@@ -157,18 +112,8 @@ const Email = ({
           </Text>
           <Bar label={t('intro.bar.manual')} value={t('intro.bar.manual.value')} width="100%" color={BRAND.red} />
           <Bar label={t('intro.bar.ai')} value={t('intro.bar.ai.value')} width="12%" color={BRAND.green} />
-          <Bar
-            label={t('intro.bar.manualChecks')}
-            value={t('intro.bar.manualChecks.value')}
-            width="62%"
-            color={BRAND.amber}
-          />
-          <Bar
-            label={t('intro.bar.aiChecks')}
-            value={t('intro.bar.aiChecks.value')}
-            width="100%"
-            color={BRAND.green}
-          />
+          <Bar label={t('intro.bar.manualChecks')} value={t('intro.bar.manualChecks.value')} width="62%" color={BRAND.amber} />
+          <Bar label={t('intro.bar.aiChecks')} value={t('intro.bar.aiChecks.value')} width="100%" color={BRAND.green} />
 
           <Hr style={hr} />
 
@@ -179,7 +124,6 @@ const Email = ({
             • {t('intro.benefit.1')}
             <br />• {t('intro.benefit.2')}
             <br />• {t('intro.benefit.3')}
-            <br />• {t('intro.benefit.4')}
             <br />• {t('intro.benefit.5')}
           </Text>
 
@@ -188,10 +132,14 @@ const Email = ({
           <Text style={{ ...small, fontWeight: 700, color: BRAND.navy, margin: '0 0 12px', letterSpacing: '0.6px' }}>
             {t('intro.section.pricing')}
           </Text>
-          {PLANS.map((p) => (
-            <PlanRow key={p.id} name={p.name} price={t('intro.plan.price', { price: p.price })} tagline={p.tagline} />
-          ))}
-          <Text style={{ ...small, margin: '10px 0 0' }}>{t('intro.addons')}</Text>
+          <Section style={{ border: `1px solid ${BRAND.border}`, borderRadius: '10px', padding: '16px', marginBottom: '18px' }}>
+            <Text style={{ ...text, margin: 0, fontWeight: 700, fontSize: '18px', color: BRAND.navy }}>
+              CertivoIQ Platform — $65,000/year
+            </Text>
+            <Text style={{ ...small, margin: '6px 0 0' }}>
+              One annual subscription includes all generally available platform capabilities. No feature tiers or training add-ons.
+            </Text>
+          </Section>
 
           <Text style={{ ...small, fontWeight: 700, color: BRAND.red, margin: '0 0 12px', letterSpacing: '0.6px' }}>
             {t('intro.section.risk')}
