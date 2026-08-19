@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Rocket, GraduationCap, Loader2, AlertTriangle, CreditCard } from "lucide-react";
+import { CheckCircle2, Rocket, Loader2, AlertTriangle, CreditCard } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { getCheckoutSessionStatus } from "@/utils/payments.functions";
@@ -14,12 +14,12 @@ export const Route = createFileRoute("/checkout/return")({
       {
         name: "description",
         content:
-          "Your CertivoIQ subscription is active. Your certification reviews are retained and LaunchPad onboarding is ready to begin.",
+          "Your CertivoIQ annual platform subscription is active. Your certification reviews are retained and LaunchPad onboarding is ready to begin.",
       },
       { property: "og:title", content: "Subscription Confirmed — CertivoIQ" },
       {
         property: "og:description",
-        content: "Plan capacity unlocked and guided onboarding started.",
+        content: "Complete CertivoIQ platform access is active and guided onboarding is ready.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -34,9 +34,6 @@ export const Route = createFileRoute("/checkout/return")({
 function CheckoutReturn() {
   const { session_id: sessionId } = Route.useSearch();
 
-  // Never trust the URL alone: verify the session with Stripe and poll until
-  // the webhook has provisioned the account, so the page can't claim success
-  // on an abandoned or unpaid checkout.
   const { data, isLoading } = useQuery({
     queryKey: ["checkout-session", sessionId],
     enabled: !!sessionId,
@@ -65,18 +62,11 @@ function CheckoutReturn() {
             <Pill tone="neutral">No checkout session</Pill>
             <h1 className="mt-4 font-display text-[26px]">Nothing to confirm here</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              We couldn't find a checkout to confirm. If you just paid, open your billing page to check your plan
-              status.
+              We couldn't find a checkout to confirm. If you just paid, open your billing page to check your subscription status.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Button asChild>
-                <Link to="/billing">
-                  <CreditCard className="size-4" /> Go to billing
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/pricing">Back to plans</Link>
-              </Button>
+              <Button asChild><Link to="/billing"><CreditCard className="size-4" /> Go to billing</Link></Button>
+              <Button variant="outline" asChild><Link to="/pricing">Back to pricing</Link></Button>
             </div>
           </>
         )}
@@ -89,69 +79,41 @@ function CheckoutReturn() {
 
         {sessionId && failed && (
           <>
-            <Pill tone="reject">
-              <AlertTriangle className="size-3" /> Could not confirm
-            </Pill>
+            <Pill tone="reject"><AlertTriangle className="size-3" /> Could not confirm</Pill>
             <h1 className="mt-4 font-display text-[26px]">We couldn't confirm this payment</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              {(data as { error: string }).error} Your card has not been charged twice — check your billing page before
-              retrying.
+              {(data as { error: string }).error} Check your billing page before retrying.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Button asChild>
-                <Link to="/billing">
-                  <CreditCard className="size-4" /> Open billing
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/pricing">Back to plans</Link>
-              </Button>
+              <Button asChild><Link to="/billing"><CreditCard className="size-4" /> Open billing</Link></Button>
+              <Button variant="outline" asChild><Link to="/pricing">Back to pricing</Link></Button>
             </div>
           </>
         )}
 
         {sessionId && pending && (
           <>
-            <Pill tone="flag">
-              <Loader2 className="size-3 animate-spin" /> Payment processing
-            </Pill>
+            <Pill tone="flag"><Loader2 className="size-3 animate-spin" /> Payment processing</Pill>
             <h1 className="mt-4 font-display text-[26px]">Your payment is settling</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              Some payment methods take a little longer to clear. We'll unlock your plan capacity automatically the
-              moment it settles — no need to pay again.
+              Some payment methods take longer to clear. Complete platform access will unlock automatically when payment settles.
             </p>
           </>
         )}
 
         {sessionId && paid && (
           <>
-            <Pill tone="seal">
-              <CheckCircle2 className="size-3" /> Payment received
-            </Pill>
-            <h1 className="mt-4 font-display text-[26px]">You're audit-ready — subscription active</h1>
+            <Pill tone="seal"><CheckCircle2 className="size-3" /> Payment received</Pill>
+            <h1 className="mt-4 font-display text-[26px]">CertivoIQ platform access is active</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              Your plan capacity is unlocked and your FREE certification review files have been kept. Your guided
-              onboarding has started.
+              Your $65,000 annual subscription includes complete access to all generally available CertivoIQ platform capabilities. Your free-review files have been retained and guided onboarding is ready.
               {!("error" in data!) && !data!.provisioned
-                ? " Final provisioning is finishing up — refresh billing in a few seconds if limits still look old."
+                ? " Final provisioning is finishing up — refresh billing if access still appears limited."
                 : ""}
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Button asChild>
-                <Link to="/launchpad">
-                  <Rocket className="size-4" /> Start LaunchPad onboarding
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/academy">
-                  <GraduationCap className="size-4" /> Open CertivoIQ Academy
-                </Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link to="/billing">
-                  <CreditCard className="size-4" /> Account & billing
-                </Link>
-              </Button>
+              <Button asChild><Link to="/launchpad"><Rocket className="size-4" /> Start LaunchPad onboarding</Link></Button>
+              <Button variant="ghost" asChild><Link to="/billing"><CreditCard className="size-4" /> Account & billing</Link></Button>
             </div>
           </>
         )}
