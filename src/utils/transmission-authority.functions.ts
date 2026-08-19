@@ -1,4 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
+﻿import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { evaluateSubmissionAuthority } from "@/lib/certification-authority.mjs";
@@ -102,6 +102,22 @@ export const getTransmissionAuthority = createServerFn({ method: "GET" })
       } as const;
     }
 
+    const { data: token, error: tokenError } = await supabase
+      .from("hfa_transmission_tokens")
+      .select(
+        "id, submission_id, agency_id, manifest_sha256, issued_at, expires_at, consumed_at, revoked_at",
+      )
+      .eq("submission_id", submission.id)
+      .eq("agency_id", submission.agency_id)
+      .eq("manifest_sha256", manifest.manifest_sha256)
+      .is("consumed_at", null)
+      .is("revoked_at", null)
+      .order("issued_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (tokenError) throw tokenError;
+
     const findings = findingsResult.data ?? [];
     const findingIds = findings.map((finding) => finding.id);
 
@@ -124,6 +140,8 @@ export const getTransmissionAuthority = createServerFn({ method: "GET" })
       manifest,
     });
 
+    const evaluatedAt = new Date().toISOString();
+
     const result = evaluateTransmissionAuthority({
       submissionAuthority,
       manifest,
@@ -133,6 +151,19 @@ export const getTransmissionAuthority = createServerFn({ method: "GET" })
       },
       grant: grantResult.data,
       priorSubmissions: priorSubmissionsResult.data ?? [],
+      submissionId: submission.id,
+      evaluatedAt,
+      token: token
+        ? {
+            tokenId: token.id,
+            submissionId: token.submission_id,
+            manifestSha256: token.manifest_sha256,
+            destinationAgencyId: token.agency_id,
+            issuedAt: token.issued_at,
+            expiresAt: token.expires_at,
+            consumedAt: token.consumed_at,
+          }
+        : null,
     });
 
     return {

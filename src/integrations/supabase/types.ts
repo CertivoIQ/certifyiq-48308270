@@ -1157,6 +1157,60 @@ export type Database = {
           },
         ]
       }
+      hfa_transmission_tokens: {
+        Row: {
+          agency_id: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          issued_at: string
+          issued_by: string
+          manifest_sha256: string
+          revoked_at: string | null
+          submission_id: string
+        }
+        Insert: {
+          agency_id: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          issued_at?: string
+          issued_by: string
+          manifest_sha256: string
+          revoked_at?: string | null
+          submission_id: string
+        }
+        Update: {
+          agency_id?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          manifest_sha256?: string
+          revoked_at?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_transmission_tokens_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_transmission_tokens_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hfa_submissions: {
         Row: {
           accepted_at: string | null
