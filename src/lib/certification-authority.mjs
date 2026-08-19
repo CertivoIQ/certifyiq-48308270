@@ -1,4 +1,4 @@
-export const SUBMISSION_AUTHORITY = Object.freeze({
+﻿export const SUBMISSION_AUTHORITY = Object.freeze({
   allowed: "ALLOWED",
   blocked: "BLOCKED",
 });
@@ -9,6 +9,8 @@ export const SUBMISSION_STATUS = Object.freeze({
   undetermined: "UNDETERMINED_FINDING",
   remediationRequired: "REMEDIATION_REQUIRED",
   staleApproval: "STALE_APPROVAL",
+  expiredApproval: "EXPIRED_APPROVAL",
+  revokedApproval: "REVOKED_APPROVAL",
   incomplete: "INCOMPLETE_REVIEW",
 });
 
@@ -17,6 +19,7 @@ export function evaluateSubmissionAuthority({
   findings = [],
   reviews = [],
   manifest = null,
+  evaluatedAt = new Date().toISOString(),
 } = {}) {
   if (!item || item.status !== "completed" || !manifest?.manifest_sha256) {
     return {
@@ -60,6 +63,10 @@ export function evaluateSubmissionAuthority({
   const missingApproval = [];
   const remediation = [];
   const staleApproval = [];
+  const expiredApproval = [];
+  const revokedApproval = [];
+
+  const evaluationTime = new Date(evaluatedAt).getTime();
 
   for (const finding of findings) {
     const review = latestReviewByFinding.get(finding.id);
@@ -79,6 +86,19 @@ export function evaluateSubmissionAuthority({
       continue;
     }
 
+    if (review.revoked_at) {
+      revokedApproval.push(finding.id);
+      continue;
+    }
+
+    if (
+      review.expires_at &&
+      evaluationTime > new Date(review.expires_at).getTime()
+    ) {
+      expiredApproval.push(finding.id);
+      continue;
+    }
+
     if (
       review.manifest_sha256 &&
       review.manifest_sha256 !== manifest.manifest_sha256
@@ -94,6 +114,26 @@ export function evaluateSubmissionAuthority({
       reason:
         "One or more current findings require remediation before submission.",
       affectedFindingIds: remediation,
+    };
+  }
+
+  if (revokedApproval.length) {
+    return {
+      submissionAuthority: SUBMISSION_AUTHORITY.blocked,
+      submissionStatus: SUBMISSION_STATUS.revokedApproval,
+      reason:
+        "One or more human approvals have been revoked.",
+      affectedFindingIds: revokedApproval,
+    };
+  }
+
+  if (expiredApproval.length) {
+    return {
+      submissionAuthority: SUBMISSION_AUTHORITY.blocked,
+      submissionStatus: SUBMISSION_STATUS.expiredApproval,
+      reason:
+        "One or more human approvals have expired.",
+      affectedFindingIds: expiredApproval,
     };
   }
 
