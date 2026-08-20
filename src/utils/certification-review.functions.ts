@@ -309,7 +309,7 @@ export const getCertificationReview = createServerFn({ method: "GET" })
     const reviews = findingIds.length
       ? await context.supabase
           .from("finding_reviews")
-          .select("finding_id, decision, reason, created_at, reviewer_id")
+          .select("finding_id, decision, reason, created_at, reviewer_id, manifest_sha256, expires_at, revoked_at")
           .in("finding_id", findingIds)
           .order("created_at", { ascending: false })
       : { data: [], error: null };
@@ -338,6 +338,7 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
       findingId: string;
       decision: ReviewDecisionInput;
       reason?: string;
+      expiresAt?: string;
     }) => {
       if (!data?.findingId) {
         throw new Error("A finding id is required.");
@@ -355,6 +356,19 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
 
       if (data.reason && data.reason.length > 2000) {
         throw new Error("The reason is too long.");
+      }
+
+      if (data.expiresAt) {
+        const expiresAt = new Date(data.expiresAt);
+        if (Number.isNaN(expiresAt.getTime())) {
+          throw new Error("The approval expiration timestamp is invalid.");
+        }
+        if (data.decision !== "approved") {
+          throw new Error("Only an approval may have an expiration timestamp.");
+        }
+        if (expiresAt.getTime() <= Date.now()) {
+          throw new Error("The approval expiration timestamp must be in the future.");
+        }
       }
 
       return data;
@@ -416,6 +430,8 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
         reviewer_id: userId,
         decision: data.decision,
         reason: data.reason ?? null,
+        expires_at: data.expiresAt ?? null,
+        revoked_at: null,
         manifest_sha256: manifest.manifest_sha256,
       });
 
@@ -434,6 +450,108 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
       findingId: finding.id,
       decision: data.decision,
       manifestSha256: manifest.manifest_sha256,
+    } as const;
+  });
+/** Explicit human revocation. Appends a new immutable review record; prior approvals are never mutated. */
+export const revokeFindingApproval = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      findingId: string;
+      reason: string;
+    }) => {
+      if (!data?.findingId) {
+        throw new Error("A finding id is required.");
+      }
+
+      const reason = data.reason?.trim();
+
+      if (!reason) {
+        throw new Error("A revocation reason is required.");
+      }
+
+      if (reason.length > 2000) {
+        throw new Error("The revocation reason is too long.");
+      }
+
+      return {
+        findingId: data.findingId,
+        reason,
+      };
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: finding, error: findingError } = await supabase
+      .from("compliance_findings")
+      .select("id")
+      .eq("id", data.findingId)
+      .maybeSingle();
+
+    if (findingError) throw findingError;
+
+    if (!finding) {
+      return {
+        error: "That finding is not available.",
+      } as const;
+    }
+
+    const { data: latestReview, error: reviewLookupError } = await supabase
+      .from("finding_reviews")
+      .select(
+        "decision, manifest_sha256, expires_at, revoked_at, created_at",
+      )
+      .eq("finding_id", finding.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (reviewLookupError) throw reviewLookupError;
+
+    if (!latestReview || latestReview.decision !== "approved") {
+      return {
+        error: "There is no current approval to revoke.",
+      } as const;
+    }
+
+    if (latestReview.revoked_at) {
+      return {
+        error: "The latest approval has already been revoked.",
+      } as const;
+    }
+
+    if (!latestReview.manifest_sha256) {
+      return {
+        error: "The approval cannot be revoked because its evidence manifest is missing.",
+      } as const;
+    }
+
+    const revokedAt = new Date().toISOString();
+
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+
+    const { error: revokeError } = await supabaseAdmin
+      .from("finding_reviews")
+      .insert({
+        finding_id: finding.id,
+        user_id: userId,
+        reviewer_id: userId,
+        decision: "approved",
+        reason: data.reason,
+        manifest_sha256: latestReview.manifest_sha256,
+        expires_at: latestReview.expires_at,
+        revoked_at: revokedAt,
+      });
+
+    if (revokeError) throw revokeError;
+
+    return {
+      findingId: finding.id,
+      revokedAt,
+      manifestSha256: latestReview.manifest_sha256,
     } as const;
   });
 export const getSubmissionAuthority = createServerFn({ method: "GET" })
@@ -480,7 +598,7 @@ export const getSubmissionAuthority = createServerFn({ method: "GET" })
       ? await supabase
           .from("finding_reviews")
           .select(
-            "finding_id, decision, reason, reviewer_id, created_at, manifest_sha256",
+            "finding_id, decision, reason, reviewer_id, created_at, manifest_sha256, expires_at, revoked_at",
           )
           .in("finding_id", findingIds)
           .order("created_at", { ascending: false })

@@ -903,30 +903,36 @@ export type Database = {
         Row: {
           created_at: string
           decision: string
+          expires_at: string | null
           finding_id: string
           id: string
           manifest_sha256: string | null
           reason: string | null
+          revoked_at: string | null
           reviewer_id: string
           user_id: string
         }
         Insert: {
           created_at?: string
           decision: string
+          expires_at?: string | null
           finding_id: string
           id?: string
           manifest_sha256?: string | null
           reason?: string | null
+          revoked_at?: string | null
           reviewer_id: string
           user_id: string
         }
         Update: {
           created_at?: string
           decision?: string
+          expires_at?: string | null
           finding_id?: string
           id?: string
           manifest_sha256?: string | null
           reason?: string | null
+          revoked_at?: string | null
           reviewer_id?: string
           user_id?: string
         }
