@@ -500,7 +500,7 @@ export const revokeFindingApproval = createServerFn({ method: "POST" })
     const { data: latestReview, error: reviewLookupError } = await supabase
       .from("finding_reviews")
       .select(
-        "decision, manifest_sha256, expires_at, revoked_at, created_at",
+        "id, decision, manifest_sha256, expires_at, revoked_at, created_at",
       )
       .eq("finding_id", finding.id)
       .order("created_at", { ascending: false })
@@ -544,7 +544,28 @@ export const revokeFindingApproval = createServerFn({ method: "POST" })
         manifest_sha256: latestReview.manifest_sha256,
         expires_at: latestReview.expires_at,
         revoked_at: revokedAt,
+        revoked_review_id: latestReview.id,
       });
+
+    if (revokeError?.code === "23505") {
+      const { data: existingRevocation, error: existingRevocationError } =
+        await supabaseAdmin
+          .from("finding_reviews")
+          .select("revoked_at, manifest_sha256")
+          .eq("revoked_review_id", latestReview.id)
+          .maybeSingle();
+
+      if (existingRevocationError) throw existingRevocationError;
+
+      if (existingRevocation) {
+        return {
+          findingId: finding.id,
+          revokedAt: existingRevocation.revoked_at,
+          manifestSha256: existingRevocation.manifest_sha256,
+          alreadyRevoked: true,
+        } as const;
+      }
+    }
 
     if (revokeError) throw revokeError;
 
@@ -552,6 +573,7 @@ export const revokeFindingApproval = createServerFn({ method: "POST" })
       findingId: finding.id,
       revokedAt,
       manifestSha256: latestReview.manifest_sha256,
+      alreadyRevoked: false,
     } as const;
   });
 export const getSubmissionAuthority = createServerFn({ method: "GET" })
