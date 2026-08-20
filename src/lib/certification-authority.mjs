@@ -93,7 +93,7 @@ export function evaluateSubmissionAuthority({
 
     if (
       review.expires_at &&
-      evaluationTime > new Date(review.expires_at).getTime()
+      evaluationTime >= new Date(review.expires_at).getTime()
     ) {
       expiredApproval.push(finding.id);
       continue;

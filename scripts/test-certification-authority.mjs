@@ -163,6 +163,33 @@ test("expired human approval blocks submission", () => {
   assert.equal(result.submissionStatus, "EXPIRED_APPROVAL");
 });
 
+test("approval is expired at the exact expiration boundary", () => {
+  const result = evaluateSubmissionAuthority({
+    item,
+    manifest,
+    findings,
+    evaluatedAt: "2026-08-20T00:00:00Z",
+    reviews: [
+      {
+        finding_id: "F-001",
+        decision: "approved",
+        created_at: "2026-08-14T00:00:00Z",
+        manifest_sha256: "manifest-v1",
+        expires_at: "2026-08-20T00:00:00Z",
+      },
+      {
+        finding_id: "F-002",
+        decision: "approved",
+        created_at: "2026-08-14T00:00:01Z",
+        manifest_sha256: "manifest-v1",
+      },
+    ],
+  });
+
+  assert.equal(result.submissionAuthority, "BLOCKED");
+  assert.equal(result.submissionStatus, "EXPIRED_APPROVAL");
+});
+
 test("current unexpired human approval remains valid", () => {
   const result = evaluateSubmissionAuthority({
     item,

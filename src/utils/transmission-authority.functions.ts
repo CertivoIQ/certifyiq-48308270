@@ -133,14 +133,15 @@ export const getTransmissionAuthority = createServerFn({ method: "GET" })
 
     if (reviewsResult.error) throw reviewsResult.error;
 
+    const evaluatedAt = new Date().toISOString();
+
     const submissionAuthority = evaluateSubmissionAuthority({
       item: itemResult.data,
       findings,
       reviews: reviewsResult.data ?? [],
       manifest,
+      evaluatedAt,
     });
-
-    const evaluatedAt = new Date().toISOString();
 
     const result = evaluateTransmissionAuthority({
       submissionAuthority,
