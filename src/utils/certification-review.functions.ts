@@ -517,7 +517,10 @@ export const revokeFindingApproval = createServerFn({ method: "POST" })
 
     if (latestReview.revoked_at) {
       return {
-        error: "The latest approval has already been revoked.",
+        findingId: finding.id,
+        revokedAt: latestReview.revoked_at,
+        manifestSha256: latestReview.manifest_sha256,
+        alreadyRevoked: true,
       } as const;
     }
 
