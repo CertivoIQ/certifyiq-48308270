@@ -909,6 +909,7 @@ export type Database = {
           manifest_sha256: string | null
           reason: string | null
           revoked_at: string | null
+          revoked_review_id: string | null
           reviewer_id: string
           user_id: string
         }
@@ -921,6 +922,7 @@ export type Database = {
           manifest_sha256?: string | null
           reason?: string | null
           revoked_at?: string | null
+          revoked_review_id?: string | null
           reviewer_id: string
           user_id: string
         }
@@ -933,6 +935,7 @@ export type Database = {
           manifest_sha256?: string | null
           reason?: string | null
           revoked_at?: string | null
+          revoked_review_id?: string | null
           reviewer_id?: string
           user_id?: string
         }
@@ -942,6 +945,13 @@ export type Database = {
             columns: ["finding_id"]
             isOneToOne: false
             referencedRelation: "compliance_findings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finding_reviews_revoked_review_id_fkey"
+            columns: ["revoked_review_id"]
+            isOneToOne: true
+            referencedRelation: "finding_reviews"
             referencedColumns: ["id"]
           },
         ]
