@@ -64,7 +64,7 @@ test("payment code requires explicit live credentials and signed webhooks", () =
   assert.match(stripe, /Invalid webhook signature/);
 });
 
-test("SupportIQ remains authenticated and human-gated for risky support", () => {
+test("SupportIQ remains authenticated and agent-gated for risky support", () => {
   const route = read("src/routes/_authenticated/supportiq.tsx");
   const triage = read("src/lib/support-triage.mjs");
   assert.match(route, /triageSupportRequest/);
@@ -92,4 +92,58 @@ test("sitemap leads with public marketing and excludes authenticated dashboard",
 test("repository is marked proprietary", () => {
   const license = read("LICENSE");
   assert.match(license, /proprietary|all rights reserved/i);
+});
+
+
+test("public pricing uses the single annual platform license", () => {
+  const pricing = read("src/routes/pricing.tsx");
+  const catalog = read("src/lib/platform-data.ts");
+  const combined = pricing + catalog;
+
+  assert.match(combined, /\$65,000/);
+  assert.match(pricing, /Request a Demo/i);
+  assert.doesNotMatch(combined, /\$999|\$4,999|\$9,999|\$14,999/);
+  assert.doesNotMatch(pricing, /Professional|Enterprise Plus|Academy|add-on|overage/i);
+});
+
+test("public launch surfaces use federal baseline and agent terminology", () => {
+  const files = [
+    "src/routes/welcome.tsx",
+    "src/routes/pricing.tsx",
+    "src/routes/methodology.tsx",
+    "src/routes/security.tsx",
+    "src/routes/terms.tsx",
+    "src/components/CertivoIQVoiceoverVideo.tsx",
+    "src/components/CertivoIQVoiceoverVideoBase.tsx",
+    "src/components/explainer-video.tsx",
+    "src/routes/_authenticated/marketing-kit.tsx",
+  ];
+  const combined = files.map(read).join("\n");
+
+  assert.match(combined, /Federal baseline/i);
+  assert.match(combined, /Manual Review/);
+  assert.match(combined, /Agent Approval/);
+  assert.match(combined, /Agent Signature/);
+  assert.doesNotMatch(combined, /human review|human approval|human verification|human sign-off/i);
+  assert.doesNotMatch(combined, /coverage for all 50 states|compliance intelligence for all 50 states/i);
+});
+
+test("public acquisition uses demo requests instead of free-file intake", () => {
+  const files = [
+    "src/routes/welcome.tsx",
+    "src/routes/pricing.tsx",
+    "src/components/CertivoIQVoiceoverVideo.tsx",
+    "src/components/CertivoIQVoiceoverVideoBase.tsx",
+    "src/components/explainer-video.tsx",
+  ];
+  const combined = files.map(read).join("\n");
+
+  assert.match(combined, /Request a Demo/i);
+  assert.doesNotMatch(combined, /TRY CERTIVOIQ FOR FREE|3 FREE CERTIFICATION REVIEWS|NO CREDIT CARD REQUIRED/);
+});
+
+test("primary application navigation excludes removed training and free-review products", () => {
+  const shell = read("src/components/app-shell.tsx");
+  assert.doesNotMatch(shell, /to=["']\/academy["']/);
+  assert.doesNotMatch(shell, /to=["']\/trial["']/);
 });
