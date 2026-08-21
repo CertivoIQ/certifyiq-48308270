@@ -72,6 +72,16 @@ export const triageSupportRequest = createServerFn({ method: "POST" })
         priority: crmPriority(classification.priority),
         channel: "supportiq",
         tags,
+        triage_category: classification.category,
+        triage_priority: classification.priority,
+        triage_disposition: classification.disposition,
+        agent_confidence: data.confidence,
+        human_required: classification.humanRequired,
+        supportiq_metadata: {
+          source: "authenticated_chat",
+          gate: "deterministic-v1",
+          actionPlan,
+        },
       })
       .select("id, case_number, status, priority, created_at")
       .single();

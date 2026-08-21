@@ -80,6 +80,33 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: number[]
+          created_at: string
+          current_step: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       certification_facts: {
         Row: {
           confidence: number

@@ -1,11 +1,12 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Check, LifeBuoy, Loader2, Rocket, UploadCloud } from "lucide-react";
+
 import { AppShell } from "@/components/app-shell";
-import { Panel, Pill, Meter } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { LAUNCHPAD_STEPS, AUDIT_JOURNEY, COACH_TIPS } from "@/lib/platform-data";
+import { Meter, Panel, Pill } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, GraduationCap, Rocket, UploadCloud } from "lucide-react";
+import { LAUNCHPAD_STEPS } from "@/lib/platform-data";
 
 export const Route = createFileRoute("/launchpad")({
   ssr: false,
@@ -21,134 +22,285 @@ export const Route = createFileRoute("/launchpad")({
   },
   head: () => ({
     meta: [
-      { title: "CertivoIQ LaunchPad — Guided Setup to Audit-Ready" },
+      { title: "CertivoIQ LaunchPad — Self-Directed Account Setup" },
       {
         name: "description",
         content:
-          "A guided 10-step wizard that takes a new operator from signup to audit-ready: organization setup, portfolio import, resident and document uploads, certification review and team invites.",
+          "Persistent, self-directed CertivoIQ onboarding for organization setup, portfolio configuration, certification review, team access, and support.",
       },
-      { property: "og:title", content: "CertivoIQ LaunchPad — Your guided path from signup to audit-ready" },
-      {
-        property: "og:description",
-        content: "Ten steps, 20–30 minutes, ending in CertivoIQ Launch Certified.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:url", content: "https://certivoiq.com/launchpad" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
-    links: [{ rel: "canonical", href: "https://certivoiq.com/launchpad" }],
   }),
   component: LaunchPadPage,
 });
 
 function LaunchPadPage() {
+  const { user } = Route.useRouteContext();
   const [step, setStep] = useState(1);
-  const current = LAUNCHPAD_STEPS[step - 1]!;
-  const pct = Math.round(((step - 1) / LAUNCHPAD_STEPS.length) * 100);
-  const done = step > LAUNCHPAD_STEPS.length;
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [completedAt, setCompletedAt] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProgress() {
+      setLoading(true);
+      setError(null);
+
+      const { data, error: loadError } = await supabase
+        .from("customer_onboarding_progress")
+        .select("current_step, completed_steps, completed_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (loadError) {
+        setError("Your onboarding progress could not be loaded.");
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
+        setStep(Math.max(1, Math.min(LAUNCHPAD_STEPS.length, data.current_step)));
+        setCompletedSteps(data.completed_steps ?? []);
+        setCompletedAt(data.completed_at);
+        setLoading(false);
+        return;
+      }
+
+      const { error: createError } = await supabase
+        .from("customer_onboarding_progress")
+        .insert({
+          user_id: user.id,
+          current_step: 1,
+          completed_steps: [],
+          completed_at: null,
+        });
+
+      if (cancelled) return;
+      if (createError) {
+        setError("Your onboarding checklist could not be started.");
+      }
+      setLoading(false);
+    }
+
+    void loadProgress();
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id]);
+
+  async function saveProgress(
+    nextStep: number,
+    nextCompletedSteps: number[],
+    nextCompletedAt: string | null,
+  ) {
+    setSaving(true);
+    setError(null);
+
+    const { error: saveError } = await supabase
+      .from("customer_onboarding_progress")
+      .upsert(
+        {
+          user_id: user.id,
+          current_step: nextStep,
+          completed_steps: nextCompletedSteps,
+          completed_at: nextCompletedAt,
+        },
+        { onConflict: "user_id" },
+      );
+
+    if (saveError) {
+      setError("Your progress was not saved. Please try again before leaving this page.");
+      setSaving(false);
+      return false;
+    }
+
+    setStep(nextStep);
+    setCompletedSteps(nextCompletedSteps);
+    setCompletedAt(nextCompletedAt);
+    setSaving(false);
+    return true;
+  }
+
+  async function continueSetup() {
+    const currentId = LAUNCHPAD_STEPS[step - 1]!.id;
+    const nextCompletedSteps = Array.from(
+      new Set([...completedSteps, currentId]),
+    ).sort((a, b) => a - b);
+    const finishing = step === LAUNCHPAD_STEPS.length;
+
+    await saveProgress(
+      finishing ? step : step + 1,
+      nextCompletedSteps,
+      finishing ? new Date().toISOString() : completedAt,
+    );
+  }
+
+  async function goBack() {
+    await saveProgress(Math.max(1, step - 1), completedSteps, completedAt);
+  }
+
+  async function restartSetup() {
+    await saveProgress(1, [], null);
+  }
+
+  if (loading) {
+    return (
+      <AppShell
+        title="CertivoIQ LaunchPad"
+        subtitle="Self-directed account setup"
+      >
+        <Panel bodyClassName="flex items-center gap-3 p-6">
+          <Loader2 className="size-5 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading your saved onboarding progress…</p>
+        </Panel>
+      </AppShell>
+    );
+  }
+
+  const done = completedAt !== null;
+  const current = LAUNCHPAD_STEPS[Math.min(step - 1, LAUNCHPAD_STEPS.length - 1)]!;
+  const pct = done
+    ? 100
+    : Math.round((completedSteps.length / LAUNCHPAD_STEPS.length) * 100);
 
   return (
     <AppShell
       title="CertivoIQ LaunchPad"
-      subtitle="Your guided path from signup to audit-ready"
-      actions={<Pill tone="seal">{done ? "100% complete" : `${pct}% complete`}</Pill>}
+      subtitle="Self-directed setup with progress saved automatically"
+      actions={<Pill tone="seal">{done ? "Setup complete" : `${pct}% complete`}</Pill>}
     >
-      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-4">
           <Panel bodyClassName="p-6">
             <div className="flex items-center gap-2">
               <Rocket className="size-4 text-primary" />
               <span className="cite text-[10.5px] uppercase tracking-[0.16em]">
-                {done ? "Graduation" : `Step ${step} of ${LAUNCHPAD_STEPS.length}`}
+                {done ? "Operational setup" : `Step ${step} of ${LAUNCHPAD_STEPS.length}`}
               </span>
             </div>
+
             <h2 className="mt-3 font-display text-[26px] leading-tight">
-              {done ? <span className="brand-text">You are officially live on CertivoIQ</span> : current.title}
+              {done ? (
+                <span className="brand-text">Your CertivoIQ setup checklist is complete</span>
+              ) : (
+                current.title
+              )}
             </h2>
-            <p className="mt-2 text-[14.5px]">{done ? "Awarded: CertivoIQ Launch Certified." : current.lead}</p>
+            <p className="mt-2 text-[14.5px]">
+              {done
+                ? "You can begin using the workflows authorized for your account."
+                : current.lead}
+            </p>
             <p className="mt-2 text-[13px] text-muted-foreground">
               {done
-                ? "Your Smart Success Coach now checks in for the next 90 days."
+                ? "This confirms account setup only. It is not a training certificate, compliance determination, or certification approval."
                 : current.detail}
             </p>
 
             <div className="mt-6">
-              <Meter value={done ? 100 : pct} tone="seal" />
+              <Meter value={pct} tone="seal" />
               <div className="mt-2 flex flex-wrap gap-1">
-                {LAUNCHPAD_STEPS.map((s) => (
-                  <span
-                    key={s.id}
-                    className={`h-2 w-6 rounded-full ${done || s.id < step ? "bg-seal" : s.id === step ? "bg-primary" : "bg-muted"}`}
-                  />
-                ))}
+                {LAUNCHPAD_STEPS.map((item) => {
+                  const complete = completedSteps.includes(item.id);
+                  return (
+                    <span
+                      key={item.id}
+                      className={`h-2 w-8 rounded-full ${
+                        complete
+                          ? "bg-seal"
+                          : item.id === step && !done
+                            ? "bg-primary"
+                            : "bg-muted"
+                      }`}
+                    />
+                  );
+                })}
               </div>
             </div>
 
+            {error ? (
+              <div className="mt-5 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            ) : null}
+
             <div className="mt-6 flex flex-wrap gap-2">
-              {step > 1 && !done && (
-                <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
+              {!done && step > 1 ? (
+                <Button variant="outline" onClick={() => void goBack()} disabled={saving}>
                   Back
                 </Button>
-              )}
+              ) : null}
+
               {done ? (
                 <>
                   <Button asChild>
                     <Link to="/compliance-intelligence">
-                      <UploadCloud className="size-4" /> Upload Your Certification
+                      <UploadCloud className="size-4" /> Open certification review
                     </Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link to="/dashboard">Open my dashboard</Link>
+                    <Link to="/dashboard">Open dashboard</Link>
                   </Button>
-                  <Button variant="outline" onClick={() => setStep(1)}>
-                    Restart wizard
+                  <Button variant="outline" onClick={() => void restartSetup()} disabled={saving}>
+                    {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+                    Review setup again
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => setStep((s) => s + 1)}>{current.cta}</Button>
+                <Button onClick={() => void continueSetup()} disabled={saving}>
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {current.cta}
+                </Button>
               )}
             </div>
           </Panel>
-
-          {done && (
-            <Panel bodyClassName="p-7">
-              <div className="rounded-lg border-2 border-primary/40 p-6 text-center">
-                <GraduationCap className="mx-auto size-7 text-primary" />
-                <p className="cite mt-3 text-[10.5px] uppercase tracking-[0.24em]">CertivoIQ LaunchPad</p>
-                <h3 className="mt-3 font-display text-[24px]">Launch Certified</h3>
-                <p className="mt-2 text-[13px] text-muted-foreground">
-                  Meridian Housing Partners · onboarding completed Aug 6, 2026
-                </p>
-              </div>
-            </Panel>
-          )}
         </div>
 
         <div className="space-y-4">
-          <Panel title="Audit Readiness Journey">
+          <Panel title="Setup checklist">
             <ul className="space-y-2.5">
-              {AUDIT_JOURNEY.map((j) => (
-                <li key={j.label} className="flex items-center gap-2.5 text-[13px]">
-                  <span
-                    className={`grid size-5 shrink-0 place-items-center rounded-full ${j.done ? "bg-seal text-primary-foreground" : "border border-border bg-muted"}`}
-                  >
-                    {j.done && <Check className="size-3" />}
-                  </span>
-                  <span className={j.done ? "" : "text-muted-foreground"}>{j.label}</span>
-                </li>
-              ))}
+              {LAUNCHPAD_STEPS.map((item) => {
+                const complete = completedSteps.includes(item.id);
+                return (
+                  <li key={item.id} className="flex items-center gap-2.5 text-[13px]">
+                    <span
+                      className={`grid size-5 shrink-0 place-items-center rounded-full ${
+                        complete
+                          ? "bg-seal text-primary-foreground"
+                          : "border border-border bg-muted"
+                      }`}
+                    >
+                      {complete ? <Check className="size-3" /> : null}
+                    </span>
+                    <span className={complete ? "" : "text-muted-foreground"}>
+                      {item.title}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </Panel>
-          <Panel title="Smart Success Coach" description="First 90 days of proactive check-ins">
-            <ul className="space-y-3">
-              {COACH_TIPS.map((t) => (
-                <li key={t.day} className="border-b border-border pb-2.5 last:border-0 last:pb-0">
-                  <p className="cite">{t.day}</p>
-                  <p className="mt-0.5 text-[12.5px]">{t.text}</p>
-                </li>
-              ))}
-            </ul>
+
+          <Panel
+            title="Self-service support"
+            description="SupportIQ answers routine product questions and creates a structured case for issues requiring review."
+          >
+            <Button variant="outline" asChild>
+              <Link to="/supportiq">
+                <LifeBuoy className="size-4" /> Open SupportIQ
+              </Link>
+            </Button>
           </Panel>
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-xs leading-5 text-muted-foreground">
+            Do not enter passwords, payment-card numbers, or unnecessary resident information in onboarding or support messages.
+          </div>
         </div>
       </div>
     </AppShell>

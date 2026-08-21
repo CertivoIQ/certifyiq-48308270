@@ -2,6 +2,27 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { timingSafeEqual } from "crypto";
 
+import {
+  SUPPORT_PRIORITY,
+  buildSupportActionPlan,
+  classifySupportRequest,
+} from "@/lib/support-triage.mjs";
+
+function crmPriority(priority: string) {
+  switch (priority) {
+    case SUPPORT_PRIORITY.security:
+      return "critical";
+    case SUPPORT_PRIORITY.production:
+    case SUPPORT_PRIORITY.billing:
+      return "high";
+    case SUPPORT_PRIORITY.compliance:
+    case SUPPORT_PRIORITY.lowConfidence:
+      return "normal";
+    default:
+      return "low";
+  }
+}
+
 const emailWebhookSchema = z.object({
   from: z.string().email(),
   to: z.union([z.string().email(), z.array(z.string().email())]).optional(),
@@ -49,6 +70,11 @@ export const Route = createFileRoute("/api/public/crm/support-email")({
         }
 
         const { from, subject, body } = parsed.data;
+        const classification = classifySupportRequest({
+          message: `${subject}\n${body}`,
+          confidence: 1,
+        });
+        const actionPlan = buildSupportActionPlan(classification);
 
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"
@@ -111,8 +137,29 @@ export const Route = createFileRoute("/api/public/crm/support-email")({
             channel: "email",
             source_email: from,
             status: "open",
-            priority: "normal",
-            tags: ["inbound"],
+            priority: crmPriority(classification.priority),
+            tags: [
+              "inbound",
+              "supportiq",
+              classification.category,
+              classification.priority,
+              classification.disposition,
+              classification.humanRequired
+                ? "human-required"
+                : "auto-resolution-eligible",
+            ],
+            triage_category: classification.category,
+            triage_priority: classification.priority,
+            triage_disposition: classification.disposition,
+            agent_confidence: 1,
+            human_required: classification.humanRequired,
+            supportiq_metadata: {
+              source: "support_email",
+              gate: "deterministic-v1",
+              messageId: parsed.data.messageId ?? null,
+              attachmentCount: parsed.data.attachments?.length ?? 0,
+              actionPlan,
+            },
           })
           .select("case_number")
           .single();
