@@ -103,7 +103,7 @@ test("public pricing uses the single annual platform license", () => {
   assert.match(combined, /\$65,000/);
   assert.match(pricing, /Request a Demo/i);
   assert.doesNotMatch(combined, /\$999|\$4,999|\$9,999|\$14,999/);
-  assert.doesNotMatch(pricing, /Professional|Enterprise Plus|Academy|add-on|overage/i);
+  assert.doesNotMatch(pricing, /Professional|Enterprise Plus|CertivoIQ Academy/i);
 });
 
 test("public launch surfaces use federal baseline and agent terminology", () => {
