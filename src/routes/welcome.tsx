@@ -5,7 +5,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
 import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
-import { coverageClaim } from "@/lib/stateCoverageRegistry";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useViewerState } from "@/hooks/use-viewer-state";
 import {
@@ -21,8 +20,6 @@ import {
   XCircle,
 } from "lucide-react";
 
-const FREE_REVIEW_COUNT = 3;
-
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
@@ -30,7 +27,7 @@ export const Route = createFileRoute("/welcome")({
       {
         name: "description",
         content:
-          "The compliance intelligence infrastructure for affordable housing. Upload certification files, surface traceable findings, and see the evidence behind every result.",
+          "Compliance intelligence infrastructure for affordable housing programs. Review certification evidence against supported federal requirements and trace every finding to its source.",
       },
       { property: "og:title", content: "CertivoIQ — Find compliance risk before the auditor." },
       {
@@ -106,7 +103,7 @@ function WelcomePage() {
           </nav>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild><Link to="/auth">Sign in</Link></Button>
-            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE</Link></Button>
+            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/contact-support"}>{isSubscriber ? "Open Dashboard" : "Request a Demo"}</Link></Button>
             <LanguageToggle />
             <ThemeToggle />
           </div>
@@ -117,25 +114,23 @@ function WelcomePage() {
         <section className="mx-auto max-w-7xl px-5 pb-16 pt-16 lg:px-8 lg:pb-24 lg:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-[1.02fr_.98fr] lg:gap-16">
             <div>
-              <Pill tone="neutral">The compliance intelligence infrastructure for affordable housing</Pill>
+              <Pill tone="neutral">Compliance intelligence infrastructure for affordable housing programs</Pill>
               <h1 className="mt-6 max-w-4xl font-display text-[48px] leading-[.98] tracking-[-0.035em] sm:text-[64px] lg:text-[76px]">
                 FIND COMPLIANCE RISK<br />BEFORE THE <span className="text-gold">AUDITOR.</span>
               </h1>
               <p className="mt-7 max-w-2xl text-[18px] leading-8 text-muted-foreground">
-                Upload a certification file. CertivoIQ reads the evidence, applies the versioned rules assigned to that property, and surfaces traceable findings your team can investigate before a missed issue becomes an expensive compliance problem.
+                CertivoIQ reads certification evidence, applies supported versioned federal requirements, and surfaces traceable findings your team can investigate before a missed issue becomes an expensive compliance problem.
               </p>
               <div className="mt-8">
                 <div className="flex flex-wrap items-start gap-3">
                   <div>
-                    <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE <ArrowRight className="ml-2 size-4" /></Link></Button>
-                    <p className="mt-2 text-[12px] font-semibold uppercase tracking-[.14em] text-gold">{FREE_REVIEW_COUNT} FREE CERTIFICATION REVIEWS</p>
-                    <p className="mt-1 text-[11px] uppercase tracking-[.14em] text-muted-foreground">NO CREDIT CARD REQUIRED</p>
+                    <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/contact-support"}>{isSubscriber ? "Open Dashboard" : "Request a Demo"} <ArrowRight className="ml-2 size-4" /></Link></Button>
                   </div>
                   <Button size="lg" variant="outline" asChild><a href="#how-it-works">See how it works</a></Button>
                 </div>
               </div>
               <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> No sales call required</span>
+                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Federal baseline review</span>
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Findings tied to source evidence</span>
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Nationwide federal baseline; state-specific packs require validation</span>
               </div>
@@ -216,7 +211,7 @@ function WelcomePage() {
             <div>
               <Pill tone="neutral">Built for defensibility</Pill>
               <h2 className="mt-5 font-display text-[38px] leading-tight sm:text-[50px]">Don't just get an answer.<br /><span className="text-gold">Know why.</span></h2>
-              <p className="mt-5 max-w-xl text-[15px] leading-7 text-background/65">Compliance intelligence should make the path from document to finding visible. CertivoIQ is designed around evidence lineage, versioned rule packs, and a complete record of every action.</p>
+              <p className="mt-5 max-w-xl text-[15px] leading-7 text-background/65">Compliance intelligence should make the path from document to finding visible. CertivoIQ is designed around evidence lineage, versioned federal rules, and a complete record of every action.</p>
               <div className="mt-7 grid gap-3 sm:grid-cols-2">
                 {["Source evidence stays attached to the finding","Rule evaluation is deterministic and explainable","Exceptions are surfaced instead of silently resolved","Every action is recorded in the audit trail"].map((item) => (
                   <div key={item} className="flex items-start gap-2.5 rounded-lg border border-background/10 bg-background/5 p-3 text-[12.5px] text-background/80"><Check className="mt-0.5 size-4 shrink-0 text-gold" />{item}</div>
@@ -234,7 +229,7 @@ function WelcomePage() {
               <h2 className="mt-4 font-display text-[38px] leading-tight sm:text-[50px]">A clearer view of compliance risk across the portfolio.</h2>
               <p className="mt-4 text-[15px] leading-7 text-muted-foreground">Built for owners, operators, compliance leaders, and property-management teams who need a defensible review process without adding another layer of administrative work.</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE <ArrowRight className="ml-2 size-4" /></Link></Button>
+                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/contact-support"}>{isSubscriber ? "Open Dashboard" : "Request a Demo"} <ArrowRight className="ml-2 size-4" /></Link></Button>
                 <Button size="lg" variant="outline" asChild><Link to="/methodology">See the methodology</Link></Button>
               </div>
             </div>
@@ -281,7 +276,7 @@ function WelcomePage() {
               <h2 className="mt-2 max-w-3xl font-display text-[28px] leading-tight sm:text-[34px]">One missed compliance finding can cost more than the system that helps you catch it.</h2>
               <p className="mt-2 max-w-3xl text-[13px] leading-6 text-muted-foreground">CertivoIQ is built to surface missing evidence, inconsistencies, and exceptions while your team still has time to investigate and resolve them.</p>
             </div>
-            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE <ArrowRight className="ml-2 size-4" /></Link></Button>
+            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/contact-support"}>{isSubscriber ? "Open Dashboard" : "Request a Demo"} <ArrowRight className="ml-2 size-4" /></Link></Button>
           </div>
         </section>
 
@@ -289,10 +284,8 @@ function WelcomePage() {
           <div className="rounded-2xl border border-gold/25 bg-accent px-6 py-10 text-center sm:px-10">
             <Pill tone="neutral">Start without a sales call</Pill>
             <h2 className="mx-auto mt-4 max-w-3xl font-display text-[34px] leading-tight sm:text-[46px]">Find the compliance issues your current process can miss.</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {FREE_REVIEW_COUNT} FREE certification reviews. Bring your own files, inspect the evidence trail, and decide whether CertivoIQ deserves a place in your compliance workflow.</p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>TRY CERTIVOIQ FOR FREE <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View plans</Link></Button></div>
-            <p className="mt-4 text-[12px] font-semibold uppercase tracking-[.14em] text-gold">{FREE_REVIEW_COUNT} FREE CERTIFICATION REVIEWS</p>
-            <p className="mt-1 text-[11px] uppercase tracking-[.14em] text-muted-foreground">NO CREDIT CARD REQUIRED</p>
+            <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Request a demonstration of the federal baseline review, evidence trail, Agent Approval workflow, and portfolio-level compliance visibility.</p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/contact-support"}>{isSubscriber ? "Open Dashboard" : "Request a Demo"} <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View pricing</Link></Button></div>
           </div>
         </section>
       </main>
@@ -302,7 +295,7 @@ function WelcomePage() {
           <div><p className="font-display text-sm">Certivo<span className="text-gold">IQ</span></p><p className="mt-1 text-[11px] text-muted-foreground">FIND COMPLIANCE RISK BEFORE THE AUDITOR.</p></div>
           <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/privacy">Privacy</Link><Link className="underline" to="/terms">Terms</Link><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
         </div>
-        <p className="cite mt-4 text-center">{coverageClaim()}</p>
+        <p className="cite mt-4 text-center">Federal baseline review only. State-agency, allocating-agency, local, and project-specific requirements require separate Manual Review.</p>
       </footer>
     </div>
   );
