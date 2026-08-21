@@ -64,9 +64,9 @@ const scenes: Scene[] = [
   {
     eyebrow: "3 · Apply rules",
     title: "Activate every applicable rule layer",
-    body: "LIHTC, HOME, Section 8, HOTMA, and the property's assigned state rule pack are evaluated together.",
+    body: "Supported federal LIHTC, HOME, Project-Based Section 8, and HOTMA requirements are evaluated together.",
     narration:
-      "The platform evaluates LIHTC, HOME, Section 8, HOTMA, and the property's assigned state rule pack together, using versioned rules.",
+      "The platform evaluates supported federal LIHTC, HOME, Project-Based Section 8, and HOTMA requirements using versioned rules. State and project-specific requirements require separate Manual Review.",
     audioSrc: "/audio/welcome/scene-03-rules.mp3",
     fallbackSeconds: 10,
     Visual: RulesVisual,
@@ -82,11 +82,11 @@ const scenes: Scene[] = [
     Visual: FindingsVisual,
   },
   {
-    eyebrow: "5 · Reviewer sign-off",
+    eyebrow: "5 · Agent Approval",
     title: "Keep your compliance team in control",
     body: "CertivoIQ prepares the review; your authorized staff make and record the decision.",
     narration:
-      "CertivoIQ prepares the review, while your compliance team keeps sign-off authority and a complete record of every action.",
+      "CertivoIQ prepares the review while your authorized compliance agent retains Agent Approval authority and provides an Agent Signature.",
     audioSrc: "/audio/welcome/scene-05-approval.mp3",
     fallbackSeconds: 9,
     Visual: ApprovalVisual,
@@ -108,7 +108,7 @@ const transcript = scenes.map((scene) => scene.narration);
 export default function CertivoIQVoiceoverVideo({
   accountState = "visitor",
   demoDashboardHref = "/demo-dashboard",
-  trialHref = "/trial",
+  trialHref = "/contact-support",
   className = "",
 }: CertivoIQVoiceoverVideoProps) {
   const [scene, setScene] = useState(0);
@@ -252,7 +252,7 @@ export default function CertivoIQVoiceoverVideo({
                 href={trialHref}
                 className="rounded-lg bg-[#FEC229] px-4 py-2.5 text-sm font-semibold text-[#012447] transition hover:bg-[#ffd35c]"
               >
-                TRY CERTIVOIQ FOR FREE
+                REQUEST A DEMO
               </a>
             )}
           </div>
@@ -596,7 +596,7 @@ function ApprovalVisual() {
           </div>
           <div className="mt-5 rounded-xl border border-[#FEC229]/30 bg-[#FEC229]/10 px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-semibold text-[#FEC229]">
-              <CheckCircle2 className="size-4" /> Sign-off recorded
+              <CheckCircle2 className="size-4" /> Agent Signature recorded
             </p>
           </div>
           <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
