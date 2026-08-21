@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Panel } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import {
+  COMPLIANCE_AUTHORITY_HIERARCHY,
   RELEASE_CHECKLIST,
   OFFICIAL_STARTING_SOURCES,
   coverageClaim,
@@ -174,6 +175,28 @@ function MethodologyPage() {
                 </li>
               ))}
             </ul>
+          </Section>
+
+          <Section id="authority-hierarchy" title="Controlling compliance authorities">
+            <p>
+              A compliance determination must be grounded in the controlling governmental or
+              project-specific source that applies to the property, program and certification
+              effective date. Industry-association guidance is not treated as an independent rule
+              authority.
+            </p>
+            <ul className="list-disc space-y-1 pl-5">
+              {COMPLIANCE_AUTHORITY_HIERARCHY.map((item) => (
+                <li key={item.authority}>
+                  <strong>{item.authority}</strong> — {item.scope}: {item.controllingSources}.
+                </li>
+              ))}
+            </ul>
+            <p>
+              State, local and project-specific requirements affect an automated Pass or Fail only
+              after the applicable source has been archived, versioned, tested and released in a
+              validated rule pack. Otherwise the review is blocked as Unable to determine and routed
+              to Manual Review.
+            </p>
           </Section>
 
           <Section id="release" title="State pack release checklist">
