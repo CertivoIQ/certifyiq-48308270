@@ -28,6 +28,10 @@ import { LeadsPanel } from "@/components/crm/leads-panel";
 import { PipelinePanel } from "@/components/crm/pipeline-panel";
 import { MailMergeDialog } from "@/components/crm/mail-merge-dialog";
 import {
+  PostSalePriorityChecklist,
+  type PostSaleChecklistEvent,
+} from "@/components/crm/post-sale-priority-checklist";
+import {
   STAGES,
   STAGE_TONE,
   money,
@@ -73,6 +77,7 @@ function CrmDashboard() {
       const { data, error } = await supabase
         .from("crm_accounts")
         .select("*")
+        .eq("is_demo", false)
         .order("arr", { ascending: false });
       if (error) throw error;
       return data;
@@ -140,6 +145,23 @@ function CrmDashboard() {
         .limit(50);
       if (error) throw error;
       return data;
+    },
+  });
+
+  const postSaleChecklists = useQuery({
+    queryKey: ["crm", "post-sale-checklists"],
+    enabled: isStaff,
+    refetchInterval: 60_000,
+    queryFn: async (): Promise<PostSaleChecklistEvent[]> => {
+      const { data, error } = await supabase
+        .from("crm_post_sale_checklists")
+        .select(
+          "id, account_id, status, trigger_reason, detected_at, surfaced_at, crm_accounts!inner(id, name, arr, closed_won_at)",
+        )
+        .in("status", ["pending", "acknowledged"])
+        .order("detected_at", { ascending: true });
+      if (error) throw error;
+      return data as unknown as PostSaleChecklistEvent[];
     },
   });
 
@@ -234,6 +256,14 @@ function CrmDashboard() {
           </div>
         </div>
       </section>
+
+      {(postSaleChecklists.data ?? []).length > 0 && (
+        <div className="mt-4 space-y-4">
+          {(postSaleChecklists.data ?? []).map((event) => (
+            <PostSalePriorityChecklist key={event.id} event={event} />
+          ))}
+        </div>
+      )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat

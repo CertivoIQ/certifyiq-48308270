@@ -1,6 +1,7 @@
 import type { Database } from "@/integrations/supabase/types";
 
 export type Account = Database["public"]["Tables"]["crm_accounts"]["Row"];
+export type PostSaleChecklist = Database["public"]["Tables"]["crm_post_sale_checklists"]["Row"];
 export type Contact = Database["public"]["Tables"]["crm_contacts"]["Row"];
 export type Campaign = Database["public"]["Tables"]["crm_campaigns"]["Row"];
 export type Template = Database["public"]["Tables"]["crm_templates"]["Row"];
