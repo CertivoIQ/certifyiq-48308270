@@ -166,8 +166,39 @@ export const RELEASE_CHECKLIST = [
   "Monitor official sources and suspend affected rules when uncertainty arises.",
 ] as const;
 
+export const COMPLIANCE_AUTHORITY_HIERARCHY = [
+  {
+    authority: "HUD program authority",
+    scope: "HUD-assisted properties",
+    controllingSources: "Applicable HUD regulations, notices, handbooks and contracts",
+  },
+  {
+    authority: "IRS / Treasury authority",
+    scope: "LIHTC and tax-exempt bond properties",
+    controllingSources: "Internal Revenue Code, Treasury regulations and official IRS guidance",
+  },
+  {
+    authority: "Other applicable federal authority",
+    scope: "Properties subject to another federal housing program",
+    controllingSources: "The governing federal statute, regulation or agency issuance",
+  },
+  {
+    authority: "State or local agency authority",
+    scope: "Properties within the allocating or monitoring agency's jurisdiction",
+    controllingSources: "The current QAP, compliance manual, agency notice and approved procedure",
+  },
+  {
+    authority: "Project-specific authority",
+    scope: "The individual property",
+    controllingSources: "The LURA, HAP contract, regulatory agreement and approved tenant-selection policy",
+  },
+] as const;
+
 export const OFFICIAL_STARTING_SOURCES = [
+  { name: "IRS Low-Income Housing Credit", url: "https://www.irs.gov/credits-deductions/businesses/low-income-housing-credit" },
+  { name: "HUD Multifamily occupancy requirements", url: "https://www.hud.gov/hudclips/handbooks/housing-4350-3" },
+  { name: "Federal income and asset regulations (24 CFR Part 5)", url: "https://www.ecfr.gov/current/title-24/subtitle-A/part-5" },
+  { name: "Federal HOME regulations (24 CFR Part 92)", url: "https://www.ecfr.gov/current/title-24/subtitle-A/part-92" },
   { name: "NCSHA state HFA directory", url: "https://www.ncsha.org/housing-help/" },
   { name: "HUD state information", url: "https://www.hud.gov/states" },
-  { name: "Federal HOME regulations (24 CFR Part 92)", url: "https://www.ecfr.gov/current/title-24/subtitle-A/part-92" },
 ] as const;
