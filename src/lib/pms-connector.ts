@@ -32,6 +32,16 @@ export type ConnectorRegistryEntry = {
   notes: string;
 };
 
+/** Candidate work is internal-only and must never feed public marketing. */
+export const CONNECTOR_CANDIDATES: ConnectorRegistryEntry[] = [
+  {
+    provider: "ResMan",
+    readiness: "no_agreement",
+    displayPublicly: false,
+    notes: "Connector foundation only; partner approval, credentials, health check, and reconciliation are pending.",
+  },
+];
+
 /** Empty until a pilot customer's PMS credentials and reconciliation exist. */
 export const AVAILABLE_CONNECTORS: ConnectorRegistryEntry[] = [];
 
