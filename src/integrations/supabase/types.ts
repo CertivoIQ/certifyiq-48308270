@@ -451,11 +451,14 @@ export type Database = {
         Row: {
           account_type: Database["public"]["Enums"]["crm_account_type"]
           arr: number
+          closed_won_at: string | null
+          contract_verified_at: string | null
           corporate_email: string | null
           created_at: string
           created_by: string | null
           hq: string | null
           id: string
+          is_demo: boolean
           last_contact_on: string | null
           last_touch: string | null
           lead_score: number
@@ -471,6 +474,7 @@ export type Database = {
           ownership_verification_status: string
           ownership_verified_at: string | null
           phone: string | null
+          payment_verified_at: string | null
           plan: string | null
           programs: string[]
           properties: number
@@ -490,11 +494,14 @@ export type Database = {
         Insert: {
           account_type?: Database["public"]["Enums"]["crm_account_type"]
           arr?: number
+          closed_won_at?: string | null
+          contract_verified_at?: string | null
           corporate_email?: string | null
           created_at?: string
           created_by?: string | null
           hq?: string | null
           id?: string
+          is_demo?: boolean
           last_contact_on?: string | null
           last_touch?: string | null
           lead_score?: number
@@ -510,6 +517,7 @@ export type Database = {
           ownership_verification_status?: string
           ownership_verified_at?: string | null
           phone?: string | null
+          payment_verified_at?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
@@ -529,11 +537,14 @@ export type Database = {
         Update: {
           account_type?: Database["public"]["Enums"]["crm_account_type"]
           arr?: number
+          closed_won_at?: string | null
+          contract_verified_at?: string | null
           corporate_email?: string | null
           created_at?: string
           created_by?: string | null
           hq?: string | null
           id?: string
+          is_demo?: boolean
           last_contact_on?: string | null
           last_touch?: string | null
           lead_score?: number
@@ -549,6 +560,7 @@ export type Database = {
           ownership_verification_status?: string
           ownership_verified_at?: string | null
           phone?: string | null
+          payment_verified_at?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
@@ -627,6 +639,56 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_post_sale_checklists: {
+        Row: {
+          account_id: string
+          acknowledged_at: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          detected_at: string
+          id: string
+          status: string
+          surfaced_at: string | null
+          trigger_reason: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          acknowledged_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          status?: string
+          surfaced_at?: string | null
+          trigger_reason: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          acknowledged_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          status?: string
+          surfaced_at?: string | null
+          trigger_reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_post_sale_checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "crm_accounts"
             referencedColumns: ["id"]
           },
         ]
