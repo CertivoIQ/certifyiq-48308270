@@ -85,7 +85,7 @@ function PlanRow({ name, price, tagline }: { name: string; price: string; taglin
       }}
     >
       <Text style={{ ...text, margin: 0, fontWeight: 600 }}>
-        {name} — <span style={{ color: BRAND.navy }}>{price}/month</span>
+        {name} — <span style={{ color: BRAND.navy }}>{price}</span>
       </Text>
       <Text style={{ ...small, margin: '2px 0 0' }}>{tagline}</Text>
     </Section>
@@ -144,10 +144,10 @@ const Email = ({
             {t('intro.section.what')}
           </Text>
           <Section style={{ paddingBottom: '4px' }}>
-            <StatCard value="4 min" label={t('intro.stat.time')} color={BRAND.navy} />
-            <StatCard value="50" label={t('intro.stat.states')} color={BRAND.navy} />
-            <StatCard value="6" label={t('intro.stat.programs')} color={BRAND.navy} />
-            <StatCard value="100%" label={t('intro.stat.signoff')} color={BRAND.green} />
+            <StatCard value="Federal" label={t('intro.stat.time')} color={BRAND.navy} />
+            <StatCard value="Versioned" label={t('intro.stat.states')} color={BRAND.navy} />
+            <StatCard value="Traceable" label={t('intro.stat.programs')} color={BRAND.navy} />
+            <StatCard value="Agent" label={t('intro.stat.signoff')} color={BRAND.green} />
           </Section>
 
           <Hr style={hr} />
@@ -156,11 +156,11 @@ const Email = ({
             {t('intro.section.vs')}
           </Text>
           <Bar label={t('intro.bar.manual')} value={t('intro.bar.manual.value')} width="100%" color={BRAND.red} />
-          <Bar label={t('intro.bar.ai')} value={t('intro.bar.ai.value')} width="12%" color={BRAND.green} />
+          <Bar label={t('intro.bar.ai')} value={t('intro.bar.ai.value')} width="100%" color={BRAND.green} />
           <Bar
             label={t('intro.bar.manualChecks')}
             value={t('intro.bar.manualChecks.value')}
-            width="62%"
+            width="100%"
             color={BRAND.amber}
           />
           <Bar
