@@ -8,7 +8,6 @@ const root = process.cwd();
 const customerFacingFiles = [
   "src/components/CertivoIQComparisonChart.tsx",
   "src/components/production-dashboard.tsx",
-  "src/lib/academy-track-a.ts",
   "src/lib/email-templates/i18n.ts",
   "src/lib/email-templates/payment-succeeded.tsx",
   "src/lib/i18n/en.ts",
@@ -25,6 +24,12 @@ const customerFacingFiles = [
   "src/routes/methodology.tsx",
   "src/routes/security.tsx",
   "src/utils/entitlements.functions.ts",
+];
+
+const retiredTrainingSurfaces = [
+  "src/routes/academy.index.tsx",
+  "src/routes/academy.$courseId.tsx",
+  "src/lib/academy-track-a.ts",
 ];
 
 const prohibitedPatterns = [
@@ -67,5 +72,17 @@ test("customer-facing source contains no prohibited AI branding language", () =>
     violations,
     [],
     `Prohibited customer-facing terminology found:\n${violations.join("\n")}`,
+  );
+});
+
+test("retired Academy training and certificate surfaces stay removed", () => {
+  const violations = retiredTrainingSurfaces.filter((relativePath) =>
+    fs.existsSync(path.join(root, relativePath)),
+  );
+
+  assert.deepEqual(
+    violations,
+    [],
+    `Retired training or certificate surface was restored:\n${violations.join("\n")}`,
   );
 });
