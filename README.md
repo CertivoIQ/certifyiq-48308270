@@ -1,100 +1,95 @@
 # CertivoIQ
 
-**AI Compliance Intelligence for Affordable Housing**
+**The compliance intelligence infrastructure for affordable housing programs.**
 
-CertivoIQ is an affordable-housing compliance intelligence platform being built to help owners, management companies, compliance teams, and housing agencies review certification evidence, apply deterministic program rules, identify findings, document human decisions, and maintain defensible audit trails.
+CertivoIQ helps affordable housing owners, operators, property managers, and compliance teams turn certification data, supported federal requirements, versioned rules, and supporting evidence into actionable compliance intelligence.
 
-## Mission
+> **Find compliance risk before the auditor.**
 
-Reduce preventable affordable-housing compliance errors by combining traceable document intelligence, deterministic rules, human approval controls, and portfolio-level risk visibility.
+## What CertivoIQ Does
 
-## Product Principles
+- Reviews and organizes certification information
+- Connects supported federal compliance requirements with source evidence
+- Surfaces potential compliance risks and blocking limitations
+- Provides traceable findings and supporting context
+- Standardizes compliance workflows
+- Improves visibility across properties and portfolios
+- Supports audit readiness
 
-- **Evidence before conclusions.** Findings should trace to source evidence.
-- **Deterministic compliance decisions.** AI may assist with extraction and explanation; authoritative rule outcomes should be reproducible.
-- **Human authority.** High-impact certification and regulatory actions remain subject to authorized human review.
-- **Fail closed.** Missing, stale, conflicting, or unauthorized evidence must not silently become a compliance approval.
-- **Versioned rules.** Findings should retain the rule version and authority used at decision time.
-- **Auditable delivery.** Internal submission status must remain distinct from verified external delivery.
+## Current Compliance Scope
 
-## Intended Compliance Scope
+CertivoIQ currently performs a **Federal Baseline Compliance Review** for supported federal affordable-housing requirements, including applicable portions of LIHTC, HOME, Project-Based Section 8, and HOTMA as implemented and validated.
 
-CertivoIQ is being designed for layered affordable-housing compliance workflows including LIHTC, HUD/Section 8, HOME, HOTMA, state housing finance agency requirements, and related property-specific controls. Regulatory coverage must be treated as versioned and jurisdiction-specific; the repository should not imply that every jurisdiction or integration is production-ready until it has been implemented and verified.
+State-agency, allocating-agency, local, and project-specific requirements are outside the current automated evaluation scope and require separate manual review. If an unevaluated requirement could change the overall result, the system must return **Unable to Determine** and record the limitation.
 
-## Core Platform Capabilities
+## Compliance Intelligence Philosophy
 
-### Compliance Intelligence
-- Certification evidence ingestion and structured extraction
-- Evidence confidence and human verification
-- Multi-source conflict detection
-- Deterministic PASS / FAIL / NOT_DETERMINED outcomes
-- Rule citations, effective dates, versions, and revision history
-- Finding remediation and approval history
+CertivoIQ is designed around evidence, applicable requirements, traceability, explicit limitations, and operational visibility. Customer-facing product messaging focuses on compliance intelligence rather than the underlying implementation technology.
 
-### HFA Submission Authority
-- Human-approved certification authority
-- Immutable evidence-manifest concepts
-- Destination authorization controls
-- Duplicate and stale-submission protection
-- Separation of internal `submitted` state from verified external delivery
-- External delivery receipt foundation
+## Agent Governance
 
-### Portfolio Intelligence
-- Property and portfolio audit-readiness concepts
-- Finding trends and recurrence analysis
-- Risk indicators and training-intervention concepts
-- Executive visibility into compliance exposure
+An **agent** is an authorized compliance agent acting for the customer. It does not refer to CertivoIQ or an automated software agent.
 
-### KnowledgeIQ Vision
-- Affordable-housing compliance training
-- Reviewer education and guided audit workflows
-- Program-specific learning modules and achievement records
+The review lifecycle uses these defined controls:
 
-## Verification Status
+1. CertivoIQ produces a federal baseline evaluation.
+2. Uncertain or conflicting items receive **Agent Action Required**.
+3. The assigned agent performs **Manual Review**.
+4. The agent records **Agent Verification** for corrected or confirmed fields.
+5. The completed result receives **Agent Approval**.
+6. CertivoIQ records the **Agent Signature**, identity, role, timestamp, and review version.
 
-The GitHub CI gate runs the compliance intelligence, vertical-slice, certification-authority, transmission-authority, HFA submit-transition, and external-delivery-receipt test suites, followed by lint and a production build. Production claims should be based on implemented and tested behavior, not roadmap items.
+CertivoIQ is compliance intelligence infrastructure, not legal advice or complete jurisdictional approval.
 
-## Technology
+## Pricing Architecture
 
-- TypeScript / React
-- TanStack Start / Router
-- Tailwind CSS
-- Supabase-backed application services
-- Deterministic compliance domain modules
-- GitHub Actions CI
+CertivoIQ has one **$65,000 annual platform license** with all currently available platform features included. There are no public plan tiers, training or Academy products, certificates, state-pack add-ons, per-file overages, or separately priced API products.
 
-See `package.json` and the source tree for the current implementation rather than relying on older architectural proposals.
+The application, sales materials, agreement, Stripe catalog, and public website must use the same annual price and entitlement language.
 
-## Security and Compliance Posture
+## API Direction
 
-CertivoIQ is designed around least privilege, explicit authority, auditability, evidence provenance, and human approval for consequential actions. Security, privacy, AI data-use, retention, and regulatory representations require continuing legal and technical review before enterprise deployment.
+The core integration workflow is secure certification submission, processing status, federal baseline evaluation, Agent Action Required states, Agent Approval, Agent Signature, findings retrieval, evidence-manifest export, and completion webhooks.
 
-## Intellectual Property
+API and property-management-system integration capabilities must not be marketed as production-ready until the end-to-end workflow has passed release testing.
 
-Copyright (c) 2026 CertivoIQ. All rights reserved.
+## Stripe Architecture
 
-This repository is proprietary and confidential unless a separate written license states otherwise. No permission is granted to copy, modify, distribute, sublicense, reverse engineer, or create derivative commercial products from proprietary CertivoIQ source code, documentation, rule packages, workflows, or original interface assets except as expressly authorized in writing.
+Stripe is the billing source of truth for the single annual platform license. Customer-facing descriptions must match the application, agreement, and public pricing experience.
 
-Third-party and open-source components remain subject to their respective licenses. Contributors and contractors should have written confidentiality and intellectual-property assignment agreements in place.
+## Security
 
-## Development
+Protect customer documents, certification data, company information, credentials, signatures, and billing information. Use least-privilege access, server-side secrets, secure authentication, appropriate authorization boundaries, and auditable changes.
 
-```sh
-git clone <repository-url>
-cd certifyiq-48308270
-bun install --frozen-lockfile
-bun run test:compliance
-bun run test:slice
-bun run lint
-bun run build
-```
+Do not request production tenant files through a public funnel until data handling, retention, tenant isolation, subprocessors, incident response, and customer-data-use terms are verified and published.
 
-Additional authority and delivery tests are executed by `.github/workflows/compliance-intelligence.yml`.
+## Testing
 
-## Legal Notice
+Run application tests and compliance-intelligence checks before release. Validate federal-scope enforcement, Unable to Determine blocking behavior, agent authorization, Agent Approval, Agent Signature, evidence manifests, and payment flows.
 
-CertivoIQ is software intended to assist trained housing-compliance professionals. It is not a substitute for legal advice, agency determinations, owner policy, or required human review. Regulatory authorities and program requirements control where they conflict with software output.
+## Development Setup
 
-## Confidentiality
+Install project dependencies with the repository's configured package manager, configure required environment variables from the deployment environment, and run the project's development and test commands defined in the repository and CI workflows.
 
-Investor, customer, and diligence access to non-public technical materials should be provided under appropriate confidentiality terms. Do not publish secrets, production credentials, resident PII, protected tenant records, or trade-secret rule implementation details in public repositories or marketing materials.
+## Environment Variables
+
+Environment variables are deployment-specific and must never be committed with real secrets. Review deployment configuration and application source for required variable names before local setup.
+
+## Deployment
+
+Deploy through the configured production pipeline. Verify domain, authentication, billing, database access, application health, federal-scope limitations, agent controls, and critical customer workflows after deployment.
+
+## Brand Standards
+
+- **Brand:** CertivoIQ
+- **Positioning:** The compliance intelligence infrastructure for affordable housing programs.
+- **Primary message:** Find compliance risk before the auditor.
+- **Colors:** Dark Blue `#012447`, Navy `#082B56`, White `#FFFFFF`, Subtle Yellow `#FEC229`
+- **Pronunciation:** “SUR-duh-voe-eye-cue” — `[ˈsərdəvoʊ aɪˈkjuː]`
+- **Primary CTA:** Request a Demo
+- **Price:** $65,000 annually
+- **Green is not part of the approved brand palette.**
+
+## Source Specification
+
+Historical build prompts and implementation specifications should live under `/docs/` rather than replacing the production README. Current customer-facing positioning is maintained in `docs/BRAND_MESSAGING.md`.
