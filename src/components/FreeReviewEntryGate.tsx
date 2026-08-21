@@ -6,6 +6,7 @@ import { Building2, Mail, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { captureFreeReviewLead, getFreeReviewLead, type FreeReviewLeadInput } from "@/lib/free-review-lead.functions";
+import { isOrganizationEmail } from "@/lib/organization-email.mjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +85,10 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
         states: Array.isArray(form.states) ? form.states : splitList(String(form.states)), programs: Array.isArray(form.programs) ? form.programs : splitList(String(form.programs)), marketingConsent: Boolean(form.marketingConsent),
       };
 
+      if (!isOrganizationEmail(normalized.email)) {
+        throw new Error("Use your organization website email address. Personal email providers are not eligible for the 3 FREE certification reviews.");
+      }
+
       if (!hasUser) {
         if (!form.fullName.trim()) throw new Error("Full name is required to create your CertivoIQ account.");
         if (form.password.length < 8) throw new Error("Password must be at least 8 characters.");
@@ -118,13 +123,13 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
 
   return (
     <Panel title="Start with your company details" description="Create your CertivoIQ account, tell us about your portfolio, and we'll prepare your 3 FREE certification reviews. Your certification upload comes immediately after this step." bodyClassName="p-5">
-      <div className="mb-5 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" /><div><p className="font-medium">Required before any FREE certification upload</p></div></div>
+      <div className="mb-5 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" /><div><p className="font-medium">Organization website email required</p><p className="mt-1 text-sm text-muted-foreground">Personal email providers are not eligible for the 3 FREE certification reviews.</p></div></div>
       <form onSubmit={submit} className="grid gap-4 lg:grid-cols-2">
-        {!hasUser && <><div className="lg:col-span-2"><Label>Full name *</Label><Input required value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="Your full name" /></div><div><Label>Work email *</Label><Input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="name@company.com" /></div><div><Label>Password *</Label><Input required minLength={8} type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="At least 8 characters" /></div></>}
+        {!hasUser && <><div className="lg:col-span-2"><Label>Full name *</Label><Input required value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="Your full name" /></div><div><Label>Organization website email *</Label><Input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="name@company.com" /></div><div><Label>Password *</Label><Input required minLength={8} type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="At least 8 characters" /></div></>}
         <div><Label>Company name *</Label><Input required value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Your company" /></div>
         <div><Label>Owner / decision-maker name *</Label><Input required value={form.ownerName} onChange={(e) => update("ownerName", e.target.value)} placeholder="Full name" /></div>
         <div><Label>Owner / decision-maker title *</Label><Input required value={form.ownerTitle} onChange={(e) => update("ownerTitle", e.target.value)} placeholder="Owner, CEO, VP Property Management…" /></div>
-        {hasUser && <div><Label>Business email *</Label><Input required type="email" value={form.email || userEmail || ""} onChange={(e) => update("email", e.target.value)} placeholder="name@company.com" /></div>}
+        {hasUser && <div><Label>Organization website email *</Label><Input required type="email" value={form.email || userEmail || ""} onChange={(e) => update("email", e.target.value)} placeholder="name@company.com" /></div>}
         <div><Label>Phone (optional)</Label><Input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="(555) 555-5555" /></div>
         <div><Label>Total portfolio units *</Label><Input required type="number" min="1" value={form.units || ""} onChange={(e) => update("units", Number(e.target.value))} placeholder="12,000" /></div>
         <div><Label>Total portfolio properties *</Label><Input required type="number" min="1" value={form.properties || ""} onChange={(e) => update("properties", Number(e.target.value))} placeholder="120" /></div>

@@ -17,6 +17,7 @@ const requiredFiles = [
   "src/routes/api/public/payments/webhook.ts",
   "src/lib/stateCoverageRegistry.ts",
   "src/lib/stripe.server.ts",
+  "src/lib/organization-email.mjs",
   "public/sitemap.xml",
   "LICENSE",
 ];
@@ -101,7 +102,7 @@ test("public pricing uses the single annual platform license", () => {
   const combined = pricing + catalog;
 
   assert.match(combined, /\$65,000/);
-  assert.match(pricing, /Request a Demo/i);
+  assert.match(pricing, /Try CertivoIQ for Free/i);
   assert.doesNotMatch(combined, /\$999|\$4,999|\$9,999|\$14,999/);
   assert.doesNotMatch(pricing, /Professional|Enterprise Plus|CertivoIQ Academy/i);
 });
@@ -128,7 +129,7 @@ test("public launch surfaces use federal baseline and agent terminology", () => 
   assert.doesNotMatch(combined, /coverage for all 50 states|compliance intelligence for all 50 states/i);
 });
 
-test("public acquisition uses demo requests instead of free-file intake", () => {
+test("public acquisition uses three free certification reviews", () => {
   const files = [
     "src/routes/welcome.tsx",
     "src/routes/pricing.tsx",
@@ -138,8 +139,11 @@ test("public acquisition uses demo requests instead of free-file intake", () => 
   ];
   const combined = files.map(read).join("\n");
 
-  assert.match(combined, /Request a Demo/i);
-  assert.doesNotMatch(combined, /TRY CERTIVOIQ FOR FREE|3 FREE CERTIFICATION REVIEWS|NO CREDIT CARD REQUIRED/);
+  assert.match(combined, /TRY CERTIVOIQ FOR FREE/i);
+  assert.match(combined, /FREE_REVIEW_COUNT\s*=\s*3/);
+  assert.match(combined, /FREE CERTIFICATION REVIEWS/i);
+  assert.match(combined, /ORGANIZATION WEBSITE EMAIL REQUIRED/i);
+  assert.doesNotMatch(combined, /Request a Demo/i);
 });
 
 test("primary application navigation excludes removed training and free-review products", () => {

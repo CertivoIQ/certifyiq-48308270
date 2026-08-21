@@ -61,7 +61,7 @@ function TermsOfUse() {
         <section>
           <h2 className="font-display text-xl text-foreground">Subscriptions, billing, and free reviews</h2>
           <p className="mt-2">
-            The current annual license price and included platform access are described on the <Link to="/pricing" className="text-primary underline underline-offset-4">pricing page</Link> or in a signed order form. Paid subscriptions and transactions are processed through the configured payment provider. Cancellations, renewals, credits, refunds, implementation terms, and procurement terms are subject to the applicable billing terms, written agreement, and law. CertivoIQ does not authorize automatic material refunds through its virtual support agent.
+            The current annual license price and included platform access are described on the <Link to="/pricing" className="text-primary underline underline-offset-4">pricing page</Link> or in a signed order form. The 3 FREE certification reviews are a product-evaluation offer for qualified leads using an organization website email and do not require a credit card where the website expressly states that. Paid subscriptions and transactions are processed through the configured payment provider. Cancellations, renewals, credits, refunds, implementation terms, and procurement terms are subject to the applicable billing terms, written agreement, and law. CertivoIQ does not authorize automatic material refunds through its virtual support agent.
           </p>
         </section>
 

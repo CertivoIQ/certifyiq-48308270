@@ -94,7 +94,7 @@ function PricingPage() {
           </div>
 
           <Button className="mt-7 w-full sm:w-auto" size="lg" asChild>
-            <Link to="/contact-support">Request a Demo</Link>
+            <Link to="/trial">Try CertivoIQ for Free</Link>
           </Button>
         </Panel>
 

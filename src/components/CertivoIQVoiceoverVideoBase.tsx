@@ -108,7 +108,7 @@ const transcript = scenes.map((scene) => scene.narration);
 export default function CertivoIQVoiceoverVideo({
   accountState = "visitor",
   demoDashboardHref = "/demo-dashboard",
-  trialHref = "/contact-support",
+  trialHref = "/trial",
   className = "",
 }: CertivoIQVoiceoverVideoProps) {
   const [scene, setScene] = useState(0);
@@ -252,7 +252,7 @@ export default function CertivoIQVoiceoverVideo({
                 href={trialHref}
                 className="rounded-lg bg-[#FEC229] px-4 py-2.5 text-sm font-semibold text-[#012447] transition hover:bg-[#ffd35c]"
               >
-                REQUEST A DEMO
+                TRY CERTIVOIQ FOR FREE
               </a>
             )}
           </div>
