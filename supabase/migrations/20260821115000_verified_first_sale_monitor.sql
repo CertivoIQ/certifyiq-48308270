@@ -66,8 +66,8 @@ create policy "Staff can manage post-sale checklists"
   on public.crm_post_sale_checklists
   for all
   to authenticated
-  using (public.is_staff(auth.uid()))
-  with check (public.is_staff(auth.uid()));
+  using (public.has_role(auth.uid(), 'staff'))
+  with check (public.has_role(auth.uid(), 'staff'));
 
 grant select, insert, update on public.crm_post_sale_checklists to authenticated;
 
