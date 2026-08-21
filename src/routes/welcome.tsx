@@ -93,8 +93,7 @@ function WelcomePage() {
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <Link to="/welcome" className="flex items-center gap-2.5">
-            <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">IQ</span>
-            <span className="font-display text-lg leading-none tracking-tight">Certivo<span className="text-gold">IQ</span></span>
+            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1 object-contain" />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             <a href="#how-it-works" className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground">How it works</a>
