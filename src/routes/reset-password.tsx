@@ -146,7 +146,7 @@ function ResetPasswordPage() {
 
         <p className="mt-4 flex items-start gap-2 text-[12px] text-muted-foreground">
           <KeyRound className="mt-0.5 size-3.5 shrink-0 text-gold" />
-          Password changes take effect immediately across the compliance workspace, Academy and staff tools.
+          Password changes take effect immediately across the compliance workspace and staff tools.
         </p>
       </div>
     </div>

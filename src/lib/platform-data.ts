@@ -15,7 +15,7 @@ export const LEVEL_META: Record<
     label: "Compliant",
     tone: "seal",
     verdict: "Pass",
-    blurb: "All program rules satisfied. Ready for reviewer sign-off.",
+    blurb: "All program rules satisfied. Ready for Agent Approval and Agent Signature.",
   },
   corrections: {
     label: "Corrections required",
@@ -57,7 +57,7 @@ export function correctionSteps(file: CertFile) {
   const open = file.findings.filter((f) => f.status !== "approved");
   if (open.length === 0) {
     return [
-      { rule: "—", step: "No corrections outstanding — proceed to reviewer sign-off.", owner: "Reviewer", due: "Today" },
+      { rule: "—", step: "No corrections outstanding — proceed to Agent Approval and Agent Signature.", owner: "Compliance Agent", due: "Today" },
     ];
   }
   return open.map((f, i) => ({
@@ -73,7 +73,7 @@ export function correctionSteps(file: CertFile) {
  * ------------------------------------------------------------------ */
 
 export const PROGRAM_OPTIONS: { id: Program | "RD" | "BOND"; label: string; note: string }[] = [
-  { id: "LIHTC", label: "LIHTC (Section 42)", note: "IRC §42 · state QAP rule pack" },
+  { id: "LIHTC", label: "LIHTC (Section 42)", note: "IRC §42 federal baseline; state requirements require Manual Review" },
   { id: "PBS8", label: "Project-Based Section 8", note: "HUD Handbook 4350.3 / HOTMA" },
   { id: "HOME", label: "HOME Investment Partnerships", note: "24 CFR Part 92" },
   { id: "HOTMA", label: "HOTMA overlay", note: "Sections 102 / 104 asset & income rules" },
@@ -99,119 +99,51 @@ export const TRIAL = {
 
 export const PLANS = [
   {
-    id: "professional",
-    name: "Professional",
-    price: "$999",
-    cadence: "/month",
-    tagline: "Small owners (1–500 units)",
-    features: ["Up to 500 units", "1 state rule pack", "Certification document review", "Compliance knowledge base", "Email support"],
-    cta: "Choose Professional",
-    featured: false,
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: "$4,999",
-    cadence: "/month",
-    tagline: "Regional management companies (500–10,000 units)",
+    id: "platform",
+    name: "CertivoIQ",
+    price: "$65,000",
+    cadence: "/year",
+    tagline: "Complete annual platform license",
     features: [
-      "Up to 10,000 units",
-      "Multi-property portfolios",
-      "State rule packs included",
-      "Document processing (10,000 docs/mo)",
-      "Customer Success Wizard",
-      "Compliance knowledge base",
-      "Priority support",
+      "All currently available platform features",
+      "Federal baseline certification review",
+      "Traceable evidence and versioned federal rules",
+      "Manual Review, Agent Verification, Agent Approval, and Agent Signature",
+      "Portfolio-level compliance visibility",
+      "Evidence-manifest export",
     ],
-    cta: "Choose Business",
+    cta: "Request a Demo",
     featured: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: "$9,999",
-    cadence: "/month",
-    tagline: "Large management companies, housing authorities, state agencies",
-    features: [
-      "Unlimited units",
-      "Multi-state portfolios",
-      "API access · SSO · white labeling",
-      "Guided Onboarding & Migration Wizard",
-      "Custom integrations",
-      "Contractual SLA",
-    ],
-    cta: "Choose Enterprise",
-    featured: false,
-    selfServe: true,
-  },
-  {
-    id: "enterprise_plus",
-    name: "Enterprise Plus",
-    price: "$14,999",
-    cadence: "/month",
-    tagline: "National REITs, multi-state portfolios, custom integrations",
-    features: [
-      "Everything in Enterprise",
-      "Unlimited + National REITs, multi-state portfolios, custom integrations",
-      "Custom rule pack development",
-      "Enterprise-level API throughput",
-      "Custom compliance reporting",
-    ],
-    cta: "Choose Enterprise Plus",
-    featured: false,
-    selfServe: true,
+    selfServe: false,
   },
 ];
 
-export const ADDONS = [
-  { name: "CertivoIQ Academy add-on", price: "$49 / user / month or $499 / property / month" },
-  { name: "High-volume document processing", price: "$3 per uploaded certification beyond plan allowance" },
-  { name: "Guided Onboarding & Migration Wizard", price: "Included on every plan — no account rep required" },
-];
+export const ADDONS: { name: string; price: string }[] = [];
 
 /** Sales email already used for CertivoIQ outreach — no new address invented. */
 export const SALES_EMAIL = "sales@certivoiq.com";
 
 /**
- * Custom add-ons that are quoted and provisioned by our team.
- * These intentionally have no Stripe price and are never sold through
- * self-serve checkout.
+ * Integrations are scoped during contracting only after the applicable
+ * end-to-end workflow has been verified for the customer's environment.
+ * They are not separately priced or advertised as production-ready.
  */
-export const SALES_ASSISTED_ADDONS = [
-  {
-    id: "state-rule-packs",
-    name: "Additional state rule packs",
-    price: "$99–$199",
-    cadence: " / month per state",
-    note: "Scoped to the states you operate in; pricing depends on the agency rule set and update cadence.",
-    subject: "CertivoIQ — additional state rule packs",
-  },
-  {
-    id: "api-access",
-    name: "API access",
-    price: "$500–$2,000",
-    cadence: " / month by usage",
-    note: "Programmatic certification submission and findings retrieval, priced by monthly call volume.",
-    subject: "CertivoIQ — API access",
-  },
-];
+export const SALES_ASSISTED_ADDONS: {
+  id: string;
+  name: string;
+  price: string;
+  cadence: string;
+  note: string;
+  subject: string;
+}[] = [];
 
-export const ACADEMY_ADDONS = [
-  {
-    id: "academy-seat",
-    name: "Academy seat add-on",
-    price: "$49",
-    cadence: "/user / month",
-    note: "Add the Academy to any platform plan, per user",
-  },
-  {
-    id: "academy-property-addon",
-    name: "Academy property add-on",
-    price: "$499",
-    cadence: "/property / month",
-    note: "Unlimited seats at one property on any platform plan",
-  },
-];
+export const ACADEMY_ADDONS: {
+  id: string;
+  name: string;
+  price: string;
+  cadence: string;
+  note: string;
+}[] = [];
 
 
 

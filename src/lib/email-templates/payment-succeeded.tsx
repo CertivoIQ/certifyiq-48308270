@@ -59,7 +59,7 @@ const Email = ({
         <Heading style={heading}>Thank you — your payment went through</Heading>
         <Text style={text}>
           {name ? `Hi ${name},` : 'Hi there,'} we received your payment and your CertivoIQ account is fully active. Your
-          plan capacity and document processing allowance are available right away.
+          currently available platform features are available under your annual license.
         </Text>
 
         <Hr style={hr} />
@@ -93,8 +93,8 @@ export const template = {
   displayName: 'Payment succeeded',
   previewData: {
     name: 'Jordan',
-    planName: 'CertivoIQ Business',
-    amountPaid: '$4,999.00',
+    planName: 'CertivoIQ annual platform license',
+    amountPaid: '$65,000.00',
     paidDate: 'August 1, 2026',
     invoiceNumber: 'CIQ-1042',
     periodLabel: 'Aug 1 – Sep 1, 2026',

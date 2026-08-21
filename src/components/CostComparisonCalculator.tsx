@@ -4,10 +4,10 @@ import { Panel } from "@/components/ui-kit";
 /**
  * Customer-input cost comparison. Nothing is preloaded and no savings figure is
  * claimed: the customer enters their own costs and sees their own arithmetic
- * next to the subscription price.
+ * next to the annual license price.
  */
 
-const BUSINESS_MONTHLY = 4999;
+const ANNUAL_LICENSE = 65000;
 
 const currency = (value: number) =>
   value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -15,13 +15,13 @@ const currency = (value: number) =>
 type FieldKey = "externalReviews" | "vacancyDelays" | "correctionCycles" | "auditPrep";
 
 const FIELDS: { key: FieldKey; label: string; help: string }[] = [
-  { key: "externalReviews", label: "External file review fees", help: "Monthly spend on outside compliance reviewers" },
-  { key: "vacancyDelays", label: "Vacancy and move-in delay cost", help: "Monthly cost of units held while files are corrected" },
-  { key: "correctionCycles", label: "Correction cycle labor", help: "Monthly internal labor cost spent reworking files" },
-  { key: "auditPrep", label: "Audit preparation", help: "Monthly amortized cost of preparing for agency review" },
+  { key: "externalReviews", label: "External file review fees", help: "Annual spend on outside compliance reviewers" },
+  { key: "vacancyDelays", label: "Vacancy and move-in delay cost", help: "Annual cost of units held while files are corrected" },
+  { key: "correctionCycles", label: "Correction cycle labor", help: "Annual internal labor cost spent reworking files" },
+  { key: "auditPrep", label: "Audit preparation", help: "Annual cost cost of preparing for agency review" },
 ];
 
-export function CostComparisonCalculator({ monthlyPrice = BUSINESS_MONTHLY }: { monthlyPrice?: number }) {
+export function CostComparisonCalculator({ annualPrice = ANNUAL_LICENSE }: { annualPrice?: number }) {
   const [values, setValues] = useState<Record<FieldKey, string>>({
     externalReviews: "",
     vacancyDelays: "",
@@ -37,7 +37,7 @@ export function CostComparisonCalculator({ monthlyPrice = BUSINESS_MONTHLY }: { 
     <Panel bodyClassName="p-6">
       <h2 className="font-display text-[22px]">Compare with your own numbers</h2>
       <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
-        Enter your organization's actual monthly costs. CertivoIQ does not estimate your savings and
+        Enter your organization's actual annual costs. CertivoIQ does not estimate your savings and
         makes no claim about what you will avoid.
       </p>
 
@@ -63,26 +63,26 @@ export function CostComparisonCalculator({ monthlyPrice = BUSINESS_MONTHLY }: { 
 
       <dl className="mt-6 grid gap-3 sm:grid-cols-3">
         <div className="rounded-md border border-border bg-muted/30 p-4">
-          <dt className="cite">Your entered monthly cost</dt>
+          <dt className="cite">Your entered annual cost</dt>
           <dd className="mt-1 font-mono text-[20px] tabular-nums">
             {anyEntered ? currency(total) : "—"}
           </dd>
         </div>
         <div className="rounded-md border border-border bg-muted/30 p-4">
-          <dt className="cite">CertivoIQ Business subscription</dt>
-          <dd className="mt-1 font-mono text-[20px] tabular-nums">{currency(monthlyPrice)}</dd>
+          <dt className="cite">CertivoIQ annual platform license</dt>
+          <dd className="mt-1 font-mono text-[20px] tabular-nums">{currency(annualPrice)}</dd>
         </div>
         <div className="rounded-md border border-border bg-muted/30 p-4">
           <dt className="cite">Difference (your figures)</dt>
           <dd className="mt-1 font-mono text-[20px] tabular-nums">
-            {anyEntered ? currency(total - monthlyPrice) : "—"}
+            {anyEntered ? currency(total - annualPrice) : "—"}
           </dd>
         </div>
       </dl>
 
       <p className="mt-5 text-[12.5px] leading-relaxed text-muted-foreground">
-        {currency(monthlyPrice)} per month for portfolio-wide compliance review workflows. Compare the
-        subscription with your organization's actual cost of external file reviews, vacancy delays,
+        {currency(annualPrice)} per year for access to all currently available platform features. Compare the
+        annual license with your organization's actual cost of external file reviews, vacancy delays,
         correction cycles, audit preparation and potential noncompliance. Regulatory and financial
         consequences vary; CertivoIQ does not guarantee avoidance of findings, penalties or credit
         recapture.

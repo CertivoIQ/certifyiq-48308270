@@ -33,7 +33,7 @@ const SECTIONS: Section[] = [
   { id: "authentication", heading: "Authentication, MFA, SSO and session controls", intent: "Sign-in methods, multi-factor enrollment, recovery codes and session lifetime." },
   { id: "audit-logs", heading: "Audit logs", intent: "What is recorded for review actions, sign-off, exports and administrative changes, and how long it is kept." },
   { id: "retention", heading: "Retention, deletion, trial data and backups", intent: "Retention windows, deletion requests, trial-upload purge timing and backup handling." },
-  { id: "ai", heading: "Processing providers, system use, training policy and human review", intent: "Which models perform extraction, whether customer content is used for training, and where a human decision is required." },
+  { id: "processing", heading: "Processing providers, system use, training policy and Manual Review", intent: "Which services perform extraction, whether customer content is used for training, and where Agent Approval is required." },
   { id: "subprocessors", heading: "Subprocessors and hosting regions", intent: "The processors involved in delivering the service and the regions where data is processed." },
   { id: "incident", heading: "Incident response and contact", intent: "How incidents are triaged, who is notified, and the timeline commitments once documented." },
   { id: "vulnerability", heading: "Vulnerability reporting", intent: "How to report a suspected vulnerability and what response to expect." },
