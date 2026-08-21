@@ -18,6 +18,7 @@ function projectAuthority(overrides = {}) {
       project_authority_inventory_complete: true,
     },
     gross_rent_floor_handoff: {
+      cap_outcome: "CAP_VALIDATED",
       project_maximum_gross_rent_cap: "1100.00",
     },
     ...overrides,
@@ -108,6 +109,9 @@ function observed(comparisonGroup, metric, amount) {
     measurement_basis_validated: true,
     event_date_match_validated: true,
     charge_inventory_complete: true,
+    ...(metric === "MAXIMUM_GROSS_RENT"
+      ? { rental_assistance_excluded: true }
+      : {}),
   };
 }
 
@@ -397,5 +401,62 @@ test("a state finding remains blocked without an active validated state pack", (
   );
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
   assert.equal(result.reason_code, "LAYERED_PROGRAM_SCOPE_NOT_VALIDATED");
-  assert.ok(result.missing_inputs.includes("state_rulepack_validated"));
+  assert.ok(result.missing_inputs.includes("state_rulepack"));
+});
+
+test("caller booleans cannot bypass the validated state-pack gate", () => {
+  const result = evaluateLayeredProgramRestrictions(
+    input({
+      state_finding_requested: true,
+      state_rulepack_validated: true,
+      state_authority_source_validated: true,
+    }),
+  );
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(result.reason_code, "LAYERED_PROGRAM_SCOPE_NOT_VALIDATED");
+  assert.ok(result.missing_inputs.includes("state_rulepack"));
+});
+
+test("an actual approved and versioned state-pack record opens state scope", () => {
+  const result = evaluateLayeredProgramRestrictions(
+    input({
+      state_finding_requested: true,
+      state_rulepack: {
+        status: "validated",
+        approvedBy: "Compliance Officer",
+        effectiveFrom: "2026-06-01",
+        version: "2026.08.1",
+        validatedRuleCount: 1,
+      },
+    }),
+  );
+  assert.equal(result.finding, "PASS");
+  assert.equal(result.authority_scope, "STATE_PROJECT_AND_FEDERAL");
+});
+
+test("LIHTC rental-assistance exclusion must be validated on observed rent", () => {
+  const data = input();
+  delete data.observed_amounts[0].rental_assistance_excluded;
+  const result = evaluateLayeredProgramRestrictions(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(
+    result.reason_code,
+    "LIHTC_RENTAL_ASSISTANCE_TREATMENT_NOT_VALIDATED",
+  );
+});
+
+test("project authority requires a validated cap or explicit validated no-cap", () => {
+  const missing = input();
+  delete missing.project_authority_result.gross_rent_floor_handoff;
+  const blocked = evaluateLayeredProgramRestrictions(missing);
+  assert.equal(blocked.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(blocked.reason_code, "PROJECT_AUTHORITY_HANDOFF_NOT_VALIDATED");
+
+  const noCap = input();
+  noCap.project_authority_result.gross_rent_floor_handoff = {
+    cap_outcome: "NO_CAP_VALIDATED",
+    project_maximum_gross_rent_cap: null,
+  };
+  const allowed = evaluateLayeredProgramRestrictions(noCap);
+  assert.equal(allowed.finding, "PASS");
 });
