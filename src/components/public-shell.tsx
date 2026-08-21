@@ -8,8 +8,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 function PublicWordmark() {
   return (
     <Link to="/welcome" className="flex items-center gap-2.5">
-      <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">IQ</span>
-      <span className="font-display text-lg leading-none tracking-tight">Certivo<span className="text-gold">IQ</span></span>
+      <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1 object-contain" />
     </Link>
   );
 }

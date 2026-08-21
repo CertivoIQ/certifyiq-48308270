@@ -90,10 +90,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         property: "og:description",
-        content: "Deterministic federal-baseline compliance auditing nationwide, with state-specific rule packs activated only after validation, plus the CertivoIQ Academy training portal.",
+        content: "CertivoIQ provides traceable certification review against supported federal affordable-housing requirements, with Agent Approval and explicit Manual Review limitations.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://certivoiq.com/welcome" },
+      { property: "og:site_name", content: "CertivoIQ" },
+      { property: "og:image", content: "https://certivoiq.com/certivoiq-social-card.png" },
+      { property: "og:image:width", content: "1254" },
+      { property: "og:image:height", content: "1254" },
+      { property: "og:image:alt", content: "CertivoIQ — Find compliance risk before the auditor." },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://certivoiq.com/certivoiq-social-card.png" },
+      { name: "twitter:image:alt", content: "CertivoIQ — Find compliance risk before the auditor." },
+      { name: "theme-color", content: "#05265f" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -111,7 +120,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: videoPrivacyCss,
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "apple-touch-icon", href: "/certivoiq-mark.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -126,6 +135,20 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "CertivoIQ",
+              url: "https://certivoiq.com",
+              logo: "https://certivoiq.com/certivoiq-mark.png",
+              image: "https://certivoiq.com/certivoiq-social-card.png",
+              description: "Compliance intelligence infrastructure for affordable housing programs.",
+            }),
+          }}
+        />
       </head>
       <body>
         {children}

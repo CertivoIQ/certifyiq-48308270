@@ -88,7 +88,7 @@ function Scene4() {
   return (
     <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto" }}>
       <div style={{ fontFamily: C.mono, fontSize: 11, letterSpacing: "0.25em", color: C.muted, textTransform: "uppercase", marginBottom: 20, ...a("fadeUp", "0.1s") }}>federal baseline compliance intelligence</div>
-      <div style={{ fontSize: "clamp(30px,5.4vw,50px)", fontWeight: 700, color: C.white, lineHeight: 1.05, marginBottom: 14, ...a("scaleIn", "0.3s", "0.7s") }}>Certivo<span style={{ color: C.gold }}>IQ</span></div>
+      <img src="/certivoiq-logo.png" alt="CertivoIQ" style={{ width: "min(360px,80vw)", height: "auto", margin: "0 auto 14px", borderRadius: 8, background: "#ffffff", padding: "8px 12px", objectFit: "contain", ...a("scaleIn", "0.3s", "0.7s") }} />
       <div style={{ fontSize: "clamp(13px,1.9vw,17px)", color: C.sky, lineHeight: 1.6, marginBottom: 30, ...a("fadeUp", "0.7s") }}>Find compliance risk before the auditor.</div>
       <div style={{ display: "flex", justifyContent: "center", ...a("fadeUp", "0.95s") }}><a href="/trial" style={{ borderRadius: 8, background: C.blue, padding: "12px 24px", fontSize: 14, fontWeight: 600, color: C.white, textDecoration: "none", boxShadow: "0 4px 18px rgba(37,99,235,0.45)" }}>Try CertivoIQ for Free</a></div>
       <div style={{ marginTop: 14, fontSize: "clamp(10px,1.3vw,12px)", color: C.muted, ...a("fadeUp", "1.1s", "0.5s") }}>$65,000 ANNUAL PLATFORM LICENSE</div>

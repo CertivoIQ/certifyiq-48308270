@@ -19,6 +19,10 @@ const requiredFiles = [
   "src/lib/stripe.server.ts",
   "src/lib/organization-email.mjs",
   "public/sitemap.xml",
+  "public/certivoiq-logo.png",
+  "public/certivoiq-mark.png",
+  "public/certivoiq-social-card.png",
+  "public/favicon.png",
   "LICENSE",
 ];
 
@@ -150,4 +154,32 @@ test("primary application navigation excludes removed training and free-review p
   const shell = read("src/components/app-shell.tsx");
   assert.doesNotMatch(shell, /to=["']\/academy["']/);
   assert.doesNotMatch(shell, /to=["']\/trial["']/);
+});
+
+
+test("official CertivoIQ logo is used across site and search metadata", () => {
+  const brandedSurfaces = [
+    "src/components/public-shell.tsx",
+    "src/components/app-shell.tsx",
+    "src/routes/welcome.tsx",
+    "src/routes/auth.tsx",
+    "src/routes/reset-password.tsx",
+    "src/routes/contact-support.tsx",
+    "src/routes/security.tsx",
+    "src/routes/methodology.tsx",
+    "src/components/explainer-video.tsx",
+    "src/routes/_authenticated/marketing-kit.tsx",
+  ];
+  const combined = brandedSurfaces.map(read).join("\n");
+  const root = read("src/routes/__root.tsx");
+  const email = read("src/lib/email-templates/shared.tsx");
+
+  assert.match(combined, /\/certivoiq-logo\.png/);
+  assert.doesNotMatch(combined, /brand-gradient grid[^\n]*>IQ<\/span>/);
+  assert.match(root, /\/favicon\.png/);
+  assert.match(root, /\/certivoiq-mark\.png/);
+  assert.match(root, /certivoiq-social-card\.png/);
+  assert.match(root, /application\/ld\+json/);
+  assert.match(root, /"@type": "Organization"/);
+  assert.match(email, /https:\/\/certivoiq\.com\/certivoiq-logo\.png/);
 });
