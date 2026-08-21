@@ -1,5 +1,7 @@
 declare module "@/lib/compliance-rule-engine.mjs" {
   export const ENGINE_BUILD: string;
+  export const LAYERED_ENGINE_BUILD: string;
+  export const LAYERED_RULE_ID: "FED-LAYERED-PROGRAM-RESTRICTIONS-001";
   export const MINIMUM_CONFIDENCE: number;
   export const REVIEW_DECISIONS: readonly ReviewDecision[];
 
@@ -97,6 +99,18 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     counts: { pass: number; fail: number; unableToDetermine: number };
   }
 
+  export interface LayeredProgramResult {
+    resolution_status: "COMPLETED" | "NOT_DETERMINED";
+    determination_status: "PASS" | "FAIL" | "NOT_DETERMINED";
+    rule_engine_authority: "ALLOWED" | "BLOCKED";
+    finding: FindingStatus;
+    reason_code?: string;
+    missing_inputs?: string[];
+    human_approval_required: true;
+    human_approval_status?: "PENDING";
+    [key: string]: unknown;
+  }
+
   export const FEDERAL_LIHTC_PACK: RulePack;
 
   export function isStatePackUsable(pack?: StatePackInput | null): boolean;
@@ -134,6 +148,10 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     jurisdiction?: string;
     minimumConfidence?: number;
   }): EvaluationResult;
+
+  export function evaluateLayeredProgramRestrictions(
+    input: Record<string, unknown>,
+  ): LayeredProgramResult;
 
   export function signOffAllowed(result: EvaluationResult): boolean;
 }
