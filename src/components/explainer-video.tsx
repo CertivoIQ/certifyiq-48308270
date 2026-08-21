@@ -71,13 +71,13 @@ function Scene2() {
 const STEPS = [
   { n: "01", title: "Finding", body: "Cited to the exact regulation, not a vague warning." },
   { n: "02", title: "Correction steps", body: "The fix, written for the reviewer who has to make it." },
-  { n: "03", title: "Reviewer sign-off", body: "Pass or fail is recorded by your own reviewer." },
+  { n: "03", title: "Agent Approval", body: "The authorized compliance agent records approval and provides an Agent Signature." },
 ];
 
 function Scene3() {
   return (
     <div style={{ maxWidth: 660, margin: "0 auto", textAlign: "center" }}>
-      <div style={{ fontSize: "clamp(15px,2.4vw,21px)", color: C.white, fontWeight: 600, marginBottom: 26, ...a("fadeUp", "0.1s") }}>Findings, corrections, and a recorded sign-off.</div>
+      <div style={{ fontSize: "clamp(15px,2.4vw,21px)", color: C.white, fontWeight: 600, marginBottom: 26, ...a("fadeUp", "0.1s") }}>Findings, corrections, Agent Approval, and a recorded Agent Signature.</div>
       <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>{STEPS.map((s, i) => <div key={s.n} style={{ textAlign: "left", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "14px 16px", ...a("cardIn", `${0.4 + i * 0.35}s`, "0.5s") }}><div style={{ fontFamily: C.mono, fontSize: 10, color: C.blueLight, letterSpacing: "0.18em" }}>{s.n}</div><div style={{ fontSize: 14, fontWeight: 600, color: C.white, margin: "8px 0 6px" }}>{s.title}</div><div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6 }}>{s.body}</div></div>)}</div>
       <div style={{ marginTop: 22, fontFamily: C.mono, fontSize: 11, letterSpacing: "0.1em", color: C.green, ...a("fadeUp", "1.6s") }}>AUDIT-READY · SIGNED OFF BY REVIEWER</div>
     </div>
@@ -87,11 +87,11 @@ function Scene3() {
 function Scene4() {
   return (
     <div style={{ textAlign: "center", maxWidth: 560, margin: "0 auto" }}>
-      <div style={{ fontFamily: C.mono, fontSize: 11, letterSpacing: "0.25em", color: C.muted, textTransform: "uppercase", marginBottom: 20, ...a("fadeUp", "0.1s") }}>compliance intelligence for all 50 states</div>
+      <div style={{ fontFamily: C.mono, fontSize: 11, letterSpacing: "0.25em", color: C.muted, textTransform: "uppercase", marginBottom: 20, ...a("fadeUp", "0.1s") }}>federal baseline compliance intelligence</div>
       <div style={{ fontSize: "clamp(30px,5.4vw,50px)", fontWeight: 700, color: C.white, lineHeight: 1.05, marginBottom: 14, ...a("scaleIn", "0.3s", "0.7s") }}>Certivo<span style={{ color: C.gold }}>IQ</span></div>
       <div style={{ fontSize: "clamp(13px,1.9vw,17px)", color: C.sky, lineHeight: 1.6, marginBottom: 30, ...a("fadeUp", "0.7s") }}>Find compliance risk before the auditor.</div>
-      <div style={{ display: "flex", justifyContent: "center", ...a("fadeUp", "0.95s") }}><a href="/trial" style={{ borderRadius: 8, background: C.blue, padding: "12px 24px", fontSize: 14, fontWeight: 600, color: C.white, textDecoration: "none", boxShadow: "0 4px 18px rgba(37,99,235,0.45)" }}>TRY CERTIVOIQ FOR FREE</a></div>
-      <div style={{ marginTop: 14, fontSize: "clamp(10px,1.3vw,12px)", color: C.muted, ...a("fadeUp", "1.1s", "0.5s") }}>3 FREE CERTIFICATION REVIEWS · NO CREDIT CARD REQUIRED</div>
+      <div style={{ display: "flex", justifyContent: "center", ...a("fadeUp", "0.95s") }}><a href="/contact-support" style={{ borderRadius: 8, background: C.blue, padding: "12px 24px", fontSize: 14, fontWeight: 600, color: C.white, textDecoration: "none", boxShadow: "0 4px 18px rgba(37,99,235,0.45)" }}>REQUEST A DEMO</a></div>
+      <div style={{ marginTop: 14, fontSize: "clamp(10px,1.3vw,12px)", color: C.muted, ...a("fadeUp", "1.1s", "0.5s") }}>$65,000 ANNUAL PLATFORM LICENSE</div>
     </div>
   );
 }
@@ -133,7 +133,7 @@ export function ExplainerVideo() {
     <section style={{ position: "relative", width: "100%", aspectRatio: "16/9", overflow: "hidden", borderRadius: 12, background: C.bg, fontFamily: C.sans }} aria-label="CertivoIQ compliance intelligence explainer video">
       <style>{css}</style>
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 3, background: "rgba(255,255,255,0.07)", zIndex: 10 }}><div style={{ height: "100%", background: C.blue, width: `${progress}%`, transition: "width 0.05s linear" }} /></div>
-      <a href="/trial" style={{ position: "absolute", right: "3%", top: "5.5%", zIndex: 20, borderRadius: 6, background: C.blue, padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, textDecoration: "none", boxShadow: "0 2px 10px rgba(37,99,235,0.45)" }}>TRY CERTIVOIQ FOR FREE</a>
+      <a href="/contact-support" style={{ position: "absolute", right: "3%", top: "5.5%", zIndex: 20, borderRadius: 6, background: C.blue, padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.white, textDecoration: "none", boxShadow: "0 2px 10px rgba(37,99,235,0.45)" }}>REQUEST A DEMO</a>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "10% 8% 6%" }}><div key={scene} style={{ width: "100%", animation: "sceneFade 0.45s ease forwards" }}><Active /></div></div>
     </section>
   );
