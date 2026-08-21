@@ -18,7 +18,7 @@ export default function CertivoIQVoiceoverVideo(props: Props) {
                 href={trialHref}
                 className="inline-flex max-w-full items-center justify-center rounded-lg bg-[#FEC229] px-6 py-3 text-center text-sm font-semibold uppercase tracking-[.12em] text-[#012447] shadow-lg transition hover:bg-[#ffd35c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEC229] focus-visible:ring-offset-2 focus-visible:ring-offset-[#012447]"
               >
-                TRY CERTIVOIQ FOR FREE
+                Try CertivoIQ for Free
               </a>
               <p className="text-[12px] font-semibold uppercase tracking-[.14em] text-[#FEC229]">FEDERAL BASELINE REVIEW</p>
               <p className="text-[11px] uppercase tracking-[.14em] text-white/70">ANNUAL PLATFORM LICENSE</p>
