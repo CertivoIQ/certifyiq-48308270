@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Rocket, GraduationCap, Loader2, AlertTriangle, CreditCard } from "lucide-react";
+import { CheckCircle2, Rocket, Loader2, AlertTriangle, CreditCard } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { getCheckoutSessionStatus } from "@/utils/payments.functions";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/checkout/return")({
       { property: "og:title", content: "Subscription Confirmed — CertivoIQ" },
       {
         property: "og:description",
-        content: "Plan capacity unlocked and guided onboarding started.",
+        content: "Annual platform access confirmed and guided onboarding started.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -65,7 +65,7 @@ function CheckoutReturn() {
             <Pill tone="neutral">No checkout session</Pill>
             <h1 className="mt-4 font-display text-[26px]">Nothing to confirm here</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              We couldn't find a checkout to confirm. If you just paid, open your billing page to check your plan
+              We couldn't find a checkout to confirm. If you just paid, open your billing page to check your annual license
               status.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
@@ -75,7 +75,7 @@ function CheckoutReturn() {
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/pricing">Back to plans</Link>
+                <Link to="/pricing">Back to pricing</Link>
               </Button>
             </div>
           </>
@@ -104,7 +104,7 @@ function CheckoutReturn() {
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/pricing">Back to plans</Link>
+                <Link to="/pricing">Back to pricing</Link>
               </Button>
             </div>
           </>
@@ -117,7 +117,7 @@ function CheckoutReturn() {
             </Pill>
             <h1 className="mt-4 font-display text-[26px]">Your payment is settling</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              Some payment methods take a little longer to clear. We'll unlock your plan capacity automatically the
+              Some payment methods take a little longer to clear. We'll confirm your annual platform access automatically the
               moment it settles — no need to pay again.
             </p>
           </>
@@ -128,10 +128,9 @@ function CheckoutReturn() {
             <Pill tone="seal">
               <CheckCircle2 className="size-3" /> Payment received
             </Pill>
-            <h1 className="mt-4 font-display text-[26px]">You're audit-ready — subscription active</h1>
+            <h1 className="mt-4 font-display text-[26px]">Annual platform license active</h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
-              Your plan capacity is unlocked and your FREE certification review files have been kept. Your guided
-              onboarding has started.
+              Your annual platform access is active. Guided onboarding has started.
               {!("error" in data!) && !data!.provisioned
                 ? " Final provisioning is finishing up — refresh billing in a few seconds if limits still look old."
                 : ""}
@@ -140,11 +139,6 @@ function CheckoutReturn() {
               <Button asChild>
                 <Link to="/launchpad">
                   <Rocket className="size-4" /> Start LaunchPad onboarding
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/academy">
-                  <GraduationCap className="size-4" /> Open CertivoIQ Academy
                 </Link>
               </Button>
               <Button variant="ghost" asChild>
