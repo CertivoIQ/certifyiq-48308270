@@ -252,7 +252,7 @@ export default function CertivoIQVoiceoverVideo({
                 href={trialHref}
                 className="rounded-lg bg-[#FEC229] px-4 py-2.5 text-sm font-semibold text-[#012447] transition hover:bg-[#ffd35c]"
               >
-                TRY CERTIVOIQ FOR FREE
+                Try CertivoIQ for Free
               </a>
             )}
           </div>
