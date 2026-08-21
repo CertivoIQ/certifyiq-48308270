@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Panel } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import {
-  RELEASE_CHECKLIST,
-  OFFICIAL_STARTING_SOURCES,
-  coverageClaim,
-} from "@/lib/stateCoverageRegistry";
+const OFFICIAL_FEDERAL_SOURCES = [
+  {
+    name: "Federal HOME regulations (24 CFR Part 92)",
+    url: "https://www.ecfr.gov/current/title-24/subtitle-A/part-92",
+  },
+  {
+    name: "Federal income and asset regulations (24 CFR Part 5)",
+    url: "https://www.ecfr.gov/current/title-24/subtitle-A/part-5",
+  },
+] as const;
 
 /**
  * Public calculation and validation methodology. No performance metric appears
@@ -90,7 +95,9 @@ function MethodologyPage() {
           Calculation &amp; validation methodology
         </h1>
         <p className="mt-4 text-[14.5px] leading-relaxed text-muted-foreground">
-          {coverageClaim()}
+          CertivoIQ currently evaluates supported federal affordable-housing requirements only.
+          State-agency, allocating-agency, local, and project-specific requirements require
+          separate Manual Review.
         </p>
 
         <div className="mt-8 space-y-3">
@@ -111,8 +118,8 @@ function MethodologyPage() {
             </ul>
             <p>
               Accepted uploads are PDF and common image scans of tenant income certifications and
-              their supporting verifications. Jurisdictional scope is the federal baseline
-              nationwide; state-specific determinations require a validated state pack.
+              their supporting verifications. Jurisdictional scope is limited to the supported
+              federal baseline. Non-federal requirements require separate Manual Review.
             </p>
           </Section>
 
@@ -130,10 +137,10 @@ function MethodologyPage() {
             </p>
           </Section>
 
-          <Section id="confidence" title="Confidence and human-verification policy">
+          <Section id="confidence" title="Confidence and Agent Verification policy">
             <p>
               Any field required for the decision that falls below the configured confidence
-              threshold must be human-verified before the engine will return Pass or Fail. Reviewer
+              threshold must receive Agent Verification before the engine will return Pass or Fail. Agent
               verification is recorded per field with the actor and timestamp.
             </p>
           </Section>
@@ -151,7 +158,7 @@ function MethodologyPage() {
             <p>
               <strong>Unable to determine</strong> — required evidence is missing, below the
               confidence policy, unverified, or affected by an unresolved rule conflict, or the
-              missing state rule could change the outcome. Final Pass/Fail and human sign-off are
+              an unevaluated non-federal requirement could change the outcome. Final Pass/Fail and Agent Signature are
               blocked, and the blocking reasons are logged with the review.
             </p>
           </Section>
@@ -165,7 +172,7 @@ function MethodologyPage() {
               guessed, and reviews that depend on them return Unable to determine.
             </p>
             <ul className="list-disc space-y-1 pl-5">
-              {OFFICIAL_STARTING_SOURCES.map((source) => (
+              {OFFICIAL_FEDERAL_SOURCES.map((source) => (
                 <li key={source.url}>
                   {source.name} —{" "}
                   <a className="underline" href={source.url} target="_blank" rel="noreferrer">
@@ -176,21 +183,13 @@ function MethodologyPage() {
             </ul>
           </Section>
 
-          <Section id="release" title="State pack release checklist">
-            <ol className="list-decimal space-y-1 pl-5">
-              {RELEASE_CHECKLIST.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
-          </Section>
-
-          <Section id="validation" title="Validation datasets, sampling and reviewer qualifications">
+          <Section id="validation" title="Validation datasets, sampling and agent qualifications">
             <p>
               Release testing uses fixture sets covering positive, negative, boundary,
               layered-program and supersession cases. Ground truth is established by a credentialed
               affordable-housing compliance professional independent of the engineer who authored
               the rule. Deterministic release tests must return 100% of expected results before a
-              pack is activated.
+              supported federal rule set is released.
             </p>
           </Section>
 
@@ -209,7 +208,7 @@ function MethodologyPage() {
               fixture suite runs on every change; a regression blocks release. Each completed review
               stores an evidence manifest containing the extracted inputs, the deterministic
               calculation trace, the rule versions and source hashes, the outcome, the engine and
-              model versions, and every human action.
+              processing versions, and every agent action.
             </p>
           </Section>
 
