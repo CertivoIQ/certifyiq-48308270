@@ -34,13 +34,13 @@ function TermsOfUse() {
           <p className="mt-2">
             CertivoIQ is a compliance-support and workflow platform. It is not a law firm, accounting firm, housing agency,
             auditor, syndicator, or tax adviser. Platform findings, calculations, evidence links, readiness scores, and other
-            outputs are tools for authorized human review. They do not guarantee compliance, agency acceptance, audit results,
+            outputs are tools for authorized Manual Review. They do not guarantee compliance, agency acceptance, audit results,
             avoidance of findings, tax-credit recapture, penalties, or other outcomes.
           </p>
           <p className="mt-2">
-            Where CertivoIQ marks a matter as unable to determine, conflicting, blocked, or requiring human review, users must
+            Where CertivoIQ marks a matter as unable to determine, conflicting, blocked, or requiring Manual Review, users must
             not treat that result as an approval. Final submissions and consequential decisions remain subject to the required
-            human authority and applicable program rules.
+            Agent Approval authority and applicable program rules.
           </p>
         </section>
 
@@ -61,7 +61,7 @@ function TermsOfUse() {
         <section>
           <h2 className="font-display text-xl text-foreground">Subscriptions, billing, and free reviews</h2>
           <p className="mt-2">
-            Current plans, allowances, billing cadence, and available add-ons are described on the <Link to="/pricing" className="text-primary underline underline-offset-4">pricing page</Link> or in a signed order form. Free certification reviews are a product-evaluation offer and do not require a credit card where the website expressly states that. Paid subscriptions and transactions are processed through the configured payment provider. Cancellations, renewals, credits, refunds, and enterprise terms are subject to the applicable checkout terms, billing portal, written agreement, and law. CertivoIQ does not authorize automatic material refunds through its virtual support agent.
+            The current annual license price and included platform access are described on the <Link to="/pricing" className="text-primary underline underline-offset-4">pricing page</Link> or in a signed order form. Paid subscriptions and transactions are processed through the configured payment provider. Cancellations, renewals, credits, refunds, implementation terms, and procurement terms are subject to the applicable billing terms, written agreement, and law. CertivoIQ does not authorize automatic material refunds through its virtual support agent.
           </p>
         </section>
 
