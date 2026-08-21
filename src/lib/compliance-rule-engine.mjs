@@ -431,3 +431,9 @@ export const REVIEW_DECISIONS = Object.freeze([
   "remediation_requested",
   "unable_to_determine",
 ]);
+
+export {
+  LAYERED_ENGINE_BUILD,
+  LAYERED_RULE_ID,
+  evaluateLayeredProgramRestrictions,
+} from "./layered-program-restrictions.mjs";
