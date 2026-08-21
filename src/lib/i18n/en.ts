@@ -41,7 +41,7 @@ export const en = {
   "shell.statesBuild": "State-specific rules not evaluated",
   "shell.trial.status": "Demo workspace · {used}/{allowed} sample reviews used",
   "shell.trial.watchDemo": "Watch the demo",
-  "shell.trial.upgrade": "Request a demo",
+  "shell.trial.upgrade": "Try CertivoIQ for Free",
 
   // ---- errors ----
   "error.notFound.title": "Page not found",
@@ -59,16 +59,16 @@ export const en = {
   "welcome.hero.title": "FIND COMPLIANCE RISK BEFORE THE AUDITOR.",
   "welcome.hero.subtitle":
     "CertivoIQ extracts evidence from affordable-housing certification files, applies supported versioned federal requirements deterministically, and shows exactly why each finding was raised.",
-  "welcome.hero.cta": "REQUEST A DEMO",
+  "welcome.hero.cta": "Try CertivoIQ for Free",
   "welcome.workflow.upload": "Upload",
   "welcome.workflow.extract": "Extract",
   "welcome.workflow.check": "Check",
   "welcome.workflow.evidence": "Evidence",
   "welcome.workflow.findings": "Findings",
-  "welcome.cta.trial": "REQUEST A DEMO",
+  "welcome.cta.trial": "Try CertivoIQ for Free",
   "welcome.cta.sample": "See a reviewed certification",
   "welcome.video.label": "CertivoIQ compliance intelligence explainer video",
-  "welcome.video.trialCta": "REQUEST A DEMO",
+  "welcome.video.trialCta": "Try CertivoIQ for Free",
   "welcome.risks.title": "What manual review alone can miss — and what it costs",
   "welcome.risks.body":
     "The items below can contribute to findings or corrective action. CertivoIQ surfaces supported federal-baseline issues for Manual Review and does not guarantee detection of every issue.",
@@ -86,8 +86,8 @@ export const en = {
     "CertivoIQ organizes evidence and findings while authorized compliance agents retain Agent Approval authority.",
   "welcome.close.title": "See CertivoIQ in your workflow",
   "welcome.close.body":
-    "Request a demonstration of federal baseline review, evidence traceability, Agent Approval, and portfolio-level visibility.",
-  "welcome.close.cta": "REQUEST A DEMO",
+    "Try CertivoIQ for Freenstration of federal baseline review, evidence traceability, Agent Approval, and portfolio-level visibility.",
+  "welcome.close.cta": "Try CertivoIQ for Free",
 
   // ---- dashboard ----
   "dash.title": "CertivoIQ Dashboard",
