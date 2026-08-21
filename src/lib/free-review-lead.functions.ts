@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isOrganizationEmail } from "@/lib/organization-email.mjs";
 
 const LEAD_SOURCE = "3 FREE certification reviews";
 
@@ -23,10 +24,8 @@ export interface FreeReviewLeadResult {
   created: boolean;
 }
 
-function planForUnits(units: number) {
-  if (units <= 500) return "Professional";
-  if (units <= 10_000) return "Business";
-  return "Enterprise";
+function platformLicense() {
+  return "Annual Platform License";
 }
 
 function cleanList(values: string[]) {
@@ -70,7 +69,9 @@ export const captureFreeReviewLead = createServerFn({ method: "POST" })
     if (!companyName) throw new Error("Company name is required.");
     if (!ownerName) throw new Error("Owner / decision-maker name is required.");
     if (!ownerTitle) throw new Error("Owner / decision-maker title is required.");
-    if (!email || !isEmail(email)) throw new Error("A valid business email address is required.");
+    if (!email || !isEmail(email) || !isOrganizationEmail(email)) {
+      throw new Error("Use your organization website email address. Personal email providers are not eligible for the 3 FREE certification reviews.");
+    }
     if (!Number.isInteger(units) || units < 1) throw new Error("Portfolio unit count is required.");
     if (!Number.isInteger(properties) || properties < 1) throw new Error("Portfolio property count is required.");
     if (!hq) throw new Error("Headquarters / primary market is required.");
@@ -93,12 +94,12 @@ export const captureFreeReviewLead = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<FreeReviewLeadResult> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const plan = planForUnits(data.units);
+    const plan = platformLicense();
     const consentNote = data.marketingConsent ? "yes" : "no";
     const notes = [
       "Warm lead captured before 3 FREE certification reviews.",
       `Marketing email consent: ${consentNote}.`,
-      "Plan recommendation is based on reported portfolio units.",
+      "Eligible lead qualified with an organization website email.",
     ].join(" ");
 
     const { data: existing, error: existingError } = await supabaseAdmin
