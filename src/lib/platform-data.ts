@@ -112,7 +112,7 @@ export const PLANS = [
       "Portfolio-level compliance visibility",
       "Evidence-manifest export",
     ],
-    cta: "Request a Demo",
+    cta: "Try CertivoIQ for Free",
     featured: true,
     selfServe: false,
   },
