@@ -129,7 +129,7 @@ function BillingPage() {
                   </>
                 ) : (
                   <Button size="sm" asChild>
-                    <Link to="/contact-support">Request a Demo</Link>
+                    <Link to="/trial">Try CertivoIQ for Free</Link>
                   </Button>
                 )}
               </div>

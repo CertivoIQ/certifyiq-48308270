@@ -50,7 +50,7 @@ The first public reference should use **authorized compliance agent**. Shorter i
 Do not claim or imply guaranteed avoidance of penalties, fines, tax-credit loss, HUD findings, regulatory action, audit findings, enforcement, or violations. Do not present CertivoIQ as legal advice, complete jurisdictional approval, or a guarantee that an audit will have no findings.
 
 ## Pricing
-CertivoIQ has one **$65,000 annual platform license**. Do not publish plan tiers, Academy or training products, certificates, state-pack add-ons, per-file overages, or separate API prices. All currently available platform features are included. The primary sales action is **Request a Demo**.
+CertivoIQ has one **$65,000 annual platform license**. Do not publish plan tiers, Academy or training products, certificates, state-pack add-ons, per-file overages, or separate API prices. All currently available platform features are included. The primary sales action is **Try CertivoIQ for Free**.
 
 ## Brand identity
 Approved colors:
@@ -65,4 +65,4 @@ Do not use green as a brand accent.
 CertivoIQ is pronounced **"SUR-duh-voe-eye-cue"**. Formal reference: `[ˈsərdəvoʊ aɪˈkjuː]`. Say the complete name smoothly without an exaggerated pause between "voe" and "eye-cue."
 
 ## Primary CTA
-**REQUEST A DEMO**
+**Try CertivoIQ for Free**

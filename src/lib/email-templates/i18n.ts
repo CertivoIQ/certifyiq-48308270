@@ -63,9 +63,9 @@ const en = {
   'intro.risk.3.cost': 'Subsidy repayment and HUD-imposed corrective action',
   'intro.risk.4': 'HOTMA implementation gaps',
   'intro.risk.4.cost': 'Systemic recertification errors across an entire portfolio',
-  'intro.cta': 'Request a CertivoIQ demonstration',
+  'intro.cta': 'Try CertivoIQ for Free',
   'intro.startFree': 'Learn more:',
-  'intro.startFree.detail': '— request a demonstration of the federal baseline workflow.',
+  'intro.startFree.detail': '— start with three free certification reviews using your organization website email.',
   'intro.signature': 'CertivoIQ — federal baseline compliance intelligence',
   'intro.unsubscribe': 'You received this introduction because your organization operates affordable housing. Reply with "unsubscribe" and we will not contact you again.',
 } as const
@@ -127,9 +127,9 @@ const es: Record<EmailKey, string> = {
   'intro.risk.3.cost': 'Reembolso del subsidio y medidas correctivas impuestas por HUD',
   'intro.risk.4': 'Brechas en la implementación de HOTMA',
   'intro.risk.4.cost': 'Errores sistemáticos de recertificación en todo el portafolio',
-  'intro.cta': 'Solicitar una demostración de CertivoIQ',
+  'intro.cta': 'Pruebe CertivoIQ gratis',
   'intro.startFree': 'Más información:',
-  'intro.startFree.detail': '— solicite una demostración del flujo de línea base federal.',
+  'intro.startFree.detail': '— comience con tres revisiones gratuitas de certificación usando el correo electrónico del sitio web de su organización.',
   'intro.signature': 'CertivoIQ — inteligencia de cumplimiento de línea base federal',
   'intro.unsubscribe': 'Recibe esta presentación porque su organización administra vivienda asequible. Responda con "unsubscribe" y no volveremos a contactarle.',
 }

@@ -105,7 +105,7 @@ function WelcomePage() {
           </nav>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" asChild><Link to="/auth">Sign in</Link></Button>
-            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "TRY CERTIVOIQ FOR FREE"}</Link></Button>
+            <Button size="sm" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "Try CertivoIQ for Free"}</Link></Button>
             <LanguageToggle />
             <ThemeToggle />
           </div>
@@ -126,7 +126,7 @@ function WelcomePage() {
               <div className="mt-8">
                 <div className="flex flex-wrap items-start gap-3">
                   <div>
-                    <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "TRY CERTIVOIQ FOR FREE"} <ArrowRight className="ml-2 size-4" /></Link></Button>
+                    <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "Try CertivoIQ for Free"} <ArrowRight className="ml-2 size-4" /></Link></Button>
                     {!isSubscriber && <><p className="mt-2 text-[12px] font-semibold uppercase tracking-[.14em] text-gold">{FREE_REVIEW_COUNT} FREE CERTIFICATION REVIEWS</p><p className="mt-1 text-[11px] uppercase tracking-[.14em] text-muted-foreground">ORGANIZATION WEBSITE EMAIL REQUIRED · NO CREDIT CARD REQUIRED</p></>}
                   </div>
                   <Button size="lg" variant="outline" asChild><a href="#how-it-works">See how it works</a></Button>
@@ -232,7 +232,7 @@ function WelcomePage() {
               <h2 className="mt-4 font-display text-[38px] leading-tight sm:text-[50px]">A clearer view of compliance risk across the portfolio.</h2>
               <p className="mt-4 text-[15px] leading-7 text-muted-foreground">Built for owners, operators, compliance leaders, and property-management teams who need a defensible review process without adding another layer of administrative work.</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "TRY CERTIVOIQ FOR FREE"} <ArrowRight className="ml-2 size-4" /></Link></Button>
+                <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "Try CertivoIQ for Free"} <ArrowRight className="ml-2 size-4" /></Link></Button>
                 <Button size="lg" variant="outline" asChild><Link to="/methodology">See the methodology</Link></Button>
               </div>
             </div>
@@ -279,7 +279,7 @@ function WelcomePage() {
               <h2 className="mt-2 max-w-3xl font-display text-[28px] leading-tight sm:text-[34px]">One missed compliance finding can cost more than the system that helps you catch it.</h2>
               <p className="mt-2 max-w-3xl text-[13px] leading-6 text-muted-foreground">CertivoIQ is built to surface missing evidence, inconsistencies, and exceptions while your team still has time to investigate and resolve them.</p>
             </div>
-            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "TRY CERTIVOIQ FOR FREE"} <ArrowRight className="ml-2 size-4" /></Link></Button>
+            <Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "Try CertivoIQ for Free"} <ArrowRight className="ml-2 size-4" /></Link></Button>
           </div>
         </section>
 
@@ -288,7 +288,7 @@ function WelcomePage() {
             <Pill tone="neutral">Start without a sales call</Pill>
             <h2 className="mx-auto mt-4 max-w-3xl font-display text-[34px] leading-tight sm:text-[46px]">Find the compliance issues your current process can miss.</h2>
             <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">Start with {FREE_REVIEW_COUNT} FREE certification reviews. Use your organization website email, bring your own files, inspect the evidence trail, and decide whether CertivoIQ belongs in your compliance workflow.</p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "TRY CERTIVOIQ FOR FREE"} <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View pricing</Link></Button></div>
+            <div className="mt-7 flex flex-wrap justify-center gap-3"><Button size="lg" asChild><Link to={isSubscriber ? "/dashboard" : "/trial"}>{isSubscriber ? "Open Dashboard" : "Try CertivoIQ for Free"} <ArrowRight className="ml-2 size-4" /></Link></Button><Button size="lg" variant="outline" asChild><Link to="/pricing">View pricing</Link></Button></div>
             {!isSubscriber && <><p className="mt-4 text-[12px] font-semibold uppercase tracking-[.14em] text-gold">{FREE_REVIEW_COUNT} FREE CERTIFICATION REVIEWS</p><p className="mt-1 text-[11px] uppercase tracking-[.14em] text-muted-foreground">ORGANIZATION WEBSITE EMAIL REQUIRED · NO CREDIT CARD REQUIRED</p></>}
           </div>
         </section>
