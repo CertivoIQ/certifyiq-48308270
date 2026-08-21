@@ -140,7 +140,8 @@ test("public acquisition uses three free certification reviews", () => {
   const combined = files.map(read).join("\n");
 
   assert.match(combined, /TRY CERTIVOIQ FOR FREE/i);
-  assert.match(combined, /3 FREE CERTIFICATION REVIEWS/i);
+  assert.match(combined, /FREE_REVIEW_COUNT\s*=\s*3/);
+  assert.match(combined, /FREE CERTIFICATION REVIEWS/i);
   assert.match(combined, /ORGANIZATION WEBSITE EMAIL REQUIRED/i);
   assert.doesNotMatch(combined, /Request a Demo/i);
 });
