@@ -31,6 +31,9 @@ type Draft = {
   website: string;
   linkedin_url: string;
   stage: Stage;
+  is_demo: boolean;
+  contract_verified: boolean;
+  payment_verified: boolean;
   arr: string;
   plan: string;
   owner: string;
@@ -54,6 +57,9 @@ const empty: Draft = {
   website: "",
   linkedin_url: "",
   stage: "new",
+  is_demo: false,
+  contract_verified: false,
+  payment_verified: false,
   arr: "",
   plan: "Enterprise",
   owner: "Unassigned",
@@ -78,6 +84,9 @@ function toDraft(a: Account): Draft {
     website: a.website ?? "",
     linkedin_url: a.linkedin_url ?? "",
     stage: a.stage,
+    is_demo: a.is_demo,
+    contract_verified: Boolean(a.contract_verified_at),
+    payment_verified: Boolean(a.payment_verified_at),
     arr: String(a.arr ?? ""),
     plan: a.plan ?? "",
     owner: a.owner ?? "",
@@ -122,6 +131,13 @@ export function AccountDialog({
         website: d.website.trim() || null,
         linkedin_url: d.linkedin_url.trim() || null,
         stage: d.stage,
+        is_demo: d.is_demo,
+        contract_verified_at: d.contract_verified
+          ? account?.contract_verified_at ?? new Date().toISOString()
+          : null,
+        payment_verified_at: d.payment_verified
+          ? account?.payment_verified_at ?? new Date().toISOString()
+          : null,
         arr: Number(d.arr) || 0,
         plan: d.plan.trim() || null,
         owner: d.owner.trim() || null,
@@ -144,7 +160,12 @@ export function AccountDialog({
         const { error } = await supabase.from("crm_accounts").update(payload).eq("id", account.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("crm_accounts").insert(payload);
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        const { error } = await supabase.from("crm_accounts").insert({
+          ...payload,
+          created_by: authData.user?.id ?? null,
+        });
         if (error) throw error;
       }
     },
@@ -226,6 +247,43 @@ export function AccountDialog({
           <div className={field}>
             <Label>Sales owner</Label>
             <Input value={d.owner} maxLength={80} onChange={(e) => setD({ ...d, owner: e.target.value })} />
+          </div>
+          <div className="sm:col-span-2 mt-2 rounded-xl border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-900 dark:bg-sky-950/20">
+            <h3 className="font-sans text-sm font-semibold text-sky-950 dark:text-sky-50">Verified sale controls</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              The post-sale checklist appears only for a non-demo account in Closed Won with a verified contract or payment.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={d.is_demo}
+                  onChange={(e) => setD({ ...d, is_demo: e.target.checked })}
+                />
+                Demo / test record
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={d.contract_verified}
+                  onChange={(e) => setD({ ...d, contract_verified: e.target.checked })}
+                />
+                Executed contract verified
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={d.payment_verified}
+                  onChange={(e) => setD({ ...d, payment_verified: e.target.checked })}
+                />
+                Payment verified
+              </label>
+            </div>
+            {d.stage === "won" && !d.is_demo && !d.contract_verified && !d.payment_verified && (
+              <p className="mt-3 text-xs font-medium text-amber-700 dark:text-amber-300">
+                Closed Won is not yet verified. This record will not trigger post-sale monitoring.
+              </p>
+            )}
           </div>
           <div className="sm:col-span-2 mt-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
             <h3 className="font-sans text-sm font-semibold text-emerald-950 dark:text-emerald-50">Ownership & management verification</h3>
