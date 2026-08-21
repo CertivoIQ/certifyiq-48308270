@@ -1,0 +1,1 @@
+CI scope: revocation update integrity hardening branch. Remove before merge if repository policy does not permit CI-note files.
