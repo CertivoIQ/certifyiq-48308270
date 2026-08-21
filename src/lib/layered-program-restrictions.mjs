@@ -9,7 +9,7 @@
  */
 
 export const LAYERED_RULE_ID = "FED-LAYERED-PROGRAM-RESTRICTIONS-001";
-export const LAYERED_ENGINE_BUILD = "layered-program-engine-2026.08.1";
+export const LAYERED_ENGINE_BUILD = "layered-program-engine-2026.08.2";
 
 const PROGRAM_CODES = new Set([
   "LIHTC",
@@ -123,6 +123,8 @@ function validateProjectAuthority(input) {
   }
 
   const envelope = result.authority_envelope;
+  const handoff = result.gross_rent_floor_handoff;
+  const capOutcome = String(handoff?.cap_outcome ?? "").toUpperCase();
   const requirements = {
     "project_authority_result.finding": result.finding === "READY",
     "project_authority_result.rule_engine_authority":
@@ -137,6 +139,10 @@ function validateProjectAuthority(input) {
       envelope?.project_authority_validated === true,
     "project_authority_result.authority_envelope.project_authority_inventory_complete":
       envelope?.project_authority_inventory_complete === true,
+    "project_authority_result.gross_rent_floor_handoff":
+      Boolean(handoff) && typeof handoff === "object" && !Array.isArray(handoff),
+    "project_authority_result.gross_rent_floor_handoff.cap_outcome":
+      capOutcome === "CAP_VALIDATED" || capOutcome === "NO_CAP_VALIDATED",
   };
   const missing = Object.entries(requirements)
     .filter(([, valid]) => !valid)
@@ -147,6 +153,25 @@ function validateProjectAuthority(input) {
         "PROJECT_AUTHORITY_HANDOFF_NOT_VALIDATED",
         "The prior project-authority gate is incomplete, blocked, or unvalidated.",
         missing,
+      ),
+    };
+  }
+  const projectCap = handoff.project_maximum_gross_rent_cap;
+  if (capOutcome === "CAP_VALIDATED" && (projectCap === null || projectCap === undefined)) {
+    return {
+      error: blocked(
+        "PROJECT_AUTHORITY_CAP_HANDOFF_NOT_VALIDATED",
+        "The project-authority handoff declares a validated cap but does not supply it.",
+        ["project_authority_result.gross_rent_floor_handoff.project_maximum_gross_rent_cap"],
+      ),
+    };
+  }
+  if (capOutcome === "NO_CAP_VALIDATED" && projectCap !== null) {
+    return {
+      error: blocked(
+        "PROJECT_AUTHORITY_CAP_HANDOFF_CONFLICT",
+        "An explicit validated no-cap outcome cannot also supply a project gross-rent cap.",
+        ["project_authority_result.gross_rent_floor_handoff"],
       ),
     };
   }
@@ -415,20 +440,6 @@ function validateLayer(layer, index, eventDate) {
         ),
       };
     }
-    if (
-      programCode === "LIHTC" &&
-      metric === "MAXIMUM_GROSS_RENT" &&
-      item.rental_assistance_excluded !== true
-    ) {
-      return {
-        error: blocked(
-          "LIHTC_RENTAL_ASSISTANCE_TREATMENT_NOT_VALIDATED",
-          "The LIHTC observed gross-rent basis must exclude rental assistance payments while retaining tenant-paid utilities and required charges.",
-          [`${itemPrefix}.rental_assistance_excluded`],
-        ),
-      };
-    }
-
     let maximumCents;
     try {
       maximumCents = moneyToCents(
@@ -634,6 +645,7 @@ function validateObservedAmounts(observedAmounts) {
       amount_cents: amountCents,
       currency,
       period,
+      rental_assistance_excluded: item.rental_assistance_excluded === true,
     });
   }
   return { value: normalized };
@@ -666,10 +678,16 @@ export function evaluateLayeredProgramRestrictions(input = {}) {
 
   const stateFindingRequested = input.state_finding_requested === true;
   if (stateFindingRequested) {
-    if (input.state_rulepack_validated !== true) missing.push("state_rulepack_validated");
-    if (input.state_authority_source_validated !== true) {
-      missing.push("state_authority_source_validated");
-    }
+    const statePack = input.state_rulepack;
+    const statePackUsable = Boolean(
+      statePack &&
+        statePack.status === "validated" &&
+        statePack.approvedBy &&
+        statePack.effectiveFrom &&
+        statePack.version &&
+        Number(statePack.validatedRuleCount) > 0,
+    );
+    if (!statePackUsable) missing.push("state_rulepack");
   }
   if (missing.length) {
     return blocked(
@@ -824,6 +842,17 @@ export function evaluateLayeredProgramRestrictions(input = {}) {
         "OBSERVED_AMOUNT_COMPARISON_BASIS_CONFLICT",
         "The observed amount does not use the metric, currency, and period of its comparison group.",
         [group],
+      );
+    }
+    const hasLihtcGrossRentConstraint = constraints.some(
+      (item) =>
+        item.program_code === "LIHTC" && item.metric === "MAXIMUM_GROSS_RENT",
+    );
+    if (hasLihtcGrossRentConstraint && observed.rental_assistance_excluded !== true) {
+      return blocked(
+        "LIHTC_RENTAL_ASSISTANCE_TREATMENT_NOT_VALIDATED",
+        "The observed LIHTC gross-rent basis must exclude rental assistance payments while retaining tenant-paid utilities and required charges.",
+        [`observed_amounts[${group}].rental_assistance_excluded`],
       );
     }
 
