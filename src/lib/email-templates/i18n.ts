@@ -129,7 +129,7 @@ const es: Record<EmailKey, string> = {
   'intro.risk.4.cost': 'Errores sistemáticos de recertificación en todo el portafolio',
   'intro.cta': 'Pruebe CertivoIQ gratis',
   'intro.startFree': 'Más información:',
-  'intro.startFree.detail': '— solicite una demostración del flujo de línea base federal.',
+  'intro.startFree.detail': '— comience con tres revisiones gratuitas de certificación usando el correo electrónico del sitio web de su organización.',
   'intro.signature': 'CertivoIQ — inteligencia de cumplimiento de línea base federal',
   'intro.unsubscribe': 'Recibe esta presentación porque su organización administra vivienda asequible. Responda con "unsubscribe" y no volveremos a contactarle.',
 }
