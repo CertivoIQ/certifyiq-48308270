@@ -77,12 +77,7 @@ function MethodologyPage() {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-4">
           <Link to="/welcome" className="flex items-center gap-2.5">
-            <span className="brand-gradient grid size-8 place-items-center rounded-[8px] font-mono text-[13px] font-bold text-gold">
-              IQ
-            </span>
-            <span className="font-display text-lg leading-none">
-              Certivo<span className="text-gold">IQ</span>
-            </span>
+            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1 object-contain" />
           </Link>
           <Button size="sm" variant="outline" asChild>
             <Link to="/security">Security &amp; Data Use</Link>
