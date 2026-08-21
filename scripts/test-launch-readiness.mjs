@@ -183,3 +183,34 @@ test("official CertivoIQ logo is used across site and search metadata", () => {
   assert.match(root, /"@type": "Organization"/);
   assert.match(email, /https:\/\/certivoiq\.com\/certivoiq-logo\.png/);
 });
+
+
+test("self-directed onboarding persists without obsolete certificate claims", () => {
+  const route = read("src/routes/launchpad.tsx");
+  const catalog = read("src/lib/platform-data.ts");
+  const migration = read(
+    "supabase/migrations/20260821123000_self_directed_onboarding.sql",
+  );
+
+  assert.match(route, /customer_onboarding_progress/);
+  assert.match(route, /upsert/);
+  assert.match(route, /progress saved automatically/i);
+  assert.match(migration, /user_id = auth\.uid\(\)/);
+  assert.match(migration, /completed_at timestamptz/);
+  assert.doesNotMatch(route + catalog, /Launch Certified|Merlin|Graduation/);
+  assert.match(route + catalog, /not a training certificate/i);
+});
+
+test("chat and email support persist deterministic ticket triage", () => {
+  const chat = read("src/utils/supportiq.functions.ts");
+  const email = read("src/routes/api/public/crm/support-email.ts");
+  const combined = chat + email;
+
+  assert.match(combined, /triage_category/);
+  assert.match(combined, /triage_priority/);
+  assert.match(combined, /triage_disposition/);
+  assert.match(combined, /human_required/);
+  assert.match(combined, /supportiq_metadata/);
+  assert.match(email, /classifySupportRequest/);
+  assert.match(email, /timingSafeEqual/);
+});
