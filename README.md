@@ -86,7 +86,7 @@ Deploy through the configured production pipeline. Verify domain, authentication
 - **Primary message:** Find compliance risk before the auditor.
 - **Colors:** Dark Blue `#012447`, Navy `#082B56`, White `#FFFFFF`, Subtle Yellow `#FEC229`
 - **Pronunciation:** “SUR-duh-voe-eye-cue” — `[ˈsərdəvoʊ aɪˈkjuː]`
-- **Primary CTA:** Request a Demo
+- **Primary CTA:** Try CertivoIQ for Free
 - **Price:** $65,000 annually
 - **Green is not part of the approved brand palette.**
 
