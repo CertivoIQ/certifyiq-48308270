@@ -21,7 +21,7 @@ export default function CertivoIQVoiceoverVideo(props: Props) {
                 REQUEST A DEMO
               </a>
               <p className="text-[12px] font-semibold uppercase tracking-[.14em] text-[#FEC229]">FEDERAL BASELINE REVIEW</p>
-              <p className="text-[11px] uppercase tracking-[.14em] text-white/70">NO CREDIT CARD REQUIRED</p>
+              <p className="text-[11px] uppercase tracking-[.14em] text-white/70">ANNUAL PLATFORM LICENSE</p>
             </div>
           </div>
         </div>
