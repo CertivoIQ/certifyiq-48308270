@@ -37,7 +37,8 @@
     "test:state-source-batch-13": "node --test scripts/test-thirteenth-state-source-batch.mjs",
     "test:state-source-batch-final": "node --test scripts/test-final-state-source-batch.mjs",
     "test:state-source-audit": "node --test scripts/test-nationwide-state-pack-audit.mjs",
-    "test:state-source-wv": "node --test scripts/test-west-virginia-source-capture.mjs"
+    "test:state-source-wv": "node --test scripts/test-west-virginia-source-capture.mjs",
+    "test:state-source-wy": "node --test scripts/test-wyoming-source-capture.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
