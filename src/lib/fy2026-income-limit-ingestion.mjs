@@ -12,6 +12,10 @@ export const FY2026_LIMIT_ACTIVATION_STATUS = Object.freeze({
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const HUD_GEOGRAPHY_PATTERN = /^\d{10}$/;
 
+// Object identity is part of the trust boundary. Public hashes and receipt
+// fields are not credentials and can never be used to forge a handoff.
+const ISSUED_ACTIVATION_RECEIPTS = new WeakSet();
+
 const PROGRAM_DATASET_FAMILIES = Object.freeze({
   LIHTC: new Set([
     "HUD_MTSP_LIMITS_FY2026",
@@ -346,50 +350,21 @@ export function evaluateFy2026IncomeLimitSourceActivation(input = {}) {
     );
   }
 
-  const validation = validateFy2026IncomeLimitRecords(input.records, {
-    expectedRecordCount: source.record_count,
-    expectedLegacyCrosswalkCount:
-      source.expected_legacy_geography_crosswalk_count ?? 0,
-  });
-  if (validation.validation_status !== "VALIDATED") {
-    return { ...validation, dataset_id: datasetId };
-  }
-  if (input.schema_validated !== true || input.effective_date_validated !== true) {
-    return blocked(
-      "SOURCE_WORKBOOK_STRUCTURE_NOT_VALIDATED",
-      "The workbook schema and effective-date fields must be validated before activation.",
-      [
-        ...(input.schema_validated === true ? [] : ["schema_validated"]),
-        ...(input.effective_date_validated === true
-          ? []
-          : ["effective_date_validated"]),
-      ],
-      { dataset_id: datasetId },
-    );
-  }
-
-  const normalizedDigest = createHash("sha256")
-    .update(JSON.stringify(validation.normalized_records))
-    .digest("hex");
-  return {
-    activation_status: FY2026_LIMIT_ACTIVATION_STATUS.active,
-    rule_engine_authority: "ALLOWED",
-    finding: "PASS",
-    dataset_id: datasetId,
-    file_name: source.file_name,
-    source_sha256: source.sha256,
-    normalized_records_sha256: normalizedDigest,
-    record_count: validation.record_count,
-    effective_from: source.effective_from,
-    geography_count: validation.geography_count,
-    legacy_geography_crosswalk_count:
-      validation.legacy_geography_crosswalk_count,
-    exact_dollar_normalization: true,
-    nearest_fifty_rounding_performed: false,
-    human_approval_required: true,
-    human_approval_status: "PENDING",
-    engine_build: FY2026_LIMIT_INGESTION_ENGINE_BUILD,
-  };
+  // Test #60 intentionally stops here. Accepting caller-provided parsed rows or
+  // validation booleans would not prove that those records came from these
+  // verified bytes. A later parser adapter must derive schema, dates, and rows
+  // directly from workbook_bytes and call a private issuer before activation.
+  return blocked(
+    "TRUSTED_WORKBOOK_PARSER_NOT_AVAILABLE",
+    "The workbook bytes match the controlled source, but activation remains blocked until a trusted parser derives and binds schema, effective dates, geography, and normalized records to those exact bytes.",
+    ["trusted_workbook_parser"],
+    {
+      dataset_id: datasetId,
+      source_sha256: actualSha256,
+      caller_records_ignored: true,
+      caller_validation_booleans_ignored: true,
+    },
+  );
 }
 
 /** Prevent a validated receipt from crossing program branches. */
@@ -410,14 +385,18 @@ export function validateFy2026IncomeLimitProgramHandoff(
   }
   if (
     !activationReceipt ||
+    typeof activationReceipt !== "object" ||
+    !ISSUED_ACTIVATION_RECEIPTS.has(activationReceipt) ||
     activationReceipt.activation_status !== FY2026_LIMIT_ACTIVATION_STATUS.active ||
     activationReceipt.dataset_id !== dataset ||
     activationReceipt.source_sha256 !==
-      CONTROLLED_FY2026_INCOME_LIMIT_SOURCES[dataset]?.sha256
+      CONTROLLED_FY2026_INCOME_LIMIT_SOURCES[dataset]?.sha256 ||
+    activationReceipt.engine_build !== FY2026_LIMIT_INGESTION_ENGINE_BUILD ||
+    !SHA256_PATTERN.test(String(activationReceipt.normalized_records_sha256 ?? ""))
   ) {
     return blocked(
       "INCOME_LIMIT_ACTIVATION_RECEIPT_REQUIRED",
-      "Program evaluation requires an active receipt bound to the controlled dataset bytes.",
+      "Program evaluation requires a module-issued activation receipt bound to the controlled workbook bytes and normalized records.",
       ["activation_receipt"],
     );
   }
