@@ -1,0 +1,105 @@
+{
+  "test_id": 72,
+  "batch_id": "NV-NE-MT-MO-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "NV",
+      "agency": "Nevada Housing Division",
+      "official_domain": "housing.nv.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://housing.nv.gov/Programs/LIHTC_Program/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL_FORMS_EXHIBITS",
+          "url": "https://housing.nv.gov/layouts/Page_Style_1.aspx?id=50733",
+          "status": "BLOCKED_COMPLIANCE_MANUAL_CURRENCY_REVIEW"
+        }
+      ],
+      "conflicts": [
+        "The compliance page identifies the manual as 2017 and includes older form/limit exhibits."
+      ]
+    },
+    {
+      "state_code": "NE",
+      "agency": "Nebraska Investment Finance Authority",
+      "official_domain": "nifa.org",
+      "sources": [
+        {
+          "type": "QAP_APPLICATION_COMPLIANCE_FORMS",
+          "url": "https://www.nifa.org/developers-property-managers/forms-docs",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_ALLOCATION",
+          "url": "https://www.nifa.org/developers-property-managers/lihtc-allocation",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The 2026/2027/2028 QAP must be resolved to the property allocation cycle."
+      ]
+    },
+    {
+      "state_code": "MT",
+      "agency": "Montana Board of Housing",
+      "official_domain": "commerce.mt.gov",
+      "sources": [
+        {
+          "type": "HOUSING_AGENCY_ROOT",
+          "url": "https://commerce.mt.gov/housing/",
+          "status": "BLOCKED_REQUIRED_DOCUMENT_INDEX_NOT_VERIFIED"
+        }
+      ],
+      "conflicts": [
+        "A 2026 QAP and 2024 compliance manual are referenced in official board materials, but canonical current document pages and exact files were not verified."
+      ]
+    },
+    {
+      "state_code": "MO",
+      "agency": "Missouri Housing Development Commission",
+      "official_domain": "mhdc.com",
+      "sources": [
+        {
+          "type": "MULTIFAMILY_QAP_PROGRAM",
+          "url": "https://mhdc.com/programs/multifamily/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE",
+          "url": "https://mhdc.com/programs/asset-management/program-compliance/housing-programs/low-income-housing-tax-credit-lihtc-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "MULTIFAMILY_APPLICATION",
+          "url": "https://mhdc.com/programs/multifamily/multifamily-application/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Annual QAP and FY2027 application materials require cycle/effective-date reconciliation."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited rules",
+    "conflict resolution",
+    "required fixtures",
+    "platform approval",
+    "enterprise VP property figure verification"
+  ]
+}
