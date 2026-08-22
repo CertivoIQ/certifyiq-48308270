@@ -1,0 +1,117 @@
+{
+  "test_id": 86,
+  "state_code": "VI",
+  "pack_id": "vi-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "TAX_EXEMPT_BOND"],
+  "release_status": "BLOCKED_PENDING_CURRENT_AUTHORITIES_LIMITS_FORMS_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T22:30:00Z",
+    "official_program_url": "https://vihfa.gov/low-income-housing-tax-credit-services/",
+    "exact_binary_count": 3,
+    "method": "OFFICIAL_PAGE_LINKED_FILE_BYTE_CAPTURE"
+  },
+  "agency": {
+    "name": "Virgin Islands Housing Finance Authority",
+    "official_domain": "vihfa.gov"
+  },
+  "exact_binary_sources": [
+    {
+      "source_type": "HISTORIC_QAP",
+      "title": "2015 Qualified Allocation Plan",
+      "official_url": "https://vihfa.gov/wp-content/uploads/2023/08/FINAL-2015-QUALIFIED-ALLOCATION-PLAN-1.pdf",
+      "file_name": "FINAL-2015-QUALIFIED-ALLOCATION-PLAN-1.pdf",
+      "file_bytes": 653509,
+      "observed_pages": 25,
+      "sha256": "e2b68c49fd21f172ded6df05180e4786f8a83ef7a74e66b34360b0ba5734c195",
+      "status": "EXACT_BYTES_CAPTURED_HISTORIC_NOT_CURRENT"
+    },
+    {
+      "source_type": "QAP_DRAFT",
+      "title": "2023 Qualified Allocation Plan Draft",
+      "official_url": "https://vihfa.gov/wp-content/uploads/2023/08/QAP-VIHFA-Final-Draft-2023-002-1.pdf",
+      "file_name": "QAP-VIHFA-Final-Draft-2023-002-1.pdf",
+      "document_self_identified_title": "2023 Qualified Allocation Plan",
+      "official_page_label": "2023 Qualified Allocation Plan draft",
+      "file_bytes": 291671,
+      "observed_pages": 30,
+      "sha256": "318e63ec92471c75dc1fae8338861607759a6403da49a21a5554e048e8eb446d",
+      "status": "EXACT_BYTES_CAPTURED_DRAFT_PENDING_ADOPTION_EVIDENCE"
+    },
+    {
+      "source_type": "QAP_COMMENT_RESPONSE",
+      "title": "2023 Qualified Allocation Plan Comments and Responses",
+      "official_url": "https://vihfa.gov/wp-content/uploads/2023/10/2023-QAP-Comments-Responses.pdf",
+      "file_name": "2023-QAP-Comments-Responses.pdf",
+      "file_bytes": 221655,
+      "observed_pages": 7,
+      "sha256": "80c78e383b2b791b18235800572530e84015c6bf6db045356001e92b7c86a5fa",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_FINAL_QAP_COMPOSITION_REVIEW"
+    }
+  ],
+  "official_page_findings": [
+    {
+      "finding_id": "VI-PAGE-ALLOCATION-2015",
+      "status": "OFFICIAL_PAGE_CAPTURED_STALE_FIGURE",
+      "description": "The live LIHTC page states a calendar-year 2015 territorial allocation of $2,680,000 and does not publish a current allocation figure."
+    },
+    {
+      "finding_id": "VI-PAGE-LIMITS",
+      "status": "OFFICIAL_PAGE_CLAIM_PENDING_LINKED_CURRENT_SCHEDULE",
+      "description": "The page says maximum income and rent limits are published annually by VIHFA, but no current limit schedule is linked on the page."
+    },
+    {
+      "finding_id": "VI-PAGE-MONITORING",
+      "status": "OFFICIAL_PAGE_SUMMARY_PENDING_MANUAL_AND_FORMS",
+      "description": "The page states that properties receive annual tenant-file monitoring and physical inspections during the 15-year compliance period, but no compliance manual, inspection procedure, owner certification, TIC, student form or lease addendum is linked."
+    }
+  ],
+  "blocking_conflicts": [
+    {
+      "conflict_id": "VI-CURRENT-QAP-001",
+      "status": "UNRESOLVED",
+      "description": "The live page links a final 2015 QAP and a file/page-label combination that still identifies the 2023 document as a draft; evidence of the currently adopted QAP is missing."
+    },
+    {
+      "conflict_id": "VI-QAP-COMMENTS-001",
+      "status": "UNRESOLVED",
+      "description": "The comment-response document describes final changes, but the resulting adopted, governor-approved QAP is not linked and cannot be reconstructed from comments alone."
+    },
+    {
+      "conflict_id": "VI-LIMITS-001",
+      "status": "UNRESOLVED",
+      "description": "No current VIHFA income and rent limit schedule was linked; property figures must be independently verified against HUD and applicable territorial authority."
+    },
+    {
+      "conflict_id": "VI-COMPLIANCE-DOCUMENTS-001",
+      "status": "UNRESOLVED",
+      "description": "No current compliance manual, monitoring instructions, annual owner certification, tenant certification, student form, lease addendum or waiver procedure was linked."
+    },
+    {
+      "conflict_id": "VI-STALE-PAGE-FIGURE-001",
+      "status": "UNRESOLVED",
+      "description": "The live program page still states a 2015 tax-credit allocation amount and must not be treated as current program funding data."
+    }
+  ],
+  "enterprise_boundary": "Only blank official forms and adopted public guidance belong in this shared pack. Completed tenant files, owner submissions, Forms 8609, extended-use agreements, waivers, utility schedules and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "HUD-confirmed income and rent limits",
+    "placed-in-service and gross-rent-floor dates",
+    "Average Income Test designations",
+    "tax-exempt bond layering",
+    "utility allowances",
+    "extended-use agreement commitments",
+    "effective dates and award cycle"
+  ],
+  "activation_requirements": [
+    "Currently adopted and governor-approved QAP with exact binary identity",
+    "Current income and rent limit schedule with HUD reconciliation",
+    "Current compliance manual, inspection procedures and official blank forms",
+    "Byte-derived content validation and page-level deterministic rule citations",
+    "Resolved source, scope, currency and supersession conflicts",
+    "Positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
