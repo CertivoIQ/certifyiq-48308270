@@ -1,0 +1,126 @@
+{
+  "test_id": 76,
+  "batch_id": "ID-NM-HI-GU-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "ID",
+      "agency": "Idaho Housing and Finance Association",
+      "official_domain": "idahohousing.com",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://www.idahohousing.com/partners/project-financing/developers/low-income-housing-tax-credits/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "TAX_CREDIT_COMPLIANCE_MANUAL_FORMS",
+          "url": "https://www.idahohousing.com/partners/property-managers/housing-compliance/tax-credit-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The published 2020 compliance manual is incorporated into later QAP materials but must be reconciled with subsequent memos, final QAP versions, property elections, and current limits."
+      ]
+    },
+    {
+      "state_code": "NM",
+      "agency": "New Mexico Mortgage Finance Authority (Housing New Mexico)",
+      "official_domain": "housingnm.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://housingnm.org/developers/lihtc",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CURRENT_AND_PRIOR_TAX_CREDIT_ROUNDS",
+          "url": "https://housingnm.org/developers/lihtc/current-and-prior-tax-credit-rounds",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLANS",
+          "url": "https://housingnm.org/developers/lihtc/qaps",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE_PLAN_LIMITS",
+          "url": "https://housingnm.org/property-owners-agents-and-managers/lihtc",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROPERTY_MANAGER_FORMS",
+          "url": "https://housingnm.org/forms/property-owners-agents-manager-forms",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Separate 4% and 9% QAP/application rounds, compliance-plan appendices, property elections, and annual limit effective dates must be resolved independently."
+      ]
+    },
+    {
+      "state_code": "HI",
+      "agency": "Hawaii Housing Finance and Development Corporation",
+      "official_domain": "dbedt.hawaii.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_COMPLIANCE_RESOURCES",
+          "url": "https://dbedt.hawaii.gov/hhfdc/developers/lihtc_html/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLAN",
+          "url": "https://dbedt.hawaii.gov/hhfdc/hhfdc-qualified-application-plan-qap-landing-page/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CONSOLIDATED_APPLICATION_2026",
+          "url": "https://dbedt.hawaii.gov/hhfdc/consolidated-application-for-financing-2026/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Public-hearing, redline, board-approved, and final QAP versions must be distinguished; the split compliance-manual sections and outside monitoring portal require controlled-source review."
+      ]
+    },
+    {
+      "state_code": "GU",
+      "jurisdiction_type": "TERRITORY",
+      "agency": "Guam Housing and Urban Renewal Authority",
+      "official_domain": "ghura.org",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_PUBLIC_NOTICE",
+          "url": "https://ghura.org/available-public-comment-2025-low-income-housing-tax-credit-lihtc-program-qualified-allocation-plan",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_2025_QAP_FINAL",
+          "url": "https://www.ghura.org/sites/default/files/2025_lihtc_qap_final_to_publish.pdf",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The 2025 proposed/public-comment materials and final QAP must be separated, and a current canonical compliance-manual, forms, and income/rent-limit index was not verified."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited rules",
+    "conflict resolution",
+    "required fixtures",
+    "platform approval",
+    "enterprise VP property figure verification"
+  ]
+}
