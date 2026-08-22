@@ -7,6 +7,8 @@
  * then returns PASS, FAIL, or UNABLE_TO_DETERMINE for agent review.
  */
 
+import { validateFy2026IncomeLimitProgramHandoff } from "./fy2026-income-limit-ingestion.mjs";
+
 export const TENANT_ELIGIBILITY_RULE_ID =
   "FED-TENANT-FILE-ELIGIBILITY-RECONCILIATION-001";
 export const TENANT_ELIGIBILITY_ENGINE_BUILD =
@@ -514,6 +516,22 @@ function validateProgramDetermination(
     }
   } else if (asset?.applicable !== false || asset?.nonapplication_validated !== true) {
     return { error: blocked("ASSET_RULE_APPLICABILITY_NOT_VALIDATED", "A non-applicable asset restriction requires an explicit validated nonapplication outcome.", [`${prefix}.asset_test`]) };
+  }
+
+  const activationHandoff = validateFy2026IncomeLimitProgramHandoff(
+    program,
+    source.dataset_id,
+    item.income_limit_source.activation_receipt,
+  );
+  if (activationHandoff.handoff_status !== "VALIDATED") {
+    return {
+      error: blocked(
+        activationHandoff.reason_code ?? "INCOME_LIMIT_ACTIVATION_RECEIPT_REQUIRED",
+        activationHandoff.reason ??
+          "A trusted FY2026 income-limit activation receipt is required before tenant eligibility can compare income to a limit.",
+        [`${prefix}.income_limit_source.activation_receipt`],
+      ),
+    };
   }
 
   let incomeCents;
