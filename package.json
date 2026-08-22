@@ -40,7 +40,8 @@
     "test:state-source-wv": "node --test scripts/test-west-virginia-source-capture.mjs",
     "test:state-source-wy": "node --test scripts/test-wyoming-source-capture.mjs",
     "test:state-source-wi": "node --test scripts/test-wisconsin-source-capture.mjs",
-    "test:state-source-wa": "node --test scripts/test-washington-source-capture.mjs"
+    "test:state-source-wa": "node --test scripts/test-washington-source-capture.mjs",
+    "test:state-source-va": "node --test scripts/test-virginia-source-audit.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
