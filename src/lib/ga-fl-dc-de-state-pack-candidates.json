@@ -4,7 +4,6 @@
   "candidate_version": "2026.1-candidate",
   "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
   "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
-  "captured_at": "2026-08-23T00:40:00Z",
   "jurisdictions": [
     {
       "state_code": "GA",
