@@ -1,6 +1,6 @@
 {
   "rule_id": "FED-TENANT-FILE-ELIGIBILITY-RECONCILIATION-001",
-  "version": "2026.08.1",
+  "version": "2026.08.2",
   "federal_sources": [
     {
       "citation": "26 USC 42(g) and 42(i)(3)(D)",
