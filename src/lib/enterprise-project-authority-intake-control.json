@@ -1,0 +1,32 @@
+{
+  "test_id": 62,
+  "control_id": "ENTERPRISE_PROJECT_AUTHORITY_INTAKE",
+  "engine_build": "enterprise-project-authority-2026.08.1",
+  "status": "IMPLEMENTED_FOR_REVIEW",
+  "purpose": "Keep enterprise-owned property and building authority separate from shared state rule packs and tenant-file evidence.",
+  "authority_boundaries": {
+    "platform_state_pack": "Official public statutes, agency manuals, notices, limits, blank forms, and validated state release metadata maintained by CertivoIQ.",
+    "enterprise_project_authority": "Recorded LURAs, Forms 8609, regulatory agreements, HAP contracts, waivers, amendments, and project schedules uploaded for an authorized organization and property.",
+    "enterprise_tenant_file": "Applications, leases, certifications, income, asset, student, and household evidence; these records are rejected by this intake boundary."
+  },
+  "controls": [
+    "Trusted server authorization fixes organization, user, property, state, building, and program scope.",
+    "Actual file bytes must match a unique SHA-256 identity and pass byte-derived classification.",
+    "Building-scoped Form 8609 records identify exactly one authorized BIN.",
+    "Updates are append-only, versioned, and linked to the current document in a compatible lineage.",
+    "Federal project-authority completeness remains visible when state-pack reconciliation is blocked.",
+    "State-specific downstream handoff requires a validated state-pack registry receipt.",
+    "All determinations retain Agent Approval."
+  ],
+  "deployment_boundary": {
+    "deterministic_gateway": "implemented",
+    "persistent_object_storage": "not_implemented",
+    "database_migrations": "not_implemented",
+    "management_upload_ui": "not_implemented",
+    "state_pack_activation": "not_performed_by_this_test"
+  },
+  "state_pack_sequence": [
+    "West Virginia validated release",
+    "Additional state releases after official-source and effective-date validation"
+  ]
+}
