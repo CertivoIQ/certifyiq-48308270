@@ -1,0 +1,65 @@
+{
+  "test_id": 87,
+  "state_code": "VT",
+  "pack_id": "vt-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "TAX_EXEMPT_BOND", "VERMONT_AFFORDABLE_HOUSING_TAX_CREDIT"],
+  "release_status": "BLOCKED_PENDING_SOURCE_COMPOSITION_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T22:45:00Z",
+    "official_program_url": "https://www.vhfa.org/developers/lihtc",
+    "official_qap_url": "https://www.vhfa.org/developers/lihtc/qap",
+    "official_forms_url": "https://www.vhfa.org/managing-agents/forms-documents",
+    "exact_binary_count": 14,
+    "method": "OFFICIAL_PAGE_LINKED_FILE_BYTE_CAPTURE"
+  },
+  "agency": {
+    "name": "Vermont Housing Finance Agency",
+    "official_domain": "vhfa.org"
+  },
+  "exact_binary_sources": [
+    {"source_type":"CURRENT_QAP","title":"2024-2025 Vermont Qualified Allocation Plan","official_url":"https://www.vhfa.org/sites/default/files/documents/multifamily/Signed_VHFA%202024-25%20Vermont%20Qualified%20Allocation%20Plan_vf.pdf","file_name":"Signed_VHFA%202024-25%20Vermont%20Qualified%20Allocation%20Plan_vf.pdf","document_self_identified_revision":"Revised 2023-02-06; effective 2023-10-01","official_page_authority":"VHFA Board approved 2023-02; Governor approved 2023-05","file_bytes":538641,"observed_pages":43,"sha256":"1d41502fbb08c47c0f78183aeeddfafd696048e34a32d9d44b170c9498656044","status":"EXACT_BYTES_CAPTURED_CURRENT_UNTIL_REPLACED"},
+    {"source_type":"QAP_CHECKLIST","title":"Current QAP Evaluation Checklist","official_url":"https://www.vhfa.org/sites/default/files/documents/multifamily/2024%20Evaluation%20Checklist.pdf","file_name":"2024%20Evaluation%20Checklist.pdf","file_bytes":122354,"observed_pages":2,"sha256":"c104254688c06450fddf7867ce9dee2020f1fdac02283ea74531a0672f6d3884","status":"EXACT_BYTES_CAPTURED_CURRENT_QAP_ONLY"},
+    {"source_type":"PROSPECTIVE_DRAFT_QAP","title":"Draft QAP - June 23, 2026","official_url":"https://vhfa.org/draft-qap-6-23-2026","file_name":"draft-qap-6-23-2026.pdf","official_page_note":"Board reviewed latest draft 2026-06-23","file_bytes":1088349,"observed_pages":23,"sha256":"fd2e8d232916ba643f6b9f2de027a115c5408d7de1ecde1b081a9f1a0febe522","status":"EXACT_BYTES_CAPTURED_PROSPECTIVE_DRAFT_NOT_ADOPTED"},
+    {"source_type":"OWNER_FORM","title":"Owner's Certificate of Continuing Program Compliance","official_url":"https://www.vhfa.org/sites/default/files/multifamily/Owner-Certification-of-Compliance-Form-FINAL-2024_fillable.pdf","file_name":"Owner-Certification-of-Compliance-Form-FINAL-2024_fillable.pdf","file_bytes":254479,"observed_pages":3,"sha256":"65f496c71e1d4e17d06fb3c92d23b4d2f312ed6c984a0065fc1a64d726e29dca","status":"EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"},
+    {"source_type":"SECTION_8_LIMITS","title":"2026 Section 8 HUD Limits","official_url":"https://vhfa.org/2026-section-8-hud-limits","file_name":"2026-section-8-hud-limits.pdf","file_bytes":400224,"observed_pages":1,"sha256":"e06f603c1f78935ccc4dfea46e368c779531f28899c8a9c98f3ad62419a1fa0d","status":"EXACT_BYTES_CAPTURED_LAYERED_PROGRAM_ONLY"},
+    {"source_type":"LIHTC_LIMITS","title":"2026 Income Limits and Rents","official_url":"https://vhfa.org/2026-income-limits-and-rents","file_name":"2026-income-limits-and-rents.pdf","file_bytes":167127,"observed_pages":6,"sha256":"07580301254a8c436617bb3c06a5ee2f8ce958da5a606b64dd7a12768a610f88","status":"EXACT_BYTES_CAPTURED_PENDING_PROPERTY_DATE_AND_HOLD_HARMLESS_SELECTION"},
+    {"source_type":"AVERAGE_INCOME_LIMITS","title":"2026 Average Income Limits","official_url":"https://vhfa.org/average-income-limit-test","file_name":"average-income-limit-test.pdf","effective_date":"2026-05-01","file_bytes":138729,"observed_pages":4,"sha256":"272d378e2c390232a0272e223c2b6cfe8ff0f3cc1b35ffcc597525abacffa38e","status":"EXACT_BYTES_CAPTURED_AVERAGE_INCOME_ONLY_PENDING_FIGURE_VALIDATION"},
+    {"source_type":"AVERAGE_INCOME_POLICY","title":"Average Income Policy","official_url":"https://www.vhfa.org/sites/default/files/documents/multifamily/AIT%20Policy%202023.07.pdf","file_name":"AIT%20Policy%202023.07.pdf","document_self_identified_revision":"2023-07","file_bytes":173140,"observed_pages":4,"sha256":"745e6b16c6a3ca981cc1f53650ca085f024a5a76218a64721bd2d7af021c6f66","status":"EXACT_BYTES_CAPTURED_AVERAGE_INCOME_ONLY_PENDING_RULE_EXTRACTION"},
+    {"source_type":"TENANT_FORM","title":"Full-time Student Eligibility Form","official_url":"https://www.vhfa.org/documents/multifamily/student_self_certification_-_10_2019.pdf","file_name":"student_self_certification_-_10_2019.pdf","document_self_identified_revision":"2019-10","file_bytes":100641,"observed_pages":1,"sha256":"28728d0f6cd14b9300feb2d5279f6bc2901c52d5b1df4a0ccf21ea0ac3e75873","status":"EXACT_BYTES_CAPTURED_PENDING_CURRENCY_AND_CONTENT_VALIDATION"},
+    {"source_type":"TENANT_FORM","title":"Student Financial Assistance Affidavit","official_url":"https://www.vhfa.org/sites/default/files/multifamily/Affidavit-of-Student-Financial-Assistance-FINAL-2024.pdf","file_name":"Affidavit-of-Student-Financial-Assistance-FINAL-2024.pdf","file_bytes":188888,"observed_pages":2,"sha256":"e358dd37a0881e7aa5f98f891245d88ea584d7dda78abf9613d4af6777660bae","status":"EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"},
+    {"source_type":"EXTENDED_USE_POLICY","title":"Housing Tax Credit Year 15 Policy","official_url":"https://www.vhfa.org/documents/multifamily/year_15_policy_rev_2020.pdf","file_name":"year_15_policy_rev_2020.pdf","document_self_identified_revision":"2020","file_bytes":337933,"observed_pages":33,"sha256":"b03df6d77be47983a7775f8227e3f68fd6a15de3237f9426d139c48895edb41a","status":"EXACT_BYTES_CAPTURED_POST_YEAR_15_ONLY_PENDING_CURRENCY_REVIEW"},
+    {"source_type":"TENANT_FORM","title":"Resident Annual Self-Certification","official_url":"https://www.vhfa.org/sites/default/files/documents/multifamily/Resident%20Self%20Certification.pdf","file_name":"Resident%20Self%20Certification.pdf","file_bytes":30180,"observed_pages":1,"sha256":"706d1ea96e69e2098e988527aeebc704112cd3594b11e7c8e9e724bd72f14263","status":"EXACT_BYTES_CAPTURED_RESTRICTED_RECERTIFICATION_SCOPE_PENDING_VALIDATION"},
+    {"source_type":"COMPLIANCE_MANUAL","title":"VHFA LIHTC Compliance Manual","official_url":"https://www.vhfa.org/sites/default/files/documents/multifamily/Compliance_lihtc_manual_-_9_2019_update_2022_corrections.pdf","file_name":"Compliance_lihtc_manual_-_9_2019_update_2022_corrections.pdf","document_self_identified_revision":"2019-09 with 2022 corrections indicated by filename","file_bytes":326471,"observed_pages":30,"sha256":"2c8cfcae770d0e26abac84e8810b336b993a67cdff94700f3af5f56a987e8a45","status":"EXACT_BYTES_CAPTURED_PENDING_HOTMA_AND_NEWER_FORM_RECONCILIATION"},
+    {"source_type":"TENANT_FORM","title":"Tenant Income Certification Form","official_url":"https://www.vhfa.org/sites/default/files/multifamily/Tenant-Income-Certification-FINAL-2024.pdf","file_name":"Tenant-Income-Certification-FINAL.pdf","file_bytes":124724,"observed_pages":2,"sha256":"1a360eed9d480f0e672b13a6b2608708ef7ca247a82cfff6b0fe4bc741f9bc3c","status":"EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"}
+  ],
+  "blocking_conflicts": [
+    {"conflict_id":"VT-QAP-PROSPECTIVE-001","status":"UNRESOLVED","description":"The governor-approved 2024-2025 QAP remains the official current QAP while the June 23, 2026 document is explicitly a draft and must not be promoted before adoption and gubernatorial approval."},
+    {"conflict_id":"VT-MANUAL-FORM-CURRENCY-001","status":"UNRESOLVED","description":"The compliance manual identifies a September 2019 edition with 2022 corrections while multiple official tenant and owner forms were updated in 2024; rule and field supersession require reconciliation."},
+    {"conflict_id":"VT-LIMIT-DATE-001","status":"UNRESOLVED","description":"The 2026 limit package contains placed-in-service and hold-harmless selection rules; no single row may be applied without property dates, county and applicable program elections."},
+    {"conflict_id":"VT-AVERAGE-INCOME-001","status":"UNRESOLVED","description":"Average Income figures and the 2023 policy apply only to properties with the Average Income election and require validated unit designations and rounding rules."},
+    {"conflict_id":"VT-SECTION8-LAYER-001","status":"UNRESOLVED","description":"Section 8 limits are a layered-program source and must not replace LIHTC MTSP limits for properties without the corresponding HUD program."},
+    {"conflict_id":"VT-EXTENDED-USE-001","status":"UNRESOLVED","description":"Year 15 and resident self-certification materials have extended-use or restricted recertification scopes and must not be applied to all households."}
+  ],
+  "enterprise_boundary": "Only blank official forms belong in this shared pack. Completed tenant certifications, owner reports, Forms 8609, extended-use agreements, HAP contracts, utility schedules, waivers and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "county and property-specific income and rent limits",
+    "placed-in-service and hold-harmless dates",
+    "Average Income Test election and unit designations",
+    "Section 8 and tax-exempt bond layering",
+    "utility allowances",
+    "set-asides and extended-use commitments",
+    "effective dates and award cycle"
+  ],
+  "activation_requirements": [
+    "Current versus prospective QAP separation with adoption evidence",
+    "Compliance manual reconciliation with newer forms and HOTMA authority",
+    "Byte-derived content validation and page-level deterministic rule citations",
+    "Property-scoped limit, election, utility and set-aside selection",
+    "Resolved source, scope, currency and supersession conflicts",
+    "Positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
