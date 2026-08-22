@@ -1,0 +1,176 @@
+{
+  "test_id": 102,
+  "batch_id": "CT-CO-CA-AR-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-23T00:45:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "CT",
+      "agency": "Connecticut Housing Finance Authority",
+      "official_domains": [
+        "chfa.org"
+      ],
+      "source_page": "https://www.chfa.org/developers/tax-credit-program/lihtc/",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM_QAP_GUIDELINES_FORMS",
+          "observed_url": "https://www.chfa.org/developers/tax-credit-program/lihtc/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "LIHTC_COMPLIANCE",
+          "observed_url": "https://www.chfa.org/owners-property-managers/lihtc-compliance/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "INCOME_LIMITS_GROSS_RENTS",
+          "observed_url": "https://www.chfa.org/rental-housing-for-owners-and-management-agents-tools-calculators-look-ups/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "CONTROLLED_DOCUMENT_INDEX",
+          "observed_url": "https://www.chfa.org/documents/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "The 2026 LIHTC guideline, newly published 2027-2028 QAP, property allocation cycle, monitoring-contractor materials, and limit effective dates must be reconciled separately.",
+        "The 2027-2028 QAP cannot replace 2026 guidelines or earlier award-cycle authority.",
+        "Monitoring contractor materials, limits and property records require separate validation."
+      ]
+    },
+    {
+      "state_code": "CO",
+      "agency": "Colorado Housing and Finance Authority",
+      "official_domains": [
+        "chfainfo.com"
+      ],
+      "source_page": "https://www.chfainfo.com/rental-housing/housing-credit/qualified-allocation-plan",
+      "sources": [
+        {
+          "source_type": "QUALIFIED_ALLOCATION_PLAN",
+          "observed_url": "https://www.chfainfo.com/rental-housing/housing-credit/qualified-allocation-plan",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "LIHTC_PROGRAM_COMPLIANCE",
+          "observed_url": "https://www.chfainfo.com/rental-housing/asset-management/lihtc-program-compliance",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "COMPLIANCE_FORMS",
+          "observed_url": "https://www.chfainfo.com/rental-housing/asset-management/compliance-forms",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "MULTIFAMILY_COMPLIANCE_UPDATES",
+          "observed_url": "https://www.chfainfo.com/rental-housing/asset-management/multifamily-program-compliance/multifamily-loan-compliance-enews",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "Draft, public-review, governor-approved, and final QAP files must be distinguished; June 2026 compliance-manual updates and financing overlays require versioned application.",
+        "Draft, review, governor-approved and final QAP files must remain distinct.",
+        "June 2026 manual updates, financing overlays and property limits require ordered application."
+      ]
+    },
+    {
+      "state_code": "CA",
+      "agency": "California Tax Credit Allocation Committee",
+      "official_domains": [
+        "treasurer.ca.gov",
+        "calhfa.ca.gov"
+      ],
+      "source_page": "https://www.treasurer.ca.gov/ctcac/tax",
+      "sources": [
+        {
+          "source_type": "CTCAC_LIHTC_PROGRAM",
+          "observed_url": "https://www.treasurer.ca.gov/ctcac/tax",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "CTCAC_QUALIFIED_ALLOCATION_PLAN_REGULATIONS",
+          "observed_url": "https://www.treasurer.ca.gov/ctcac/programreg/regulations",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "CTCAC_COMPLIANCE",
+          "observed_url": "https://www.treasurer.ca.gov/ctcac/compliance",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "CTCAC_COMPLIANCE_MANUAL",
+          "observed_url": "https://www.treasurer.ca.gov/ctcac/compliance/manual",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "CTCAC_COMPLIANCE_FORMS",
+          "observed_url": "https://www.treasurer.ca.gov/ctcac/compliance/forms",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "CALHFA_FINANCING_LIMIT_OVERLAY",
+          "observed_url": "https://www.calhfa.ca.gov/multifamily/asset/mtsp/index.htm",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "CTCAC is the statewide LIHTC allocation and compliance authority; CalHFA requirements are separate financing and regulatory-agreement overlays and cannot replace CTCAC rules.",
+        "Placed-in-service cohorts, regulatory agreement terms, joint monitoring, and 4% versus 9% application paths require property-specific resolution.",
+        "CTCAC controls statewide LIHTC; CalHFA materials are separate financing overlays."
+      ]
+    },
+    {
+      "state_code": "AR",
+      "agency": "Arkansas Development Finance Authority",
+      "official_domains": [
+        "adfa.arkansas.gov"
+      ],
+      "source_page": "https://adfa.arkansas.gov/programs/housing-development/low-income-housing-tax-credit/",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://adfa.arkansas.gov/programs/housing-development/low-income-housing-tax-credit/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "LIHTC_DOCUMENT_ARCHIVE",
+          "observed_url": "https://adfa.arkansas.gov/document_category/lihtc-documents/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "COMPLIANCE_AND_MONITORING",
+          "observed_url": "https://adfa.arkansas.gov/compliance-and-monitoring/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "COMPLIANCE_MANUAL_FORMS_LIMITS_ARCHIVE",
+          "observed_url": "https://adfa.arkansas.gov/document_category/compliance-and-monitoring/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "The 2026 affordable-housing compliance manual, QAP/applications, forms, HOTMA-related guidance, and annual income/rent limits must be versioned and tested independently.",
+        "The 2026 manual, QAP, applications, HOTMA guidance and limits require separate versioning.",
+        "Forms cannot substitute for controlling rules or recorded property restrictions."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property utility schedule"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited rules",
+    "required fixtures",
+    "independent approval",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
