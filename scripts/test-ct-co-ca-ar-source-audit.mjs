@@ -1,5 +1,5 @@
 import assert from"node:assert/strict";import{readFile}from"node:fs/promises";import test from"node:test";const b=JSON.parse(await readFile(new URL("../src/lib/thirteenth-state-source-batch-candidates.json",import.meta.url),"utf8"));
-test("Test 102 covers CT, CO, CA and AR",()=>{assert.equal(b.test_id,102);assert.deepEqual(b.states.map(x=>x.state_code),["CT","CO","CA","AR"]);});
+test("Test 102 covers CT, CO, CA and AR",()=>{assert.equal(b.test_id,78);assert.equal(b.source_capture_test_id,102);assert.deepEqual(b.states.map(x=>x.state_code),["CT","CO","CA","AR"]);});
 test("sources remain on declared official domains",()=>{for(const j of b.states)for(const s of j.sources){assert.ok((j.official_domains??[j.official_domain]).includes(new URL(s.url).hostname.replace(/^www\./,"")));assert.ok(!("sha256" in s));assert.match(s.status,/^(?:PENDING|BLOCKED)_/);}});
 test("preserves version and authority blockers",()=>{const x=Object.fromEntries(b.states.map(j=>[j.state_code,j]));assert.ok(x.CT.conflicts.some(v=>v.includes("2027-2028")));assert.ok(x.CO.conflicts.some(v=>v.includes("June 2026")));assert.ok(x.CA.conflicts.some(v=>v.includes("CTCAC")));assert.ok(x.AR.conflicts.some(v=>v.includes("HOTMA")));});
 test("California keeps allocator and financier domains distinct",()=>assert.equal(b.states.find(j=>j.state_code==="CA").official_domains.length,2));
