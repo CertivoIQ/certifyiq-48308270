@@ -61,6 +61,7 @@ jobs:
           bun run test:compliance
           bun run test:slice
           bun run test:layered
+          bun run test:tenant
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
