@@ -62,20 +62,27 @@ const PROGRAM_DATASET_FAMILIES = Object.freeze({
 
 const APPROVED_DATASETS = Object.freeze({
   HUD_MTSP_LIMITS_FY2026: {
+    active: true,
     sha256: "fbc0af877e610d9cd3d9192febc6d4827319874605adc8897ca95366afac3465",
     record_count: 4764,
     effective_from: "2026-05-01",
   },
   HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18: {
+    active: true,
     sha256: "54917d23269060f85eeac45ba429b1ce1b157c7dd51a1ce975e5b0293a5ce8ed",
     record_count: 4764,
     effective_from: "2026-05-01",
   },
   HUD_HOME_RENT_LIMITS_FY2026: {
+    active: true,
     sha256: "3082bd081727dea71dd62abcb811e3d26ce605f1f645fd5cd8dbcb76e8d4f133",
     record_count: 4764,
     effective_from: "2026-06-01",
   },
+  HUD_HOME_INCOME_LIMITS_FY2026: { active: false },
+  HUD_HTF_INCOME_LIMITS_FY2026: { active: false },
+  HUD_SECTION8_INCOME_LIMITS_FY2026: { active: false },
+  USDA_RD_INCOME_LIMITS_FY2026: { active: false },
 });
 
 function uniqueSorted(values = []) {
@@ -198,6 +205,20 @@ function validateDataset(source, prefix, eventDate) {
 
   const datasetId = String(source.dataset_id);
   const approved = APPROVED_DATASETS[datasetId];
+  if (!approved) {
+    return blocked(
+      "UNREGISTERED_INCOME_LIMIT_SOURCE",
+      "The income-limit dataset is not registered in the controlled source pack.",
+      [`${prefix}.dataset_id`],
+    );
+  }
+  if (approved.active !== true) {
+    return blocked(
+      "CONTROLLED_DATASET_NOT_ACTIVATED",
+      "The income-limit dataset remains blocked until its source bytes, hash, structure, and effective-date coverage are validated.",
+      [`${prefix}.dataset_id`],
+    );
+  }
   if (approved) {
     const mismatches = [];
     if (String(source.sha256) !== approved.sha256) mismatches.push(`${prefix}.sha256`);
@@ -526,7 +547,12 @@ export function evaluateTenantFileEligibility(input = {}) {
   }
 
   const knownFailures = results
-    .filter((result) => result.finding === "FAIL")
+    .filter(
+      (result) =>
+        result.income_finding === "FAIL" ||
+        result.student_finding === "FAIL" ||
+        result.asset_finding === "FAIL",
+    )
     .map((result) => `PROGRAM:${result.program_code}`);
   const unresolved = results.filter((result) => result.finding === "NOT_DETERMINED");
   if (unresolved.length) {
