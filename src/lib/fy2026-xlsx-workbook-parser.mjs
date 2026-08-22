@@ -19,11 +19,14 @@ const PROFILES = Object.freeze({
       "fips2010",
       "fips2025",
       "fips2026",
+      "fips_code",
+      "fips_code_2026",
+      "county_fips",
       "geography_id",
       "geo_id",
     ]),
     limit_header_pattern:
-      /^(?:median\d*|mfi\d*|lim(?:20|30|40|50|60|70|80)_?p?[1-8]|il(?:20|30|40|50|60|70|80)_?p?[1-8]|(?:very_low|extremely_low|low_income)_?p?[1-8])$/,
+      /^(?:median\d*|mfi\d*|(?:eli|vlil|lil|mtsp(?:50|60))_?p?[1-8]|(?:lim|il|l)(?:20|30|40|50|60|70|80)(?:pct|percent)?(?:_ami)?_?(?:person_?)?p?[1-8]|(?:20|30|40|50|60|70|80)(?:pct|percent)?(?:_ami)?_?(?:person_?)?p?[1-8]|(?:very_low|extremely_low|low_income)_?(?:person_?)?p?[1-8])$/,
   }),
   HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18: Object.freeze({
     geography_headers: Object.freeze([
@@ -31,16 +34,22 @@ const PROFILES = Object.freeze({
       "fips2010",
       "fips2025",
       "fips2026",
+      "fips_code",
+      "fips_code_2026",
+      "county_fips",
       "geography_id",
       "geo_id",
     ]),
     limit_header_pattern:
-      /^(?:lim|il)?(?:20|30|40|50|60|70|80)(?:pct|percent)?_?p?[1-8]$/,
+      /^(?:(?:lim|il|l|mtsp)?(?:20|30|40|50|60|70|80)(?:pct|percent)?(?:_ami)?_?(?:person_?)?p?[1-8])$/,
   }),
   HUD_HOME_RENT_LIMITS_FY2026: Object.freeze({
     geography_headers: Object.freeze([
       "fips2026",
       "fips",
+      "fips_code",
+      "fips_code_2026",
+      "county_fips",
       "geography_id",
       "geo_id",
     ]),
