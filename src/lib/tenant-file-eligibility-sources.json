@@ -1,0 +1,100 @@
+{
+  "rule_id": "FED-TENANT-FILE-ELIGIBILITY-RECONCILIATION-001",
+  "version": "2026.08.1",
+  "federal_sources": [
+    {
+      "citation": "26 USC 42(g) and 42(i)(3)(D)",
+      "authority": "Congress / Internal Revenue Code",
+      "scope": "LIHTC household income and full-time-student household eligibility",
+      "url": "https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title26-section42"
+    },
+    {
+      "citation": "24 CFR 5.609",
+      "authority": "HUD",
+      "scope": "HUD annual income inclusions, exclusions, and calculation",
+      "url": "https://www.ecfr.gov/current/title-24/section-5.609"
+    },
+    {
+      "citation": "24 CFR 5.612",
+      "authority": "HUD",
+      "scope": "Section 8 higher-education student restrictions",
+      "url": "https://www.ecfr.gov/current/title-24/section-5.612"
+    },
+    {
+      "citation": "24 CFR 5.618",
+      "authority": "HUD",
+      "scope": "HUD asset restrictions and permitted family certification",
+      "url": "https://www.ecfr.gov/current/title-24/section-5.618"
+    },
+    {
+      "citation": "24 CFR 92.203",
+      "authority": "HUD",
+      "scope": "HOME annual and adjusted income determinations",
+      "url": "https://www.ecfr.gov/current/title-24/section-92.203"
+    },
+    {
+      "citation": "7 CFR 3560.152",
+      "authority": "USDA Rural Development",
+      "scope": "RD tenant eligibility, certification, verification, and recertification",
+      "url": "https://www.ecfr.gov/current/title-7/section-3560.152"
+    }
+  ],
+  "approved_dataset_metadata": [
+    {
+      "dataset_id": "HUD_MTSP_LIMITS_FY2026",
+      "file_name": "MTSP-Data-FY26.xlsx",
+      "sha256": "fbc0af877e610d9cd3d9192febc6d4827319874605adc8897ca95366afac3465",
+      "record_count": 4764,
+      "effective_from": "2026-05-01",
+      "content_available_in_repository": false
+    },
+    {
+      "dataset_id": "HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18",
+      "file_name": "MTSP-IncAvg-Data-FY26.xlsx",
+      "sha256": "54917d23269060f85eeac45ba429b1ce1b157c7dd51a1ce975e5b0293a5ce8ed",
+      "record_count": 4764,
+      "effective_from": "2026-05-01",
+      "content_available_in_repository": false,
+      "normalization_rule": "ROUND_EXCEL_DECIMAL_ARTIFACT_TO_EXACT_DOLLAR_NEVER_NEAREST_50"
+    },
+    {
+      "dataset_id": "HUD_HOME_INCOME_LIMITS_FY2026",
+      "file_name": "HOME_IncomeLmts_Natl_2026.xlsx",
+      "content_available_in_repository": false,
+      "activation_status": "BLOCKED_PENDING_FILE_HASH_AND_CONTENT_VALIDATION"
+    },
+    {
+      "dataset_id": "HUD_SECTION8_INCOME_LIMITS_FY2026",
+      "file_name": "Section8-FY26.xlsx",
+      "content_available_in_repository": false,
+      "activation_status": "BLOCKED_PENDING_FILE_HASH_AND_CONTENT_VALIDATION"
+    },
+    {
+      "dataset_id": "HUD_HOME_RENT_LIMITS_FY2026",
+      "file_name": "HOME_RentLimits_Natl_2026.xlsx",
+      "sha256": "3082bd081727dea71dd62abcb811e3d26ce605f1f645fd5cd8dbcb76e8d4f133",
+      "record_count": 4764,
+      "effective_from": "2026-06-01",
+      "content_available_in_repository": false
+    }
+  ],
+  "user_supplied_reference_names": [
+    "Eligibility-Income-Asset-Deduction-Checklist.pdf",
+    "HAP Contract.pdf",
+    "HUD LIHTC Tenant Data Collection Form.pdf",
+    "Lease-Sample-2.pdf",
+    "LIHTC Student Status Affidavit.pdf",
+    "LIHTC-HOME-Recert-Application_2025.pdf",
+    "RD-Student-Status-Certif-_2025.pdf",
+    "Recert-Application-2025-RD-LIHTC.pdf",
+    "Section-8-LIHTC-Combined-Initial-Application_2025.pdf",
+    "tic_0.pdf",
+    "Unemployed-Affidavit.pdf",
+    "PIH-2026-15.pdf",
+    "WVHDF-Section-42-Tax-Credit-Compliance-Manual.pdf"
+  ],
+  "state_scope": {
+    "west_virginia": "DRAFT_BLOCKED_PENDING_VALIDATED_PACK_AND_FILE_INGESTION",
+    "other_states": "NOT_ACTIVATED"
+  }
+}
