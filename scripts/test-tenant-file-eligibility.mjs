@@ -258,6 +258,9 @@ test("HOME and Section 8 datasets stay blocked pending file validation", () => {
 test("unresolved student status blocks while preserving known failures", () => {
   const data = input();
   data.program_determinations[0].annual_income = "70000.00";
+  data.evidence.find(
+    (item) => item.field === "annual_income:LIHTC",
+  ).value = "70000.00";
   data.program_determinations[0].student_status.finding = "NOT_DETERMINED";
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
