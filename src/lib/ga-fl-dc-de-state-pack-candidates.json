@@ -1,0 +1,150 @@
+{
+  "test_id": 101,
+  "batch_id": "GA-FL-DC-DE-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-23T00:40:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "GA",
+      "jurisdiction_type": "STATE",
+      "agency": "Georgia Department of Community Affairs",
+      "official_domains": [
+        "dca.georgia.gov"
+      ],
+      "source_page": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "QUALIFIED_ALLOCATION_PLANS_AMENDMENTS",
+          "observed_url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/qualified-allocation-plans-and",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "COMPLIANCE_MANUAL_DOCUMENTS",
+          "observed_url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/housing-tax-credit-compliance-11",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "RENT_INCOME_LIMITS",
+          "observed_url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/housing-tax-credit-compliance-5",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "The 2026-2027 amended QAP, amendment memoranda, March 2024 compliance manual, later updates, and effective-date-specific limits must be versioned separately.",
+        "Final QAP, amendments, March 2024 manual and later updates require ordered version control.",
+        "Limits, utility allowances and property elections require effective-date verification."
+      ]
+    },
+    {
+      "state_code": "FL",
+      "jurisdiction_type": "STATE",
+      "agency": "Florida Housing Finance Corporation",
+      "official_domains": [
+        "floridahousing.org"
+      ],
+      "source_page": "https://www.floridahousing.org/programs/developers-multifamily-programs/low-income-housing-tax-credits",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://www.floridahousing.org/programs/developers-multifamily-programs/low-income-housing-tax-credits",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "NONCOMPETITIVE_QAP_DOCUMENTS",
+          "observed_url": "https://www.floridahousing.org/programs/developers-multifamily-programs/non-competitive/related-references-and-links",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "COMPLIANCE_GUIDEBOOK",
+          "observed_url": "https://www.floridahousing.org/owners-and-managers/compliance/compliance-guidebook",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "COMPLIANCE_LIMITS_FORMS_UPDATES",
+          "observed_url": "https://www.floridahousing.org/owners-and-managers/compliance",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "Competitive RFAs, noncompetitive QAP/application materials, compliance rule changes, and development-specific land-use and financing restrictions are distinct authorities.",
+        "Competitive RFAs and noncompetitive QAP materials are distinct authorities.",
+        "Guidebook changes, land-use agreements, financing overlays and property limits require reconciliation."
+      ]
+    },
+    {
+      "state_code": "DC",
+      "jurisdiction_type": "DISTRICT",
+      "agency": "District of Columbia Department of Housing and Community Development",
+      "official_domains": [
+        "dhcd.dc.gov",
+        "dchfa.org"
+      ],
+      "source_page": "https://dhcd.dc.gov/page/low-income-housing-tax-credit-lihtc-program",
+      "sources": [
+        {
+          "source_type": "LIHTC_ALLOCATOR_PROGRAM_QAP",
+          "observed_url": "https://dhcd.dc.gov/page/low-income-housing-tax-credit-lihtc-program",
+          "status": "OFFICIAL_CANDIDATE_BLOCKED_CURRENT_QAP_CURRENCY_NOT_VERIFIED"
+        },
+        {
+          "source_type": "DCHFA_MULTIFAMILY_FINANCING_GUIDE",
+          "observed_url": "https://www.dchfa.org/wp-content/uploads/2024/06/Multifamily-Underwriting-and-Program-Guidelines-06.24.pdf",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "DHCD is the District LIHTC allocation-plan authority; DCHFA bond and multifamily-financing requirements are separate overlays and cannot replace DHCD QAP or compliance rules.",
+        "A clearly current final DHCD QAP, compliance manual, forms, and limit index was not verified from the reviewed program page.",
+        "DHCD is the allocator; DCHFA bond and financing guidance cannot replace DHCD authority."
+      ]
+    },
+    {
+      "state_code": "DE",
+      "jurisdiction_type": "STATE",
+      "agency": "Delaware State Housing Authority",
+      "official_domains": [
+        "destatehousing.com"
+      ],
+      "source_page": "https://www.destatehousing.com/build/lihtc/",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM_APPLICATIONS",
+          "observed_url": "https://www.destatehousing.com/build/lihtc/",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "source_type": "LIHTC_2025_2026_QAP",
+          "observed_url": "https://www.destatehousing.com/wp-content/uploads/2026/06/2025-2026-LIHTC-QAP.pdf",
+          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "blocking_conflicts": [
+        "The 2025-2026 QAP references a separately distributed compliance monitoring manual; a current canonical public manual, forms, and income/rent-limit index was not verified.",
+        "The QAP references a separately distributed monitoring manual whose current canonical public copy was not verified.",
+        "Forms, limits, amendments and property restrictions remain blocked."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property utility schedule"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited rules",
+    "required fixtures",
+    "independent approval",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
