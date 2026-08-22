@@ -1,0 +1,177 @@
+{
+  "test_id": 98,
+  "batch_id": "MD-ME-LA-KY-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-23T00:10:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "MD",
+      "agency": "Maryland Department of Housing and Community Development",
+      "official_domain": "dhcd.maryland.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "STATE_FINANCING"
+      ],
+      "source_page": "https://dhcd.maryland.gov/housing/multifamily-financing-programs/low-income-housing-tax-credit-program",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://dhcd.maryland.gov/housing/multifamily-financing-programs/low-income-housing-tax-credit-program",
+          "status": "OFFICIAL_PAGE_OBSERVED_NEW_SITE_MIGRATION"
+        },
+        {
+          "source_type": "DOCUMENT_LIBRARY",
+          "observed_url": "https://dhcd.maryland.gov/housing/multifamily-housing-development-document-library",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_CURRENT_QAP_AND_GUIDE_REQUIRE_CAPTURE"
+        },
+        {
+          "source_type": "ASSET_MANAGEMENT",
+          "observed_url": "https://dhcd.maryland.gov/Credit-Assurance/Pages/Multifamily-Lending.aspx",
+          "status": "OFFICIAL_PAGE_CANDIDATE_EXACT_CONTENT_REQUIRES_VALIDATION"
+        }
+      ],
+      "blocking_conflicts": [
+        "The new site publishes draft post-Year-15 policy, a 2006 handbook, older forms and 2025 limits; these cannot be treated as a coherent current compliance pack.",
+        "Current QAP, Multifamily Rental Financing Program Guide, later notices and property legal documents require exact ordering and effective dates.",
+        "Federal LIHTC limits, Maryland financing restrictions, utility policy, 40-year covenant and property elections require reconciliation."
+      ]
+    },
+    {
+      "state_code": "ME",
+      "agency": "Maine State Housing Authority",
+      "official_domain": "mainehousing.org",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "RLP"
+      ],
+      "source_page": "https://www.mainehousing.org/programs-services/housing-development/developmentdetails/low-income-housing-tax-credit-program",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://www.mainehousing.org/programs-services/housing-development/developmentdetails/low-income-housing-tax-credit-program",
+          "status": "OFFICIAL_PAGE_OBSERVED_2027_2028_CURRENT_AND_PRIOR_QAPS"
+        },
+        {
+          "source_type": "PROPERTY_FORMS",
+          "observed_url": "https://www.mainehousing.org/partners/partner-type/asset-management/property-management-forms",
+          "status": "OFFICIAL_PAGE_OBSERVED_UNDER_UPDATE_CURRENT_SET_UNRESOLVED"
+        },
+        {
+          "source_type": "ASSET_NOTICES",
+          "observed_url": "https://www.mainehousing.org/partners/partner-type/asset-management/asset-management-notices",
+          "status": "OFFICIAL_PAGE_OBSERVED_LATER_NOTICES_REQUIRE_RECONCILIATION"
+        }
+      ],
+      "blocking_conflicts": [
+        "The program page lists 2027-2028 and prior QAPs; the property's allocation cycle and amendments must control.",
+        "MaineHousing identifies property-management forms as under update, so no form set may be promoted as final-current.",
+        "RLP financing, LIHTC, bond, notices, limits and recorded property commitments must remain separate and date-bound."
+      ]
+    },
+    {
+      "state_code": "LA",
+      "agency": "Louisiana Housing Corporation",
+      "official_domain": "lhc.la.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "HOME",
+        "HTF"
+      ],
+      "source_page": "https://www.lhc.la.gov/low-income-housing-tax-credit-lihtc-program",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://www.lhc.la.gov/low-income-housing-tax-credit-lihtc-program",
+          "status": "OFFICIAL_PAGE_OBSERVED_ARCHIVE_AND_2025_ROUND"
+        },
+        {
+          "source_type": "DEVELOPMENT_RESOURCES",
+          "observed_url": "https://www.lhc.la.gov/resources-for-housing-development",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_CURRENT_COMPONENTS_REQUIRE_CAPTURE"
+        },
+        {
+          "source_type": "COMPLIANCE_ROOT",
+          "observed_url": "https://www.lhc.la.gov/compliance",
+          "status": "OFFICIAL_PAGE_CANDIDATE_EXACT_MANUAL_AND_NOTICES_REQUIRE_VALIDATION"
+        }
+      ],
+      "blocking_conflicts": [
+        "The program page intermixes archived rounds and 2025 materials; the final 2025 QAP, 2026 amendments and subsequent notices require exact ordering.",
+        "QAP, compliance manual, FAQs, NOFAs and income/rent limit releases are separate authorities and cannot silently overwrite one another.",
+        "LIHTC, HOME, HTF, bond, rental assistance and recorded regulatory agreement restrictions require property-level reconciliation."
+      ]
+    },
+    {
+      "state_code": "KY",
+      "agency": "Kentucky Housing Corporation",
+      "official_domain": "kyhousing.org",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "HOME",
+        "AHTF"
+      ],
+      "source_page": "https://www.kyhousing.org/programs/low-income-housing-tax-credit-lihtc-program",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://www.kyhousing.org/programs/low-income-housing-tax-credit-lihtc-program",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        },
+        {
+          "source_type": "QAP_RESOURCES",
+          "observed_url": "https://www.kyhousing.org/page/qaps-guides-and-resources",
+          "status": "OFFICIAL_PAGE_OBSERVED_MULTICYCLE_DOCUMENT_SET_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "COMPLIANCE",
+          "observed_url": "https://www.kyhousing.org/page/compliance",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_MANUAL_NOTICES_REQUIRE_CAPTURE"
+        },
+        {
+          "source_type": "REQUIRED_DOCUMENTATION",
+          "observed_url": "https://www.kyhousing.org/page/required-documentation",
+          "status": "OFFICIAL_PAGE_OBSERVED_FORMS_NOT_RULE_AUTHORITY"
+        }
+      ],
+      "blocking_conflicts": [
+        "The applicable QAP and multifamily-guideline cycle must match the property's allocation and binding commitments.",
+        "Third-party calculators and forms cannot replace controlled official limit files, HUD geography and property verification.",
+        "LIHTC, bond, HOME, Affordable Housing Trust Fund and recorded project restrictions must remain separate."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement",
+    "completed owner certification",
+    "property utility schedule"
+  ],
+  "property_figure_verification_scope": [
+    "HUD-confirmed geography, household size, income and rent limits",
+    "program and award-cycle effective dates",
+    "placed-in-service and gross-rent-floor dates",
+    "minimum set-aside and Average Income Test elections",
+    "utility allowance method, evidence and effective date",
+    "layered federal, state, bond, HOME and local restrictions",
+    "recorded extended-use and project-specific commitments"
+  ],
+  "activation_requirements": [
+    "exact official bytes, byte lengths and SHA-256 hashes",
+    "final-current and supersession verification",
+    "page-cited deterministic rules",
+    "program and authority separation",
+    "positive, negative, boundary, layered and supersession fixtures",
+    "independent compliance-expert approval bound to the release",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
