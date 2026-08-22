@@ -307,3 +307,69 @@ test("program certification inventory must match the federal layers exactly", ()
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
   assert.ok(result.blockers.some((item) => item.reason_code === "PROGRAM_RECERTIFICATION_INVENTORY_MISMATCH"));
 });
+
+test("a malformed program certification roster fails closed", () => {
+  const data = input();
+  data.program_certifications[0].household_member_ids = "MEMBER-1";
+  const result = evaluateRecertificationOccupancyControls(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.ok(
+    result.blockers.some(
+      (item) => item.reason_code === "RECERTIFICATION_HOUSEHOLD_ROSTER_INVALID",
+    ),
+  );
+});
+
+test("a future over-income determination date fails closed", () => {
+  const data = input();
+  data.lihtc_occupancy.current_annual_income = "70000.01";
+  data.lihtc_occupancy.over_income_determined_date = "2026-08-02";
+  const result = evaluateRecertificationOccupancyControls(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.ok(
+    result.blockers.some(
+      (item) => item.reason_code === "OVER_INCOME_DETERMINATION_FUTURE_DATED",
+    ),
+  );
+});
+
+test("a triggered standard rule requires the over-income unit bedroom count", () => {
+  const data = input();
+  data.lihtc_occupancy.current_annual_income = "70000.01";
+  delete data.lihtc_occupancy.over_income_unit_bedrooms;
+  const result = evaluateRecertificationOccupancyControls(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.ok(
+    result.blockers.some(
+      (item) => item.reason_code === "OVER_INCOME_UNIT_SIZE_INVALID",
+    ),
+  );
+});
+
+test("an average-income event requires a finite post-designation project average", () => {
+  const data = input();
+  data.lihtc_occupancy = occupancy({
+    minimum_set_aside: "AVERAGE_INCOME",
+    current_annual_income: "112000.01",
+    sixty_percent_income_limit: "60000.00",
+    unit_designated_income_limit: "80000.00",
+    average_income_threshold_validated: true,
+    available_unit_events: [
+      availableUnit({
+        new_resident_annual_income: "65000.00",
+        required_designated_income_limit: "70000.00",
+        average_income_designation_validated: true,
+        maximum_permitted_income_calculation_validated: true,
+      }),
+    ],
+  });
+  const result = evaluateRecertificationOccupancyControls(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.ok(
+    result.blockers.some(
+      (item) =>
+        item.reason_code ===
+        "AVERAGE_INCOME_AVAILABLE_UNIT_DESIGNATION_NOT_VALIDATED",
+    ),
+  );
+});
