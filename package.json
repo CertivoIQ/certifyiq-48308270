@@ -28,7 +28,8 @@
     "test:state-source-batch-4": "node --test scripts/test-fourth-state-source-batch.mjs",
     "test:state-source-batch-5": "node --test scripts/test-fifth-state-source-batch.mjs",
     "test:state-source-batch-6": "node --test scripts/test-sixth-state-source-batch.mjs",
-    "test:state-source-batch-7": "node --test scripts/test-seventh-state-source-batch.mjs"
+    "test:state-source-batch-7": "node --test scripts/test-seventh-state-source-batch.mjs",
+    "test:state-source-batch-8": "node --test scripts/test-eighth-state-source-batch.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
