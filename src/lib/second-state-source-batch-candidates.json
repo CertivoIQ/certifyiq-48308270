@@ -1,0 +1,119 @@
+{
+  "test_id": 67,
+  "batch_id": "VI-VT-UT-TX-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "VI",
+      "agency": "Virgin Islands Housing Finance Authority",
+      "official_domain": "vihfa.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_AND_QAP_PAGE",
+          "url": "https://vihfa.gov/low-income-housing-tax-credit-services/",
+          "status": "BLOCKED_CURRENCY_REVIEW_2015_FINAL_AND_2023_DRAFT_LISTED"
+        }
+      ],
+      "conflicts": [
+        "The current page lists a 2015 QAP and a 2023 draft; no current final 2026 QAP was verified."
+      ]
+    },
+    {
+      "state_code": "VT",
+      "agency": "Vermont Housing Finance Agency",
+      "official_domain": "vhfa.org",
+      "sources": [
+        {
+          "type": "PROGRAM_MATERIALS",
+          "url": "https://vhfa.org/developers/lihtc/program-materials",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FORMS_LIMITS_AND_COMPLIANCE",
+          "url": "https://vhfa.org/managing-agents/forms-documents",
+          "status": "BLOCKED_COMPLIANCE_MANUAL_CURRENCY_REVIEW"
+        },
+        {
+          "type": "QAP_DRAFT",
+          "url": "https://vhfa.org/comparison-may-11-2026-and-march-24-2026-qap-drafts",
+          "status": "BLOCKED_DRAFT_NOT_FINAL"
+        }
+      ],
+      "conflicts": [
+        "The linked LIHTC compliance guide identifies itself as July 2011.",
+        "The 2027-2028 QAP material found is a draft and requires final adoption verification."
+      ]
+    },
+    {
+      "state_code": "UT",
+      "agency": "Utah Housing Corporation",
+      "official_domain": "utahhousingcorp.org",
+      "sources": [
+        {
+          "type": "AGENCY_DISCOVERY_ROOT",
+          "url": "https://www.utahhousingcorp.org/",
+          "status": "BLOCKED_REQUIRED_LIHTC_SOURCE_PAGES_NOT_VERIFIED"
+        }
+      ],
+      "conflicts": [
+        "Search did not verify current QAP, compliance manual, forms index, and monitoring pages from the supplied agency root."
+      ]
+    },
+    {
+      "state_code": "TX",
+      "agency": "Texas Department of Housing and Community Affairs",
+      "official_domain": "tdhca.texas.gov",
+      "sources": [
+        {
+          "type": "QAP_AND_9_PERCENT_PROGRAM",
+          "url": "https://www.tdhca.texas.gov/competitive-9-housing-tax-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "APPLICATION_MATERIALS",
+          "url": "https://www.tdhca.texas.gov/apply-funds",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUALS_AND_RULES",
+          "url": "https://www.tdhca.texas.gov/compliance-manuals-and-rules",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS",
+          "url": "https://www.tdhca.texas.gov/compliance-forms",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_INDEX",
+          "url": "https://www.tdhca.texas.gov/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "POST_AWARD_MANUAL",
+          "url": "https://www.tdhca.texas.gov/post-award-activities-manual",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": []
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current document verification",
+    "page-cited deterministic rules",
+    "conflict resolution",
+    "required fixture suite",
+    "platform release approval",
+    "enterprise VP property figure verification"
+  ]
+}
