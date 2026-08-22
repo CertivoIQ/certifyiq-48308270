@@ -1,0 +1,116 @@
+{
+  "test_id": 79,
+  "batch_id": "AZ-AK-AL-CANDIDATES",
+  "is_final_supplied_hfa_batch": true,
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "AZ",
+      "agency": "Arizona Department of Housing",
+      "official_domain": "housing.az.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://housing.az.gov/programs/rental-development/low-income-housing-tax-credit-lihtc-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_2026_2027_QAP_FINAL",
+          "url": "https://housing.az.gov/resources/2026-2027-qap-final",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "RENTAL_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://housing.az.gov/programs/rental-compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CONTROLLED_RESOURCE_INDEX",
+          "url": "https://housing.az.gov/resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The signed 2026-2027 QAP, post-award manual, application Q&A bulletins, property award cycle, and May 1, 2026 income/rent limits must be versioned separately."
+      ]
+    },
+    {
+      "state_code": "AK",
+      "agency": "Alaska Housing Finance Corporation",
+      "official_domain": "ahfc.us",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.ahfc.us/pros/homelessness/development-grants/low-income-housing-tax-credit",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "GOAL_PROGRAM_QAP",
+          "url": "https://www.ahfc.us/pros/homelessness/development-grants/goal",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "GOAL_FORMS_DOCUMENTS",
+          "url": "https://www.ahfc.us/pros/homelessness/development-grants/goal/goal-dow",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "AFFORDABLE_HOUSING_COMPLIANCE_REFERENCE_MANUAL",
+          "url": "https://www.ahfc.us/download_file/view/1607/800",
+          "status": "BLOCKED_COMPLIANCE_MANUAL_CURRENCY_REVIEW"
+        }
+      ],
+      "conflicts": [
+        "The older compliance reference manual must be reconciled with the June 24, 2026 GOAL Rating and Award Criteria Plan, current forms, recorded agreements, and combined HOME/HTF/SCHDF overlays."
+      ]
+    },
+    {
+      "state_code": "AL",
+      "agency": "Alabama Housing Finance Authority",
+      "official_domain": "ahfa.com",
+      "sources": [
+        {
+          "type": "HOUSING_CREDITS_HOME_PROGRAM",
+          "url": "https://www.ahfa.com/programs/rental-housing/multifamily-programs/home-housing-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CURRENT_YEAR_ALLOCATION_PLANS",
+          "url": "https://www.ahfa.com/programs/rental-housing/allocation-application-information/current-year-allocation-plans",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_UPDATES_FORMS_LIMITS",
+          "url": "https://www.ahfa.com/programs/rental-housing/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "MULTIFAMILY_NOTICES",
+          "url": "https://www.ahfa.com/programs/rental-housing/multifamily-notices",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The posted 2027 QAP and notices must not replace the 2026 or earlier QAP governing a property award; federal housing credits, Alabama workforce credits, HOME, HTF, and bond requirements remain separate layers."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited rules",
+    "conflict resolution",
+    "required fixtures",
+    "platform approval",
+    "enterprise VP property figure verification"
+  ]
+}
