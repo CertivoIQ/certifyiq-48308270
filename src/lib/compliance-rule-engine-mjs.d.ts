@@ -5,6 +5,9 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export const TENANT_ELIGIBILITY_ENGINE_BUILD: string;
   export const TENANT_ELIGIBILITY_RULE_ID:
     "FED-TENANT-FILE-ELIGIBILITY-RECONCILIATION-001";
+  export const RECERTIFICATION_OCCUPANCY_ENGINE_BUILD: string;
+  export const RECERTIFICATION_OCCUPANCY_RULE_ID:
+    "FED-RECERTIFICATION-OCCUPANCY-CONTROLS-001";
   export const MINIMUM_CONFIDENCE: number;
   export const REVIEW_DECISIONS: readonly ReviewDecision[];
 
@@ -127,6 +130,20 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     [key: string]: unknown;
   }
 
+  export interface RecertificationOccupancyResult {
+    resolution_status: "COMPLETED" | "NOT_DETERMINED";
+    determination_status: "PASS" | "FAIL" | "NOT_DETERMINED";
+    rule_engine_authority: "ALLOWED" | "BLOCKED";
+    finding: FindingStatus;
+    reason_code?: string;
+    blockers?: Array<Record<string, unknown>>;
+    confirmed_failure_indicators?: string[];
+    agent_approval_required: true;
+    agent_approval_status?: "PENDING";
+    human_approval_required: true;
+    [key: string]: unknown;
+  }
+
   export const FEDERAL_LIHTC_PACK: RulePack;
 
   export function isStatePackUsable(pack?: StatePackInput | null): boolean;
@@ -172,6 +189,10 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export function evaluateTenantFileEligibility(
     input: Record<string, unknown>,
   ): TenantFileEligibilityResult;
+
+  export function evaluateRecertificationOccupancyControls(
+    input: Record<string, unknown>,
+  ): RecertificationOccupancyResult;
 
   export function normalizeIncomeLimitDollar(
     value: string | number,
