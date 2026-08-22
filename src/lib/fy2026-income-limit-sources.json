@@ -2,6 +2,8 @@
   "test_id": 60,
   "version": "2026.08.1",
   "activation_policy": "ACTUAL_BYTES_HASH_STRUCTURE_GEOGRAPHY_EFFECTIVE_DATE_AND_NORMALIZATION_REQUIRED",
+  "parser_binding_status": "BLOCKED_PENDING_TRUSTED_BYTE_DERIVED_XLSX_PARSER",
+  "receipt_policy": "MODULE_ISSUED_IDENTITY_REQUIRED_CALLER_CONSTRUCTED_RECEIPTS_REJECTED",
   "official_sources": [
     {
       "dataset_id": "HUD_MTSP_LIMITS_FY2026",
