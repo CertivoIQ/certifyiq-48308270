@@ -1,0 +1,77 @@
+{
+  "test_id": 85,
+  "state_code": "VA",
+  "pack_id": "va-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "TAX_EXEMPT_BOND", "VIRGINIA_HOUSING_LOAN"],
+  "release_status": "BLOCKED_PENDING_EXACT_BYTES_SOURCE_COMPOSITION_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T22:20:00Z",
+    "official_program_url": "https://www.virginiahousing.com/partners/rental-housing/rental-housing-tax-credits",
+    "official_compliance_url": "https://www.virginiahousing.com/partners/rental-housing/compliance-monitoring",
+    "official_forms_url": "https://www.virginiahousing.com/partners/rental-housing/compliance-forms-and-documents",
+    "official_limits_url": "https://www.virginiahousing.com/partners/rental-housing/income-limits",
+    "exact_binary_count": 0,
+    "method": "OFFICIAL_VISIBLE_PAGE_LINK_CAPTURE",
+    "binary_capture_status": "BLOCKED_BY_BROWSER_URL_POLICY_PENDING_SAFE_RETRY"
+  },
+  "agency": {
+    "name": "Virginia Housing Development Authority",
+    "official_domain": "virginiahousing.com",
+    "official_asset_host": "mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net"
+  },
+  "official_link_candidates": [
+    {"source_type":"CURRENT_QAP","title":"2026 QAP","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/rental-financing-tax-credits/how-does-it-work/2026-qap.pdf?rev=498ca549a19d44f3a049aa4e6ce5453a&hash=291FD2934060BA858212877BAA16070D","revision_token":"498ca549a19d44f3a049aa4e6ce5453a","status":"OFFICIAL_PAGE_LINK_CAPTURED_PENDING_EXACT_BYTES"},
+    {"source_type":"PROGRAM_MANUAL","title":"2026 Federal Housing Tax Credit Manual","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/rental-financing-tax-credits/how-does-it-work/2026-federal-housing-credit-manual.pdf?rev=530f3ff25ff340cba92363f7e606fbd1&hash=7679B592362EE54300BE3E0DBD7964A1","revision_token":"530f3ff25ff340cba92363f7e606fbd1","status":"OFFICIAL_PAGE_LINK_CAPTURED_PENDING_EXACT_BYTES"},
+    {"source_type":"PROSPECTIVE_DRAFT_QAP","title":"2027 Draft QAP","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/rental-financing-tax-credits/tax-credit-announcements/2026/final-draft-2027-qap.pdf?rev=d744b4ef328a486e9f224d1bafb3dc1f&hash=F94F3F78B3DA5F5D5A54C364131F1C7E","official_page_date":"2026-06-09","revision_token":"d744b4ef328a486e9f224d1bafb3dc1f","status":"OFFICIAL_PAGE_LINK_CAPTURED_PROSPECTIVE_DRAFT_PENDING_EXACT_BYTES"},
+    {"source_type":"PROSPECTIVE_QAP_CHANGES","title":"2027 Proposed QAP Changes","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/rental-financing-tax-credits/tax-credit-announcements/2026/2027-qualified-allocation-plan-proposed-changes.pdf?rev=84802f4d70714b37a74f2b9bdf18b844&hash=AF81C25576C1FE5BF1BB27B0C715C41A","official_page_date":"2026-05-12","revision_token":"84802f4d70714b37a74f2b9bdf18b844","status":"OFFICIAL_PAGE_LINK_CAPTURED_PROSPECTIVE_PROPOSAL_PENDING_EXACT_BYTES"},
+    {"source_type":"LIMIT_MEMO","title":"2026 Program Income and Rent Limits Memo","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/income-limits/program-income--rent-limits-memo--may-2026.pdf?rev=a073ae7dcfce4ce891cae1c1468dca9b&sc_lang=en&hash=A0EAC93C80635018DFFD799EEF6F1B5C","revision_token":"a073ae7dcfce4ce891cae1c1468dca9b","status":"OFFICIAL_PAGE_LINK_CAPTURED_RESOURCE_ONLY_PENDING_HUD_CONFIRMATION_AND_EXACT_BYTES"},
+    {"source_type":"LIMIT_WORKBOOK","title":"2026 Program Income and Rent Limits","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/income-limits/program-income-and-rent-limits_may-2026.xlsx?rev=1a1a07a89774409884412a8431bcb196&sc_lang=en&hash=61629DA4DB2285AEEB32B6B6E641B0A0","official_page_note":"Reflects HUD update 2026-05-18","revision_token":"1a1a07a89774409884412a8431bcb196","status":"OFFICIAL_PAGE_LINK_CAPTURED_RESOURCE_ONLY_PENDING_HUD_CONFIRMATION_AND_EXACT_BYTES"},
+    {"source_type":"HERA_LIMITS","title":"2026 MTSP and HERA Special Rent Limits","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/income-limits/mtsp-and-hera-special-rent-limits---may-2026.pdf?rev=1ba19479bbc44096adeaa97cff350385&sc_lang=en&hash=05037A2AEC6EDB11F767F75D774EDF17","official_page_note":"Reflects HUD update 2026-05-18","revision_token":"1ba19479bbc44096adeaa97cff350385","status":"OFFICIAL_PAGE_LINK_CAPTURED_PRE_2009_HERA_SCOPE_PENDING_HUD_CONFIRMATION_AND_EXACT_BYTES"},
+    {"source_type":"COMPLIANCE_GUIDANCE","title":"Electronic Records and Signatures Guidance","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/compliance-monitoring/electronic-records-and-signatures_nov-2025.pdf?rev=e93675742e3f43edad79f6a58660084f&sc_lang=en&hash=9186CD493635E76D719B4745BB88E932","official_page_date":"2025-11-10","revision_token":"e93675742e3f43edad79f6a58660084f","status":"OFFICIAL_PAGE_LINK_CAPTURED_PENDING_EXACT_BYTES"},
+    {"source_type":"COMPLIANCE_GUIDANCE","title":"HOTMA Guidance Summary","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/compliance-monitoring/hotma-guidance-summary_updated_oct-2025.pdf?rev=0bf3aeb7e24a465584f461499f14d1a3&sc_lang=en&hash=2937748EC4FA07C7C724F59B3016C638","official_page_date":"2025-10-15","revision_token":"0bf3aeb7e24a465584f461499f14d1a3","status":"OFFICIAL_PAGE_LINK_CAPTURED_PENDING_EFFECTIVE_DATE_AND_EXACT_BYTES"},
+    {"source_type":"INSPECTION_GUIDANCE","title":"NSPIRE Memo","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/compliance-monitoring/nspire-memo_feb-2025.pdf?sc_lang=en&rev=180c0c224e7e4786bc887ce868cbd2d4&hash=B8E4892954BA4F81429987418A7F1738","official_page_note":"Effective 2023-10-01; updated 2025-02-07","revision_token":"180c0c224e7e4786bc887ce868cbd2d4","status":"OFFICIAL_PAGE_LINK_CAPTURED_PENDING_EXACT_BYTES"},
+    {"source_type":"EXTENDED_USE_GUIDANCE","title":"Post-Year 15 Compliance Monitoring Guidance","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/compliance-monitoring/post-year-15-compliance-monitoring-guidance_nov-2025.pdf?rev=9371a611853d47d0bf17205c404cbbdb&sc_lang=en&hash=EC71338C66DB7AEB6ABA53E30A4D6BEC","official_page_date":"2025-11-10","revision_token":"9371a611853d47d0bf17205c404cbbdb","status":"OFFICIAL_PAGE_LINK_CAPTURED_POST_YEAR_15_ONLY_PENDING_EXACT_BYTES"},
+    {"source_type":"TENANT_FORM","title":"Student Self-Certification Form","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/compliance-monitoring/student-self-certification-form.pdf?rev=3b471539ed39478591da065fbee5e6ad&hash=D6CF08E9DF47A2B9AEB9272A4644DFAB","revision_token":"3b471539ed39478591da065fbee5e6ad","status":"OFFICIAL_PAGE_LINK_CAPTURED_PENDING_EXACT_BYTES_AND_CONTENT_VALIDATION"},
+    {"source_type":"LOAN_PROGRAM_LEASE_FORM","title":"Lease Addendum (MD 225)","official_url":"https://mc-7eaf08cc-3802-4bab-9abf-a732-cdn-endpoint.azureedge.net/-/media/docs/partners/rental-housing/compliance-monitoring/lease-addendum-md-225.pdf?rev=99c571a8abcf443ea03c79d0ac1deb3b&hash=C39E446E086FF025209F353BE7815E9B","revision_token":"99c571a8abcf443ea03c79d0ac1deb3b","status":"OFFICIAL_PAGE_LINK_CAPTURED_VIRGINIA_HOUSING_FINANCING_ONLY_PENDING_EXACT_BYTES"},
+    {"source_type":"MODEL_FORM_DEPENDENCY","title":"NCSHA Model Compliance Forms","official_url":"https://www.ncsha.org/resource/model-compliance-forms-for-housing-credit-developments/","status":"OFFICIAL_VIRGINIA_PAGE_EXTERNAL_DEPENDENCY_PENDING_VERSION_BINDING_AND_EXACT_BYTES"}
+  ],
+  "official_authority_notes": [
+    "Virginia Housing states that its tax-credit and tax-exempt-bond income and rent limits are a resource only.",
+    "Owners must confirm MTSP and National Non-Metropolitan limits on HUD before implementation.",
+    "HUD may update limits after the initial publication date.",
+    "HERA Special limits apply only to qualifying pre-2009 properties in identified localities.",
+    "Virginia Housing directs multiple eligibility forms to NCSHA model forms rather than Virginia-specific binaries."
+  ],
+  "blocking_conflicts": [
+    {"conflict_id":"VA-EXACT-BYTES-001","status":"UNRESOLVED","description":"The first-party Virginia Housing CDN links were visible and captured, but binary retrieval was blocked by browser URL policy; bytes, page counts and SHA-256 identities remain unverified."},
+    {"conflict_id":"VA-QAP-PROSPECTIVE-001","status":"UNRESOLVED","description":"The adopted 2026 QAP must remain distinct from the 2027 draft QAP and proposed-change materials."},
+    {"conflict_id":"VA-LIMIT-HUD-001","status":"UNRESOLVED","description":"Virginia Housing labels its tax-credit and tax-exempt-bond limits as resource only and requires owners to confirm applicable HUD MTSP and National Non-Metropolitan limits before implementation."},
+    {"conflict_id":"VA-HERA-SCOPE-001","status":"UNRESOLVED","description":"HERA Special limits are restricted by placed-in-service date and identified locality and must never be applied as a statewide default."},
+    {"conflict_id":"VA-NCSHA-FORMS-001","status":"UNRESOLVED","description":"Core TIC, TIC instructions, asset and student forms are delegated to NCSHA model forms and require exact version binding and Virginia applicability approval."},
+    {"conflict_id":"VA-LOAN-FORM-SCOPE-001","status":"UNRESOLVED","description":"The MD 225 lease addendum is required only when financing through Virginia Housing and is not a universal LIHTC lease form."}
+  ],
+  "enterprise_boundary": "Only blank official or explicitly adopted model forms belong in this shared pack. Completed tenant certifications, owner reports, EUAs, loan agreements, Forms 8609, utility schedules and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "HUD-confirmed MTSP and National Non-Metropolitan limits",
+    "HERA Special locality and pre-2009 eligibility",
+    "placed-in-service and gross-rent-floor dates",
+    "Average Income Test designations",
+    "tax-exempt bond and Virginia Housing loan layering",
+    "utility allowances",
+    "EUA and loan-agreement commitments",
+    "effective dates and award cycle"
+  ],
+  "activation_requirements": [
+    "Exact binary capture with SHA-256, byte count and page count for each linked asset",
+    "Adopted 2026 versus prospective 2027 QAP separation",
+    "HUD-confirmed property-specific limit selection",
+    "Exact NCSHA model-form version binding and Virginia applicability approval",
+    "Byte-derived content validation and page-level deterministic rule citations",
+    "Resolved source, scope, currency and supersession conflicts",
+    "Positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
