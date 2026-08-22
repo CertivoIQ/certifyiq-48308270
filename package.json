@@ -47,7 +47,8 @@
     "test:state-source-ut": "node --test scripts/test-utah-source-audit.mjs",
     "test:state-source-tx": "node --test scripts/test-texas-source-capture.mjs",
     "test:state-source-tn": "node --test scripts/test-tennessee-source-capture.mjs",
-    "test:state-source-sd": "node --test scripts/test-south-dakota-source-audit.mjs"
+    "test:state-source-sd": "node --test scripts/test-south-dakota-source-audit.mjs",
+    "test:state-source-ok-oh-mp-nd": "node --test scripts/test-ok-oh-mp-nd-source-audit.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
