@@ -1,0 +1,191 @@
+{
+  "test_id": 95,
+  "batch_id": "NC-NY-NJ-NH-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-22T23:40:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "NC",
+      "agency": "North Carolina Housing Finance Agency",
+      "official_domain": "nchfa.com",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "RPP",
+        "WHLP",
+        "HOME",
+        "HTF"
+      ],
+      "source_page": "https://www.nchfa.com/rental-housing-partners/rental-developers/qualified-allocation-plan/2026-qualified-allocation-plan-qap",
+      "sources": [
+        {
+          "source_type": "FINAL_QAP",
+          "title": "Final 2026 Qualified Allocation Plan",
+          "observed_url": "https://www.nchfa.com/sites/default/files/page_attachments/2026FinalQAP.pdf",
+          "observed_page_count": 37,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "COMPLIANCE_APPENDIX",
+          "title": "2026 QAP Appendix F — Monitoring Compliance",
+          "observed_url": "https://www.nchfa.com/sites/default/files/2025-11/2026QAP%E2%80%94AppendixF.pdf",
+          "observed_page_count": 9,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "PROGRAM_COMPLIANCE",
+          "title": "Program Compliance",
+          "observed_url": "https://www.nchfa.com/rental-housing-partners/rental-owners-managers/program-compliance",
+          "status": "OFFICIAL_PAGE_OBSERVED_CURRENT_COMPOSITION_REQUIRES_CAPTURE"
+        }
+      ],
+      "blocking_conflicts": [
+        "The final QAP, Appendix F, later notices and property documents must be bound to the applicable award and certification dates.",
+        "LIHTC, bond, RPP, WHLP, HOME, HTF, RD and CDBG-DR restrictions cannot be substituted or compared without measure normalization.",
+        "County designation, income averaging, assistance and property elections require VP Compliance verification."
+      ]
+    },
+    {
+      "state_code": "NY",
+      "agency": "New York State Homes and Community Renewal / HFA",
+      "official_domain": "hcr.ny.gov",
+      "program_codes": [
+        "LIHTC_9_PERCENT",
+        "LIHTC_4_PERCENT",
+        "SLIHC",
+        "HOME",
+        "HTF"
+      ],
+      "source_page": "https://hcr.ny.gov/2026-multifamily-finance-9-lihtc-rfp",
+      "sources": [
+        {
+          "source_type": "NINE_PERCENT_RFP",
+          "title": "2026 Multifamily Finance 9% LIHTC RFP",
+          "observed_url": "https://hcr.ny.gov/2026-multifamily-finance-9-rfp",
+          "observed_page_count": 18,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "NINE_PERCENT_QAP",
+          "title": "Part 2040 9% LIHTC QAP — effective June 11, 2025",
+          "observed_url": "https://hcr.ny.gov/system/files/documents/2025/06/rule-text-title-9-part-2040-9-dhcr-qap-effective-6-11-2025.pdf",
+          "observed_page_count": 44,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "CAPITAL_PROGRAMS_MANUAL",
+          "title": "Capital Programs Manual — 2026",
+          "observed_url": "https://hcr.ny.gov/capital-programs-manual-2026",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_COMPONENTS_REQUIRE_CAPTURE"
+        }
+      ],
+      "blocking_conflicts": [
+        "The 9% QAP/RFP, 4% HFA authority, SLIHC and layered capital programs must remain distinct.",
+        "New York City HDC is a separate geographic authority; current HDC QAP and compliance sources were not verified in this capture.",
+        "RFP updates, Q&A, term sheets, manuals, property commitments and limits require exact-current reconciliation."
+      ]
+    },
+    {
+      "state_code": "NJ",
+      "agency": "New Jersey Housing and Mortgage Finance Agency",
+      "official_domain": "nj.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "MULTIFAMILY_FINANCING"
+      ],
+      "source_page": "https://www.nj.gov/dca/hmfa/developers/uniap/",
+      "sources": [
+        {
+          "source_type": "UNIAP_2026",
+          "title": "2026 UNIAP and Tax Credit Application Updates",
+          "observed_url": "https://www.nj.gov/dca/hmfa/developers/uniap/",
+          "status": "OFFICIAL_PAGE_OBSERVED_DOCUMENT_SET_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "QAP_INDEX",
+          "title": "Qualified Allocation Plan",
+          "observed_url": "https://www.nj.gov/dca/hmfa/developers/lihtc/qap/",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_CURRENT_QAP_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "COMPLIANCE_INDEX",
+          "title": "LIHTC Compliance",
+          "observed_url": "https://www.nj.gov/dca/hmfa/developers/lihtc/compliance/",
+          "status": "OFFICIAL_PAGE_CANDIDATE_EXACT_CONTENT_REQUIRES_VALIDATION"
+        }
+      ],
+      "blocking_conflicts": [
+        "The current QAP, UNIAP files, developer bulletins and compliance materials require exact release composition and effective dates.",
+        "The 2026 9% application page prohibits underwriting with Average Income while post-award election changes require agency handling; no rule may infer a property election.",
+        "Consolidated UNIAP financing programs must remain separate from LIHTC eligibility and property restrictions."
+      ]
+    },
+    {
+      "state_code": "NH",
+      "agency": "New Hampshire Housing",
+      "official_domain": "nhhousing.org",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND"
+      ],
+      "source_page": "https://www.nhhousing.org/developer-financing/lihtc/",
+      "sources": [
+        {
+          "source_type": "CURRENT_QAP",
+          "title": "2027-2028 Qualified Allocation Plan",
+          "observed_url": "https://www.nhhousing.org/wp-content/uploads/2026/05/2027-2028-Qualified-Allocation-Plan-1.pdf",
+          "observed_page_count": 63,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_FUTURE_CYCLE_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "title": "Low-Income Housing Tax Credits",
+          "observed_url": "https://www.nhhousing.org/developer-financing/lihtc/",
+          "status": "OFFICIAL_PAGE_OBSERVED_CURRENT_AND_DRAFT_HISTORY_PRESENT"
+        },
+        {
+          "source_type": "ASSET_MANAGEMENT",
+          "title": "LIHTC Asset Management and Compliance",
+          "observed_url": "https://www.nhhousing.org/developer-financing/asset-management/low-income-housing-tax-credit/",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_MANUAL_FORMS_AND_LIMITS_REQUIRE_CAPTURE"
+        }
+      ],
+      "blocking_conflicts": [
+        "The official page labels the 2027-2028 QAP current, but a 2026 certification may be controlled by an earlier award-cycle QAP and recorded agreement.",
+        "Final, redlined and draft QAP materials coexist; only final authority may drive rules.",
+        "Compliance manual, limits, utility allowances and project elections require exact-current and property-specific validation."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement",
+    "completed owner certification",
+    "property utility schedule"
+  ],
+  "property_figure_verification_scope": [
+    "HUD-confirmed geography, household size, income and rent limits",
+    "program and award-cycle effective dates",
+    "placed-in-service and gross-rent-floor dates",
+    "minimum set-aside and Average Income Test elections",
+    "utility allowance method, evidence and effective date",
+    "layered federal, state, bond, HOME and local restrictions",
+    "recorded extended-use and project-specific commitments"
+  ],
+  "activation_requirements": [
+    "exact official bytes, byte lengths and SHA-256 hashes",
+    "final-current and supersession verification",
+    "page-cited deterministic rules",
+    "program, authority and geographic-scope separation",
+    "positive, negative, boundary, layered and supersession fixtures",
+    "independent compliance-expert approval bound to the release",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
