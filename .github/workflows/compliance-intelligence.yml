@@ -94,6 +94,7 @@ jobs:
           bun run test:state-source-tx
           bun run test:state-source-tn
           bun run test:state-source-sd
+          bun run test:state-source-ok-oh-mp-nd
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
