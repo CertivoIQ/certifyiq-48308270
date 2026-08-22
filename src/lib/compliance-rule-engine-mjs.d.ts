@@ -241,5 +241,22 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     activationReceipt?: Record<string, unknown> | null,
   ): Record<string, unknown>;
 
+  export const FY2026_XLSX_PARSER_BUILD: string;
+
+  export function parseControlledFy2026Workbook(
+    input?: Record<string, unknown>,
+  ): Record<string, unknown>;
+
+  export function selectFy2026IncomeLimit(
+    input?: Record<string, unknown>,
+  ): Record<string, unknown>;
+
+  export function validateFy2026IncomeLimitSelection(
+    programCode: string,
+    datasetId: string,
+    activationReceipt?: Record<string, unknown> | null,
+    limitSelection?: Record<string, unknown> | null,
+  ): Record<string, unknown>;
+
   export function signOffAllowed(result: EvaluationResult): boolean;
 }
