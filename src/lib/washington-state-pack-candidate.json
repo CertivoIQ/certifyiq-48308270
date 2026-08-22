@@ -1,0 +1,85 @@
+{
+  "test_id": 84,
+  "state_code": "WA",
+  "pack_id": "wa-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "TAX_EXEMPT_BOND"],
+  "release_status": "BLOCKED_PENDING_SOURCE_COMPOSITION_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T22:00:00Z",
+    "official_program_url": "https://www.wshfc.org/mhcf/9percent/2027application.htm",
+    "official_compliance_url": "https://www.wshfc.org/managers/ManualTaxCreditIndex.htm",
+    "official_forms_url": "https://www.wshfc.org/managers/forms-RC.htm",
+    "official_reports_url": "https://www.wshfc.org/managers/forms-tc.htm",
+    "official_limits_url": "https://www.wshfc.org/Managers/Map.aspx",
+    "official_inspections_url": "https://www.wshfc.org/managers/prop_inspections.htm",
+    "exact_binary_count": 26,
+    "method": "OFFICIAL_PAGE_LINKED_FILE_BYTE_CAPTURE"
+  },
+  "agency": {
+    "name": "Washington State Housing Finance Commission",
+    "official_domain": "wshfc.org"
+  },
+  "exact_binary_sources": [
+    {"source_type":"PROGRAM_POLICY","title":"9% Tax Credit Program Policies","official_url":"https://www.wshfc.org/mhcf/9percent/2027application/ProgramDocs/9percentTaxCreditPolicies.pdf","file_name":"9percentTaxCreditPolicies.pdf","document_self_identified_revision":"Approved 2026-07-23; republished 2026-08-05","file_bytes":1030734,"observed_pages":84,"sha256":"ae724b21146dd180efb3da77cd57b33783a04a0989d417158cb26ff03dd15d27","status":"EXACT_BYTES_CAPTURED_PENDING_EFFECTIVE_SCOPE_REVIEW"},
+    {"source_type":"PROGRAM_VALUES","title":"9% Program Values","official_url":"https://www.wshfc.org/mhcf/9percent/2027application/ProgramDocs/9percentGuidance.pdf","file_name":"9percentGuidance.pdf","file_bytes":107097,"observed_pages":3,"sha256":"e5eb100f180b061f8f58f0607a6849f69deba78c5b855f0bd896399e30599b73","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_CLASSIFICATION"},
+    {"source_type":"APPLICATION_INSTRUCTIONS","title":"2027 9% Competitive Housing Credit Application Instructions","official_url":"https://www.wshfc.org/mhcf/9percent/2027application/ProgramDocs/LIHTCApplicationInstructions.pdf","file_name":"LIHTCApplicationInstructions.pdf","document_self_identified_revision":"2027 application cycle","file_bytes":288020,"observed_pages":3,"sha256":"9d43af9f7670103cc9de5ca5add3e842accccb4990615072b566bad6a4de99be","status":"EXACT_BYTES_CAPTURED_PROSPECTIVE_APPLICATION_ONLY"},
+    {"source_type":"QUALIFIED_ALLOCATION_PLAN","title":"Qualified Allocation Plan","official_url":"https://www.wshfc.org/mhcf/9percent/2027application/ProgramDocs/QAP.pdf","file_name":"QAP.pdf","document_self_identified_revision":"Amended 2012-06-28","file_bytes":143057,"observed_pages":10,"sha256":"a13d16ca88aff766e3c6071fae68efad55f174851cc5f5dee5ec1c241956b812","status":"EXACT_BYTES_CAPTURED_PENDING_CURRENT_AUTHORITY_RECONCILIATION"},
+    {"source_type":"PROGRAM_RULES","title":"Low-Income Housing Tax Credit Program Rules","official_url":"https://www.wshfc.org/mhcf/9percent/2027application/ProgramDocs/Rules.pdf","file_name":"Rules.pdf","file_bytes":262367,"observed_pages":5,"sha256":"327ec8a86ad916e32d40aabaef7f99b08aa418b976ba8d374f5885e8c7d6ac75","status":"EXACT_BYTES_CAPTURED_PENDING_AUTHORITY_MAPPING"},
+    {"source_type":"TENANT_FORM","title":"Household Eligibility Application","official_url":"https://www.wshfc.org/managers/Forms/HouseholdEligibilityApplication_February2025new.pdf","file_name":"HouseholdEligibilityApplication_February2025new.pdf","document_self_identified_revision":"2025-02-27","file_bytes":379930,"observed_pages":12,"sha256":"8e72980932d5d4ec725b3f663efc3351e972cc6db6871b48bcabe76e4a300706","status":"EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"},
+    {"source_type":"TENANT_FORM","title":"Tenant Income Certification with Calculations","official_url":"https://www.wshfc.org/managers/Forms/TenantIncomeCert_TIC_wcalcs_rev_5.13.2025.pdf","file_name":"TenantIncomeCert_TIC_wcalcs_rev_5.13.2025.pdf","document_self_identified_revision":"2025-05-13","file_bytes":4887411,"observed_pages":4,"sha256":"55a2b689b8f970dbc138a94d7ebda74658a02ad5e75c9ace49bd0323ba1e4e7b","status":"EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"},
+    {"source_type":"TENANT_FORM","title":"Self-Certification of Annual Income","official_url":"https://www.wshfc.org/managers/Forms/50_SelfCertificationOfAnnualIncome%20Jan232025.pdf","file_name":"50_SelfCertificationOfAnnualIncome%20Jan232025.pdf","document_self_identified_revision":"2025-01-23","file_bytes":98544,"observed_pages":2,"sha256":"76ab2ac3115c3019a80922dde77cb9c5798619ac0ad79edbcf816216498edd40","status":"EXACT_BYTES_CAPTURED_100_PERCENT_LIHTC_RECERTIFICATION_ONLY"},
+    {"source_type":"TENANT_FORM","title":"Student Certification","official_url":"https://www.wshfc.org/managers/Forms/320_StudentCertification.pdf","file_name":"320_StudentCertification.pdf","document_self_identified_revision":"2017-04","file_bytes":78930,"observed_pages":1,"sha256":"7449535a1aaf4ba4af201ac2bfb46b558c6e3684c16290011b901ccec021f4bd","status":"EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"},
+    {"source_type":"LEASE_RIDER","title":"Tax Credit Lease Rider - Tax Credit Property","official_url":"https://www.wshfc.org/managers/Forms/430_TaxCreditLeaseRider_RevDec2024.pdf","file_name":"430_TaxCreditLeaseRider_RevDec2024.pdf","document_self_identified_revision":"2024-12","file_bytes":91834,"observed_pages":3,"sha256":"aced6f4fc28d93287c64519973b51ff40ecdb96ba9332c88082672b3d0cdbf2c","status":"EXACT_BYTES_CAPTURED_MANDATORY_SIGNATURE_DEADLINE_REVIEW"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":1,"title":"Introduction","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/30_Chap01Introduction_Dec2024Final.pdf","file_name":"30_Chap01Introduction_Dec2024Final.pdf","file_bytes":233279,"observed_pages":7,"sha256":"8d8750defb67c35961c1de7d787feb4a93bfb0fdd5ad54be87d839f0a728d8aa","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":2,"title":"Federal Requirements","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/40_Chap02FederalRequirements_Dec2024Final.pdf","file_name":"40_Chap02FederalRequirements_Dec2024Final.pdf","file_bytes":342099,"observed_pages":20,"sha256":"7e55258a5394faae7400affcdf7e0a25d798937d239f73d64bc851a0d31b2b55","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":3,"title":"Washington State Requirements","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/50_Chap03WashingtonStateRequirements_Dec2024_Final.pdf","file_name":"50_Chap03WashingtonStateRequirements_Dec2024_Final.pdf","file_bytes":248721,"observed_pages":10,"sha256":"475048bc31802184b2cbbced544cad81d58336c881957ed56da8a741a53da69e","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":4,"title":"Rents & Tenancy Issues","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/60_Chap04Rents&TenancyIssues_Dec2024Final.pdf","file_name":"60_Chap04Rents&TenancyIssues_Dec2024Final.pdf","file_bytes":256687,"observed_pages":6,"sha256":"d0483a0c95feabf46ac9f8f1e3a323750ff7b804b9dbd3b89bd9c579931df2a1","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":5,"title":"Income & Asset Certification","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/70_Chap05IncomeAssetCertification_Dec2024Final.pdf","file_name":"70_Chap05IncomeAssetCertification_Dec2024Final.pdf","file_bytes":397612,"observed_pages":25,"sha256":"cebd20dbebe70b83ae91d577ad275c905e05eca693a54308bb62d8e29895be06","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":6,"title":"Reporting & Records Retention","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/80_Chap06Reporting&RecordsRetention_Dec2024Final.pdf","file_name":"80_Chap06Reporting&RecordsRetention_Dec2024Final.pdf","file_bytes":238795,"observed_pages":10,"sha256":"ad48823228339f33dca08d96fe1b78296110673e4e188d23f8cf3e7d04af5652","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":7,"title":"Noncompliance","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/90_Chap07Noncompliance_Dec2024%20Final.pdf","file_name":"90_Chap07Noncompliance_Dec2024%20Final.pdf","file_bytes":190950,"observed_pages":6,"sha256":"57841e1f476ae1df4852a7aa7f94499fa888e979617bd32d9dba90b980b444b0","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":8,"title":"Tax-Exempt Bond-Financed Properties with Tax Credits","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/100_Chap08TaxExemptBondFinancedPropertiesWithTaxCredits_Nov2024.pdf","file_name":"100_Chap08TaxExemptBondFinancedPropertiesWithTaxCredits_Nov2024.pdf","file_bytes":75379,"observed_pages":2,"sha256":"95faf5fa29b50a3d3d38c7dd3bfaa886a3ae697f770e8cc0132334959ead1e49","status":"EXACT_BYTES_CAPTURED_LAYERED_PROGRAM_ONLY"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":9,"title":"Property Transfers","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/110_Chap09PropertyTransfers_Dec2024_Final.pdf","file_name":"110_Chap09PropertyTransfers_Dec2024_Final.pdf","file_bytes":193766,"observed_pages":9,"sha256":"5bc82ff6fe2fe36094fc1e46706eaebddfa4ddfc6d8986916ef1f230a4ad8fcf","status":"EXACT_BYTES_CAPTURED_TRANSACTION_SCOPE_ONLY"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":10,"title":"Qualified Contract Process","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/120_Chap10QualifiedContractProcess.pdf","file_name":"120_Chap10QualifiedContractProcess.pdf","document_self_identified_revision":"2009-02","file_bytes":28685,"observed_pages":5,"sha256":"a0369eea34e0c23a43c404a9b3540919ebfddf67e53438a1ee127d83b8655fbb","status":"EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":11,"title":"Post-Year 15 Monitoring Procedures","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/130_Chap11PostYr15MonitoringProcedures_Dec2024%20Final.pdf","file_name":"130_Chap11PostYr15MonitoringProcedures_Dec2024%20Final.pdf","file_bytes":136152,"observed_pages":5,"sha256":"00b1fe374e828feebe9c65c8eeb28563af888a761d88fcca0608fc66ce243c97","status":"EXACT_BYTES_CAPTURED_POST_YEAR_15_ONLY"},
+    {"source_type":"COMPLIANCE_MANUAL_CHAPTER","chapter":12,"title":"Recertification Waiver Procedure","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/140_Chap12RecertificationWaiverProcedure.pdf","file_name":"140_Chap12RecertificationWaiverProcedure.pdf","document_self_identified_revision":"2009-02","file_bytes":61394,"observed_pages":5,"sha256":"a1af35781e303cbeb51c1c275e56b7804fdd43116c7f970bcc8bbffc80f8fc1a","status":"EXACT_BYTES_CAPTURED_PENDING_CURRENCY_AND_PROPERTY_SCOPE_REVIEW"},
+    {"source_type":"COMPLIANCE_FAQ","title":"Tax Credit Frequently Asked Questions","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/160_AppendixB-FAQsCompliance_TaxCredit.pdf","file_name":"160_AppendixB-FAQsCompliance_TaxCredit.pdf","document_self_identified_revision":"2024-12","file_bytes":428049,"observed_pages":33,"sha256":"29a1c24b7a101e12ef7bb5746fe791fb4a7c31ae0bc8e490152e432125946021","status":"EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"},
+    {"source_type":"UTILITY_ALLOWANCE_POLICY","title":"Utility Allowance Procedures for LIHTC Properties","official_url":"https://www.wshfc.org/managers/ManualTaxCredit/290_AppendixOUtilityAllowanceProceduresForLIHTCProperties.pdf","file_name":"290_AppendixOUtilityAllowanceProceduresForLIHTCProperties.pdf","document_self_identified_revision":"2018-10","file_bytes":262236,"observed_pages":7,"sha256":"b853c3eea36cb246da15322c280eb4332007da5f97b5f88c2033a7dfa1a5446f","status":"EXACT_BYTES_CAPTURED_PENDING_PROPERTY_UTILITY_SELECTION"},
+    {"source_type":"ANNUAL_REPORT_INSTRUCTIONS","title":"2025 Tax Credit Annual Reports Submission Instructions","official_url":"https://www.wshfc.org/managers/Reports/TCReports/2025%20Tax%20Credit%20Annual%20Reports%20Submission%20Instructions.pdf","file_name":"2025%20Tax%20Credit%20Annual%20Reports%20Submission%20Instructions.pdf","document_self_identified_revision":"2025-12-16","file_bytes":1518327,"observed_pages":6,"sha256":"a201a79e1fdf6bef95a3c4fcd6c4402cdbdf404578fc0e33e611532fe9ff6dc8","status":"EXACT_BYTES_CAPTURED_2026_SUBMISSION_CYCLE"},
+    {"source_type":"OWNER_FORM","title":"Owner's Annual Certification","official_url":"https://www.wshfc.org/managers/Reports/TCReports/Tax%20Credit_2025OwnersAnnualCertification.pdf","file_name":"Tax%20Credit_2025OwnersAnnualCertification.pdf","document_self_identified_revision":"2025-12-16","file_bytes":251721,"observed_pages":6,"sha256":"baf84522cb79a62d9aaef7219b360508f6bc8bf07d769475c47f9a252d0c15c7","status":"EXACT_BYTES_CAPTURED_2026_SUBMISSION_CYCLE_PENDING_CONTENT_VALIDATION"}
+  ],
+  "page_only_sources": [
+    {"source_type":"PROPERTY_LIMIT_LOOKUP","title":"2026 Income and Rent Limits by County and Property","official_url":"https://www.wshfc.org/Managers/Map.aspx","status":"OFFICIAL_INTERACTIVE_SOURCE_PENDING_PROPERTY_EXPORT_AND_HUD_RECONCILIATION"},
+    {"source_type":"INSPECTION_GUIDANCE","title":"LIHTC Inspections FAQ","official_url":"https://www.wshfc.org/managers/prop_inspections.htm","status":"OFFICIAL_PAGE_CAPTURED_PENDING_DETERMINISTIC_RULE_EXTRACTION"}
+  ],
+  "blocking_conflicts": [
+    {"conflict_id":"WA-QAP-CURRENCY-001","status":"UNRESOLVED","description":"The 2027 application page links a QAP self-identified as amended June 28, 2012, while the separate 9% Policies were approved July 23, 2026 and republished August 5, 2026; their current authority composition must be approved."},
+    {"conflict_id":"WA-PROSPECTIVE-CYCLE-001","status":"UNRESOLVED","description":"The application instructions apply to the prospective 2027 allocation cycle and must not replace rules governing earlier awards or existing properties."},
+    {"conflict_id":"WA-LIMIT-PROPERTY-001","status":"UNRESOLVED","description":"The Commission publishes 2026 limits through an interactive county/property lookup; no single statewide figure table may be applied without selecting the property, county, placed-in-service limits and applicable HUD authority."},
+    {"conflict_id":"WA-HOTMA-MANUAL-001","status":"UNRESOLVED","description":"The compliance landing page advertises HOTMA updates while the captured chapter and FAQ files identify mostly December 2024 revisions; exact supersession and effective-date rules require review."},
+    {"conflict_id":"WA-HISTORIC-PROCEDURE-001","status":"UNRESOLVED","description":"The qualified-contract and recertification-waiver chapters identify February 2009 revisions and cannot be treated as universally current without property and legal review."},
+    {"conflict_id":"WA-FORM-SCOPE-001","status":"UNRESOLVED","description":"Self-certification, post-Year 15, bond-layered, and annual-report documents have restricted scopes and submission cycles that must not be applied globally."}
+  ],
+  "enterprise_boundary": "Only blank official forms belong in this shared pack. Completed tenant certifications, owner reports, project Forms 8609, regulatory agreements, waivers, utility documentation, and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "property and county specific income and rent limits",
+    "HUD MTSP and HERA applicability",
+    "placed-in-service and gross-rent-floor dates",
+    "Average Income Test designations",
+    "tax-exempt bond layering",
+    "utility allowances",
+    "set-asides and regulatory-agreement commitments",
+    "effective dates and award cycle"
+  ],
+  "activation_requirements": [
+    "Approved authority composition for the 2012 QAP, 2026 Policies and program Rules",
+    "Current and prospective allocation-cycle separation",
+    "Byte-derived content validation and page-level deterministic rule citations",
+    "Property-scoped income, rent, utility and set-aside selection",
+    "Resolved currency, HOTMA, scope and supersession conflicts",
+    "Positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
