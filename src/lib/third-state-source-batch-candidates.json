@@ -1,0 +1,110 @@
+{
+  "test_id": 68,
+  "batch_id": "TN-SD-SC-RI-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "TN",
+      "agency": "Tennessee Housing Development Agency",
+      "official_domain": "thda.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://thda.org/rental-housing-partn/lihtc-program/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "HOUSING_CREDIT_COMPLIANCE",
+          "url": "https://thda.org/rental-housing-partn/housing-credit-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_ASSET_MANAGEMENT",
+          "url": "https://thda.org/rental-housing-partn/compliance-asset-management/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "THOMAS_DOCUMENTS",
+          "url": "https://thda.org/rental-housing-partn/thomas-documents/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Current final QAP document bytes were not directly verified from indexed source results."
+      ]
+    },
+    {
+      "state_code": "SD",
+      "agency": "South Dakota Housing",
+      "official_domain": "sdhda.org",
+      "sources": [
+        {
+          "type": "AGENCY_AND_PROGRAM_RESOURCES",
+          "url": "https://www.sdhda.org/",
+          "status": "BLOCKED_REQUIRED_DOCUMENT_LINKS_NOT_INDEPENDENTLY_VERIFIED"
+        }
+      ],
+      "conflicts": [
+        "The redesigned site exposes Housing Tax Credit and compliance resource categories, but current QAP/manual/form document URLs were not verified."
+      ]
+    },
+    {
+      "state_code": "SC",
+      "agency": "South Carolina State Housing Finance and Development Authority",
+      "official_domain": "schousing.com",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_AND_PROGRAM",
+          "url": "https://www.schousing.com/home/HousingTaxCredits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FOUR_PERCENT_TEB",
+          "url": "https://schousing.com/Home/MultifamilyTaxExempt",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "2027 materials are drafts; the 2026 QAP revised 2026-03-31 remains the current final candidate."
+      ]
+    },
+    {
+      "state_code": "RI",
+      "agency": "Rhode Island Housing",
+      "official_domain": "rihousing.com",
+      "sources": [
+        {
+          "type": "DEVELOPER_HANDBOOK_QAP_COMPLIANCE",
+          "url": "https://www.rihousing.com/partners/builders-developers/developers-handbook/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.rihousing.com/partners/builders-developers/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The 2026 QAP and compliance manual require exact-byte identity and publication-status validation."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current document verification",
+    "page-cited deterministic rules",
+    "conflict resolution",
+    "required fixture suite",
+    "platform release approval",
+    "enterprise VP property figure verification"
+  ]
+}
