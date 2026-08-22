@@ -1,0 +1,95 @@
+{
+  "test_id": 63,
+  "state_code": "WV",
+  "pack_id": "wv-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC"],
+  "release_status": "BLOCKED_PENDING_SOURCE_BYTES_AND_EXPERT_REVIEW",
+  "agency": {
+    "name": "West Virginia Housing Development Fund",
+    "official_domain": "wvhdf.com",
+    "program_page": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/low-income-housing-tax-credit-program/",
+    "compliance_resources_page": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/"
+  },
+  "official_source_candidates": [
+    {
+      "source_type": "ALLOCATION_PLAN",
+      "title": "2025 and 2026 Allocation Plan",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/02/2025-and-2026-Allocation-Plan-1.pdf",
+      "observed_pages": 139,
+      "sha256": null,
+      "status": "PENDING_EXACT_BYTES"
+    },
+    {
+      "source_type": "PROGRAM_MANUAL",
+      "title": "2025 and 2026 Tax Credit Manual",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/02/2025-and-2026-Tax-Credit-Manual-1.pdf",
+      "official_page_updated": "2026-06-26",
+      "observed_pages": 82,
+      "sha256": null,
+      "status": "PENDING_EXACT_BYTES"
+    },
+    {
+      "source_type": "COMPLIANCE_MANUAL",
+      "title": "WVHDF Section 42 Tax Credit Compliance Manual",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WVHDF-Section-42-Tax-Credit-Compliance-Manual.pdf",
+      "official_page_published": "2026-03-05",
+      "document_self_identified_edition": "2017 Edition",
+      "observed_pages": 33,
+      "sha256": null,
+      "status": "PENDING_EXACT_BYTES_AND_CURRENCY_REVIEW"
+    },
+    {
+      "source_type": "COMPLIANCE_FORMS_INDEX",
+      "title": "WVHDF Multifamily Compliance Forms and Instructions",
+      "official_url": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/",
+      "sha256": null,
+      "status": "PENDING_CAPTURED_BYTES"
+    }
+  ],
+  "official_blank_form_candidates": [
+    {
+      "title": "WV LIHTC Tenant Income Certification Form",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WV-LIHTC-Tenant-Income-Certification-Form.pdf",
+      "status": "PENDING_EXACT_BYTES"
+    },
+    {
+      "title": "WVHDF Annual Self Certification of Tenant Income",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WVHDF-Annual-Self-Certification-of-Tenant-Income.pdf",
+      "status": "PENDING_EXACT_BYTES"
+    },
+    {
+      "title": "LIHTC Annual Income Recertification Waiver Certification",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/LIHTC-Annual-Income-Recertification-Waiver-Certification.pdf",
+      "document_self_identified_date": "2009-03",
+      "status": "PENDING_EXACT_BYTES_AND_SUPERSESSION_REVIEW"
+    }
+  ],
+  "blocking_conflicts": [
+    {
+      "conflict_id": "WV-CURRENCY-001",
+      "status": "UNRESOLVED",
+      "description": "The current WVHDF page was published in 2026, but the linked compliance PDF identifies itself as the 2017 Edition."
+    },
+    {
+      "conflict_id": "WV-RECERT-WAIVER-001",
+      "status": "UNRESOLVED",
+      "description": "The 2017 compliance manual says the Fund does not issue a recertification waiver, while the current forms page links a document self-identified as a March 2009 waiver procedure."
+    },
+    {
+      "conflict_id": "WV-PLAN-CHANGE-001",
+      "status": "UNRESOLVED",
+      "description": "The 2025-2026 Allocation Plan states that program materials are subject to change; prospective effective dates and supersession must be approved per rule."
+    }
+  ],
+  "enterprise_boundary": "Only blank official forms belong in this shared pack. Completed tenant forms, project Forms 8609, LURAs, HAP contracts, waivers, and regulatory agreements remain enterprise/property records.",
+  "activation_requirements": [
+    "Exact official bytes and SHA-256 identities",
+    "Byte-derived document identity validation",
+    "Page-level deterministic rule citations",
+    "Resolved currency and supersession conflicts",
+    "Positive, negative, boundary, layered-program, and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Prospective effective date and retained prior versions"
+  ]
+}
