@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import test from "node:test";
+const batch=JSON.parse(await readFile(new URL("../src/lib/nv-ne-mt-mo-state-pack-candidates.json",import.meta.url),"utf8"));
+test("Test 96 covers NV, NE, MT and MO",()=>{assert.equal(batch.test_id,96);assert.deepEqual(batch.jurisdictions.map(x=>x.state_code),["NV","NE","MT","MO"]);});
+test("sources remain on official agency domains without invented hashes",()=>{for(const j of batch.jurisdictions)for(const s of j.sources){assert.equal(new URL(s.observed_url).hostname.replace(/^www\./,""),j.official_domain);assert.ok(!("sha256" in s));assert.match(s.status,/^OFFICIAL_/);}});
+test("preserves access, currency, canonical-source and cycle blockers",()=>{const x=Object.fromEntries(batch.jurisdictions.map(j=>[j.state_code,j]));assert.ok(x.NV.blocking_conflicts.some(v=>v.includes("rejected automated retrieval")));assert.ok(x.NE.blocking_conflicts.some(v=>v.includes("multiple cycles")));assert.ok(x.MT.blocking_conflicts.some(v=>v.includes("not verified")));assert.ok(x.MO.blocking_conflicts.some(v=>v.includes("2028 QAP")));});
+test("separates layered program authorities",()=>{for(const code of ["NE","MO"])assert.ok(batch.jurisdictions.find(j=>j.state_code===code).program_codes.length>=5);});
+test("keeps property records outside shared packs",()=>{for(const v of ["completed tenant records","property Form 8609","LURA or declaration","HAP contract","property utility schedule"])assert.ok(batch.shared_pack_excludes.includes(v));});
+test("keeps all jurisdictions fail-closed and VP-gated",()=>{assert.match(batch.release_status,/^BLOCKED_/);assert.equal(batch.enterprise_activation_requires,"VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION");assert.ok(batch.jurisdictions.every(j=>j.sources.length===3&&j.blocking_conflicts.length===3));});
