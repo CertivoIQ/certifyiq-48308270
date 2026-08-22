@@ -1,0 +1,145 @@
+{
+  "test_id": 90,
+  "state_code": "TN",
+  "pack_id": "tn-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "TAX_EXEMPT_BOND", "NHTF"],
+  "release_status": "BLOCKED_PENDING_COMPLIANCE_SOURCE_RETRIEVAL_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T23:55:00Z",
+    "official_program_url": "https://thda.org/rental-housing-partn/lihtc-program/",
+    "official_application_documents_url": "https://thda.org/rental-housing-partn/thomas-documents/",
+    "official_property_manager_url": "https://thda.org/rental-housing-partn/rental-housing-property-managers-owners-landlords/",
+    "advertised_compliance_url": "https://thda.org/rental-housing-partners/project-based-section-8/rental-housing-compliance",
+    "advertised_compliance_result": "404_PAGE_NOT_FOUND",
+    "exact_binary_count": 2,
+    "official_link_candidate_count": 6,
+    "method": "OFFICIAL_PAGE_LINKED_FILE_CAPTURE_WITH_CDN_RETRIEVAL_BOUNDARY"
+  },
+  "agency": {
+    "name": "Tennessee Housing Development Agency",
+    "official_domain": "thda.org",
+    "official_cdn_domain": "dogvxws799i6n.cloudfront.net"
+  },
+  "exact_binary_sources": [
+    {
+      "source_type": "CURRENT_QAP",
+      "title": "2026 Qualified Allocation Plan",
+      "official_url": "https://thda.org/wp-content/uploads/2026/02/2026_MF_QAP-STYLE-GUIDE-VERSION-WITH-SIGNATUREE.pdf",
+      "file_name": "2026_MF_QAP-STYLE-GUIDE-VERSION-WITH-SIGNATUREE.pdf",
+      "document_self_identified_authority": "THDA Board approved 2025-09-23; Governor approved 2025-12-17",
+      "file_bytes": 1693201,
+      "observed_pages": 139,
+      "sha256": "7de2d24910bf2552742b25ccaf0d9a1f3a388abb9be04d433095776f3e055c56",
+      "status": "EXACT_BYTES_CAPTURED_CURRENT_GOVERNOR_APPROVED"
+    },
+    {
+      "source_type": "PROSPECTIVE_DRAFT_QAP",
+      "title": "Draft 2027 Qualified Allocation Plan",
+      "official_url": "https://thda.org/wp-content/uploads/2026/03/MP_2026-DRAFT2027LIHTCQAP-2.4.2026_Redline.pdf",
+      "file_name": "MP_2026-DRAFT2027LIHTCQAP-2.4.2026_Redline.pdf",
+      "document_self_identified_authority": "Board and Governor approval dates blank",
+      "file_bytes": 1698924,
+      "observed_pages": 135,
+      "sha256": "e616b414ff370d49981f3ed29b0aafcf4b050e50f88cfe97f743143e6d47ba6e",
+      "status": "EXACT_BYTES_CAPTURED_PROSPECTIVE_DRAFT_NOT_ADOPTED"
+    }
+  ],
+  "official_link_candidates": [
+    {
+      "source_type": "APPLICATION_MANUAL",
+      "title": "THOMAS User Manual",
+      "official_page_url": "https://thda.org/rental-housing-partn/thomas-documents/",
+      "observed_url": "https://dogvxws799i6n.cloudfront.net/wp-content/uploads/THOMAS-External-Manual-REVISED.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_CDN_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "COMPLIANCE_GUIDE",
+      "title": "THOMAS Compliance Guide",
+      "official_page_url": "https://thda.org/rental-housing-partn/thomas-documents/",
+      "observed_url": "https://dogvxws799i6n.cloudfront.net/wp-content/uploads/Updated-THOMAS-Compliance-Guide.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_CDN_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "PROGRAM_FAQ",
+      "title": "2026 Frequently Asked Questions",
+      "official_page_url": "https://thda.org/rental-housing-partn/thomas-documents/",
+      "observed_url": "https://dogvxws799i6n.cloudfront.net/wp-content/uploads/MF_2026_FAQ-3.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_CDN_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "UTILITY_ALLOWANCE_GUIDANCE",
+      "title": "Utility Allowance Guidance",
+      "official_page_url": "https://thda.org/rental-housing-partn/thomas-documents/",
+      "observed_url": "https://dogvxws799i6n.cloudfront.net/wp-content/uploads/Utility-Allowance-Guidance.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_CDN_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "APPLICATION_ELIGIBILITY_FORM",
+      "title": "2026 LIHTC Eligibility Certification - BOTH",
+      "official_page_url": "https://thda.org/rental-housing-partn/thomas-documents/",
+      "observed_url": "https://dogvxws799i6n.cloudfront.net/wp-content/uploads/MF_2026_LIHTC-Attachment-21-Eligibility-1.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_CDN_BYTES_NOT_CAPTURED_APPLICATION_SCOPE_ONLY"
+    },
+    {
+      "source_type": "UTILITY_ALLOWANCE_WORKSHEET",
+      "title": "Utility Allowance Certification and Utility Worksheet - BOTH",
+      "official_page_url": "https://thda.org/rental-housing-partn/thomas-documents/",
+      "observed_url": "https://dogvxws799i6n.cloudfront.net/wp-content/uploads/Utility-Allowance-Certification-and-Utility-Worksheet.xlsx",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_CDN_BYTES_NOT_CAPTURED_PROPERTY_INPUT_DEPENDENT"
+    }
+  ],
+  "blocking_conflicts": [
+    {
+      "conflict_id": "TN-QAP-DRAFT-001",
+      "status": "UNRESOLVED",
+      "description": "The 2026 QAP is current and governor-approved; the 2027 QAP is explicitly a draft with blank approval dates and must not be promoted."
+    },
+    {
+      "conflict_id": "TN-COMPLIANCE-NAV-001",
+      "status": "UNRESOLVED",
+      "description": "The property-manager page's advertised Rental Housing Compliance path returned THDA's Page Not Found response during capture."
+    },
+    {
+      "conflict_id": "TN-CDN-BINARY-001",
+      "status": "UNRESOLVED",
+      "description": "The THOMAS page exposes current-looking compliance, FAQ, utility and application documents through an agency-linked CDN, but exact binary identities were not captured and may not be released."
+    },
+    {
+      "conflict_id": "TN-2026-GUIDANCE-CURRENCY-001",
+      "status": "UNRESOLVED",
+      "description": "THDA states on the THOMAS page that it is updating guidelines, notices and attachments for the 2026 initial application cycles, so supersession review remains open."
+    },
+    {
+      "conflict_id": "TN-LIMITS-001",
+      "status": "UNRESOLVED",
+      "description": "A current THDA-linked LIHTC income and rent limit package was not located in the reviewed pages; no property figures may be activated."
+    },
+    {
+      "conflict_id": "TN-UTILITY-ALLOWANCE-001",
+      "status": "UNRESOLVED",
+      "description": "Utility-allowance guidance and the certification worksheet require exact capture plus property method, evidence and effective-date validation."
+    }
+  ],
+  "enterprise_boundary": "Only exact blank official forms and adopted public guidance belong in this shared pack. Completed tenant files, owner submissions, Forms 8609, carryover documents, restrictive covenants, THOMAS records, utility schedules, waivers and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "county and property-specific income and rent limits",
+    "placed-in-service and gross-rent-floor dates",
+    "competitive and noncompetitive LIHTC or MTBA layering",
+    "Average Income Test election and unit designations",
+    "utility allowance method, schedule and effective date",
+    "restrictive-covenant set-asides and property commitments",
+    "effective QAP, guidance and award cycle"
+  ],
+  "activation_requirements": [
+    "Preserve the approved 2026 QAP and exclude the unapproved 2027 draft",
+    "Restore or locate the official rental compliance library",
+    "Capture exact identities for current compliance, FAQ, form and utility sources",
+    "Locate current THDA-linked LIHTC income and rent limit authorities",
+    "Resolve source, scope, currency and supersession conflicts",
+    "Add positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
