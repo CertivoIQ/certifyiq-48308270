@@ -450,3 +450,14 @@ export {
   RECERTIFICATION_OCCUPANCY_RULE_ID,
   evaluateRecertificationOccupancyControls,
 } from "./recertification-occupancy-controls.mjs";
+
+export {
+  CONTROLLED_FY2026_GEOGRAPHY_CROSSWALK,
+  CONTROLLED_FY2026_INCOME_LIMIT_SOURCES,
+  FY2026_LIMIT_ACTIVATION_STATUS,
+  FY2026_LIMIT_INGESTION_ENGINE_BUILD,
+  evaluateFy2026IncomeLimitSourceActivation,
+  normalizeFy2026IncomeLimitDollar,
+  validateFy2026IncomeLimitProgramHandoff,
+  validateFy2026IncomeLimitRecords,
+} from "./fy2026-income-limit-ingestion.mjs";

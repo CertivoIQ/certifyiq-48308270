@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  TENANT_ELIGIBILITY_RULE_ID,
   evaluateTenantFileEligibility,
   normalizeIncomeLimitDollar,
 } from "../src/lib/tenant-file-eligibility.mjs";
@@ -182,13 +181,15 @@ function input(overrides = {}) {
   };
 }
 
-test("a controlled LIHTC tenant-file determination passes", () => {
+test("legacy controlled metadata cannot bypass the Test #60 receipt gate", () => {
   const result = evaluateTenantFileEligibility(input());
-  assert.equal(result.finding, "PASS");
-  assert.equal(result.rule_id, TENANT_ELIGIBILITY_RULE_ID);
-  assert.equal(result.program_results.length, 1);
-  assert.equal(result.cross_program_income_substitution_performed, false);
-  assert.equal(result.agent_approval_status, "PENDING");
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(result.reason_code, "INCOME_LIMIT_ACTIVATION_RECEIPT_REQUIRED");
+  assert.ok(
+    result.missing_inputs.includes(
+      "program_determinations[0].income_limit_source.activation_receipt",
+    ),
+  );
 });
 
 test("spreadsheet artifacts normalize to exact dollars, never nearest fifty", () => {
@@ -244,7 +245,7 @@ test("income-limit datasets cannot cross program branches", () => {
   assert.equal(result.reason_code, "INCOME_LIMIT_PROGRAM_BRANCH_CONFLICT");
 });
 
-test("HOME and Section 8 datasets stay blocked pending file validation", () => {
+test("layered HOME review stops at the first unactivated program source", () => {
   const data = input();
   data.program_inventory.push("HOME");
   data.program_determinations.push(determination("HOME"));
@@ -252,10 +253,10 @@ test("HOME and Section 8 datasets stay blocked pending file validation", () => {
   data.evidence.push(...programEvidence("HOME"));
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
-  assert.equal(result.reason_code, "CONTROLLED_DATASET_NOT_ACTIVATED");
+  assert.equal(result.reason_code, "INCOME_LIMIT_ACTIVATION_RECEIPT_REQUIRED");
 });
 
-test("unresolved student status blocks while preserving known failures", () => {
+test("unresolved student status cannot trigger an income comparison without an activation receipt", () => {
   const data = input();
   data.program_determinations[0].annual_income = "70000.00";
   data.evidence.find(
@@ -264,8 +265,7 @@ test("unresolved student status blocks while preserving known failures", () => {
   data.program_determinations[0].student_status.finding = "NOT_DETERMINED";
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
-  assert.equal(result.reason_code, "PROGRAM_ELIGIBILITY_NOT_DETERMINED");
-  assert.ok(result.confirmed_failure_indicators.includes("PROGRAM:LIHTC"));
+  assert.equal(result.reason_code, "INCOME_LIMIT_ACTIVATION_RECEIPT_REQUIRED");
 });
 
 test("HAP-assisted branches require a HAP contract", () => {
