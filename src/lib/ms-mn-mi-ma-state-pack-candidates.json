@@ -1,0 +1,178 @@
+{
+  "test_id": 97,
+  "batch_id": "MS-MN-MI-MA-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-22T23:59:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "MS",
+      "agency": "Mississippi Home Corporation",
+      "official_domain": "mshomecorp.com",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "HOME",
+        "HTF",
+        "USDA_RD"
+      ],
+      "source_page": "https://www.mshomecorp.com/",
+      "sources": [
+        {
+          "source_type": "AGENCY_ROOT",
+          "observed_url": "https://www.mshomecorp.com/",
+          "status": "OFFICIAL_PAGE_OBSERVED_CANONICAL_DOCUMENT_INDEX_NOT_VERIFIED"
+        },
+        {
+          "source_type": "DEVELOPER_GUIDE_FUNDING",
+          "observed_url": "https://developer-guide.mshomecorp.com/securing-funding",
+          "status": "OFFICIAL_AGENCY_SUBDOMAIN_PAGE_OBSERVED_GUIDE_NOT_CONTROLLING_AUTHORITY"
+        },
+        {
+          "source_type": "DEVELOPER_GUIDE_STEWARDSHIP",
+          "observed_url": "https://developer-guide.mshomecorp.com/stewardship",
+          "status": "OFFICIAL_AGENCY_SUBDOMAIN_PAGE_OBSERVED_GUIDE_NOT_COMPLIANCE_MANUAL"
+        }
+      ],
+      "blocking_conflicts": [
+        "The official guide links a Mississippi QAP but a clearly current canonical QAP, amendments and compliance index were not verified.",
+        "The developer guide is educational and cannot replace final MHC allocation or compliance authority.",
+        "LIHTC, HOME, HTF, RD, rental assistance and property restrictions must remain separate and property-specific."
+      ]
+    },
+    {
+      "state_code": "MN",
+      "agency": "Minnesota Housing Finance Agency",
+      "official_domain": "mnhousing.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "STATE_FINANCING"
+      ],
+      "source_page": "https://www.mnhousing.gov/home/rental-housing/housing-development-and-capital-programs/housing-tax-credits",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://www.mnhousing.gov/home/rental-housing/housing-development-and-capital-programs/housing-tax-credits",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        },
+        {
+          "source_type": "QAP_INDEX",
+          "observed_url": "https://www.mnhousing.gov/home/rental-housing/housing-development-and-capital-programs/housing-tax-credits/qualified-allocation-plan-qap",
+          "status": "OFFICIAL_PAGE_OBSERVED_MULTICYCLE_DOCUMENT_SET_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "PROPERTY_RESOURCES",
+          "observed_url": "https://www.mnhousing.gov/home/rental-housing/property-managers/documents-forms-and-resources",
+          "status": "OFFICIAL_PAGE_OBSERVED_FORMS_NOT_RULE_AUTHORITY"
+        },
+        {
+          "source_type": "LIMITS_INDEX",
+          "observed_url": "https://www.mnhousing.gov/home/rental-housing/post-selection/rent-income-limits",
+          "status": "OFFICIAL_PAGE_OBSERVED_PROPERTY_DATE_SELECTION_REQUIRED"
+        }
+      ],
+      "blocking_conflicts": [
+        "Allocation cycle, placed-in-service date, gross-rent floor and later amendments must select the controlling authority.",
+        "Rent and income limit tables require HUD geography, household/unit size, effective date and property election verification.",
+        "Minnesota financing overlays and recorded project restrictions cannot be substituted for federal LIHTC rules."
+      ]
+    },
+    {
+      "state_code": "MI",
+      "agency": "Michigan State Housing Development Authority",
+      "official_domain": "michigan.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "STATE_FINANCING"
+      ],
+      "source_page": "https://www.michigan.gov/mshda/developers/low-income-housing-tax-credits-lihtc",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://www.michigan.gov/mshda/developers/low-income-housing-tax-credits-lihtc",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        },
+        {
+          "source_type": "QAP_INDEX",
+          "observed_url": "https://www.michigan.gov/mshda/developers/lihtc/lihtc/qualified-allocation-plan",
+          "status": "OFFICIAL_PAGE_OBSERVED_CURRENT_AND_HISTORIC_MATERIALS_REQUIRE_CAPTURE"
+        },
+        {
+          "source_type": "LIMITS_INDEX",
+          "observed_url": "https://www.michigan.gov/mshda/rental/property-managers/compliance/income_rent_and_utility_limits",
+          "status": "OFFICIAL_PAGE_OBSERVED_EFFECTIVE_DATE_SELECTION_REQUIRED"
+        }
+      ],
+      "blocking_conflicts": [
+        "Current and historical QAP materials must be reconciled to the property's award cycle and amendments.",
+        "The chaptered compliance manual and later notices require exact identities, ordering and supersession rules.",
+        "Income, rent and utility limits require property-specific geography, election, floor and effective-date validation."
+      ]
+    },
+    {
+      "state_code": "MA",
+      "agency": "Executive Office of Housing and Livable Communities",
+      "official_domain": "mass.gov",
+      "program_codes": [
+        "LIHTC",
+        "STATE_LIHTC",
+        "TAX_EXEMPT_BOND",
+        "STATE_FINANCING"
+      ],
+      "source_page": "https://www.mass.gov/info-details/low-income-housing-tax-credit-lihtc",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://www.mass.gov/info-details/low-income-housing-tax-credit-lihtc",
+          "status": "OFFICIAL_PAGE_CANDIDATE_EXACT_CONTENT_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "QAP_INDEX",
+          "observed_url": "https://www.mass.gov/info-details/qualified-allocation-plan",
+          "status": "OFFICIAL_URL_OBSERVED_RETRIEVAL_ERROR_EXACT_CONTENT_NOT_CAPTURED"
+        },
+        {
+          "source_type": "AGENCY_ROOT",
+          "observed_url": "https://www.mass.gov/orgs/executive-office-of-housing-and-livable-communities",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        }
+      ],
+      "blocking_conflicts": [
+        "EOHLC is the statewide allocation-plan authority; MassHousing financing or asset-management materials cannot replace EOHLC rules.",
+        "The final 2025-2026 QAP and its amendment must be captured, ordered and versioned together before activation.",
+        "The QAP page retrieval failed in this capture, so no exact content identity or current rule may be asserted."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement",
+    "completed owner certification",
+    "property utility schedule"
+  ],
+  "property_figure_verification_scope": [
+    "HUD-confirmed geography, household size, income and rent limits",
+    "program and award-cycle effective dates",
+    "placed-in-service and gross-rent-floor dates",
+    "minimum set-aside and Average Income Test elections",
+    "utility allowance method, evidence and effective date",
+    "layered federal, state, bond, HOME and local restrictions",
+    "recorded extended-use and project-specific commitments"
+  ],
+  "activation_requirements": [
+    "exact official bytes, byte lengths and SHA-256 hashes",
+    "final-current and supersession verification",
+    "page-cited deterministic rules",
+    "program and authority separation",
+    "positive, negative, boundary, layered and supersession fixtures",
+    "independent compliance-expert approval bound to the release",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
