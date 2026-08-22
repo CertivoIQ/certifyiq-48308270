@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   RECERTIFICATION_OCCUPANCY_RULE_ID,
   evaluateRecertificationOccupancyControls,
-} from "./recertification-occupancy-controls.mjs";
+} from "../src/lib/recertification-occupancy-controls.mjs";
 
 const members = ["MEMBER-1", "MEMBER-2"];
 
