@@ -221,8 +221,9 @@ test("average-income available-unit designation and resident limit are enforced"
     available_unit_events: [
       availableUnit({
         new_resident_annual_income: "70000.01",
-        maximum_permitted_income: "70000.00",
+        required_designated_income_limit: "70000.00",
         average_income_designation_validated: true,
+        maximum_permitted_income_calculation_validated: true,
         project_average_after_designation: 60,
       }),
     ],
