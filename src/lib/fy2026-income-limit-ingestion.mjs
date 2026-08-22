@@ -52,7 +52,7 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
     official_url:
       "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-Data-FY26.xlsx",
     content_available_in_repository: false,
-    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_SCHEMA_AND_CROSSWALK",
+    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_AND_CROSSWALK",
     expected_legacy_geography_crosswalk_count: 6,
   }),
   HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18: Object.freeze({
@@ -65,7 +65,7 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
     official_url:
       "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-IncAvg-Data-FY26.xlsx",
     content_available_in_repository: false,
-    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA",
+    activation_status: "BLOCKED_PENDING_SOURCE_BYTES",
     expected_legacy_geography_crosswalk_count: 0,
     normalization_rule:
       "ROUND_EXCEL_DECIMAL_ARTIFACT_TO_EXACT_DOLLAR_NEVER_NEAREST_50",
@@ -78,7 +78,7 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
     record_count: 4764,
     effective_from: "2026-06-01",
     content_available_in_repository: false,
-    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA",
+    activation_status: "BLOCKED_PENDING_SOURCE_BYTES",
     expected_legacy_geography_crosswalk_count: 0,
   }),
   HUD_HOME_INCOME_LIMITS_FY2026: Object.freeze({
