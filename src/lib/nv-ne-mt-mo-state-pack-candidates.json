@@ -1,0 +1,173 @@
+{
+  "test_id": 96,
+  "batch_id": "NV-NE-MT-MO-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-22T23:58:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "NV",
+      "agency": "Nevada Housing Division",
+      "official_domain": "housing.nv.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND"
+      ],
+      "source_page": "https://housing.nv.gov/Programs/LIHTC_Program/",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "observed_url": "https://housing.nv.gov/Programs/LIHTC_Program/",
+          "status": "OFFICIAL_URL_OBSERVED_ACCESS_REJECTED_EXACT_CONTENT_NOT_CAPTURED"
+        },
+        {
+          "source_type": "COMPLIANCE_INDEX",
+          "observed_url": "https://housing.nv.gov/layouts/Page_Style_1.aspx?id=50733",
+          "status": "OFFICIAL_PAGE_CANDIDATE_2017_MANUAL_CURRENCY_UNRESOLVED"
+        },
+        {
+          "source_type": "AGENCY_ROOT",
+          "observed_url": "https://housing.nv.gov/",
+          "status": "OFFICIAL_PAGE_OBSERVED_CANONICAL_DOCUMENT_LINKS_REQUIRE_CAPTURE"
+        }
+      ],
+      "blocking_conflicts": [
+        "The official LIHTC page rejected automated retrieval, so no content identity or current QAP may be asserted.",
+        "The compliance candidate identifies a 2017 manual and older exhibits; current applicability is unresolved.",
+        "QAP cycle, compliance notices, limits, utility allowances and property elections require exact-current validation."
+      ]
+    },
+    {
+      "state_code": "NE",
+      "agency": "Nebraska Investment Finance Authority",
+      "official_domain": "nifa.org",
+      "program_codes": [
+        "LIHTC",
+        "AHTC",
+        "TAX_EXEMPT_BOND",
+        "HOME",
+        "HTF",
+        "CDBG_DR"
+      ],
+      "source_page": "https://www.nifa.org/developers-property-managers/forms-docs",
+      "sources": [
+        {
+          "source_type": "FORMS_DOCUMENTS",
+          "observed_url": "https://www.nifa.org/developers-property-managers/forms-docs",
+          "status": "OFFICIAL_PAGE_OBSERVED_MULTICYCLE_DOCUMENT_SET"
+        },
+        {
+          "source_type": "LIHTC_ALLOCATION",
+          "observed_url": "https://www.nifa.org/developers-property-managers/lihtc-allocation",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_CURRENT_COMPONENTS_REQUIRE_CAPTURE"
+        },
+        {
+          "source_type": "PROGRAM_ROOT",
+          "observed_url": "https://www.nifa.org/developers-property-managers",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        }
+      ],
+      "blocking_conflicts": [
+        "The 2026/2027/2028 QAP spans multiple cycles; the property allocation cycle and amendments must control.",
+        "9% and 4%/bond plans, federal LIHTC, Nebraska AHTC, CRANE, HOME, HTF and CDBG-DR authorities must remain separate.",
+        "The official index links documents through an agency-controlled storage host and a third-party limits service; exact bytes and authoritative HUD figures require independent capture."
+      ]
+    },
+    {
+      "state_code": "MT",
+      "agency": "Montana Board of Housing",
+      "official_domain": "commerce.mt.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND"
+      ],
+      "source_page": "https://commerce.mt.gov/housing/",
+      "sources": [
+        {
+          "source_type": "HOUSING_ROOT",
+          "observed_url": "https://commerce.mt.gov/housing/",
+          "status": "OFFICIAL_PAGE_OBSERVED_REQUIRED_LIHTC_INDEX_NOT_VERIFIED"
+        },
+        {
+          "source_type": "MULTIFAMILY_DEVELOPMENT",
+          "observed_url": "https://commerce.mt.gov/housing/Multifamily-Development",
+          "status": "OFFICIAL_PAGE_CANDIDATE_EXACT_CONTENT_REQUIRES_VALIDATION"
+        },
+        {
+          "source_type": "HOUSING_RESOURCES",
+          "observed_url": "https://commerce.mt.gov/housing/Resources",
+          "status": "OFFICIAL_PAGE_CANDIDATE_CANONICAL_DOCUMENT_SET_NOT_VERIFIED"
+        }
+      ],
+      "blocking_conflicts": [
+        "Canonical current QAP, compliance manual, forms and amendments were not verified from the official housing root.",
+        "References to a 2026 QAP and 2024 compliance manual cannot be promoted without exact official document identities and supersession review.",
+        "Property LURA, elections, limits, utility allowances and layered restrictions remain controlling and unverified."
+      ]
+    },
+    {
+      "state_code": "MO",
+      "agency": "Missouri Housing Development Commission",
+      "official_domain": "mhdc.com",
+      "program_codes": [
+        "LIHTC",
+        "STATE_LIHTC",
+        "TAX_EXEMPT_BOND",
+        "HOME",
+        "NHTF"
+      ],
+      "source_page": "https://mhdc.com/programs/multifamily/",
+      "sources": [
+        {
+          "source_type": "MULTIFAMILY_QAP",
+          "observed_url": "https://mhdc.com/programs/multifamily/",
+          "status": "OFFICIAL_PAGE_OBSERVED_2027_CURRENT_2028_DEVELOPMENT"
+        },
+        {
+          "source_type": "LIHTC_COMPLIANCE",
+          "observed_url": "https://mhdc.com/programs/asset-management/program-compliance/housing-programs/low-income-housing-tax-credit-lihtc-compliance/",
+          "status": "OFFICIAL_PAGE_OBSERVED_MANUAL_REVISED_JULY_2025"
+        },
+        {
+          "source_type": "MULTIFAMILY_APPLICATION",
+          "observed_url": "https://mhdc.com/programs/multifamily/multifamily-application/",
+          "status": "OFFICIAL_PAGE_OBSERVED_APPLICATION_CYCLE_REQUIRES_BINDING"
+        }
+      ],
+      "blocking_conflicts": [
+        "The official page lists the 2027 QAP as current while developing the 2028 QAP; property award cycle must select authority.",
+        "The LIHTC compliance manual is identified as revised July 2025 and requires later-notice and supersession reconciliation.",
+        "Federal and Missouri tax credits, HOME, NHTF, bond, NOFA and property restrictions must remain separate."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement",
+    "completed owner certification",
+    "property utility schedule"
+  ],
+  "property_figure_verification_scope": [
+    "HUD-confirmed geography, household size, income and rent limits",
+    "program and award-cycle effective dates",
+    "placed-in-service and gross-rent-floor dates",
+    "minimum set-aside and Average Income Test elections",
+    "utility allowance method, evidence and effective date",
+    "layered federal, state, bond, HOME and local restrictions",
+    "recorded extended-use and project-specific commitments"
+  ],
+  "activation_requirements": [
+    "exact official bytes, byte lengths and SHA-256 hashes",
+    "final-current and supersession verification",
+    "page-cited deterministic rules",
+    "program and authority separation",
+    "positive, negative, boundary, layered and supersession fixtures",
+    "independent compliance-expert approval bound to the release",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
