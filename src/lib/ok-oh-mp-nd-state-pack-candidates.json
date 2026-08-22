@@ -1,0 +1,181 @@
+{
+  "test_id": 94,
+  "batch_id": "OK-OH-MP-ND-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-22T23:05:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "OK",
+      "agency": "Oklahoma Housing Finance Agency",
+      "official_domain": "ohfa.org",
+      "program_codes": [
+        "LIHTC",
+        "OK_AHTC",
+        "TAX_EXEMPT_BOND"
+      ],
+      "source_page": "https://www.ohfa.org/affordable-housing-tax-credits/",
+      "sources": [
+        {
+          "source_type": "CURRENT_QAP",
+          "title": "2026 QAP Application Instructions — effective January 1, 2026",
+          "observed_url": "https://www.ohfa.org/wp-content/uploads/2025/09/2026-QAP-Final-Board-Approved-09.24.2025.docx",
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_DOCX_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "COMPLIANCE_MANUAL_INDEX",
+          "title": "Tax Credit Compliance Manual",
+          "observed_url": "https://www.ohfa.org/taxcreditcompliancemanual/",
+          "status": "OFFICIAL_PAGE_OBSERVED_COMPONENT_COMPOSITION_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "PROGRAM_INDEX",
+          "title": "Affordable Housing Tax Credits",
+          "observed_url": "https://www.ohfa.org/affordable-housing-tax-credits/",
+          "status": "OFFICIAL_PAGE_OBSERVED_2026_CURRENT_AND_2027_DRAFTS_PRESENT"
+        }
+      ],
+      "blocking_conflicts": [
+        "The official page simultaneously publishes the effective 2026 QAP and 2027 draft materials; award-cycle and supersession must be bound.",
+        "Federal LIHTC and Oklahoma Affordable Housing Tax Credit authority cannot be substituted for one another.",
+        "The componentized compliance manual, current notices, limits and utility allowances require exact identities and property-date validation."
+      ]
+    },
+    {
+      "state_code": "OH",
+      "agency": "Ohio Housing Finance Agency",
+      "official_domain": "ohiohome.org",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND",
+        "HOME"
+      ],
+      "source_page": "https://ohiohome.org/compliance/default.aspx",
+      "sources": [
+        {
+          "source_type": "LIHTC_COMPLIANCE",
+          "title": "OHFA LIHTC Compliance Manual — revised January 22, 2026",
+          "observed_url": "https://ohiohome.org/compliance/default.aspx",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_MANUAL_BINARY_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "COMPLIANCE_POLICIES",
+          "title": "Compliance Policies",
+          "observed_url": "https://ohiohome.org/compliance/policies.aspx",
+          "status": "OFFICIAL_PAGE_OBSERVED_CURRENT_POLICY_SET_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "COMPLIANCE_FORMS",
+          "title": "Reporting and Compliance Forms",
+          "observed_url": "https://ohiohome.org/compliance/forms.aspx",
+          "status": "OFFICIAL_PAGE_OBSERVED_FORMS_ARE_NOT_RULE_AUTHORITY"
+        }
+      ],
+      "blocking_conflicts": [
+        "The January 22, 2026 manual revision and its effective boundary must be tied to the certification event.",
+        "LIHTC, HOME and other OHFA program rules must remain separated; the HOME February 1, 2026 implementation statement is not LIHTC authority.",
+        "Forms, message updates, QAP materials, limits and property elections require exact-current reconciliation."
+      ]
+    },
+    {
+      "state_code": "MP",
+      "agency": "Northern Marianas Housing Corporation",
+      "official_domain": "nmhcgov.net",
+      "program_codes": [
+        "LIHTC"
+      ],
+      "source_page": "https://www.nmhcgov.net/low-income-housing-tax-credit-lihtc/",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "title": "Low Income Housing Tax Credit Program",
+          "observed_url": "https://www.nmhcgov.net/low-income-housing-tax-credit-lihtc/",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        },
+        {
+          "source_type": "QAP_PUBLIC_NOTICE",
+          "title": "Public Notice: 2025-2026 LIHTC QAP",
+          "observed_url": "https://www.nmhcgov.net/public-notice-2025-2026-lihtc-qap/",
+          "status": "OFFICIAL_PAGE_EXPLICITLY_LABELS_QAP_DRAFT"
+        },
+        {
+          "source_type": "DRAFT_QAP",
+          "title": "2025-2026 CNMI LIHTC QAP — DRAFT",
+          "observed_url": "https://www.nmhcgov.net/wp-content/uploads/2026/03/2025-2026-CNMI-LIHTC-QAP-DRAFT.pdf",
+          "observed_page_count": 24,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_DRAFT_NOT_RELEASE_AUTHORITY"
+        }
+      ],
+      "blocking_conflicts": [
+        "The only exact 2025-2026 QAP located is explicitly labeled DRAFT and cannot authorize production rules.",
+        "The July 2026 availability and deadline notices do not establish adoption of the draft QAP.",
+        "A final adopted QAP, compliance authority, limits and project documents remain unverified."
+      ]
+    },
+    {
+      "state_code": "ND",
+      "agency": "North Dakota Housing Finance Agency",
+      "official_domain": "ndhousing.nd.gov",
+      "program_codes": [
+        "LIHTC",
+        "TAX_EXEMPT_BOND"
+      ],
+      "source_page": "https://www.ndhousing.nd.gov/development",
+      "sources": [
+        {
+          "source_type": "CURRENT_LISTING",
+          "title": "2027 LIHTC Allocation Plan",
+          "observed_url": "https://www.ndhousing.nd.gov/sites/default/files/documents/Plans/2027LIHTCAllocationPlan.pdf",
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_2027_PLAN_BINARY_NOT_CAPTURED"
+        },
+        {
+          "source_type": "PRIOR_CYCLE_QAP",
+          "title": "2026 LIHTC Allocation Plan",
+          "observed_url": "https://www.ndhousing.nd.gov/sites/www/files/documents/Plans/2026LIHTCAllocationPlan.pdf",
+          "observed_page_count": 20,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_PRIOR_CYCLE_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "PROGRAM_INDEX",
+          "title": "Project Financing — Low Income Housing Tax Credit Program",
+          "observed_url": "https://www.ndhousing.nd.gov/development",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        }
+      ],
+      "blocking_conflicts": [
+        "The official page lists the 2027 plan as current and the 2026 plan under past allocation plans; the property award cycle must select the controlling plan.",
+        "HOME, HTF and Housing Incentive Fund allocation plans on the same page are separate programs and cannot be used as LIHTC authority.",
+        "The QAP incorporates the compliance manual and property standards; exact current identities and project restrictions require reconciliation."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement",
+    "completed owner certification",
+    "property utility schedule"
+  ],
+  "property_figure_verification_scope": [
+    "HUD-confirmed geography, household size, income and rent limits",
+    "program and award-cycle effective dates",
+    "placed-in-service and gross-rent-floor dates",
+    "minimum set-aside and Average Income Test elections",
+    "utility allowance method, evidence and effective date",
+    "layered federal, state, bond, HOME and local restrictions",
+    "recorded extended-use and project-specific commitments"
+  ],
+  "activation_requirements": [
+    "exact official bytes, byte lengths and SHA-256 hashes",
+    "final-current and supersession verification",
+    "page-cited deterministic rules",
+    "program and authority separation",
+    "positive, negative, boundary, layered and supersession fixtures",
+    "independent compliance-expert approval bound to the release",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
