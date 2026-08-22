@@ -110,12 +110,8 @@ function input(overrides = {}) {
     household_member_ids: members,
     event_date: "2026-07-15",
     certification_type: "INITIAL",
-    program_inventory: ["LIHTC", "HOME", "HCV_TENANT_BASED"],
-    program_determinations: [
-      determination("LIHTC"),
-      determination("HOME"),
-      determination("HCV_TENANT_BASED"),
-    ],
+    program_inventory: ["LIHTC"],
+    program_determinations: [determination("LIHTC")],
     documents: [
       document("TENANT_APPLICATION", "DOC-APP"),
       document("TENANT_INCOME_CERTIFICATION", "DOC-TIC"),
@@ -148,11 +144,11 @@ function input(overrides = {}) {
   };
 }
 
-test("separate LIHTC, HOME, and HCV eligibility branches pass", () => {
+test("a controlled LIHTC tenant-file determination passes", () => {
   const result = evaluateTenantFileEligibility(input());
   assert.equal(result.finding, "PASS");
   assert.equal(result.rule_id, TENANT_ELIGIBILITY_RULE_ID);
-  assert.equal(result.program_results.length, 3);
+  assert.equal(result.program_results.length, 1);
   assert.equal(result.cross_program_income_substitution_performed, false);
   assert.equal(result.agent_approval_status, "PENDING");
 });
@@ -201,25 +197,28 @@ test("an approved dataset identity mismatch blocks", () => {
 
 test("income-limit datasets cannot cross program branches", () => {
   const data = input();
-  data.program_determinations[1].income_limit_source = dataset("LIHTC");
+  data.program_determinations[0].income_limit_source = dataset("LIHTC", {
+    dataset_id: "HUD_HOME_RENT_LIMITS_FY2026",
+    sha256: "3082bd081727dea71dd62abcb811e3d26ce605f1f645fd5cd8dbcb76e8d4f133",
+    effective_from: "2026-06-01",
+  });
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.reason_code, "INCOME_LIMIT_PROGRAM_BRANCH_CONFLICT");
 });
 
-test("Section 8 student failure remains separate from LIHTC", () => {
+test("HOME and Section 8 datasets stay blocked pending file validation", () => {
   const data = input();
-  data.program_determinations[2].student_status.finding = "FAIL";
+  data.program_inventory.push("HOME");
+  data.program_determinations.push(determination("HOME"));
   const result = evaluateTenantFileEligibility(data);
-  assert.equal(result.finding, "FAIL");
-  const byProgram = Object.fromEntries(result.program_results.map((item) => [item.program_code, item.finding]));
-  assert.equal(byProgram.HCV_TENANT_BASED, "FAIL");
-  assert.equal(byProgram.LIHTC, "PASS");
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(result.reason_code, "CONTROLLED_DATASET_NOT_ACTIVATED");
 });
 
 test("unresolved student status blocks while preserving known failures", () => {
   const data = input();
   data.program_determinations[0].annual_income = "70000.00";
-  data.program_determinations[2].student_status.finding = "NOT_DETERMINED";
+  data.program_determinations[0].student_status.finding = "NOT_DETERMINED";
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
   assert.equal(result.reason_code, "PROGRAM_ELIGIBILITY_NOT_DETERMINED");
@@ -228,6 +227,8 @@ test("unresolved student status blocks while preserving known failures", () => {
 
 test("HAP-assisted branches require a HAP contract", () => {
   const data = input();
+  data.program_inventory.push("HCV_TENANT_BASED");
+  data.program_determinations.push(determination("HCV_TENANT_BASED"));
   data.documents = data.documents.filter((item) => item.document_type !== "HAP_CONTRACT");
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.reason_code, "REQUIRED_TENANT_FILE_DOCUMENT_MISSING");
@@ -253,8 +254,8 @@ test("program inventory must match exact determination handoffs", () => {
 
 test("program-specific student rule substitution is blocked", () => {
   const data = input();
-  data.program_determinations[2].student_status.rule_basis =
-    "LIHTC_IRC_42_FULL_TIME_STUDENT_HOUSEHOLD";
+  data.program_determinations[0].student_status.rule_basis =
+    "HUD_SECTION_8_HIGHER_EDUCATION_STUDENT_24_CFR_5_612";
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.reason_code, "STUDENT_RULE_PROGRAM_BRANCH_CONFLICT");
 });
