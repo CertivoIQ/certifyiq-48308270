@@ -1,0 +1,120 @@
+{
+  "test_id": 75,
+  "batch_id": "KS-IA-IN-IL-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "KS",
+      "agency": "Kansas Housing Resources Corporation",
+      "official_domain": "kshousingcorp.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP_APPLICATIONS",
+          "url": "https://kshousingcorp.org/housing-partners/housing-development-lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "HOUSING_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://kshousingcorp.org/housing-partners/khrc-housing-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Draft and final QAP versions must be distinguished, and the property allocation year must control before any development or compliance rule is activated."
+      ]
+    },
+    {
+      "state_code": "IA",
+      "agency": "Iowa Finance Authority",
+      "official_domain": "opportunityiowa.gov",
+      "sources": [
+        {
+          "type": "HOUSING_TAX_CREDIT_PROGRAM",
+          "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/housing-tax-credit-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_QAP_APPLICATION_RESOURCES",
+          "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/housing-tax-credit-program/resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/home-program/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Separate 4% and 9% QAPs, amended application appendices, compliance-manual updates, and annual limit effective dates must be resolved to the property."
+      ]
+    },
+    {
+      "state_code": "IN",
+      "agency": "Indiana Housing and Community Development Authority",
+      "official_domain": "in.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://www.in.gov/ihcda/developers/rental-housing-tax-credits-rhtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "REAL_ESTATE_COMPLIANCE_MANUAL_FORMS",
+          "url": "https://www.in.gov/ihcda/developers/red-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "REAL_ESTATE_DEPARTMENT_NOTICES",
+          "url": "https://www.in.gov/ihcda/newsroom/red-notices/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The published 2021 compliance manual must be applied with later RED notices, current forms, and 2026 income/rent limits without silently treating the older manual as complete."
+      ]
+    },
+    {
+      "state_code": "IL",
+      "agency": "Illinois Housing Development Authority",
+      "official_domain": "ihda.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://www.ihda.org/developers/tax-credits/low-income-tax-credit/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "DEVELOPER_MULTIFAMILY_DOCUMENT_LIBRARY",
+          "url": "https://www.ihda.org/developers/developer-resource-center/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROPERTY_MANAGER_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://www.ihda.org/rental-housing-main/property-managers/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The newly posted 2027-2028 QAP must not replace the QAP governing an earlier award; compliance manuals, state tax-credit overlays, and annual limits require separate version control."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited rules",
+    "conflict resolution",
+    "required fixtures",
+    "platform approval",
+    "enterprise VP property figure verification"
+  ]
+}

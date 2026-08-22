@@ -77,6 +77,7 @@ jobs:
           bun run test:state-source-batch-7
           bun run test:state-source-batch-8
           bun run test:state-source-batch-9
+          bun run test:state-source-batch-10
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
