@@ -1,0 +1,828 @@
+{
+  "test_id": 64,
+  "title": "National HFA official-source registry",
+  "source_directory": {
+    "publisher": "National Council of State Housing Agencies",
+    "url": "https://www.ncsha.org/membership/hfa-members/",
+    "retrieved_at": "2026-08-22",
+    "role": "DISCOVERY_ONLY"
+  },
+  "jurisdiction_count": 51,
+  "activation_policy": "CANDIDATE_ONLY_UNTIL_TEST_63_RELEASE_GATE_PASSES",
+  "warning": "NCSHA identifies HFA websites but does not validate document currency, supersession, rule interpretation, fixtures, or independent approval.",
+  "jurisdictions": [
+    {
+      "state_code": "AL",
+      "agency": "Alabama Housing Finance Authority",
+      "official_domain": "ahfa.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "AK",
+      "agency": "Alaska Housing Finance Corporation",
+      "official_domain": "ahfc.us",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "AZ",
+      "agency": "Arizona Department of Housing",
+      "official_domain": "housing.az.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "AR",
+      "agency": "Arkansas Development Finance Authority",
+      "official_domain": "arkansas.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "CA",
+      "agency": "California Housing Finance Agency",
+      "official_domain": "calhfa.ca.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "CO",
+      "agency": "Colorado Housing and Finance Authority",
+      "official_domain": "chfainfo.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "CT",
+      "agency": "Connecticut Housing Finance Authority",
+      "official_domain": "chfa.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "DE",
+      "agency": "Delaware State Housing Authority",
+      "official_domain": "destatehousing.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "DC",
+      "agency": "District of Columbia Housing Finance Agency",
+      "official_domain": "dchfa.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "FL",
+      "agency": "Florida Housing Finance Corporation",
+      "official_domain": "floridahousing.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "GA",
+      "agency": "Georgia Department of Community Affairs / Georgia Housing and Finance Authority",
+      "official_domain": "dca.georgia.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "HI",
+      "agency": "Hawaii Housing Finance and Development Corporation",
+      "official_domain": "hawaii.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "ID",
+      "agency": "Idaho Housing and Finance Association",
+      "official_domain": "idahohousing.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "IL",
+      "agency": "Illinois Housing Development Authority",
+      "official_domain": "ihda.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "IN",
+      "agency": "Indiana Housing and Community Development Authority",
+      "official_domain": "in.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "IA",
+      "agency": "Iowa Finance Authority",
+      "official_domain": "opportunityiowa.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "KS",
+      "agency": "Kansas Housing Resources Corporation",
+      "official_domain": "kshousingcorp.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "KY",
+      "agency": "Kentucky Housing Corporation",
+      "official_domain": "kyhousing.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "LA",
+      "agency": "Louisiana Housing Corporation",
+      "official_domain": "lhc.la.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "ME",
+      "agency": "MaineHousing",
+      "official_domain": "mainehousing.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "MD",
+      "agency": "Maryland Department of Housing and Community Development",
+      "official_domain": "dhcd.maryland.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "MA",
+      "agency": "MassHousing",
+      "official_domain": "masshousing.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "MI",
+      "agency": "Michigan State Housing Development Authority",
+      "official_domain": "michigan.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "MN",
+      "agency": "Minnesota Housing",
+      "official_domain": "mnhousing.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "MS",
+      "agency": "Mississippi Home Corporation",
+      "official_domain": "mshomecorp.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "MO",
+      "agency": "Missouri Housing Development Commission",
+      "official_domain": "mhdc.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "MT",
+      "agency": "Montana Board of Housing",
+      "official_domain": "commerce.mt.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "NE",
+      "agency": "Nebraska Investment Finance Authority",
+      "official_domain": "nifa.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "NV",
+      "agency": "Nevada Housing Division",
+      "official_domain": "housing.nv.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "NH",
+      "agency": "New Hampshire Housing",
+      "official_domain": "nhhousing.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "NJ",
+      "agency": "New Jersey Housing and Mortgage Finance Agency",
+      "official_domain": "njhousing.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "NM",
+      "agency": "Housing New Mexico",
+      "official_domain": "housingnm.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "NY",
+      "agency": "New York State Homes and Community Renewal",
+      "official_domain": "hcr.ny.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "NC",
+      "agency": "North Carolina Housing Finance Agency",
+      "official_domain": "nchfa.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "ND",
+      "agency": "North Dakota Housing Finance Agency",
+      "official_domain": "ndhousing.nd.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "OH",
+      "agency": "Ohio Housing Finance Agency",
+      "official_domain": "ohiohome.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "OK",
+      "agency": "Oklahoma Housing Finance Agency",
+      "official_domain": "ohfa.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "OR",
+      "agency": "Oregon Housing and Community Services",
+      "official_domain": "ohcs.oregon.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "PA",
+      "agency": "Pennsylvania Housing Finance Agency",
+      "official_domain": "phfa.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "RI",
+      "agency": "Rhode Island Housing",
+      "official_domain": "rihousing.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "SC",
+      "agency": "South Carolina State Housing Finance and Development Authority",
+      "official_domain": "schousing.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "SD",
+      "agency": "South Dakota Housing Development Authority",
+      "official_domain": "sdhda.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "TN",
+      "agency": "Tennessee Housing Development Agency",
+      "official_domain": "thda.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "TX",
+      "agency": "Texas Department of Housing and Community Affairs",
+      "official_domain": "tdhca.texas.gov",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "UT",
+      "agency": "Utah Housing Corporation",
+      "official_domain": "utahhousingcorp.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "VT",
+      "agency": "Vermont Housing Finance Agency",
+      "official_domain": "vhfa.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "VA",
+      "agency": "Virginia Housing",
+      "official_domain": "virginiahousing.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "WA",
+      "agency": "Washington State Housing Finance Commission",
+      "official_domain": "wshfc.org",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "WV",
+      "agency": "West Virginia Housing Development Fund",
+      "official_domain": "wvhdf.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "EXISTING_BLOCKED_CANDIDATE",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "WI",
+      "agency": "Wisconsin Housing and Economic Development Authority",
+      "official_domain": "wheda.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    },
+    {
+      "state_code": "WY",
+      "agency": "Wyoming Community Development Authority",
+      "official_domain": "wyomingcda.com",
+      "source_status": "TRUSTED_DOMAIN_CANDIDATE",
+      "pack_status": "NOT_YET_INGESTED",
+      "required_next_steps": [
+        "Locate current allocation plan and program manual",
+        "Locate current compliance manual and forms index",
+        "Capture exact official bytes and SHA-256 identities",
+        "Resolve currency and supersession conflicts",
+        "Create page-cited deterministic rules and fixtures",
+        "Obtain independent compliance-expert approval"
+      ]
+    }
+  ],
+  "additional_administering_agencies": [
+    {
+      "jurisdiction": "CA",
+      "agency": "California Tax Credit Allocation Committee",
+      "official_domain": "treasurer.ca.gov",
+      "role": "LIHTC_ADMINISTRATOR_CANDIDATE"
+    },
+    {
+      "jurisdiction": "DC",
+      "agency": "District of Columbia Department of Housing and Community Development",
+      "official_domain": "dhcd.dc.gov",
+      "role": "ASSOCIATE_MEMBER_CANDIDATE"
+    },
+    {
+      "jurisdiction": "MA",
+      "agency": "Executive Office of Housing and Livable Communities",
+      "official_domain": "mass.gov",
+      "role": "ASSOCIATE_MEMBER_CANDIDATE"
+    },
+    {
+      "jurisdiction": "NY",
+      "agency": "New York City Housing Development Corporation",
+      "official_domain": "nychdc.com",
+      "role": "LOCAL_ADMINISTRATOR_CANDIDATE"
+    }
+  ],
+  "territories": [
+    {
+      "state_code": "GU",
+      "agency": "Guam Housing and Urban Renewal Authority",
+      "official_domain": "ghura.org"
+    },
+    {
+      "state_code": "MP",
+      "agency": "Northern Marianas Housing Corporation",
+      "official_domain": "nmhcgov.net"
+    },
+    {
+      "state_code": "PR",
+      "agency": "Puerto Rico Housing Finance Authority",
+      "official_domain": "afv.pr.gov"
+    },
+    {
+      "state_code": "VI",
+      "agency": "Virgin Islands Housing Finance Authority",
+      "official_domain": "vihfa.gov"
+    }
+  ]
+}
