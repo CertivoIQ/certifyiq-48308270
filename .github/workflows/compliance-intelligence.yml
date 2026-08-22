@@ -86,6 +86,7 @@ jobs:
           bun run test:state-source-wv
           bun run test:state-source-wy
           bun run test:state-source-wi
+          bun run test:state-source-wa
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
