@@ -165,6 +165,17 @@ function evaluateRecertification(program, record, input, eventDate) {
       { program_code: program },
     );
   }
+  if (
+    !Array.isArray(record.household_member_ids) ||
+    !record.household_member_ids.length
+  ) {
+    return blocked(
+      "RECERTIFICATION_HOUSEHOLD_ROSTER_INVALID",
+      "The program certification roster must be a nonempty structured list.",
+      [`${prefix}.household_member_ids`],
+      { program_code: program },
+    );
+  }
   if (!sameRoster(record.household_member_ids, input.household_member_ids)) {
     return blocked(
       "RECERTIFICATION_HOUSEHOLD_ROSTER_CONFLICT",
@@ -474,6 +485,29 @@ function evaluateAvailableUnitRule(input, eventDate) {
   } catch (error) {
     return blocked("OVER_INCOME_DETERMINATION_DATE_INVALID", error.message, ["lihtc_occupancy.over_income_determined_date"]);
   }
+  if (determinedDate > eventDate) {
+    return blocked(
+      "OVER_INCOME_DETERMINATION_FUTURE_DATED",
+      "The over-income determination cannot postdate the current evaluation.",
+      ["lihtc_occupancy.over_income_determined_date"],
+    );
+  }
+
+  let overIncomeUnitBedrooms = null;
+  if (occupancy.deep_rent_skewed !== true) {
+    overIncomeUnitBedrooms = Number(occupancy.over_income_unit_bedrooms);
+    if (
+      !Number.isFinite(overIncomeUnitBedrooms) ||
+      !Number.isInteger(overIncomeUnitBedrooms) ||
+      overIncomeUnitBedrooms < 0
+    ) {
+      return blocked(
+        "OVER_INCOME_UNIT_SIZE_INVALID",
+        "The standard available-unit rule requires a validated nonnegative bedroom count for the over-income unit.",
+        ["lihtc_occupancy.over_income_unit_bedrooms"],
+      );
+    }
+  }
 
   const failures = [];
   const evaluatedEvents = [];
@@ -513,7 +547,7 @@ function evaluateAvailableUnitRule(input, eventDate) {
 
     const relevant = occupancy.deep_rent_skewed === true
       ? unitEvent.was_low_income_before_vacancy === true
-      : Number(unitEvent.bedrooms) <= Number(occupancy.over_income_unit_bedrooms);
+      : Number(unitEvent.bedrooms) <= overIncomeUnitBedrooms;
     if (!relevant) continue;
 
     let newResidentIncome;
@@ -532,10 +566,15 @@ function evaluateAvailableUnitRule(input, eventDate) {
           permittedIncome = forty;
         }
       } else if (setAside === "AVERAGE_INCOME") {
+        const projectAverageAfterDesignation = Number(
+          unitEvent.project_average_after_designation,
+        );
         if (
           unitEvent.average_income_designation_validated !== true ||
           unitEvent.maximum_permitted_income_calculation_validated !== true ||
-          Number(unitEvent.project_average_after_designation) > 60
+          !Number.isFinite(projectAverageAfterDesignation) ||
+          projectAverageAfterDesignation < 0 ||
+          projectAverageAfterDesignation > 60
         ) {
           return blocked("AVERAGE_INCOME_AVAILABLE_UNIT_DESIGNATION_NOT_VALIDATED", "The available unit must preserve a validated project average no greater than 60 percent.", [prefix]);
         }
