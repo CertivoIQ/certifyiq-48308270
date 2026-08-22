@@ -1,0 +1,155 @@
+{
+  "test_id": 80,
+  "title": "Nationwide state-pack completeness and duplicate-authority audit",
+  "status": "BLOCKED_COVERAGE_INVENTORY_ONLY",
+  "activation_policy": "COVERAGE_DOES_NOT_ACTIVATE_ANY_STATE_OR_TERRITORY_PACK",
+  "expected_scope": {
+    "states": 50,
+    "districts": 1,
+    "territories": 4,
+    "total_jurisdictions": 55
+  },
+  "state_and_district_codes": [
+    "AL",
+    "AK",
+    "AZ",
+    "AR",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "DC",
+    "FL",
+    "GA",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "IA",
+    "KS",
+    "KY",
+    "LA",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "MN",
+    "MS",
+    "MO",
+    "MT",
+    "NE",
+    "NV",
+    "NH",
+    "NJ",
+    "NM",
+    "NY",
+    "NC",
+    "ND",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VT",
+    "VA",
+    "WA",
+    "WV",
+    "WI",
+    "WY"
+  ],
+  "territory_codes": [
+    "GU",
+    "MP",
+    "PR",
+    "VI"
+  ],
+  "separately_managed_candidates": [
+    {
+      "state_code": "WV",
+      "file": "west-virginia-state-pack-candidate.json",
+      "test_id": 63
+    }
+  ],
+  "batch_files": [
+    "first-state-source-batch-candidates.json",
+    "second-state-source-batch-candidates.json",
+    "third-state-source-batch-candidates.json",
+    "fourth-state-source-batch-candidates.json",
+    "fifth-state-source-batch-candidates.json",
+    "sixth-state-source-batch-candidates.json",
+    "seventh-state-source-batch-candidates.json",
+    "eighth-state-source-batch-candidates.json",
+    "ninth-state-source-batch-candidates.json",
+    "tenth-state-source-batch-candidates.json",
+    "eleventh-state-source-batch-candidates.json",
+    "twelfth-state-source-batch-candidates.json",
+    "thirteenth-state-source-batch-candidates.json",
+    "final-state-source-batch-candidates.json"
+  ],
+  "allowed_scoped_multi_authority": {
+    "NY": {
+      "required_scopes": [
+        "STATEWIDE",
+        "NEW_YORK_CITY"
+      ],
+      "statewide_allocator_contains": "Homes and Community Renewal",
+      "local_overlay_contains": "New York City Housing Development Corporation"
+    }
+  },
+  "authority_resolutions": [
+    {
+      "state_code": "CA",
+      "canonical_allocator": "California Tax Credit Allocation Committee",
+      "overlay_agencies": [
+        "California Housing Finance Agency"
+      ],
+      "discovery_directory_is_not_authority": true
+    },
+    {
+      "state_code": "DC",
+      "canonical_allocator": "District of Columbia Department of Housing and Community Development",
+      "overlay_agencies": [
+        "District of Columbia Housing Finance Agency"
+      ],
+      "discovery_directory_is_not_authority": true
+    },
+    {
+      "state_code": "MA",
+      "canonical_allocator": "Executive Office of Housing and Livable Communities",
+      "overlay_agencies": [
+        "MassHousing"
+      ],
+      "discovery_directory_is_not_authority": true
+    },
+    {
+      "state_code": "NY",
+      "canonical_allocator": "New York State Homes and Community Renewal / HFA",
+      "overlay_agencies": [
+        "New York City Housing Development Corporation"
+      ],
+      "scope_required": true
+    },
+    {
+      "state_code": "NM",
+      "canonical_allocator": "New Mexico Mortgage Finance Authority (Housing New Mexico)",
+      "must_not_alias_state_code": "MP"
+    },
+    {
+      "state_code": "MP",
+      "canonical_allocator": "Northern Marianas Housing Corporation",
+      "must_not_alias_state_code": "NM"
+    }
+  ],
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "conclusions": [
+    "Every state and the District of Columbia has exactly one candidate jurisdiction owner after scoped authority reconciliation.",
+    "Guam, Northern Mariana Islands, Puerto Rico, and U.S. Virgin Islands are explicit territorial candidates.",
+    "West Virginia remains separately managed and blocked under Test 63.",
+    "Coverage inventory is not a validated rule pack and cannot support a compliance determination."
+  ]
+}
