@@ -120,19 +120,39 @@ function numericCell(reference, value, formula = null) {
   return `<c r="${reference}">${formula ? `<f>${formula}</f>` : ""}<v>${value}</v></c>`;
 }
 
-function workbookFixture({ headers = ["fips", "lim50_1", "lim60_1"], external = false } = {}) {
-  const headerCells = headers.map((header, index) => inlineCell(`${String.fromCharCode(65 + index)}1`, header)).join("");
+function sharedCell(reference, index) {
+  return `<c r="${reference}" t="s"><v>${index}</v></c>`;
+}
+
+function workbookFixture({
+  headers = ["fips", "lim50_1", "lim60_1"],
+  external = false,
+  useSharedStrings = false,
+} = {}) {
+  const shared = [...headers, "5400100000", "5400300000"];
+  const headerCells = headers
+    .map((header, index) =>
+      useSharedStrings
+        ? sharedCell(`${String.fromCharCode(65 + index)}1`, index)
+        : inlineCell(`${String.fromCharCode(65 + index)}1`, header),
+    )
+    .join("");
   const rows = [
     `<row r="1">${headerCells}</row>`,
-    `<row r="2">${inlineCell("A2", "5400100000")}${numericCell("B2", "61039.99999999999")}${numericCell("C2", "73248")}</row>`,
-    `<row r="3">${inlineCell("A3", "5400300000")}${numericCell("B3", "62500", "125000/2")}${numericCell("C3", "75000")}</row>`,
+    `<row r="2">${useSharedStrings ? sharedCell("A2", headers.length) : inlineCell("A2", "5400100000")}${numericCell("B2", "61039.99999999999")}${numericCell("C2", "73248")}</row>`,
+    `<row r="3">${useSharedStrings ? sharedCell("A3", headers.length + 1) : inlineCell("A3", "5400300000")}${numericCell("B3", "62500", "125000/2")}${numericCell("C3", "75000")}</row>`,
   ].join("");
-  return storedZip({
+  const files = {
     "[Content_Types].xml": "<?xml version=\"1.0\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"></Types>",
     "xl/workbook.xml": "<?xml version=\"1.0\"?><workbook xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets><sheet name=\"Limits\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>",
     "xl/_rels/workbook.xml.rels": `<?xml version="1.0"?><Relationships><Relationship Id="rId1" Type="worksheet" Target="${external ? "https://example.com/sheet.xml" : "worksheets/sheet1.xml"}"${external ? ' TargetMode="External"' : ""}/></Relationships>`,
     "xl/worksheets/sheet1.xml": `<?xml version="1.0"?><worksheet><sheetData>${rows}</sheetData></worksheet>`,
-  });
+  };
+  if (useSharedStrings) {
+    files["xl/sharedStrings.xml"] =
+      `<?xml version="1.0"?><sst>${shared.map((value) => `<si><t>${value}</t></si>`).join("")}</sst>`;
+  }
+  return storedZip(files);
 }
 
 test("parses controlled rows directly from XLSX bytes", () => {
@@ -148,6 +168,16 @@ test("parses controlled rows directly from XLSX bytes", () => {
   assert.equal(result.records[0].limit_values.lim50_1, "61039.99999999999");
   assert.equal(result.records[1].source_geography_id, "5400300000");
   assert.match(result.workbook_sha256, /^[a-f0-9]{64}$/);
+});
+
+test("parses shared-string headers and geography keys", () => {
+  const result = parseControlledFy2026Workbook({
+    dataset_id: "HUD_MTSP_LIMITS_FY2026",
+    workbook_bytes: workbookFixture({ useSharedStrings: true }),
+  });
+  assert.equal(result.parser_status, "PARSED");
+  assert.equal(result.record_count, 2);
+  assert.equal(result.records[0].source_geography_id, "5400100000");
 });
 
 test("rejects bytes whose ZIP content no longer matches its CRC", () => {
