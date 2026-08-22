@@ -1,0 +1,179 @@
+{
+  "test_id": 93,
+  "batch_id": "RI-PR-PA-OR-EXACT-SOURCE-AUDIT",
+  "candidate_version": "2026.1-candidate",
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "captured_at": "2026-08-22T22:35:00Z",
+  "jurisdictions": [
+    {
+      "state_code": "RI",
+      "agency": "Rhode Island Housing",
+      "official_domain": "rihousing.com",
+      "program_codes": ["LIHTC", "TAX_EXEMPT_BOND", "HOME"],
+      "source_page": "https://www.rihousing.com/partners/builders-developers/developers-handbook/",
+      "sources": [
+        {
+          "source_type": "CURRENT_QAP",
+          "title": "2026 Qualified Allocation Plan",
+          "observed_url": "https://www.rihousing.com/wp-content/uploads/2026/01/2026-Section-7-QAP-2.pdf",
+          "observed_page_count": 55,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "DEVELOPERS_HANDBOOK_UPDATES",
+          "title": "2026 Developers Handbook Updates",
+          "observed_url": "https://www.rihousing.com/wp-content/uploads/2026/01/2026-Developers-Handbook-Updates.pdf",
+          "observed_page_count": 6,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "DEVELOPERS_HANDBOOK_INDEX",
+          "title": "RIHousing Developers Handbook",
+          "observed_url": "https://www.rihousing.com/partners/builders-developers/developers-handbook/",
+          "status": "OFFICIAL_PAGE_OBSERVED_COMPONENT_COMPOSITION_REQUIRES_CAPTURE"
+        }
+      ],
+      "blocking_conflicts": [
+        "The QAP references a separate compliance manual and the handbook publishes component and update links; exact current composition, hashes and supersession require validation.",
+        "The QAP uses a 58 percent Average Income Test maximum that must remain tied to the exact 2026 authority and property election.",
+        "Income limits and utility allowances remain property, date and program specific."
+      ]
+    },
+    {
+      "state_code": "PR",
+      "agency": "Puerto Rico Housing Finance Authority",
+      "official_domain": "afv.pr.gov",
+      "program_codes": ["LIHTC", "HOME", "HTF"],
+      "source_page": "https://www.afv.pr.gov/nofa-2025/",
+      "sources": [
+        {
+          "source_type": "LATEST_VERIFIED_QAP",
+          "title": "2025 Qualified Allocation Plan",
+          "observed_url": "https://www.afv.pr.gov/wp-content/uploads/2025/10/qap25.pdf",
+          "observed_page_count": 65,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_2025_CYCLE_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "LIHTC_LIMITS",
+          "title": "2025 LIHTC Income and Rent Limits",
+          "observed_url": "https://www.afv.pr.gov/wp-content/uploads/2025/10/annex-c-2025-lihtc-income-and-rent-limits.pdf",
+          "observed_page_count": 14,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_2025_CYCLE_PROPERTY_SELECTION_REQUIRED"
+        },
+        {
+          "source_type": "COMPLIANCE_MONITORING_PLAN",
+          "title": "Compliance Monitoring Plan revised July 2016",
+          "observed_url": "https://www.afv.pr.gov/wp-content/uploads/2025/10/annex-o-compliance-monitoring-plan-rev-july-2016.pdf",
+          "observed_page_count": 130,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_STALE_MANUAL_RECONCILIATION_REQUIRED"
+        }
+      ],
+      "blocking_conflicts": [
+        "The latest verified public allocation cycle is 2025; no adopted 2026 QAP was verified.",
+        "The 2025 QAP links a compliance monitoring plan revised in July 2016, requiring current notice and supersession reconciliation.",
+        "The 2025 limits cannot be used for a 2026 certification event."
+      ]
+    },
+    {
+      "state_code": "PA",
+      "agency": "Pennsylvania Housing Finance Agency",
+      "official_domain": "phfa.org",
+      "program_codes": ["LIHTC", "TAX_EXEMPT_BOND", "PA_LIHTC", "AHTC"],
+      "source_page": "https://www.phfa.org/mhp/developers/lihtc.aspx",
+      "sources": [
+        {
+          "source_type": "CURRENT_QAP",
+          "title": "2025 and 2026 Qualified Allocation Plan",
+          "observed_url": "https://www.phfa.org/forms/multifamily_program_notices/qap/2025_and_2026/2025-2026-lihtc-qap.pdf",
+          "observed_page_count": 63,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "BOND_TEST_POLICY",
+          "title": "March 19, 2026 Bond Test Policy",
+          "observed_url": "https://www.phfa.org/forms/multifamily_program_notices/qap/2025_and_2026/2026-bond-test-policy.pdf",
+          "observed_page_count": 1,
+          "status": "OFFICIAL_EXACT_LINK_OBSERVED_BOND_SCOPE_BINARY_HASH_NOT_CAPTURED"
+        },
+        {
+          "source_type": "COMPLIANCE_MONITORING_INDEX",
+          "title": "Property Management and Compliance Monitoring Procedures",
+          "observed_url": "https://www.phfa.org/mhp/propertymanagement/",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_MANUAL_COMPOSITION_REQUIRES_CAPTURE"
+        }
+      ],
+      "blocking_conflicts": [
+        "The 2025/2026 QAP, bond policy, compliance procedures and later program notices require exact release composition and effective-date validation.",
+        "Federal LIHTC, PA LIHTC and AHTC authorities cannot be substituted for one another.",
+        "Rent, income, utility and property elections require VP Compliance verification."
+      ]
+    },
+    {
+      "state_code": "OR",
+      "agency": "Oregon Housing and Community Services",
+      "official_domain": "oregon.gov",
+      "program_codes": ["LIHTC", "TAX_EXEMPT_BOND", "HOME", "OAHTC"],
+      "source_page": "https://www.oregon.gov/ohcs/rental-housing/housing-development/development-resources/pages/low-income-housing-tax-credits.aspx",
+      "sources": [
+        {
+          "source_type": "LIHTC_PROGRAM",
+          "title": "Low-Income Housing Tax Credit Program",
+          "observed_url": "https://www.oregon.gov/ohcs/rental-housing/housing-development/development-resources/pages/low-income-housing-tax-credits.aspx",
+          "status": "OFFICIAL_PAGE_OBSERVED"
+        },
+        {
+          "source_type": "QAP_INDEX",
+          "title": "Qualified Allocation Plan",
+          "observed_url": "https://www.oregon.gov/ohcs/rental-housing/housing-development/development-resources/Pages/qualified-allocation-plan.aspx",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_QAP_BINARY_REQUIRES_CAPTURE"
+        },
+        {
+          "source_type": "LIHTC_COMPLIANCE_INDEX",
+          "title": "LIHTC Program Compliance",
+          "observed_url": "https://www.oregon.gov/ohcs/compliance-monitoring/Pages/compliance-lihtc-program.aspx",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_MANUAL_AND_FORMS_REQUIRE_CAPTURE"
+        },
+        {
+          "source_type": "AVERAGE_INCOME_TEST_POLICY",
+          "title": "Average Income Test Policy",
+          "observed_url": "https://www.oregon.gov/ohcs/rental-housing/housing-development/development-resources/Pages/average-income-test-policy.aspx",
+          "status": "OFFICIAL_PAGE_OBSERVED_EXACT_POLICY_BINARY_REQUIRES_CAPTURE"
+        }
+      ],
+      "blocking_conflicts": [
+        "The official program references the 2025 QAP for the 2026 selection process while 2027 updates are under development; award-cycle and supersession facts must be bound.",
+        "The QAP, ORCA manuals, compliance material and Average Income Test policy require exact identities and page-cited reconciliation.",
+        "Oregon's 45-year additional extended-use requirement and property-specific limits must be verified against the project authority record."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA or declaration",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement",
+    "completed owner certification",
+    "property utility schedule"
+  ],
+  "property_figure_verification_scope": [
+    "HUD-confirmed geography, household size, income and rent limits",
+    "program and award-cycle effective dates",
+    "placed-in-service and gross-rent-floor dates",
+    "minimum set-aside and Average Income Test elections",
+    "utility allowance method, evidence and effective date",
+    "layered federal, state, bond, HOME and local restrictions",
+    "recorded extended-use and project-specific commitments"
+  ],
+  "activation_requirements": [
+    "exact official bytes, byte lengths and SHA-256 hashes",
+    "final-current and supersession verification",
+    "page-cited deterministic rules",
+    "program and authority separation",
+    "positive, negative, boundary, layered and supersession fixtures",
+    "independent compliance-expert approval bound to the release",
+    "enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
