@@ -198,5 +198,48 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     value: string | number,
   ): string;
 
+  export const FY2026_LIMIT_INGESTION_ENGINE_BUILD: string;
+  export const FY2026_LIMIT_ACTIVATION_STATUS: {
+    active: "ACTIVE";
+    blocked: "BLOCKED";
+  };
+  export const CONTROLLED_FY2026_GEOGRAPHY_CROSSWALK: readonly Record<string, unknown>[];
+  export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES: Readonly<
+    Record<string, Readonly<Record<string, unknown>>>
+  >;
+
+  export interface Fy2026IncomeLimitActivationResult {
+    activation_status: "ACTIVE" | "BLOCKED";
+    rule_engine_authority: "ALLOWED" | "BLOCKED";
+    finding: FindingStatus;
+    reason_code?: string;
+    missing_inputs?: string[];
+    dataset_id?: string;
+    human_approval_required: true;
+    [key: string]: unknown;
+  }
+
+  export function normalizeFy2026IncomeLimitDollar(
+    value: string | number,
+  ): string;
+
+  export function validateFy2026IncomeLimitRecords(
+    records: readonly Record<string, unknown>[],
+    options?: {
+      expectedRecordCount?: number;
+      expectedLegacyCrosswalkCount?: number;
+    },
+  ): Record<string, unknown>;
+
+  export function evaluateFy2026IncomeLimitSourceActivation(
+    input?: Record<string, unknown>,
+  ): Fy2026IncomeLimitActivationResult;
+
+  export function validateFy2026IncomeLimitProgramHandoff(
+    programCode: string,
+    datasetId: string,
+    activationReceipt?: Record<string, unknown> | null,
+  ): Record<string, unknown>;
+
   export function signOffAllowed(result: EvaluationResult): boolean;
 }
