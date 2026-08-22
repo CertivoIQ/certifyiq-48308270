@@ -1,0 +1,110 @@
+{
+  "test_id": 71,
+  "batch_id": "NY-HCR-NYCHDC-NJ-NH-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "authorities": [
+    {
+      "jurisdiction": "NY",
+      "scope": "STATEWIDE",
+      "agency": "New York State Homes and Community Renewal / HFA",
+      "official_domain": "hcr.ny.gov",
+      "sources": [
+        {
+          "type": "2026_9_PERCENT_RFP_AND_QAP",
+          "url": "https://hcr.ny.gov/2026-multifamily-finance-9-lihtc-rfp",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "2026_CAPITAL_PROGRAMS_MANUAL",
+          "url": "https://hcr.ny.gov/capital-programs-manual-2026",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FOUR_PERCENT_LIHTC",
+          "url": "https://hcr.ny.gov/low-income-housing-tax-credit-program-4pct",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "9% and 4% authorities and project types must remain distinct."
+      ]
+    },
+    {
+      "jurisdiction": "NY",
+      "scope": "NEW_YORK_CITY",
+      "agency": "New York City Housing Development Corporation",
+      "official_domain": "nychdc.com",
+      "sources": [
+        {
+          "type": "AGENCY_DISCOVERY_ROOT",
+          "url": "https://www.nychdc.com/",
+          "status": "BLOCKED_REQUIRED_LIHTC_SOURCE_PAGES_NOT_VERIFIED"
+        }
+      ],
+      "conflicts": [
+        "No current HDC QAP/compliance/form source pages were verified from indexed official results."
+      ]
+    },
+    {
+      "jurisdiction": "NJ",
+      "scope": "STATEWIDE",
+      "agency": "New Jersey Housing and Mortgage Finance Agency",
+      "official_domain": "njhousing.gov",
+      "sources": [
+        {
+          "type": "UNIAP_LIHTC_APPLICATION_AND_QAP_RESOURCES",
+          "url": "https://njhousing.gov/developers/uniap/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "AGENCY_LIHTC_AND_COMPLIANCE_PORTAL_INDEX",
+          "url": "https://www.njhousing.gov/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Current QAP year, compliance manual, and form versions require exact-byte validation."
+      ]
+    },
+    {
+      "jurisdiction": "NH",
+      "scope": "STATEWIDE",
+      "agency": "New Hampshire Housing",
+      "official_domain": "nhhousing.org",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_AND_APPLICATION",
+          "url": "https://www.nhhousing.org/developer-financing/lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE_MANUALS_FORMS_AND_LIMITS",
+          "url": "https://www.nhhousing.org/developer-financing/asset-management/low-income-housing-tax-credit/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "2027-cycle and current compliance sources require effective-date reconciliation."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "authority and geographic scope reconciliation",
+    "final-current verification",
+    "page-cited deterministic rules",
+    "conflict resolution",
+    "required fixtures",
+    "platform release approval",
+    "enterprise VP property figure verification"
+  ]
+}
