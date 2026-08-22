@@ -12,22 +12,22 @@
         {
           "type": "LIHTC_PROGRAM_QAP_GUIDELINES_FORMS",
           "url": "https://www.chfa.org/developers/tax-credit-program/lihtc/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "LIHTC_COMPLIANCE",
           "url": "https://www.chfa.org/owners-property-managers/lihtc-compliance/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "INCOME_LIMITS_GROSS_RENTS",
           "url": "https://www.chfa.org/rental-housing-for-owners-and-management-agents-tools-calculators-look-ups/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "CONTROLLED_DOCUMENT_INDEX",
           "url": "https://www.chfa.org/documents/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         }
       ],
       "conflicts": [
@@ -44,22 +44,22 @@
         {
           "type": "QUALIFIED_ALLOCATION_PLAN",
           "url": "https://www.chfainfo.com/rental-housing/housing-credit/qualified-allocation-plan",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "LIHTC_PROGRAM_COMPLIANCE",
           "url": "https://www.chfainfo.com/rental-housing/asset-management/lihtc-program-compliance",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "COMPLIANCE_FORMS",
           "url": "https://www.chfainfo.com/rental-housing/asset-management/compliance-forms",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "MULTIFAMILY_COMPLIANCE_UPDATES",
           "url": "https://www.chfainfo.com/rental-housing/asset-management/multifamily-program-compliance/multifamily-loan-compliance-enews",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         }
       ],
       "conflicts": [
@@ -79,38 +79,41 @@
         {
           "type": "CTCAC_LIHTC_PROGRAM",
           "url": "https://www.treasurer.ca.gov/ctcac/tax",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "CTCAC_QUALIFIED_ALLOCATION_PLAN_REGULATIONS",
           "url": "https://www.treasurer.ca.gov/ctcac/programreg/regulations",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "CTCAC_COMPLIANCE",
           "url": "https://www.treasurer.ca.gov/ctcac/compliance",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "CTCAC_COMPLIANCE_MANUAL",
           "url": "https://www.treasurer.ca.gov/ctcac/compliance/manual",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "CTCAC_COMPLIANCE_FORMS",
           "url": "https://www.treasurer.ca.gov/ctcac/compliance/forms",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "CALHFA_FINANCING_LIMIT_OVERLAY",
           "url": "https://www.calhfa.ca.gov/multifamily/asset/mtsp/index.htm",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         }
       ],
       "conflicts": [
         "CTCAC is the statewide LIHTC allocation and compliance authority; CalHFA requirements are separate financing and regulatory-agreement overlays and cannot replace CTCAC rules.",
         "Placed-in-service cohorts, regulatory agreement terms, joint monitoring, and 4% versus 9% application paths require property-specific resolution.",
         "CTCAC controls statewide LIHTC; CalHFA materials are separate financing overlays."
+      ],
+      "related_agencies": [
+        "California Housing Finance Agency"
       ]
     },
     {
@@ -121,22 +124,22 @@
         {
           "type": "LIHTC_PROGRAM",
           "url": "https://adfa.arkansas.gov/programs/housing-development/low-income-housing-tax-credit/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "LIHTC_DOCUMENT_ARCHIVE",
           "url": "https://adfa.arkansas.gov/document_category/lihtc-documents/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "COMPLIANCE_AND_MONITORING",
           "url": "https://adfa.arkansas.gov/compliance-and-monitoring/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         },
         {
           "type": "COMPLIANCE_MANUAL_FORMS_LIMITS_ARCHIVE",
           "url": "https://adfa.arkansas.gov/document_category/compliance-and-monitoring/",
-          "status": "OFFICIAL_CANDIDATE_PENDING_EXACT_BYTES_AND_HASHES"
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
         }
       ],
       "conflicts": [
@@ -151,7 +154,8 @@
     "property Form 8609",
     "LURA or declaration",
     "HAP contract",
-    "property utility schedule"
+    "property utility schedule",
+    "LURA"
   ],
   "activation_requirements": [
     "exact official bytes and SHA-256 hashes",
