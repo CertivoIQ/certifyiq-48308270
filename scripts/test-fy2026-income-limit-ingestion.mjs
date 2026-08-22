@@ -150,15 +150,34 @@ test("program branches reject cross-program dataset substitution", () => {
   assert.equal(result.reason_code, "INCOME_LIMIT_PROGRAM_BRANCH_CONFLICT");
 });
 
-test("program branches require a receipt bound to actual controlled bytes", () => {
+test("public source hashes cannot be forged into activation receipts", () => {
   const result = validateFy2026IncomeLimitProgramHandoff(
     "LIHTC",
     "HUD_MTSP_LIMITS_FY2026",
     {
       activation_status: "ACTIVE",
       dataset_id: "HUD_MTSP_LIMITS_FY2026",
-      source_sha256: "0".repeat(64),
+      source_sha256:
+        "fbc0af877e610d9cd3d9192febc6d4827319874605adc8897ca95366afac3465",
+      normalized_records_sha256: "1".repeat(64),
+      record_count: 4764,
+      engine_build: FY2026_LIMIT_INGESTION_ENGINE_BUILD,
     },
   );
   assert.equal(result.reason_code, "INCOME_LIMIT_ACTIVATION_RECEIPT_REQUIRED");
+});
+
+test("standalone normalized records are validation output, not activation authority", () => {
+  const validation = validateFy2026IncomeLimitRecords(
+    [record("5400199999")],
+    { expectedRecordCount: 1 },
+  );
+  assert.equal(validation.validation_status, "VALIDATED");
+  assert.equal(validation.activation_status, undefined);
+  const handoff = validateFy2026IncomeLimitProgramHandoff(
+    "LIHTC",
+    "HUD_MTSP_LIMITS_FY2026",
+    validation,
+  );
+  assert.equal(handoff.reason_code, "INCOME_LIMIT_ACTIVATION_RECEIPT_REQUIRED");
 });
