@@ -15,6 +15,7 @@
     "test:recert": "node --test scripts/test-recertification-occupancy-controls.mjs",
     "test:limits": "node --test scripts/test-fy2026-income-limit-ingestion.mjs",
     "test:xlsx": "node --test scripts/test-fy2026-xlsx-workbook-parser.mjs",
+    "test:project-authority": "node --test scripts/test-enterprise-project-authority-intake.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs",
