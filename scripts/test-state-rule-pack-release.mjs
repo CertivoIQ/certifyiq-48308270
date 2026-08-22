@@ -395,6 +395,9 @@ test("issues and validates a complete West Virginia release receipt", async () =
   assert.equal(release.status, "validated");
   assert.equal(release.state_code, "WV");
   assert.equal(release.validated_rule_count, 1);
+  assert.equal(release.validatedRuleCount, 1);
+  assert.equal(release.effectiveFrom, "2026-09-01");
+  assert.equal(release.approvedBy, "expert-1");
   assert.equal(
     gateway.validateStatePackRelease({
       state_code: "WV",
