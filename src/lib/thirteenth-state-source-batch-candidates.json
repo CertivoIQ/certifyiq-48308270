@@ -1,5 +1,5 @@
 {
-  "test_id": 102,
+  "test_id": 78,
   "batch_id": "CT-CO-CA-AR-EXACT-SOURCE-AUDIT",
   "status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
   "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
@@ -167,5 +167,6 @@
     "required fixtures",
     "independent approval",
     "enterprise VP Compliance property-figure verification at onboarding"
-  ]
+  ],
+  "source_capture_test_id": 102
 }
