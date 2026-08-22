@@ -7,12 +7,15 @@
  * then returns PASS, FAIL, or UNABLE_TO_DETERMINE for agent review.
  */
 
-import { validateFy2026IncomeLimitProgramHandoff } from "./fy2026-income-limit-ingestion.mjs";
+import {
+  validateFy2026IncomeLimitProgramHandoff,
+  validateFy2026IncomeLimitSelection,
+} from "./fy2026-income-limit-ingestion.mjs";
 
 export const TENANT_ELIGIBILITY_RULE_ID =
   "FED-TENANT-FILE-ELIGIBILITY-RECONCILIATION-001";
 export const TENANT_ELIGIBILITY_ENGINE_BUILD =
-  "tenant-file-eligibility-engine-2026.08.2";
+  "tenant-file-eligibility-engine-2026.08.3";
 
 const PROGRAM_CODES = new Set([
   "LIHTC",
@@ -534,11 +537,44 @@ function validateProgramDetermination(
     };
   }
 
+  const selectionHandoff = validateFy2026IncomeLimitSelection(
+    program,
+    source.dataset_id,
+    item.income_limit_source.activation_receipt,
+    item.income_limit_source.limit_selection,
+  );
+  if (selectionHandoff.selection_status !== "VALIDATED") {
+    return {
+      error: blocked(
+        selectionHandoff.reason_code ??
+          "INCOME_LIMIT_SELECTION_RECEIPT_REQUIRED",
+        selectionHandoff.reason ??
+          "The compared income limit must come from the activated workbook records.",
+        [`${prefix}.income_limit_source.limit_selection`],
+      ),
+    };
+  }
+  if (
+    String(selectionHandoff.normalized_limit_amount) !==
+    String(source.normalized_limit_amount)
+  ) {
+    return {
+      error: blocked(
+        "INCOME_LIMIT_SELECTION_AMOUNT_CONFLICT",
+        "The caller-supplied normalized limit does not match the module-issued workbook selection.",
+        [`${prefix}.income_limit_source.normalized_limit_amount`],
+      ),
+    };
+  }
+
   let incomeCents;
   let limitCents;
   try {
     incomeCents = moneyToCents(item.annual_income, `${prefix}.annual_income`);
-    limitCents = moneyToCents(source.normalized_limit_amount, `${prefix}.income_limit_source.normalized_limit_amount`);
+    limitCents = moneyToCents(
+      selectionHandoff.normalized_limit_amount,
+      `${prefix}.income_limit_source.limit_selection.normalized_limit_amount`,
+    );
   } catch (error) {
     return { error: blocked("INVALID_PROGRAM_INCOME_COMPARISON", error.message, [prefix]) };
   }
