@@ -12,6 +12,7 @@
     "test:compliance": "node --test scripts/test-compliance-intelligence.mjs",
     "test:layered": "node --test scripts/test-layered-program-restrictions.mjs",
     "test:tenant": "node --test scripts/test-tenant-file-eligibility.mjs",
+    "test:recert": "node --test scripts/test-recertification-occupancy-controls.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs",
