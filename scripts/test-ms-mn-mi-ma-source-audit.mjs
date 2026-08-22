@@ -1,0 +1,9 @@
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";import test from "node:test";
+const batch=JSON.parse(await readFile(new URL("../src/lib/ms-mn-mi-ma-state-pack-candidates.json",import.meta.url),"utf8"));
+test("Test 97 covers MS, MN, MI and MA",()=>{assert.equal(batch.test_id,97);assert.deepEqual(batch.jurisdictions.map(x=>x.state_code),["MS","MN","MI","MA"]);});
+test("sources use official domains or Mississippi agency subdomain",()=>{for(const j of batch.jurisdictions)for(const s of j.sources){const h=new URL(s.observed_url).hostname.replace(/^www\./,"");assert.ok(h===j.official_domain||h.endsWith("."+j.official_domain));assert.ok(!("sha256" in s));assert.match(s.status,/^OFFICIAL_/);}});
+test("preserves authority and retrieval blockers",()=>{const x=Object.fromEntries(batch.jurisdictions.map(j=>[j.state_code,j]));assert.ok(x.MS.blocking_conflicts.some(v=>v.includes("educational")));assert.ok(x.MN.blocking_conflicts.some(v=>v.includes("gross-rent floor")));assert.ok(x.MI.blocking_conflicts.some(v=>v.includes("chaptered compliance manual")));assert.ok(x.MA.blocking_conflicts.some(v=>v.includes("retrieval failed")));});
+test("keeps EOHLC distinct from MassHousing",()=>{assert.ok(batch.jurisdictions.find(j=>j.state_code==="MA").blocking_conflicts.some(v=>v.includes("MassHousing")));});
+test("keeps property records outside shared packs",()=>{for(const v of ["completed tenant records","property Form 8609","LURA or declaration","HAP contract","property utility schedule"])assert.ok(batch.shared_pack_excludes.includes(v));});
+test("keeps all jurisdictions fail-closed and VP-gated",()=>{assert.match(batch.release_status,/^BLOCKED_/);assert.equal(batch.enterprise_activation_requires,"VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION");assert.ok(batch.jurisdictions.every(j=>j.sources.length>=3&&j.blocking_conflicts.length===3));});
