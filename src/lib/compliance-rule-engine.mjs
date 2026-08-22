@@ -437,3 +437,10 @@ export {
   LAYERED_RULE_ID,
   evaluateLayeredProgramRestrictions,
 } from "./layered-program-restrictions.mjs";
+
+export {
+  TENANT_ELIGIBILITY_ENGINE_BUILD,
+  TENANT_ELIGIBILITY_RULE_ID,
+  evaluateTenantFileEligibility,
+  normalizeIncomeLimitDollar,
+} from "./tenant-file-eligibility.mjs";
