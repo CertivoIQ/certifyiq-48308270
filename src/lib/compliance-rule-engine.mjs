@@ -444,3 +444,9 @@ export {
   evaluateTenantFileEligibility,
   normalizeIncomeLimitDollar,
 } from "./tenant-file-eligibility.mjs";
+
+export {
+  RECERTIFICATION_OCCUPANCY_ENGINE_BUILD,
+  RECERTIFICATION_OCCUPANCY_RULE_ID,
+  evaluateRecertificationOccupancyControls,
+} from "./recertification-occupancy-controls.mjs";
