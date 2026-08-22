@@ -1,0 +1,110 @@
+{
+  "test_id": 70,
+  "batch_id": "OH-MP-ND-NC-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "OH",
+      "agency": "Ohio Housing Finance Agency",
+      "official_domain": "ohiohome.org",
+      "sources": [
+        {
+          "type": "QAP_GUIDELINES",
+          "url": "https://ohiohome.org/compliance/qaps.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL",
+          "url": "https://ohiohome.org/compliance/default.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS",
+          "url": "https://ohiohome.org/compliance/forms.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_POLICIES",
+          "url": "https://ohiohome.org/compliance/policies.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Compliance manual revised 2026-01-22 effective 2026-02-01; effective-date handoff must be preserved."
+      ]
+    },
+    {
+      "state_code": "MP",
+      "agency": "Northern Marianas Housing Corporation",
+      "official_domain": "nmhcgov.net",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_APPLICATION_AND_FORMS",
+          "url": "https://www.nmhcgov.net/low-income-housing-tax-credit-lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "2025-2026 QAP and 2026 notices are listed; final adoption and exact bytes require validation."
+      ]
+    },
+    {
+      "state_code": "ND",
+      "agency": "North Dakota Housing Finance Agency",
+      "official_domain": "ndhousing.nd.gov",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_PROGRAM_AND_APPLICATION",
+          "url": "https://www.ndhousing.nd.gov/development",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "The page lists a 2027 allocation plan; current-cycle applicability and compliance-source inventory require review."
+      ]
+    },
+    {
+      "state_code": "NC",
+      "agency": "North Carolina Housing Finance Agency",
+      "official_domain": "nchfa.com",
+      "sources": [
+        {
+          "type": "FINAL_2026_QAP_AND_APPENDICES",
+          "url": "https://www.nchfa.com/rental-housing-partners/rental-developers/qualified-allocation-plan/2026-qualified-allocation-plan-qap",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROGRAM_COMPLIANCE",
+          "url": "https://www.nchfa.com/rental-housing-partners/rental-owners-managers/program-compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "OWNERSHIP_MANAGEMENT_FORMS",
+          "url": "https://www.nchfa.com/rental-housing-partners/rental-owners-managers/policies-resources-forms/ownershipmanagement",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "Final 2026 QAP is identified, but exact bytes, compliance manual version, and form versions require validation."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited deterministic rules",
+    "conflict resolution",
+    "required fixtures",
+    "platform release approval",
+    "enterprise VP property figure verification"
+  ]
+}
