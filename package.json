@@ -21,7 +21,8 @@
     "format": "prettier --write .",
     "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs",
     "test:ocr": "node scripts/test-ocr-sidecar.mjs",
-    "test:property-figures": "node --test scripts/test-enterprise-property-figure-verification.mjs"
+    "test:property-figures": "node --test scripts/test-enterprise-property-figure-verification.mjs",
+    "test:state-source-batch": "node --test scripts/test-first-state-source-batch.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
