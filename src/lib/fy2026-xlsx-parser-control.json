@@ -1,0 +1,39 @@
+{
+  "test_id": 61,
+  "version": "2026.08.1",
+  "parser_build": "fy2026-xlsx-parser-2026.08.1",
+  "parser_status": "IMPLEMENTED_FAIL_CLOSED_PENDING_CONTROLLED_WORKBOOK_BYTES",
+  "trust_boundary": {
+    "input": "ACTUAL_XLSX_BYTES_ONLY",
+    "zip_crc32_required": true,
+    "sha256_bound_to_activation_receipt": true,
+    "caller_parsed_rows_ignored": true,
+    "caller_validation_booleans_ignored": true,
+    "caller_constructed_activation_receipts_rejected": true,
+    "caller_constructed_limit_selections_rejected": true,
+    "external_workbook_relationships_rejected": true,
+    "unsafe_archive_paths_rejected": true,
+    "archive_size_and_expansion_limits_enforced": true
+  },
+  "controlled_schema_profiles": [
+    "HUD_MTSP_LIMITS_FY2026",
+    "HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18",
+    "HUD_HOME_RENT_LIMITS_FY2026"
+  ],
+  "source_activation_status": {
+    "HUD_MTSP_LIMITS_FY2026": "BLOCKED_PENDING_EXACT_WORKBOOK_BYTES_AND_SIX_APPROVED_LEGACY_FIPS_MAPPINGS",
+    "HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18": "BLOCKED_PENDING_EXACT_WORKBOOK_BYTES",
+    "HUD_HOME_RENT_LIMITS_FY2026": "BLOCKED_PENDING_EXACT_WORKBOOK_BYTES",
+    "HUD_HOME_INCOME_LIMITS_FY2026": "BLOCKED_PENDING_HASH_SCHEMA_AND_EXACT_WORKBOOK_BYTES",
+    "HUD_SECTION8_INCOME_LIMITS_FY2026": "BLOCKED_PENDING_HASH_SCHEMA_AND_EXACT_WORKBOOK_BYTES",
+    "HUD_HTF_INCOME_LIMITS_FY2026": "BLOCKED_PENDING_CONTROLLED_SOURCE",
+    "USDA_RD_INCOME_LIMITS_FY2026": "BLOCKED_PENDING_CONTROLLED_SOURCE"
+  },
+  "normalization_policy": "EXCEL_DECIMAL_ARTIFACTS_TO_EXACT_WHOLE_DOLLARS_NEVER_NEAREST_50",
+  "state_pack_sequence": {
+    "federal_parser_work_blocked_by_state_pack_rollout": false,
+    "first_state_activation_target": "West Virginia",
+    "west_virginia_status": "DRAFT_BLOCKED_PENDING_FEDERAL_SOURCE_ACTIVATION_UTILITY_ALLOWANCES_AND_PROJECT_AUTHORITY_VALIDATION",
+    "unqualified_state_or_50_state_findings_allowed": false
+  }
+}
