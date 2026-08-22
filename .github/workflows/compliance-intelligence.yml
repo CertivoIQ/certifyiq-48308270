@@ -68,6 +68,7 @@ jobs:
           bun run test:project-authority
           bun run test:state-pack
           bun run test:property-figures
+          bun run test:state-source-batch
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
