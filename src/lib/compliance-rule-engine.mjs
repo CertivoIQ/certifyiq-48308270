@@ -468,3 +468,8 @@ export {
   FY2026_XLSX_PARSER_BUILD,
   parseControlledFy2026Workbook,
 } from "./fy2026-xlsx-workbook-parser.mjs";
+
+export {
+  ENTERPRISE_PROJECT_AUTHORITY_ENGINE_BUILD,
+  createEnterpriseProjectAuthorityGateway,
+} from "./enterprise-project-authority-intake.mjs";

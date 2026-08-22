@@ -8,6 +8,7 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export const RECERTIFICATION_OCCUPANCY_ENGINE_BUILD: string;
   export const RECERTIFICATION_OCCUPANCY_RULE_ID:
     "FED-RECERTIFICATION-OCCUPANCY-CONTROLS-001";
+  export const ENTERPRISE_PROJECT_AUTHORITY_ENGINE_BUILD: string;
   export const MINIMUM_CONFIDENCE: number;
   export const REVIEW_DECISIONS: readonly ReviewDecision[];
 
@@ -257,6 +258,19 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     activationReceipt?: Record<string, unknown> | null,
     limitSelection?: Record<string, unknown> | null,
   ): Record<string, unknown>;
+
+  export interface EnterpriseProjectAuthorityGateway {
+    beginUploadSession(input?: Record<string, unknown>): Promise<Record<string, unknown>>;
+    ingestProjectAuthorityDocuments(input?: Record<string, unknown>): Promise<Record<string, unknown>>;
+    evaluateProjectAuthority(input?: Record<string, unknown>): Promise<Record<string, unknown>>;
+    validateProjectAuthorityHandoff(input?: Record<string, unknown>): Record<string, unknown>;
+  }
+
+  export function createEnterpriseProjectAuthorityGateway(adapters: {
+    authorizeUpload(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+    validateDocumentContent(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+    validateStatePackRelease(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+  }): EnterpriseProjectAuthorityGateway;
 
   export function signOffAllowed(result: EvaluationResult): boolean;
 }

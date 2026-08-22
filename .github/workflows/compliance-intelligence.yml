@@ -65,6 +65,7 @@ jobs:
           bun run test:recert
           bun run test:limits
           bun run test:xlsx
+          bun run test:project-authority
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
