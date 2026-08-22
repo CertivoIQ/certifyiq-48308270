@@ -82,7 +82,7 @@ jobs:
           bun run test:state-source-batch-12
           bun run test:state-source-batch-13
           bun run test:state-source-batch-final
-          bun run test:state-source-audit
+          bun run test:state-source-audit\n          bun run test:state-source-wv
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
