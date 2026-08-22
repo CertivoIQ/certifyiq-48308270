@@ -458,6 +458,13 @@ export {
   FY2026_LIMIT_INGESTION_ENGINE_BUILD,
   evaluateFy2026IncomeLimitSourceActivation,
   normalizeFy2026IncomeLimitDollar,
+  selectFy2026IncomeLimit,
   validateFy2026IncomeLimitProgramHandoff,
   validateFy2026IncomeLimitRecords,
+  validateFy2026IncomeLimitSelection,
 } from "./fy2026-income-limit-ingestion.mjs";
+
+export {
+  FY2026_XLSX_PARSER_BUILD,
+  parseControlledFy2026Workbook,
+} from "./fy2026-xlsx-workbook-parser.mjs";

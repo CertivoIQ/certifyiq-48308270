@@ -1,8 +1,8 @@
 {
   "test_id": 60,
-  "version": "2026.08.1",
+  "version": "2026.08.2",
   "activation_policy": "ACTUAL_BYTES_HASH_STRUCTURE_GEOGRAPHY_EFFECTIVE_DATE_AND_NORMALIZATION_REQUIRED",
-  "parser_binding_status": "BLOCKED_PENDING_TRUSTED_BYTE_DERIVED_XLSX_PARSER",
+  "parser_binding_status": "IMPLEMENTED_TRUSTED_BYTE_DERIVED_XLSX_PARSER_PENDING_EXACT_SOURCE_BYTES",
   "receipt_policy": "MODULE_ISSUED_IDENTITY_REQUIRED_CALLER_CONSTRUCTED_RECEIPTS_REJECTED",
   "official_sources": [
     {
@@ -12,7 +12,7 @@
       "record_count": 4764,
       "effective_from": "2026-05-01",
       "official_url": "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-Data-FY26.xlsx",
-      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES_SCHEMA_AND_CROSSWALK",
+      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES_AND_CROSSWALK",
       "expected_legacy_geography_crosswalk_count": 6
     },
     {
@@ -22,7 +22,7 @@
       "record_count": 4764,
       "effective_from": "2026-05-01",
       "official_url": "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-IncAvg-Data-FY26.xlsx",
-      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA",
+      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES",
       "normalization_rule": "ROUND_EXCEL_DECIMAL_ARTIFACT_TO_EXACT_DOLLAR_NEVER_NEAREST_50"
     },
     {
@@ -31,7 +31,7 @@
       "sha256": "3082bd081727dea71dd62abcb811e3d26ce605f1f645fd5cd8dbcb76e8d4f133",
       "record_count": 4764,
       "effective_from": "2026-06-01",
-      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA"
+      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES"
     },
     {
       "dataset_id": "HUD_HOME_INCOME_LIMITS_FY2026",

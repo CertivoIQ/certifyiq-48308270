@@ -29,7 +29,7 @@ test("controlled FY2026 registry preserves the approved identities", () => {
       .HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18.record_count,
     4764,
   );
-  assert.equal(FY2026_LIMIT_INGESTION_ENGINE_BUILD.includes("2026.08.1"), true);
+  assert.equal(FY2026_LIMIT_INGESTION_ENGINE_BUILD.includes("2026.08.2"), true);
 });
 
 test("Excel artifacts normalize to exact dollars and never nearest fifty", () => {

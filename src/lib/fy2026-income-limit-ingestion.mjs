@@ -1,8 +1,13 @@
 import { createHash } from "node:crypto";
 
+import {
+  FY2026_XLSX_PARSER_BUILD,
+  parseControlledFy2026Workbook,
+} from "./fy2026-xlsx-workbook-parser.mjs";
+
 /** Deterministic Test #60 source-ingestion and activation gate. */
 export const FY2026_LIMIT_INGESTION_ENGINE_BUILD =
-  "fy2026-income-limit-ingestion-2026.08.1";
+  "fy2026-income-limit-ingestion-2026.08.2";
 
 export const FY2026_LIMIT_ACTIVATION_STATUS = Object.freeze({
   active: "ACTIVE",
@@ -15,6 +20,9 @@ const HUD_GEOGRAPHY_PATTERN = /^\d{10}$/;
 // Object identity is part of the trust boundary. Public hashes and receipt
 // fields are not credentials and can never be used to forge a handoff.
 const ISSUED_ACTIVATION_RECEIPTS = new WeakSet();
+const ACTIVATED_RECORDS_BY_RECEIPT = new WeakMap();
+const ISSUED_LIMIT_SELECTIONS = new WeakSet();
+const LIMIT_SELECTION_RECEIPTS = new WeakMap();
 
 const PROGRAM_DATASET_FAMILIES = Object.freeze({
   LIHTC: new Set([
@@ -44,7 +52,7 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
     official_url:
       "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-Data-FY26.xlsx",
     content_available_in_repository: false,
-    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_SCHEMA_AND_CROSSWALK",
+    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_AND_CROSSWALK",
     expected_legacy_geography_crosswalk_count: 6,
   }),
   HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18: Object.freeze({
@@ -57,7 +65,7 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
     official_url:
       "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-IncAvg-Data-FY26.xlsx",
     content_available_in_repository: false,
-    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA",
+    activation_status: "BLOCKED_PENDING_SOURCE_BYTES",
     expected_legacy_geography_crosswalk_count: 0,
     normalization_rule:
       "ROUND_EXCEL_DECIMAL_ARTIFACT_TO_EXACT_DOLLAR_NEVER_NEAREST_50",
@@ -70,7 +78,7 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
     record_count: 4764,
     effective_from: "2026-06-01",
     content_available_in_repository: false,
-    activation_status: "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA",
+    activation_status: "BLOCKED_PENDING_SOURCE_BYTES",
     expected_legacy_geography_crosswalk_count: 0,
   }),
   HUD_HOME_INCOME_LIMITS_FY2026: Object.freeze({
@@ -350,21 +358,89 @@ export function evaluateFy2026IncomeLimitSourceActivation(input = {}) {
     );
   }
 
-  // Test #60 intentionally stops here. Accepting caller-provided parsed rows or
-  // validation booleans would not prove that those records came from these
-  // verified bytes. A later parser adapter must derive schema, dates, and rows
-  // directly from workbook_bytes and call a private issuer before activation.
-  return blocked(
-    "TRUSTED_WORKBOOK_PARSER_NOT_AVAILABLE",
-    "The workbook bytes match the controlled source, but activation remains blocked until a trusted parser derives and binds schema, effective dates, geography, and normalized records to those exact bytes.",
-    ["trusted_workbook_parser"],
-    {
+  const parsed = parseControlledFy2026Workbook({
+    dataset_id: datasetId,
+    workbook_bytes: bytes,
+  });
+  if (
+    parsed.parser_status !== "PARSED" ||
+    parsed.workbook_sha256 !== actualSha256
+  ) {
+    return blocked(
+      parsed.reason_code ?? "CONTROLLED_XLSX_PARSE_FAILED",
+      parsed.reason ??
+        "The trusted parser could not derive controlled records from the verified workbook bytes.",
+      parsed.missing_inputs ?? ["workbook_bytes"],
+      {
+        dataset_id: datasetId,
+        source_sha256: actualSha256,
+        parser_build: FY2026_XLSX_PARSER_BUILD,
+        caller_records_ignored: true,
+        caller_validation_booleans_ignored: true,
+      },
+    );
+  }
+
+  const crosswalk = controlledCrosswalkMap();
+  const records = parsed.records.map((record) => {
+    const mapping = crosswalk.get(String(record.source_geography_id));
+    return {
+      ...record,
+      target_geography_id: String(
+        mapping?.target_geography_id ?? record.source_geography_id,
+      ),
+    };
+  });
+  const validated = validateFy2026IncomeLimitRecords(records, {
+    expectedRecordCount: source.record_count,
+    expectedLegacyCrosswalkCount:
+      source.expected_legacy_geography_crosswalk_count ?? 0,
+  });
+  if (validated.validation_status !== "VALIDATED") {
+    return {
+      ...validated,
       dataset_id: datasetId,
       source_sha256: actualSha256,
+      parser_build: FY2026_XLSX_PARSER_BUILD,
       caller_records_ignored: true,
       caller_validation_booleans_ignored: true,
-    },
+    };
+  }
+
+  const normalizedRecordsSha256 = createHash("sha256")
+    .update(JSON.stringify(validated.normalized_records))
+    .digest("hex");
+  const receipt = Object.freeze({
+    activation_status: FY2026_LIMIT_ACTIVATION_STATUS.active,
+    rule_engine_authority: "ALLOWED",
+    finding: "PASS",
+    dataset_id: datasetId,
+    file_name: source.file_name,
+    effective_from: source.effective_from,
+    source_sha256: actualSha256,
+    normalized_records_sha256: normalizedRecordsSha256,
+    record_count: validated.record_count,
+    geography_count: validated.geography_count,
+    legacy_geography_crosswalk_count:
+      validated.legacy_geography_crosswalk_count,
+    exact_dollar_normalization: true,
+    nearest_fifty_rounding_performed: false,
+    engine_build: FY2026_LIMIT_INGESTION_ENGINE_BUILD,
+    parser_build: FY2026_XLSX_PARSER_BUILD,
+    agent_approval_required: true,
+    human_approval_required: true,
+  });
+  ISSUED_ACTIVATION_RECEIPTS.add(receipt);
+  ACTIVATED_RECORDS_BY_RECEIPT.set(
+    receipt,
+    new Map(
+      validated.normalized_records.map((record) => [
+        record.target_geography_id,
+        record,
+      ]),
+    ),
   );
+  return receipt;
 }
 
 /** Prevent a validated receipt from crossing program branches. */
@@ -405,5 +481,98 @@ export function validateFy2026IncomeLimitProgramHandoff(
     program_code: program,
     dataset_id: dataset,
     activation_receipt_validated: true,
+  };
+}
+
+/**
+ * Select one limit only from records privately bound to a module-issued
+ * activation receipt. Caller-supplied geography rows or amounts are ignored.
+ */
+export function selectFy2026IncomeLimit(input = {}) {
+  const program = String(input.program_code ?? "").toUpperCase();
+  const dataset = String(input.dataset_id ?? "");
+  const receipt = input.activation_receipt;
+  const handoff = validateFy2026IncomeLimitProgramHandoff(
+    program,
+    dataset,
+    receipt,
+  );
+  if (handoff.handoff_status !== "VALIDATED") return handoff;
+
+  const geographyId = String(input.geography_id ?? "");
+  const limitField = String(input.limit_field ?? "");
+  if (!HUD_GEOGRAPHY_PATTERN.test(geographyId) || !limitField) {
+    return blocked(
+      "INCOME_LIMIT_SELECTION_INPUT_INVALID",
+      "A ten-digit FY2026 geography key and exact controlled limit field are required.",
+      ["geography_id", "limit_field"],
+    );
+  }
+  const record = ACTIVATED_RECORDS_BY_RECEIPT.get(receipt)?.get(geographyId);
+  const amount = record?.limit_values?.[limitField];
+  if (!record || amount === undefined) {
+    return blocked(
+      "INCOME_LIMIT_SELECTION_NOT_FOUND",
+      "The requested geography and limit field were not present in the activated workbook records.",
+      ["geography_id", "limit_field"],
+      { dataset_id: dataset },
+    );
+  }
+
+  const selection = Object.freeze({
+    selection_status: "VALIDATED",
+    program_code: program,
+    dataset_id: dataset,
+    target_geography_id: geographyId,
+    source_geography_id: record.source_geography_id,
+    limit_field: limitField,
+    normalized_limit_amount: amount,
+    source_sha256: receipt.source_sha256,
+    normalized_records_sha256: receipt.normalized_records_sha256,
+    engine_build: FY2026_LIMIT_INGESTION_ENGINE_BUILD,
+  });
+  ISSUED_LIMIT_SELECTIONS.add(selection);
+  LIMIT_SELECTION_RECEIPTS.set(selection, receipt);
+  return selection;
+}
+
+/** Validate that a selected amount came from the exact activated workbook. */
+export function validateFy2026IncomeLimitSelection(
+  programCode,
+  datasetId,
+  activationReceipt,
+  limitSelection,
+) {
+  const handoff = validateFy2026IncomeLimitProgramHandoff(
+    programCode,
+    datasetId,
+    activationReceipt,
+  );
+  if (handoff.handoff_status !== "VALIDATED") return handoff;
+  if (
+    !limitSelection ||
+    typeof limitSelection !== "object" ||
+    !ISSUED_LIMIT_SELECTIONS.has(limitSelection) ||
+    LIMIT_SELECTION_RECEIPTS.get(limitSelection) !== activationReceipt ||
+    limitSelection.selection_status !== "VALIDATED" ||
+    limitSelection.program_code !== String(programCode ?? "").toUpperCase() ||
+    limitSelection.dataset_id !== String(datasetId ?? "") ||
+    limitSelection.source_sha256 !== activationReceipt.source_sha256 ||
+    limitSelection.normalized_records_sha256 !==
+      activationReceipt.normalized_records_sha256
+  ) {
+    return blocked(
+      "INCOME_LIMIT_SELECTION_RECEIPT_REQUIRED",
+      "The income-limit amount must be selected from records privately bound to the module-issued activation receipt.",
+      ["limit_selection"],
+    );
+  }
+  return {
+    selection_status: "VALIDATED",
+    program_code: limitSelection.program_code,
+    dataset_id: limitSelection.dataset_id,
+    target_geography_id: limitSelection.target_geography_id,
+    limit_field: limitSelection.limit_field,
+    normalized_limit_amount: limitSelection.normalized_limit_amount,
   };
 }
