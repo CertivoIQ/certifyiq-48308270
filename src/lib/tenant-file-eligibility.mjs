@@ -10,7 +10,7 @@
 export const TENANT_ELIGIBILITY_RULE_ID =
   "FED-TENANT-FILE-ELIGIBILITY-RECONCILIATION-001";
 export const TENANT_ELIGIBILITY_ENGINE_BUILD =
-  "tenant-file-eligibility-engine-2026.08.1";
+  "tenant-file-eligibility-engine-2026.08.2";
 
 const PROGRAM_CODES = new Set([
   "LIHTC",
@@ -28,6 +28,16 @@ const PROGRAM_CODES = new Set([
 const CERTIFICATION_TYPES = new Set(["INITIAL", "ANNUAL", "INTERIM"]);
 const FINDINGS = new Set(["PASS", "FAIL", "NOT_DETERMINED"]);
 const INCOME_AVERAGING_DESIGNATIONS = new Set([20, 30, 40, 50, 60, 70, 80]);
+
+const REQUIRED_PROGRAM_EVIDENCE_KINDS = Object.freeze([
+  "annual_income",
+  "net_family_assets",
+  "deductions",
+  "student_status",
+]);
+
+// State and local scope stays blocked until a reviewed release is registered here.
+const APPROVED_STATE_PACKS = Object.freeze({});
 
 const STUDENT_RULE_BASIS = Object.freeze({
   LIHTC: "LIHTC_IRC_42_FULL_TIME_STUDENT_HOUSEHOLD",
@@ -157,15 +167,49 @@ function stableValue(value) {
   return `${typeof value}:${String(value)}`;
 }
 
-function statePackUsable(pack) {
-  return Boolean(
-    pack &&
-      pack.status === "validated" &&
-      pack.approvedBy &&
-      pack.version &&
-      pack.effectiveFrom &&
-      Number(pack.validatedRuleCount) > 0,
+function statePackUsable(pack, eventDate, programs) {
+  if (!pack || typeof pack !== "object" || Array.isArray(pack)) return false;
+  const approved = APPROVED_STATE_PACKS[String(pack.pack_id ?? "")];
+  if (!approved || approved.active !== true) return false;
+
+  let effectiveFrom;
+  let effectiveTo;
+  try {
+    effectiveFrom = parseIsoDate(approved.effective_from, "approved_state_pack.effective_from");
+    effectiveTo = approved.effective_to
+      ? parseIsoDate(approved.effective_to, "approved_state_pack.effective_to")
+      : null;
+  } catch {
+    return false;
+  }
+
+  const requestedStatePrograms = programs.filter((program) =>
+    ["STATE_HFA", "LOCAL_PROGRAM"].includes(program),
   );
+  return Boolean(
+    pack.status === "validated" &&
+      String(pack.jurisdiction ?? "").toUpperCase() ===
+        String(approved.jurisdiction).toUpperCase() &&
+      String(pack.version ?? "") === String(approved.version) &&
+      String(pack.sha256 ?? "") === String(approved.sha256) &&
+      String(pack.approvedBy ?? "") === String(approved.approved_by) &&
+      String(pack.effectiveFrom ?? "") === effectiveFrom &&
+      Number(pack.validatedRuleCount) === Number(approved.validated_rule_count) &&
+      eventDate >= effectiveFrom &&
+      (!effectiveTo || eventDate <= effectiveTo) &&
+      requestedStatePrograms.every((program) =>
+        approved.program_codes.includes(program),
+      ),
+  );
+}
+
+function requiredEvidenceFieldsForPrograms(programs) {
+  return [
+    "household_roster",
+    ...programs.flatMap((program) =>
+      REQUIRED_PROGRAM_EVIDENCE_KINDS.map((kind) => `${kind}:${program}`),
+    ),
+  ];
 }
 
 function validateDataset(source, prefix, eventDate) {
@@ -325,6 +369,15 @@ function reconcileEvidence(input, documentIds) {
   if (!Array.isArray(input.required_evidence_fields) || !input.required_evidence_fields.length) {
     return { error: blocked("REQUIRED_EVIDENCE_FIELD_INVENTORY_MISSING", "The gate requires an explicit inventory of income, asset, deduction, and eligibility fields.", ["required_evidence_fields"]) };
   }
+  const declaredFields = uniqueSorted(input.required_evidence_fields);
+  const mandatoryFields = requiredEvidenceFieldsForPrograms(input.program_inventory);
+  const omittedMandatoryFields = mandatoryFields.filter(
+    (field) => !declaredFields.includes(field),
+  );
+  if (omittedMandatoryFields.length) {
+    return { error: blocked("REQUIRED_ELIGIBILITY_EVIDENCE_SCOPE_MISSING", "The evidence inventory must include household roster plus program-specific income, asset, deduction, and student fields.", omittedMandatoryFields) };
+  }
+  const fieldsToReconcile = uniqueSorted([...declaredFields, ...mandatoryFields]);
   if (!Array.isArray(input.evidence)) {
     return { error: blocked("TENANT_FILE_EVIDENCE_INVALID", "Evidence must be a structured list.", ["evidence"]) };
   }
@@ -351,13 +404,13 @@ function reconcileEvidence(input, documentIds) {
     entries.push(item);
     byField.set(field, entries);
   }
-  const missingFields = input.required_evidence_fields.filter((field) => !byField.has(String(field)));
+  const missingFields = fieldsToReconcile.filter((field) => !byField.has(field));
   if (missingFields.length) {
     return { error: blocked("REQUIRED_TENANT_FILE_EVIDENCE_MISSING", "One or more required tenant-file facts are missing.", missingFields) };
   }
   const conflicts = [];
   const resolved = {};
-  for (const field of input.required_evidence_fields.map(String)) {
+  for (const field of fieldsToReconcile) {
     const entries = byField.get(field);
     const values = new Set(entries.map((entry) => stableValue(entry.value)));
     if (values.size !== 1) conflicts.push(field);
@@ -369,7 +422,13 @@ function reconcileEvidence(input, documentIds) {
   return { resolved };
 }
 
-function validateProgramDetermination(item, index, input, eventDate) {
+function validateProgramDetermination(
+  item,
+  index,
+  input,
+  eventDate,
+  resolvedEvidence,
+) {
   const prefix = `program_determinations[${index}]`;
   if (!item || typeof item !== "object" || Array.isArray(item)) {
     return { error: blocked("INVALID_PROGRAM_ELIGIBILITY_DETERMINATION", "Each program determination must be a structured record.", [prefix]) };
@@ -398,6 +457,22 @@ function validateProgramDetermination(item, index, input, eventDate) {
   }
   if (stableValue(item.household_member_ids) !== stableValue(input.household_member_ids)) {
     return { error: blocked("PROGRAM_HOUSEHOLD_ROSTER_CONFLICT", "A program determination used a different household roster.", [`${prefix}.household_member_ids`]) };
+  }
+
+  const incomeEvidenceField = `annual_income:${program}`;
+  let handoffIncomeCents;
+  let evidenceIncomeCents;
+  try {
+    handoffIncomeCents = moneyToCents(item.annual_income, `${prefix}.annual_income`);
+    evidenceIncomeCents = moneyToCents(
+      resolvedEvidence[incomeEvidenceField],
+      `resolved_evidence.${incomeEvidenceField}`,
+    );
+  } catch (error) {
+    return { error: blocked("INVALID_PROGRAM_INCOME_EVIDENCE", error.message, [incomeEvidenceField]) };
+  }
+  if (handoffIncomeCents !== evidenceIncomeCents) {
+    return { error: blocked("PROGRAM_INCOME_EVIDENCE_CONFLICT", "The program income calculation does not match the reconciled tenant-file evidence.", [`${prefix}.annual_income`, incomeEvidenceField]) };
   }
 
   const source = validateDataset(item.income_limit_source, `${prefix}.income_limit_source`, eventDate);
@@ -518,7 +593,7 @@ export function evaluateTenantFileEligibility(input = {}) {
     return blocked("UNRECOGNIZED_PROGRAM_ELIGIBILITY_INVENTORY", "The program inventory is empty or contains an unrecognized branch.", ["program_inventory"]);
   }
   const stateRequested = programs.some((program) => ["STATE_HFA", "LOCAL_PROGRAM"].includes(program)) || input.state_finding_requested === true;
-  if (stateRequested && !statePackUsable(input.state_rulepack)) {
+  if (stateRequested && !statePackUsable(input.state_rulepack, eventDate, programs)) {
     return blocked("STATE_ELIGIBILITY_PACK_NOT_VALIDATED", "State and local tenant-eligibility findings remain blocked without an approved, versioned, effective rule pack.", ["state_rulepack"]);
   }
 
@@ -530,7 +605,13 @@ export function evaluateTenantFileEligibility(input = {}) {
   const results = [];
   const determinationPrograms = new Set();
   for (const [index, item] of input.program_determinations.entries()) {
-    const validation = validateProgramDetermination(item, index, input, eventDate);
+    const validation = validateProgramDetermination(
+      item,
+      index,
+      input,
+      eventDate,
+      evidenceValidation.resolved,
+    );
     if (validation.error) return validation.error;
     if (determinationPrograms.has(validation.value.program_code)) {
       return blocked("DUPLICATE_PROGRAM_ELIGIBILITY_DETERMINATION", "Each program must have exactly one reconciled eligibility determination.", [validation.value.program_code]);
