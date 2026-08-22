@@ -314,6 +314,19 @@ function evaluateHouseholdChanges(input, programs, eventDate) {
       "resulting_roster_validated",
       "program_impacts_complete",
     ].filter((field) => change[field] !== true);
+    const requiredValues = ["event_id", "change_date", "resulting_household_member_ids"].filter(
+      (field) => change[field] === null || change[field] === undefined,
+    );
+    if (requiredValues.length) {
+      blockers.push(
+        blocked(
+          "HOUSEHOLD_CHANGE_EVENT_SCOPE_MISSING",
+          "Each household change requires an event ID, change date, and resulting roster.",
+          requiredValues.map((field) => `${prefix}.${field}`),
+        ),
+      );
+      continue;
+    }
     let changeDate;
     try {
       changeDate = parseIsoDate(change.change_date, `${prefix}.change_date`);
@@ -336,6 +349,16 @@ function evaluateHouseholdChanges(input, programs, eventDate) {
     const impactPrograms = uniqueSorted(
       change.program_impacts.map((impact) => String(impact.program_code ?? "").toUpperCase()),
     );
+    if (impactPrograms.length !== change.program_impacts.length) {
+      blockers.push(
+        blocked(
+          "DUPLICATE_HOUSEHOLD_CHANGE_PROGRAM_IMPACT",
+          "Each household change may contain only one impact record per program.",
+          [prefix],
+        ),
+      );
+      continue;
+    }
     const difference = [
       ...programs.filter((program) => !impactPrograms.includes(program)),
       ...impactPrograms.filter((program) => !programs.includes(program)),
@@ -456,6 +479,21 @@ function evaluateAvailableUnitRule(input, eventDate) {
   const evaluatedEvents = [];
   for (const [index, unitEvent] of occupancy.available_unit_events.entries()) {
     const prefix = `lihtc_occupancy.available_unit_events[${index}]`;
+    const requiredEventValues = [
+      "event_id",
+      "occupied_date",
+      "bedrooms",
+      "new_resident_annual_income",
+    ].filter(
+      (field) => unitEvent?.[field] === null || unitEvent?.[field] === undefined,
+    );
+    if (requiredEventValues.length) {
+      return blocked(
+        "AVAILABLE_UNIT_EVENT_SCOPE_MISSING",
+        "Each available-unit event requires an event ID, occupancy date, unit size, and new-resident income.",
+        requiredEventValues.map((field) => `${prefix}.${field}`),
+      );
+    }
     const requiredEventTrue = [
       "source_validated",
       "unit_size_validated",
@@ -496,11 +534,17 @@ function evaluateAvailableUnitRule(input, eventDate) {
       } else if (setAside === "AVERAGE_INCOME") {
         if (
           unitEvent.average_income_designation_validated !== true ||
+          unitEvent.maximum_permitted_income_calculation_validated !== true ||
           Number(unitEvent.project_average_after_designation) > 60
         ) {
           return blocked("AVERAGE_INCOME_AVAILABLE_UNIT_DESIGNATION_NOT_VALIDATED", "The available unit must preserve a validated project average no greater than 60 percent.", [prefix]);
         }
-        permittedIncome = moneyToCents(unitEvent.maximum_permitted_income, `${prefix}.maximum_permitted_income`);
+        permittedIncome = moneyToCents(
+          unitEvent.was_low_income_before_vacancy === true
+            ? unitEvent.prior_designated_income_limit
+            : unitEvent.required_designated_income_limit,
+          `${prefix}.maximum_permitted_income`,
+        );
       } else {
         permittedIncome = moneyToCents(unitEvent.applicable_income_limit, `${prefix}.applicable_income_limit`);
       }
