@@ -1,10 +1,18 @@
 {
   "test_id": 63,
+  "source_capture_test_id": 81,
   "state_code": "WV",
   "pack_id": "wv-lihtc",
-  "candidate_version": "2026.1-candidate",
+  "candidate_version": "2026.2-candidate",
   "program_codes": ["LIHTC"],
-  "release_status": "BLOCKED_PENDING_SOURCE_BYTES_AND_EXPERT_REVIEW",
+  "release_status": "BLOCKED_PENDING_CONFLICT_RESOLUTION_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T20:31:39Z",
+    "official_index_url": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/",
+    "exact_binary_count": 21,
+    "method": "OFFICIAL_LANDING_PAGE_TO_LINKED_FILE_BYTE_CAPTURE",
+    "raw_forms_index_status": "PENDING_RAW_HTML_CAPTURE"
+  },
   "agency": {
     "name": "West Virginia Housing Development Fund",
     "official_domain": "wvhdf.com",
@@ -15,81 +23,303 @@
     {
       "source_type": "ALLOCATION_PLAN",
       "title": "2025 and 2026 Allocation Plan",
+      "landing_page_url": "https://www.wvhdf.com/pdf/2025-and-2026-allocation-plan/",
       "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/02/2025-and-2026-Allocation-Plan-1.pdf",
+      "file_name": "2025-and-2026-Allocation-Plan-1.pdf",
+      "file_bytes": 4713833,
       "observed_pages": 139,
-      "sha256": null,
-      "status": "PENDING_EXACT_BYTES"
+      "sha256": "900f0641cfcac976a9d2503d5dfdc59fcba7b55870317a5ccc6f4c1c804c9d19",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
     },
     {
       "source_type": "PROGRAM_MANUAL",
       "title": "2025 and 2026 Tax Credit Manual",
+      "landing_page_url": "https://www.wvhdf.com/pdf/2025-and-2026-tax-credit-manual/",
       "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/02/2025-and-2026-Tax-Credit-Manual-1.pdf",
+      "file_name": "2025-and-2026-Tax-Credit-Manual-1.pdf",
       "official_page_updated": "2026-06-26",
+      "file_bytes": 2418970,
       "observed_pages": 82,
-      "sha256": null,
-      "status": "PENDING_EXACT_BYTES"
+      "sha256": "60fd11c739782619f94722096b58a94f7bf73726c0d159b86819ff9902d52b8f",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "source_type": "PROGRAM_CALENDAR",
+      "title": "2025 and 2026 Program Calendar",
+      "landing_page_url": "https://www.wvhdf.com/pdf/2025-and-2026-program-calendar/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/02/2025-and-2026-LIHTCP-Program-Calendar.pdf",
+      "file_name": "2025-and-2026-LIHTCP-Program-Calendar.pdf",
+      "file_bytes": 247904,
+      "observed_pages": 2,
+      "sha256": "e796753fb728ab68e99125e201b53498395bd1f8840a71f7866113c4394cc448",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
     },
     {
       "source_type": "COMPLIANCE_MANUAL",
       "title": "WVHDF Section 42 Tax Credit Compliance Manual",
+      "landing_page_url": "https://www.wvhdf.com/pdf/wvhdf-section-42-tax-credit-compliance-manual/",
       "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WVHDF-Section-42-Tax-Credit-Compliance-Manual.pdf",
+      "file_name": "WVHDF-Section-42-Tax-Credit-Compliance-Manual.pdf",
       "official_page_published": "2026-03-05",
       "document_self_identified_edition": "2017 Edition",
+      "file_bytes": 287581,
       "observed_pages": 33,
-      "sha256": null,
-      "status": "PENDING_EXACT_BYTES_AND_CURRENCY_REVIEW"
+      "sha256": "aa1abe0701197265eee4d900f595c218572037e9b28f0a157ef57c64d57d2bdd",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    },
+    {
+      "source_type": "INCOME_LIMITS",
+      "title": "West Virginia Income Limits Report",
+      "landing_page_url": "https://www.wvhdf.com/pdf/west-virginia-income-limits-report/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/West-Virginia-Income-Limits-Report.pdf",
+      "file_name": "West-Virginia-Income-Limits-Report.pdf",
+      "file_bytes": 119783,
+      "observed_pages": 7,
+      "sha256": "4bcd3844f9ab97dbff126313a9d2de08d5ad92ac514875f6616939cec482783d",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_FIGURE_VALIDATION"
+    },
+    {
+      "source_type": "INCOME_ASSET_WORKSHEET",
+      "title": "LIHTC Income Asset Worksheet",
+      "landing_page_url": "https://www.wvhdf.com/excel/lihtc-income-asset-worksheet/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/LIHTC-IncomeAssetWorksheet.xls",
+      "file_name": "LIHTC-IncomeAssetWorksheet.xls",
+      "file_bytes": 37376,
+      "sha256": "fd574ee5fe04d6ebd9537483cb89c854fd538ccbbad008d64021bf2e6e08d510",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
     },
     {
       "source_type": "COMPLIANCE_FORMS_INDEX",
       "title": "WVHDF Multifamily Compliance Forms and Instructions",
       "official_url": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/",
       "sha256": null,
-      "status": "PENDING_CAPTURED_BYTES"
+      "status": "PENDING_RAW_HTML_CAPTURE"
     }
   ],
   "official_blank_form_candidates": [
     {
       "title": "WV LIHTC Tenant Income Certification Form",
+      "landing_page_url": "https://www.wvhdf.com/pdf/wv-lihtc-tenant-income-certification-form/",
       "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WV-LIHTC-Tenant-Income-Certification-Form.pdf",
-      "status": "PENDING_EXACT_BYTES"
+      "file_name": "WV-LIHTC-Tenant-Income-Certification-Form.pdf",
+      "file_bytes": 49159,
+      "observed_pages": 6,
+      "sha256": "da5d2a7a42aa721010ef197f7ceae862a8ff07aa2061194ae61cf2aca0c935ca",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
     },
     {
       "title": "WVHDF Annual Self Certification of Tenant Income",
+      "landing_page_url": "https://www.wvhdf.com/pdf/wvhdf-annual-self-certification-of-tenant-income/",
       "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WVHDF-Annual-Self-Certification-of-Tenant-Income.pdf",
-      "status": "PENDING_EXACT_BYTES"
+      "file_name": "WVHDF-Annual-Self-Certification-of-Tenant-Income.pdf",
+      "file_bytes": 799836,
+      "observed_pages": 2,
+      "sha256": "0416b1505f07255dbf8a428e67ea7c7c7512cf76c23e5e98c86ec892a029abef",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
     },
     {
       "title": "LIHTC Annual Income Recertification Waiver Certification",
+      "landing_page_url": "https://www.wvhdf.com/pdf/lihtc-annual-income-recertification-waiver-certification/",
       "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/LIHTC-Annual-Income-Recertification-Waiver-Certification.pdf",
-      "document_self_identified_date": "2009-03",
-      "status": "PENDING_EXACT_BYTES_AND_SUPERSESSION_REVIEW"
+      "file_name": "LIHTC-Annual-Income-Recertification-Waiver-Certification.pdf",
+      "file_bytes": 830471,
+      "observed_pages": 1,
+      "sha256": "36488ec6c762e2a555c0f0a4aa431ac81230e66b1a948ad579c1d890ddee512e",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_SUPERSESSION_REVIEW"
+    },
+    {
+      "title": "Certification Waiver Procedures",
+      "landing_page_url": "https://www.wvhdf.com/pdf/wvhdf-certification-waiver-procedures/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WVHDF-Certification-Waiver-Procedures.pdf",
+      "file_name": "WVHDF-Certification-Waiver-Procedures.pdf",
+      "document_effective_date": "2019-01-01",
+      "file_bytes": 148220,
+      "observed_pages": 2,
+      "sha256": "ca9c32c54f2d927b46b624b11d008610ade25224ecac2428f9b4ab661a8bae36",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_SUPERSESSION_REVIEW"
+    },
+    {
+      "title": "WV Annual Owner Certification",
+      "landing_page_url": "https://www.wvhdf.com/pdf/wv-annual-owner-cert-fillable/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Blank-WV-Owner-Certification.pdf",
+      "file_name": "Blank-WV-Owner-Certification.pdf",
+      "file_bytes": 129315,
+      "observed_pages": 4,
+      "sha256": "5e552734f9788387c35f6c3cc8e39f2d1504f849e73cd627e0101bbccaa7abc2",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_ISSUER_REVIEW"
+    },
+    {
+      "title": "Student Status Household Affidavit",
+      "landing_page_url": "https://www.wvhdf.com/pdf/student-status-household-affidavit/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Student-Status-Household-Affidavit-1.pdf",
+      "file_name": "Student-Status-Household-Affidavit-1.pdf",
+      "file_bytes": 651216,
+      "observed_pages": 1,
+      "sha256": "d3c8a7a6a88534e259e5bf527d0bd8c5048bbe59c93457e97cff96f4561846e0",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Household Eligibility Questionnaire",
+      "landing_page_url": "https://www.wvhdf.com/pdf/household-eligibility-questionnaire/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Household-Eligibility-Questionnaire.pdf",
+      "file_name": "Household-Eligibility-Questionnaire.pdf",
+      "file_bytes": 315544,
+      "observed_pages": 3,
+      "sha256": "5fadeb75ea0f293d9c96be06acccd58ea61d210222c3efef2efbffc63e214b4a",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Lease Addendum Utility Allowance",
+      "landing_page_url": "https://www.wvhdf.com/pdf/lease-addendum-utility-allowance/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Lease-Addendum-Utility-Allowance.pdf",
+      "file_name": "Lease-Addendum-Utility-Allowance.pdf",
+      "file_bytes": 132033,
+      "observed_pages": 1,
+      "sha256": "da650b28e306672572e94aa43e14870bf5eeaba92b0cd89b6a062d18ad422009",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Lease Addendum Tax Credit Eligibility and Maximum Rent",
+      "landing_page_url": "https://www.wvhdf.com/pdf/lease-addendum-tax-credit-eligibility-and-maximum-rent/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Lease-Addendum-Tax-Credit-Eligibility-and-Maximum-Rent.pdf",
+      "file_name": "Lease-Addendum-Tax-Credit-Eligibility-and-Maximum-Rent.pdf",
+      "file_bytes": 15746,
+      "observed_pages": 1,
+      "sha256": "4e2fa3e095095c170e34a8becd1e731968c45f782fe20605f2dbdd5d5c35a5cc",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Lease Addendum Income Limits",
+      "landing_page_url": "https://www.wvhdf.com/pdf/lease-addendum-income-limits/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Lease-Addendum-Income-Limits.pdf",
+      "file_name": "Lease-Addendum-Income-Limits.pdf",
+      "file_bytes": 129429,
+      "observed_pages": 1,
+      "sha256": "a11ecb052f05aa2462ea1d6834b95cf636888747e19e2cb536700ce45f876d9f",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Lease Addendum 140 Rule",
+      "landing_page_url": "https://www.wvhdf.com/pdf/lease-addendum-140-rule/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Lease-Addendum-140-Rule.pdf",
+      "file_name": "Lease-Addendum-140-Rule.pdf",
+      "file_bytes": 79577,
+      "observed_pages": 1,
+      "sha256": "49ae57e2a85d666f78e3b3cdb0a7442b015a302e233847c6ca59d244f0b7164e",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    }
+  ],
+  "inspection_and_monitoring_candidates": [
+    {
+      "title": "WV POST Year 15 Monitoring Changes 2016",
+      "landing_page_url": "https://www.wvhdf.com/pdf/wv-post-year-15-monitoring-changes-2016/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/WV-POST-Year-15-Monitoring-Changes-2016.pdf",
+      "file_name": "WV-POST-Year-15-Monitoring-Changes-2016.pdf",
+      "file_bytes": 47812,
+      "observed_pages": 1,
+      "sha256": "cf14a203e32090f6e7980e474df3af5924431cdfadd954ddaca37f2eeda0b783",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    }
+  ],
+  "related_home_document_candidates": [
+    {
+      "title": "HOME Rental Management Handbook (4/2024)",
+      "landing_page_url": "https://www.wvhdf.com/pdf/home-rental-management-handbook/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/HOME-Rental-Management-Handbook-2018-1.pdf",
+      "file_name": "HOME-Rental-Management-Handbook-2018-1.pdf",
+      "document_self_identified_revision": "2018-06",
+      "file_bytes": 426261,
+      "observed_pages": 36,
+      "sha256": "9a21eeecf3d2a19230ff64405b3a6b2e4baa1a69c72a917fcc3727ce7d16cf6f",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    },
+    {
+      "title": "HOME Lease Addendum",
+      "landing_page_url": "https://www.wvhdf.com/pdf/home-lease-addendum/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/HOME-Lease-Addendum.pdf",
+      "file_name": "HOME-Lease-Addendum.pdf",
+      "file_bytes": 37157,
+      "observed_pages": 2,
+      "sha256": "a969a1a43519c4afd346549765e768e96de42ae334584aa059c32fbead061d31",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "HOME Form 600 Owners Certification of Ongoing Program Compliance",
+      "landing_page_url": "https://www.wvhdf.com/pdf/home-form-600-owners-certification-of-ongoing-program-compliance/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/HOME-Form-600-%E2%80%93-Owners-Certification-of-Ongoing-Program-Compliance.pdf",
+      "file_name": "HOME-Form-600-–-Owners-Certification-of-Ongoing-Program-Compliance.pdf",
+      "file_bytes": 15706,
+      "observed_pages": 2,
+      "sha256": "a404a7876a78fcea7d749254f96b853094b39b11369acc2d7c3fb71b1ba0054a",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "HOME Form 300 Tenant Income Certification",
+      "landing_page_url": "https://www.wvhdf.com/excel/home-form-300-tenant-income-certification/",
+      "official_url": "https://www.wvhdf.com/wp-content/uploads/2026/03/Form-300-fillable.xlsx",
+      "file_name": "Form-300-fillable.xlsx",
+      "sha256": null,
+      "status": "PENDING_EXACT_BYTES"
+    }
+  ],
+  "source_gap_candidates": [
+    {
+      "title": "Underwriting Reminders and Updates dated 2026-08-20",
+      "reported_file_name": "Underwriting-Reminders-and-Updates_WVHDF_8.20.2026.pdf",
+      "status": "NOT_OBSERVED_ON_CURRENT_OFFICIAL_INDEX",
+      "required_resolution": "Confirm the official source URL and whether this notice supersedes any captured manual provision."
     }
   ],
   "blocking_conflicts": [
     {
       "conflict_id": "WV-CURRENCY-001",
       "status": "UNRESOLVED",
-      "description": "The current WVHDF page was published in 2026, but the linked compliance PDF identifies itself as the 2017 Edition."
+      "description": "The current WVHDF landing page was published in 2026, but the linked compliance PDF identifies itself as the 2017 Edition."
     },
     {
       "conflict_id": "WV-RECERT-WAIVER-001",
       "status": "UNRESOLVED",
-      "description": "The 2017 compliance manual says the Fund does not issue a recertification waiver, while the current forms page links a document self-identified as a March 2009 waiver procedure."
+      "description": "The 2017 compliance manual says the Fund does not and will not issue a recertification waiver, while the current resources index links waiver procedures effective January 1, 2019 and a waiver certification form."
+    },
+    {
+      "conflict_id": "WV-OWNER-CERT-ISSUER-001",
+      "status": "UNRESOLVED",
+      "description": "The current WVHDF owner-certification form is addressed to WVHDF but its certification clause names a Department of Housing and Community Development as the Authority."
     },
     {
       "conflict_id": "WV-PLAN-CHANGE-001",
       "status": "UNRESOLVED",
       "description": "The 2025-2026 Allocation Plan states that program materials are subject to change; prospective effective dates and supersession must be approved per rule."
+    },
+    {
+      "conflict_id": "WV-HOME-CURRENCY-001",
+      "status": "UNRESOLVED",
+      "description": "The current resource index labels the HOME Rental Management Handbook as 4/2024, while the linked PDF identifies itself as Revised June, 2018."
+    },
+    {
+      "conflict_id": "WV-UNINDEXED-UPDATE-001",
+      "status": "UNRESOLVED",
+      "description": "A user-reported underwriting update dated August 20, 2026 was not present on the live official resource index during this capture and needs official-source and supersession confirmation."
     }
   ],
   "enterprise_boundary": "Only blank official forms belong in this shared pack. Completed tenant forms, project Forms 8609, LURAs, HAP contracts, waivers, and regulatory agreements remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "income limits",
+    "rent limits",
+    "utility allowances",
+    "set-asides",
+    "effective dates",
+    "property-specific program layering"
+  ],
   "activation_requirements": [
-    "Exact official bytes and SHA-256 identities",
-    "Byte-derived document identity validation",
+    "Raw official forms-index bytes and SHA-256 identity",
+    "Byte-derived document identity and content validation for every captured file",
     "Page-level deterministic rule citations",
-    "Resolved currency and supersession conflicts",
+    "Resolved currency, issuer, update, and supersession conflicts",
     "Positive, negative, boundary, layered-program, and supersession fixtures",
     "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding",
     "Prospective effective date and retained prior versions"
   ]
 }
