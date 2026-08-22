@@ -1,0 +1,137 @@
+{
+  "test_id": 91,
+  "state_code": "SD",
+  "pack_id": "sd-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "HOME", "NHTF", "TAX_EXEMPT_BOND"],
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-23T00:15:00Z",
+    "supplied_official_url": "http://www.sdhda.org/",
+    "redirected_official_url": "https://www.sdhousing.org/",
+    "official_program_url": "https://www.sdhousing.org/develop-housing/available-development-programs/housing-tax-credits",
+    "official_forms_url": "https://www.sdhousing.org/manage-housing/forms-resources/htc-program-management-forms-resources",
+    "exact_binary_count": 0,
+    "official_link_candidate_count": 7,
+    "method": "OFFICIAL_PAGE_LINK_INVENTORY_INLINE_BINARY_CAPTURE_UNAVAILABLE"
+  },
+  "agency": {
+    "name": "South Dakota Housing",
+    "official_domain": "sdhousing.org",
+    "legacy_domain": "sdhda.org"
+  },
+  "official_page_findings": [
+    {
+      "finding_id": "SD-2026-APPLICATION-CYCLE",
+      "official_url": "https://www.sdhousing.org/develop-housing/available-development-programs/housing-tax-credits",
+      "description": "The page identifies the July 2026-2027 HOME-HTC application round and a 2026-2027 final QAP."
+    },
+    {
+      "finding_id": "SD-2026-UTILITY-METHODS",
+      "official_url": "https://www.sdhousing.org/develop-housing/available-development-programs/housing-tax-credits",
+      "description": "For 2026, local PHA calculations are not accepted; the page permits service-provider documentation, the HUD Utility Schedule Model, or an SD Housing worksheet request and requires property-specific calculation."
+    },
+    {
+      "finding_id": "SD-HUD-LIMIT-AUTHORITY",
+      "official_url": "https://www.huduser.gov/portal/datasets/il.html",
+      "description": "SD Housing directs income-restriction users to HUD User rather than publishing one statewide static LIHTC figure table on the reviewed page."
+    }
+  ],
+  "official_link_candidates": [
+    {
+      "source_type": "CURRENT_QAP",
+      "title": "Low Income Housing Tax Credit Qualified Allocation Plan 2026-2027",
+      "observed_url": "https://www.sdhousing.org/s/2026-2027-HTC-QAP-Final-072026.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_EXACT_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "COMPLIANCE_MANUAL",
+      "title": "Housing Tax Credit Compliance Manual",
+      "observed_url": "https://www.sdhousing.org/s/2025HTC.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_EXACT_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "UTILITY_ALLOWANCE_WORKSHEET",
+      "title": "Utility Allowance Worksheet",
+      "observed_url": "https://www.sdhousing.org/s/UA-Allowance-Worksheet-Fillable.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_EXACT_BYTES_NOT_CAPTURED_PROPERTY_INPUT_DEPENDENT"
+    },
+    {
+      "source_type": "TENANT_INCOME_CERTIFICATION",
+      "title": "HTC Tenant Income Certification Form and TIC Instructions",
+      "observed_url": "https://www.sdhousing.org/s/Tenant-Income-Certification.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_EXACT_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "STUDENT_SELF_CERTIFICATION",
+      "title": "HTC Student Self-Certification",
+      "observed_url": "https://www.sdhousing.org/s/Student-Self-Certification.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_EXACT_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "STUDENT_FINANCIAL_ASSISTANCE_FORM",
+      "title": "HTC Affidavit of Student Financial Assistance",
+      "observed_url": "https://www.sdhousing.org/s/Affidavit-of-Student-Financial-Assistance.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_EXACT_BYTES_NOT_CAPTURED"
+    },
+    {
+      "source_type": "ASSET_CERTIFICATION",
+      "title": "HOME HTF HTC Under $50,000 Asset Certification",
+      "observed_url": "https://www.sdhousing.org/s/Under-50000-Asset-Certification.pdf",
+      "status": "OFFICIAL_PAGE_LINK_OBSERVED_EXACT_BYTES_NOT_CAPTURED_LAYERED_PROGRAM_SCOPE"
+    }
+  ],
+  "blocking_conflicts": [
+    {
+      "conflict_id": "SD-BINARY-IDENTITY-001",
+      "status": "UNRESOLVED",
+      "description": "Current-looking QAP, compliance, utility and form links were observed on official pages, but inline resources did not yield exact binary identities and cannot be released."
+    },
+    {
+      "conflict_id": "SD-QAP-CURRENCY-001",
+      "status": "UNRESOLVED",
+      "description": "The visible resource title identifies a final 2026-2027 QAP, but its internal adoption, approval and effective-date evidence requires exact capture and validation."
+    },
+    {
+      "conflict_id": "SD-COMPLIANCE-CURRENCY-001",
+      "status": "UNRESOLVED",
+      "description": "The compliance manual URL identifies 2025 while the application page is operating a 2026 cycle; supersession and newer notices require reconciliation."
+    },
+    {
+      "conflict_id": "SD-LIMITS-001",
+      "status": "UNRESOLVED",
+      "description": "SD Housing routes income restrictions to HUD User and property dates and elections remain necessary; no statewide property figure may be activated."
+    },
+    {
+      "conflict_id": "SD-UTILITY-ALLOWANCE-001",
+      "status": "UNRESOLVED",
+      "description": "The 2026 page disallows local PHA calculations and requires one of specified methods plus property-specific evidence and timing; a generic allowance is prohibited."
+    },
+    {
+      "conflict_id": "SD-ANNUAL-OWNER-CERT-001",
+      "status": "UNRESOLVED",
+      "description": "A current public blank Annual Owner Certification was not located in the reviewed program-management form inventory."
+    }
+  ],
+  "enterprise_boundary": "Only exact blank official forms and adopted public guidance belong in this shared pack. Completed tenant certifications, owner submissions, Forms 8609, reservation and carryover documents, extended-use agreements, utility schedules, waivers and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "HUD-confirmed county and property-specific income and rent limits",
+    "placed-in-service and gross-rent-floor dates",
+    "LIHTC, HOME, NHTF and bond layering",
+    "Average Income Test election and unit designations",
+    "approved utility allowance method, evidence and effective date",
+    "extended-use set-asides and property commitments",
+    "effective QAP, compliance guidance and award cycle"
+  ],
+  "activation_requirements": [
+    "Capture exact binary identities for the current QAP, compliance manual and blank forms",
+    "Verify QAP adoption, approval and effective dates",
+    "Reconcile 2025 compliance guidance with the 2026 application cycle and later notices",
+    "Bind HUD limit selection and utility method to property facts",
+    "Resolve source, scope, currency and supersession conflicts",
+    "Add positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
