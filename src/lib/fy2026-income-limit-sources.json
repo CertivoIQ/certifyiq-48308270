@@ -1,0 +1,67 @@
+{
+  "test_id": 60,
+  "version": "2026.08.1",
+  "activation_policy": "ACTUAL_BYTES_HASH_STRUCTURE_GEOGRAPHY_EFFECTIVE_DATE_AND_NORMALIZATION_REQUIRED",
+  "official_sources": [
+    {
+      "dataset_id": "HUD_MTSP_LIMITS_FY2026",
+      "file_name": "MTSP-Data-FY26.xlsx",
+      "sha256": "fbc0af877e610d9cd3d9192febc6d4827319874605adc8897ca95366afac3465",
+      "record_count": 4764,
+      "effective_from": "2026-05-01",
+      "official_url": "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-Data-FY26.xlsx",
+      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES_SCHEMA_AND_CROSSWALK",
+      "expected_legacy_geography_crosswalk_count": 6
+    },
+    {
+      "dataset_id": "HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18",
+      "file_name": "MTSP-IncAvg-Data-FY26.xlsx",
+      "sha256": "54917d23269060f85eeac45ba429b1ce1b157c7dd51a1ce975e5b0293a5ce8ed",
+      "record_count": 4764,
+      "effective_from": "2026-05-01",
+      "official_url": "https://www.huduser.gov/portal/datasets/mtsp/mtsp26/MTSP-IncAvg-Data-FY26.xlsx",
+      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA",
+      "normalization_rule": "ROUND_EXCEL_DECIMAL_ARTIFACT_TO_EXACT_DOLLAR_NEVER_NEAREST_50"
+    },
+    {
+      "dataset_id": "HUD_HOME_RENT_LIMITS_FY2026",
+      "file_name": "HOME_RentLimits_Natl_2026.xlsx",
+      "sha256": "3082bd081727dea71dd62abcb811e3d26ce605f1f645fd5cd8dbcb76e8d4f133",
+      "record_count": 4764,
+      "effective_from": "2026-06-01",
+      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES_AND_SCHEMA"
+    },
+    {
+      "dataset_id": "HUD_HOME_INCOME_LIMITS_FY2026",
+      "file_name": "HOME_IncomeLmts_Natl_2026.xlsx",
+      "activation_status": "BLOCKED_PENDING_FILE_HASH_AND_CONTENT_VALIDATION"
+    },
+    {
+      "dataset_id": "HUD_HTF_INCOME_LIMITS_FY2026",
+      "activation_status": "BLOCKED_PENDING_CONTROLLED_SOURCE"
+    },
+    {
+      "dataset_id": "HUD_SECTION8_INCOME_LIMITS_FY2026",
+      "file_name": "Section8-FY26.xlsx",
+      "activation_status": "BLOCKED_PENDING_FILE_HASH_AND_CONTENT_VALIDATION"
+    },
+    {
+      "dataset_id": "USDA_RD_INCOME_LIMITS_FY2026",
+      "activation_status": "BLOCKED_PENDING_CONTROLLED_SOURCE"
+    }
+  ],
+  "controlled_geography_crosswalk": {
+    "expected_count": 6,
+    "approved_entries": [],
+    "status": "BLOCKED_PENDING_VALIDATED_HOME_OR_SECTION8_SOURCE_ROWS",
+    "affected_states": ["Maine", "Massachusetts"],
+    "west_virginia_affected": false
+  },
+  "state_pack_policy": {
+    "state_specific_findings_require_validated_state_pack": true,
+    "federal_test_60_blocked_by_state_pack_rollout": false,
+    "first_activation_target": "West Virginia",
+    "west_virginia_status": "DRAFT_BLOCKED_PENDING_VALIDATED_PACK_AND_SOURCE_BYTES",
+    "other_states_status": "NOT_ACTIVATED"
+  }
+}
