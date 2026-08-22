@@ -73,6 +73,49 @@ function student(program, overrides = {}) {
   };
 }
 
+function programEvidenceFields(program) {
+  return [
+    `annual_income:${program}`,
+    `net_family_assets:${program}`,
+    `deductions:${program}`,
+    `student_status:${program}`,
+  ];
+}
+
+function programEvidence(program, annualIncome = "59000.00") {
+  const validated = {
+    source_validated: true,
+    value_validated: true,
+    current_for_event: true,
+  };
+  return [
+    {
+      field: `annual_income:${program}`,
+      value: annualIncome,
+      source_document_id: "DOC-TIC",
+      ...validated,
+    },
+    {
+      field: `net_family_assets:${program}`,
+      value: "15000.00",
+      source_document_id: "DOC-TIC",
+      ...validated,
+    },
+    {
+      field: `deductions:${program}`,
+      value: program === "LIHTC" ? "NOT_APPLICABLE" : "PROGRAM_SPECIFIC",
+      source_document_id: "DOC-TIC",
+      ...validated,
+    },
+    {
+      field: `student_status:${program}`,
+      value: "ELIGIBLE",
+      source_document_id: "DOC-APP",
+      ...validated,
+    },
+  ];
+}
+
 function determination(program, overrides = {}) {
   return {
     program_code: program,
@@ -120,17 +163,12 @@ function input(overrides = {}) {
     ],
     required_evidence_fields: [
       "household_roster",
-      "employment_income",
-      "net_family_assets",
-      "student_status",
+      ...programEvidenceFields("LIHTC"),
     ],
     evidence: [
       { field: "household_roster", value: members, source_document_id: "DOC-APP", source_validated: true, value_validated: true, current_for_event: true },
       { field: "household_roster", value: [...members].reverse(), source_document_id: "DOC-TIC", source_validated: true, value_validated: true, current_for_event: true },
-      { field: "employment_income", value: "59000.00", source_document_id: "DOC-APP", source_validated: true, value_validated: true, current_for_event: true },
-      { field: "employment_income", value: "59000.00", source_document_id: "DOC-TIC", source_validated: true, value_validated: true, current_for_event: true },
-      { field: "net_family_assets", value: "15000.00", source_document_id: "DOC-TIC", source_validated: true, value_validated: true, current_for_event: true },
-      { field: "student_status", value: "NOT_FULL_TIME_HOUSEHOLD", source_document_id: "DOC-APP", source_validated: true, value_validated: true, current_for_event: true },
+      ...programEvidence("LIHTC"),
     ],
     property_identity_validated: true,
     unit_identity_validated: true,
@@ -160,7 +198,7 @@ test("spreadsheet artifacts normalize to exact dollars, never nearest fifty", ()
 
 test("conflicting tenant-file evidence blocks every determination", () => {
   const data = input();
-  data.evidence.push({ field: "employment_income", value: "60000.00", source_document_id: "DOC-LEASE", source_validated: true, value_validated: true, current_for_event: true });
+  data.evidence.push({ field: "annual_income:LIHTC", value: "60000.00", source_document_id: "DOC-LEASE", source_validated: true, value_validated: true, current_for_event: true });
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
   assert.equal(result.reason_code, "CONFLICTING_TENANT_FILE_EVIDENCE");
@@ -210,6 +248,8 @@ test("HOME and Section 8 datasets stay blocked pending file validation", () => {
   const data = input();
   data.program_inventory.push("HOME");
   data.program_determinations.push(determination("HOME"));
+  data.required_evidence_fields.push(...programEvidenceFields("HOME"));
+  data.evidence.push(...programEvidence("HOME"));
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.finding, "UNABLE_TO_DETERMINE");
   assert.equal(result.reason_code, "CONTROLLED_DATASET_NOT_ACTIVATED");
@@ -258,4 +298,49 @@ test("program-specific student rule substitution is blocked", () => {
     "HUD_SECTION_8_HIGHER_EDUCATION_STUDENT_24_CFR_5_612";
   const result = evaluateTenantFileEligibility(data);
   assert.equal(result.reason_code, "STUDENT_RULE_PROGRAM_BRANCH_CONFLICT");
+});
+
+test("program income must match reconciled tenant-file evidence", () => {
+  const data = input();
+  data.program_determinations[0].annual_income = "60000.00";
+  const result = evaluateTenantFileEligibility(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(result.reason_code, "PROGRAM_INCOME_EVIDENCE_CONFLICT");
+});
+
+test("caller-defined evidence inventory cannot omit eligibility fields", () => {
+  const data = input();
+  data.required_evidence_fields = ["household_roster"];
+  const result = evaluateTenantFileEligibility(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(result.reason_code, "REQUIRED_ELIGIBILITY_EVIDENCE_SCOPE_MISSING");
+  assert.ok(result.missing_inputs.includes("annual_income:LIHTC"));
+});
+
+test("unregistered dataset identifiers remain blocked", () => {
+  const data = input();
+  data.program_determinations[0].income_limit_source.dataset_id =
+    "CALLER_CREATED_LIMITS";
+  const result = evaluateTenantFileEligibility(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(result.reason_code, "UNREGISTERED_INCOME_LIMIT_SOURCE");
+});
+
+test("caller-created future state packs cannot activate state findings", () => {
+  const data = input({
+    state_finding_requested: true,
+    state_rulepack: {
+      pack_id: "CALLER-CREATED-WV",
+      jurisdiction: "WV",
+      status: "validated",
+      approvedBy: "caller",
+      version: "2099.1",
+      sha256: "caller",
+      effectiveFrom: "2099-01-01",
+      validatedRuleCount: 999,
+    },
+  });
+  const result = evaluateTenantFileEligibility(data);
+  assert.equal(result.finding, "UNABLE_TO_DETERMINE");
+  assert.equal(result.reason_code, "STATE_ELIGIBILITY_PACK_NOT_VALIDATED");
 });
