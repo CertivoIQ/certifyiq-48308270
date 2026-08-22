@@ -155,12 +155,15 @@
     "LURA or declaration",
     "HAP contract",
     "property utility schedule",
-    "LURA"
+    "LURA",
+    "property waiver",
+    "regulatory agreement"
   ],
   "activation_requirements": [
     "exact official bytes and SHA-256 hashes",
     "final-current verification",
     "page-cited rules",
+    "conflict resolution",
     "required fixtures",
     "independent approval",
     "enterprise VP Compliance property-figure verification at onboarding"
