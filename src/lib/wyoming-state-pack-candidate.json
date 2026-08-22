@@ -1,0 +1,222 @@
+{
+  "test_id": 82,
+  "state_code": "WY",
+  "pack_id": "wy-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC"],
+  "release_status": "BLOCKED_PENDING_CANONICAL_SOURCE_SELECTION_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T20:46:46Z",
+    "official_index_url": "https://www.wyomingcda.com/affordable-housing/",
+    "exact_binary_count": 12,
+    "pending_binary_count": 2,
+    "method": "OFFICIAL_PAGE_LINKED_FILE_BYTE_CAPTURE"
+  },
+  "agency": {
+    "name": "Wyoming Community Development Authority",
+    "official_domain": "wyomingcda.com",
+    "program_page": "https://www.wyomingcda.com/affordable-housing/"
+  },
+  "official_source_candidates": [
+    {
+      "source_type": "CURRENT_ALLOCATION_PLAN",
+      "title": "2026 Affordable Housing Allocation Plan",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2025/07/2026-AHAP-Final-UPDATED.pdf",
+      "file_name": "2026-AHAP-Final-UPDATED.pdf",
+      "file_bytes": 823127,
+      "observed_pages": 75,
+      "sha256": "b56fc8109700bf76ee8b2e75773fa7b50a959b1e23e00bdcb624e718a78e69b1",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "source_type": "PROSPECTIVE_ALLOCATION_PLAN_VARIANT",
+      "title": "2027 Affordable Housing Allocation Plan (FINAL-1)",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2026/06/2027-AHAP-FINAL-1.pdf",
+      "file_name": "2027-AHAP-FINAL-1.pdf",
+      "file_bytes": 834184,
+      "observed_pages": 80,
+      "sha256": "e984f7be94c2f1c313535ba7daeec66834b372a019e2221dff0dcc0e9a7a2c7b",
+      "extracted_text_sha256": "9740ef6d0fcd1e6e047351f4caafee728cfb7f7bd1febef1d9b436d84e71df51",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CANONICAL_VARIANT_REVIEW"
+    },
+    {
+      "source_type": "PROSPECTIVE_ALLOCATION_PLAN_VARIANT",
+      "title": "2027 Affordable Housing Allocation Plan (FINAL)",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2026/06/2027-AHAP-FINAL.pdf",
+      "file_name": "2027-AHAP-FINAL.pdf",
+      "file_bytes": 834184,
+      "observed_pages": 80,
+      "sha256": "6a906000c0d8faa48f6a6520d6f8e762747223ffce76b6646131d93782369bd1",
+      "extracted_text_sha256": "9740ef6d0fcd1e6e047351f4caafee728cfb7f7bd1febef1d9b436d84e71df51",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CANONICAL_VARIANT_REVIEW"
+    },
+    {
+      "source_type": "COMPLIANCE_MANUAL",
+      "title": "2025-2026 Affordable Rental Housing Compliance Manual",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2025/08/WCDA-2025-2026-Compliance-Manual.pdf",
+      "file_name": "WCDA-2025-2026-Compliance-Manual.pdf",
+      "document_self_identified_date": "2025-08",
+      "document_applicable_no_later_than": "2026-01-01",
+      "file_bytes": 3601559,
+      "observed_pages": 63,
+      "sha256": "adccb3dfd15b31d8b7876e57b5c224de9abd087176f67e4c8d0e1b881af58311",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"
+    }
+  ],
+  "official_blank_form_candidates": [
+    {
+      "title": "Tenant Income Certification",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2025/12/Tenant-Income-Certification-FINAL.pdf",
+      "file_name": "Tenant-Income-Certification-FINAL.pdf",
+      "file_bytes": 124724,
+      "observed_pages": 2,
+      "sha256": "1a360eed9d480f0e672b13a6b2608708ef7ca247a82cfff6b0fe4bc741f9bc3c",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Tenant Income Certification Instructions",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2025/12/TIC-Instructions-FINAL.pdf",
+      "file_name": "TIC-Instructions-FINAL.pdf",
+      "file_bytes": 127329,
+      "observed_pages": 5,
+      "sha256": "19852e491f694de5c3c5b7ccbc1576103ccf2718f97f90f026ef2d1f8e3db090",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Owner Certification of Continuing LIHTC Compliance (2019-10 link)",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2019/10/1.-Owner-Certification-of-Compliance-Form-2019-003-fillable.pdf",
+      "file_name": "1.-Owner-Certification-of-Compliance-Form-2019-003-fillable.pdf",
+      "document_self_identified_version": "2019",
+      "file_bytes": 234573,
+      "observed_pages": 3,
+      "sha256": "941403621989eb8991a326442811877d9e211ed54ea1bf0cb314487a4fcf8ccf",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CANONICAL_VERSION_REVIEW"
+    },
+    {
+      "title": "Annual Owner Certification for LIHTC (2019-11 link)",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2019/11/1.-Owner-Certification-of-Compliance-Form-2019-003-fillable1.pdf",
+      "file_name": "1.-Owner-Certification-of-Compliance-Form-2019-003-fillable1.pdf",
+      "document_self_identified_version": "2019",
+      "file_bytes": 234573,
+      "observed_pages": 3,
+      "sha256": "941403621989eb8991a326442811877d9e211ed54ea1bf0cb314487a4fcf8ccf",
+      "status": "EXACT_BYTES_CAPTURED_DUPLICATE"
+    },
+    {
+      "title": "Annual Owner Certification for LIHTC (2021 secured)",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2021/12/LIHTC-Annual-Owners-Certification-fillable-2021SECURED.pdf",
+      "file_name": "LIHTC-Annual-Owners-Certification-fillable-2021SECURED.pdf",
+      "document_self_identified_version": "2021",
+      "file_bytes": 105554,
+      "observed_pages": 3,
+      "sha256": "39f52267f35a6634fd831c527b6ea21bde78cf12f382a3c6bdb1df84bda951ab",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CANONICAL_VERSION_REVIEW"
+    },
+    {
+      "title": "Certification of Zero Income",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2026/04/Certification-of-Zero-Income.pdf",
+      "file_name": "Certification-of-Zero-Income.pdf",
+      "file_bytes": 80812,
+      "observed_pages": 1,
+      "sha256": "f4c2520d3bb61cc72c63ca5608c52f91da1c3880aa4ccff068345720dfa9a3ce",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Self Certification Questionnaire (LIHTC)",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2020/12/SelfCertificationQ-LIHTC.pdf",
+      "file_name": "SelfCertificationQ-LIHTC.pdf",
+      "file_bytes": 68440,
+      "observed_pages": 3,
+      "sha256": "e81da09556a75d0a1df4620b3994e26c65faf63e44d7c3e6c24e4770b4207321",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    },
+    {
+      "title": "Student Self-Certification (LIHTC)",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2025/12/Student-Self-Certification-Form-LIHTC.pdf",
+      "file_name": "Student-Self-Certification-Form-LIHTC.pdf",
+      "file_bytes": 83006,
+      "observed_pages": 2,
+      "sha256": "1a07ec8e2158f7e28c47c9b0c1392acb4ce84ff99429005b5a63015f837b0850",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    }
+  ],
+  "pending_official_binary_candidates": [
+    {
+      "title": "LIHTC First Year Qualified Basis Certification",
+      "official_url": "http://www.wyomingcda.com/wp-content/uploads/2018/01/LIHTC_First_Year_Qualified_Basis_Certification.pdf",
+      "file_name": "LIHTC_First_Year_Qualified_Basis_Certification.pdf",
+      "sha256": null,
+      "status": "PENDING_EXACT_BYTES_AND_HTTPS_REVIEW"
+    },
+    {
+      "title": "Income Asset Worksheet",
+      "official_url": "https://www.wyomingcda.com/wp-content/uploads/2022/03/Income-Asset-Worksheet-NEW.xlsx",
+      "file_name": "Income-Asset-Worksheet-NEW.xlsx",
+      "sha256": null,
+      "status": "PENDING_EXACT_BYTES"
+    }
+  ],
+  "external_figure_source_candidates": [
+    {
+      "title": "Rent and Income Limit Calculator",
+      "official_index_label": "Rent and Income Limit Calculator",
+      "external_url": "https://ric.novoco.com/tenant/rentincome/calculator/z1.jsp",
+      "publisher_domain": "novoco.com",
+      "status": "THIRD_PARTY_SOURCE_REQUIRES_AUTHORITY_AND_FIGURE_VALIDATION"
+    }
+  ],
+  "blocking_conflicts": [
+    {
+      "conflict_id": "WY-2027-PLAN-VARIANTS-001",
+      "status": "UNRESOLVED",
+      "description": "WCDA publishes two 2027 FINAL filenames with identical extracted text and page count but different exact PDF hashes and creation metadata; one canonical byte identity must be selected."
+    },
+    {
+      "conflict_id": "WY-PROSPECTIVE-2027-001",
+      "status": "UNRESOLVED",
+      "description": "The 2026 plan is current while a 2027 plan is already published; prospective effective dates and supersession must remain separate."
+    },
+    {
+      "conflict_id": "WY-OWNER-CERT-LINEAGE-001",
+      "status": "UNRESOLVED",
+      "description": "The live page simultaneously publishes two byte-identical 2019 owner-certification links and a distinct 2021 secured version without a stated supersession relationship."
+    },
+    {
+      "conflict_id": "WY-MISLABELED-PLAN-LINK-001",
+      "status": "UNRESOLVED",
+      "description": "One visible 2026 Affordable Housing Allocation Plan link on the live page points to the 2023 AHAP file."
+    },
+    {
+      "conflict_id": "WY-THIRD-PARTY-LIMITS-001",
+      "status": "UNRESOLVED",
+      "description": "WCDA directs users to a Novogradac-hosted calculator for rent and income limits; the property figures are not an exact WCDA-controlled statewide dataset in this capture."
+    },
+    {
+      "conflict_id": "WY-PLAN-AMENDMENT-001",
+      "status": "UNRESOLVED",
+      "description": "The 2026 plan states that the allocation plan and related program materials may be amended from time to time."
+    }
+  ],
+  "enterprise_boundary": "Only blank official forms belong in this shared pack. Completed tenant certifications, owner submissions, project Forms 8609, LURAs, HAP contracts, waivers, and regulatory agreements remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "income limits",
+    "rent limits",
+    "utility allowances",
+    "set-asides",
+    "effective dates",
+    "property-specific program layering"
+  ],
+  "activation_requirements": [
+    "Canonical current and prospective allocation-plan byte identities",
+    "Canonical owner-certification version lineage",
+    "Exact bytes for pending official binaries",
+    "Trusted rent and income figure authority validation",
+    "Byte-derived content validation and page-level deterministic rule citations",
+    "Resolved source, currency, amendment, and supersession conflicts",
+    "Positive, negative, boundary, layered-program, and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding",
+    "Prospective effective date and retained prior versions"
+  ]
+}
