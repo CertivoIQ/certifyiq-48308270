@@ -44,7 +44,8 @@
     "test:state-source-va": "node --test scripts/test-virginia-source-audit.mjs",
     "test:state-source-vi": "node --test scripts/test-virgin-islands-source-capture.mjs",
     "test:state-source-vt": "node --test scripts/test-vermont-source-capture.mjs",
-    "test:state-source-ut": "node --test scripts/test-utah-source-audit.mjs"
+    "test:state-source-ut": "node --test scripts/test-utah-source-audit.mjs",
+    "test:state-source-tx": "node --test scripts/test-texas-source-capture.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",

@@ -1,0 +1,176 @@
+{
+  "test_id": 89,
+  "state_code": "TX",
+  "pack_id": "tx-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "TAX_EXEMPT_BOND", "HOME", "NHTF"],
+  "release_status": "BLOCKED_PENDING_SOURCE_COMPOSITION_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T23:20:00Z",
+    "official_program_url": "https://www.tdhca.texas.gov/competitive-9-housing-tax-credits",
+    "official_qap_url": "https://www.tdhca.texas.gov/multifamily-programs-qap-nofas-and-rules",
+    "official_compliance_url": "https://www.tdhca.texas.gov/compliance",
+    "official_forms_url": "https://www.tdhca.texas.gov/compliance-forms",
+    "official_limits_url": "https://www.tdhca.texas.gov/income-and-rent-limits",
+    "official_utility_allowance_url": "https://www.tdhca.texas.gov/compliance-utility-allowance-information",
+    "exact_binary_count": 8,
+    "method": "OFFICIAL_PAGE_LINKED_FILE_BYTE_CAPTURE"
+  },
+  "agency": {
+    "name": "Texas Department of Housing and Community Affairs",
+    "official_domain": "tdhca.texas.gov"
+  },
+  "page_authorities": [
+    {
+      "source_type": "PROGRAM_PAGE",
+      "title": "Competitive (9%) Housing Tax Credits",
+      "official_url": "https://www.tdhca.texas.gov/competitive-9-housing-tax-credits",
+      "authority_note": "TDHCA identifies the QAP and Uniform Multifamily Rules as the governing application authorities and routes post-award monitoring to its Compliance division."
+    },
+    {
+      "source_type": "COMPLIANCE_PAGE",
+      "title": "Compliance",
+      "official_url": "https://www.tdhca.texas.gov/compliance",
+      "authority_note": "TDHCA states that file monitoring and physical inspections occur at least once every three years and that Annual Owner's Compliance Reports are submitted through CMTS."
+    },
+    {
+      "source_type": "PROPERTY_LIMIT_TOOL_AUTHORITY",
+      "title": "Income and Rent Limits",
+      "official_url": "https://www.tdhca.texas.gov/income-and-rent-limits",
+      "authority_note": "TDHCA states that the public tool is not definitive or conclusively correct and expressly warns that inaccurate project-specific data produces erroneous output."
+    }
+  ],
+  "exact_binary_sources": [
+    {
+      "source_type": "CURRENT_QAP",
+      "title": "2026 Governor Approved Qualified Allocation Plan (10 TAC Chapter 11)",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/multifamily/docs/26-QAP.pdf",
+      "file_name": "26-QAP.pdf",
+      "document_self_identified_revision": "Governor approved with modification 2025-12-01",
+      "file_bytes": 1755171,
+      "observed_pages": 218,
+      "sha256": "4bda851be19661d53b5729edd8b49378c41e170b16d5fefcadddcc6b0de60b8a",
+      "status": "EXACT_BYTES_CAPTURED_CURRENT_COURTESY_COPY_PENDING_TAC_RECONCILIATION"
+    },
+    {
+      "source_type": "COMPLIANCE_MONITORING_RULE",
+      "title": "10 TAC Chapter 10 Subchapter F - Compliance Monitoring",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/CM-SubCh-F-Searchable.pdf",
+      "file_name": "CM-SubCh-F-Searchable.pdf",
+      "official_page_effective_date": "2025-01-02",
+      "file_bytes": 1362467,
+      "observed_pages": 81,
+      "sha256": "2bfceae19671d1ec69fc7d318f4f31ca431aa8dc7c8b4e55763bc059f3569c2f",
+      "status": "EXACT_BYTES_CAPTURED_CURRENT_RULE_PENDING_DETERMINISTIC_EXTRACTION"
+    },
+    {
+      "source_type": "TENANT_INCOME_CERTIFICATION",
+      "title": "HOTMA Income Certification",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/HOTMA-IncomeCert_1.pdf",
+      "file_name": "HOTMA-IncomeCert_1.pdf",
+      "file_bytes": 603883,
+      "observed_pages": 3,
+      "sha256": "7d7d6f75eeb258a856cfbde56b5f2a01544e51005a79efd852e0826f20531ff0",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_FIELD_AND_PROGRAM_SCOPE_VALIDATION"
+    },
+    {
+      "source_type": "STUDENT_ELIGIBILITY_FORM",
+      "title": "Certification of Student Eligibility",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/StudentEligibility.pdf",
+      "file_name": "StudentEligibility.pdf",
+      "file_bytes": 117296,
+      "observed_pages": 1,
+      "sha256": "78fda34816df55bbfe1b914f35fa6e20dbb7f657bc41211a178d04cd4dad9ca3",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "source_type": "OWNER_ELECTRONIC_FILE_CERTIFICATION",
+      "title": "Electronic File Certification",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/EFCert-form.pdf",
+      "file_name": "EFCert-form.pdf",
+      "file_bytes": 109076,
+      "observed_pages": 2,
+      "sha256": "ea94cc5affca19dcdcef730397ef36dcfb0d8012215da10c3cb5ebf7b3f9097f",
+      "status": "EXACT_BYTES_CAPTURED_OPTIONAL_ELECTRONIC_RECORD_SCOPE_ONLY"
+    },
+    {
+      "source_type": "ANNUAL_TENANT_ELIGIBILITY_CERTIFICATION",
+      "title": "2020 Annual Eligibility Certification",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/20-AnnualEligibilityCertification.pdf",
+      "file_name": "20-AnnualEligibilityCertification.pdf",
+      "document_self_identified_revision": "2020",
+      "file_bytes": 194179,
+      "observed_pages": 1,
+      "sha256": "cf8531fa8bc2571674e501d07a3db23cc155c6889c0f18a0380a10d406e53b75",
+      "status": "EXACT_BYTES_CAPTURED_RESTRICTED_PROGRAM_AND_RECERTIFICATION_SCOPE_PENDING_CURRENCY_REVIEW"
+    },
+    {
+      "source_type": "INCOME_RENT_TOOL_INSTRUCTIONS",
+      "title": "Instructions on How To Use the Department Income and Rent Tool",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/IRL-Instructions.pdf",
+      "file_name": "IRL-Instructions.pdf",
+      "file_bytes": 56472,
+      "observed_pages": 2,
+      "sha256": "f5398fc9f4bbbfd459bf0ca45a9f123867a504e85286a91591c4056a4976f3b0",
+      "status": "EXACT_BYTES_CAPTURED_PROPERTY_INPUT_DEPENDENT_NO_STATEWIDE_FIGURE_ACTIVATION"
+    },
+    {
+      "source_type": "UTILITY_ALLOWANCE_GUIDANCE",
+      "title": "Actual Use Technical Guide",
+      "official_url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/Actual-Use-TechGuide.pdf",
+      "file_name": "Actual-Use-TechGuide.pdf",
+      "file_bytes": 74886,
+      "observed_pages": 2,
+      "sha256": "deb39f310884e38af58b2f13cd59ba138662731d74fecc7e00c242f2bff49ce0",
+      "status": "EXACT_BYTES_CAPTURED_ACTUAL_USE_METHOD_ONLY_PENDING_PROPERTY_EVIDENCE"
+    }
+  ],
+  "blocking_conflicts": [
+    {
+      "conflict_id": "TX-QAP-TAC-001",
+      "status": "UNRESOLVED",
+      "description": "The adopted 2026 QAP PDF identifies itself as a courtesy copy and warns that nonsubstantive differences may exist from the official Texas Administrative Code version; deterministic rules require TAC reconciliation."
+    },
+    {
+      "conflict_id": "TX-LIMIT-INPUT-001",
+      "status": "UNRESOLVED",
+      "description": "TDHCA expressly warns that its public Income and Rent Tool is not definitive and that inaccurate project-specific inputs produce erroneous figures; no statewide row may be activated without property verification."
+    },
+    {
+      "conflict_id": "TX-LAYERED-PROGRAM-001",
+      "status": "UNRESOLVED",
+      "description": "TDHCA instructions require separate tool runs for each applicable funding source, so LIHTC, HOME, NHTF and bond limits must not be flattened into one result."
+    },
+    {
+      "conflict_id": "TX-ANNUAL-CERT-SCOPE-001",
+      "status": "UNRESOLVED",
+      "description": "The static 2020 Annual Eligibility Certification is a tenant form with restricted program scope and is not the Annual Owner's Compliance Report, which TDHCA requires through CMTS."
+    },
+    {
+      "conflict_id": "TX-UTILITY-ALLOWANCE-001",
+      "status": "UNRESOLVED",
+      "description": "The Actual Use method requires property-specific samples, utility-provider evidence, rent roll data and TDHCA review; its guide cannot supply a generic allowance."
+    }
+  ],
+  "enterprise_boundary": "Only blank official forms and adopted public guidance belong in this shared pack. Completed tenant certifications, owner reports, Forms 8609, carryover agreements, LURAs, CMTS submissions, utility schedules, waivers and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "county, designated place and property-specific income and rent limits",
+    "placed-in-service, carryover, determination and gross-rent-floor dates",
+    "9% LIHTC, 4% bond, HOME and NHTF layering",
+    "Average Income Test election and unit designations",
+    "utility allowance method, evidence and effective date",
+    "LURA set-asides and property commitments",
+    "current TAC, QAP and award cycle"
+  ],
+  "activation_requirements": [
+    "Reconcile the courtesy QAP PDF to the operative Texas Administrative Code",
+    "Extract deterministic rule citations from the current compliance monitoring rule",
+    "Validate current blank-form fields and restricted program scopes",
+    "Require separate property-verified limit results for every layered funding source",
+    "Resolve source, scope, currency, supersession and utility-method conflicts",
+    "Add positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
