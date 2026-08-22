@@ -1,0 +1,85 @@
+{
+  "test_id": 69,
+  "batch_id": "PR-PA-OR-OK-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "states": [
+    {
+      "state_code": "PR",
+      "agency": "Puerto Rico Housing Finance Authority",
+      "official_domain": "afv.pr.gov",
+      "sources": [
+        {
+          "type": "NOFA_QAP_AND_FORMS",
+          "url": "https://www.afv.pr.gov/nofa-2016/",
+          "status": "BLOCKED_OBSOLETE_2016_SOURCE"
+        }
+      ],
+      "conflicts": [
+        "The indexed official page exposes 2016 QAP, limits, monitoring plan, and forms; no current final 2026 LIHTC materials were verified."
+      ]
+    },
+    {
+      "state_code": "PA",
+      "agency": "Pennsylvania Housing Finance Agency",
+      "official_domain": "phfa.org",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_AND_PROGRAM",
+          "url": "https://www.phfa.org/mhp/developers/lihtc.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "2025/2026 QAP and compliance monitoring procedures are listed but require exact-byte and effective-date validation."
+      ]
+    },
+    {
+      "state_code": "OR",
+      "agency": "Oregon Housing and Community Services",
+      "official_domain": "ohcs.oregon.gov",
+      "sources": [
+        {
+          "type": "AGENCY_DISCOVERY_ROOT",
+          "url": "https://ohcs.oregon.gov/",
+          "status": "BLOCKED_REQUIRED_LIHTC_SOURCE_PAGES_NOT_VERIFIED"
+        }
+      ],
+      "conflicts": [
+        "Current QAP, compliance manual, forms index, and monitoring pages were not verified from indexed official results."
+      ]
+    },
+    {
+      "state_code": "OK",
+      "agency": "Oklahoma Housing Finance Agency",
+      "official_domain": "ohfa.org",
+      "sources": [
+        {
+          "type": "QAP_APPLICATION_COMPLIANCE_AND_FORMS",
+          "url": "https://www.ohfa.org/affordable-housing-tax-credits/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "conflicts": [
+        "2027 QAP materials are drafts; the 2026 QAP effective 2026-01-01 remains the current final candidate."
+      ]
+    }
+  ],
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "final-current verification",
+    "page-cited deterministic rules",
+    "conflict resolution",
+    "required fixtures",
+    "platform release approval",
+    "enterprise VP property figure verification"
+  ]
+}
