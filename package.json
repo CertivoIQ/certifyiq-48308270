@@ -20,7 +20,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs",
-    "test:ocr": "node scripts/test-ocr-sidecar.mjs"
+    "test:ocr": "node scripts/test-ocr-sidecar.mjs",
+    "test:property-figures": "node --test scripts/test-enterprise-property-figure-verification.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
