@@ -9,6 +9,7 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export const RECERTIFICATION_OCCUPANCY_RULE_ID:
     "FED-RECERTIFICATION-OCCUPANCY-CONTROLS-001";
   export const ENTERPRISE_PROJECT_AUTHORITY_ENGINE_BUILD: string;
+  export const STATE_RULE_PACK_RELEASE_ENGINE_BUILD: string;
   export const MINIMUM_CONFIDENCE: number;
   export const REVIEW_DECISIONS: readonly ReviewDecision[];
 
@@ -271,6 +272,21 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     validateDocumentContent(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
     validateStatePackRelease(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
   }): EnterpriseProjectAuthorityGateway;
+
+  export interface StateRulePackReleaseGateway {
+    beginMaintenanceSession(input?: Record<string, unknown>): Promise<Record<string, unknown>>;
+    ingestOfficialSources(input?: Record<string, unknown>): Promise<Record<string, unknown>>;
+    createValidatedRelease(input?: Record<string, unknown>): Promise<Record<string, unknown>>;
+    validateStatePackRelease(input?: Record<string, unknown>): Record<string, unknown>;
+  }
+
+  export function createStateRulePackReleaseGateway(adapters: {
+    authorizeMaintainer(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+    validateSourceContent(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+    validateSourceConflicts(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+    validateRuleFixtures(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+    approveIndependentRelease(input: Record<string, unknown>): Promise<Record<string, unknown>> | Record<string, unknown>;
+  }): StateRulePackReleaseGateway;
 
   export function signOffAllowed(result: EvaluationResult): boolean;
 }
