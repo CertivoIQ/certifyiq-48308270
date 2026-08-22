@@ -42,7 +42,8 @@
     "test:state-source-wi": "node --test scripts/test-wisconsin-source-capture.mjs",
     "test:state-source-wa": "node --test scripts/test-washington-source-capture.mjs",
     "test:state-source-va": "node --test scripts/test-virginia-source-audit.mjs",
-    "test:state-source-vi": "node --test scripts/test-virgin-islands-source-capture.mjs"
+    "test:state-source-vi": "node --test scripts/test-virgin-islands-source-capture.mjs",
+    "test:state-source-vt": "node --test scripts/test-vermont-source-capture.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
