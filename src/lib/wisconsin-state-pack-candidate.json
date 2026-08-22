@@ -1,0 +1,359 @@
+{
+  "test_id": 83,
+  "state_code": "WI",
+  "pack_id": "wi-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC"],
+  "release_status": "BLOCKED_PENDING_SOURCE_COMPOSITION_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T21:00:04Z",
+    "official_program_url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc/allocating",
+    "official_forms_url": "https://www.wheda.com/developers-and-property-managers/forms-manuals-and-resources/housing-tax-credit-forms",
+    "official_data_url": "https://www.wheda.com/developers-and-property-managers/tax-credits/multifamily-data-library",
+    "official_monitoring_url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc/monitoring",
+    "exact_binary_count": 26,
+    "method": "OFFICIAL_PAGE_LINKED_FILE_BYTE_CAPTURE"
+  },
+  "agency": {
+    "name": "Wisconsin Housing and Economic Development Authority",
+    "official_domain": "wheda.com"
+  },
+  "official_source_candidates": [
+    {
+      "source_type": "CURRENT_CONSOLIDATED_QAP",
+      "title": "2025-2026 Qualified Allocation Plan",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2025/2025-26-qap.pdf",
+      "file_name": "2025-26-qap.pdf",
+      "document_self_identified_revision": "2026-07",
+      "file_bytes": 4422620,
+      "observed_pages": 40,
+      "sha256": "0df8e431c02f591c8d871ab938ae887b0e5e0dfd16fed4b14fbb4e517b025f1e",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_MODIFICATION_COMPOSITION_REVIEW"
+    },
+    {
+      "source_type": "PROSPECTIVE_QAP",
+      "title": "2027-2028 Qualified Allocation Plan",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2027/2027-2028-qap.pdf",
+      "file_name": "2027-2028-qap.pdf",
+      "official_page_updated": "2026-06-18",
+      "file_bytes": 2212745,
+      "observed_pages": 25,
+      "sha256": "91034cfd2443fcb755ed8877a36cb3b8f981b4efeb7669e002d569f85ba27b24",
+      "status": "EXACT_BYTES_CAPTURED_PROSPECTIVE_PENDING_EFFECTIVE_DATE"
+    },
+    {
+      "source_type": "QAP_MODIFICATION",
+      "modification_number": 1,
+      "title": "Summary of Changes - Modification 1 of the 2025-2026 QAP",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2026/summary-of-changes-modification-1-to-the-2025-2026-qualified-allocation-plan.pdf",
+      "file_name": "summary-of-changes-modification-1-to-the-2025-2026-qualified-allocation-plan.pdf",
+      "document_updated": "2025-08-11",
+      "file_bytes": 290508,
+      "observed_pages": 5,
+      "sha256": "d34ff745089c998d0fb357fe8a24f1385cf2747ddba71a3dd08e7a7a64b9c623",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_APPLICABILITY_REVIEW"
+    },
+    {
+      "source_type": "QAP_MODIFICATION",
+      "modification_number": 2,
+      "title": "Summary of Changes - Modification 2 of the 2025-2026 QAP",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2026/summary-of-changes-modification-2-to-the-2025-26-qualified-allocation-plan.pdf",
+      "file_name": "summary-of-changes-modification-2-to-the-2025-26-qualified-allocation-plan.pdf",
+      "document_updated": "2025-08-11",
+      "file_bytes": 98302,
+      "observed_pages": 1,
+      "sha256": "f7ca8d219c16602ecf9c9b2e0107307dc955718b318993507470e9c2c44051ce",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_APPLICABILITY_REVIEW"
+    },
+    {
+      "source_type": "QAP_MODIFICATION",
+      "modification_number": 3,
+      "title": "Summary of Changes - Modification 3 of the 2025-2026 QAP",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2026/summary-of-changes---modification-3-to-the-2025-26-qualified-allocation-plan.pdf",
+      "file_name": "summary-of-changes---modification-3-to-the-2025-26-qualified-allocation-plan.pdf",
+      "document_updated": "2025-10-15",
+      "file_bytes": 124133,
+      "observed_pages": 1,
+      "sha256": "2a63bc9a50bc66be72e30803215b1209d2d49417afe5de7847910cf725676fc9",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_APPLICABILITY_REVIEW"
+    },
+    {
+      "source_type": "QAP_MODIFICATION",
+      "modification_number": 4,
+      "title": "Summary of Changes - Modification 4 of the 2025-2026 QAP",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2026/summary-of-changes---modification-4-to-the-2025-26-qualified-allocation-plan.pdf",
+      "file_name": "summary-of-changes---modification-4-to-the-2025-26-qualified-allocation-plan.pdf",
+      "document_updated": "2025-11-14",
+      "file_bytes": 143078,
+      "observed_pages": 2,
+      "sha256": "9a9c2965003b3644cace106bdd8f9c97a2663841ab30e6ace48adb84d4c8bb07",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_APPLICABILITY_REVIEW"
+    },
+    {
+      "source_type": "QAP_MODIFICATION",
+      "modification_number": 5,
+      "title": "Summary of Changes - Modification 5 of the 2025-2026 QAP",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2026/summary-of-changes---modification-5-to-the-2025-26-qualified-allocation-plan.pdf",
+      "file_name": "summary-of-changes---modification-5-to-the-2025-26-qualified-allocation-plan.pdf",
+      "document_updated": "2026-01-21",
+      "file_bytes": 111034,
+      "observed_pages": 1,
+      "sha256": "ee718b1943362b4a0e94da5fb454979993f8ccf6cd88a60aaf1d986cd4e3bdd8",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_APPLICABILITY_REVIEW"
+    },
+    {
+      "source_type": "QAP_MODIFICATION",
+      "modification_number": 6,
+      "title": "Summary of Changes - Modification 6 of the 2025-2026 QAP",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2026/summary-of-changes---modification-6-to-the-2025-26-qualified-allocation-plan.pdf",
+      "file_name": "summary-of-changes---modification-6-to-the-2025-26-qualified-allocation-plan.pdf",
+      "document_updated": "2026-02-18",
+      "file_bytes": 112221,
+      "observed_pages": 1,
+      "sha256": "3e2ba00540a74009003a265712d7a9f310f5f2598ad23c81b864f8e6d31b9426",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_APPLICABILITY_REVIEW"
+    },
+    {
+      "source_type": "QAP_MODIFICATION",
+      "modification_number": 7,
+      "title": "Summary of Changes - Modification 7 of the 2025-2026 QAP",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/2026/summary-of-changes---modification-7-to-the-2025-26-qualified-allocation-plan.pdf",
+      "file_name": "summary-of-changes---modification-7-to-the-2025-26-qualified-allocation-plan.pdf",
+      "document_updated": "2026-07-28",
+      "file_bytes": 113629,
+      "observed_pages": 1,
+      "sha256": "5ca566432a2ccbc3f44628b3583064ff38011f7fafef0a4a14f8fda7c6c1986c",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_APPLICABILITY_REVIEW"
+    },
+    {
+      "source_type": "COMPLIANCE_MANUAL",
+      "title": "HTC Compliance Monitoring Manual",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/htc-monitoring-manual.pdf",
+      "file_name": "htc-monitoring-manual.pdf",
+      "document_self_identified_revision": "2026-08",
+      "file_bytes": 905761,
+      "observed_pages": 89,
+      "sha256": "bf01cc3b61b2862954950d6e400509718b3b03c59a774630250d50970603e28a",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_RULE_EXTRACTION"
+    }
+  ],
+  "official_blank_form_candidates": [
+    {
+      "title": "Owner Certificate of Continuing Compliance",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/ahtc100.pdf",
+      "file_name": "ahtc100.pdf",
+      "form_number": "100",
+      "file_bytes": 383052,
+      "observed_pages": 4,
+      "sha256": "270adcd76879bbfdd1710f2e2413c8f4297de21eafe610fa4f1cb4fa2f8e943f",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Form 100 Instructions",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/ahtc100-instructions.pdf",
+      "file_name": "ahtc100-instructions.pdf",
+      "form_number": "101",
+      "file_bytes": 162583,
+      "observed_pages": 1,
+      "sha256": "fd8de5d3c7b2560c0f51db5f5f8b2d584f9bd1fb563cae3fce0ea0143bc08a8b",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Tenant Income Certification",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/ahtc300.pdf",
+      "file_name": "ahtc300.pdf",
+      "form_number": "300",
+      "file_bytes": 369668,
+      "observed_pages": 2,
+      "sha256": "52672a93520502b3d4bdee9167b2d42cf35eb99daa9a9e2b4dc7c94e46b736cd",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "TIC Instructions",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/form-301-instructions-for-completing-tic.pdf",
+      "file_name": "form-301-instructions-for-completing-tic.pdf",
+      "form_number": "301",
+      "file_bytes": 210192,
+      "observed_pages": 5,
+      "sha256": "3ee9937d0f6d2e5e75628ee7061edb674954b8f0b103331b50322b1f98637401",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Student Status Verification",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/ahtc800-b-student-status-verification.pdf",
+      "file_name": "ahtc800-b-student-status-verification.pdf",
+      "form_number": "800B",
+      "file_bytes": 265164,
+      "observed_pages": 1,
+      "sha256": "9da43025d183b7e92cca0699b5995830cd8aadb878f97bc7b3846651066e81fa",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Affidavit of Student Financial Assistance",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/ahtc800-c-affidavit-of-student-financial-assistance.pdf",
+      "file_name": "ahtc800-c-affidavit-of-student-financial-assistance.pdf",
+      "form_number": "800C",
+      "file_bytes": 191446,
+      "observed_pages": 2,
+      "sha256": "2deb7b329507d901b6c5d0c8dde71e1120991c0f9af718d3ff2e175b6ab00adb",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CONTENT_VALIDATION"
+    },
+    {
+      "title": "Tenant Income Self-Recertification",
+      "official_url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/extended-use/y15300.pdf",
+      "file_name": "y15300.pdf",
+      "form_number": "Y15-300",
+      "file_bytes": 211797,
+      "observed_pages": 4,
+      "sha256": "085487948a8b249240f4d03db0a7bbc5120fcc142d565f068d96b727ba4f1396",
+      "status": "EXACT_BYTES_CAPTURED_EXTENDED_USE_ONLY_PENDING_SCOPE_VALIDATION"
+    }
+  ],
+  "official_figure_candidates": [
+    {
+      "figure_type": "MTSP_LIMITS",
+      "title": "2026 Multifamily Tax Subsidy Project Limits",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/mf-data-library/2026-multifamily-tax-subsidy-project-mtsp-limits.pdf",
+      "file_name": "2026-multifamily-tax-subsidy-project-mtsp-limits.pdf",
+      "effective_date": "2026-05-01",
+      "file_bytes": 235910,
+      "observed_pages": 9,
+      "sha256": "2857b0797eda31fc7cefa6d275067e12bfe1b51a367c2906fd7838e10e81cc3f",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_FIGURE_VALIDATION"
+    },
+    {
+      "figure_type": "HERA_SPECIAL_LIMITS",
+      "title": "2026 HERA Special Limits",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/mf-data-library/2026-hera-special-limits.pdf",
+      "file_name": "2026-hera-special-limits.pdf",
+      "file_bytes": 238589,
+      "observed_pages": 9,
+      "sha256": "ed5a014a55920afa9701eb55ff94119d2595f71b75df716e2a1fea691f54d424",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_FIGURE_VALIDATION"
+    },
+    {
+      "figure_type": "AVERAGE_INCOME_LIMITS",
+      "title": "2026 Average Income Limits",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/mf-data-library/2026-average-income-limits.pdf",
+      "file_name": "2026-average-income-limits.pdf",
+      "file_bytes": 339873,
+      "observed_pages": 15,
+      "sha256": "b16586270f02490efe09e0e3d79f0d434989706d8ca1cfe895e76173e6f3e55d",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_FIGURE_VALIDATION"
+    },
+    {
+      "figure_type": "SECTION_8_INCOME_LIMITS",
+      "title": "2026 Section 8 Income Limits",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/mf-data-library/2026-section-8-income-limits-wheda.pdf",
+      "file_name": "2026-section-8-income-limits-wheda.pdf",
+      "file_bytes": 563943,
+      "observed_pages": 9,
+      "sha256": "95fdd93d35604b6c3962ed80a78fdfa843fb08cfe78f11548a77fd6a3b700d21",
+      "status": "EXACT_BYTES_CAPTURED_LAYERED_PROGRAM_ONLY_PENDING_SCOPE_VALIDATION"
+    },
+    {
+      "figure_type": "WHEDA_FINANCING_ONLY_LIMITS",
+      "title": "2026 WHEDA Financing-Only Limits",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/mf-data-library/2026-wheda-financing-only-limits.pdf",
+      "file_name": "2026-wheda-financing-only-limits.pdf",
+      "file_bytes": 138447,
+      "observed_pages": 3,
+      "sha256": "d4eb358c06f7e6b9b6906c8b1bc702a4d2ccf36f518092bb8dabaa62bb20eb65",
+      "status": "EXACT_BYTES_CAPTURED_FINANCING_ONLY_PENDING_SCOPE_VALIDATION"
+    }
+  ],
+  "monitoring_policy_candidates": [
+    {
+      "title": "Compliance Policy for Extended Use Period",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/compliance-policy-for-extended-use.pdf",
+      "file_name": "compliance-policy-for-extended-use.pdf",
+      "file_bytes": 36636,
+      "observed_pages": 4,
+      "sha256": "01d77810b45955c4ca262b9448071505115ce567de696107c8b5e18f1497dc89",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    },
+    {
+      "title": "Compliance Policy for Opt-Out Provision",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/compliance-policy-for-opt-out-provision.pdf",
+      "file_name": "compliance-policy-for-opt-out-provision.pdf",
+      "file_bytes": 2074267,
+      "observed_pages": 11,
+      "sha256": "f273cbd387ba0c7449adefb70ddc1d41502e8b02abb0d632e6eb55c85a434509",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    },
+    {
+      "title": "Credit on Credit Guidance",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/credit-on-credit-guidance.pdf",
+      "file_name": "credit-on-credit-guidance.pdf",
+      "file_bytes": 20749,
+      "observed_pages": 1,
+      "sha256": "43c7166897bde4b535de79592dee37de6dc3f9d9691075452df1d2bb8734c1ef",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    },
+    {
+      "title": "Lease-Purchase LIHTC Projects",
+      "official_url": "https://www.wheda.com/globalassets/documents/tax-credits/htc/lease-purchase-lihtc-projects.pdf",
+      "file_name": "lease-purchase-lihtc-projects.pdf",
+      "file_bytes": 26893,
+      "observed_pages": 2,
+      "sha256": "da7b3f7083f52793f1598e77794cf9e2e1e6b7af1b54451c5b1cddb542df5a11",
+      "status": "EXACT_BYTES_CAPTURED_PENDING_CURRENCY_REVIEW"
+    }
+  ],
+  "blocking_conflicts": [
+    {
+      "conflict_id": "WI-QAP-COMPOSITION-001",
+      "status": "UNRESOLVED",
+      "description": "The live current QAP is self-identified as Revised July 2026 while WHEDA also publishes seven separate modification summaries; the exact consolidated hierarchy must be approved."
+    },
+    {
+      "conflict_id": "WI-PROSPECTIVE-2027-001",
+      "status": "UNRESOLVED",
+      "description": "The 2027-2028 QAP is already published but must not supersede the current 2025-2026 rules before its approved prospective effective date."
+    },
+    {
+      "conflict_id": "WI-MODIFICATION-SCOPE-001",
+      "status": "UNRESOLVED",
+      "description": "The seven modifications have different application-cycle, credit-type, and transaction-date scopes and cannot be applied globally to every property."
+    },
+    {
+      "conflict_id": "WI-LIMIT-LAYERING-001",
+      "status": "UNRESOLVED",
+      "description": "WHEDA publishes distinct MTSP, HERA, Average Income, Section 8, and financing-only limit tables; the platform must select only the tables applicable to each property and program layer."
+    },
+    {
+      "conflict_id": "WI-EXTENDED-USE-FORM-SCOPE-001",
+      "status": "UNRESOLVED",
+      "description": "The tenant self-recertification form is published under Extended Use and must not be applied to initial compliance-period households without validated authority."
+    },
+    {
+      "conflict_id": "WI-MANUAL-SUPPLEMENT-001",
+      "status": "UNRESOLVED",
+      "description": "The August 2026 compliance manual states that it is a supplement rather than a complete compliance guide, requiring rule citations to controlling sources and program-specific documents."
+    }
+  ],
+  "enterprise_boundary": "Only blank official forms belong in this shared pack. Completed tenant certifications, owner submissions, project Forms 8609, LURAs, HAP contracts, waivers, and regulatory agreements remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "MTSP income and rent limits",
+    "HERA special limits",
+    "Average Income Test designations",
+    "Section 8 layered-program limits",
+    "WHEDA financing-only limits",
+    "utility allowances",
+    "set-asides",
+    "effective dates",
+    "property-specific program layering"
+  ],
+  "activation_requirements": [
+    "Approved source composition for the revised QAP and modifications 1 through 7",
+    "Prospective 2027-2028 effective date and retained current rules",
+    "Byte-derived content validation and page-level deterministic rule citations",
+    "Property and transaction scoped modification rules",
+    "Validated figure-table selection without cross-program substitution",
+    "Resolved source, scope, currency, and supersession conflicts",
+    "Positive, negative, boundary, layered-program, and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
