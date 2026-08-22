@@ -1,0 +1,6 @@
+import assert from"node:assert/strict";import{readFile}from"node:fs/promises";import test from"node:test";const d=JSON.parse(await readFile(new URL("../src/lib/sixth-state-source-batch-candidates.json",import.meta.url)));
+test("contains separate NY authorities plus NJ and NH",()=>{assert.deepEqual(d.authorities.map(a=>[a.jurisdiction,a.scope]),[["NY","STATEWIDE"],["NY","NEW_YORK_CITY"],["NJ","STATEWIDE"],["NH","STATEWIDE"]])});
+test("keeps every authority non-active",()=>{assert.match(d.status,/^BLOCKED_/);for(const a of d.authorities)for(const s of a.sources)assert.match(s.status,/^(PENDING|BLOCKED)_/)});
+test("uses registered official domains",()=>{for(const a of d.authorities)for(const s of a.sources){const h=new URL(s.url).hostname.replace(/^www\./,"");assert.ok(h===a.official_domain||h.endsWith("."+a.official_domain))}});
+test("does not collapse statewide and NYC New York authority",()=>{const ny=d.authorities.filter(a=>a.jurisdiction==="NY");assert.equal(ny.length,2);assert.notEqual(ny[0].scope,ny[1].scope)});
+test("requires VP verification and property boundary",()=>{assert.equal(d.enterprise_activation_requires,"VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION");assert.ok(d.shared_pack_excludes.includes("LURA"))});
