@@ -1,0 +1,29 @@
+{
+  "test_id": 88,
+  "state_code": "UT",
+  "pack_id": "ut-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "TAX_EXEMPT_BOND"],
+  "release_status": "BLOCKED_OFFICIAL_SITE_UNAVAILABLE_PENDING_EXACT_AUTHORITIES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T23:00:00Z",
+    "supplied_official_url": "http://www.utahhousingcorp.org/",
+    "https_url": "https://www.utahhousingcorp.org/",
+    "http_result": "NAVIGATION_TIMEOUT",
+    "https_result": "502_BAD_GATEWAY_CONNECTION_REFUSED",
+    "exact_binary_count": 0,
+    "method": "OFFICIAL_SITE_AVAILABILITY_AUDIT"
+  },
+  "agency": {"name":"Utah Housing Corporation","official_domain":"utahhousingcorp.org"},
+  "official_link_candidates": [],
+  "blocking_conflicts": [
+    {"conflict_id":"UT-SITE-AVAILABILITY-001","status":"UNRESOLVED","description":"The supplied official HTTP site timed out and its HTTPS endpoint returned 502 Bad Gateway with connection refused during capture."},
+    {"conflict_id":"UT-CURRENT-QAP-001","status":"UNRESOLVED","description":"A current adopted QAP could not be verified from the unavailable official site."},
+    {"conflict_id":"UT-COMPLIANCE-DOCUMENTS-001","status":"UNRESOLVED","description":"Current compliance guidance, monitoring procedures, official blank forms and utility-allowance procedures could not be verified."},
+    {"conflict_id":"UT-LIMITS-001","status":"UNRESOLVED","description":"Current Utah/HUD-linked income and rent limit authorities could not be verified and no property figures may be activated."}
+  ],
+  "enterprise_boundary": "Only verified blank official forms and adopted public guidance belong in this shared pack. Completed tenant files, owner submissions, Forms 8609, regulatory agreements, waivers, utility schedules and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": ["HUD-confirmed income and rent limits","placed-in-service and gross-rent-floor dates","Average Income Test designations","tax-exempt bond layering","utility allowances","regulatory-agreement commitments","effective dates and award cycle"],
+  "activation_requirements": ["Successful official-site retrieval","Current adopted QAP and compliance manual with exact binary identities","Current official blank forms and monitoring procedures","HUD-confirmed property-specific figure sources","Resolved source, scope, currency and supersession conflicts","Independent compliance-expert approval bound to the exact release","Enterprise VP Compliance property-figure verification at onboarding"]
+}
