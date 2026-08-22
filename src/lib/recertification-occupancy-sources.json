@@ -1,0 +1,72 @@
+{
+  "rule_id": "FED-RECERTIFICATION-OCCUPANCY-CONTROLS-001",
+  "version": "2026.08.1",
+  "federal_sources": [
+    {
+      "citation": "26 USC 42(g)(2)(D)",
+      "authority": "Congress / Internal Revenue Code",
+      "scope": "Over-income units, 140-percent and 170-percent triggers, average-income treatment, and next-available-unit requirements",
+      "url": "https://www.govinfo.gov/link/uscode/26/42"
+    },
+    {
+      "citation": "26 USC 42(g)(8)",
+      "authority": "Congress / Internal Revenue Code",
+      "scope": "Secretary waiver authority for annual LIHTC tenant-income recertification when the entire building is occupied by low-income tenants",
+      "url": "https://www.govinfo.gov/link/uscode/26/42"
+    },
+    {
+      "citation": "26 CFR 1.42-15",
+      "authority": "Treasury / IRS",
+      "scope": "Available-unit rule definitions, standard, average-income, deep-rent-skewed, and resident-transfer rules",
+      "url": "https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/subject-group-ECFRd13f17a89aa6852/section-1.42-15"
+    },
+    {
+      "citation": "24 CFR 5.657",
+      "authority": "HUD",
+      "scope": "Section 8 project-based annual and interim reexaminations",
+      "url": "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/subpart-F/subject-group-ECFR21e2ec7ca564228/section-5.657"
+    },
+    {
+      "citation": "24 CFR 982.516",
+      "authority": "HUD",
+      "scope": "Housing Choice Voucher family-income and composition reexaminations",
+      "url": "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982/subpart-K/section-982.516"
+    },
+    {
+      "citation": "24 CFR 92.252",
+      "authority": "HUD",
+      "scope": "HOME rental housing tenant income and occupancy requirements",
+      "url": "https://www.ecfr.gov/current/title-24/subtitle-A/part-92/subpart-F/section-92.252"
+    },
+    {
+      "citation": "24 CFR 93.302",
+      "authority": "HUD",
+      "scope": "Housing Trust Fund rental housing income and occupancy requirements",
+      "url": "https://www.ecfr.gov/current/title-24/subtitle-A/part-93/subpart-G/section-93.302"
+    },
+    {
+      "citation": "7 CFR 3560.152",
+      "authority": "USDA Rural Development",
+      "scope": "RD tenant eligibility, certification, verification, and recertification",
+      "url": "https://www.ecfr.gov/current/title-7/subtitle-B/chapter-XXXV/part-3560/subpart-D/section-3560.152"
+    }
+  ],
+  "controlled_waiver_registry": {
+    "active_waivers": [],
+    "activation_status": "BLOCKED_PENDING_WAIVER_BYTES_IDENTITY_BUILDING_SCOPE_AND_EFFECTIVE_DATE_VALIDATION"
+  },
+  "user_supplied_reference_names": [
+    "LIHTC-Annual-Income-Recertification-Waiver-Certification.pdf",
+    "WVHDF-Annual-Self-Certification-of-Tenant-Income.pdf",
+    "LIHTC-HOME-Recert-Application_2025.pdf",
+    "Recert-Application-2025-RD-LIHTC.pdf",
+    "PIH-2026-15.pdf",
+    "PIH HOTMA Implementation FAQ 9.13.2024.pdf",
+    "NIFA-NE_Compliance+Manual+12-21-final.pdf",
+    "WVHDF-Section-42-Tax-Credit-Compliance-Manual.pdf"
+  ],
+  "state_scope": {
+    "west_virginia": "DRAFT_BLOCKED_PENDING_VALIDATED_PACK_AND_FILE_INGESTION",
+    "other_states": "NOT_ACTIVATED"
+  }
+}
