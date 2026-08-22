@@ -35,7 +35,8 @@
     "test:state-source-batch-11": "node --test scripts/test-eleventh-state-source-batch.mjs",
     "test:state-source-batch-12": "node --test scripts/test-twelfth-state-source-batch.mjs",
     "test:state-source-batch-13": "node --test scripts/test-thirteenth-state-source-batch.mjs",
-    "test:state-source-batch-final": "node --test scripts/test-final-state-source-batch.mjs"
+    "test:state-source-batch-final": "node --test scripts/test-final-state-source-batch.mjs",
+    "test:state-source-audit": "node --test scripts/test-nationwide-state-pack-audit.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
