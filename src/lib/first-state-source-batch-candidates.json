@@ -1,0 +1,121 @@
+{
+  "test_id": 66,
+  "batch_id": "WY-WI-WA-VA-2026-CANDIDATES",
+  "status": "BLOCKED_PENDING_EXACT_BYTES_RULES_AND_APPROVAL",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "shared_pack_excludes": [
+    "completed tenant records",
+    "property Form 8609",
+    "LURA",
+    "HAP contract",
+    "property waiver",
+    "regulatory agreement"
+  ],
+  "states": [
+    {
+      "state_code": "WY",
+      "agency": "Wyoming Community Development Authority",
+      "official_domain": "wyomingcda.com",
+      "sources": [
+        {
+          "type": "ALLOCATION_AND_PROGRAM_PAGE",
+          "url": "https://www.wyomingcda.com/affordable-housing/",
+          "evidence": [
+            "2026 Affordable Housing Allocation Plan",
+            "2027 Affordable Housing Allocation Plan",
+            "2025-2026 Compliance Manual",
+            "Required Forms",
+            "HOME materials"
+          ],
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ]
+    },
+    {
+      "state_code": "WI",
+      "agency": "Wisconsin Housing and Economic Development Authority",
+      "official_domain": "wheda.com",
+      "sources": [
+        {
+          "type": "QAP_PAGE",
+          "url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc/qap",
+          "status": "PENDING_EXACT_BYTES_AND_CURRENCY_REVIEW"
+        },
+        {
+          "type": "PROGRAM_PAGE",
+          "url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc",
+          "status": "PENDING_2027_2028_QAP_PUBLICATION_REVIEW"
+        },
+        {
+          "type": "FORMS_MANUALS_INDEX",
+          "url": "https://www.wheda.com/developers-and-property-managers/forms-manuals-and-resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "REPORTING_PAGE",
+          "url": "https://www.wheda.com/developers-and-property-managers/property-managers/reporting--schedule",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ]
+    },
+    {
+      "state_code": "WA",
+      "agency": "Washington State Housing Finance Commission",
+      "official_domain": "wshfc.org",
+      "sources": [
+        {
+          "type": "QAP_AND_9_PERCENT_PROGRAM",
+          "url": "https://www.wshfc.org/mhcf/9percent/2026application.htm",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FOUR_PERCENT_PROGRAM",
+          "url": "https://www.wshfc.org/mhcf/4percent/index.htm",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL",
+          "url": "https://www.wshfc.org/managers/manualtaxcreditindex.htm",
+          "status": "PENDING_CHAPTER_BYTES_AND_HASHES"
+        }
+      ]
+    },
+    {
+      "state_code": "VA",
+      "agency": "Virginia Housing",
+      "official_domain": "virginiahousing.com",
+      "sources": [
+        {
+          "type": "QAP_AND_PROGRAM_PAGE",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/rental-housing-tax-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "APPLICATION_PAGE",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/tax-credit-application-process",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MONITORING",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/compliance-monitoring",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS_INDEX",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/compliance-forms-and-documents",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ]
+    }
+  ],
+  "activation_requirements": [
+    "exact official bytes and SHA-256 hashes",
+    "byte-derived document identity",
+    "complete current source inventory",
+    "currency and supersession resolution",
+    "page-cited deterministic rules",
+    "positive negative boundary layered-program and supersession fixtures",
+    "platform compliance release approval",
+    "enterprise VP property figure verification"
+  ]
+}
