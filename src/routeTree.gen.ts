@@ -19,9 +19,11 @@ import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedAuditSimulatorRouteImport } from './routes/_authenticated/audit-simulator'
@@ -35,8 +37,7 @@ import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authent
 import { Route as AuthenticatedPmsHubRouteImport } from './routes/_authenticated/pms-hub'
 import { Route as AuthenticatedPortfolioComplianceRouteImport } from './routes/_authenticated/portfolio-compliance'
 import { Route as AuthenticatedSubmissionCenterRouteImport } from './routes/_authenticated/submission-center'
-import { Route as AcademyIndexRouteImport } from './routes/academy.index'
-import { Route as AcademyCourseIdRouteImport } from './routes/academy.$courseId'
+import { Route as AuthenticatedSupportiqRouteImport } from './routes/_authenticated/supportiq'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
@@ -101,6 +102,11 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -114,6 +120,11 @@ const RulesRoute = RulesRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrialRoute = TrialRouteImport.update({
@@ -187,15 +198,10 @@ const AuthenticatedSubmissionCenterRoute =
     path: '/submission-center',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AcademyIndexRoute = AcademyIndexRouteImport.update({
-  id: '/academy/',
-  path: '/academy/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AcademyCourseIdRoute = AcademyCourseIdRouteImport.update({
-  id: '/academy/$courseId',
-  path: '/academy/$courseId',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedSupportiqRoute = AuthenticatedSupportiqRouteImport.update({
+  id: '/supportiq',
+  path: '/supportiq',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
@@ -284,9 +290,11 @@ export interface FileRoutesByFullPath {
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
   '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
@@ -300,12 +308,11 @@ export interface FileRoutesByFullPath {
   '/pms-hub': typeof AuthenticatedPmsHubRoute
   '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
   '/submission-center': typeof AuthenticatedSubmissionCenterRoute
-  '/academy/$courseId': typeof AcademyCourseIdRoute
+  '/supportiq': typeof AuthenticatedSupportiqRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
-  '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
@@ -327,9 +334,11 @@ export interface FileRoutesByTo {
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
   '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
@@ -343,12 +352,11 @@ export interface FileRoutesByTo {
   '/pms-hub': typeof AuthenticatedPmsHubRoute
   '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
   '/submission-center': typeof AuthenticatedSubmissionCenterRoute
-  '/academy/$courseId': typeof AcademyCourseIdRoute
+  '/supportiq': typeof AuthenticatedSupportiqRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
-  '/academy': typeof AcademyIndexRoute
   '/files': typeof FilesIndexRoute
   '/properties': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
@@ -372,9 +380,11 @@ export interface FileRoutesById {
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
   '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
@@ -388,12 +398,11 @@ export interface FileRoutesById {
   '/_authenticated/pms-hub': typeof AuthenticatedPmsHubRoute
   '/_authenticated/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
   '/_authenticated/submission-center': typeof AuthenticatedSubmissionCenterRoute
-  '/academy/$courseId': typeof AcademyCourseIdRoute
+  '/_authenticated/supportiq': typeof AuthenticatedSupportiqRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/files/$fileId': typeof FilesFileIdRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
-  '/academy/': typeof AcademyIndexRoute
   '/files/': typeof FilesIndexRoute
   '/properties/': typeof PropertiesIndexRoute
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
@@ -417,9 +426,11 @@ export interface FileRouteTypes {
     | '/launchpad'
     | '/methodology'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/rules'
     | '/security'
+    | '/terms'
     | '/trial'
     | '/welcome'
     | '/audit-simulator'
@@ -433,12 +444,11 @@ export interface FileRouteTypes {
     | '/pms-hub'
     | '/portfolio-compliance'
     | '/submission-center'
-    | '/academy/$courseId'
+    | '/supportiq'
     | '/api/chat'
     | '/checkout/return'
     | '/files/$fileId'
     | '/properties/$propertyId'
-    | '/academy/'
     | '/files/'
     | '/properties/'
     | '/account/security'
@@ -460,9 +470,11 @@ export interface FileRouteTypes {
     | '/launchpad'
     | '/methodology'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/rules'
     | '/security'
+    | '/terms'
     | '/trial'
     | '/welcome'
     | '/audit-simulator'
@@ -476,12 +488,11 @@ export interface FileRouteTypes {
     | '/pms-hub'
     | '/portfolio-compliance'
     | '/submission-center'
-    | '/academy/$courseId'
+    | '/supportiq'
     | '/api/chat'
     | '/checkout/return'
     | '/files/$fileId'
     | '/properties/$propertyId'
-    | '/academy'
     | '/files'
     | '/properties'
     | '/account/security'
@@ -504,9 +515,11 @@ export interface FileRouteTypes {
     | '/launchpad'
     | '/methodology'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/rules'
     | '/security'
+    | '/terms'
     | '/trial'
     | '/welcome'
     | '/_authenticated/audit-simulator'
@@ -520,12 +533,11 @@ export interface FileRouteTypes {
     | '/_authenticated/pms-hub'
     | '/_authenticated/portfolio-compliance'
     | '/_authenticated/submission-center'
-    | '/academy/$courseId'
+    | '/_authenticated/supportiq'
     | '/api/chat'
     | '/checkout/return'
     | '/files/$fileId'
     | '/properties/$propertyId'
-    | '/academy/'
     | '/files/'
     | '/properties/'
     | '/_authenticated/account/security'
@@ -549,17 +561,17 @@ export interface RootRouteChildren {
   LaunchpadRoute: typeof LaunchpadRoute
   MethodologyRoute: typeof MethodologyRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RulesRoute: typeof RulesRoute
   SecurityRoute: typeof SecurityRoute
+  TermsRoute: typeof TermsRoute
   TrialRoute: typeof TrialRoute
   WelcomeRoute: typeof WelcomeRoute
-  AcademyCourseIdRoute: typeof AcademyCourseIdRoute
   ApiChatRoute: typeof ApiChatRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
   PropertiesPropertyIdRoute: typeof PropertiesPropertyIdRoute
-  AcademyIndexRoute: typeof AcademyIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
   ApiPublicFederalHousingNewsRoute: typeof ApiPublicFederalHousingNewsRoute
@@ -642,6 +654,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -661,6 +680,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trial': {
@@ -754,19 +780,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSubmissionCenterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/academy/': {
-      id: '/academy/'
-      path: '/academy'
-      fullPath: '/academy/'
-      preLoaderRoute: typeof AcademyIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/academy/$courseId': {
-      id: '/academy/$courseId'
-      path: '/academy/$courseId'
-      fullPath: '/academy/$courseId'
-      preLoaderRoute: typeof AcademyCourseIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/supportiq': {
+      id: '/_authenticated/supportiq'
+      path: '/supportiq'
+      fullPath: '/supportiq'
+      preLoaderRoute: typeof AuthenticatedSupportiqRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/chat': {
       id: '/api/chat'
@@ -893,6 +912,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPmsHubRoute: typeof AuthenticatedPmsHubRoute
   AuthenticatedPortfolioComplianceRoute: typeof AuthenticatedPortfolioComplianceRoute
   AuthenticatedSubmissionCenterRoute: typeof AuthenticatedSubmissionCenterRoute
+  AuthenticatedSupportiqRoute: typeof AuthenticatedSupportiqRoute
   AuthenticatedAccountSecurityRoute: typeof AuthenticatedAccountSecurityRoute
 }
 
@@ -909,6 +929,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPmsHubRoute: AuthenticatedPmsHubRoute,
   AuthenticatedPortfolioComplianceRoute: AuthenticatedPortfolioComplianceRoute,
   AuthenticatedSubmissionCenterRoute: AuthenticatedSubmissionCenterRoute,
+  AuthenticatedSupportiqRoute: AuthenticatedSupportiqRoute,
   AuthenticatedAccountSecurityRoute: AuthenticatedAccountSecurityRoute,
 }
 
@@ -926,17 +947,17 @@ const rootRouteChildren: RootRouteChildren = {
   LaunchpadRoute: LaunchpadRoute,
   MethodologyRoute: MethodologyRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RulesRoute: RulesRoute,
   SecurityRoute: SecurityRoute,
+  TermsRoute: TermsRoute,
   TrialRoute: TrialRoute,
   WelcomeRoute: WelcomeRoute,
-  AcademyCourseIdRoute: AcademyCourseIdRoute,
   ApiChatRoute: ApiChatRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   FilesFileIdRoute: FilesFileIdRoute,
   PropertiesPropertyIdRoute: PropertiesPropertyIdRoute,
-  AcademyIndexRoute: AcademyIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
   ApiPublicFederalHousingNewsRoute: ApiPublicFederalHousingNewsRoute,
