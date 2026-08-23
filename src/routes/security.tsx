@@ -48,7 +48,7 @@ export const Route = createFileRoute("/security")({
       {
         name: "description",
         content:
-          "How CertivoIQ handles compliance data: tenant isolation, authentication, retention, automated processing, subprocessors, incident response and vulnerability reporting.",
+          "Affordable Housing Compliance Intelligence: how CertivoIQ handles compliance data — tenant isolation, authentication, retention, automated processing, subprocessors, incident response and vulnerability reporting.",
       },
       { property: "og:title", content: "Security & Data Use — CertivoIQ" },
       {

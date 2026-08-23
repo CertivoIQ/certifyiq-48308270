@@ -7,8 +7,11 @@ import { LanguageToggle } from "@/components/language-toggle";
 
 function PublicWordmark() {
   return (
-    <Link to="/welcome" className="flex items-center gap-2.5">
-      <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1 object-contain" />
+    <Link to="/welcome" className="flex min-w-0 items-center gap-2.5">
+      <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto shrink-0 rounded-md bg-white px-1.5 py-1 object-contain" />
+      <span className="hidden truncate text-[11.5px] font-semibold uppercase leading-tight tracking-[.12em] text-muted-foreground lg:inline">
+        Affordable Housing Compliance Intelligence
+      </span>
     </Link>
   );
 }
@@ -55,7 +58,8 @@ export function PublicShell({
         {children}
       </main>
       <footer className="border-t border-border py-6 text-center">
-        <p className="cite text-[12px] text-muted-foreground">CertivoIQ — Find compliance risk before the auditor.</p>
+        <p className="cite text-[12px] text-muted-foreground">CertivoIQ — Affordable Housing Compliance Intelligence</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">Find compliance risk before the auditor.</p>
         <nav className="mt-2 flex items-center justify-center gap-4 text-[12px] text-muted-foreground" aria-label="Legal and support links">
           <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
           <Link to="/terms" className="hover:text-foreground">Terms</Link>

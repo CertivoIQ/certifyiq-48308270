@@ -18,13 +18,13 @@ export const Route = createFileRoute("/contact-support")({
       {
         name: "description",
         content:
-          "Reach the CertivoIQ support team for help with affordable housing compliance, platform questions, or account assistance.",
+          "Reach the CertivoIQ support team — Affordable Housing Compliance Intelligence — for help with platform questions, reviews, or account assistance.",
       },
       { property: "og:title", content: "Contact Support — CertivoIQ" },
       {
         property: "og:description",
         content:
-          "Reach the CertivoIQ support team for help with affordable housing compliance, platform questions, or account assistance.",
+          "Reach the CertivoIQ support team — Affordable Housing Compliance Intelligence — for help with platform questions, reviews, or account assistance.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
