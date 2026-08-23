@@ -39,7 +39,7 @@ export const es: Dictionary = {
   "nav.toggle": "Mostrar u ocultar la navegación",
 
   // ---- shell ----
-  "shell.tagline": "Inteligencia de cumplimiento",
+  "shell.tagline": "Affordable Housing Compliance Intelligence",
   "shell.rulePacksActive": "Línea base federal activa",
   "shell.statesBuild": "Reglas estatales no evaluadas",
   "shell.trial.status": "Espacio de demostración · {used}/{allowed} revisiones de muestra usadas",
@@ -58,7 +58,7 @@ export const es: Dictionary = {
   "welcome.nav.support": "Contactar soporte",
   "welcome.nav.pricing": "Precios",
   "welcome.nav.open": "Abrir la plataforma",
-  "welcome.pill": "Revisión de cumplimiento de línea base federal",
+  "welcome.pill": "Affordable Housing Compliance Intelligence",
   "welcome.hero.title": "ENCUENTRE EL RIESGO DE CUMPLIMIENTO ANTES QUE EL AUDITOR.",
   "welcome.hero.subtitle": "CertivoIQ extrae evidencia de archivos de certificación de vivienda asequible, aplica requisitos federales compatibles y versionados, y muestra por qué se generó cada hallazgo.",
   "welcome.hero.cta": "Pruebe CertivoIQ gratis",

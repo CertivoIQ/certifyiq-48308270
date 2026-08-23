@@ -8,10 +8,10 @@ export const Route = createFileRoute("/trial")({
       { title: "Review Your 3 FREE Certifications — CertivoIQ" },
       {
         name: "description",
-        content: "Create your CertivoIQ account, capture your company details, and move directly to your 3 FREE certification reviews.",
+        content: "Affordable Housing Compliance Intelligence from CertivoIQ. Create your account with your organization website email and move directly to your 3 FREE certification reviews.",
       },
       { property: "og:title", content: "Review Your 3 FREE Certifications — CertivoIQ" },
-      { property: "og:description", content: "Start with proof: capture your company details, then upload your first certification for review." },
+      { property: "og:description", content: "Affordable Housing Compliance Intelligence. Start with proof: capture your company details, then upload your first certification for review." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://certivoiq.com/trial" },
     ],
@@ -25,7 +25,7 @@ function TrialEntryPage() {
     <PublicShell>
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="cite">START WITH PROOF, THEN SCALE</p>
+          <p className="cite">AFFORDABLE HOUSING COMPLIANCE INTELLIGENCE</p>
           <h1 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">Review Your 3 FREE Certifications</h1>
           <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">Create your account and tell us about your portfolio first. Then we’ll take you straight to certification upload so you can experience CertivoIQ on your own files.</p>
         </div>

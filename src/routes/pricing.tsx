@@ -22,13 +22,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "CertivoIQ is available through one $65,000 annual platform license with all currently available features included.",
+          "Affordable Housing Compliance Intelligence from CertivoIQ, available through one $65,000 annual platform license with all currently available features included.",
       },
       { property: "og:title", content: "CertivoIQ Platform Pricing" },
       {
         property: "og:description",
         content:
-          "One annual license. All currently available CertivoIQ platform features included.",
+          "Affordable Housing Compliance Intelligence. One annual license. All currently available CertivoIQ platform features included.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -43,7 +43,7 @@ function PricingPage() {
   return (
     <PublicShell
       title="Platform pricing"
-      subtitle="One annual license for the complete CertivoIQ platform"
+      subtitle="Affordable Housing Compliance Intelligence — one annual license for the complete CertivoIQ platform"
     >
       <div className="mx-auto max-w-3xl">
         <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
@@ -52,7 +52,7 @@ function PricingPage() {
               <Pill tone="seal">Annual platform license</Pill>
               <h2 className="mt-4 font-display text-[28px]">CertivoIQ</h2>
               <p className="mt-1 text-[13.5px] text-muted-foreground">
-                Compliance intelligence infrastructure for affordable housing programs
+                Affordable Housing Compliance Intelligence
               </p>
             </div>
             <div className="text-left md:text-right">

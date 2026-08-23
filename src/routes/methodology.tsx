@@ -24,7 +24,7 @@ export const Route = createFileRoute("/methodology")({
       {
         name: "description",
         content:
-          "How CertivoIQ reaches a compliance outcome: document extraction, deterministic calculation, confidence policy, rule sourcing and versioning, and the definitions of Pass, Fail and Unable to determine.",
+          "Affordable Housing Compliance Intelligence: how CertivoIQ reaches a compliance outcome — document extraction, deterministic calculation, confidence policy, rule sourcing and versioning, and the definitions of Pass, Fail and Unable to determine.",
       },
       { property: "og:title", content: "Calculation & Validation Methodology — CertivoIQ" },
       {

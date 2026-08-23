@@ -36,7 +36,7 @@ export const en = {
   "nav.toggle": "Toggle navigation",
 
   // ---- shell ----
-  "shell.tagline": "Compliance intelligence infrastructure",
+  "shell.tagline": "Affordable Housing Compliance Intelligence",
   "shell.rulePacksActive": "Federal baseline active",
   "shell.statesBuild": "State-specific rules not evaluated",
   "shell.trial.status": "Demo workspace · {used}/{allowed} sample reviews used",
@@ -55,7 +55,7 @@ export const en = {
   "welcome.nav.support": "Contact Support",
   "welcome.nav.pricing": "Pricing",
   "welcome.nav.open": "Open the platform",
-  "welcome.pill": "Federal baseline compliance review",
+  "welcome.pill": "Affordable Housing Compliance Intelligence",
   "welcome.hero.title": "FIND COMPLIANCE RISK BEFORE THE AUDITOR.",
   "welcome.hero.subtitle":
     "CertivoIQ extracts evidence from affordable-housing certification files, applies supported versioned federal requirements deterministically, and shows exactly why each finding was raised.",

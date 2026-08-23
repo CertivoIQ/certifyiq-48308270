@@ -25,17 +25,17 @@ const FREE_REVIEW_COUNT = 3;
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "CertivoIQ — Find compliance risk before the auditor." },
+      { title: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         name: "description",
         content:
-          "Compliance intelligence infrastructure for affordable housing programs. Review certification evidence against supported federal requirements and trace every finding to its source.",
+          "Affordable Housing Compliance Intelligence. CertivoIQ reviews certification evidence against supported federal requirements and traces every finding to its source.",
       },
-      { property: "og:title", content: "CertivoIQ — Find compliance risk before the auditor." },
+      { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },
       {
         property: "og:description",
         content:
-          "Upload certification files, surface traceable compliance findings, and review the evidence before a missed issue becomes an expensive problem.",
+          "Affordable Housing Compliance Intelligence: upload certification files, surface traceable federal-baseline findings, and review the evidence before a missed issue becomes an expensive problem.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -115,7 +115,7 @@ function WelcomePage() {
         <section className="mx-auto max-w-7xl px-5 pb-16 pt-16 lg:px-8 lg:pb-24 lg:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-[1.02fr_.98fr] lg:gap-16">
             <div>
-              <Pill tone="neutral">Compliance intelligence infrastructure for affordable housing programs</Pill>
+              <Pill tone="neutral">Affordable Housing Compliance Intelligence</Pill>
               <h1 className="mt-6 max-w-4xl font-display text-[48px] leading-[.98] tracking-[-0.035em] sm:text-[64px] lg:text-[76px]">
                 FIND COMPLIANCE RISK<br />BEFORE THE <span className="text-gold">AUDITOR.</span>
               </h1>
@@ -147,7 +147,7 @@ function WelcomePage() {
               <div className="absolute -inset-5 rounded-[28px] bg-gold/10 blur-2xl" />
               <Panel className="relative overflow-hidden border-gold/20 bg-card shadow-2xl" bodyClassName="p-0">
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                  <div><p className="text-[10px] font-semibold uppercase tracking-[.16em] text-muted-foreground">Compliance intelligence</p><p className="mt-1 font-display text-lg">Certification review</p></div>
+                  <div><p className="text-[10px] font-semibold uppercase tracking-[.16em] text-muted-foreground">Affordable Housing Compliance Intelligence</p><p className="mt-1 font-display text-lg">Certification review</p></div>
                   <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[10px] font-semibold text-gold-ink dark:text-gold">IN REVIEW</span>
                 </div>
                 <div className="border-b border-border bg-muted/30 px-5 py-4">
