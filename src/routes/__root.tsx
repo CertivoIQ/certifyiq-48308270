@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "The compliance intelligence infrastructure for affordable housing. CertivoIQ reviews LIHTC, Section 8, HOME and HOTMA certifications with a deterministic rules engine, traceable evidence and portfolio risk scoring.",
+          "Affordable Housing Compliance Intelligence. CertivoIQ reviews LIHTC, Section 8, HOME and HOTMA certifications against supported federal requirements with versioned rules and traceable evidence.",
       },
       { name: "author", content: "CertivoIQ" },
       { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },
@@ -145,7 +145,7 @@ function RootShell({ children }: { children: ReactNode }) {
               url: "https://certivoiq.com",
               logo: "https://certivoiq.com/certivoiq-mark.png",
               image: "https://certivoiq.com/certivoiq-social-card.png",
-              description: "Compliance intelligence infrastructure for affordable housing programs.",
+              description: "Affordable Housing Compliance Intelligence for LIHTC, Section 8, HOME and HOTMA programs.",
             }),
           }}
         />
