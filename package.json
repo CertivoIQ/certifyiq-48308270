@@ -21,6 +21,7 @@
     "format": "prettier --write .",
     "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs",
     "test:ocr": "node scripts/test-ocr-sidecar.mjs",
+    "test:operations": "node --test scripts/test-operations-control-plane.mjs",
     "test:property-figures": "node --test scripts/test-enterprise-property-figure-verification.mjs",
     "test:state-source-batch": "node --test scripts/test-first-state-source-batch.mjs",
     "test:state-source-batch-2": "node --test scripts/test-second-state-source-batch.mjs",
