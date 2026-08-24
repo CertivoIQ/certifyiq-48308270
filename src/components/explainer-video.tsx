@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef, type CSSProperties } from "react";
 
 const C = {
-  bg: "#012447",
-  blue: "#082B56",
+  bg: "#012459",
+  blue: "#012459",
   blueLight: "#3D7ABF",
   sky: "#BAE6FD",
   white: "#F8FAFC",
   muted: "#64748B",
   dim: "#94A3B8",
   red: "#F87171",
-  green: "#FEC229",
-  gold: "#FEC229",
+  green: "#FEAD05",
+  gold: "#FEAD05",
   mono: "'JetBrains Mono','Fira Code','Courier New',monospace",
   sans: "-apple-system,'Segoe UI',Roboto,sans-serif",
 };

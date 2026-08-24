@@ -54,10 +54,10 @@ CertivoIQ has one **$65,000 annual platform license**. Do not publish plan tiers
 
 ## Brand identity
 Approved colors:
-- Dark Blue: `#012447`
-- Navy: `#082B56`
+- Dark Blue: `#012459`
+- Navy: `#012459`
 - White: `#FFFFFF`
-- Subtle Yellow: `#FEC229`
+- Subtle Yellow: `#FEAD05`
 
 Do not use green as a brand accent.
 
