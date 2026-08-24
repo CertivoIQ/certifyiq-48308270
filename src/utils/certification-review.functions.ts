@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { PackRelease, StateCoverage } from "@/lib/stateCoverageRegistry";
+import { evaluateSubmissionAuthority } from "@/lib/certification-authority.mjs";
 
 /**
  * The live compliance vertical slice.
