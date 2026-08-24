@@ -919,6 +919,33 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: number[]
+          created_at: string
+          current_step: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       evidence_manifests: {
         Row: {
           certification_id: string | null
@@ -1716,55 +1743,73 @@ export type Database = {
       support_cases: {
         Row: {
           account_id: string | null
+          agent_confidence: number | null
           assigned_to: string | null
           case_number: string
           channel: string
           contact_id: string | null
           created_at: string
           description: string | null
+          human_required: boolean
           id: string
           last_response_at: string | null
           priority: string
           source_email: string | null
           status: string
           subject: string
+          supportiq_metadata: Json
           tags: string[] | null
+          triage_category: string | null
+          triage_disposition: string | null
+          triage_priority: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           account_id?: string | null
+          agent_confidence?: number | null
           assigned_to?: string | null
           case_number?: string
           channel?: string
           contact_id?: string | null
           created_at?: string
           description?: string | null
+          human_required?: boolean
           id?: string
           last_response_at?: string | null
           priority?: string
           source_email?: string | null
           status?: string
           subject: string
+          supportiq_metadata?: Json
           tags?: string[] | null
+          triage_category?: string | null
+          triage_disposition?: string | null
+          triage_priority?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           account_id?: string | null
+          agent_confidence?: number | null
           assigned_to?: string | null
           case_number?: string
           channel?: string
           contact_id?: string | null
           created_at?: string
           description?: string | null
+          human_required?: boolean
           id?: string
           last_response_at?: string | null
           priority?: string
           source_email?: string | null
           status?: string
           subject?: string
+          supportiq_metadata?: Json
           tags?: string[] | null
+          triage_category?: string | null
+          triage_disposition?: string | null
+          triage_priority?: string | null
           updated_at?: string
           user_id?: string | null
         }
