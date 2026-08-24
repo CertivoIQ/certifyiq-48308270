@@ -205,21 +205,21 @@ grant all on public.operations_jobs, public.operations_approvals, public.operati
   public.operations_communications to service_role;
 
 create policy "staff read operations jobs" on public.operations_jobs for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 create policy "staff read operations approvals" on public.operations_approvals for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 create policy "staff read operations audit" on public.operations_audit_events for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 create policy "staff read operations incidents" on public.operations_incidents for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 create policy "staff read operations sources" on public.operations_source_versions for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 create policy "staff read operations budgets" on public.operations_budget_limits for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 create policy "staff read operations costs" on public.operations_cost_events for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 create policy "staff read operations communications" on public.operations_communications for select to authenticated
-using (public.has_role(auth.uid(), 'staff'::public.app_role));
+using ((public.has_role(auth.uid(), 'admin'::public.app_role) or public.has_role(auth.uid(), 'analyst'::public.app_role)));
 
 create policy "users read own operations preferences" on public.operations_notification_preferences
 for select to authenticated using (auth.uid() = user_id);
@@ -246,8 +246,8 @@ language plpgsql security definer set search_path = public as $$
 declare
   approval public.operations_approvals;
 begin
-  if not public.has_role(auth.uid(), 'staff'::public.app_role) then
-    raise exception 'staff approval required';
+  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+    raise exception 'admin approval required';
   end if;
   select * into approval from public.operations_approvals where id = _approval_id for update;
   if approval.id is null or approval.status <> 'pending' then raise exception 'approval is not pending'; end if;
@@ -272,7 +272,7 @@ create or replace function public.operations_reject(
 language plpgsql security definer set search_path = public as $$
 declare approval public.operations_approvals;
 begin
-  if not public.has_role(auth.uid(), 'staff'::public.app_role) then raise exception 'staff approval required'; end if;
+  if not public.has_role(auth.uid(), 'admin'::public.app_role) then raise exception 'admin approval required'; end if;
   if nullif(trim(_reason),'') is null then raise exception 'rejection reason required'; end if;
   select * into approval from public.operations_approvals where id=_approval_id for update;
   if approval.id is null or approval.status <> 'pending' then raise exception 'approval is not pending'; end if;
