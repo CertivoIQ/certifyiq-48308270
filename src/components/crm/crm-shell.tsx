@@ -103,6 +103,9 @@ export function CrmShell({
             <Button size="sm" variant="ghost" asChild>
               <Link to="/crm-support">Support</Link>
             </Button>
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/crm/operations">Operations</Link>
+            </Button>
             <Button size="sm" variant="outline" asChild>
               <Link to="/welcome">
                 <ArrowLeft className="size-4" /> Product
