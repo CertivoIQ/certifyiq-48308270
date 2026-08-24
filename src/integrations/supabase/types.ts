@@ -965,28 +965,40 @@ export type Database = {
         Row: {
           created_at: string
           decision: string
+          expires_at: string | null
           finding_id: string
           id: string
+          manifest_sha256: string | null
           reason: string | null
           reviewer_id: string
+          revoked_at: string | null
+          revoked_review_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           decision: string
+          expires_at?: string | null
           finding_id: string
           id?: string
+          manifest_sha256?: string | null
           reason?: string | null
           reviewer_id: string
+          revoked_at?: string | null
+          revoked_review_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           decision?: string
+          expires_at?: string | null
           finding_id?: string
           id?: string
+          manifest_sha256?: string | null
           reason?: string | null
           reviewer_id?: string
+          revoked_at?: string | null
+          revoked_review_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -995,6 +1007,13 @@ export type Database = {
             columns: ["finding_id"]
             isOneToOne: false
             referencedRelation: "compliance_findings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finding_reviews_revoked_review_id_fkey"
+            columns: ["revoked_review_id"]
+            isOneToOne: false
+            referencedRelation: "finding_reviews"
             referencedColumns: ["id"]
           },
         ]
@@ -1177,6 +1196,76 @@ export type Database = {
           },
         ]
       }
+      hfa_delivery_receipts: {
+        Row: {
+          adapter: string
+          agency_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_status: string
+          evidence_manifest_id: string
+          external_receipt_id: string
+          externally_delivered: boolean
+          id: string
+          manifest_sha256: string
+          receipt_payload: Json
+          submission_id: string
+        }
+        Insert: {
+          adapter: string
+          agency_id: string
+          created_at?: string
+          created_by: string
+          delivered_at?: string | null
+          delivery_status: string
+          evidence_manifest_id: string
+          external_receipt_id: string
+          externally_delivered?: boolean
+          id?: string
+          manifest_sha256: string
+          receipt_payload?: Json
+          submission_id: string
+        }
+        Update: {
+          adapter?: string
+          agency_id?: string
+          created_at?: string
+          created_by?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          evidence_manifest_id?: string
+          external_receipt_id?: string
+          externally_delivered?: boolean
+          id?: string
+          manifest_sha256?: string
+          receipt_payload?: Json
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_delivery_receipts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_delivery_receipts_evidence_manifest_id_fkey"
+            columns: ["evidence_manifest_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_manifests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_delivery_receipts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hfa_submission_grants: {
         Row: {
           agency_id: string
@@ -1295,6 +1384,60 @@ export type Database = {
           {
             foreignKeyName: "hfa_submissions_previous_submission_id_fkey"
             columns: ["previous_submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hfa_transmission_tokens: {
+        Row: {
+          agency_id: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          issued_at: string
+          issued_by: string
+          manifest_sha256: string
+          revoked_at: string | null
+          submission_id: string
+        }
+        Insert: {
+          agency_id: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          issued_at?: string
+          issued_by: string
+          manifest_sha256: string
+          revoked_at?: string | null
+          submission_id: string
+        }
+        Update: {
+          agency_id?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          manifest_sha256?: string
+          revoked_at?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_transmission_tokens_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_transmission_tokens_submission_id_fkey"
+            columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "hfa_submissions"
             referencedColumns: ["id"]
