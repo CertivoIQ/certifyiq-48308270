@@ -1,0 +1,16 @@
+{
+  "name": "CertivoIQ — Affordable Housing Compliance Intelligence",
+  "short_name": "CertivoIQ",
+  "description": "Affordable Housing Compliance Intelligence for LIHTC, Section 8, HOME and HOTMA certification review.",
+  "start_url": "/welcome",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#012459",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "48x48", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

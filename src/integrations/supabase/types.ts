@@ -80,33 +80,6 @@ export type Database = {
         }
         Relationships: []
       }
-      customer_onboarding_progress: {
-        Row: {
-          completed_at: string | null
-          completed_steps: number[]
-          created_at: string
-          current_step: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          completed_steps?: number[]
-          created_at?: string
-          current_step?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          completed_steps?: number[]
-          created_at?: string
-          current_step?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       certification_facts: {
         Row: {
           confidence: number
@@ -500,8 +473,8 @@ export type Database = {
           ownership_sources: string[]
           ownership_verification_status: string
           ownership_verified_at: string | null
-          phone: string | null
           payment_verified_at: string | null
+          phone: string | null
           plan: string | null
           programs: string[]
           properties: number
@@ -543,8 +516,8 @@ export type Database = {
           ownership_sources?: string[]
           ownership_verification_status?: string
           ownership_verified_at?: string | null
-          phone?: string | null
           payment_verified_at?: string | null
+          phone?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
@@ -586,8 +559,8 @@ export type Database = {
           ownership_sources?: string[]
           ownership_verification_status?: string
           ownership_verified_at?: string | null
-          phone?: string | null
           payment_verified_at?: string | null
+          phone?: string | null
           plan?: string | null
           programs?: string[]
           properties?: number
@@ -666,56 +639,6 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      crm_post_sale_checklists: {
-        Row: {
-          account_id: string
-          acknowledged_at: string | null
-          cancelled_at: string | null
-          completed_at: string | null
-          created_at: string
-          detected_at: string
-          id: string
-          status: string
-          surfaced_at: string | null
-          trigger_reason: string
-          updated_at: string
-        }
-        Insert: {
-          account_id: string
-          acknowledged_at?: string | null
-          cancelled_at?: string | null
-          completed_at?: string | null
-          created_at?: string
-          detected_at?: string
-          id?: string
-          status?: string
-          surfaced_at?: string | null
-          trigger_reason: string
-          updated_at?: string
-        }
-        Update: {
-          account_id?: string
-          acknowledged_at?: string | null
-          cancelled_at?: string | null
-          completed_at?: string | null
-          created_at?: string
-          detected_at?: string
-          id?: string
-          status?: string
-          surfaced_at?: string | null
-          trigger_reason?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_post_sale_checklists_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: true
-            referencedRelation: "crm_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -913,6 +836,56 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_post_sale_checklists: {
+        Row: {
+          account_id: string
+          acknowledged_at: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          detected_at: string
+          id: string
+          status: string
+          surfaced_at: string | null
+          trigger_reason: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          acknowledged_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          status?: string
+          surfaced_at?: string | null
+          trigger_reason: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          acknowledged_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          status?: string
+          surfaced_at?: string | null
+          trigger_reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_post_sale_checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "crm_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_templates: {
         Row: {
           body: string
@@ -943,6 +916,33 @@ export type Database = {
           id?: string
           name?: string
           subject?: string
+        }
+        Relationships: []
+      }
+      customer_onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: number[]
+          created_at: string
+          current_step: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -997,9 +997,9 @@ export type Database = {
           id: string
           manifest_sha256: string | null
           reason: string | null
+          reviewer_id: string
           revoked_at: string | null
           revoked_review_id: string | null
-          reviewer_id: string
           user_id: string
         }
         Insert: {
@@ -1010,9 +1010,9 @@ export type Database = {
           id?: string
           manifest_sha256?: string | null
           reason?: string | null
+          reviewer_id: string
           revoked_at?: string | null
           revoked_review_id?: string | null
-          reviewer_id: string
           user_id: string
         }
         Update: {
@@ -1023,9 +1023,9 @@ export type Database = {
           id?: string
           manifest_sha256?: string | null
           reason?: string | null
+          reviewer_id?: string
           revoked_at?: string | null
           revoked_review_id?: string | null
-          reviewer_id?: string
           user_id?: string
         }
         Relationships: [
@@ -1039,7 +1039,7 @@ export type Database = {
           {
             foreignKeyName: "finding_reviews_revoked_review_id_fkey"
             columns: ["revoked_review_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "finding_reviews"
             referencedColumns: ["id"]
           },
@@ -1223,6 +1223,76 @@ export type Database = {
           },
         ]
       }
+      hfa_delivery_receipts: {
+        Row: {
+          adapter: string
+          agency_id: string
+          created_at: string
+          created_by: string
+          delivered_at: string | null
+          delivery_status: string
+          evidence_manifest_id: string
+          external_receipt_id: string
+          externally_delivered: boolean
+          id: string
+          manifest_sha256: string
+          receipt_payload: Json
+          submission_id: string
+        }
+        Insert: {
+          adapter: string
+          agency_id: string
+          created_at?: string
+          created_by: string
+          delivered_at?: string | null
+          delivery_status: string
+          evidence_manifest_id: string
+          external_receipt_id: string
+          externally_delivered?: boolean
+          id?: string
+          manifest_sha256: string
+          receipt_payload?: Json
+          submission_id: string
+        }
+        Update: {
+          adapter?: string
+          agency_id?: string
+          created_at?: string
+          created_by?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          evidence_manifest_id?: string
+          external_receipt_id?: string
+          externally_delivered?: boolean
+          id?: string
+          manifest_sha256?: string
+          receipt_payload?: Json
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_delivery_receipts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_delivery_receipts_evidence_manifest_id_fkey"
+            columns: ["evidence_manifest_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_manifests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_delivery_receipts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hfa_submission_grants: {
         Row: {
           agency_id: string
@@ -1255,60 +1325,6 @@ export type Database = {
           },
           {
             foreignKeyName: "hfa_submission_grants_submission_id_fkey"
-            columns: ["submission_id"]
-            isOneToOne: false
-            referencedRelation: "hfa_submissions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      hfa_transmission_tokens: {
-        Row: {
-          agency_id: string
-          consumed_at: string | null
-          created_at: string
-          expires_at: string
-          id: string
-          issued_at: string
-          issued_by: string
-          manifest_sha256: string
-          revoked_at: string | null
-          submission_id: string
-        }
-        Insert: {
-          agency_id: string
-          consumed_at?: string | null
-          created_at?: string
-          expires_at: string
-          id?: string
-          issued_at?: string
-          issued_by: string
-          manifest_sha256: string
-          revoked_at?: string | null
-          submission_id: string
-        }
-        Update: {
-          agency_id?: string
-          consumed_at?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          issued_at?: string
-          issued_by?: string
-          manifest_sha256?: string
-          revoked_at?: string | null
-          submission_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hfa_transmission_tokens_agency_id_fkey"
-            columns: ["agency_id"]
-            isOneToOne: false
-            referencedRelation: "hfa_agencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "hfa_transmission_tokens_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "hfa_submissions"
@@ -1395,6 +1411,60 @@ export type Database = {
           {
             foreignKeyName: "hfa_submissions_previous_submission_id_fkey"
             columns: ["previous_submission_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hfa_transmission_tokens: {
+        Row: {
+          agency_id: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          issued_at: string
+          issued_by: string
+          manifest_sha256: string
+          revoked_at: string | null
+          submission_id: string
+        }
+        Insert: {
+          agency_id: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          issued_at?: string
+          issued_by: string
+          manifest_sha256: string
+          revoked_at?: string | null
+          submission_id: string
+        }
+        Update: {
+          agency_id?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          manifest_sha256?: string
+          revoked_at?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hfa_transmission_tokens_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "hfa_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hfa_transmission_tokens_submission_id_fkey"
+            columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "hfa_submissions"
             referencedColumns: ["id"]
@@ -1673,55 +1743,73 @@ export type Database = {
       support_cases: {
         Row: {
           account_id: string | null
+          agent_confidence: number | null
           assigned_to: string | null
           case_number: string
           channel: string
           contact_id: string | null
           created_at: string
           description: string | null
+          human_required: boolean
           id: string
           last_response_at: string | null
           priority: string
           source_email: string | null
           status: string
           subject: string
+          supportiq_metadata: Json
           tags: string[] | null
+          triage_category: string | null
+          triage_disposition: string | null
+          triage_priority: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           account_id?: string | null
+          agent_confidence?: number | null
           assigned_to?: string | null
           case_number?: string
           channel?: string
           contact_id?: string | null
           created_at?: string
           description?: string | null
+          human_required?: boolean
           id?: string
           last_response_at?: string | null
           priority?: string
           source_email?: string | null
           status?: string
           subject: string
+          supportiq_metadata?: Json
           tags?: string[] | null
+          triage_category?: string | null
+          triage_disposition?: string | null
+          triage_priority?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           account_id?: string | null
+          agent_confidence?: number | null
           assigned_to?: string | null
           case_number?: string
           channel?: string
           contact_id?: string | null
           created_at?: string
           description?: string | null
+          human_required?: boolean
           id?: string
           last_response_at?: string | null
           priority?: string
           source_email?: string | null
           status?: string
           subject?: string
+          supportiq_metadata?: Json
           tags?: string[] | null
+          triage_category?: string | null
+          triage_disposition?: string | null
+          triage_priority?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1837,6 +1925,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      crm_verified_sale_trigger_reason: {
+        Args: { p_contract_verified_at: string; p_payment_verified_at: string }
+        Returns: string
+      }
       generate_support_case_number: { Args: never; Returns: string }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }

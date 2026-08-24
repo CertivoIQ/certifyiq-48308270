@@ -9,6 +9,6 @@ Direction locked for the public homepage:
 
 CTA order: Try CertivoIQ for Free / 3 FREE CERTIFICATION REVIEWS / NO CREDIT CARD REQUIRED.
 
-Palette: Dark Blue #012447, Navy #082B56, White #FFFFFF, Subtle Yellow #FEC229. No green.
+Palette: Dark Blue #012459, Navy #012459, White #FFFFFF, Subtle Yellow #FEAD05. No green.
 
 No "AI" or "human review" positioning. No fabricated traction, savings, customer counts, certifications, or coverage claims. No guaranteed-outcome claims.
