@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Clock3, DollarSign, ShieldCheck, Workflow } from "lucide-react";
 
 import { CrmShell } from "@/components/crm/crm-shell";
+import { OperationsApprovalActions } from "@/components/crm/operations-approval-actions";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { useIsStaff } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,6 +166,9 @@ function OperationsControlCenter() {
                 </div>
                 <p className="cite mt-1">Snapshot {approval.snapshot_sha256.slice(0, 16)}…</p>
                 <p className="mt-1 text-xs text-muted-foreground">Expires {new Date(approval.expires_at).toLocaleString()}</p>
+                {approval.status === "pending" && (
+                  <OperationsApprovalActions approvalId={approval.id} actionType={approval.action_type} />
+                )}
               </li>
             ))}
             {!data.approvals.length && <li className="px-5 py-8 text-sm text-muted-foreground">No approvals are waiting.</li>}
