@@ -83,7 +83,7 @@
 :root {
   --radius: 0.625rem;
 
-  /* Core brand palette — Dark Blue #012459, Navy #012459, White, Subtle Yellow #FEAD05 */
+  /* Approved CertivoIQ palette — Navy #012459, Yellow-Gold #FEAD05, White #FFFFFF */
   --ink: #012459;
   --paper: oklch(0.985 0.005 265);
   --slate: oklch(0.55 0.033 265);
@@ -151,7 +151,7 @@
   --paper: #012459;
   --slate: oklch(0.7 0.026 265);
   --rule: oklch(0.31 0.028 268);
-  --brand: #14508C;
+  --brand: #FEAD05;
   --brand-glow: #012459;
   --brand-soft: oklch(0.3 0.07 262);
   --gold: #FEAD05;
@@ -170,7 +170,7 @@
   --popover: oklch(0.215 0.03 268);
   --popover-foreground: var(--ink);
   --primary: var(--brand);
-  --primary-foreground: oklch(0.16 0.03 268);
+  --primary-foreground: #012459;
   --secondary: oklch(0.26 0.03 268);
   --secondary-foreground: var(--ink);
   --muted: oklch(0.255 0.028 268);
