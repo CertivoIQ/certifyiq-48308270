@@ -1,3 +1,5 @@
+import { federalProgramPackGate } from "./federal-program-rule-pack-registry.mjs";
+
 /**
  * Deterministic compliance rule engine.
  *
@@ -251,20 +253,7 @@ export function normalizeCertificationPrograms(programs) {
 }
 
 function substantivePackGate(program) {
-  return Object.freeze({
-    id: `FED-${program}-SUBSTANTIVE-PACK-GATE`,
-    version: "1.0.0",
-    jurisdiction: "federal",
-    severity: "critical",
-    requires: Object.freeze([]),
-    citation: "Program-specific controlling federal authority",
-    description: `A validated substantive ${program} rule pack is required.`,
-    evaluate: () => ({
-      status: FINDING_STATUS.unableToDetermine,
-      explanation:
-        "This program is identified for the certification, but its substantive production rule pack is not active.",
-    }),
-  });
+  return federalProgramPackGate(program);
 }
 
 /**
@@ -482,6 +471,17 @@ export function evaluateCertification(input) {
       evidenceStatus,
       evidenceRefs: evidenceRefs(factsByField, rule.requires),
     };
+
+    if (rule.activationStatus === "blocked") {
+      const outcome = rule.evaluate({});
+      return {
+        ...base,
+        status: FINDING_STATUS.unableToDetermine,
+        ruleEvaluationStatus: RULE_EVALUATION_STATUS.blocked,
+        explanation: `${rule.description} ${outcome.explanation}`,
+        blockingReasons: [outcome.explanation],
+      };
+    }
 
     if (rule.jurisdiction === "state" && !statePackUsable) {
       return {
