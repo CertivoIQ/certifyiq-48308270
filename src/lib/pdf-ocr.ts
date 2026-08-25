@@ -1,6 +1,7 @@
 import {
   MAX_OCR_PAGES,
   MAX_PDF_PAGES,
+  OCR_ENGINE,
   OCR_LIMIT_MESSAGE,
   OCR_SIDECAR_VERSION,
   OCR_TIME_BUDGET_MS,
@@ -24,8 +25,12 @@ import {
  * SSR graph or the initial page bundle.
  */
 
-const OCR_ENGINE = 'tesseract.js:eng';
 const RENDER_SCALE = 2;
+
+async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return [...digest].map((value) => value.toString(16).padStart(2, '0')).join('');
+}
 
 export function isPdfFile(file: File): boolean {
   return /application\/pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
@@ -59,7 +64,9 @@ export async function prepareCertificationForReview(
   const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  const sourceBuffer = await file.arrayBuffer();
+  const sourceSha256 = await sha256Hex(sourceBuffer);
+  const bytes = new Uint8Array(sourceBuffer);
   const pdf = await pdfjs.getDocument({ data: bytes }).promise;
 
   try {
@@ -126,6 +133,8 @@ export async function prepareCertificationForReview(
       sidecar: {
         schemaVersion: OCR_SIDECAR_VERSION,
         sourceFileName: file.name,
+        sourceSha256,
+        sourceByteSize: file.size,
         createdAt: new Date().toISOString(),
         pageCount: pdf.numPages,
         truncated: false,
