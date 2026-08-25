@@ -104,6 +104,31 @@ test("HOME and HTF retain a verified, non-activated rule inventory", () => {
   assert.ok(homeRules.every((rule) => rule.evidenceFields.length > 0));
   assert.ok(htfRules.every((rule) => rule.evidenceFields.length > 0));
   assert.ok(Object.isFrozen(homeRules[0].evidenceFields));
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.HOME.requiredControls.includes(
+      "controlled_home_rent_limit_receipt",
+    ),
+  );
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.HTF.requiredControls.includes(
+      "controlled_htf_rent_limit_receipt",
+    ),
+  );
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.HTF.requiredControls.includes(
+      "controlled_htf_grant_fiscal_year_authority",
+    ),
+  );
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.HOME.officialSources.includes(
+      "https://www.huduser.gov/portal/datasets/HOME-Income-limits.html",
+    ),
+  );
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.HTF.officialSources.includes(
+      "https://www.huduser.gov/portal/datasets/HTF-Rent-limits.html",
+    ),
+  );
 });
 
 test("HCV, PBV, Public Housing, and Multifamily rules preserve program-specific policy boundaries", () => {
@@ -205,6 +230,14 @@ test("gate findings disclose verified rules and missing controlled authorities",
   assert.equal(homeGate.activationStatus, "blocked");
   assert.equal(homeGate.verifiedRules.length, 4);
   assert.ok(homeGate.missingControls.includes("controlled_home_income_limit_receipt"));
+  assert.ok(homeGate.missingControls.includes("controlled_home_rent_limit_receipt"));
+
+  const htfGate = federalProgramPackGate("HTF");
+  assert.ok(htfGate.missingControls.includes("controlled_htf_income_limit_receipt"));
+  assert.ok(htfGate.missingControls.includes("controlled_htf_rent_limit_receipt"));
+  assert.ok(
+    htfGate.missingControls.includes("controlled_htf_grant_fiscal_year_authority"),
+  );
 
   const hcvGate = federalProgramPackGate("HCV_TENANT_BASED");
   assert.ok(hcvGate.missingControls.includes("asset_enforcement_policy"));
