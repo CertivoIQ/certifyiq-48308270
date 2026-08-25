@@ -17,10 +17,11 @@ import {
   evaluateTenantFileEligibility,
   normalizeCertificationPrograms,
 } from "./compliance-rule-engine.mjs";
+import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
-  "federal-review-orchestrator-2026.08.1";
-export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.1";
+  "federal-review-orchestrator-2026.08.2";
+export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.2";
 
 const CONTROL = Object.freeze({
   tenantEligibility: Object.freeze({
@@ -188,6 +189,10 @@ export function evaluateFederalCertificationReview(input = {}) {
         })
       : null;
 
+  const mfhHotma = programs.includes("HUD_MFH_PROJECT_BASED")
+    ? classifyAllMfhHotmaModules(input.mfhHotmaInput ?? {})
+    : null;
+
   const controlFindings = [
     controlFinding(CONTROL.tenantEligibility, tenantEligibility),
     ...(recertification
@@ -216,6 +221,7 @@ export function evaluateFederalCertificationReview(input = {}) {
       tenantEligibility,
       recertification,
       layeredPrograms,
+      mfhHotma,
     },
   };
 }
