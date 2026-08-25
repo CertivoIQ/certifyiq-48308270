@@ -1,6 +1,6 @@
 /** Controlled federal program-pack coverage and authority registry. */
 export const FEDERAL_PROGRAM_PACK_REGISTRY_BUILD =
-  "federal-program-pack-registry-2026.08.4";
+  "federal-program-pack-registry-2026.08.5";
 
 const pack = (entry) =>
   Object.freeze({
@@ -115,13 +115,19 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     citation: "24 CFR 92.203, 92.252, and 92.253",
     officialSources: Object.freeze([
       "https://www.hudexchange.info/programs/home/",
+      "https://www.huduser.gov/portal/datasets/HOME-Income-limits.html",
+      "https://www.huduser.gov/portal/datasets/HOME-Rent-limits.html",
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-92",
     ]),
     sourceHierarchy: {
-      programGuidance: ["https://www.hudexchange.info/programs/home/"],
+      programGuidance: [
+        "https://www.hudexchange.info/programs/home/",
+        "https://www.huduser.gov/portal/datasets/HOME-Income-limits.html",
+        "https://www.huduser.gov/portal/datasets/HOME-Rent-limits.html",
+      ],
       controllingLaw: ["https://www.ecfr.gov/current/title-24/subtitle-A/part-92"],
     },
-    requiredControls: ["controlled_home_income_limit_receipt", "home_rent_limit", "lease_restrictions", "period_of_affordability"],
+    requiredControls: ["controlled_home_income_limit_receipt", "controlled_home_rent_limit_receipt", "lease_restrictions", "period_of_affordability"],
     verifiedRules: [
       {
         id: "HOME-INCOME-DETERMINATION",
@@ -156,13 +162,19 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     citation: "24 CFR 93.151 and 93.302",
     officialSources: Object.freeze([
       "https://www.hudexchange.info/programs/htf/",
+      "https://www.huduser.gov/portal/datasets/HTF-Income-limits.html",
+      "https://www.huduser.gov/portal/datasets/HTF-Rent-limits.html",
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-93",
     ]),
     sourceHierarchy: {
-      programGuidance: ["https://www.hudexchange.info/programs/htf/"],
+      programGuidance: [
+        "https://www.hudexchange.info/programs/htf/",
+        "https://www.huduser.gov/portal/datasets/HTF-Income-limits.html",
+        "https://www.huduser.gov/portal/datasets/HTF-Rent-limits.html",
+      ],
       controllingLaw: ["https://www.ecfr.gov/current/title-24/subtitle-A/part-93"],
     },
-    requiredControls: ["controlled_htf_income_limit_receipt", "htf_rent_limit", "extremely_low_income_targeting"],
+    requiredControls: ["controlled_htf_income_limit_receipt", "controlled_htf_rent_limit_receipt", "controlled_htf_grant_fiscal_year_authority"],
     verifiedRules: [
       {
         id: "HTF-INCOME-DETERMINATION",
