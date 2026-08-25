@@ -1,1 +1,4 @@
 project_id = "evowyobviuhbfgqlvyqm"
+
+[functions.operations-worker]
+verify_jwt = false

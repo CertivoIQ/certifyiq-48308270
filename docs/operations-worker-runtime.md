@@ -12,7 +12,7 @@ customer communications.
 - stale-lease recovery;
 - Tier 4 completion blocked without a valid separate approval;
 - staff approve/reject actions with a required written reason;
-- authenticated internal tick endpoint;
+- authenticated internal Edge Function endpoint;
 - health-check handler with no customer, billing, communication, or compliance side effect.
 
 ## Deployment requirements
@@ -20,7 +20,7 @@ customer communications.
 - Apply both Batch 1 and Batch 2 migrations in order.
 - Configure `OPERATIONS_WORKER_SECRET` as a random server-only production secret.
 - Keep `SUPABASE_SERVICE_ROLE_KEY` server-only.
-- Invoke `POST /api/internal/operations/tick` with
+- Invoke `POST /functions/v1/operations-worker` with
   `Authorization: Bearer <OPERATIONS_WORKER_SECRET>`.
 - Begin at a conservative schedule only after a non-production smoke test.
 - Do not enqueue unsupported job types. Unknown types fail into bounded retry and then
@@ -31,3 +31,11 @@ customer communications.
 Federal/state retrieval, parsing, compliance-rule activation, CRM publishing, user
 email, billing, customer-access changes, and production deployment handlers remain
 inactive. They require later batches and their applicable approval gates.
+
+
+## Lovable Cloud deployment
+
+The production frontend is static and does not expose TanStack server routes. Deploy
+`supabase/functions/operations-worker/index.ts` as the `operations-worker` Edge Function.
+The function authenticates with `OPERATIONS_WORKER_SECRET`; platform JWT verification is
+disabled because this is a server-to-server endpoint with its own bearer secret.
