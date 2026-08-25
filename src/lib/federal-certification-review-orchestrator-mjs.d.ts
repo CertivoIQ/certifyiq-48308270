@@ -6,6 +6,10 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     ExtractedFact,
     StatePackInput,
   } from "@/lib/compliance-rule-engine.mjs";
+  import type {
+    MfhHotmaAllModuleResult,
+    MfhHotmaReviewInput,
+  } from "@/lib/mfh-hotma-rule-engine.mjs";
 
   export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD: string;
   export const FEDERAL_REVIEW_PACK_VERSION: string;
@@ -20,6 +24,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     tenantFileInput?: Record<string, unknown>;
     layeredProgramInput?: Record<string, unknown>;
     recertificationInput?: Record<string, unknown>;
+    mfhHotmaInput?: Omit<MfhHotmaReviewInput, "module_id">;
   }
 
   export interface FederalCertificationReviewResult extends EvaluationResult {
@@ -29,6 +34,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
       tenantEligibility: Record<string, unknown>;
       recertification: Record<string, unknown> | null;
       layeredPrograms: Record<string, unknown> | null;
+      mfhHotma: MfhHotmaAllModuleResult | null;
     };
   }
 
