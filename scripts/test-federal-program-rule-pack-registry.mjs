@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  FEDERAL_JURISDICTION_DIRECTORY,
   FEDERAL_PROGRAM_RULE_PACKS,
+  STATE_PROGRAM_OVERLAYS,
   federalProgramPackGate,
 } from "../src/lib/federal-program-rule-pack-registry.mjs";
 import {
@@ -37,6 +39,68 @@ test("only LIHTC is partial; incomplete substantive packs remain blocked", () =>
   }
 });
 
+test("program pages are guidance and controlling authorities are separately recorded", () => {
+  for (const entry of Object.values(FEDERAL_PROGRAM_RULE_PACKS)) {
+    assert.ok(Array.isArray(entry.sourceHierarchy.programGuidance));
+    assert.ok(entry.sourceHierarchy.controllingLaw.length > 0);
+    assert.ok(entry.sourceHierarchy.controllingLaw.every((url) => /^https:\/\//.test(url)));
+  }
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.HOME.sourceHierarchy.programGuidance.includes(
+      "https://www.hudexchange.info/programs/home/",
+    ),
+  );
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.HTF.sourceHierarchy.programGuidance.includes(
+      "https://www.hudexchange.info/programs/htf/",
+    ),
+  );
+  assert.ok(
+    FEDERAL_PROGRAM_RULE_PACKS.TAX_EXEMPT_BOND.sourceHierarchy.controllingLaw.some(
+      (url) => url.includes("title26-section142"),
+    ),
+  );
+});
+
+test("HUD state directory and California CDLAC cannot act as federal rule authority", () => {
+  assert.equal(FEDERAL_JURISDICTION_DIRECTORY.role, "JURISDICTION_DISCOVERY_ONLY");
+  assert.equal(FEDERAL_JURISDICTION_DIRECTORY.complianceRuleAuthority, false);
+  assert.equal(FEDERAL_JURISDICTION_DIRECTORY.url, "https://www.hud.gov/states/");
+
+  const cdlac = STATE_PROGRAM_OVERLAYS.CA_TAX_EXEMPT_BOND_CDLAC;
+  assert.equal(cdlac.jurisdiction, "CA");
+  assert.equal(cdlac.program, "TAX_EXEMPT_BOND");
+  assert.equal(cdlac.federalBaselineAuthority, false);
+  assert.equal(cdlac.url, "https://www.treasurer.ca.gov/cdlac");
+});
+
+test("HOME and HTF retain a verified, non-activated rule inventory", () => {
+  const homeRules = FEDERAL_PROGRAM_RULE_PACKS.HOME.verifiedRules;
+  const htfRules = FEDERAL_PROGRAM_RULE_PACKS.HTF.verifiedRules;
+  assert.deepEqual(
+    homeRules.map((rule) => rule.id),
+    [
+      "HOME-INCOME-DETERMINATION",
+      "HOME-RENT-LIMIT",
+      "HOME-AFFORDABILITY-PERIOD",
+      "HOME-LEASE-AND-TENANT-PROTECTIONS",
+    ],
+  );
+  assert.deepEqual(
+    htfRules.map((rule) => rule.id),
+    [
+      "HTF-INCOME-DETERMINATION",
+      "HTF-RENT-LIMIT",
+      "HTF-AFFORDABILITY-PERIOD",
+      "HTF-ANNUAL-INCOME-REEXAMINATION",
+      "HTF-LEASE-AND-TENANT-PROTECTIONS",
+    ],
+  );
+  assert.ok(homeRules.every((rule) => rule.evidenceFields.length > 0));
+  assert.ok(htfRules.every((rule) => rule.evidenceFields.length > 0));
+  assert.ok(Object.isFrozen(homeRules[0].evidenceFields));
+});
+
 test("HUD Multifamily records the official January 1 2027 HOTMA deadline", () => {
   const multifamily = FEDERAL_PROGRAM_RULE_PACKS.HUD_MFH_PROJECT_BASED;
   assert.equal(multifamily.mandatoryComplianceDate, "2027-01-01");
@@ -54,10 +118,14 @@ test("inactive program packs produce BLOCKED findings, never evaluated findings"
   }
 });
 
-test("gate findings disclose the specific missing controlled authorities", () => {
-  const gate = federalProgramPackGate("HCV_TENANT_BASED");
-  assert.equal(gate.activationStatus, "blocked");
-  assert.ok(gate.missingControls.includes("asset_enforcement_policy"));
-  assert.ok(gate.missingControls.includes("real_property_restriction"));
-  assert.match(gate.citation, /24 CFR 5\.618/);
+test("gate findings disclose verified rules and missing controlled authorities", () => {
+  const homeGate = federalProgramPackGate("HOME");
+  assert.equal(homeGate.activationStatus, "blocked");
+  assert.equal(homeGate.verifiedRules.length, 4);
+  assert.ok(homeGate.missingControls.includes("controlled_home_income_limit_receipt"));
+
+  const hcvGate = federalProgramPackGate("HCV_TENANT_BASED");
+  assert.ok(hcvGate.missingControls.includes("asset_enforcement_policy"));
+  assert.ok(hcvGate.missingControls.includes("real_property_restriction"));
+  assert.match(hcvGate.citation, /24 CFR 5\.618/);
 });
