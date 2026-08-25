@@ -54,7 +54,8 @@
     "test:state-source-sd": "node --test scripts/test-south-dakota-source-audit.mjs",
     "test:state-source-id-nm-hi-gu": "node --test scripts/test-id-nm-hi-gu-source-audit.mjs",
     "test:orchestrator": "node --test scripts/test-federal-certification-review-orchestrator.mjs",
-    "test:federal-packs": "node --test scripts/test-federal-program-rule-pack-registry.mjs"
+    "test:federal-packs": "node --test scripts/test-federal-program-rule-pack-registry.mjs",
+    "test:mfh-hotma": "node --test scripts/test-mfh-hotma-rule-engine.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
