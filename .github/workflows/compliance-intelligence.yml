@@ -65,6 +65,7 @@ jobs:
           bun run test:tenant
           bun run test:recert
           bun run test:limits
+          bun run test:limits-storage
           bun run test:xlsx
           bun run test:project-authority
           bun run test:state-pack
