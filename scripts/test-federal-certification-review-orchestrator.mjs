@@ -189,7 +189,7 @@ test("PHA-administered reviews expose cohort-aware HOTMA implementation routing"
 });
 
 
-test("MFH reviews expose owner-policy and system controls without affecting PASS/FAIL counts", () => {
+test("MFH reviews promote blocked owner-policy controls into the sign-off decision", () => {
   const result = evaluateFederalCertificationReview({
     facts: [],
     programs: ["HUD_MFH_PROJECT_BASED"],
@@ -218,4 +218,18 @@ test("MFH reviews expose owner-policy and system controls without affecting PASS
       (entry) => !["PASS", "FAIL"].includes(entry.finding),
     ),
   );
+
+  const operationalFindings = result.findings.filter((finding) =>
+    finding.ruleId?.startsWith("MFH-HOTMA-"),
+  );
+  assert.equal(operationalFindings.length, 7);
+  assert.ok(
+    operationalFindings.every(
+      (finding) =>
+        finding.status === "UNABLE_TO_DETERMINE" &&
+        finding.ruleEvaluationStatus === "BLOCKED",
+    ),
+  );
+  assert.ok(result.counts.unableToDetermine >= 7);
+  assert.equal(signOffAllowed(result), false);
 });
