@@ -1,6 +1,6 @@
 /** Controlled federal program-pack coverage and authority registry. */
 export const FEDERAL_PROGRAM_PACK_REGISTRY_BUILD =
-  "federal-program-pack-registry-2026.08.2";
+  "federal-program-pack-registry-2026.08.3";
 
 const pack = (entry) =>
   Object.freeze({
@@ -142,20 +142,46 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     program: "HCV_TENANT_BASED",
     packId: "federal-hcv",
     activationStatus: "BLOCKED",
-    citation: "24 CFR 5.609, 24 CFR 5.618, and 24 CFR 982.516; Notice PIH 2023-27",
+    citation: "24 CFR 5.609, 24 CFR 5.618, and 24 CFR 982.516; Notice PIH 2023-27 Revision 3 and Notice PIH 2024-38",
     officialSources: Object.freeze([
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
       "https://www.hud.gov/helping-americans/housing-choice-vouchers",
+      "https://www.hud.gov/hud-partners/hotma",
+      "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982",
     ]),
     sourceHierarchy: {
       programGuidance: [
         "https://www.hud.gov/helping-americans/housing-choice-vouchers",
         "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
+        "https://www.hud.gov/hud-partners/hotma",
       ],
-      controllingLaw: ["https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618"],
+      controllingLaw: [
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
+        "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982",
+      ],
     },
     requiredControls: ["controlled_section8_income_limit_receipt", "hotma_implementation_authority", "asset_enforcement_policy", "real_property_restriction"],
+    verifiedRules: [
+      {
+        id: "HCV-ADMISSION-ELIGIBILITY",
+        citation: "24 CFR 982.201 and 24 CFR 5.618(a)",
+        requirement: "Determine program, income, citizenship, social-security-number, and admission asset eligibility before HCV admission.",
+        evidenceFields: ["controlled_section8_income_limit_receipt", "annual_income", "household_size", "citizenship_status", "ssn_disclosure_status", "net_family_assets", "real_property_ownership"],
+      },
+      {
+        id: "HCV-INCOME-REEXAMINATION",
+        citation: "24 CFR 982.516",
+        requirement: "Conduct annual and required interim income/composition examinations with the prescribed verification and effective-date treatment.",
+        evidenceFields: ["last_reexamination_date", "income_change_date", "adjusted_income_change_percent", "third_party_verification", "pha_reexamination_policy"],
+      },
+      {
+        id: "HCV-ASSET-RESTRICTION-AND-POLICY",
+        citation: "24 CFR 5.618",
+        requirement: "Apply the asset and suitable-real-property restrictions at admission; at reexamination, apply the PHA's written enforcement or exception policy.",
+        evidenceFields: ["determination_type", "net_family_assets", "controlled_asset_threshold", "real_property_ownership", "real_property_suitability", "pha_asset_enforcement_policy"],
+      },
+    ],
   }),
   HUD_PBV: pack({
     program: "HUD_PBV",
@@ -164,52 +190,150 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     citation: "24 CFR parts 5 and 983; Notice PIH 2024-19",
     officialSources: Object.freeze([
       "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-983",
+      "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982/subpart-K/section-982.516",
+      "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       "https://www.hud.gov/helping-americans/housing-choice-vouchers-project",
     ]),
     sourceHierarchy: {
       programGuidance: ["https://www.hud.gov/helping-americans/housing-choice-vouchers-project"],
-      controllingLaw: ["https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-983"],
+      controllingLaw: [
+        "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-983",
+        "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982/subpart-K/section-982.516",
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
+      ],
     },
     requiredControls: ["controlled_section8_income_limit_receipt", "hotma_implementation_authority", "hap_contract_authority", "asset_enforcement_policy"],
+    verifiedRules: [
+      {
+        id: "PBV-PARTICIPANT-ELIGIBILITY",
+        citation: "24 CFR 983.251 and 24 CFR 982.201",
+        requirement: "Determine PBV eligibility using current verified information and confirm total tenant payment is below gross rent before assistance begins.",
+        evidenceFields: ["eligibility_determination_date", "controlled_section8_income_limit_receipt", "annual_income", "household_size", "total_tenant_payment", "gross_rent"],
+      },
+      {
+        id: "PBV-CONTRACT-UNIT-ELIGIBILITY",
+        citation: "24 CFR 983.52, 983.53, and 983.208",
+        requirement: "Use only eligible contract units, avoid prohibited subsidy combinations, and maintain units under the applicable HAP/HQS requirements.",
+        evidenceFields: ["hap_contract", "unit_subsidy_inventory", "unit_occupancy", "inspection_date", "inspection_standard", "deficiency_cure_status"],
+      },
+      {
+        id: "PBV-LEASE",
+        citation: "24 CFR 983.256",
+        requirement: "Use an executed written lease with the HUD tenancy addendum and all required unit, rent, utility, service, and term provisions.",
+        evidenceFields: ["lease", "hud_tenancy_addendum", "initial_lease_term", "lease_unit", "tenant_rent", "utility_responsibility"],
+      },
+      {
+        id: "PBV-REASONABLE-RENT",
+        citation: "24 CFR 983.301 through 983.305",
+        requirement: "Keep rent to owner within the applicable cap and reasonable-rent determination supported by current comparability evidence.",
+        evidenceFields: ["rent_to_owner", "rent_cap", "reasonable_rent_determination", "comparable_units", "utility_responsibility", "hap_contract_anniversary"],
+      },
+      {
+        id: "PBV-HOTMA-INCOME-AND-ASSETS",
+        citation: "24 CFR 5.618 and 24 CFR 982.516",
+        requirement: "Apply HCV income-review and asset rules, including the admission/reexamination policy distinction, to PBV families.",
+        evidenceFields: ["determination_type", "last_reexamination_date", "net_family_assets", "controlled_asset_threshold", "real_property_ownership", "pha_asset_enforcement_policy"],
+      },
+    ],
   }),
   HUD_MFH_PROJECT_BASED: pack({
     program: "HUD_MFH_PROJECT_BASED",
     packId: "federal-hud-multifamily",
     activationStatus: "BLOCKED",
-    citation: "24 CFR 5.609 and 5.618; Notice H 2025-07",
+    citation: "24 CFR 5.609, 5.618, 5.657, and 5.659; Notice H 2025-07 and Notice PIH 2023-27 Revision 3",
     officialSources: Object.freeze([
       "https://www.hud.gov/hud-partners/multifamily",
       "https://www.hud.gov/hud-partners/multifamily-hotma",
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
+      "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/subpart-F/section-5.657",
+      "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/subpart-F/section-5.659",
+      "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
     ]),
     sourceHierarchy: {
       programGuidance: [
         "https://www.hud.gov/hud-partners/multifamily",
         "https://www.hud.gov/hud-partners/multifamily-hotma",
+        "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
       ],
-      controllingLaw: ["https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618"],
+      controllingLaw: [
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/subpart-F/section-5.657",
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/subpart-F/section-5.659",
+      ],
     },
     requiredControls: ["controlled_section8_income_limit_receipt", "hotma_adoption_status", "tenant_selection_plan", "asset_enforcement_policy"],
     mandatoryComplianceDate: "2027-01-01",
+    verifiedRules: [
+      {
+        id: "MFH-HOTMA-IMPLEMENTATION-STATUS",
+        citation: "Notice H 2025-07; Notice PIH 2023-27 Revision 3, section 6.2",
+        requirement: "Track property-level HOTMA adoption; full compliance is mandatory January 1, 2027, with required TSP/EIV and tenant-file steps for early adoption.",
+        evidenceFields: ["mfh_program_subtype", "hotma_adoption_date", "tenant_selection_plan_revision", "eiv_policy_revision", "tracs_version", "tenant_file_annotation"],
+      },
+      {
+        id: "MFH-INCOME-REEXAMINATION",
+        citation: "24 CFR 5.657 and 5.659",
+        requirement: "Conduct at least annual income/composition reexaminations and retain the required family information and verification.",
+        evidenceFields: ["mfh_program_subtype", "last_reexamination_date", "annual_income", "adjusted_income", "third_party_verification", "consent_form"],
+      },
+      {
+        id: "MFH-ASSET-RESTRICTION-APPLICABILITY",
+        citation: "24 CFR 5.618; Notice PIH 2023-27 Revision 3, sections 2 and 4",
+        requirement: "Apply Section 104 asset restrictions only to applicable Multifamily subtypes, including Section 8 PBRA and 202/8, and not to listed PRAC/PRA/PAC/SPRAC programs.",
+        evidenceFields: ["mfh_program_subtype", "determination_type", "net_family_assets", "controlled_asset_threshold", "real_property_ownership", "owner_asset_enforcement_policy"],
+      },
+    ],
   }),
   PUBLIC_HOUSING: pack({
     program: "PUBLIC_HOUSING",
     packId: "federal-public-housing",
     activationStatus: "BLOCKED",
-    citation: "24 CFR 5.618 and part 960; HOTMA sections 102-104",
+    citation: "24 CFR 5.618 and 24 CFR part 960; HOTMA sections 102-104; Notice PIH 2023-27 Revision 3",
     officialSources: Object.freeze([
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       "https://www.hud.gov/hud-partners/hotma",
       "https://www.hud.gov/helping-americans/public-housing",
+      "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-960",
+      "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
     ]),
     sourceHierarchy: {
       programGuidance: [
         "https://www.hud.gov/helping-americans/public-housing",
         "https://www.hud.gov/hud-partners/hotma",
+        "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
       ],
-      controllingLaw: ["https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618"],
+      controllingLaw: [
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
+        "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-960",
+      ],
     },
     requiredControls: ["controlled_public_housing_income_limit", "admissions_and_continued_occupancy_policy", "asset_enforcement_policy", "over_income_period"],
+    verifiedRules: [
+      {
+        id: "PUBLIC-HOUSING-ADMISSION-ELIGIBILITY",
+        citation: "24 CFR 960.201 and 24 CFR 5.618(a)",
+        requirement: "Admit only eligible low-income families after applying the required program, income, and admission asset restrictions.",
+        evidenceFields: ["controlled_public_housing_income_limit", "annual_income", "household_size", "net_family_assets", "real_property_ownership", "admission_eligibility_record"],
+      },
+      {
+        id: "PUBLIC-HOUSING-INCOME-REEXAMINATION",
+        citation: "24 CFR 960.257 and 960.259",
+        requirement: "Conduct the applicable annual, triennial, and interim examinations and retain the prescribed verification.",
+        evidenceFields: ["rent_option", "last_reexamination_date", "income_change_date", "adjusted_income_change_percent", "third_party_verification", "acop_reexamination_policy"],
+      },
+      {
+        id: "PUBLIC-HOUSING-ASSET-RESTRICTION-AND-POLICY",
+        citation: "24 CFR 5.618",
+        requirement: "Apply the asset and suitable-real-property restrictions at admission; at reexamination, apply the PHA's written enforcement or exception policy.",
+        evidenceFields: ["determination_type", "net_family_assets", "controlled_asset_threshold", "real_property_ownership", "real_property_suitability", "acop_asset_enforcement_policy"],
+      },
+      {
+        id: "PUBLIC-HOUSING-OVER-INCOME-PERIOD",
+        citation: "24 CFR 960.507",
+        requirement: "Track consecutive over-income months and issue the prescribed notices and continued-occupancy action at 12 and 24 months.",
+        evidenceFields: ["controlled_very_low_income_limit", "over_income_start_date", "income_examination_dates", "notice_dates", "acop_over_income_policy", "continued_occupancy_action"],
+      },
+    ],
   }),
   RURAL_DEVELOPMENT: pack({
     program: "RURAL_DEVELOPMENT",
