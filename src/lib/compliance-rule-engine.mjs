@@ -15,7 +15,7 @@ import { federalProgramPackGate } from "./federal-program-rule-pack-registry.mjs
  *    guessed PASS or FAIL.
  */
 
-export const ENGINE_BUILD = "rule-engine-2026.08.3";
+export const ENGINE_BUILD = "rule-engine-2026.08.4";
 export const MINIMUM_CONFIDENCE = 0.85;
 
 export const FINDING_STATUS = Object.freeze({
@@ -42,7 +42,7 @@ export const RULE_EVALUATION_STATUS = Object.freeze({
  */
 const CERTIFICATION_RULE_CATALOG = Object.freeze({
   id: "certification-rule-catalog",
-  version: "2026.08.3",
+  version: "2026.08.4",
   jurisdiction: "US",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -81,32 +81,69 @@ const CERTIFICATION_RULE_CATALOG = Object.freeze({
       },
     },
     {
-      id: "LIHTC-INCOME-LIMIT-60",
-      version: "1.0.0",
+      id: "LIHTC-INCOME-LIMIT-APPLICABLE",
+      version: "2.0.0",
       jurisdiction: "federal",
       severity: "critical",
-      requires: ["household_annual_income", "income_limit_60_pct"],
-      citation: "26 U.S.C. 42(g)(1)(B); HUD MTSP income limits",
+      requires: [
+        "household_annual_income",
+        "applicable_lihtc_income_limit",
+        "lihtc_income_limit_basis_pct",
+        "lihtc_minimum_set_aside_election",
+        "controlled_income_limit_receipt",
+      ],
+      citation: "26 U.S.C. 42(g)(1); HUD MTSP income limits",
       description:
-        "Household annual income must not exceed the applicable 60% AMI limit at certification.",
+        "Household annual income must not exceed the controlled LIHTC limit selected for the project's irrevocable minimum-set-aside election and, for an average-income project, the unit's taxpayer-designated imputed income limitation.",
       evaluate: (facts) => {
         const income = Number(facts.household_annual_income.value);
-        const limit = Number(facts.income_limit_60_pct.value);
+        const limit = Number(facts.applicable_lihtc_income_limit.value);
+        const basis = Number(facts.lihtc_income_limit_basis_pct.value);
+        const election = String(
+          facts.lihtc_minimum_set_aside_election.value,
+        )
+          .trim()
+          .toUpperCase()
+          .replace(/[ _]/g, "-");
+        const averageIncomeElection = election.startsWith("AVERAGE-INCOME");
+        const validElection =
+          election === "20-50" ||
+          election === "40-60" ||
+          averageIncomeElection;
+        if (!validElection) {
+          return {
+            status: FINDING_STATUS.unableToDetermine,
+            explanation:
+              "The LIHTC minimum-set-aside election is missing or is not recognized as 20-50, 40-60, or average-income.",
+          };
+        }
+        const validBasis =
+          (election === "20-50" && basis === 50) ||
+          (election === "40-60" && basis === 60) ||
+          (averageIncomeElection &&
+            [20, 30, 40, 50, 60, 70, 80].includes(basis));
+        if (!validBasis) {
+          return {
+            status: FINDING_STATUS.unableToDetermine,
+            explanation:
+              "The income-limit basis is inconsistent with the declared LIHTC election or is not an allowed average-income designation.",
+          };
+        }
         if (!Number.isFinite(income) || !Number.isFinite(limit) || limit <= 0) {
           return {
             status: FINDING_STATUS.unableToDetermine,
             explanation:
-              "Income or applicable income limit is not a usable number.",
+              "Household income or the controlled applicable LIHTC income limit is not a usable number.",
           };
         }
         return income <= limit
           ? {
               status: FINDING_STATUS.pass,
-              explanation: `Household income ${income} is within the 60% limit ${limit}.`,
+              explanation: `Household income ${income} is within the controlled ${basis}% limit ${limit}.`,
             }
           : {
               status: FINDING_STATUS.fail,
-              explanation: `Household income ${income} exceeds the 60% limit ${limit}.`,
+              explanation: `Household income ${income} exceeds the controlled ${basis}% limit ${limit}.`,
             };
       },
     },
@@ -204,19 +241,19 @@ const HOTMA_ASSET_CAP_PROGRAMS = new Set([
 
 export const FEDERAL_LIHTC_PACK = Object.freeze({
   id: "federal-lihtc",
-  version: "2026.08.3",
+  version: "2026.08.4",
   jurisdiction: "US",
   status: "validated",
   effectiveFrom: "2026-01-01",
   rules: Object.freeze([
     catalogRule("LIHTC-TIC-SIGNATURE"),
-    catalogRule("LIHTC-INCOME-LIMIT-60"),
+    catalogRule("LIHTC-INCOME-LIMIT-APPLICABLE"),
   ]),
 });
 
 export const HOTMA_ASSET_CAP_OVERLAY_PACK = Object.freeze({
   id: "federal-hotma-asset-cap-overlay",
-  version: "2026.08.3",
+  version: "2026.08.4",
   jurisdiction: "US",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -225,7 +262,7 @@ export const HOTMA_ASSET_CAP_OVERLAY_PACK = Object.freeze({
 
 export const STATE_QAP_OVERLAY_PACK = Object.freeze({
   id: "state-qap-overlay",
-  version: "2026.08.3",
+  version: "2026.08.4",
   jurisdiction: "state",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -293,7 +330,7 @@ export function buildCertificationRulePack(input = {}) {
 
   return Object.freeze({
     id: `program-applicable:${programs.join("+")}${overlayIds.length ? `+${overlayIds.join("+")}` : ""}`,
-    version: "2026.08.3",
+    version: "2026.08.4",
     jurisdiction: "US",
     status: "validated",
     effectiveFrom: "2026-01-01",

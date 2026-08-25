@@ -15,7 +15,7 @@ const CERTIFICATION_TEXT = [
   "Certification Effective Date: 2026-03-05",
   "Household Annual Income: $42,500",
   "Page 2",
-  "60% Income Limit: $48,900",
+  "Applicable LIHTC Income Limit: $48,900",
   "Household Net Assets: $12,000",
   "HOTMA Asset Cap: $100,000",
   "Gross Rent: 1,150",
@@ -29,7 +29,7 @@ function extract(text) {
     tenant_signature_date: "tenant signature date",
     certification_effective_date: "certification effective date",
     household_annual_income: "household annual income",
-    income_limit_60_pct: "60% income limit",
+    applicable_lihtc_income_limit: "applicable lihtc income limit",
     household_net_assets: "household net assets",
     hotma_asset_cap: "hotma asset cap",
     gross_rent: "gross rent",
@@ -38,7 +38,7 @@ function extract(text) {
   };
   const numeric = new Set([
     "household_annual_income",
-    "income_limit_60_pct",
+    "applicable_lihtc_income_limit",
     "household_net_assets",
     "hotma_asset_cap",
     "gross_rent",
@@ -74,6 +74,29 @@ function extract(text) {
   return facts;
 }
 
+function withLihtcAuthority(facts, overrides = {}) {
+  const authority = {
+    lihtc_minimum_set_aside_election: "40-60",
+    lihtc_income_limit_basis_pct: 60,
+    controlled_income_limit_receipt: "HUD_MTSP_FY2026:verified-receipt",
+    ...overrides,
+  };
+  return [
+    ...facts,
+    ...Object.entries(authority).map(([field, value]) => ({
+      field,
+      value,
+      sourceDocumentRef: "controlled-project-authority.json",
+      page: 1,
+      snippet: `${field}: ${value}`,
+      confidence: 1,
+      humanVerified: true,
+      requiredForDecision: true,
+      provider: "controlled-project-authority",
+    })),
+  ];
+}
+
 test("extraction attaches a document/page citation to every fact", () => {
   const facts = extract(CERTIFICATION_TEXT);
   assert.equal(facts.length, 9);
@@ -83,14 +106,14 @@ test("extraction attaches a document/page citation to every fact", () => {
     assert.ok(fact.snippet.length > 0);
   }
   assert.equal(
-    facts.find((fact) => fact.field === "income_limit_60_pct").page,
+    facts.find((fact) => fact.field === "applicable_lihtc_income_limit").page,
     2,
   );
 });
 
 test("a complete compliant file passes federal rules and blocks the state rule", () => {
   const result = evaluateCertification({
-    facts: extract(CERTIFICATION_TEXT),
+    facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
     jurisdiction: "TX",
   });
   assert.equal(result.engineBuild, ENGINE_BUILD);
@@ -122,7 +145,7 @@ test("a validated state pack unlocks the state-specific determination", () => {
   assert.equal(isStatePackUsable(statePack), true);
   assert.equal(isStatePackUsable({ ...statePack, approvedBy: null }), false);
   const result = evaluateCertification({
-    facts: extract(CERTIFICATION_TEXT),
+    facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
     jurisdiction: "TX",
     statePack,
   });
@@ -132,25 +155,72 @@ test("a validated state pack unlocks the state-specific determination", () => {
 });
 
 test("a real violation is a deterministic FAIL with evidence references", () => {
-  const facts = extract(CERTIFICATION_TEXT).map((fact) =>
+  const facts = withLihtcAuthority(extract(CERTIFICATION_TEXT)).map((fact) =>
     fact.field === "household_annual_income" ? { ...fact, value: 61000 } : fact,
   );
   const result = evaluateCertification({ facts });
   const finding = result.findings.find(
-    (entry) => entry.ruleId === "LIHTC-INCOME-LIMIT-60",
+    (entry) => entry.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
   );
   assert.equal(finding.status, FINDING_STATUS.fail);
-  assert.equal(finding.evidenceRefs.length, 2);
+  assert.equal(finding.evidenceRefs.length, 5);
   assert.equal(finding.evidenceRefs[0].documentRef, "tic-2026-03.txt");
-  assert.equal(finding.ruleVersion, "1.0.0");
+  assert.equal(finding.ruleVersion, "2.0.0");
+});
+
+test("LIHTC income evaluation follows 20-50 and average-income authority instead of assuming 60 percent", () => {
+  const base = extract(CERTIFICATION_TEXT);
+
+  const twentyFifty = withLihtcAuthority(
+    base.map((fact) =>
+      fact.field === "applicable_lihtc_income_limit"
+        ? { ...fact, value: 41000 }
+        : fact,
+    ),
+    {
+      lihtc_minimum_set_aside_election: "20-50",
+      lihtc_income_limit_basis_pct: 50,
+    },
+  );
+  const twentyFiftyFinding = evaluateCertification({
+    facts: twentyFifty,
+  }).findings.find(
+    (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
+  );
+  assert.equal(twentyFiftyFinding.status, FINDING_STATUS.fail);
+  assert.match(twentyFiftyFinding.explanation, /controlled 50% limit/);
+
+  const averageIncome = withLihtcAuthority(base, {
+    lihtc_minimum_set_aside_election: "average income",
+    lihtc_income_limit_basis_pct: 70,
+  });
+  const averageFinding = evaluateCertification({
+    facts: averageIncome,
+  }).findings.find(
+    (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
+  );
+  assert.equal(averageFinding.status, FINDING_STATUS.pass);
+  assert.match(averageFinding.explanation, /controlled 70% limit/);
+
+  const inconsistent = withLihtcAuthority(base, {
+    lihtc_minimum_set_aside_election: "20-50",
+    lihtc_income_limit_basis_pct: 60,
+  });
+  const inconsistentFinding = evaluateCertification({
+    facts: inconsistent,
+  }).findings.find(
+    (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
+  );
+  assert.equal(inconsistentFinding.status, FINDING_STATUS.unableToDetermine);
+  assert.match(inconsistentFinding.blockingReasons[0], /inconsistent/i);
 });
 
 test("missing or low-confidence evidence yields UNABLE_TO_DETERMINE, not a guess", () => {
-  const withoutLimit = extract(CERTIFICATION_TEXT).filter(
-    (fact) => fact.field !== "income_limit_60_pct",
+  const withoutLimit = withLihtcAuthority(extract(CERTIFICATION_TEXT)).filter(
+    (fact) => fact.field !== "applicable_lihtc_income_limit",
   );
   const missing = evaluateCertification({ facts: withoutLimit }).findings.find(
-    (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-60",
+    (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
   );
   assert.equal(missing.status, FINDING_STATUS.unableToDetermine);
   assert.match(
@@ -158,13 +228,13 @@ test("missing or low-confidence evidence yields UNABLE_TO_DETERMINE, not a guess
     /missing from the submitted evidence/i,
   );
 
-  const lowConfidence = extract(CERTIFICATION_TEXT).map((fact) =>
+  const lowConfidence = withLihtcAuthority(extract(CERTIFICATION_TEXT)).map((fact) =>
     fact.field === "household_annual_income"
       ? { ...fact, confidence: 0.4 }
       : fact,
   );
   const blocked = evaluateCertification({ facts: lowConfidence }).findings.find(
-    (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-60",
+    (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
   );
   assert.equal(blocked.status, FINDING_STATUS.unableToDetermine);
   assert.match(blocked.blockingReasons[0], /confidence policy/i);
@@ -176,17 +246,17 @@ test("missing or low-confidence evidence yields UNABLE_TO_DETERMINE, not a guess
   );
   assert.equal(
     evaluateCertification({ facts: verified }).findings.find(
-      (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-60",
+      (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
     ).status,
     FINDING_STATUS.pass,
   );
 });
 
 test("Test #12: conflicting multi-source income evidence blocks the rule engine", async (t) => {
-  const baseFacts = extract(CERTIFICATION_TEXT).filter(
+  const baseFacts = withLihtcAuthority(extract(CERTIFICATION_TEXT)).filter(
     (fact) =>
       fact.field !== "household_annual_income" &&
-      fact.field !== "income_limit_60_pct",
+      fact.field !== "applicable_lihtc_income_limit",
   );
   const incomeFact = (value, sourceDocumentRef) => ({
     field: "household_annual_income",
@@ -200,7 +270,7 @@ test("Test #12: conflicting multi-source income evidence blocks the rule engine"
     provider: "deterministic-text",
   });
   const limitFact = {
-    field: "income_limit_60_pct",
+    field: "applicable_lihtc_income_limit",
     value: 45000,
     sourceDocumentRef: "income-limits-2026.pdf",
     page: 4,
@@ -213,7 +283,7 @@ test("Test #12: conflicting multi-source income evidence blocks the rule engine"
   const evaluateIncome = (incomes) =>
     evaluateCertification({
       facts: [...baseFacts, ...incomes, limitFact],
-    }).findings.find((finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-60");
+    }).findings.find((finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE");
 
   await t.test("valid evidence at or below the limit passes", () => {
     const finding = evaluateIncome([incomeFact(42000, "source-a.pdf")]);
@@ -239,7 +309,7 @@ test("Test #12: conflicting multi-source income evidence blocks the rule engine"
       assert.equal(finding.evidenceStatus, "CONFLICTING");
       assert.equal(finding.status, FINDING_STATUS.unableToDetermine);
       assert.equal(finding.ruleEvaluationStatus, "BLOCKED");
-      assert.equal(finding.evidenceRefs.length, 3);
+      assert.equal(finding.evidenceRefs.length, 6);
       assert.match(
         finding.blockingReasons[0],
         /source-a\.pdf page 1 reports 42000/i,
@@ -259,7 +329,7 @@ test("Test #12: conflicting multi-source income evidence blocks the rule engine"
 
 test("LIHTC-only reviews never activate the HOTMA asset-cap overlay", () => {
   const result = evaluateCertification({
-    facts: extract(CERTIFICATION_TEXT),
+    facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
     programs: ["LIHTC"],
   });
   assert.equal(
@@ -268,7 +338,7 @@ test("LIHTC-only reviews never activate the HOTMA asset-cap overlay", () => {
   );
   assert.deepEqual(
     result.findings.map((finding) => finding.ruleId),
-    ["LIHTC-TIC-SIGNATURE", "LIHTC-INCOME-LIMIT-60"],
+    ["LIHTC-TIC-SIGNATURE", "LIHTC-INCOME-LIMIT-APPLICABLE"],
   );
 });
 
@@ -276,7 +346,7 @@ test("HOTMA cannot be activated for an LIHTC-only certification", () => {
   assert.throws(
     () =>
       evaluateCertification({
-        facts: extract(CERTIFICATION_TEXT),
+        facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
         programs: ["LIHTC"],
         hotmaApplicable: true,
       }),
@@ -286,7 +356,7 @@ test("HOTMA cannot be activated for an LIHTC-only certification", () => {
 
 test("an explicit applicable HUD overlay evaluates HOTMA but blocks unsupported program sign-off", () => {
   const result = evaluateCertification({
-    facts: extract(CERTIFICATION_TEXT),
+    facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
     programs: ["LIHTC", "HUD_MFH_PROJECT_BASED"],
     hotmaApplicable: true,
   });
@@ -307,7 +377,7 @@ test("unknown program codes are rejected instead of silently misrouted", () => {
   assert.throws(
     () =>
       evaluateCertification({
-        facts: extract(CERTIFICATION_TEXT),
+        facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
         programs: ["LIHTC", "NOT_A_PROGRAM"],
       }),
     /unsupported certification program/i,
