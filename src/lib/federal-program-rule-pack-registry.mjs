@@ -1,6 +1,6 @@
 /** Controlled federal program-pack coverage and authority registry. */
 export const FEDERAL_PROGRAM_PACK_REGISTRY_BUILD =
-  "federal-program-pack-registry-2026.08.6";
+  "federal-program-pack-registry-2026.08.7";
 
 const pack = (entry) =>
   Object.freeze({
@@ -97,16 +97,83 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     program: "LIHTC",
     packId: "federal-lihtc",
     activationStatus: "PARTIAL",
-    citation: "26 U.S.C. 42(g); HUD MTSP income limits",
+    citation:
+      "26 U.S.C. 42(c), 42(g), 42(h)(6), 42(i)(3)(D), and 42(m); 26 CFR 1.42-5",
     officialSources: Object.freeze([
       "https://uscode.house.gov/view.xhtml?req=(title:26%20section:42%20edition:prelim)",
+      "https://www.govinfo.gov/link/uscode/26/42",
+      "https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.42-5",
       "https://www.huduser.gov/portal/datasets/mtsp.html",
     ]),
     sourceHierarchy: {
       programGuidance: ["https://www.huduser.gov/portal/datasets/mtsp.html"],
-      controllingLaw: ["https://uscode.house.gov/view.xhtml?req=(title:26%20section:42%20edition:prelim)"],
+      controllingLaw: [
+        "https://uscode.house.gov/view.xhtml?req=(title:26%20section:42%20edition:prelim)",
+        "https://www.govinfo.gov/link/uscode/26/42",
+        "https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.42-5",
+      ],
     },
-    requiredControls: ["controlled_income_limit_receipt", "project_election", "student_status", "rent_and_utility_allowance"],
+    requiredControls: [
+      "controlled_income_limit_receipt",
+      "project_election",
+      "applicable_fraction",
+      "unit_income_designation",
+      "student_status",
+      "rent_and_utility_allowance",
+      "next_available_unit_tracking",
+      "extended_use_agreement",
+      "state_agency_compliance_authority",
+    ],
+    programBoundaries: Object.freeze([
+      "A fixed 60-percent income limit is not universal: the federal minimum-set-aside election may be 20-50, 40-60, or average-income, and average-income units use taxpayer-designated 20-through-80 percent imputed income limitations.",
+      "LIHTC participation alone does not activate HOTMA asset restrictions; an independently applicable HUD or other controlling program is required.",
+      "A section 42(g)(1)(C) average-income election does not replace the separate issuer election required by section 142(d) for a tax-exempt-bond project.",
+      "State QAP, allocation, regulatory-agreement, and extended-use requirements are separate overlays and must not be inferred from the federal baseline.",
+    ]),
+    verifiedRules: [
+      {
+        id: "LIHTC-MINIMUM-SET-ASIDE-ELECTION",
+        citation: "26 U.S.C. 42(g)(1)",
+        requirement: "Apply the taxpayer's irrevocable 20-50, 40-60, or average-income election at project level; for average-income, use only designated 20-through-80 percent increments whose average does not exceed 60 percent.",
+        evidenceFields: ["project_election", "election_date", "total_residential_units", "rent_restricted_units", "qualified_households", "unit_income_designations", "average_designation_pct"],
+      },
+      {
+        id: "LIHTC-UNIT-INCOME-AND-RENT",
+        citation: "26 U.S.C. 42(g)(1) and 42(g)(2)(A)-(C)",
+        requirement: "For each low-income unit, confirm household income against the controlled limit applicable to the project election and unit designation, and keep gross rent including the prescribed utility allowance within 30 percent of the applicable imputed income limitation.",
+        evidenceFields: ["controlled_income_limit_receipt", "project_election", "unit_income_designation", "household_size", "household_annual_income", "tenant_paid_rent", "utility_allowance", "applicable_gross_rent_limit"],
+      },
+      {
+        id: "LIHTC-APPLICABLE-FRACTION",
+        citation: "26 U.S.C. 42(c)(1)",
+        requirement: "Determine qualified basis using the smaller of the building's low-income unit fraction or low-income floor-space fraction at the close of the taxable year.",
+        evidenceFields: ["building_id", "low_income_unit_count", "total_residential_unit_count", "low_income_floor_space", "total_residential_floor_space", "applicable_fraction", "qualified_basis"],
+      },
+      {
+        id: "LIHTC-NEXT-AVAILABLE-UNIT",
+        citation: "26 U.S.C. 42(g)(2)(D)",
+        requirement: "When a low-income household exceeds the applicable 140-percent threshold, preserve low-income-unit status only by satisfying the election-specific next-available-unit rule, including the distinct average-income comparison.",
+        evidenceFields: ["project_election", "unit_income_designation", "current_household_income", "controlled_140_percent_threshold", "building_id", "next_available_unit", "next_available_unit_size", "new_household_income", "next_unit_designation"],
+      },
+      {
+        id: "LIHTC-STUDENT-UNIT",
+        citation: "26 U.S.C. 42(i)(3)(D)",
+        requirement: "Do not treat a unit occupied entirely by full-time students as a low-income unit unless a statutory student exception is documented.",
+        evidenceFields: ["household_members", "full_time_student_status", "student_months", "student_exception", "exception_evidence"],
+      },
+      {
+        id: "LIHTC-EXTENDED-USE",
+        citation: "26 U.S.C. 42(h)(6)",
+        requirement: "Maintain the recorded extended low-income housing commitment for the required extended-use period, subject only to the statutory termination and tenant-protection rules.",
+        evidenceFields: ["extended_use_agreement", "recording_date", "compliance_period_start", "extended_use_end_date", "qualified_contract_or_foreclosure_event", "three_year_tenant_protection_end_date"],
+      },
+      {
+        id: "LIHTC-AGENCY-COMPLIANCE-MONITORING",
+        citation: "26 U.S.C. 42(m)(1)(B)(iii) and 26 CFR 1.42-5",
+        requirement: "Satisfy the state housing credit agency's controlled compliance-monitoring procedure, including required owner certifications, record retention, reviews, inspections, and correction reporting.",
+        evidenceFields: ["state_agency_compliance_authority", "owner_annual_certification", "tenant_income_certifications", "rent_records", "record_retention_period", "file_review", "physical_inspection", "noncompliance_notice", "correction_evidence"],
+      },
+    ],
   }),
   HOME: pack({
     program: "HOME",
