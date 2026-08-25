@@ -1,0 +1,253 @@
+{
+  "schema_version": "1.0",
+  "rule_pack_id": "FED-HUD-PIH-HOTMA-IMPLEMENTATION-2026-08",
+  "activation_status": "BLOCKED_PENDING_CONTROLLED_SOURCE_RELEASE",
+  "full_compliance_date": "2027-01-01",
+  "covered_programs": [
+    "HCV_TENANT_BASED",
+    "HUD_PBV",
+    "MOD_REHAB",
+    "MOD_REHAB_SRO",
+    "PUBLIC_HOUSING"
+  ],
+  "pha_cohorts": [
+    "NON_MTW_NON_FRS",
+    "INITIAL_MTW",
+    "MTW_EXPANSION",
+    "FRS_EXCLUSIVE"
+  ],
+  "review_classifications": [
+    "NOT_APPLICABLE",
+    "PRE_IMPLEMENTATION_OBSERVATION",
+    "COMPLIANCE_FINDING",
+    "UNABLE_TO_DETERMINE"
+  ],
+  "reporting_paths": [
+    "HUD_50058_2024",
+    "HUD_50058_2020_ALTERNATIVE"
+  ],
+  "sources": [
+    {
+      "source_id": "HUD-NOTICE-PIH-2026-15",
+      "title": "PHA Compliance Deadline for HOTMA Sections 102 and 104 and Alternative HUD-50058 Reporting Instructions",
+      "authority_class": "COMPLIANCE_DATE_AND_REPORTING_NOTICE",
+      "source_status": "CURRENT",
+      "issued_date": "2026-05-14",
+      "source_url": "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf"
+    },
+    {
+      "source_id": "HUD-NOTICE-PIH-2024-38",
+      "title": "HOTMA Sections 102 and 104 Updated Guidance to PHAs on Compliance",
+      "authority_class": "IMPLEMENTATION_NOTICE",
+      "source_status": "CURRENT_AS_AMENDED_BY_PIH_2026_15",
+      "issued_date": "2024-12-17",
+      "source_url": "https://www.hud.gov/hud-partners/hotma"
+    },
+    {
+      "source_id": "HUD-NOTICE-PIH-2023-27-H-2023-10-REVISION-3",
+      "title": "Implementation Guidance: Sections 102 and 104 of HOTMA",
+      "authority_class": "SUBSTANTIVE_IMPLEMENTATION_GUIDANCE",
+      "source_status": "CURRENT_REVISION",
+      "source_url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/2023-10hsgn.pdf"
+    },
+    {
+      "source_id": "HUD-PIH-HOTMA-RESOURCE-INDEX",
+      "title": "HUD HOTMA Resources",
+      "authority_class": "DISCOVERY_INDEX",
+      "source_status": "CURRENT",
+      "may_independently_authorize_findings": false,
+      "source_url": "https://www.hud.gov/hud-partners/hotma"
+    }
+  ],
+  "modules": [
+    {
+      "module_id": "PHA-HOTMA-COHORT-AND-DEADLINE",
+      "name": "PHA cohort and enforcement deadline",
+      "applies_to_programs": [
+        "HCV_TENANT_BASED",
+        "HUD_PBV",
+        "MOD_REHAB",
+        "MOD_REHAB_SRO",
+        "PUBLIC_HOUSING"
+      ],
+      "requirement_effective_date": "2027-01-01",
+      "authority_class": "FEDERAL_IMPLEMENTATION_GATE",
+      "citations": [
+        "Notice PIH 2026-15, sections III-VI and Appendix A"
+      ],
+      "requirement": "Classify the PHA as non-MTW/non-FRS, initial MTW, MTW Expansion, or FRS-exclusive before applying the January 1, 2027 full-compliance deadline.",
+      "evidence_fields": [
+        "pha_cohort",
+        "program_inventory",
+        "transaction_effective_date"
+      ],
+      "required_input_flags": []
+    },
+    {
+      "module_id": "PHA-HOTMA-EID-ENROLLMENT-CUTOFF",
+      "name": "Earned Income Disregard enrollment cutoff",
+      "applies_to_programs": [
+        "HCV_TENANT_BASED",
+        "HUD_PBV",
+        "MOD_REHAB",
+        "MOD_REHAB_SRO",
+        "PUBLIC_HOUSING"
+      ],
+      "requirement_effective_date": "2024-01-01",
+      "authority_class": "FEDERAL_MANDATORY_MILESTONE",
+      "citations": [
+        "Notice PIH 2026-15, Appendix A"
+      ],
+      "requirement": "All PHAs must cease new enrollment into Earned Income Disregard beginning January 1, 2024.",
+      "evidence_fields": [
+        "eid_enrollment_date",
+        "eid_existing_participant_status"
+      ],
+      "required_input_flags": [
+        "eid_enrollment_status_validated"
+      ]
+    },
+    {
+      "module_id": "PHA-HOTMA-HUD-9886-A",
+      "name": "HUD-9886-A consent form",
+      "applies_to_programs": [
+        "HCV_TENANT_BASED",
+        "HUD_PBV",
+        "MOD_REHAB",
+        "MOD_REHAB_SRO",
+        "PUBLIC_HOUSING"
+      ],
+      "requirement_effective_date": "2025-02-01",
+      "authority_class": "FEDERAL_MANDATORY_MILESTONE",
+      "citations": [
+        "Notice PIH 2026-15, Appendix A"
+      ],
+      "requirement": "All PHAs must use HUD-9886-A no later than February 1, 2025.",
+      "evidence_fields": [
+        "consent_form_version",
+        "consent_form_execution_date"
+      ],
+      "required_input_flags": [
+        "hud_9886_a_version_validated"
+      ]
+    },
+    {
+      "module_id": "PHA-HOTMA-JULY-2025-PROVISIONS",
+      "name": "July 2025 selected HOTMA provisions",
+      "applies_to_programs": [
+        "HCV_TENANT_BASED",
+        "HUD_PBV",
+        "MOD_REHAB",
+        "MOD_REHAB_SRO",
+        "PUBLIC_HOUSING"
+      ],
+      "requirement_effective_date": "2025-07-01",
+      "authority_class": "FEDERAL_MANDATORY_MILESTONE",
+      "citations": [
+        "Notice PIH 2024-38; Notice PIH 2026-15, Appendix A"
+      ],
+      "requirement": "All PHAs must apply the income exclusions, definitions, and de minimis error provisions identified in Notice PIH 2024-38 beginning July 1, 2025.",
+      "evidence_fields": [
+        "income_exclusion_version",
+        "definition_version",
+        "de_minimis_error_review"
+      ],
+      "required_input_flags": [
+        "july_2025_provisions_validated"
+      ]
+    },
+    {
+      "module_id": "PHA-HOTMA-FULL-SECTIONS-102-104",
+      "name": "Full Sections 102 and 104 compliance",
+      "applies_to_programs": [
+        "HCV_TENANT_BASED",
+        "HUD_PBV",
+        "MOD_REHAB",
+        "MOD_REHAB_SRO",
+        "PUBLIC_HOUSING"
+      ],
+      "requirement_effective_date": "2027-01-01",
+      "authority_class": "FEDERAL_MANDATORY_FOR_RESOLVED_COHORT",
+      "citations": [
+        "Notice PIH 2026-15, section IV and Appendix A"
+      ],
+      "requirement": "For non-MTW, non-FRS PHAs, every HUD-50058 transaction effective on or after January 1, 2027 must comply with all applicable provisions of HOTMA Sections 102 and 104.",
+      "evidence_fields": [
+        "transaction_effective_date",
+        "pha_cohort",
+        "hotma_policy_version",
+        "income_and_asset_workpaper"
+      ],
+      "required_input_flags": [
+        "full_hotma_policy_set_validated"
+      ]
+    },
+    {
+      "module_id": "PHA-HOTMA-HUD-50058-REPORTING-PATH",
+      "name": "HUD-50058 HOTMA reporting path",
+      "applies_to_programs": [
+        "HCV_TENANT_BASED",
+        "HUD_PBV",
+        "MOD_REHAB",
+        "MOD_REHAB_SRO",
+        "PUBLIC_HOUSING"
+      ],
+      "requirement_effective_date": "2027-01-01",
+      "authority_class": "FEDERAL_SYSTEMS_REPORTING_CONTROL",
+      "citations": [
+        "Notice PIH 2026-15, section IV.A-IV.B"
+      ],
+      "requirement": "A non-MTW, non-FRS PHA must use the 2024 HUD-50058 or the temporary 2020 HUD-50058 alternative reporting instructions for HOTMA-compliant transactions.",
+      "evidence_fields": [
+        "hud_50058_reporting_path",
+        "software_vendor",
+        "software_release_version",
+        "submission_validation_result"
+      ],
+      "required_input_flags": [
+        "reporting_path_validated",
+        "software_compatibility_validated"
+      ]
+    },
+    {
+      "module_id": "PHA-HOTMA-2020-ALTERNATIVE-INSTRUCTIONS",
+      "name": "2020 HUD-50058 alternative reporting instructions",
+      "applies_to_programs": [
+        "HCV_TENANT_BASED",
+        "HUD_PBV",
+        "MOD_REHAB",
+        "MOD_REHAB_SRO",
+        "PUBLIC_HOUSING"
+      ],
+      "requirement_effective_date": "2027-01-01",
+      "authority_class": "FEDERAL_TEMPORARY_SYSTEMS_INSTRUCTION",
+      "citations": [
+        "Notice PIH 2026-15, Appendix B"
+      ],
+      "requirement": "When using the 2020 HUD-50058 alternative path, apply the temporary Section 2, 6, 7, and 8 instructions, expected warning treatment, and HOTMA indicator handling.",
+      "evidence_fields": [
+        "hud_50058_reporting_path",
+        "pha_use_field_hotma_indicator",
+        "section_6_asset_mapping",
+        "section_7_income_mapping",
+        "section_8_deduction_mapping",
+        "ims_pic_validation_result"
+      ],
+      "required_input_flags": [
+        "alternative_50058_instructions_validated",
+        "alternative_hotma_indicator_validated"
+      ]
+    }
+  ],
+  "execution_policy": {
+    "controlled_source_release_required": true,
+    "current_notice_version_required": true,
+    "exact_pha_cohort_required": true,
+    "exact_program_required": true,
+    "transaction_effective_date_required": true,
+    "mtw_and_frs_full_compliance_deadline_result": "UNABLE_TO_DETERMINE_PENDING_FUTURE_HUD_GUIDANCE",
+    "missing_or_conflicting_evidence_result": "UNABLE_TO_DETERMINE",
+    "resource_index_may_authorize_findings": false,
+    "human_approval_required": true
+  }
+}

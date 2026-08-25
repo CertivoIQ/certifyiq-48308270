@@ -279,12 +279,13 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     program: "HCV_TENANT_BASED",
     packId: "federal-hcv",
     activationStatus: "BLOCKED",
-    citation: "24 CFR 5.609, 24 CFR 5.618, and 24 CFR 982.516; Notice PIH 2023-27 Revision 3 and Notice PIH 2024-38",
+    citation: "24 CFR 5.609, 24 CFR 5.618, and 24 CFR 982.516; Notice PIH 2023-27 Revision 3, Notice PIH 2024-38, and Notice PIH 2026-15",
     officialSources: Object.freeze([
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
       "https://www.hud.gov/helping-americans/housing-choice-vouchers",
       "https://www.hud.gov/hud-partners/hotma",
+      "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf",
       "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982",
     ]),
     sourceHierarchy: {
@@ -292,13 +293,14 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
         "https://www.hud.gov/helping-americans/housing-choice-vouchers",
         "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
         "https://www.hud.gov/hud-partners/hotma",
+        "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf",
       ],
       controllingLaw: [
         "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
         "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982",
       ],
     },
-    requiredControls: ["controlled_section8_income_limit_receipt", "hotma_implementation_authority", "asset_enforcement_policy", "real_property_restriction"],
+    requiredControls: ["controlled_section8_income_limit_receipt", "hotma_implementation_authority", "pha_hotma_cohort", "hud_50058_reporting_path", "asset_enforcement_policy", "real_property_restriction"],
     verifiedRules: [
       {
         id: "HCV-ADMISSION-ELIGIBILITY",
@@ -324,22 +326,23 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     program: "HUD_PBV",
     packId: "federal-hud-pbv",
     activationStatus: "BLOCKED",
-    citation: "24 CFR parts 5 and 983; Notice PIH 2024-19",
+    citation: "24 CFR parts 5 and 983; Notice PIH 2024-19 and Notice PIH 2026-15",
     officialSources: Object.freeze([
       "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-983",
       "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982/subpart-K/section-982.516",
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       "https://www.hud.gov/helping-americans/housing-choice-vouchers-project",
+      "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf",
     ]),
     sourceHierarchy: {
-      programGuidance: ["https://www.hud.gov/helping-americans/housing-choice-vouchers-project"],
+      programGuidance: ["https://www.hud.gov/helping-americans/housing-choice-vouchers-project", "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf"],
       controllingLaw: [
         "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-983",
         "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-982/subpart-K/section-982.516",
         "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       ],
     },
-    requiredControls: ["controlled_section8_income_limit_receipt", "hotma_implementation_authority", "hap_contract_authority", "asset_enforcement_policy"],
+    requiredControls: ["controlled_section8_income_limit_receipt", "hotma_implementation_authority", "pha_hotma_cohort", "hud_50058_reporting_path", "hap_contract_authority", "asset_enforcement_policy"],
     verifiedRules: [
       {
         id: "PBV-PARTICIPANT-ELIGIBILITY",
@@ -425,26 +428,28 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     program: "PUBLIC_HOUSING",
     packId: "federal-public-housing",
     activationStatus: "BLOCKED",
-    citation: "24 CFR 5.618 and 24 CFR part 960; HOTMA sections 102-104; Notice PIH 2023-27 Revision 3",
+    citation: "24 CFR 5.618 and 24 CFR part 960; HOTMA sections 102-104; Notice PIH 2023-27 Revision 3 and Notice PIH 2026-15",
     officialSources: Object.freeze([
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       "https://www.hud.gov/hud-partners/hotma",
       "https://www.hud.gov/helping-americans/public-housing",
       "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-960",
       "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
+      "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf",
     ]),
     sourceHierarchy: {
       programGuidance: [
         "https://www.hud.gov/helping-americans/public-housing",
         "https://www.hud.gov/hud-partners/hotma",
         "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
+        "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf",
       ],
       controllingLaw: [
         "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
         "https://www.ecfr.gov/current/title-24/subtitle-B/chapter-IX/part-960",
       ],
     },
-    requiredControls: ["controlled_public_housing_income_limit", "admissions_and_continued_occupancy_policy", "asset_enforcement_policy", "over_income_period"],
+    requiredControls: ["controlled_public_housing_income_limit", "pha_hotma_cohort", "hud_50058_reporting_path", "admissions_and_continued_occupancy_policy", "asset_enforcement_policy", "over_income_period"],
     verifiedRules: [
       {
         id: "PUBLIC-HOUSING-ADMISSION-ELIGIBILITY",

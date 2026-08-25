@@ -153,3 +153,37 @@ test("MFH reviews expose all ten HOTMA module classifications without manufactur
     ),
   );
 });
+
+test("PHA-administered reviews expose cohort-aware HOTMA implementation routing", () => {
+  const result = evaluateFederalCertificationReview({
+    facts: [],
+    programs: ["HCV_TENANT_BASED"],
+    certificationType: "INITIAL",
+    phaHotmaInput: {
+      program_applicability_validated: true,
+      pha_cohort: "NON_MTW_NON_FRS",
+      transaction_effective_date: "2027-01-01",
+      controlled_source_release_approved: true,
+      current_rule_version_validated: true,
+      source_status_conflict: false,
+      full_hotma_policy_set_validated: true,
+      hud_50058_reporting_path: "HUD_50058_2024",
+      reporting_path_validated: true,
+      software_compatibility_validated: true,
+      alternative_50058_instructions_validated: true,
+      alternative_hotma_indicator_validated: true,
+      eid_enrollment_status_validated: true,
+      hud_9886_a_version_validated: true,
+      july_2025_provisions_validated: true,
+    },
+  });
+
+  assert.equal(result.controlResults.phaHotma.length, 1);
+  assert.equal(result.controlResults.phaHotma[0].program, "HCV_TENANT_BASED");
+  assert.equal(result.controlResults.phaHotma[0].module_count, 7);
+  assert.ok(
+    result.controlResults.phaHotma[0].classifications.every(
+      (entry) => !["PASS", "FAIL"].includes(entry.finding),
+    ),
+  );
+});

@@ -10,6 +10,10 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     MfhHotmaAllModuleResult,
     MfhHotmaReviewInput,
   } from "@/lib/mfh-hotma-rule-engine.mjs";
+  import type {
+    PhaHotmaAllModuleResult,
+    PhaHotmaImplementationInput,
+  } from "@/lib/pha-hotma-implementation-engine.mjs";
 
   export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD: string;
   export const FEDERAL_REVIEW_PACK_VERSION: string;
@@ -25,6 +29,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     layeredProgramInput?: Record<string, unknown>;
     recertificationInput?: Record<string, unknown>;
     mfhHotmaInput?: Omit<MfhHotmaReviewInput, "module_id">;
+    phaHotmaInput?: Omit<PhaHotmaImplementationInput, "module_id" | "program">;
   }
 
   export interface FederalCertificationReviewResult extends EvaluationResult {
@@ -35,6 +40,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
       recertification: Record<string, unknown> | null;
       layeredPrograms: Record<string, unknown> | null;
       mfhHotma: MfhHotmaAllModuleResult | null;
+      phaHotma: Array<PhaHotmaAllModuleResult & { program: string }> | null;
     };
   }
 
