@@ -7,7 +7,7 @@ import {
 
 /** Deterministic Test #60 source-ingestion and activation gate. */
 export const FY2026_LIMIT_INGESTION_ENGINE_BUILD =
-  "fy2026-income-limit-ingestion-2026.08.3";
+  "fy2026-income-limit-ingestion-2026.08.4";
 
 export const FY2026_LIMIT_ACTIVATION_STATUS = Object.freeze({
   active: "ACTIVE",
@@ -39,6 +39,11 @@ const PROGRAM_DATASET_FAMILIES = Object.freeze({
   HUD_PBV: new Set(["HUD_SECTION8_INCOME_LIMITS_FY2026"]),
   HUD_MFH_PROJECT_BASED: new Set(["HUD_SECTION8_INCOME_LIMITS_FY2026"]),
   RURAL_DEVELOPMENT: new Set(["USDA_RD_INCOME_LIMITS_FY2026"]),
+});
+
+export const CONTROLLED_FY2026_RENT_LIMIT_DATASET_FAMILIES = Object.freeze({
+  HOME: Object.freeze(["HUD_HOME_RENT_LIMITS_FY2026"]),
+  HTF: Object.freeze(["HUD_HTF_RENT_LIMITS_FY2026"]),
 });
 
 export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
@@ -87,18 +92,47 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
       "3082bd081727dea71dd62abcb811e3d26ce605f1f645fd5cd8dbcb76e8d4f133",
     record_count: 4764,
     effective_from: "2026-06-01",
+    official_landing_page:
+      "https://www.huduser.gov/portal/datasets/HOME-Rent-limits.html",
     content_available_in_repository: false,
-    activation_status: "BLOCKED_PENDING_SOURCE_BYTES",
+    activation_status: "BLOCKED_PENDING_CONTROLLED_STORAGE_AND_RENT_RECEIPT_PIPELINE",
     expected_legacy_geography_crosswalk_count: 0,
   }),
   HUD_HOME_INCOME_LIMITS_FY2026: Object.freeze({
     dataset_id: "HUD_HOME_INCOME_LIMITS_FY2026",
     file_name: "HOME_IncomeLmts_Natl_2026.xlsx",
-    activation_status: "BLOCKED_PENDING_FILE_HASH_AND_CONTENT_VALIDATION",
+    effective_from: "2026-06-01",
+    official_landing_page:
+      "https://www.huduser.gov/portal/datasets/HOME-Income-limits.html",
+    content_available_in_repository: false,
+    source_bytes_sha256_verified: false,
+    activation_status:
+      "BLOCKED_PENDING_FILE_HASH_RECORD_COUNT_SIZE_CONTENT_AND_CROSSWALK",
+    expected_legacy_geography_crosswalk_count: 6,
   }),
   HUD_HTF_INCOME_LIMITS_FY2026: Object.freeze({
     dataset_id: "HUD_HTF_INCOME_LIMITS_FY2026",
-    activation_status: "BLOCKED_PENDING_CONTROLLED_SOURCE",
+    file_name: "HTF_IncomeLmts_Natl_2026.xlsx",
+    effective_from: "2026-06-01",
+    official_landing_page:
+      "https://www.huduser.gov/portal/datasets/HTF-Income-limits.html",
+    content_available_in_repository: false,
+    source_bytes_sha256_verified: false,
+    activation_status:
+      "BLOCKED_PENDING_FILE_HASH_RECORD_COUNT_SIZE_AND_CONTENT_VALIDATION",
+    expected_legacy_geography_crosswalk_count: 0,
+  }),
+  HUD_HTF_RENT_LIMITS_FY2026: Object.freeze({
+    dataset_id: "HUD_HTF_RENT_LIMITS_FY2026",
+    file_name: "HTF_RentLimits_Natl_2026.xlsx",
+    effective_from: "2026-06-01",
+    official_landing_page:
+      "https://www.huduser.gov/portal/datasets/HTF-Rent-limits.html",
+    content_available_in_repository: false,
+    source_bytes_sha256_verified: false,
+    activation_status:
+      "BLOCKED_PENDING_FILE_HASH_RECORD_COUNT_SIZE_CONTENT_AND_RENT_RECEIPT_PIPELINE",
+    expected_legacy_geography_crosswalk_count: 0,
   }),
   HUD_SECTION8_INCOME_LIMITS_FY2026: Object.freeze({
     dataset_id: "HUD_SECTION8_INCOME_LIMITS_FY2026",
@@ -110,6 +144,51 @@ export const CONTROLLED_FY2026_INCOME_LIMIT_SOURCES = Object.freeze({
     activation_status: "BLOCKED_PENDING_CONTROLLED_SOURCE",
   }),
 });
+
+/**
+ * Register the program/rent-dataset relationship without granting rule authority.
+ * Rent activation requires its own byte-derived selection receipt pipeline and
+ * can never reuse an income-limit activation receipt.
+ */
+export function validateFy2026RentLimitProgramRegistration(
+  programCode,
+  datasetId,
+) {
+  const program = String(programCode ?? "").toUpperCase();
+  const dataset = String(datasetId ?? "");
+  const family = CONTROLLED_FY2026_RENT_LIMIT_DATASET_FAMILIES[program];
+  if (!family || !family.includes(dataset)) {
+    return blocked(
+      "RENT_LIMIT_PROGRAM_BRANCH_CONFLICT",
+      "The selected rent-limit dataset does not belong to the requested program branch.",
+      ["program_code", "dataset_id"],
+    );
+  }
+  const source = CONTROLLED_FY2026_INCOME_LIMIT_SOURCES[dataset];
+  const incompleteMetadata = [
+    "file_name",
+    "sha256",
+    "record_count",
+    "effective_from",
+  ].filter((field) => source?.[field] === null || source?.[field] === undefined);
+  return {
+    registration_status: "REGISTERED",
+    activation_status: FY2026_LIMIT_ACTIVATION_STATUS.blocked,
+    rule_engine_authority: "BLOCKED",
+    finding: "UNABLE_TO_DETERMINE",
+    program_code: program,
+    dataset_id: dataset,
+    official_landing_page: source?.official_landing_page ?? null,
+    effective_from: source?.effective_from ?? null,
+    reason_code: incompleteMetadata.length
+      ? "CONTROLLED_RENT_SOURCE_METADATA_INCOMPLETE"
+      : "RENT_LIMIT_ACTIVATION_RECEIPT_PIPELINE_REQUIRED",
+    missing_inputs: incompleteMetadata.length
+      ? incompleteMetadata.map((field) => `${dataset}.${field}`)
+      : ["controlled_storage_record", "rent_limit_activation_receipt"],
+    human_approval_required: true,
+  };
+}
 
 // Intentionally empty until the six Maine/Massachusetts mappings are derived
 // from validated FY2026 HOME/Section 8 source bytes and approved for release.
