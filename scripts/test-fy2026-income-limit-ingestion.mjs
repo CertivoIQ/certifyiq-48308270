@@ -4,10 +4,12 @@ import test from "node:test";
 import {
   CONTROLLED_FY2026_GEOGRAPHY_CROSSWALK,
   CONTROLLED_FY2026_INCOME_LIMIT_SOURCES,
+  CONTROLLED_FY2026_RENT_LIMIT_DATASET_FAMILIES,
   FY2026_LIMIT_INGESTION_ENGINE_BUILD,
   evaluateFy2026IncomeLimitSourceActivation,
   normalizeFy2026IncomeLimitDollar,
   validateFy2026IncomeLimitProgramHandoff,
+  validateFy2026RentLimitProgramRegistration,
   validateFy2026IncomeLimitRecords,
 } from "../src/lib/fy2026-income-limit-ingestion.mjs";
 
@@ -47,7 +49,7 @@ test("controlled FY2026 registry preserves the approved identities", () => {
     averaging.activation_status,
     "BLOCKED_PENDING_CONTROLLED_STORAGE",
   );
-  assert.equal(FY2026_LIMIT_INGESTION_ENGINE_BUILD.includes("2026.08.3"), true);
+  assert.equal(FY2026_LIMIT_INGESTION_ENGINE_BUILD.includes("2026.08.4"), true);
 });
 
 test("Excel artifacts normalize to exact dollars and never nearest fifty", () => {
@@ -87,6 +89,67 @@ test("pending HOME, HTF, Section 8, and RD identities remain inactive", () => {
   ]) {
     const result = evaluateFy2026IncomeLimitSourceActivation({ dataset_id });
     assert.equal(result.reason_code, "CONTROLLED_SOURCE_METADATA_INCOMPLETE");
+  }
+});
+
+test("HOME and HTF official FY2026 identities stay registered but inactive", () => {
+  const homeIncome =
+    CONTROLLED_FY2026_INCOME_LIMIT_SOURCES.HUD_HOME_INCOME_LIMITS_FY2026;
+  const htfIncome =
+    CONTROLLED_FY2026_INCOME_LIMIT_SOURCES.HUD_HTF_INCOME_LIMITS_FY2026;
+  const homeRent =
+    CONTROLLED_FY2026_INCOME_LIMIT_SOURCES.HUD_HOME_RENT_LIMITS_FY2026;
+  const htfRent =
+    CONTROLLED_FY2026_INCOME_LIMIT_SOURCES.HUD_HTF_RENT_LIMITS_FY2026;
+
+  for (const source of [homeIncome, htfIncome, homeRent, htfRent]) {
+    assert.equal(source.effective_from, "2026-06-01");
+    assert.match(source.official_landing_page, /^https:\/\/www\.huduser\.gov\//);
+    assert.equal(source.content_available_in_repository, false);
+    assert.match(source.activation_status, /^BLOCKED_/);
+  }
+  assert.equal(homeIncome.source_bytes_sha256_verified, false);
+  assert.equal(htfIncome.source_bytes_sha256_verified, false);
+  assert.equal(htfRent.source_bytes_sha256_verified, false);
+  assert.deepEqual(CONTROLLED_FY2026_RENT_LIMIT_DATASET_FAMILIES.HOME, [
+    "HUD_HOME_RENT_LIMITS_FY2026",
+  ]);
+  assert.deepEqual(CONTROLLED_FY2026_RENT_LIMIT_DATASET_FAMILIES.HTF, [
+    "HUD_HTF_RENT_LIMITS_FY2026",
+  ]);
+});
+
+test("rent datasets require a distinct program-bound receipt pipeline", () => {
+  const home = validateFy2026RentLimitProgramRegistration(
+    "HOME",
+    "HUD_HOME_RENT_LIMITS_FY2026",
+  );
+  assert.equal(home.registration_status, "REGISTERED");
+  assert.equal(home.activation_status, "BLOCKED");
+  assert.equal(home.reason_code, "RENT_LIMIT_ACTIVATION_RECEIPT_PIPELINE_REQUIRED");
+  assert.ok(home.missing_inputs.includes("rent_limit_activation_receipt"));
+
+  const htf = validateFy2026RentLimitProgramRegistration(
+    "HTF",
+    "HUD_HTF_RENT_LIMITS_FY2026",
+  );
+  assert.equal(htf.reason_code, "CONTROLLED_RENT_SOURCE_METADATA_INCOMPLETE");
+  assert.ok(htf.missing_inputs.includes("HUD_HTF_RENT_LIMITS_FY2026.sha256"));
+
+  const crossed = validateFy2026RentLimitProgramRegistration(
+    "HOME",
+    "HUD_HTF_RENT_LIMITS_FY2026",
+  );
+  assert.equal(crossed.reason_code, "RENT_LIMIT_PROGRAM_BRANCH_CONFLICT");
+});
+
+test("rent datasets cannot be substituted into the income receipt path", () => {
+  for (const [program, dataset] of [
+    ["HOME", "HUD_HOME_RENT_LIMITS_FY2026"],
+    ["HTF", "HUD_HTF_RENT_LIMITS_FY2026"],
+  ]) {
+    const result = validateFy2026IncomeLimitProgramHandoff(program, dataset, {});
+    assert.equal(result.reason_code, "INCOME_LIMIT_PROGRAM_BRANCH_CONFLICT");
   }
 });
 
