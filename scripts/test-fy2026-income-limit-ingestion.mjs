@@ -29,7 +29,25 @@ test("controlled FY2026 registry preserves the approved identities", () => {
       .HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18.record_count,
     4764,
   );
-  assert.equal(FY2026_LIMIT_INGESTION_ENGINE_BUILD.includes("2026.08.2"), true);
+  const mtsp =
+    CONTROLLED_FY2026_INCOME_LIMIT_SOURCES.HUD_MTSP_LIMITS_FY2026;
+  const averaging =
+    CONTROLLED_FY2026_INCOME_LIMIT_SOURCES
+      .HUD_MTSP_INCOME_AVERAGING_FY2026_REV_2026_05_18;
+  assert.equal(mtsp.source_bytes_sha256_verified, true);
+  assert.equal(mtsp.verified_size_bytes, 833472);
+  assert.equal(mtsp.content_available_in_repository, false);
+  assert.equal(
+    mtsp.activation_status,
+    "BLOCKED_PENDING_CONTROLLED_STORAGE_AND_CROSSWALK",
+  );
+  assert.equal(averaging.source_bytes_sha256_verified, true);
+  assert.equal(averaging.verified_size_bytes, 1449076);
+  assert.equal(
+    averaging.activation_status,
+    "BLOCKED_PENDING_CONTROLLED_STORAGE",
+  );
+  assert.equal(FY2026_LIMIT_INGESTION_ENGINE_BUILD.includes("2026.08.3"), true);
 });
 
 test("Excel artifacts normalize to exact dollars and never nearest fifty", () => {
