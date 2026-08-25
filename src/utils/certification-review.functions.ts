@@ -118,7 +118,14 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       .download(extraction.sidecarPathFor(item.storage_path));
     if (sidecarDownload.data) {
       try {
-        ocrDocument = extraction.loadOcrDocument(JSON.parse(await sidecarDownload.data.text()));
+        ocrDocument = extraction.loadOcrDocument(
+          JSON.parse(await sidecarDownload.data.text()),
+          {
+            fileName: item.original_file_name,
+            sha256: documentSha256,
+            byteSize: bytes.byteLength,
+          },
+        );
       } catch {
         // An unreadable sidecar never becomes evidence; fall back to PDF text.
         ocrDocument = null;
@@ -279,6 +286,10 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         ocr: ocrDocument
           ? {
               engines: ocrDocument.ocrEngines,
+              sidecarSchemaVersion: ocrDocument.sidecarSchemaVersion,
+              sourceSha256: ocrDocument.sourceSha256,
+              sourceByteSize: ocrDocument.sourceByteSize,
+              sourceIdentityVerified: true,
               ocrPageCount: ocrDocument.ocrPageCount,
               textPageCount: ocrDocument.textPageCount,
               skippedPageCount: ocrDocument.skippedPageCount,
