@@ -1,8 +1,8 @@
 {
   "test_id": 60,
-  "version": "2026.08.2",
+  "version": "2026.08.3",
   "activation_policy": "ACTUAL_BYTES_HASH_STRUCTURE_GEOGRAPHY_EFFECTIVE_DATE_AND_NORMALIZATION_REQUIRED",
-  "parser_binding_status": "IMPLEMENTED_TRUSTED_BYTE_DERIVED_XLSX_PARSER_PENDING_EXACT_SOURCE_BYTES",
+  "parser_binding_status": "IMPLEMENTED_TRUSTED_BYTE_DERIVED_INCOME_XLSX_PARSER_PENDING_EXACT_HOME_HTF_SOURCE_BYTES_AND_DISTINCT_RENT_RECEIPT_PIPELINE",
   "receipt_policy": "MODULE_ISSUED_IDENTITY_REQUIRED_CALLER_CONSTRUCTED_RECEIPTS_REJECTED",
   "official_sources": [
     {
@@ -31,16 +31,38 @@
       "sha256": "3082bd081727dea71dd62abcb811e3d26ce605f1f645fd5cd8dbcb76e8d4f133",
       "record_count": 4764,
       "effective_from": "2026-06-01",
-      "activation_status": "BLOCKED_PENDING_SOURCE_BYTES"
+      "activation_status": "BLOCKED_PENDING_CONTROLLED_STORAGE_AND_RENT_RECEIPT_PIPELINE",
+      "official_landing_page": "https://www.huduser.gov/portal/datasets/HOME-Rent-limits.html"
     },
     {
       "dataset_id": "HUD_HOME_INCOME_LIMITS_FY2026",
       "file_name": "HOME_IncomeLmts_Natl_2026.xlsx",
-      "activation_status": "BLOCKED_PENDING_FILE_HASH_AND_CONTENT_VALIDATION"
+      "activation_status": "BLOCKED_PENDING_FILE_HASH_RECORD_COUNT_SIZE_CONTENT_AND_CROSSWALK",
+      "effective_from": "2026-06-01",
+      "official_landing_page": "https://www.huduser.gov/portal/datasets/HOME-Income-limits.html",
+      "content_available_in_repository": false,
+      "source_bytes_sha256_verified": false,
+      "expected_legacy_geography_crosswalk_count": 6
     },
     {
       "dataset_id": "HUD_HTF_INCOME_LIMITS_FY2026",
-      "activation_status": "BLOCKED_PENDING_CONTROLLED_SOURCE"
+      "activation_status": "BLOCKED_PENDING_FILE_HASH_RECORD_COUNT_SIZE_AND_CONTENT_VALIDATION",
+      "file_name": "HTF_IncomeLmts_Natl_2026.xlsx",
+      "effective_from": "2026-06-01",
+      "official_landing_page": "https://www.huduser.gov/portal/datasets/HTF-Income-limits.html",
+      "content_available_in_repository": false,
+      "source_bytes_sha256_verified": false,
+      "expected_legacy_geography_crosswalk_count": 0
+    },
+    {
+      "dataset_id": "HUD_HTF_RENT_LIMITS_FY2026",
+      "file_name": "HTF_RentLimits_Natl_2026.xlsx",
+      "effective_from": "2026-06-01",
+      "official_landing_page": "https://www.huduser.gov/portal/datasets/HTF-Rent-limits.html",
+      "content_available_in_repository": false,
+      "source_bytes_sha256_verified": false,
+      "activation_status": "BLOCKED_PENDING_FILE_HASH_RECORD_COUNT_SIZE_CONTENT_AND_RENT_RECEIPT_PIPELINE",
+      "expected_legacy_geography_crosswalk_count": 0
     },
     {
       "dataset_id": "HUD_SECTION8_INCOME_LIMITS_FY2026",
@@ -56,7 +78,10 @@
     "expected_count": 6,
     "approved_entries": [],
     "status": "BLOCKED_PENDING_VALIDATED_HOME_OR_SECTION8_SOURCE_ROWS",
-    "affected_states": ["Maine", "Massachusetts"],
+    "affected_states": [
+      "Maine",
+      "Massachusetts"
+    ],
     "west_virginia_affected": false
   },
   "state_pack_policy": {
@@ -65,5 +90,13 @@
     "first_activation_target": "West Virginia",
     "west_virginia_status": "DRAFT_BLOCKED_PENDING_VALIDATED_PACK_AND_SOURCE_BYTES",
     "other_states_status": "NOT_ACTIVATED"
+  },
+  "rent_limit_receipt_policy": {
+    "status": "BLOCKED_PENDING_DISTINCT_BYTE_DERIVED_PIPELINE",
+    "income_receipts_may_be_reused": false,
+    "required_program_bindings": {
+      "HOME": "HUD_HOME_RENT_LIMITS_FY2026",
+      "HTF": "HUD_HTF_RENT_LIMITS_FY2026"
+    }
   }
 }
