@@ -60,6 +60,7 @@ jobs:
           set -e
           bun run test:compliance
           bun run test:slice
+          bun run test:orchestrator
           bun run test:layered
           bun run test:tenant
           bun run test:recert
