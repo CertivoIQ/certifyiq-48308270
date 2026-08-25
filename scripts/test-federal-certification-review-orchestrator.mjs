@@ -114,3 +114,42 @@ test("a known core failure is preserved alongside unresolved broader controls", 
   );
   assert.equal(signOffAllowed(result), false);
 });
+
+test("MFH reviews expose all ten HOTMA module classifications without manufacturing PASS or FAIL", () => {
+  const result = evaluateFederalCertificationReview({
+    facts: [],
+    programs: ["HUD_MFH_PROJECT_BASED"],
+    certificationType: "INITIAL",
+    mfhHotmaInput: {
+      mfh_program_subtype: "SECTION_202_811_PRAC",
+      program_applicability_validated: true,
+      certification_effective_date: "2027-01-01",
+      controlled_source_release_approved: true,
+      current_rule_version_validated: true,
+      source_status_conflict: false,
+      inflation_adjustment_release_validated: true,
+      tracs_and_form_version_validated: true,
+      policy_evidence: {
+        tenant_selection_plan: "TSP-REV-2026-01",
+        hardship_policy: "TSP-HARDSHIP-2026-01",
+        interim_reexamination_policy: "TSP-INTERIM-2026-01",
+        eiv_policy_and_procedures: "EIV-REV-2026-01",
+      },
+    },
+  });
+
+  const hotma = result.controlResults.mfhHotma;
+  assert.equal(hotma.module_count, 10);
+  assert.equal(hotma.classifications.length, 10);
+  assert.equal(
+    hotma.classifications.find(
+      (entry) => entry.module_id === "MFH-HOTMA-A-ASSET-LIMITATION",
+    ).finding_classification,
+    "NOT_APPLICABLE",
+  );
+  assert.ok(
+    hotma.classifications.every(
+      (entry) => !["PASS", "FAIL"].includes(entry.finding),
+    ),
+  );
+});
