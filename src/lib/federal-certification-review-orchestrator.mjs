@@ -22,8 +22,8 @@ import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
 import { classifyAllPhaHotmaImplementationModules } from "./pha-hotma-implementation-engine.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
-  "federal-review-orchestrator-2026.08.4";
-export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.4";
+  "federal-review-orchestrator-2026.08.5";
+export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.5";
 
 const CONTROL = Object.freeze({
   tenantEligibility: Object.freeze({
@@ -48,6 +48,11 @@ const CONTROL = Object.freeze({
     ruleId: "FED-CERTIFICATION-TYPE-SCOPE-GATE-001",
     title: "Certification event type scope",
     citation: "Applicable federal program certification-cycle authority",
+  }),
+  mfhHotmaOperations: Object.freeze({
+    ruleId: "MFH-HOTMA-OPERATIONAL-CONTROL",
+    title: "HUD Multifamily HOTMA owner-policy and system control",
+    citation: "HUD Notices H-2025-07 and H-2023-10 / PIH-2023-27 REV-3",
   }),
 });
 
@@ -214,6 +219,17 @@ export function evaluateFederalCertificationReview(input = {}) {
       }))
     : null;
 
+  const mfhOperationalBlockingFindings =
+    mfhHotmaOperations?.classifications
+      ?.filter(
+        (classification) =>
+          classification?.rule_engine_authority === "BLOCKED" ||
+          classification?.finding === "UNABLE_TO_DETERMINE",
+      )
+      .map((classification) =>
+        controlFinding(CONTROL.mfhHotmaOperations, classification),
+      ) ?? [];
+
   const controlFindings = [
     controlFinding(CONTROL.tenantEligibility, tenantEligibility),
     ...(recertification
@@ -227,6 +243,7 @@ export function evaluateFederalCertificationReview(input = {}) {
     ...(layeredPrograms
       ? [controlFinding(CONTROL.layeredPrograms, layeredPrograms)]
       : []),
+    ...mfhOperationalBlockingFindings,
   ];
   const findings = [...core.findings, ...controlFindings];
 

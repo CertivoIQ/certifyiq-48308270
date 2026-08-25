@@ -104,3 +104,28 @@ test("guidance alone cannot authorize a rent override classification", () => {
   assert.equal(result.finding_classification, "UNABLE_TO_DETERMINE");
   assert.equal(result.reason_code, "RENT_OVERRIDE_PROPERTY_AUTHORITY_REQUIRED");
 });
+
+test("post-mandatory certifications cannot use future adoption dates to bypass controls", () => {
+  const result = classifyMfhHotmaOwnerSystemControl({
+    ...complete,
+    module_id: "MFH-HOTMA-TENANT-NOTICE",
+    certification_effective_date: "2027-06-01",
+    property_hotma_implementation_date: "2027-08-01",
+  });
+  assert.equal(result.finding_classification, "UNABLE_TO_DETERMINE");
+  assert.equal(result.rule_engine_authority, "BLOCKED");
+  assert.equal(result.reason_code, "POST_MANDATORY_IMPLEMENTATION_DATE_CONFLICT");
+  assert.equal(result.human_approval_required, true);
+});
+
+test("certifications before the HOTMA final-rule effective date are not applicable", () => {
+  const result = classifyMfhHotmaOwnerSystemControl({
+    ...complete,
+    module_id: "MFH-HOTMA-OWNER-TSP-REVISION",
+    certification_effective_date: "2023-12-31",
+    property_hotma_implementation_date: "2023-12-01",
+  });
+  assert.equal(result.finding_classification, "NOT_APPLICABLE");
+  assert.equal(result.reason_code, "PRE_HOTMA_FINAL_RULE_CERTIFICATION");
+  assert.equal(result.human_approval_required, true);
+});
