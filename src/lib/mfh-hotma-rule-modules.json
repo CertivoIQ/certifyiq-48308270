@@ -1,0 +1,227 @@
+{
+  "schema_version": "1.0",
+  "rule_pack_id": "FED-HUD-MFH-HOTMA-MODULES-2026-08",
+  "activation_status": "BLOCKED_PENDING_CONTROLLED_SOURCE_RELEASE",
+  "final_rule_effective_date": "2024-01-01",
+  "mandatory_compliance_date": "2027-01-01",
+  "program_subtypes": [
+    "SECTION_8_PBRA",
+    "SECTION_202_8",
+    "SECTION_202_162_PAC",
+    "SECTION_202_811_PRAC",
+    "SECTION_236_IRP",
+    "SECTION_811_PRA",
+    "SPRAC"
+  ],
+  "review_classifications": [
+    "NOT_APPLICABLE",
+    "PRE_IMPLEMENTATION_OBSERVATION",
+    "COMPLIANCE_FINDING",
+    "UNABLE_TO_DETERMINE"
+  ],
+  "source_statuses": [
+    "CURRENT",
+    "CURRENT_REVISION",
+    "SUPERSEDED_IN_PART",
+    "FUTURE_EFFECTIVE",
+    "ARCHIVED"
+  ],
+  "sources": [
+    {
+      "source_id": "FED-HOTMA-FINAL-RULE-88-FR-9600",
+      "authority_class": "CONTROLLING_RULE",
+      "source_status": "CURRENT",
+      "effective_date": "2024-01-01",
+      "source_url": "https://www.federalregister.gov/documents/2023/02/14/2023-01617/housing-opportunity-through-modernization-act-of-2016-implementation-of-sections-102-103-and-104"
+    },
+    {
+      "source_id": "HUD-NOTICE-H-2023-10-REVISION-3",
+      "authority_class": "IMPLEMENTATION_NOTICE",
+      "source_status": "CURRENT_REVISION",
+      "issued_date": "2026-04-16",
+      "source_url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/2023-10hsgn.pdf"
+    },
+    {
+      "source_id": "HUD-NOTICE-H-2025-07",
+      "authority_class": "COMPLIANCE_DATE_NOTICE",
+      "source_status": "CURRENT",
+      "issued_date": "2025-12-17",
+      "source_url": "https://www.hud.gov/sites/default/files/hudclips/documents/HSGN-07.pdf"
+    },
+    {
+      "source_id": "HUD-MFH-HOTMA-DISCRETIONARY-POLICIES-2024-02-01",
+      "authority_class": "OWNER_POLICY_GUIDANCE",
+      "source_status": "CURRENT_PENDING_REVISION_VALIDATION",
+      "may_prove_owner_policy_adoption": false,
+      "source_url": "https://www.hud.gov/sites/dfiles/Housing/documents/MFH_List_Discretionary_Policies_Implement_HOTMA-Updated02012024.pdf"
+    },
+    {
+      "source_id": "HUD-MFH-HOTMA-RENT-OVERRIDE-2024-02-29",
+      "authority_class": "SYSTEMS_INSTRUCTION",
+      "source_status": "CURRENT_METHOD_WITH_SUPERSEDED_MILESTONE_DATES",
+      "may_independently_authorize_findings": false,
+      "source_url": "https://www.hud.gov/sites/dfiles/Housing/documents/Rent_Override.pdf"
+    },
+    {
+      "source_id": "HUD-HOTMA-INFLATION-ADJUSTMENTS-CY2027",
+      "authority_class": "ANNUAL_THRESHOLD_DATA",
+      "source_status": "FUTURE_EFFECTIVE",
+      "published_date": "2026-08-03",
+      "effective_date": "2027-01-01",
+      "activation_status": "BLOCKED_PENDING_CONTROLLED_SOURCE_RECEIPT",
+      "source_url": "https://www.huduser.gov/portal/sites/default/files/datasets/inflationary-adjustments/CY2027-Revised-Amounts-And-Passbook-Rate.pdf"
+    },
+    {
+      "source_id": "HUD-MFH-HOTMA-RESOURCE-INDEX",
+      "authority_class": "DISCOVERY_INDEX",
+      "source_status": "CURRENT",
+      "may_independently_authorize_findings": false,
+      "source_url": "https://www.hud.gov/hud-partners/multifamily-hotma"
+    }
+  ],
+  "modules": [
+    {
+      "module_id": "MFH-HOTMA-A-ASSET-LIMITATION",
+      "attachment": "A",
+      "name": "Asset Limitation",
+      "hotma_sections": ["104"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8"],
+      "authority_class": "FEDERAL_WITH_OWNER_POLICY_OVERLAY",
+      "citations": ["24 CFR 5.618", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment A"],
+      "requirement": "Apply admission asset and suitable-real-property restrictions; at reexamination apply the owner's written enforcement, cure, or exception policy.",
+      "evidence_fields": ["determination_type", "net_family_assets", "controlled_asset_threshold", "real_property_ownership", "real_property_suitability"],
+      "policy_evidence_fields": ["tenant_selection_plan", "owner_asset_enforcement_policy"],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3", "HUD-MFH-HOTMA-DISCRETIONARY-POLICIES-2024-02-01"]
+    },
+    {
+      "module_id": "MFH-HOTMA-B-CALCULATING-INCOME",
+      "attachment": "B",
+      "name": "Calculating Income",
+      "hotma_sections": ["102"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_MANDATORY",
+      "citations": ["24 CFR 5.609(c)", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment B"],
+      "requirement": "Use the applicable prior-year or anticipated-income method and calculate annual income from controlled verified evidence.",
+      "evidence_fields": ["certification_action", "prior_year_income", "anticipated_income", "annual_income", "income_calculation_workpaper"],
+      "policy_evidence_fields": [],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3"]
+    },
+    {
+      "module_id": "MFH-HOTMA-C-DEDUCTIONS-AND-EXPENSES",
+      "attachment": "C",
+      "name": "Deductions and Expenses",
+      "hotma_sections": ["102"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_WITH_OWNER_POLICY_OVERLAY",
+      "citations": ["24 CFR 5.611", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment C"],
+      "requirement": "Apply mandatory deductions, expense thresholds, phased-in relief, and documented hardship treatment using owner policies where HUD grants discretion.",
+      "evidence_fields": ["family_status", "dependent_count", "eligible_expenses", "annual_income", "hardship_request", "third_party_verification"],
+      "policy_evidence_fields": ["tenant_selection_plan", "hardship_policy"],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3", "HUD-MFH-HOTMA-DISCRETIONARY-POLICIES-2024-02-01"]
+    },
+    {
+      "module_id": "MFH-HOTMA-D-FAIR-HOUSING-CIVIL-RIGHTS",
+      "attachment": "D",
+      "name": "Applicable Fair Housing and Civil Rights Requirements",
+      "hotma_sections": ["102", "104"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_MANDATORY",
+      "citations": ["24 CFR 5.105(a)", "24 CFR 8.6", "24 CFR part 5 subpart L", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment D"],
+      "requirement": "Apply fair housing, accessibility, effective-communication, language-access, and VAWA protections when implementing HOTMA.",
+      "evidence_fields": ["reasonable_accommodation_record", "effective_communication_record", "language_access_record", "vawa_confidentiality_record"],
+      "policy_evidence_fields": [],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3"]
+    },
+    {
+      "module_id": "MFH-HOTMA-E-HOUSEHOLD-COMPOSITION",
+      "attachment": "E",
+      "name": "Household Composition",
+      "hotma_sections": ["102"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_MANDATORY",
+      "citations": ["24 CFR 5.403", "24 CFR 5.603", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment E"],
+      "requirement": "Classify household members consistently before calculating income, exclusions, deductions, or eligibility.",
+      "evidence_fields": ["household_roster", "member_relationships", "member_ages", "student_status", "foster_member_status", "live_in_aide_status"],
+      "policy_evidence_fields": [],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3"]
+    },
+    {
+      "module_id": "MFH-HOTMA-F-INCOME",
+      "attachment": "F",
+      "name": "Income",
+      "hotma_sections": ["102", "104"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_MANDATORY",
+      "citations": ["24 CFR 5.603", "24 CFR 5.609", "24 CFR 5.618", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment F"],
+      "requirement": "Classify earned and unearned income, determine net family assets and asset income, and apply controlled passbook-rate and self-certification thresholds.",
+      "evidence_fields": ["income_sources", "asset_inventory", "net_family_assets", "actual_asset_income", "controlled_passbook_rate", "asset_self_certification"],
+      "policy_evidence_fields": [],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3"]
+    },
+    {
+      "module_id": "MFH-HOTMA-G-INCOME-EXCLUSIONS",
+      "attachment": "G",
+      "name": "Income Exclusions",
+      "hotma_sections": ["102"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_MANDATORY",
+      "citations": ["24 CFR 5.609(b)", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment G"],
+      "requirement": "Exclude only income sources authorized by current regulation and HUD's current federally mandated exclusions list.",
+      "evidence_fields": ["income_sources", "income_source_frequency", "excluded_income_category", "exclusion_authority", "student_financial_assistance"],
+      "policy_evidence_fields": [],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3"]
+    },
+    {
+      "module_id": "MFH-HOTMA-H-INFLATIONARY-ADJUSTMENTS",
+      "attachment": "H",
+      "name": "Inflationary Adjustments",
+      "hotma_sections": ["102", "104"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_MANDATORY",
+      "citations": ["24 CFR 5.603", "24 CFR 5.609", "24 CFR 5.611", "24 CFR 5.618", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment H"],
+      "requirement": "Use the HUD-published effective-date-controlled inflation adjustment for every adjustable HOTMA threshold and deduction.",
+      "evidence_fields": ["controlled_inflation_adjustment_release", "certification_effective_date", "threshold_name", "threshold_value"],
+      "policy_evidence_fields": [],
+      "classification_controls": {"required_input_flags": ["inflation_adjustment_release_validated"]},
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3", "HUD-HOTMA-INFLATION-ADJUSTMENTS-CY2027"]
+    },
+    {
+      "module_id": "MFH-HOTMA-I-INTERIM-REEXAMINATIONS",
+      "attachment": "I",
+      "name": "Interim Reexaminations",
+      "hotma_sections": ["102"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_WITH_OWNER_POLICY_OVERLAY",
+      "citations": ["24 CFR 5.657(c)", "24 CFR 891.410(g)(2)", "24 CFR 891.610(g)(2)", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment I"],
+      "requirement": "Apply mandatory interim thresholds and household-change rules together with permitted owner reporting and effective-date policies.",
+      "evidence_fields": ["income_change_date", "household_change_date", "adjusted_income_change_percent", "next_annual_reexamination_date", "interim_reexamination_record"],
+      "policy_evidence_fields": ["tenant_selection_plan", "interim_reexamination_policy"],
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3", "HUD-MFH-HOTMA-DISCRETIONARY-POLICIES-2024-02-01"]
+    },
+    {
+      "module_id": "MFH-HOTMA-J-VERIFICATION-EIV",
+      "attachment": "J",
+      "name": "Verification and EIV",
+      "hotma_sections": ["102"],
+      "applies_to": ["SECTION_8_PBRA", "SECTION_202_8", "SECTION_202_162_PAC", "SECTION_202_811_PRAC", "SECTION_236_IRP", "SECTION_811_PRA", "SPRAC"],
+      "authority_class": "FEDERAL_WITH_OWNER_POLICY_OVERLAY",
+      "citations": ["24 CFR 5.230", "24 CFR 5.232", "24 CFR 5.233", "24 CFR 5.659", "Notice H 2023-10/PIH 2023-27 Revision 3, Attachment J"],
+      "requirement": "Apply HUD's verification hierarchy, consent requirements, EIV mandates, zero-income procedures, and permitted owner EIV policies.",
+      "evidence_fields": ["verification_level", "third_party_verification", "eiv_income_report", "consent_form", "zero_income_self_certification"],
+      "policy_evidence_fields": ["eiv_policy_and_procedures", "tenant_selection_plan"],
+      "classification_controls": {"required_input_flags": ["tracs_and_form_version_validated"]},
+      "source_ids": ["FED-HOTMA-FINAL-RULE-88-FR-9600", "HUD-NOTICE-H-2023-10-REVISION-3", "HUD-MFH-HOTMA-DISCRETIONARY-POLICIES-2024-02-01"]
+    }
+  ],
+  "execution_policy": {
+    "resource_index_may_authorize_findings": false,
+    "training_or_faq_may_independently_authorize_findings": false,
+    "program_subtype_required": true,
+    "certification_effective_date_required": true,
+    "controlled_source_release_required": true,
+    "owner_policy_adoption_evidence_required_when_applicable": true,
+    "missing_or_conflicting_evidence_result": "UNABLE_TO_DETERMINE",
+    "human_approval_required": true
+  }
+}
+
