@@ -1,6 +1,6 @@
 /** Controlled federal program-pack coverage and authority registry. */
 export const FEDERAL_PROGRAM_PACK_REGISTRY_BUILD =
-  "federal-program-pack-registry-2026.08.5";
+  "federal-program-pack-registry-2026.08.6";
 
 const pack = (entry) =>
   Object.freeze({
@@ -409,13 +409,93 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     program: "RURAL_DEVELOPMENT",
     packId: "federal-usda-rd",
     activationStatus: "BLOCKED",
-    citation: "7 CFR 3560.152 and 3560.202",
-    officialSources: Object.freeze(["https://www.ecfr.gov/current/title-7/subtitle-B/chapter-XXXV/part-3560"]),
+    citation:
+      "7 CFR 3560.152 through 3560.160, 3560.202 through 3560.205, and 3560.257; 91 FR 18769",
+    officialSources: Object.freeze([
+      "https://www.ecfr.gov/current/title-7/subtitle-B/chapter-XXXV/part-3560",
+      "https://www.federalregister.gov/documents/2026/04/13/2026-07064/revisions-to-the-calculation-of-annual-household-income-and-net-family-assets-in-the-section-515",
+      "https://www.usda.gov/guidance-documents/rhs-handbook/rhs/hb-2-3560-mfh-asset-management-handbook",
+      "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.603",
+      "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.609",
+      "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.611",
+    ]),
     sourceHierarchy: {
-      programGuidance: [],
-      controllingLaw: ["https://www.ecfr.gov/current/title-7/subtitle-B/chapter-XXXV/part-3560"],
+      programGuidance: [
+        "https://www.usda.gov/guidance-documents/rhs-handbook/rhs/hb-2-3560-mfh-asset-management-handbook",
+      ],
+      controllingLaw: [
+        "https://www.ecfr.gov/current/title-7/subtitle-B/chapter-XXXV/part-3560",
+        "https://www.federalregister.gov/documents/2026/04/13/2026-07064/revisions-to-the-calculation-of-annual-household-income-and-net-family-assets-in-the-section-515",
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.603",
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.609",
+        "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.611",
+      ],
     },
-    requiredControls: ["controlled_usda_income_limit_receipt", "borrower_project_authority", "occupancy_and_rent_controls"],
+    requiredControls: [
+      "controlled_usda_income_limit_receipt",
+      "controlled_usda_hotma_income_asset_authority",
+      "borrower_project_authority",
+      "agency_approved_tenant_certification",
+      "agency_approved_lease_and_occupancy_rules",
+      "agency_approved_rent_and_utility_allowance",
+      "rental_assistance_allocation_authority",
+    ],
+    programBoundaries: Object.freeze([
+      "This pack covers direct Rural Development multifamily programs governed by 7 CFR part 3560, including Section 515 and Section 514/516; it does not authorize findings for Section 538 guaranteed properties unless controlling project authority incorporates the same requirement.",
+      "The citizenship and qualified-alien phrases in 7 CFR 3560.152(a)(1) and 3560.154(a)(7) have delayed-effective-date notes and must not independently produce an eligibility finding.",
+      "HUD Section 8 and LIHTC rules apply only when the household receives those benefits or another controlling project document makes them applicable; they do not replace Rural Development controls.",
+      "The rental-assistance priority rule applies only when an RHS rental-assistance unit is available for assignment.",
+    ]),
+    verifiedRules: [
+      {
+        id: "RD-TENANT-ELIGIBILITY-AND-CERTIFICATION",
+        citation: "7 CFR 3560.152(a) and (e)",
+        requirement: "Confirm the household meets the applicable Rural Development income or other-program-benefit eligibility path, execute the Agency-approved tenant certification before occupancy, recertify at least annually and for required income changes, verify supporting information, and timely submit and retain the certification record.",
+        evidenceFields: ["controlled_usda_income_limit_receipt", "borrower_project_authority", "household_size", "annual_income", "other_program_benefit", "tenant_certification", "certification_effective_date", "income_change_amount", "verification_record", "agency_submission_date", "tenant_file_retention_date"],
+      },
+      {
+        id: "RD-HOTMA-INCOME-AND-ASSET-CALCULATION",
+        citation: "7 CFR 3560.153; 24 CFR 5.603(b), 5.609(a)-(b), and 5.611; 91 FR 18769",
+        requirement: "For determinations on or after April 13, 2026, calculate annual income under 24 CFR 5.609(a) and (b), adjusted income under 24 CFR 5.611, and net family assets under 24 CFR 5.603(b), using controlled current authority.",
+        evidenceFields: ["determination_date", "controlled_usda_hotma_income_asset_authority", "annual_income_components", "income_exclusions", "adjusted_income", "deductions", "net_family_assets", "asset_records"],
+      },
+      {
+        id: "RD-TENANT-SELECTION-AND-WAITLIST",
+        citation: "7 CFR 3560.154(d) through (h)",
+        requirement: "Use only Agency-compliant, nonarbitrary selection criteria documented in the management plan; preserve every application's waiting-list disposition and complete-application priority; apply required income and special priorities; and issue timely written selection, waitlist, or rejection notices with appeal rights.",
+        evidenceFields: ["management_plan", "tenant_selection_criteria", "application", "application_complete_date_time", "waiting_list", "waiting_list_disposition", "income_priority", "special_priority", "applicant_notice", "notice_date", "hearing_rights_notice"],
+      },
+      {
+        id: "RD-UNIT-ASSIGNMENT-AND-OCCUPANCY",
+        citation: "7 CFR 3560.155",
+        requirement: "Assign units under the approved occupancy rules, preserve accessible-unit protections, transfer suitable over-housed or under-housed tenants before selecting from the waiting list, and obtain Agency concurrence before implementing occupancy-rule changes.",
+        evidenceFields: ["agency_approved_occupancy_rules", "unit_accessibility_features", "applicant_accessibility_need", "accessible_unit_marketing", "household_size", "unit_bedrooms", "over_under_housed_status", "transfer_offer", "waiting_list_selection", "agency_concurrence", "tenant_comment_record"],
+      },
+      {
+        id: "RD-LEASE-TERMINATION-AND-GRIEVANCE",
+        citation: "7 CFR 3560.156, 3560.159, and 3560.160",
+        requirement: "Execute an Agency-approved written lease before occupancy with required program provisions; limit termination or nonrenewal to documented material noncompliance, occupancy-rule violations, or other good cause after required notice and cure opportunity; and maintain the applicable tenant grievance and adverse-action process.",
+        evidenceFields: ["agency_approved_lease", "lease_execution_date", "lease_term", "required_lease_provisions", "termination_basis", "violation_notice", "cure_opportunity", "termination_notice", "supporting_incident_record", "posted_grievance_procedure", "tenant_rights_summary", "adverse_action_notice", "delivery_receipt"],
+      },
+      {
+        id: "RD-AGENCY-APPROVED-RENTS-AND-UTILITIES",
+        citation: "7 CFR 3560.202 and 3560.205",
+        requirement: "Use only Agency-approved rents and utility allowances; review tenant-paid utility allowances annually with retained support; obtain written Agency approval before implementing changes; and apply approved changes consistently to similar units.",
+        evidenceFields: ["agency_approved_note_rent", "agency_approved_basic_rent", "applicable_hud_contract_rent", "applicable_lihtc_rent", "utility_allowance", "utility_allowance_review_date", "utility_support", "rent_change_request", "agency_written_approval", "change_effective_date", "similar_unit_matrix"],
+      },
+      {
+        id: "RD-TENANT-CONTRIBUTION",
+        citation: "7 CFR 3560.203",
+        requirement: "Set the tenant contribution at the highest applicable regulatory amount, never above note rent; revise it for qualifying household or approved rent/utility changes; and remit overage above basic rent through note rent to the Agency.",
+        evidenceFields: ["monthly_adjusted_income", "gross_monthly_income", "public_assistance_shelter_amount", "basic_rent", "note_rent", "rhs_rental_assistance", "tenant_contribution", "household_change_date", "approved_rent_utility_change", "overage_remittance"],
+      },
+      {
+        id: "RD-RENTAL-ASSISTANCE-ASSIGNMENT",
+        citation: "7 CFR 3560.257",
+        requirement: "When an RHS rental-assistance unit becomes available, assign it promptly using the prescribed very-low-income, low-income, applicant, tenant-burden, and occupancy-waiver priorities, with the required documentation before using lower-priority categories.",
+        evidenceFields: ["rental_assistance_allocation_authority", "rental_assistance_availability_date", "eligible_household_inventory", "household_income_category", "adjusted_income", "approved_shelter_cost", "waiting_list", "occupancy_waiver", "priority_assignment", "lower_priority_documentation", "assignment_effective_date"],
+      },
+    ],
   }),
   TAX_EXEMPT_BOND: pack({
     program: "TAX_EXEMPT_BOND",
