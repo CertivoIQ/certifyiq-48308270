@@ -174,6 +174,51 @@ test("HUD Multifamily records the official January 1 2027 HOTMA deadline", () =>
   assert.ok(multifamily.officialSources.includes("https://www.hud.gov/hud-partners/multifamily-hotma"));
 });
 
+test("Rural Development records current HOTMA-aligned direct MFH controls without activating them", () => {
+  const rural = FEDERAL_PROGRAM_RULE_PACKS.RURAL_DEVELOPMENT;
+
+  assert.deepEqual(
+    rural.verifiedRules.map((rule) => rule.id),
+    [
+      "RD-TENANT-ELIGIBILITY-AND-CERTIFICATION",
+      "RD-HOTMA-INCOME-AND-ASSET-CALCULATION",
+      "RD-TENANT-SELECTION-AND-WAITLIST",
+      "RD-UNIT-ASSIGNMENT-AND-OCCUPANCY",
+      "RD-LEASE-TERMINATION-AND-GRIEVANCE",
+      "RD-AGENCY-APPROVED-RENTS-AND-UTILITIES",
+      "RD-TENANT-CONTRIBUTION",
+      "RD-RENTAL-ASSISTANCE-ASSIGNMENT",
+    ],
+  );
+  assert.equal(rural.activationStatus, "BLOCKED");
+  assert.match(rural.verifiedRules[1].requirement, /on or after April 13, 2026/);
+  assert.match(rural.verifiedRules[1].citation, /24 CFR 5\.603\(b\).*5\.609\(a\)-\(b\).*5\.611/);
+  assert.ok(
+    rural.officialSources.includes(
+      "https://www.federalregister.gov/documents/2026/04/13/2026-07064/revisions-to-the-calculation-of-annual-household-income-and-net-family-assets-in-the-section-515",
+    ),
+  );
+  assert.ok(
+    rural.sourceHierarchy.programGuidance.includes(
+      "https://www.usda.gov/guidance-documents/rhs-handbook/rhs/hb-2-3560-mfh-asset-management-handbook",
+    ),
+  );
+  assert.ok(
+    rural.requiredControls.includes("controlled_usda_hotma_income_asset_authority"),
+  );
+  assert.ok(
+    rural.requiredControls.includes("agency_approved_rent_and_utility_allowance"),
+  );
+  assert.ok(
+    rural.programBoundaries.some((boundary) => /does not authorize findings for Section 538/.test(boundary)),
+  );
+  assert.ok(
+    rural.programBoundaries.some((boundary) => /delayed-effective-date notes/.test(boundary)),
+  );
+  assert.ok(Object.isFrozen(rural.programBoundaries));
+  assert.ok(Object.isFrozen(rural.verifiedRules[0].evidenceFields));
+});
+
 test("tax-exempt bond rules preserve section 142 controls and cross-program boundaries", () => {
   const bond = FEDERAL_PROGRAM_RULE_PACKS.TAX_EXEMPT_BOND;
 
@@ -243,6 +288,18 @@ test("gate findings disclose verified rules and missing controlled authorities",
   assert.ok(hcvGate.missingControls.includes("asset_enforcement_policy"));
   assert.ok(hcvGate.missingControls.includes("real_property_restriction"));
   assert.match(hcvGate.citation, /24 CFR 5\.618/);
+
+  const ruralGate = federalProgramPackGate("RURAL_DEVELOPMENT");
+  assert.equal(ruralGate.verifiedRules.length, 8);
+  assert.ok(
+    ruralGate.missingControls.includes("controlled_usda_hotma_income_asset_authority"),
+  );
+  assert.ok(
+    ruralGate.missingControls.includes("agency_approved_lease_and_occupancy_rules"),
+  );
+  assert.ok(
+    ruralGate.missingControls.includes("rental_assistance_allocation_authority"),
+  );
 
   const bondGate = federalProgramPackGate("TAX_EXEMPT_BOND");
   assert.equal(bondGate.verifiedRules.length, 5);
