@@ -18,10 +18,11 @@ import {
   normalizeCertificationPrograms,
 } from "./compliance-rule-engine.mjs";
 import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
+import { classifyAllPhaHotmaImplementationModules } from "./pha-hotma-implementation-engine.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
-  "federal-review-orchestrator-2026.08.2";
-export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.2";
+  "federal-review-orchestrator-2026.08.3";
+export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.3";
 
 const CONTROL = Object.freeze({
   tenantEligibility: Object.freeze({
@@ -193,6 +194,19 @@ export function evaluateFederalCertificationReview(input = {}) {
     ? classifyAllMfhHotmaModules(input.mfhHotmaInput ?? {})
     : null;
 
+  const phaHotmaPrograms = programs.filter((program) =>
+    ["HCV_TENANT_BASED", "HUD_PBV", "PUBLIC_HOUSING"].includes(program),
+  );
+  const phaHotma = phaHotmaPrograms.length
+    ? phaHotmaPrograms.map((program) => ({
+        program,
+        ...classifyAllPhaHotmaImplementationModules({
+          ...(input.phaHotmaInput ?? {}),
+          program,
+        }),
+      }))
+    : null;
+
   const controlFindings = [
     controlFinding(CONTROL.tenantEligibility, tenantEligibility),
     ...(recertification
@@ -222,6 +236,7 @@ export function evaluateFederalCertificationReview(input = {}) {
       recertification,
       layeredPrograms,
       mfhHotma,
+      phaHotma,
     },
   };
 }
