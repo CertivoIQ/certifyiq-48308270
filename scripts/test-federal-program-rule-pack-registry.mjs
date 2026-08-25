@@ -72,6 +72,11 @@ test("HUD state directory and California CDLAC cannot act as federal rule author
   assert.equal(cdlac.program, "TAX_EXEMPT_BOND");
   assert.equal(cdlac.federalBaselineAuthority, false);
   assert.equal(cdlac.url, "https://www.treasurer.ca.gov/cdlac");
+  assert.equal(cdlac.activationStatus, "BLOCKED");
+  assert.equal(cdlac.verifiedRules.length, 5);
+  assert.ok(cdlac.requiredControls.includes("cdlac_committee_resolution"));
+  assert.ok(cdlac.requiredControls.includes("controlled_cdlac_reporting_notice"));
+  assert.ok(Object.isFrozen(cdlac.verifiedRules[0].evidenceFields));
 });
 
 test("HOME and HTF retain a verified, non-activated rule inventory", () => {
@@ -144,6 +149,47 @@ test("HUD Multifamily records the official January 1 2027 HOTMA deadline", () =>
   assert.ok(multifamily.officialSources.includes("https://www.hud.gov/hud-partners/multifamily-hotma"));
 });
 
+test("tax-exempt bond rules preserve section 142 controls and cross-program boundaries", () => {
+  const bond = FEDERAL_PROGRAM_RULE_PACKS.TAX_EXEMPT_BOND;
+
+  assert.deepEqual(
+    bond.verifiedRules.map((rule) => rule.id),
+    [
+      "TEB-QRR-SET-ASIDE-ELECTION",
+      "TEB-QRR-QUALIFIED-PROJECT-PERIOD",
+      "TEB-QRR-CURRENT-INCOME-DETERMINATION",
+      "TEB-QRR-NEXT-AVAILABLE-UNIT",
+      "TEB-QRR-ANNUAL-IRS-CERTIFICATION",
+    ],
+  );
+  assert.match(bond.verifiedRules[0].requirement, /20 percent.*50 percent.*40 percent.*60 percent/);
+  assert.match(bond.verifiedRules[1].requirement, /latest statutory end date/);
+  assert.match(bond.verifiedRules[3].requirement, /section 42 building scope instead of project scope/);
+  assert.ok(bond.requiredControls.includes("annual_irs_certification"));
+  assert.ok(bond.officialSources.includes("https://www.govinfo.gov/link/uscode/26/142"));
+  assert.ok(bond.programBoundaries.some((boundary) => /average-income election does not replace/.test(boundary)));
+  assert.ok(bond.programBoundaries.some((boundary) => /do not independently impose a federal gross-rent limit/.test(boundary)));
+});
+
+test("California CDLAC overlay keeps current state rules separate from the federal baseline", () => {
+  const cdlac = STATE_PROGRAM_OVERLAYS.CA_TAX_EXEMPT_BOND_CDLAC;
+
+  assert.deepEqual(
+    cdlac.verifiedRules.map((rule) => rule.id),
+    [
+      "CA-CDLAC-QRRP-MINIMUM-INCOME-RESTRICTION",
+      "CA-CDLAC-QRRP-GROSS-RENT-AND-UTILITY-EVIDENCE",
+      "CA-CDLAC-QRRP-MINIMUM-RESTRICTION-TERM",
+      "CA-CDLAC-QRRP-REGULATORY-AGREEMENT",
+      "CA-CDLAC-QRRP-COMPLIANCE-REPORTING",
+    ],
+  );
+  assert.match(cdlac.verifiedRules[0].requirement, /10 percent.*50 percent/);
+  assert.match(cdlac.verifiedRules[2].requirement, /55-year/);
+  assert.match(cdlac.verifiedRules[4].requirement, /current controlled CDLAC reporting notice/);
+  assert.equal(cdlac.federalBaselineAuthority, false);
+});
+
 test("inactive program packs produce BLOCKED findings, never evaluated findings", () => {
   for (const program of PROGRAMS.filter((value) => value !== "LIHTC")) {
     const result = evaluateCertification({ facts: [], programs: [program] });
@@ -164,4 +210,9 @@ test("gate findings disclose verified rules and missing controlled authorities",
   assert.ok(hcvGate.missingControls.includes("asset_enforcement_policy"));
   assert.ok(hcvGate.missingControls.includes("real_property_restriction"));
   assert.match(hcvGate.citation, /24 CFR 5\.618/);
+
+  const bondGate = federalProgramPackGate("TAX_EXEMPT_BOND");
+  assert.equal(bondGate.verifiedRules.length, 5);
+  assert.ok(bondGate.missingControls.includes("bond_election_document"));
+  assert.ok(bondGate.missingControls.includes("next_available_unit_tracking"));
 });
