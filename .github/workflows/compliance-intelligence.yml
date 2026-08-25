@@ -63,6 +63,7 @@ jobs:
           bun run test:orchestrator
           bun run test:federal-packs
           bun run test:mfh-hotma
+          bun run test:mfh-hotma-operations
           bun run test:pha-hotma
           bun run test:layered
           bun run test:tenant
