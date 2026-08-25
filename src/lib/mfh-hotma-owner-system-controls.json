@@ -1,0 +1,55 @@
+{
+  "rule_pack_id": "hud-mfh-hotma-owner-systems",
+  "version": "2026.08.1",
+  "activation_status": "ACTIVE_WITH_HUMAN_APPROVAL",
+  "authority": [
+    "HUD-NOTICE-H-2025-07",
+    "HUD-NOTICE-H-2023-10-PIH-2023-27-REV-3",
+    "HUD-MFH-HOTMA-WEB"
+  ],
+  "modules": [
+    {
+      "module_id": "MFH-HOTMA-OWNER-TSP-REVISION",
+      "name": "Tenant Selection Plan revision and adoption",
+      "required_evidence_fields": ["tenant_selection_plan_ref", "tsp_revision_date", "tsp_effective_date", "tsp_approval_record_ref"],
+      "required_input_flags": ["tsp_policy_sections_validated", "owner_adoption_authority_validated"]
+    },
+    {
+      "module_id": "MFH-HOTMA-OWNER-EIV-POLICY",
+      "name": "EIV policy and verification procedure revision",
+      "required_evidence_fields": ["eiv_policy_ref", "eiv_policy_effective_date", "eiv_approval_record_ref"],
+      "required_input_flags": ["eiv_verification_hierarchy_validated", "owner_adoption_authority_validated"]
+    },
+    {
+      "module_id": "MFH-HOTMA-TENANT-NOTICE",
+      "name": "Tenant notice delivery and accessibility record",
+      "required_evidence_fields": ["tenant_notice_template_ref", "tenant_notice_version", "tenant_notice_delivery_record_ref"],
+      "required_input_flags": ["notice_delivery_method_validated", "notice_language_accessibility_validated"]
+    },
+    {
+      "module_id": "MFH-HOTMA-LEASE-MODEL-LEASE",
+      "name": "HUD model lease or addendum applicability and execution",
+      "required_evidence_fields": ["lease_applicability_record_ref", "executed_lease_or_addendum_ref", "lease_or_addendum_version"],
+      "required_input_flags": ["hud_lease_applicability_validated", "lease_execution_validated"]
+    },
+    {
+      "module_id": "MFH-HOTMA-TRACS-FORM-VERSION",
+      "name": "TRACS release and certification form version",
+      "required_evidence_fields": ["tracs_release", "certification_form_version", "transmission_validation_ref"],
+      "required_input_flags": ["software_compatibility_validated", "certification_form_effective_date_validated", "tracs_transmission_validated"]
+    },
+    {
+      "module_id": "MFH-HOTMA-RENT-OVERRIDE",
+      "name": "Rent override authorization and audit trail",
+      "required_evidence_fields": ["rent_override_condition_ref", "rent_override_reason", "rent_override_approver_ref", "rent_override_calculation_ref", "rent_override_audit_trail_ref"],
+      "required_input_flags": ["rent_override_authority_validated", "rent_override_calculation_validated"],
+      "guidance_cannot_independently_authorize_finding": true
+    },
+    {
+      "module_id": "MFH-HOTMA-TENANT-FILE-ANNOTATION",
+      "name": "Tenant-file implementation annotation",
+      "required_evidence_fields": ["property_hotma_implementation_record_ref", "tenant_file_annotation_ref", "certification_action_ref"],
+      "required_input_flags": ["certification_action_dates_validated", "evidence_manifest_validated"]
+    }
+  ]
+}
