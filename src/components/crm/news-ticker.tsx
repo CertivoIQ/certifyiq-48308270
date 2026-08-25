@@ -12,6 +12,8 @@ export function NewsTicker({
 }) {
   if (!items.length) return null;
   const row = [...items, ...items];
+  // Keep the crawl near a broadcast-news reading pace as the feed grows.
+  const tickerDurationSeconds = Math.max(64, items.length * 8);
   const updatedLabel = fetchedAt
     ? new Date(fetchedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
     : null;
@@ -23,7 +25,10 @@ export function NewsTicker({
           <BellRing className="size-3.5" /> Federal
         </span>
         <div className="relative min-w-0 flex-1 overflow-hidden">
-          <div className="ticker-track flex w-max items-center gap-8">
+          <div
+            className="ticker-track flex w-max items-center gap-8"
+            style={{ animationDuration: `${tickerDurationSeconds}s` }}
+          >
             {row.map((n, i) => {
               const body = (
                 <>
