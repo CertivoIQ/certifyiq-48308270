@@ -29,6 +29,9 @@ export function CertificationReviewPanel() {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [jurisdiction, setJurisdiction] = useState('US');
+  const [certificationType, setCertificationType] = useState<
+    '' | 'INITIAL' | 'ANNUAL' | 'INTERIM'
+  >('');
   const [notice, setNotice] = useState('');
   const { account } = useAccount();
 
@@ -52,6 +55,7 @@ export function CertificationReviewPanel() {
         data: {
           itemId,
           programs: ['LIHTC'],
+          certificationType: certificationType as 'INITIAL' | 'ANNUAL' | 'INTERIM',
           ...(jurisdiction === 'US' ? {} : { jurisdiction }),
           useAi: true,
         },
@@ -99,7 +103,25 @@ export function CertificationReviewPanel() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-sm text-muted-foreground" htmlFor="certification-type">
+            Certification type
+          </label>
+          <select
+            id="certification-type"
+            className="rounded-md border bg-background px-2 py-1 text-sm"
+            value={certificationType}
+            onChange={(event) =>
+              setCertificationType(
+                event.target.value as '' | 'INITIAL' | 'ANNUAL' | 'INTERIM',
+              )
+            }
+          >
+            <option value="">Select type</option>
+            <option value="INITIAL">Initial</option>
+            <option value="ANNUAL">Annual</option>
+            <option value="INTERIM">Interim</option>
+          </select>
           <label className="text-sm text-muted-foreground" htmlFor="jurisdiction">
             Jurisdiction
           </label>
@@ -112,7 +134,7 @@ export function CertificationReviewPanel() {
           />
           <button
             className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            disabled={!activeId || run.isPending}
+            disabled={!activeId || !certificationType || run.isPending}
             onClick={() => activeId && run.mutate(activeId)}
           >
             <PlayCircle className="h-4 w-4" />
