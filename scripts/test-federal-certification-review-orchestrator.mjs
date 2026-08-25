@@ -187,3 +187,35 @@ test("PHA-administered reviews expose cohort-aware HOTMA implementation routing"
     ),
   );
 });
+
+
+test("MFH reviews expose owner-policy and system controls without affecting PASS/FAIL counts", () => {
+  const result = evaluateFederalCertificationReview({
+    facts: [],
+    programs: ["HUD_MFH_PROJECT_BASED"],
+    certificationType: "INITIAL",
+    mfhHotmaOperationsInput: {
+      mfh_program_subtype: "SECTION_8_PBRA",
+      program_applicability_validated: true,
+      certification_effective_date: "2027-01-01",
+      property_hotma_implementation_date: "2026-10-01",
+      controlled_source_release_approved: true,
+      current_rule_version_validated: true,
+      source_status_conflict: false,
+    },
+  });
+
+  const operations = result.controlResults.mfhHotmaOperations;
+  assert.equal(operations.module_count, 7);
+  assert.equal(operations.classifications.length, 7);
+  assert.ok(
+    operations.classifications.every(
+      (entry) => entry.finding_classification === "UNABLE_TO_DETERMINE",
+    ),
+  );
+  assert.ok(
+    operations.classifications.every(
+      (entry) => !["PASS", "FAIL"].includes(entry.finding),
+    ),
+  );
+});
