@@ -101,6 +101,42 @@ test("HOME and HTF retain a verified, non-activated rule inventory", () => {
   assert.ok(Object.isFrozen(homeRules[0].evidenceFields));
 });
 
+test("HCV, PBV, Public Housing, and Multifamily rules preserve program-specific policy boundaries", () => {
+  const hcv = FEDERAL_PROGRAM_RULE_PACKS.HCV_TENANT_BASED;
+  const pbv = FEDERAL_PROGRAM_RULE_PACKS.HUD_PBV;
+  const publicHousing = FEDERAL_PROGRAM_RULE_PACKS.PUBLIC_HOUSING;
+  const multifamily = FEDERAL_PROGRAM_RULE_PACKS.HUD_MFH_PROJECT_BASED;
+
+  assert.equal(hcv.verifiedRules.length, 3);
+  assert.ok(
+    hcv.verifiedRules
+      .find((rule) => rule.id === "HCV-ASSET-RESTRICTION-AND-POLICY")
+      .evidenceFields.includes("pha_asset_enforcement_policy"),
+  );
+  assert.ok(
+    hcv.sourceHierarchy.controllingLaw.some((url) => url.endsWith("/part-982")),
+  );
+
+  assert.equal(pbv.verifiedRules.length, 5);
+  assert.ok(pbv.verifiedRules.some((rule) => rule.id === "PBV-CONTRACT-UNIT-ELIGIBILITY"));
+  assert.ok(pbv.verifiedRules.some((rule) => rule.id === "PBV-REASONABLE-RENT"));
+
+  assert.equal(publicHousing.verifiedRules.length, 4);
+  assert.ok(
+    publicHousing.verifiedRules
+      .find((rule) => rule.id === "PUBLIC-HOUSING-OVER-INCOME-PERIOD")
+      .evidenceFields.includes("over_income_start_date"),
+  );
+
+  assert.equal(multifamily.verifiedRules.length, 3);
+  assert.ok(
+    multifamily.verifiedRules.every((rule) =>
+      rule.evidenceFields.includes("mfh_program_subtype"),
+    ),
+  );
+  assert.match(multifamily.verifiedRules[2].requirement, /not to listed PRAC\/PRA\/PAC\/SPRAC/);
+});
+
 test("HUD Multifamily records the official January 1 2027 HOTMA deadline", () => {
   const multifamily = FEDERAL_PROGRAM_RULE_PACKS.HUD_MFH_PROJECT_BASED;
   assert.equal(multifamily.mandatoryComplianceDate, "2027-01-01");
