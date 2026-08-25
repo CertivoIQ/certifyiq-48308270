@@ -142,7 +142,7 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     program: "HCV_TENANT_BASED",
     packId: "federal-hcv",
     activationStatus: "BLOCKED",
-    citation: "24 CFR 5.609, 5.618, and 982.516; Notice PIH 2023-27",
+    citation: "24 CFR 5.609, 24 CFR 5.618, and 24 CFR 982.516; Notice PIH 2023-27",
     officialSources: Object.freeze([
       "https://www.ecfr.gov/current/title-24/subtitle-A/part-5/section-5.618",
       "https://www.hud.gov/sites/dfiles/PIH/documents/PIH%202023-27%20HOTMA.pdf",
