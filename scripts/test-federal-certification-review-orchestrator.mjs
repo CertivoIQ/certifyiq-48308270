@@ -23,7 +23,10 @@ const COMPLETE_NARROW_FACTS = [
   fact("tenant_signature_date", "2026-03-01"),
   fact("certification_effective_date", "2026-03-05"),
   fact("household_annual_income", 42500),
-  fact("income_limit_60_pct", 48900),
+  fact("applicable_lihtc_income_limit", 48900),
+  fact("lihtc_income_limit_basis_pct", 60),
+  fact("lihtc_minimum_set_aside_election", "40-60"),
+  fact("controlled_income_limit_receipt", "HUD_MTSP_FY2026:verified-receipt"),
 ];
 
 test("initial reviews retain a tenant-eligibility blocker until trusted scope is supplied", () => {
@@ -105,7 +108,7 @@ test("a known core failure is preserved alongside unresolved broader controls", 
   assert.equal(result.counts.unableToDetermine, 1);
   assert.equal(
     result.findings.find(
-      (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-60",
+      (finding) => finding.ruleId === "LIHTC-INCOME-LIMIT-APPLICABLE",
     ).status,
     "FAIL",
   );
