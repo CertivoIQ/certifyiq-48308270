@@ -120,8 +120,9 @@ export function CrmShell({
       </div>
 
       <p className="cite mt-4 flex items-center gap-2 px-4 sm:px-7">
-        Official HUD Newsroom and Federal Register updates appear below with
-        dates and direct source links; the feed refreshes every 15 minutes.
+        Official HUD Newsroom, HUD HOTMA, and federal affordable-housing
+        updates appear below with dates and direct source links; the feed
+        refreshes every 15 minutes.
       </p>
       <NewsTicker
         items={tickerItems}
