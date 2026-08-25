@@ -15,7 +15,6 @@ jobs:
     name: Run supervised operations tick
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    environment: production
     steps:
       - name: Validate required secrets
         env:
