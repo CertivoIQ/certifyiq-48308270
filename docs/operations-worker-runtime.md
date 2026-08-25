@@ -39,3 +39,14 @@ The production frontend is static and does not expose TanStack server routes. De
 `supabase/functions/operations-worker/index.ts` as the `operations-worker` Edge Function.
 The function authenticates with `OPERATIONS_WORKER_SECRET`; platform JWT verification is
 disabled because this is a server-to-server endpoint with its own bearer secret.
+
+
+## GitHub Actions fallback for Lovable Cloud
+
+Lovable Cloud does not deploy backend functions merely because their source was merged
+through GitHub. The manual `Operations Worker Dispatch` workflow calls the narrowly
+scoped `operations_github_tick` RPC instead. Configure the production GitHub environment
+with `CERTIVOIQ_SUPABASE_URL`, `CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY`, and
+`OPERATIONS_WORKER_SECRET`. Store only the SHA-256 hash of the worker secret in
+`operations_runtime_secrets`. Keep the workflow manual until the production smoke test
+passes and later batches activate supported handlers.
