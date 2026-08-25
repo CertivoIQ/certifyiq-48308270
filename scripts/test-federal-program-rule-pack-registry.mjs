@@ -79,6 +79,41 @@ test("HUD state directory and California CDLAC cannot act as federal rule author
   assert.ok(Object.isFrozen(cdlac.verifiedRules[0].evidenceFields));
 });
 
+test("LIHTC inventory rejects a universal 60-percent assumption and remains partial", () => {
+  const lihtc = FEDERAL_PROGRAM_RULE_PACKS.LIHTC;
+
+  assert.deepEqual(
+    lihtc.verifiedRules.map((rule) => rule.id),
+    [
+      "LIHTC-MINIMUM-SET-ASIDE-ELECTION",
+      "LIHTC-UNIT-INCOME-AND-RENT",
+      "LIHTC-APPLICABLE-FRACTION",
+      "LIHTC-NEXT-AVAILABLE-UNIT",
+      "LIHTC-STUDENT-UNIT",
+      "LIHTC-EXTENDED-USE",
+      "LIHTC-AGENCY-COMPLIANCE-MONITORING",
+    ],
+  );
+  assert.equal(lihtc.activationStatus, "PARTIAL");
+  assert.ok(lihtc.requiredControls.includes("controlled_income_limit_receipt"));
+  assert.ok(lihtc.requiredControls.includes("next_available_unit_tracking"));
+  assert.ok(lihtc.requiredControls.includes("state_agency_compliance_authority"));
+  assert.ok(lihtc.officialSources.includes("https://www.govinfo.gov/link/uscode/26/42"));
+  assert.ok(
+    lihtc.officialSources.includes(
+      "https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.42-5",
+    ),
+  );
+  assert.ok(
+    lihtc.programBoundaries.some((boundary) => /fixed 60-percent income limit is not universal/.test(boundary)),
+  );
+  assert.ok(
+    lihtc.programBoundaries.some((boundary) => /does not activate HOTMA asset restrictions/.test(boundary)),
+  );
+  assert.ok(Object.isFrozen(lihtc.programBoundaries));
+  assert.ok(Object.isFrozen(lihtc.verifiedRules[0].evidenceFields));
+});
+
 test("HOME and HTF retain a verified, non-activated rule inventory", () => {
   const homeRules = FEDERAL_PROGRAM_RULE_PACKS.HOME.verifiedRules;
   const htfRules = FEDERAL_PROGRAM_RULE_PACKS.HTF.verifiedRules;
