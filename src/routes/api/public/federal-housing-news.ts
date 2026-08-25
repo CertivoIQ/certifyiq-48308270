@@ -162,11 +162,97 @@ async function hudNewsUpdates(): Promise<FederalNewsItem[]> {
   return items;
 }
 
+function dateFromText(value: string): string | null {
+  const match = value.match(
+    /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+20\d{2}\b/i,
+  );
+  if (!match) return null;
+  const timestamp = Date.parse(`${match[0]} 12:00:00 UTC`);
+  return Number.isNaN(timestamp) ? null : new Date(timestamp).toISOString();
+}
+
+async function hudHotmaUpdates(): Promise<FederalNewsItem[]> {
+  const pageUrl = "https://www.hud.gov/hud-partners/hotma";
+  const response = await fetch(pageUrl, {
+    headers: {
+      Accept: "text/html",
+      "User-Agent": "CertivoIQ-Federal-Housing-News/1.0 (+https://certivoiq.com/welcome)",
+    },
+  });
+  if (!response.ok) throw new Error(`HUD HOTMA Resources returned ${response.status}`);
+
+  const html = await response.text();
+  const pageDates = [...textOnly(html).matchAll(
+    /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+20\d{2}\b/gi,
+  )]
+    .map((match) => dateFromText(match[0]))
+    .filter((date): date is string => Boolean(date))
+    .sort((a, b) => Date.parse(b) - Date.parse(a));
+  const pageUpdatedAt = pageDates[0] ?? new Date().toISOString();
+
+  const anchorPattern = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  const seen = new Set<string>();
+  const items: FederalNewsItem[] = [];
+
+  for (const match of html.matchAll(anchorPattern)) {
+    const headline = textOnly(match[2] ?? "");
+    if (
+      !/\bHOTMA\b|HUD-50058|PIH Notice|income and asset|interim reexamination/i.test(
+        headline,
+      )
+    ) {
+      continue;
+    }
+
+    const url = new URL(match[1]!, pageUrl).toString();
+    const hostname = new URL(url).hostname;
+    if (
+      hostname !== "www.hud.gov" &&
+      hostname !== "hud.gov" &&
+      hostname !== "www.hudexchange.info" &&
+      hostname !== "hudexchange.info"
+    ) {
+      continue;
+    }
+    if (seen.has(url)) continue;
+    seen.add(url);
+
+    items.push({
+      id: `hud-hotma-${url}`,
+      kind: "federal",
+      headline,
+      detail: "Official HUD HOTMA implementation resource",
+      published_at: dateFromText(headline) ?? pageUpdatedAt,
+      source: "HUD · HOTMA Resources",
+      url,
+    });
+    if (items.length >= 12) break;
+  }
+
+  if (!items.length) {
+    items.push({
+      id: "hud-hotma-clearinghouse",
+      kind: "federal",
+      headline: "HUD HOTMA implementation updates and resources",
+      detail: "Official HUD HOTMA clearinghouse",
+      published_at: pageUpdatedAt,
+      source: "HUD · HOTMA Resources",
+      url: pageUrl,
+    });
+  }
+
+  return items;
+}
+
 export const Route = createFileRoute("/api/public/federal-housing-news")({
   server: {
     handlers: {
       GET: async () => {
-        const results = await Promise.allSettled([hudNewsUpdates(), federalRegisterUpdates()]);
+        const results = await Promise.allSettled([
+          hudNewsUpdates(),
+          hudHotmaUpdates(),
+          federalRegisterUpdates(),
+        ]);
         const items = results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
         const unique = [...new Map(items.map((item) => [item.url, item])).values()]
           .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))
