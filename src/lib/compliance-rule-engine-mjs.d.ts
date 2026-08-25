@@ -146,7 +146,31 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     [key: string]: unknown;
   }
 
+  export type CertificationProgram =
+    | "LIHTC"
+    | "HOME"
+    | "HTF"
+    | "HCV_TENANT_BASED"
+    | "HUD_PBV"
+    | "HUD_MFH_PROJECT_BASED"
+    | "PUBLIC_HOUSING"
+    | "RURAL_DEVELOPMENT"
+    | "TAX_EXEMPT_BOND";
+
+  export const CERTIFICATION_PROGRAM: Readonly<Record<string, CertificationProgram>>;
   export const FEDERAL_LIHTC_PACK: RulePack;
+  export const HOTMA_ASSET_CAP_OVERLAY_PACK: RulePack;
+  export const STATE_QAP_OVERLAY_PACK: RulePack;
+
+  export function normalizeCertificationPrograms(
+    programs?: CertificationProgram | readonly CertificationProgram[],
+  ): CertificationProgram[];
+
+  export function buildCertificationRulePack(input?: {
+    programs?: CertificationProgram | readonly CertificationProgram[];
+    hotmaApplicable?: boolean;
+    jurisdiction?: string;
+  }): RulePack;
 
   export function isStatePackUsable(pack?: StatePackInput | null): boolean;
 
@@ -179,6 +203,8 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export function evaluateCertification(input: {
     facts: readonly ExtractedFact[];
     pack?: RulePack;
+    programs?: readonly CertificationProgram[];
+    hotmaApplicable?: boolean;
     statePack?: StatePackInput | null;
     jurisdiction?: string;
     minimumConfidence?: number;

@@ -48,7 +48,14 @@ export function CertificationReviewPanel() {
 
   const run = useMutation({
     mutationFn: async (itemId: string) =>
-      runReview({ data: { itemId, ...(jurisdiction === 'US' ? {} : { jurisdiction }), useAi: true } }),
+      runReview({
+        data: {
+          itemId,
+          programs: ['LIHTC'],
+          ...(jurisdiction === 'US' ? {} : { jurisdiction }),
+          useAi: true,
+        },
+      }),
     onSuccess: async (result) => {
       if ('error' in result && result.error) setNotice(result.error);
       else if ('rulePack' in result && result.rulePack && result.counts) {

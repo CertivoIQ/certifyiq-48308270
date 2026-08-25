@@ -96,7 +96,7 @@ test("a complete compliant file passes federal rules and blocks the state rule",
   assert.equal(result.engineBuild, ENGINE_BUILD);
   assert.equal(result.rulePackVersion, FEDERAL_LIHTC_PACK.version);
   assert.equal(result.statePackApplied, false);
-  assert.equal(result.counts.pass, 3);
+  assert.equal(result.counts.pass, 2);
   assert.equal(result.counts.fail, 0);
   // Guardrail: no validated state pack ⇒ UNABLE_TO_DETERMINE, never a guess.
   const stateFinding = result.findings.find(
@@ -127,7 +127,7 @@ test("a validated state pack unlocks the state-specific determination", () => {
     statePack,
   });
   assert.equal(result.statePackApplied, true);
-  assert.equal(result.counts.pass, 4);
+  assert.equal(result.counts.pass, 3);
   assert.equal(signOffAllowed(result), true);
 });
 
@@ -253,5 +253,63 @@ test("Test #12: conflicting multi-source income evidence blocks the rule engine"
         /prevents this rule from being evaluated/i,
       );
     },
+  );
+});
+
+
+test("LIHTC-only reviews never activate the HOTMA asset-cap overlay", () => {
+  const result = evaluateCertification({
+    facts: extract(CERTIFICATION_TEXT),
+    programs: ["LIHTC"],
+  });
+  assert.equal(
+    result.findings.some((finding) => finding.ruleId === "HOTMA-ASSET-CAP"),
+    false,
+  );
+  assert.deepEqual(
+    result.findings.map((finding) => finding.ruleId),
+    ["LIHTC-TIC-SIGNATURE", "LIHTC-INCOME-LIMIT-60"],
+  );
+});
+
+test("HOTMA cannot be activated for an LIHTC-only certification", () => {
+  assert.throws(
+    () =>
+      evaluateCertification({
+        facts: extract(CERTIFICATION_TEXT),
+        programs: ["LIHTC"],
+        hotmaApplicable: true,
+      }),
+    /LIHTC alone is not sufficient/i,
+  );
+});
+
+test("an explicit applicable HUD overlay evaluates HOTMA but blocks unsupported program sign-off", () => {
+  const result = evaluateCertification({
+    facts: extract(CERTIFICATION_TEXT),
+    programs: ["LIHTC", "HUD_MFH_PROJECT_BASED"],
+    hotmaApplicable: true,
+  });
+  const hotmaFinding = result.findings.find(
+    (finding) => finding.ruleId === "HOTMA-ASSET-CAP",
+  );
+  const substantivePackGate = result.findings.find(
+    (finding) =>
+      finding.ruleId ===
+      "FED-HUD_MFH_PROJECT_BASED-SUBSTANTIVE-PACK-GATE",
+  );
+  assert.equal(hotmaFinding.status, FINDING_STATUS.pass);
+  assert.equal(substantivePackGate.status, FINDING_STATUS.unableToDetermine);
+  assert.equal(signOffAllowed(result), false);
+});
+
+test("unknown program codes are rejected instead of silently misrouted", () => {
+  assert.throws(
+    () =>
+      evaluateCertification({
+        facts: extract(CERTIFICATION_TEXT),
+        programs: ["LIHTC", "NOT_A_PROGRAM"],
+      }),
+    /unsupported certification program/i,
   );
 });

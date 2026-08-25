@@ -24,12 +24,44 @@ function organizationIdFor(userId: string) {
   return `org-${userId}`;
 }
 
+export type CertificationProgram =
+  | "LIHTC"
+  | "HOME"
+  | "HTF"
+  | "HCV_TENANT_BASED"
+  | "HUD_PBV"
+  | "HUD_MFH_PROJECT_BASED"
+  | "PUBLIC_HOUSING"
+  | "RURAL_DEVELOPMENT"
+  | "TAX_EXEMPT_BOND";
+
+const CERTIFICATION_PROGRAMS = new Set<CertificationProgram>([
+  "LIHTC",
+  "HOME",
+  "HTF",
+  "HCV_TENANT_BASED",
+  "HUD_PBV",
+  "HUD_MFH_PROJECT_BASED",
+  "PUBLIC_HOUSING",
+  "RURAL_DEVELOPMENT",
+  "TAX_EXEMPT_BOND",
+]);
+
 export const runCertificationReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { itemId: string; jurisdiction?: string; useAi?: boolean }) => {
+  .inputValidator((data: {
+    itemId: string;
+    jurisdiction?: string;
+    useAi?: boolean;
+    programs?: CertificationProgram[];
+  }) => {
     if (!data?.itemId || data.itemId.length > 100) throw new Error("A certification item id is required.");
     if (data.jurisdiction && !/^[A-Za-z]{2}$/.test(data.jurisdiction)) throw new Error("Jurisdiction must be a two-letter state code.");
-    return data;
+    const programs = data.programs ?? ["LIHTC"];
+    if (!programs.length || programs.some((program) => !CERTIFICATION_PROGRAMS.has(program))) {
+      throw new Error("At least one supported certification program must be declared.");
+    }
+    return { ...data, programs: [...new Set(programs)] };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -166,6 +198,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     // --- deterministic evaluation ----------------------------------------
     const evaluation = engine.evaluateCertification({
       facts: result.facts,
+      programs: data.programs,
       jurisdiction,
       ...(statePack
         ? {
