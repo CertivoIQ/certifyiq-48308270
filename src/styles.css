@@ -399,10 +399,12 @@
 }
 
 .ticker-track {
-  animation: ticker-scroll 48s linear infinite;
+  animation: ticker-scroll 64s linear infinite;
+  will-change: transform;
 }
 
-.crm-ticker:hover .ticker-track {
+.crm-ticker:hover .ticker-track,
+.crm-ticker:focus-within .ticker-track {
   animation-play-state: paused;
 }
 

@@ -14,17 +14,36 @@ const RELEVANT_TERMS = [
   "affordable housing",
   "multifamily",
   "low-income housing",
+  "low income housing",
+  "low-income housing tax credit",
   "lihtc",
   "section 8",
   "housing choice voucher",
+  "project-based rental assistance",
+  "project-based voucher",
+  "rental assistance demonstration",
   "public housing",
   "hotma",
   "home investment partnerships",
+  "home-arp",
+  "housing trust fund",
   "community development block grant",
   "continuum of care",
+  "homeless assistance",
   "fair housing",
   "rural housing",
+  "multifamily housing",
+  "section 202",
+  "section 811",
+  "section 515",
+  "section 521",
   "housing finance agency",
+  "income limits",
+  "area median income",
+  "utility allowance",
+  "housing quality standards",
+  "nsire",
+  "mtsp",
 ];
 
 function textOnly(value: string): string {
@@ -47,9 +66,12 @@ function relevant(value: string): boolean {
 
 async function federalRegisterUpdates(): Promise<FederalNewsItem[]> {
   const params = new URLSearchParams({
-    per_page: "50",
+    per_page: "100",
     order: "newest",
-    "conditions[agencies][]": "housing-and-urban-development-department",
+    // Search every federal agency, then apply the affordable-housing program
+    // relevance gate below. This captures HUD, Treasury/IRS LIHTC, USDA Rural
+    // Housing, and other federal program updates without mixing in general news.
+    "conditions[term]": "housing",
   });
   const response = await fetch(`https://www.federalregister.gov/api/v1/documents.json?${params}`, {
     headers: { Accept: "application/json" },
@@ -64,6 +86,10 @@ async function federalRegisterUpdates(): Promise<FederalNewsItem[]> {
       publication_date?: string;
       html_url?: string;
       type?: string;
+      agencies?: Array<{
+        name?: string;
+        raw_name?: string;
+      }>;
     }>;
   };
 
@@ -71,17 +97,27 @@ async function federalRegisterUpdates(): Promise<FederalNewsItem[]> {
     .filter((item) => item.title && item.html_url)
     .filter((item) => relevant(`${item.title} ${item.abstract ?? ""}`))
     .slice(0, 15)
-    .map((item) => ({
-      id: `federal-register-${item.document_number ?? item.html_url}`,
-      kind: "federal",
-      headline: textOnly(item.title!),
-      detail: item.type ? `${item.type} · Official Federal Register document` : "Official Federal Register document",
-      published_at: item.publication_date
-        ? new Date(`${item.publication_date}T12:00:00Z`).toISOString()
-        : new Date().toISOString(),
-      source: "Federal Register · HUD",
-      url: item.html_url!,
-    }));
+    .map((item) => {
+      const agencies = (item.agencies ?? [])
+        .map((agency) => agency.name ?? agency.raw_name)
+        .filter((name): name is string => Boolean(name))
+        .slice(0, 2)
+        .join(" / ");
+
+      return {
+        id: `federal-register-${item.document_number ?? item.html_url}`,
+        kind: "federal" as const,
+        headline: textOnly(item.title!),
+        detail: item.type
+          ? `${item.type} · Official Federal Register document`
+          : "Official Federal Register document",
+        published_at: item.publication_date
+          ? new Date(`${item.publication_date}T12:00:00Z`).toISOString()
+          : new Date().toISOString(),
+        source: agencies ? `Federal Register · ${agencies}` : "Federal Register",
+        url: item.html_url!,
+      };
+    });
 }
 
 async function hudNewsUpdates(): Promise<FederalNewsItem[]> {
@@ -126,11 +162,97 @@ async function hudNewsUpdates(): Promise<FederalNewsItem[]> {
   return items;
 }
 
+function dateFromText(value: string): string | null {
+  const match = value.match(
+    /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+20\d{2}\b/i,
+  );
+  if (!match) return null;
+  const timestamp = Date.parse(`${match[0]} 12:00:00 UTC`);
+  return Number.isNaN(timestamp) ? null : new Date(timestamp).toISOString();
+}
+
+async function hudHotmaUpdates(): Promise<FederalNewsItem[]> {
+  const pageUrl = "https://www.hud.gov/hud-partners/hotma";
+  const response = await fetch(pageUrl, {
+    headers: {
+      Accept: "text/html",
+      "User-Agent": "CertivoIQ-Federal-Housing-News/1.0 (+https://certivoiq.com/welcome)",
+    },
+  });
+  if (!response.ok) throw new Error(`HUD HOTMA Resources returned ${response.status}`);
+
+  const html = await response.text();
+  const pageDates = [...textOnly(html).matchAll(
+    /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+20\d{2}\b/gi,
+  )]
+    .map((match) => dateFromText(match[0]))
+    .filter((date): date is string => Boolean(date))
+    .sort((a, b) => Date.parse(b) - Date.parse(a));
+  const pageUpdatedAt = pageDates[0] ?? new Date().toISOString();
+
+  const anchorPattern = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  const seen = new Set<string>();
+  const items: FederalNewsItem[] = [];
+
+  for (const match of html.matchAll(anchorPattern)) {
+    const headline = textOnly(match[2] ?? "");
+    if (
+      !/\bHOTMA\b|HUD-50058|PIH Notice|income and asset|interim reexamination/i.test(
+        headline,
+      )
+    ) {
+      continue;
+    }
+
+    const url = new URL(match[1]!, pageUrl).toString();
+    const hostname = new URL(url).hostname;
+    if (
+      hostname !== "www.hud.gov" &&
+      hostname !== "hud.gov" &&
+      hostname !== "www.hudexchange.info" &&
+      hostname !== "hudexchange.info"
+    ) {
+      continue;
+    }
+    if (seen.has(url)) continue;
+    seen.add(url);
+
+    items.push({
+      id: `hud-hotma-${url}`,
+      kind: "federal",
+      headline,
+      detail: "Official HUD HOTMA implementation resource",
+      published_at: dateFromText(headline) ?? pageUpdatedAt,
+      source: "HUD · HOTMA Resources",
+      url,
+    });
+    if (items.length >= 12) break;
+  }
+
+  if (!items.length) {
+    items.push({
+      id: "hud-hotma-clearinghouse",
+      kind: "federal",
+      headline: "HUD HOTMA implementation updates and resources",
+      detail: "Official HUD HOTMA clearinghouse",
+      published_at: pageUpdatedAt,
+      source: "HUD · HOTMA Resources",
+      url: pageUrl,
+    });
+  }
+
+  return items;
+}
+
 export const Route = createFileRoute("/api/public/federal-housing-news")({
   server: {
     handlers: {
       GET: async () => {
-        const results = await Promise.allSettled([hudNewsUpdates(), federalRegisterUpdates()]);
+        const results = await Promise.allSettled([
+          hudNewsUpdates(),
+          hudHotmaUpdates(),
+          federalRegisterUpdates(),
+        ]);
         const items = results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
         const unique = [...new Map(items.map((item) => [item.url, item])).values()]
           .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))
@@ -144,7 +266,7 @@ export const Route = createFileRoute("/api/public/federal-housing-news")({
           {
             items: unique,
             fetched_at: new Date().toISOString(),
-            sources: ["HUD Newsroom", "Federal Register · HUD"],
+            sources: [...new Set(unique.map((item) => item.source))],
             partial: results.some((result) => result.status === "rejected"),
           },
           {
