@@ -13,7 +13,7 @@
  *    guessed PASS or FAIL.
  */
 
-export const ENGINE_BUILD = "rule-engine-2026.08.2";
+export const ENGINE_BUILD = "rule-engine-2026.08.3";
 export const MINIMUM_CONFIDENCE = 0.85;
 
 export const FINDING_STATUS = Object.freeze({
@@ -34,12 +34,13 @@ export const RULE_EVALUATION_STATUS = Object.freeze({
 });
 
 /**
- * Federal LIHTC / HOTMA baseline pack. Versioned; citations point at the
- * controlling federal source. This pack is jurisdiction-independent.
+ * Catalog of the narrow rules already implemented by the vertical slice.
+ * The catalog is never evaluated directly. buildCertificationRulePack()
+ * selects only the rules that are applicable to the declared programs.
  */
-export const FEDERAL_LIHTC_PACK = Object.freeze({
-  id: "federal-lihtc-hotma",
-  version: "2026.08.1",
+const CERTIFICATION_RULE_CATALOG = Object.freeze({
+  id: "certification-rule-catalog",
+  version: "2026.08.3",
   jurisdiction: "US",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -173,6 +174,145 @@ export const FEDERAL_LIHTC_PACK = Object.freeze({
   ]),
 });
 
+const catalogRule = (ruleId) => {
+  const rule = CERTIFICATION_RULE_CATALOG.rules.find((entry) => entry.id === ruleId);
+  if (!rule) throw new Error(`Rule catalog entry ${ruleId} is missing.`);
+  return rule;
+};
+
+export const CERTIFICATION_PROGRAM = Object.freeze({
+  lihtc: "LIHTC",
+  home: "HOME",
+  htf: "HTF",
+  hcvTenantBased: "HCV_TENANT_BASED",
+  hudPbv: "HUD_PBV",
+  hudMfhProjectBased: "HUD_MFH_PROJECT_BASED",
+  publicHousing: "PUBLIC_HOUSING",
+  ruralDevelopment: "RURAL_DEVELOPMENT",
+  taxExemptBond: "TAX_EXEMPT_BOND",
+});
+
+const CERTIFICATION_PROGRAM_VALUES = new Set(Object.values(CERTIFICATION_PROGRAM));
+const HOTMA_ASSET_CAP_PROGRAMS = new Set([
+  CERTIFICATION_PROGRAM.publicHousing,
+  CERTIFICATION_PROGRAM.hcvTenantBased,
+  CERTIFICATION_PROGRAM.hudPbv,
+  CERTIFICATION_PROGRAM.hudMfhProjectBased,
+]);
+
+export const FEDERAL_LIHTC_PACK = Object.freeze({
+  id: "federal-lihtc",
+  version: "2026.08.3",
+  jurisdiction: "US",
+  status: "validated",
+  effectiveFrom: "2026-01-01",
+  rules: Object.freeze([
+    catalogRule("LIHTC-TIC-SIGNATURE"),
+    catalogRule("LIHTC-INCOME-LIMIT-60"),
+  ]),
+});
+
+export const HOTMA_ASSET_CAP_OVERLAY_PACK = Object.freeze({
+  id: "federal-hotma-asset-cap-overlay",
+  version: "2026.08.3",
+  jurisdiction: "US",
+  status: "validated",
+  effectiveFrom: "2026-01-01",
+  rules: Object.freeze([catalogRule("HOTMA-ASSET-CAP")]),
+});
+
+export const STATE_QAP_OVERLAY_PACK = Object.freeze({
+  id: "state-qap-overlay",
+  version: "2026.08.3",
+  jurisdiction: "state",
+  status: "validated",
+  effectiveFrom: "2026-01-01",
+  rules: Object.freeze([catalogRule("STATE-QAP-UTILITY-ALLOWANCE")]),
+});
+
+export function normalizeCertificationPrograms(programs) {
+  const requested =
+    programs == null
+      ? [CERTIFICATION_PROGRAM.lihtc]
+      : Array.isArray(programs)
+        ? programs
+        : [programs];
+  const normalized = [...new Set(requested.map((program) => String(program).trim().toUpperCase()))]
+    .filter(Boolean)
+    .sort();
+  if (!normalized.length) {
+    throw new TypeError("At least one certification program must be declared.");
+  }
+  const unsupported = normalized.filter((program) => !CERTIFICATION_PROGRAM_VALUES.has(program));
+  if (unsupported.length) {
+    throw new RangeError(`Unsupported certification program(s): ${unsupported.join(", ")}.`);
+  }
+  return normalized;
+}
+
+function substantivePackGate(program) {
+  return Object.freeze({
+    id: `FED-${program}-SUBSTANTIVE-PACK-GATE`,
+    version: "1.0.0",
+    jurisdiction: "federal",
+    severity: "critical",
+    requires: Object.freeze([]),
+    citation: "Program-specific controlling federal authority",
+    description: `A validated substantive ${program} rule pack is required.`,
+    evaluate: () => ({
+      status: FINDING_STATUS.unableToDetermine,
+      explanation:
+        "This program is identified for the certification, but its substantive production rule pack is not active.",
+    }),
+  });
+}
+
+/**
+ * Build the only pack that the vertical slice may evaluate for this review.
+ * HOTMA is an explicit overlay and is never inferred from LIHTC participation.
+ */
+export function buildCertificationRulePack(input = {}) {
+  const programs = normalizeCertificationPrograms(input.programs);
+  const rules = [];
+  if (programs.includes(CERTIFICATION_PROGRAM.lihtc)) {
+    rules.push(...FEDERAL_LIHTC_PACK.rules);
+  }
+  for (const program of programs) {
+    if (program !== CERTIFICATION_PROGRAM.lihtc) rules.push(substantivePackGate(program));
+  }
+
+  if (input.hotmaApplicable === true) {
+    const hasApplicableHudProgram = programs.some((program) =>
+      HOTMA_ASSET_CAP_PROGRAMS.has(program),
+    );
+    if (!hasApplicableHudProgram) {
+      throw new RangeError(
+        "The HOTMA asset-cap overlay requires an applicable Public Housing or Section 8 program; LIHTC alone is not sufficient.",
+      );
+    }
+    rules.push(...HOTMA_ASSET_CAP_OVERLAY_PACK.rules);
+  }
+
+  if (String(input.jurisdiction ?? "US").toUpperCase() !== "US") {
+    rules.push(...STATE_QAP_OVERLAY_PACK.rules);
+  }
+
+  const overlayIds = [
+    input.hotmaApplicable === true ? "hotma-asset-cap" : null,
+    String(input.jurisdiction ?? "US").toUpperCase() !== "US" ? "state-qap" : null,
+  ].filter(Boolean);
+
+  return Object.freeze({
+    id: `program-applicable:${programs.join("+")}${overlayIds.length ? `+${overlayIds.join("+")}` : ""}`,
+    version: "2026.08.3",
+    jurisdiction: "US",
+    status: "validated",
+    effectiveFrom: "2026-01-01",
+    programs: Object.freeze(programs),
+    rules: Object.freeze(rules),
+  });
+}
+
 /** A state pack is usable only when independently approved and versioned. */
 export function isStatePackUsable(pack) {
   return Boolean(
@@ -288,14 +428,20 @@ function evidenceRefs(factsByField, fields) {
 /**
  * Evaluate a fact set against a rule pack.
  *
- * @param {{ facts: readonly object[], pack?: object, statePack?: object|null, jurisdiction?: string, minimumConfidence?: number }} input
+ * @param {{ facts: readonly object[], pack?: object, programs?: readonly string[], hotmaApplicable?: boolean, statePack?: object|null, jurisdiction?: string, minimumConfidence?: number }} input
  */
 export function evaluateCertification(input) {
-  const pack = input.pack ?? FEDERAL_LIHTC_PACK;
+  const jurisdiction = String(input.jurisdiction ?? "US").toUpperCase();
+  const pack =
+    input.pack ??
+    buildCertificationRulePack({
+      programs: input.programs,
+      hotmaApplicable: input.hotmaApplicable,
+      jurisdiction,
+    });
   const minimumConfidence = Number.isFinite(input.minimumConfidence)
     ? input.minimumConfidence
     : MINIMUM_CONFIDENCE;
-  const jurisdiction = input.jurisdiction ?? "US";
   const statePackUsable = isStatePackUsable(input.statePack);
 
   const factsByField = {};
