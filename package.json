@@ -14,6 +14,7 @@
     "test:tenant": "node --test scripts/test-tenant-file-eligibility.mjs",
     "test:recert": "node --test scripts/test-recertification-occupancy-controls.mjs",
     "test:limits": "node --test scripts/test-fy2026-income-limit-ingestion.mjs",
+    "test:limits-storage": "node --test scripts/test-fy2026-controlled-source-storage.mjs",
     "test:xlsx": "node --test scripts/test-fy2026-xlsx-workbook-parser.mjs",
     "test:project-authority": "node --test scripts/test-enterprise-project-authority-intake.mjs",
     "test:state-pack": "node --test scripts/test-state-rule-pack-release.mjs",
