@@ -1,6 +1,6 @@
 /** Controlled federal program-pack coverage and authority registry. */
 export const FEDERAL_PROGRAM_PACK_REGISTRY_BUILD =
-  "federal-program-pack-registry-2026.08.3";
+  "federal-program-pack-registry-2026.08.4";
 
 const pack = (entry) =>
   Object.freeze({
@@ -18,6 +18,18 @@ const pack = (entry) =>
     }),
   });
 
+const stateOverlay = (entry) =>
+  Object.freeze({
+    ...entry,
+    officialSources: Object.freeze(entry.officialSources),
+    requiredControls: Object.freeze(entry.requiredControls),
+    verifiedRules: Object.freeze(
+      entry.verifiedRules.map((rule) =>
+        Object.freeze({ ...rule, evidenceFields: Object.freeze(rule.evidenceFields) }),
+      ),
+    ),
+  });
+
 export const FEDERAL_JURISDICTION_DIRECTORY = Object.freeze({
   role: "JURISDICTION_DISCOVERY_ONLY",
   url: "https://www.hud.gov/states/",
@@ -25,12 +37,58 @@ export const FEDERAL_JURISDICTION_DIRECTORY = Object.freeze({
 });
 
 export const STATE_PROGRAM_OVERLAYS = Object.freeze({
-  CA_TAX_EXEMPT_BOND_CDLAC: Object.freeze({
+  CA_TAX_EXEMPT_BOND_CDLAC: stateOverlay({
     jurisdiction: "CA",
     program: "TAX_EXEMPT_BOND",
     role: "STATE_PROGRAM_OVERLAY",
     url: "https://www.treasurer.ca.gov/cdlac",
     federalBaselineAuthority: false,
+    activationStatus: "BLOCKED",
+    citation: "4 CCR 5000 et seq., including sections 5107 and 5112",
+    officialSources: [
+      "https://www.treasurer.ca.gov/cdlac/qrrp",
+      "https://www.treasurer.ca.gov/cdlac/regulations",
+      "https://www.treasurer.ca.gov/sites/default/files/2026-03/approved.pdf",
+      "https://www.treasurer.ca.gov/cdlac/compliance",
+    ],
+    requiredControls: [
+      "controlled_cdlac_regulations_receipt",
+      "cdlac_committee_resolution",
+      "recorded_bond_regulatory_agreement",
+      "controlled_cdlac_reporting_notice",
+    ],
+    verifiedRules: [
+      {
+        id: "CA-CDLAC-QRRP-MINIMUM-INCOME-RESTRICTION",
+        citation: "4 CCR 5107(a)(1)",
+        requirement: "Restrict gross rents for at least 10 percent of project units to households with income no greater than 50 percent of AMI, with the required unit distribution and bedroom mix.",
+        evidenceFields: ["cdlac_committee_resolution", "total_residential_units", "restricted_50_ami_units", "unit_distribution", "bedroom_mix"],
+      },
+      {
+        id: "CA-CDLAC-QRRP-GROSS-RENT-AND-UTILITY-EVIDENCE",
+        citation: "4 CCR 5107(a)(2) and 5107(c)",
+        requirement: "Apply the Committee Resolution's rent restrictions using gross rent and support the applicable utility allowance with current permitted evidence.",
+        evidenceFields: ["cdlac_committee_resolution", "tenant_paid_rent", "utility_allowance", "utility_allowance_source", "rent_comparability_matrix", "unit_type"],
+      },
+      {
+        id: "CA-CDLAC-QRRP-MINIMUM-RESTRICTION-TERM",
+        citation: "4 CCR 5107(d) and 5112(c)(2)",
+        requirement: "Maintain the resolution's income and rent restrictions for the 55-year CDLAC qualified project period, or the applicable 50-year Native American Lands term or approved tenant-homeownership exception.",
+        evidenceFields: ["fifty_percent_occupancy_date", "cdlac_qualified_project_period_start", "native_american_lands_status", "recorded_restriction_end_date", "tenant_homeownership_exception"],
+      },
+      {
+        id: "CA-CDLAC-QRRP-REGULATORY-AGREEMENT",
+        citation: "4 CCR 5112(a) and 5112(c)",
+        requirement: "Execute and record a Bond Regulatory Agreement that incorporates the CDLAC resolution, applicable income and affordability restrictions, and required change/default notices.",
+        evidenceFields: ["recorded_bond_regulatory_agreement", "cdlac_committee_resolution", "recording_date", "ownership_change_notice", "default_notice"],
+      },
+      {
+        id: "CA-CDLAC-QRRP-COMPLIANCE-REPORTING",
+        citation: "4 CCR 5013 through 5015 and current CDLAC compliance guidance",
+        requirement: "Submit the applicable sponsor and issuer compliance certifications on the cadence and deadline stated in the current controlled CDLAC reporting notice.",
+        evidenceFields: ["controlled_cdlac_reporting_notice", "certificate_of_completion_date", "sponsor_certification", "issuer_self_certification", "submission_date"],
+      },
+    ],
   }),
 });
 
@@ -354,12 +412,60 @@ export const FEDERAL_PROGRAM_RULE_PACKS = Object.freeze({
     citation: "26 U.S.C. 142(d)",
     officialSources: Object.freeze([
       "https://uscode.house.gov/view.xhtml?edition=prelim&num=0&req=granuleid%3AUSC-prelim-title26-section142",
+      "https://www.govinfo.gov/link/uscode/26/142",
     ]),
     sourceHierarchy: {
       programGuidance: [],
-      controllingLaw: ["https://uscode.house.gov/view.xhtml?edition=prelim&num=0&req=granuleid%3AUSC-prelim-title26-section142"],
+      controllingLaw: [
+        "https://uscode.house.gov/view.xhtml?edition=prelim&num=0&req=granuleid%3AUSC-prelim-title26-section142",
+        "https://www.govinfo.gov/link/uscode/26/142",
+      ],
     },
-    requiredControls: ["controlled_income_limit_receipt", "bond_election", "next_available_unit_rule", "set_aside_fraction"],
+    requiredControls: [
+      "controlled_income_limit_receipt",
+      "bond_election_document",
+      "qualified_project_period",
+      "current_income_determinations",
+      "next_available_unit_tracking",
+      "annual_irs_certification",
+    ],
+    programBoundaries: Object.freeze([
+      "A 26 U.S.C. 42(g)(1)(C) average-income election does not replace the issuer's 20-50 or 40-60 election under 26 U.S.C. 142(d)(1).",
+      "The baseline 20-50 and 40-60 tests in 26 U.S.C. 142(d)(1) do not independently impose a federal gross-rent limit; rent findings require a deep-rent-skewing election or another controlling program, regulatory agreement, or state overlay.",
+      "When section 42 credit is allowed, section 142(d)(3)(C) changes the next-available-unit comparison scope from project to section 42 building.",
+    ]),
+    verifiedRules: [
+      {
+        id: "TEB-QRR-SET-ASIDE-ELECTION",
+        citation: "26 U.S.C. 142(d)(1)",
+        requirement: "Throughout the qualified project period, satisfy the issuer's issue-date election of either at least 20 percent of units occupied by households at or below 50 percent of AMGI or at least 40 percent at or below 60 percent of AMGI.",
+        evidenceFields: ["bond_issue_date", "bond_election_document", "bond_election", "total_residential_units", "qualified_units", "controlled_income_limit_receipt", "household_income_by_unit"],
+      },
+      {
+        id: "TEB-QRR-QUALIFIED-PROJECT-PERIOD",
+        citation: "26 U.S.C. 142(d)(2)(A)",
+        requirement: "Track the qualified project period from the first day 10 percent of units are occupied through the latest statutory end date tied to 15 years after 50 percent occupancy, bond retirement, or termination of section 8 assistance.",
+        evidenceFields: ["ten_percent_occupancy_date", "fifty_percent_occupancy_date", "tax_exempt_bond_outstanding_date", "section_8_assistance_termination_date", "qualified_project_period"],
+      },
+      {
+        id: "TEB-QRR-CURRENT-INCOME-DETERMINATION",
+        citation: "26 U.S.C. 142(d)(2)(B) and 142(d)(3)(A)",
+        requirement: "Determine household income using the section 8-consistent, family-size-adjusted method and complete at least annual current-income determinations unless the statutory no-over-limit-new-resident exception applies for that year.",
+        evidenceFields: ["controlled_income_limit_receipt", "household_size", "current_household_income", "income_determination_date", "new_resident_income_inventory", "annual_recertification_exception"],
+      },
+      {
+        id: "TEB-QRR-NEXT-AVAILABLE-UNIT",
+        citation: "26 U.S.C. 142(d)(3)(B)-(C)",
+        requirement: "After a qualifying resident exceeds 140 percent of the applicable limit, do not rent a comparable or smaller available unit to a new over-limit household; use section 42 building scope instead of project scope when section 42 credit is allowed.",
+        evidenceFields: ["over_income_unit", "current_household_income", "controlled_140_percent_limit", "next_available_unit", "next_available_unit_size", "new_resident_income", "section_42_credit_allowed", "section_42_building_id"],
+      },
+      {
+        id: "TEB-QRR-ANNUAL-IRS-CERTIFICATION",
+        citation: "26 U.S.C. 142(d)(7)",
+        requirement: "The project operator must submit the prescribed annual certification to the Secretary stating whether the project continues to meet section 142(d).",
+        evidenceFields: ["annual_irs_certification", "certification_period", "submission_date", "submission_receipt"],
+      },
+    ],
   }),
 });
 
