@@ -23,6 +23,7 @@
     "test:ocr": "node scripts/test-ocr-sidecar.mjs",
     "test:operations": "node --test scripts/test-operations-control-plane.mjs",
     "test:operations-worker": "node --test scripts/test-operations-worker-runtime.mjs",
+    "test:operations-source": "node --test scripts/test-hud-source-pipeline.mjs",
     "test:property-figures": "node --test scripts/test-enterprise-property-figure-verification.mjs",
     "test:state-source-batch": "node --test scripts/test-first-state-source-batch.mjs",
     "test:state-source-batch-2": "node --test scripts/test-second-state-source-batch.mjs",
