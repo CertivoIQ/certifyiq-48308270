@@ -32,7 +32,7 @@ export const EXTRACTION_FIELDS = [
   "tenant_signature_date",
   "certification_effective_date",
   "household_annual_income",
-  "income_limit_60_pct",
+  "applicable_lihtc_income_limit",
   "household_net_assets",
   "hotma_asset_cap",
   "gross_rent",
@@ -46,7 +46,7 @@ const FIELD_LABELS: Record<ExtractionField, string[]> = {
   tenant_signature_date: ["tenant signature date", "signature date", "signed on"],
   certification_effective_date: ["certification effective date", "effective date"],
   household_annual_income: ["household annual income", "annual income", "total household income"],
-  income_limit_60_pct: ["60% income limit", "income limit 60", "applicable income limit"],
+  applicable_lihtc_income_limit: ["applicable lihtc income limit", "applicable income limit", "60% income limit", "50% income limit"],
   household_net_assets: ["household net assets", "net family assets", "net assets"],
   hotma_asset_cap: ["hotma asset cap", "asset cap"],
   gross_rent: ["gross rent"],
@@ -56,7 +56,7 @@ const FIELD_LABELS: Record<ExtractionField, string[]> = {
 
 const NUMERIC_FIELDS = new Set<ExtractionField>([
   "household_annual_income",
-  "income_limit_60_pct",
+  "applicable_lihtc_income_limit",
   "household_net_assets",
   "hotma_asset_cap",
   "gross_rent",
