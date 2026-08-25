@@ -6,13 +6,14 @@
  */
 import CONTROL_PACK from "./mfh-hotma-owner-system-controls.json" with { type: "json" };
 import {
+  MFH_HOTMA_FINAL_RULE_EFFECTIVE_DATE,
   MFH_HOTMA_FINDING_CLASSIFICATION,
   MFH_HOTMA_MANDATORY_COMPLIANCE_DATE,
   MFH_HOTMA_PROGRAM_SUBTYPES,
 } from "./mfh-hotma-rule-engine.mjs";
 
 export const MFH_HOTMA_OWNER_SYSTEM_ENGINE_BUILD =
-  "mfh-hotma-owner-system-engine-2026.08.1";
+  "mfh-hotma-owner-system-engine-2026.08.2";
 
 const PROGRAMS = new Set(MFH_HOTMA_PROGRAM_SUBTYPES);
 const MODULES = Object.freeze(
@@ -120,6 +121,15 @@ export function classifyMfhHotmaOwnerSystemControl(input = {}) {
     );
   }
 
+  const finalRuleEffective = parseIsoDate(MFH_HOTMA_FINAL_RULE_EFFECTIVE_DATE);
+  if (eventDate.timestamp < finalRuleEffective.timestamp) {
+    return notApplicable(
+      "PRE_HOTMA_FINAL_RULE_CERTIFICATION",
+      "The certification predates the HOTMA final-rule effective date.",
+      detailsFor(module, subtype),
+    );
+  }
+
   const sourceFailures = [];
   if (input.controlled_source_release_approved !== true)
     sourceFailures.push("controlled_source_release_approved");
@@ -145,12 +155,25 @@ export function classifyMfhHotmaOwnerSystemControl(input = {}) {
       detailsFor(module, subtype),
     );
   }
+  const mandatory = parseIsoDate(MFH_HOTMA_MANDATORY_COMPLIANCE_DATE);
   if (eventDate.timestamp < implementationDate.timestamp) {
-    return notApplicable(
-      "PRE_ADOPTION_CERTIFICATION",
-      "The certification predates the property's documented HOTMA implementation.",
+    if (eventDate.timestamp < mandatory.timestamp) {
+      return notApplicable(
+        "PRE_ADOPTION_CERTIFICATION",
+        "The certification predates the property's documented HOTMA implementation.",
+        {
+          ...detailsFor(module, subtype),
+          property_hotma_implementation_date: implementationDate.iso,
+        },
+      );
+    }
+    return blocked(
+      "POST_MANDATORY_IMPLEMENTATION_DATE_CONFLICT",
+      "A property implementation date after a post-mandatory certification cannot bypass HOTMA operational controls.",
+      ["property_hotma_implementation_date"],
       {
         ...detailsFor(module, subtype),
+        certification_effective_date: eventDate.iso,
         property_hotma_implementation_date: implementationDate.iso,
       },
     );
@@ -196,7 +219,6 @@ export function classifyMfhHotmaOwnerSystemControl(input = {}) {
     );
   }
 
-  const mandatory = parseIsoDate(MFH_HOTMA_MANDATORY_COMPLIANCE_DATE);
   return {
     resolution_status: "READY",
     determination_status:
