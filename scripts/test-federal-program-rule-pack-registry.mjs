@@ -341,3 +341,20 @@ test("gate findings disclose verified rules and missing controlled authorities",
   assert.ok(bondGate.missingControls.includes("bond_election_document"));
   assert.ok(bondGate.missingControls.includes("next_available_unit_tracking"));
 });
+
+test("PHA-administered packs cite Notice PIH 2026-15 and require cohort/reporting controls", () => {
+  const noticeUrl =
+    "https://www.hud.gov/sites/default/files/hudclips/documents/PIH-2026-15.pdf";
+  for (const program of [
+    "HCV_TENANT_BASED",
+    "HUD_PBV",
+    "PUBLIC_HOUSING",
+  ]) {
+    const pack = FEDERAL_PROGRAM_RULE_PACKS[program];
+    assert.ok(pack.officialSources.includes(noticeUrl));
+    assert.ok(pack.sourceHierarchy.programGuidance.includes(noticeUrl));
+    assert.ok(pack.requiredControls.includes("pha_hotma_cohort"));
+    assert.ok(pack.requiredControls.includes("hud_50058_reporting_path"));
+    assert.match(pack.citation, /Notice PIH 2026-15/);
+  }
+});
