@@ -54,9 +54,13 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     jurisdiction?: string;
     useAi?: boolean;
     programs?: CertificationProgram[];
+    certificationType: "INITIAL" | "ANNUAL" | "INTERIM";
   }) => {
     if (!data?.itemId || data.itemId.length > 100) throw new Error("A certification item id is required.");
     if (data.jurisdiction && !/^[A-Za-z]{2}$/.test(data.jurisdiction)) throw new Error("Jurisdiction must be a two-letter state code.");
+    if (!["INITIAL", "ANNUAL", "INTERIM"].includes(data.certificationType)) {
+      throw new Error("Certification type must be INITIAL, ANNUAL, or INTERIM.");
+    }
     const programs = data.programs ?? ["LIHTC"];
     if (!programs.length || programs.some((program) => !CERTIFICATION_PROGRAMS.has(program))) {
       throw new Error("At least one supported certification program must be declared.");
@@ -82,7 +86,9 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     await supabase.from("certification_import_items").update({ status: "processing" }).eq("id", item.id);
 
     const extraction = await import("@/lib/certification-extraction.server");
-    const engine = await import("@/lib/compliance-rule-engine.mjs");
+    const orchestrator = await import(
+      "@/lib/federal-certification-review-orchestrator.mjs"
+    );
     const { hashJson, sha256Hex } = await import("@/lib/complianceDecisionAndManifest");
     const registry = await import("@/lib/stateCoverageRegistry");
     // Evidence, findings and manifests are written with the service role: end users
@@ -196,9 +202,10 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     }
 
     // --- deterministic evaluation ----------------------------------------
-    const evaluation = engine.evaluateCertification({
+    const evaluation = orchestrator.evaluateFederalCertificationReview({
       facts: result.facts,
       programs: data.programs,
+      certificationType: data.certificationType,
       jurisdiction,
       ...(statePack
         ? {
@@ -266,6 +273,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         statePackApplied: evaluation.statePackApplied,
         extractionProvider: result.provider,
         documentKind,
+        controlResults: evaluation.controlResults,
         // OCR provenance for the audit trail: which pages were OCR-derived and
         // with which engine. Absent for machine-readable documents.
         ocr: ocrDocument
