@@ -431,6 +431,9 @@ export type OcrDocument = {
   textPageCount: number;
   skippedPageCount: number;
   ocrEngines: string[];
+  sidecarSchemaVersion: string;
+  sourceSha256: string;
+  sourceByteSize: number;
 };
 
 /**
@@ -439,8 +442,11 @@ export type OcrDocument = {
  * page text came from OCR. Returns null when the sidecar carries no usable page
  * text, so the caller fails safe instead of producing findings without evidence.
  */
-export function loadOcrDocument(sidecar: unknown): OcrDocument | null {
-  const composed = composeSidecarText(sidecar as OcrSidecar);
+export function loadOcrDocument(
+  sidecar: unknown,
+  expectedSource: { fileName: string; sha256: string; byteSize: number },
+): OcrDocument | null {
+  const composed = composeSidecarText(sidecar as OcrSidecar, expectedSource);
   if (!composed.text.trim() || composed.ocrPageCount === 0) return null;
   return {
     text: composed.text,
@@ -451,5 +457,8 @@ export function loadOcrDocument(sidecar: unknown): OcrDocument | null {
     textPageCount: composed.textPageCount,
     skippedPageCount: composed.skippedPageCount,
     ocrEngines: [...new Set(composed.pages.map((page) => page.engine).filter((engine): engine is string => !!engine))],
+    sidecarSchemaVersion: composed.sourceIdentity.schemaVersion,
+    sourceSha256: composed.sourceIdentity.sourceSha256,
+    sourceByteSize: composed.sourceIdentity.sourceByteSize,
   };
 }
