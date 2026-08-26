@@ -70,6 +70,7 @@ jobs:
           node --test scripts/test-wv-lihtc-deterministic-rule-pack.mjs
           node --test scripts/test-wy-lihtc-deterministic-rule-pack.mjs
           node --test scripts/test-wi-lihtc-deterministic-rule-pack.mjs
+          node --test scripts/test-wa-lihtc-deterministic-rule-pack.mjs
           node --test scripts/test-external-state-pack-attestation.mjs
           bun run test:mfh-hotma
           bun run test:mfh-hotma-operations
