@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type {
+  ComplianceSourceStatus,
   CorrectionCase,
   HfaAgency,
   HfaMetric,
@@ -39,6 +40,16 @@ const tabs: Array<{ id: Tab; label: string }> = [
 
 const badge = "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset";
 
+const sourceStatusTone: Record<ComplianceSourceStatus, string> = {
+  ACTIVE: "bg-emerald-50 text-emerald-800 ring-emerald-200",
+  CANDIDATE: "bg-slate-50 text-slate-700 ring-slate-200",
+  BLOCKED: "bg-rose-50 text-rose-800 ring-rose-200",
+  SUPERSEDED: "bg-slate-100 text-slate-600 ring-slate-300",
+  SOURCE_CHANGED: "bg-amber-50 text-amber-900 ring-amber-200",
+  AWAITING_REVIEW: "bg-blue-50 text-blue-800 ring-blue-200",
+  AWAITING_VP_VERIFICATION: "bg-violet-50 text-violet-800 ring-violet-200",
+};
+
 export default function HfaRegulatoryConsole({
   agency,
   metrics,
@@ -52,6 +63,18 @@ export default function HfaRegulatoryConsole({
   const openCorrections = useMemo(
     () => corrections.filter((item) => !["accepted"].includes(item.status)).length,
     [corrections],
+  );
+  const sourceAttentionCount = useMemo(
+    () =>
+      releases.filter((release) =>
+        [
+          "BLOCKED",
+          "SOURCE_CHANGED",
+          "AWAITING_REVIEW",
+          "AWAITING_VP_VERIFICATION",
+        ].includes(release.sourceStatus ?? ""),
+      ).length,
+    [releases],
   );
 
   return (
@@ -116,16 +139,14 @@ export default function HfaRegulatoryConsole({
                 <SubmissionList items={submissions.slice(0, 5)} />
               </Panel>
               <Panel title="Attention required" icon={<AlertTriangle className="h-5 w-5" />}>
-                <p className="text-4xl font-semibold">{openCorrections}</p>
+                <p className="text-4xl font-semibold">{openCorrections + sourceAttentionCount}</p>
                 <p className="mt-2 text-sm text-slate-600">
-                  Open or reopened corrective-action cases
+                  Open corrective actions and compliance sources requiring review
                 </p>
-                <button
-                  onClick={() => setTab("corrections")}
-                  className="mt-5 text-sm font-semibold text-cyan-700"
-                >
-                  Review corrective actions →
-                </button>
+                <div className="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-cyan-700">
+                  <button onClick={() => setTab("corrections")}>Corrective actions →</button>
+                  <button onClick={() => setTab("rules")}>Source status →</button>
+                </div>
               </Panel>
             </div>
           </section>
@@ -149,7 +170,7 @@ export default function HfaRegulatoryConsole({
             <SectionTitle
               icon={<Scale className="h-6 w-6" />}
               title="Rule-pack governance"
-              description="Source, validate, test, approve, activate and suspend effective-dated state rules."
+              description="Source, validate, monitor, test, approve, activate and suspend effective-dated rules without silently promoting changed authority."
             />
             {canManageRules && (
               <button className="mt-5 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">
@@ -172,10 +193,56 @@ export default function HfaRegulatoryConsole({
                         sources · {release.testCount} tests
                       </p>
                     </div>
-                    <span className={`${badge} bg-cyan-50 text-cyan-800 ring-cyan-200`}>
-                      {release.status.replaceAll("_", " ")}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`${badge} bg-cyan-50 text-cyan-800 ring-cyan-200`}>
+                        {release.status.replaceAll("_", " ")}
+                      </span>
+                      {release.sourceStatus && (
+                        <span className={`${badge} ${sourceStatusTone[release.sourceStatus]}`}>
+                          {release.sourceStatus.replaceAll("_", " ")}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {(release.lastCheckedAt || release.sourceAuthority || release.sourceChangedAt) && (
+                    <div className="mt-4 grid gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-3">
+                      <p>
+                        <span className="font-semibold text-slate-900">Authority:</span>{" "}
+                        {release.sourceAuthority ?? "Not recorded"}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-900">Last checked:</span>{" "}
+                        {release.lastCheckedAt ?? "Not checked"}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-900">Changed:</span>{" "}
+                        {release.sourceChangedAt ?? "No change recorded"}
+                      </p>
+                      <p className="sm:col-span-2 lg:col-span-3">
+                        <span className="font-semibold text-slate-900">Affected scope:</span>{" "}
+                        {[...(release.affectedJurisdictions ?? []), ...(release.affectedPrograms ?? [])].join(" · ") || "Not recorded"}
+                      </p>
+                      {release.sourceUrl && (
+                        <p className="break-all sm:col-span-2 lg:col-span-3">
+                          <span className="font-semibold text-slate-900">Source:</span>{" "}
+                          <a
+                            href={release.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium text-cyan-700 underline underline-offset-2"
+                          >
+                            {release.sourceUrl}
+                          </a>
+                        </p>
+                      )}
+                      {(release.reviewRequired || release.vpVerificationRequired) && (
+                        <p className="sm:col-span-2 lg:col-span-3 font-medium text-amber-900">
+                          {release.reviewRequired && "Human source review required. "}
+                          {release.vpVerificationRequired && "VP Compliance property-figure verification required."}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
@@ -193,8 +260,7 @@ export default function HfaRegulatoryConsole({
               <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 className="font-semibold">New sampling run</h3>
                 <p className="mt-2 text-sm text-slate-600">
-                  Lovable should connect this control to a server-side, seeded and reproducible
-                  sampling job with an exported selection rationale.
+                  Sampling must run server-side with a seeded, reproducible selection and an exported rationale.
                 </p>
                 <button className="mt-5 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white">
                   Configure sample
