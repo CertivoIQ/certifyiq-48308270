@@ -77,7 +77,7 @@ function MethodologyPage() {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-4">
           <Link to="/welcome" className="flex items-center gap-2.5">
-            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1 object-contain" />
+            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-11 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-11 w-auto object-contain dark:block" />
           </Link>
           <Button size="sm" variant="outline" asChild>
             <Link to="/security">Security &amp; Data Use</Link>

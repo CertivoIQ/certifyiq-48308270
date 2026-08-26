@@ -76,7 +76,7 @@ function PhaOverviewPage() {
       <header className="border-b border-border/80 bg-background/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <Link to="/welcome">
-            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1" />
+            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-11 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-11 w-auto object-contain dark:block" />
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild><Link to="/welcome">Main site</Link></Button>

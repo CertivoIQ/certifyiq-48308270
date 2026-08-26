@@ -93,7 +93,7 @@ function WelcomePage() {
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
           <Link to="/welcome" className="flex items-center gap-2.5">
-            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1 object-contain" />
+            <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-11 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-11 w-auto object-contain dark:block" />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             <a href="#how-it-works" className="px-3 py-2 text-[13px] text-muted-foreground hover:text-foreground">How it works</a>
@@ -295,7 +295,7 @@ function WelcomePage() {
 
       <footer className="border-t border-border py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 text-center sm:flex-row sm:text-left lg:px-8">
-          <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-8 w-auto rounded bg-white px-1.5 py-1 object-contain" /><p className="mt-1 text-[11px] text-muted-foreground">FIND COMPLIANCE RISK BEFORE THE AUDITOR.</p></div>
+          <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-9 w-auto object-contain dark:block" /><p className="mt-1 text-[11px] text-muted-foreground">FIND COMPLIANCE RISK BEFORE THE AUDITOR.</p></div>
           <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/privacy">Privacy</Link><Link className="underline" to="/terms">Terms</Link><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
         </div>
         <p className="cite mt-4 text-center">Federal baseline review only. State-agency, allocating-agency, local, and project-specific requirements require separate Manual Review.</p>

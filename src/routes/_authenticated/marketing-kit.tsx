@@ -69,7 +69,7 @@ function MarketingKitPage() {
       </div>
       <article className="print-sheet mx-auto my-8 max-w-3xl rounded-lg border border-border bg-card p-8 shadow-ledger print:my-0">
         <header className="flex items-start justify-between gap-4 border-b border-border pb-5">
-          <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-12 w-auto rounded-md bg-white px-2 py-1 object-contain" /><p className="mt-1.5 text-[12.5px] text-muted-foreground">Compliance intelligence infrastructure — LIHTC · HOME · Project-Based Section 8 · HOTMA</p></div>
+          <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-14 w-auto object-contain dark:hidden print:block" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-14 w-auto object-contain dark:block print:hidden" /><p className="mt-1.5 text-[12.5px] text-muted-foreground">Compliance intelligence infrastructure — LIHTC · HOME · Project-Based Section 8 · HOTMA</p></div>
           <p className="text-right text-[11.5px] leading-snug text-muted-foreground">certivoiq.com/welcome<br />Federal baseline compliance intelligence</p>
         </header>
         <section className="print-avoid-break mt-6"><h2 className="font-display text-[26px] leading-[1.15]">One missed certification can cost <span className="text-reject">years of tax credits</span></h2><p className="mt-3 text-[13.5px] leading-relaxed text-muted-foreground">CertivoIQ evaluates certification evidence against supported, versioned federal requirements and returns traceable findings or Unable to Determine when evidence or scope is incomplete. An authorized compliance agent retains Agent Approval authority and provides an Agent Signature.</p></section>

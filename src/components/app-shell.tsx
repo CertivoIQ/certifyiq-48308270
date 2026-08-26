@@ -43,7 +43,7 @@ const NAV = [
 function Wordmark() {
   return (
     <Link to="/dashboard" className="flex items-center gap-2.5">
-      <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto rounded-md bg-white px-1.5 py-1 object-contain" />
+      <img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" />
     </Link>
   );
 }
@@ -88,7 +88,7 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
     <div className="min-h-screen lg:grid lg:grid-cols-[248px_1fr]">
       <aside className="hidden flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 lg:sticky lg:top-0 lg:flex lg:h-screen">
         <Wordmark />
-        <p className="mt-1.5 pl-[42px] text-[11px] tracking-wide text-sidebar-foreground/55">{t("shell.tagline")}</p>
+        <p className="mt-2 pl-1 text-[11px] tracking-wide text-sidebar-foreground/55">{t("shell.tagline")}</p>
         <div className="mt-7 overflow-y-auto"><NavLinks /></div>
         <div className="mt-auto rounded-lg border border-sidebar-border/70 bg-sidebar-accent/40 p-3">
           <p className="cite text-[10.5px] uppercase tracking-[0.16em] text-sidebar-foreground/60">{t("shell.rulePacksActive")}</p>
