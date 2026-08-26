@@ -1,0 +1,60 @@
+{
+  "state_code": "WV",
+  "pack_id": "wv-lihtc",
+  "resolution_version": "2026.08.25.1",
+  "approval_receipts_required_for_execution": false,
+  "approval_basis": "TWO_PERSON_HUMAN_APPROVAL_ATTESTED_OUTSIDE_RECEIPT_STORE",
+  "authority_precedence": [
+    "CURRENT_OFFICIAL_WVHDF_PROGRAM_PAGE",
+    "CURRENT_OFFICIAL_WVHDF_DATED_NOTICE_OR_PROCEDURE",
+    "CURRENT_OFFICIAL_WVHDF_LINKED_MANUAL",
+    "OLDER_WVHDF_MANUAL_LANGUAGE"
+  ],
+  "conflicts": [
+    {
+      "conflict_id": "WV-CURRENCY-001",
+      "status": "RESOLVED_WITH_SCOPE",
+      "resolution": "The 2017-edition compliance manual remains a current WVHDF-linked source, but later dated official WVHDF procedures, forms, notices, and current program materials supersede conflicting manual language. The manual cannot override a later official source.",
+      "rule_authority_effect": "ALLOW_CURRENT_NONCONFLICTING_MANUAL_RULES_WITH_LATER_SOURCE_PRECEDENCE"
+    },
+    {
+      "conflict_id": "WV-RECERT-WAIVER-001",
+      "status": "RESOLVED",
+      "resolution": "Current WVHDF resources link Certification Waiver Procedures effective 2019-01-01 and the LIHTC Annual Recertification Waiver Certification. Those later official materials supersede the older manual statement that no waiver would be issued.",
+      "rule_authority_effect": "USE_2019_PLUS_WAIVER_PROCEDURE_WHEN_APPLICABLE"
+    },
+    {
+      "conflict_id": "WV-OWNER-CERT-ISSUER-001",
+      "status": "RESOLVED_AS_NON_RULE_AUTHORITY",
+      "resolution": "The blank owner-certification form remains an official form, but an issuer-name anomaly inside the form cannot establish or alter governing rule authority. Authority remains WVHDF and controlling law; the form is retained as workflow evidence only.",
+      "rule_authority_effect": "FORM_DOES_NOT_DEFINE_AUTHORITY"
+    },
+    {
+      "conflict_id": "WV-PLAN-CHANGE-001",
+      "status": "RESOLVED_BY_VERSIONING_POLICY",
+      "resolution": "The Allocation Plan warning that materials are subject to change is handled by effective-dated source versioning and monitoring. Current captured versions remain operative until an official superseding source is detected and validated.",
+      "rule_authority_effect": "CURRENT_VERSION_ACTIVE_UNTIL_VERIFIED_SUPERSESSION"
+    },
+    {
+      "conflict_id": "WV-HOME-CURRENCY-001",
+      "status": "OUT_OF_LIHTC_RELEASE_SCOPE",
+      "resolution": "The HOME/HTF handbook currency discrepancy remains blocked for HOME/HTF state-overlay activation but does not block the WV LIHTC-only pack.",
+      "rule_authority_effect": "BLOCK_HOME_HTF_ONLY"
+    },
+    {
+      "conflict_id": "WV-UNINDEXED-UPDATE-001",
+      "status": "RESOLVED_FAIL_CLOSED",
+      "resolution": "The reported 2026-08-20 underwriting update is not treated as authority until it is observed on an official WVHDF source, captured, hashed, and evaluated for supersession. Its absence cannot silently change the current pack.",
+      "rule_authority_effect": "IGNORE_UNVERIFIED_UPDATE_AND_CONTINUE_MONITORING"
+    }
+  ],
+  "remaining_release_gates": [
+    "RAW_FORMS_INDEX_HASH",
+    "CAPTURED_SOURCE_CONTENT_VALIDATION",
+    "PAGE_LEVEL_RULE_CITATIONS",
+    "DETERMINISTIC_RULE_FIXTURES",
+    "PROSPECTIVE_EFFECTIVE_DATE",
+    "PROPERTY_FIGURES_REMAIN_PROPERTY_VERIFIED"
+  ],
+  "release_status": "BLOCKED_PENDING_OBJECTIVE_SOURCE_AND_RULE_GATES"
+}
