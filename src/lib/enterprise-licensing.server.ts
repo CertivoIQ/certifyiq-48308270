@@ -1,13 +1,34 @@
 import type { StripeInvoiceLike } from "@/lib/stripe-webhook-types";
 import type { StripeEnv } from "@/lib/stripe.server";
 
+type EnterpriseDbRow = Record<string, unknown>;
+type EnterpriseDbError = { code?: string; message?: string };
+type EnterpriseDbResult = {
+  data: EnterpriseDbRow | EnterpriseDbRow[] | null;
+  error: EnterpriseDbError | null;
+};
+
+interface EnterpriseDbQuery extends PromiseLike<EnterpriseDbResult> {
+  select(columns?: string): EnterpriseDbQuery;
+  eq(column: string, value: unknown): EnterpriseDbQuery;
+  maybeSingle(): PromiseLike<{
+    data: EnterpriseDbRow | null;
+    error: EnterpriseDbError | null;
+  }>;
+}
+
+interface EnterpriseDbTable {
+  select(columns?: string): EnterpriseDbQuery;
+  insert(values: EnterpriseDbRow | EnterpriseDbRow[]): EnterpriseDbQuery;
+  update(values: EnterpriseDbRow): EnterpriseDbQuery;
+  upsert(
+    values: EnterpriseDbRow | EnterpriseDbRow[],
+    options?: { onConflict?: string; ignoreDuplicates?: boolean },
+  ): EnterpriseDbQuery;
+}
+
 export type EnterpriseLicenseDb = {
-  from(table: string): {
-    select(columns?: string): any;
-    insert(values: Record<string, unknown> | Record<string, unknown>[]): any;
-    update(values: Record<string, unknown>): any;
-    upsert(values: Record<string, unknown> | Record<string, unknown>[], options?: Record<string, unknown>): any;
-  };
+  from(table: string): EnterpriseDbTable;
 };
 
 const ANNUAL_LICENSE_CENTS = 6_500_000;
@@ -36,11 +57,20 @@ function invoiceCrmAccountId(invoice: StripeInvoiceLike): string | null {
 
 function activationException(invoice: StripeInvoiceLike): string | null {
   const metadata = invoiceMetadata(invoice);
-  if (metadata["license_product"] && metadata["license_product"] !== PRODUCT_CODE) return "wrong_product";
+  if (metadata["license_product"] && metadata["license_product"] !== PRODUCT_CODE) {
+    return "wrong_product";
+  }
   if (!invoiceOrganizationId(invoice)) return "missing_organization_id";
   if ((invoice.amount_paid ?? 0) <= 0) return "invoice_not_paid";
-  if ((invoice.amount_due ?? 0) > 0 && (invoice.amount_paid ?? 0) < (invoice.amount_due ?? 0)) return "partial_payment";
-  if (metadata["manual_review_required"] === "true") return metadata["manual_review_reason"] || "manual_review_required";
+  if (
+    (invoice.amount_due ?? 0) > 0 &&
+    (invoice.amount_paid ?? 0) < (invoice.amount_due ?? 0)
+  ) {
+    return "partial_payment";
+  }
+  if (metadata["manual_review_required"] === "true") {
+    return metadata["manual_review_reason"] || "manual_review_required";
+  }
   return null;
 }
 
@@ -154,16 +184,18 @@ export async function applyEnterpriseInvoicePaid(
   const now = isoFromUnix(invoice.status_transitions?.paid_at) ?? new Date().toISOString();
   const { data: existing } = await db
     .from("enterprise_licenses")
-    .select("id,status,expires_at")
+    .select("id,status,starts_at,expires_at")
     .eq("organization_id", organizationId)
     .eq("product_code", PRODUCT_CODE)
     .maybeSingle();
 
   const priorExpiry = existing?.["expires_at"] as string | null | undefined;
-  const stillCurrent = priorExpiry && new Date(priorExpiry).getTime() > new Date(now).getTime();
-  const startsAt = stillCurrent ? priorExpiry! : now;
+  const stillCurrent = Boolean(
+    priorExpiry && new Date(priorExpiry).getTime() > new Date(now).getTime(),
+  );
+  const startsAt = stillCurrent && priorExpiry ? priorExpiry : now;
   const expiresAt = addDays(startsAt, ACTIVE_DAYS);
-  const action = existing ? "renewed" : "activated";
+  const action: "activated" | "renewed" = existing ? "renewed" : "activated";
 
   await db.from("enterprise_licenses").upsert(
     {
