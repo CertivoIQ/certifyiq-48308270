@@ -7,8 +7,9 @@ operations. It must not allow a language model or unattended worker to become th
 compliance authority, approve its own consequential action, or bypass deterministic
 tests.
 
-This document covers Batch 1: the control plane. Autonomous workers are not activated
-by this batch.
+This document covers the supervised control plane and its escalation-only operating
+mode. The operations worker runs once per hour and may execute only job types explicitly
+allowlisted by the deterministic runtime. Unknown work fails closed.
 
 ## Risk tiers
 
@@ -40,6 +41,27 @@ immutable action snapshot hash. A changed action requires a new approval.
 CRM prospects are not platform-user recipients. Bulk platform email must use the
 verified CertivoIQ mail service, honor suppressions and preferences, and remain in
 draft until approved.
+
+## Escalation-only operating mode
+
+The founder is not notified for successful routine work. Normal exceptions go to the
+smallest qualified specialist queue; only material decisions interrupt the founder.
+
+| Event class | Default destination | Founder notified |
+| --- | --- | --- |
+| Successful routine work, unchanged source monitoring, grounded support, onboarding | Continue automatically | No |
+| Source change, evidence conflict, or rule activation request | Compliance queue; block pending required approvals | No |
+| Payment failure | Finance queue | No |
+| Reproduced bug, stale worker, exhausted retries, or quarantined job | Operations queue | No |
+| Suspected security incident | Security queue | No, unless critical customer or production impact |
+| Material billing dispute, strategic contract exception, executive procurement | Executive escalation | Yes |
+| Severe production incident or critical customer/production impact | Contain, then executive escalation | Yes |
+| Legal demand or regulatory authority conflict | Legal/regulatory review | Yes |
+
+Low-confidence work routes to a specialist. Three failed attempts quarantine the job.
+Unclassified or malformed events are quarantined instead of being executed. Source
+conflicts block activation. “Founder notification” is an escalation signal, not an
+approval substitute.
 
 ## Compliance boundary
 
