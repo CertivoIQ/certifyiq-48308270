@@ -1,13 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "@/lib/stripe.server";
+import {
+  createStripeClient,
+  getStripeErrorMessage,
+  type StripeEnv,
+} from "@/lib/stripe.server";
 
 const ANNUAL_LICENSE_CENTS = 6_500_000;
 const PRODUCT_CODE = "certivoiq_enterprise";
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type EnterpriseInvoiceResult =
-  | { ok: true; invoiceId: string; invoiceNumber: string | null; hostedInvoiceUrl: string | null }
+  | {
+      ok: true;
+      invoiceId: string;
+      invoiceNumber: string | null;
+      hostedInvoiceUrl: string | null;
+    }
   | { error: string };
 
 /**
@@ -27,12 +37,22 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
       allowCard?: boolean;
       environment: StripeEnv;
     }) => {
-      if (!UUID_PATTERN.test(data.organizationId)) throw new Error("Invalid organizationId");
-      if (data.crmAccountId && !UUID_PATTERN.test(data.crmAccountId)) throw new Error("Invalid crmAccountId");
-      if (!data.organizationName.trim()) throw new Error("Organization name is required");
-      if (!/^\S+@\S+\.\S+$/.test(data.billingEmail)) throw new Error("Valid billing email is required");
+      if (!UUID_PATTERN.test(data.organizationId)) {
+        throw new Error("Invalid organizationId");
+      }
+      if (data.crmAccountId && !UUID_PATTERN.test(data.crmAccountId)) {
+        throw new Error("Invalid crmAccountId");
+      }
+      if (!data.organizationName.trim()) {
+        throw new Error("Organization name is required");
+      }
+      if (!/^\S+@\S+\.\S+$/.test(data.billingEmail)) {
+        throw new Error("Valid billing email is required");
+      }
       const netDays = data.netDays ?? 30;
-      if (netDays < 0 || netDays > 120) throw new Error("Payment terms must be between Net 0 and Net 120");
+      if (netDays < 0 || netDays > 120) {
+        throw new Error("Payment terms must be between Net 0 and Net 120");
+      }
       return { ...data, netDays };
     },
   )
@@ -43,9 +63,14 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
     });
     if (!isStaff) throw new Response("Unauthorized", { status: 403 });
 
+    const netDays = data.netDays ?? 30;
+
     try {
       const stripe = createStripeClient(data.environment);
-      const existing = await stripe.customers.list({ email: data.billingEmail, limit: 1 });
+      const existing = await stripe.customers.list({
+        email: data.billingEmail,
+        limit: 1,
+      });
       let customer = existing.data[0];
       if (!customer) {
         customer = await stripe.customers.create({
@@ -71,7 +96,8 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
         customer: customer.id,
         amount: ANNUAL_LICENSE_CENTS,
         currency: "usd",
-        description: "CertivoIQ Annual Organization License — all currently available platform features",
+        description:
+          "CertivoIQ Annual Organization License — all currently available platform features",
         metadata: {
           billing_model: "enterprise_invoice",
           license_product: PRODUCT_CODE,
@@ -88,19 +114,23 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
         organization_name: data.organizationName,
         billing_email: data.billingEmail,
         payment_method: data.allowCard ? "ach_or_card" : "ach",
-        payment_terms: `net_${data.netDays}`,
-        ...(data.purchaseOrderNumber ? { purchase_order_number: data.purchaseOrderNumber } : {}),
+        payment_terms: `net_${netDays}`,
+        ...(data.purchaseOrderNumber
+          ? { purchase_order_number: data.purchaseOrderNumber }
+          : {}),
       };
 
       const invoice = await stripe.invoices.create({
         customer: customer.id,
         collection_method: "send_invoice",
-        days_until_due: data.netDays,
+        days_until_due: netDays,
         auto_advance: true,
         description: "CertivoIQ annual organization license",
         metadata,
         payment_settings: {
-          payment_method_types: data.allowCard ? ["us_bank_account", "card"] : ["us_bank_account"],
+          payment_method_types: data.allowCard
+            ? ["us_bank_account", "card"]
+            : ["us_bank_account"],
         },
       } as Parameters<typeof stripe.invoices.create>[0]);
 
@@ -111,7 +141,7 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
       await supabaseAdmin.from("crm_news").insert({
         kind: "billing",
         headline: `Enterprise invoice issued — ${data.organizationName}`,
-        detail: `${sent.number ?? sent.id} · $65,000 · Net ${data.netDays} · ${data.allowCard ? "ACH/card" : "ACH"}`,
+        detail: `${sent.number ?? sent.id} · $65,000 · Net ${netDays} · ${data.allowCard ? "ACH/card" : "ACH"}`,
         source: "CertivoIQ Enterprise Billing",
       });
 
