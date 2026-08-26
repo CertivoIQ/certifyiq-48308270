@@ -33,6 +33,7 @@ export type EnterpriseLicenseDb = {
 
 const ANNUAL_LICENSE_CENTS = 6_500_000;
 const PRODUCT_CODE = "certivoiq_enterprise";
+const PLAN_ID = "annual";
 const ACTIVE_DAYS = 365;
 
 function isoFromUnix(seconds: number | null | undefined): string | null {
@@ -53,6 +54,10 @@ function invoiceOrganizationId(invoice: StripeInvoiceLike): string | null {
 
 function invoiceCrmAccountId(invoice: StripeInvoiceLike): string | null {
   return invoiceMetadata(invoice)["crm_account_id"] || null;
+}
+
+function invoiceAdminEmail(invoice: StripeInvoiceLike): string | null {
+  return invoiceMetadata(invoice)["billing_email"] || invoice.customer_email || null;
 }
 
 function activationException(invoice: StripeInvoiceLike): string | null {
@@ -135,6 +140,134 @@ async function updateCrm(
   });
 }
 
+async function noteProvisioningIssue(
+  db: EnterpriseLicenseDb,
+  invoice: StripeInvoiceLike,
+  detail: string,
+) {
+  await db.from("crm_news").insert({
+    kind: "billing",
+    headline: "Enterprise admin provisioning requires attention",
+    detail: `Invoice ${invoice.number ?? invoice.id ?? "unknown"}: ${detail}`,
+    source: "CertivoIQ Enterprise Billing",
+  });
+}
+
+async function provisionEnterpriseAdmin(
+  db: EnterpriseLicenseDb,
+  invoice: StripeInvoiceLike,
+  env: StripeEnv,
+  organizationId: string,
+  expiresAt: string,
+): Promise<string> {
+  const email = invoiceAdminEmail(invoice);
+  if (!email) {
+    await noteProvisioningIssue(db, invoice, "No billing/admin email was recorded.");
+    return "admin_email_missing";
+  }
+
+  try {
+    const { data: profile } = await db
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    let userId = profile?.["id"] as string | undefined;
+    let invited = false;
+
+    if (!userId && env === "live") {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: {
+          organization_id: organizationId,
+          certivoiq_enterprise_admin: true,
+        },
+      });
+      if (error) {
+        await noteProvisioningIssue(db, invoice, `Admin invitation failed: ${error.message}`);
+        return "admin_invite_failed";
+      }
+      userId = data.user?.id;
+      invited = Boolean(userId);
+    }
+
+    if (!userId) {
+      if (env === "sandbox") return "sandbox_invite_suppressed";
+      await noteProvisioningIssue(db, invoice, "Admin user could not be resolved after invitation.");
+      return "admin_user_unresolved";
+    }
+
+    const { data: license, error: licenseReadError } = await db
+      .from("enterprise_licenses")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("product_code", PRODUCT_CODE)
+      .maybeSingle();
+    if (licenseReadError || !license?.["id"]) {
+      await noteProvisioningIssue(db, invoice, "Active organization license could not be resolved.");
+      return "license_membership_unresolved";
+    }
+
+    const licenseId = String(license["id"]);
+    const now = new Date().toISOString();
+
+    const { error: memberError } = await db.from("enterprise_license_members").upsert(
+      {
+        license_id: licenseId,
+        user_id: userId,
+        role: "admin",
+      },
+      { onConflict: "license_id,user_id" },
+    );
+    if (memberError) {
+      await noteProvisioningIssue(db, invoice, `Admin membership failed: ${memberError.message ?? "database error"}`);
+      return "admin_membership_failed";
+    }
+
+    const { error: accessError } = await db.from("account_access").upsert(
+      {
+        user_id: userId,
+        environment: env,
+        status: "active",
+        plan_id: PLAN_ID,
+        price_id: PRODUCT_CODE,
+        unit_limit: null,
+        property_limit: null,
+        ai_doc_allowance: null,
+        access_until: expiresAt,
+        files_purge_at: null,
+        files_purged_at: null,
+        subscribed_at: now,
+        demo_data_cleared_at: now,
+        welcome_sent_at: now,
+        launchpad_started_at: now,
+        updated_at: now,
+      },
+      { onConflict: "user_id" },
+    );
+    if (accessError) {
+      await noteProvisioningIssue(db, invoice, `Admin entitlement failed: ${accessError.message ?? "database error"}`);
+      return "admin_entitlement_failed";
+    }
+
+    await db.from("crm_news").insert({
+      kind: "subscriber",
+      headline: invited
+        ? "Enterprise administrator invited"
+        : "Enterprise administrator provisioned",
+      detail: `${email} is attached as an administrator for the active organization license.`,
+      source: "CertivoIQ Enterprise Billing",
+    });
+
+    return invited ? "admin_invited" : "existing_admin_provisioned";
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown provisioning error";
+    await noteProvisioningIssue(db, invoice, detail);
+    return "admin_provisioning_failed";
+  }
+}
+
 /**
  * Invoice-first enterprise activation.
  * Paid invoices activate or renew organization access automatically.
@@ -197,7 +330,7 @@ export async function applyEnterpriseInvoicePaid(
   const expiresAt = addDays(startsAt, ACTIVE_DAYS);
   const action: "activated" | "renewed" = existing ? "renewed" : "activated";
 
-  await db.from("enterprise_licenses").upsert(
+  const { error: licenseWriteError } = await db.from("enterprise_licenses").upsert(
     {
       organization_id: organizationId,
       crm_account_id: invoiceCrmAccountId(invoice),
@@ -221,9 +354,19 @@ export async function applyEnterpriseInvoicePaid(
     },
     { onConflict: "organization_id,product_code" },
   );
+  if (licenseWriteError) {
+    throw new Error(`Enterprise license activation failed: ${licenseWriteError.message ?? "database error"}`);
+  }
 
   await updateCrm(db, invoice, "active", startsAt, expiresAt);
-  await recordEvent(db, event, invoice, action, `${env}:${PRODUCT_CODE}`);
+  const provisioning = await provisionEnterpriseAdmin(
+    db,
+    invoice,
+    env,
+    organizationId,
+    expiresAt,
+  );
+  await recordEvent(db, event, invoice, action, `${env}:${PRODUCT_CODE}:${provisioning}`);
   return { action };
 }
 
