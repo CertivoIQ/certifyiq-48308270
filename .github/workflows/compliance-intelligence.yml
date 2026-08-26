@@ -62,6 +62,7 @@ jobs:
           bun run test:slice
           bun run test:orchestrator
           bun run test:federal-packs
+          node --test scripts/test-federal-controlled-source-activation.mjs
           node --test scripts/test-local-property-overlay-intake.mjs
           bun run test:mfh-hotma
           bun run test:mfh-hotma-operations
