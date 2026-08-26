@@ -1,0 +1,41 @@
+name: WVHDF Source Watch
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 11 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: certivoiq-wvhdf-source-watch
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    name: Retrieve, validate, and stage WVHDF source evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate required secrets
+        env:
+          CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
+          CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY }}
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: |
+          test -n "$CERTIVOIQ_SUPABASE_URL"
+          test -n "$CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY"
+          test -n "$OPERATIONS_WORKER_SECRET"
+      - name: Stage WVHDF official resource index
+        env:
+          CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
+          CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY }}
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: node scripts/stage-wv-official-index.mjs
