@@ -211,7 +211,7 @@ function PhaPersonaPage() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/80 bg-background/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <Link to="/welcome"><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-11 w-auto object-contain" /></Link>
+          <Link to="/welcome"><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-11 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-11 w-auto object-contain dark:block" /></Link>
           <div className="flex items-center gap-3">
             <Button variant="outline" asChild><Link to="/pha">PHA roles</Link></Button>
             <Button asChild><a href="#request">{page.cta}</a></Button>

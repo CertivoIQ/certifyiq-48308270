@@ -80,7 +80,7 @@ function ResetPasswordPage() {
     <div className="grid min-h-screen place-items-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/welcome" className="flex items-center justify-center gap-2.5">
-          <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-12 w-auto object-contain" />
+          <img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-12 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-12 w-auto object-contain dark:block" />
         </Link>
 
         <div className="mt-7 rounded-xl border border-border bg-card p-6 shadow-sm">
