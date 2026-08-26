@@ -26,6 +26,7 @@ export const capturePhaCampaignLead = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.trim().toLowerCase();
+    const agencyName = data.agencyName.trim();
     const source = `PHA campaign · ${data.persona}`;
     const notes = [
       `CTA: ${data.cta}.`,
@@ -37,16 +38,28 @@ export const capturePhaCampaignLead = createServerFn({ method: "POST" })
       data.note?.trim() ? `Prospect note: ${data.note.trim()}` : null,
     ].filter(Boolean).join(" ");
 
-    const { data: existing, error: lookupError } = await supabaseAdmin
+    const { data: emailMatch, error: emailLookupError } = await supabaseAdmin
       .from("crm_accounts")
       .select("id")
-      .or(`corporate_email.eq.${email},name.ilike.${data.agencyName.trim()}`)
+      .eq("corporate_email", email)
       .limit(1)
       .maybeSingle();
-    if (lookupError) throw lookupError;
+    if (emailLookupError) throw emailLookupError;
+
+    let existing = emailMatch;
+    if (!existing) {
+      const { data: nameMatch, error: nameLookupError } = await supabaseAdmin
+        .from("crm_accounts")
+        .select("id")
+        .ilike("name", agencyName)
+        .limit(1)
+        .maybeSingle();
+      if (nameLookupError) throw nameLookupError;
+      existing = nameMatch;
+    }
 
     const accountPayload = {
-      name: data.agencyName.trim(),
+      name: agencyName,
       account_type: "enterprise" as const,
       units: data.units ?? 0,
       stage: "new" as const,
