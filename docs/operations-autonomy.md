@@ -63,6 +63,9 @@ Unclassified or malformed events are quarantined instead of being executed. Sour
 conflicts block activation. “Founder notification” is an escalation signal, not an
 approval substitute.
 
+The scheduled worker remains subject to the same allowlists, retry caps, approval gates,
+and quarantine behavior as a manually dispatched worker tick.
+
 ## Compliance boundary
 
 A compliance rule cannot advance unless:
