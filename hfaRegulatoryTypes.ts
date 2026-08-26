@@ -1,6 +1,14 @@
 export type SubmissionStatus = "draft" | "submitted" | "in_review" | "correction_required" | "accepted" | "withdrawn";
 export type CorrectionStatus = "open" | "owner_responded" | "agency_review" | "accepted" | "reopened";
 export type RuleReleaseStatus = "draft" | "expert_validated" | "agency_reviewed" | "agency_certified" | "suspended";
+export type ComplianceSourceStatus =
+  | "ACTIVE"
+  | "CANDIDATE"
+  | "BLOCKED"
+  | "SUPERSEDED"
+  | "SOURCE_CHANGED"
+  | "AWAITING_REVIEW"
+  | "AWAITING_VP_VERIFICATION";
 
 export type HfaAgency = { id: string; name: string; stateCode: string; authorityScope: string[] };
 export type HfaMetric = { label: string; value: string; detail: string; tone?: "neutral" | "warning" | "critical" | "positive" };
@@ -24,6 +32,15 @@ export type RulePackRelease = {
   status: RuleReleaseStatus;
   sourceCount: number;
   testCount: number;
+  sourceStatus?: ComplianceSourceStatus;
+  lastCheckedAt?: string | null;
+  sourceAuthority?: string | null;
+  sourceUrl?: string | null;
+  affectedJurisdictions?: string[];
+  affectedPrograms?: string[];
+  sourceChangedAt?: string | null;
+  reviewRequired?: boolean;
+  vpVerificationRequired?: boolean;
 };
 export type CorrectionCase = {
   id: string;
