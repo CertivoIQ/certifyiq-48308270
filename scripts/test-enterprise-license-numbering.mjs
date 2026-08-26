@@ -7,6 +7,7 @@ const migration = fs.readFileSync(
   "utf8",
 );
 
+// Guard the public identifier contract independently from the internal UUID key.
 test("enterprise licenses use immutable customer-facing CIQ license numbers", () => {
   assert.match(migration, /add column if not exists license_number text/i);
   assert.match(migration, /CIQ-' \|\| license_year \|\| '-' \|\| lpad\(sequence_value::text, 6, '0'\)/i);
