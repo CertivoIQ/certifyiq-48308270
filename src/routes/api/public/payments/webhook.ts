@@ -8,19 +8,17 @@ import {
   isAddonPrice,
   isPlanPrice,
 } from "@/lib/plan-catalog";
+import {
+  applyEnterpriseInvoicePaid,
+  applyEnterpriseInvoicePastDue,
+  type EnterpriseLicenseDb,
+} from "@/lib/enterprise-licensing.server";
 import type {
   StripeInvoiceLike,
   StripeLineItemLike,
   StripeSubscriptionLike,
 } from "@/lib/stripe-webhook-types";
 
-// Loose typing: this service-role client writes columns across several tables
-// and must not be constrained by the generated single-table row types.
-/**
- * Loose service-role database surface: this webhook writes columns across
- * several tables and must not be constrained by the generated single-table
- * row types.
- */
 type DbRow = Record<string, unknown>;
 interface DbError {
   code?: string;
@@ -60,6 +58,10 @@ function getSupabase() {
   return _supabase;
 }
 
+function enterpriseDb(): EnterpriseLicenseDb {
+  return getSupabase() as unknown as EnterpriseLicenseDb;
+}
+
 function isoFromUnix(seconds: number | null | undefined): string | null {
   return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
@@ -67,16 +69,13 @@ function isoFromUnix(seconds: number | null | undefined): string | null {
 function resolvePriceId(item: StripeLineItemLike | null | undefined): string {
   return (
     item?.price?.lookup_key ||
-    item?.price?.metadata?.['lovable_external_id'] ||
+    item?.price?.metadata?.["lovable_external_id"] ||
     item?.price?.id ||
     "unknown"
   );
 }
 
 function planItem(subscription: StripeSubscriptionLike): StripeLineItemLike | undefined {
-  // A subscription may have multiple items (plan + add-ons). The plan item is
-  // the recurring price that matches a known platform plan; fall back to the
-  // first item if there is no plan item (e.g. add-on-only subscriptions).
   return (
     subscription.items?.data?.find((it: StripeLineItemLike) => isPlanPrice(resolvePriceId(it))) ||
     subscription.items?.data?.[0]
@@ -119,31 +118,18 @@ function collectAddonEntitlements(subscription: StripeSubscriptionLike): Partial
   return updates;
 }
 
-/**
- * Claim a Stripe event id. Returns true only for the first caller, so any
- * one-time activation side effect runs exactly once per event.
- */
 async function claimEvent(eventId: string | undefined, eventType: string): Promise<boolean> {
   if (!eventId) return true;
   const { error } = await getSupabase()
     .from("stripe_processed_events")
     .insert({ event_id: eventId, event_type: eventType });
   if (error) {
-    // 23505 = unique violation → this event was already applied.
     if ((error as { code?: string }).code === "23505") return false;
     console.error("Event ledger write failed", eventId, error);
   }
   return true;
 }
 
-/**
- * First activation of a paid plan: mark the account subscribed and take the
- * demo dataset away. Demo certifications, findings, properties and dashboard
- * files are hard-coded mock data (src/lib/demo-data.ts) — there is nothing
- * persisted per user to delete, so the flag below is what gates the mock
- * dataset off for this user. Real, user-created data is never touched.
- * Billing stays per-user; no org/files/storage architecture is introduced.
- */
 async function activateSubscriber(userId: string, env: StripeEnv, eventId?: string, eventType = "") {
   if (!(await claimEvent(eventId, eventType))) return;
   const now = new Date().toISOString();
@@ -155,17 +141,13 @@ async function activateSubscriber(userId: string, env: StripeEnv, eventId?: stri
   console.log("Subscriber activated; demo dataset gated off", userId, env);
 }
 
-/**
- * Purchase side effects, per CertivoIQ's rules:
- *  - unlock plan capacity (units / properties / AI document allowance)
- *  - end the trial and cancel the 14-day file deletion clock
- *  - convert the matching CRM lead to "won" and announce it on the ticker
- *  - queue the welcome email + start the LaunchPad onboarding wizard
- */
-async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEnv, event?: { id?: string; type?: string }) {
-
+async function applyPurchase(
+  subscription: StripeSubscriptionLike,
+  env: StripeEnv,
+  event?: { id?: string; type?: string },
+) {
   const supabase = getSupabase();
-  const userId = subscription.metadata?.['userId'];
+  const userId = subscription.metadata?.["userId"];
   if (!userId) {
     console.error("Subscription has no userId metadata:", subscription.id);
     return;
@@ -179,8 +161,6 @@ async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEn
   const plan = PLAN_ENTITLEMENTS[row.price_id];
   const active = ["active", "trialing", "past_due"].includes(row.status);
 
-  // Merge, never replace: account_access is one row per user shared by the
-  // platform plan and every add-on subscription.
   const { data: existing } = await supabase
     .from("account_access")
     .select("*")
@@ -200,7 +180,6 @@ async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEn
   delete access["id"];
 
   if (plan && active) {
-    // Plan purchase / renewal: unlock capacity, clear the trial purge hold.
     access["status"] = row.status;
     access["plan_id"] = plan.planId;
     access["price_id"] = plan.priceId;
@@ -212,8 +191,6 @@ async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEn
     access["files_purged_at"] = null;
   }
 
-  // Merge add-on entitlements from all items on the subscription. Add-ons are
-  // attached to the same subscription as the plan and billed at the next cycle.
   const addonEntitlements = collectAddonEntitlements(subscription);
   for (const [key, value] of Object.entries(addonEntitlements)) {
     access[key] = value;
@@ -221,13 +198,10 @@ async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEn
 
   await supabase.from("account_access").upsert(access, { onConflict: "user_id" });
 
-  // Verified subscription now active → subscriber, clean production dashboard.
   if (plan && row.status === "active") {
     await activateSubscriber(userId, env, event?.id, event?.type ?? "");
   }
 
-
-  // A new billing period resets the metered AI document allowance.
   if (plan && active && row.current_period_start) {
     await supabase.from("usage_counters").upsert(
       {
@@ -245,11 +219,10 @@ async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEn
     );
   }
 
-  // Only announce and convert the CRM lead on the first plan activation.
   const firstActivation = plan && active && existing?.["plan_id"] !== plan.planId;
   if (!firstActivation) return;
 
-  const email: string | undefined = subscription.metadata?.['email'];
+  const email: string | undefined = subscription.metadata?.["email"];
   const { data: profile } = await supabase
     .from("profiles")
     .select("email, full_name")
@@ -289,7 +262,6 @@ async function applyPurchase(subscription: StripeSubscriptionLike, env: StripeEn
   });
 }
 
-/** Cancellation: access runs to the period end, then a 14-day file hold. */
 async function applyCancellation(subscription: StripeSubscriptionLike, env: StripeEnv) {
   const supabase = getSupabase();
   const row = subscriptionRow(subscription, env);
@@ -300,10 +272,9 @@ async function applyCancellation(subscription: StripeSubscriptionLike, env: Stri
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
 
-  const userId = subscription.metadata?.['userId'];
+  const userId = subscription.metadata?.["userId"];
   if (!userId) return;
 
-  // An add-on ending must not revoke the platform plan.
   if (isAddonPrice(row.price_id)) {
     await supabase
       .from("account_access")
@@ -328,8 +299,9 @@ async function applyCancellation(subscription: StripeSubscriptionLike, env: Stri
     .eq("user_id", userId);
 }
 
-/** Recipient + display name for billing emails triggered by an invoice. */
-async function billingRecipient(invoice: StripeInvoiceLike): Promise<{ recipient: string; name?: string | null } | null> {
+async function billingRecipient(
+  invoice: StripeInvoiceLike,
+): Promise<{ recipient: string; name?: string | null } | null> {
   const supabase = getSupabase();
   const subId = invoice?.subscription ?? invoice?.parent?.subscription_details?.subscription;
 
@@ -359,7 +331,6 @@ async function billingRecipient(invoice: StripeInvoiceLike): Promise<{ recipient
   return { recipient: email, name: name ?? null };
 }
 
-/** Billing notifications must never fail the webhook — log and move on. */
 async function notify(invoice: StripeInvoiceLike, kind: "created" | "paid" | "failed") {
   try {
     const ctx = await billingRecipient(invoice);
@@ -391,21 +362,15 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "checkout.session.completed": {
       const session = event.data.object;
-      if (session['payment_status'] === "unpaid") break;
-      // One-time purchases (AI document overage) need no entitlement change;
-      // subscription fulfilment is handled by customer.subscription.*.
+      if (session["payment_status"] === "unpaid") break;
       break;
     }
     case "invoice.finalized": {
-      // A new invoice exists and the amount is settled — notify the customer.
       const invoice = event.data.object;
       if ((invoice.amount_due ?? 0) > 0) await notify(invoice, "created");
       break;
     }
     case "invoice.payment_failed": {
-      // Dunning: flag the account past_due but never revoke access — Stripe
-      // retries automatically and sends customer.subscription.updated on the
-      // final outcome.
       const invoice = event.data.object;
       const subId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
       if (subId) {
@@ -416,12 +381,25 @@ async function handleWebhook(req: Request, env: StripeEnv) {
           .eq("stripe_subscription_id", subId)
           .eq("environment", env);
       }
+      await applyEnterpriseInvoicePastDue(
+        enterpriseDb(),
+        invoice,
+        event as { id?: string; type?: string },
+      );
       await notify(invoice, "failed");
       break;
     }
-    case "invoice.paid":
-      await notify(event.data.object, "paid");
+    case "invoice.paid": {
+      const invoice = event.data.object;
+      await applyEnterpriseInvoicePaid(
+        enterpriseDb(),
+        invoice,
+        env,
+        event as { id?: string; type?: string },
+      );
+      await notify(invoice, "paid");
       break;
+    }
     case "checkout.session.async_payment_succeeded":
     case "checkout.session.async_payment_failed":
       break;
@@ -429,7 +407,6 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       console.log("Unhandled payments event:", event.type);
   }
 }
-
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
