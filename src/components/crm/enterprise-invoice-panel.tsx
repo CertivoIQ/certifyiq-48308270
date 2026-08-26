@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, Workflow } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui-kit";
-import { createEnterpriseLicenseInvoice } from "@/lib/enterprise-invoice.functions";
+import {
+  automateEnterpriseLicenseInvoice,
+  createEnterpriseLicenseInvoice,
+} from "@/lib/enterprise-invoice.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 
 type InvoiceContact = {
@@ -57,11 +60,40 @@ export function EnterpriseInvoicePanel({
       if ("error" in result) throw new Error(result.error);
 
       setHostedInvoiceUrl(result.hostedInvoiceUrl);
-      toast.success(
-        `${result.invoiceNumber ?? "Enterprise invoice"} issued for $65,000.`,
-      );
+      toast.success(`${result.invoiceNumber ?? "Enterprise invoice"} issued for $65,000.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invoice issuance failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runAutomation = async (sandboxTest = false) => {
+    if (sandboxTest && environment !== "sandbox") {
+      toast.error("Switch billing to sandbox before creating a test invoice.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await automateEnterpriseLicenseInvoice({
+        data: {
+          accountId,
+          purchaseOrderNumber: purchaseOrderNumber || undefined,
+          netDays,
+          allowCard,
+          environment,
+          sandboxTest,
+        },
+      });
+      if ("error" in result) throw new Error(result.error);
+      setHostedInvoiceUrl(result.hostedInvoiceUrl);
+      toast.success(
+        sandboxTest
+          ? `${result.invoiceNumber ?? "Sandbox invoice"} created through the automated workflow.`
+          : `${result.invoiceNumber ?? "Enterprise invoice"} created and sent automatically to ${result.billingEmail}.`,
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Automated invoice workflow failed");
     } finally {
       setBusy(false);
     }
@@ -70,11 +102,29 @@ export function EnterpriseInvoicePanel({
   return (
     <Panel
       title="Enterprise license invoice"
-      description="Issue the $65,000 annual organization license by invoice. ACH is the default; card payment is optional."
+      description="Automation resolves the best verified billing contact from CRM, defaults to Net 30 + ACH, issues the invoice, and logs the result. Staff can still override terms below."
     >
+      <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
+        <p className="font-semibold text-emerald-950 dark:text-emerald-50">Automated workflow</p>
+        <p className="mt-1 text-emerald-800 dark:text-emerald-200">
+          CRM organization → preferred verified finance/billing contact → PO/terms → ACH/card rules → $65,000 invoice → CRM log → paid-invoice license activation.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button onClick={() => void runAutomation(false)} disabled={busy || !verifiedEmails.length}>
+            <Workflow className="size-4" />
+            {busy ? "Running…" : "Run automated invoice workflow"}
+          </Button>
+          {environment === "sandbox" && (
+            <Button variant="outline" onClick={() => void runAutomation(true)} disabled={busy || !verifiedEmails.length}>
+              Create sandbox test invoice
+            </Button>
+          )}
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm font-medium">
-          Billing contact
+          Billing contact override
           <select
             value={billingEmail}
             onChange={(event) => setBillingEmail(event.target.value)}
@@ -126,9 +176,9 @@ export function EnterpriseInvoicePanel({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button onClick={issueInvoice} disabled={busy || !billingEmail}>
+        <Button variant="outline" onClick={issueInvoice} disabled={busy || !billingEmail}>
           <FileText className="size-4" />
-          {busy ? "Issuing invoice…" : "Issue $65,000 invoice"}
+          {busy ? "Issuing invoice…" : "Issue manually"}
         </Button>
         {hostedInvoiceUrl && (
           <Button variant="outline" asChild>
