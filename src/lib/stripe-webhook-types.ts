@@ -40,6 +40,10 @@ export interface StripeInvoiceLineLike {
 export interface StripeInvoiceLike {
   id?: string
   number?: string | null
+  customer?: string | null
+  status?: string | null
+  metadata?: Record<string, string> | null
+  collection_method?: string | null
   currency?: string | null
   amount_due?: number | null
   amount_paid?: number | null
