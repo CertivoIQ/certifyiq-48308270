@@ -20,6 +20,7 @@ const requiredFiles = [
   "src/lib/organization-email.mjs",
   "public/sitemap.xml",
   "public/certivoiq-logo.png",
+  "public/certivoiq-logo-dark.png",
   "public/certivoiq-mark.png",
   "public/certivoiq-social-card.png",
   "public/favicon.png",
@@ -175,6 +176,8 @@ test("official CertivoIQ logo is used across site and search metadata", () => {
   const email = read("src/lib/email-templates/shared.tsx");
 
   assert.match(combined, /\/certivoiq-logo\.png/);
+  assert.match(combined, /\/certivoiq-logo-dark\.png/);
+  assert.doesNotMatch(combined, /certivoiq-logo[^\n]*(?:bg-white|rounded-md|px-1\.5|py-1)/);
   assert.doesNotMatch(combined, /brand-gradient grid[^\n]*>IQ<\/span>/);
   assert.match(root, /\/favicon\.png/);
   assert.match(root, /\/certivoiq-mark\.png/);
