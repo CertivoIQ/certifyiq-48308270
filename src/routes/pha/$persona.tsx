@@ -6,6 +6,7 @@ import { ArrowRight, Check, FileSearch, ShieldCheck, Workflow } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Panel, Pill } from "@/components/ui-kit";
 import { capturePhaCampaignLead, PHA_PERSONAS, type PhaPersona } from "@/lib/pha-campaign-lead.functions";
 
@@ -113,6 +114,15 @@ const pages: Record<PhaPersona, PersonaPage> = {
   },
 };
 
+const ROLE_CHOICES: { value: PhaPersona; label: string }[] = [
+  { value: "executive", label: "Executive Director / CEO" },
+  { value: "compliance", label: "Compliance / QA Director" },
+  { value: "hcv", label: "HCV Director" },
+  { value: "public-housing", label: "Public Housing Director" },
+  { value: "finance-operations", label: "CFO / COO" },
+  { value: "technology", label: "CIO / IT Director" },
+];
+
 function isPersona(value: string): value is PhaPersona {
   return (PHA_PERSONAS as readonly string[]).includes(value);
 }
@@ -143,6 +153,7 @@ function PhaPersonaPage() {
   const captureLead = useServerFn(capturePhaCampaignLead);
   const [pending, setPending] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<PhaPersona | "">("");
   const [form, setForm] = useState({
     agencyName: "",
     name: "",
@@ -177,8 +188,21 @@ function PhaPersonaPage() {
     );
   }
 
+  function selectRole(value: string) {
+    if (!isPersona(value)) return;
+    setSelectedRole(value);
+    if (value !== persona && typeof window !== "undefined") {
+      const query = window.location.search;
+      window.location.assign(`/pha/${value}${query}#request`);
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (selectedRole !== persona) {
+      toast.error("Please select your affordable housing role before continuing.");
+      return;
+    }
     setPending(true);
     try {
       const result = await captureLead({
@@ -299,6 +323,21 @@ function PhaPersonaPage() {
                 </div>
               ) : (
                 <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
+                  <fieldset className="sm:col-span-2">
+                    <legend className="text-sm font-medium">What is your role in affordable housing? *</legend>
+                    <p className="mt-1 text-xs text-muted-foreground">Required. Your choice sends you to the correct demonstration, CRM path, and follow-up.</p>
+                    <RadioGroup value={selectedRole} onValueChange={selectRole} className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Affordable housing role">
+                      {ROLE_CHOICES.map((role) => {
+                        const id = `lead-role-${role.value}`;
+                        return (
+                          <Label key={role.value} htmlFor={id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition hover:border-gold/50 has-[[data-state=checked]]:border-gold has-[[data-state=checked]]:bg-gold/10">
+                            <RadioGroupItem id={id} value={role.value} />
+                            <span>{role.label}</span>
+                          </Label>
+                        );
+                      })}
+                    </RadioGroup>
+                  </fieldset>
                   <div className="sm:col-span-2"><Label>Housing agency *</Label><Input required value={form.agencyName} onChange={(e) => setForm({ ...form, agencyName: e.target.value })} /></div>
                   <div><Label>Name *</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
                   <div><Label>Title *</Label><Input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
@@ -313,7 +352,7 @@ function PhaPersonaPage() {
                     I agree to receive this demonstration and relevant CertivoIQ compliance communications. I can unsubscribe from marketing communications.
                   </label>
                   <div className="sm:col-span-2">
-                    <Button type="submit" size="lg" disabled={pending}>{pending ? "Submitting…" : page.cta}</Button>
+                    <Button type="submit" size="lg" disabled={pending || !selectedRole}>{pending ? "Submitting…" : !selectedRole ? "Select your role to continue" : page.cta}</Button>
                     <p className="mt-3 text-xs text-muted-foreground">Agency email required. No Lovable-managed email is sent by this form.</p>
                   </div>
                 </form>
