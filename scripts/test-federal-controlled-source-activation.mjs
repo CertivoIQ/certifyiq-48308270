@@ -86,7 +86,7 @@ test("Section 8 income source can activate for HCV only after program authority 
   const result = evaluateFederalControlledSourceActivation({
     program: "HCV_TENANT_BASED",
     authorityControls: {
-      controlled_income_limit_receipt: true,
+      controlled_section8_income_limit_receipt: true,
     },
     datasetReceipts: {
       HUD_SECTION8_INCOME_LIMITS_FY2026: receipt("HUD_SECTION8_INCOME_LIMITS_FY2026"),
@@ -101,7 +101,7 @@ test("Section 8 income source can activate for HCV only after program authority 
 test("duplicate approver identities do not satisfy independent approval", () => {
   const result = evaluateFederalControlledSourceActivation({
     program: "HCV_TENANT_BASED",
-    authorityControls: { controlled_income_limit_receipt: true },
+    authorityControls: { controlled_section8_income_limit_receipt: true },
     datasetReceipts: {
       HUD_SECTION8_INCOME_LIMITS_FY2026: receipt("HUD_SECTION8_INCOME_LIMITS_FY2026"),
     },
