@@ -8,6 +8,7 @@ import { Panel } from "@/components/ui-kit";
 import { useIsStaff } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import type { Account, Contact, NewsItem } from "@/lib/crm";
+import type { LicensePricingClass } from "@/lib/license-pricing.functions";
 
 export const Route = createFileRoute("/_authenticated/crm-billing")({
   head: () => ({
@@ -75,6 +76,12 @@ function CrmBillingPage() {
     [accountId, accounts.data],
   );
 
+  const initialPricingClass: LicensePricingClass =
+    selectedAccount &&
+    (selectedAccount as Account & { license_pricing_class?: string }).license_pricing_class === "pha"
+      ? "pha"
+      : "standard";
+
   return (
     <CrmShell
       email={email}
@@ -85,7 +92,7 @@ function CrmBillingPage() {
       <div className="space-y-4">
         <Panel
           title="Enterprise billing console"
-          description="Create organization-level annual invoices after procurement details are confirmed. Paid qualifying invoices activate licenses automatically."
+          description="Create organization-level annual invoices after procurement details are confirmed. Standard organizations are $65,000/year; PHAs are $150,000/year. Paid qualifying invoices activate licenses automatically."
         >
           <label className="block max-w-2xl text-sm font-medium">
             CRM organization
@@ -95,23 +102,31 @@ function CrmBillingPage() {
               className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               <option value="">Select organization</option>
-              {(accounts.data ?? []).map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name} · {account.stage}
-                </option>
-              ))}
+              {(accounts.data ?? []).map((account) => {
+                const pricingClass =
+                  (account as Account & { license_pricing_class?: string }).license_pricing_class === "pha"
+                    ? "PHA · $150,000"
+                    : "Standard · $65,000";
+                return (
+                  <option key={account.id} value={account.id}>
+                    {account.name} · {pricingClass} · {account.stage}
+                  </option>
+                );
+              })}
             </select>
           </label>
           <p className="mt-3 text-xs text-muted-foreground">
-            The CRM account ID is used as the organization license identity, keeping sales,
-            invoice, renewal, and entitlement history tied to one record.
+            The CRM account ID and pricing class are authoritative for invoicing, renewal,
+            license activation, and entitlement history. Invoice amounts are never entered manually.
           </p>
         </Panel>
 
         {selectedAccount && (
           <EnterpriseInvoicePanel
+            key={`${selectedAccount.id}-${initialPricingClass}`}
             accountId={selectedAccount.id}
             accountName={selectedAccount.name}
+            initialPricingClass={initialPricingClass}
             contacts={(contacts.data ?? []).map((contact) => ({
               id: contact.id,
               name: contact.name,
