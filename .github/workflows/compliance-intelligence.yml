@@ -122,6 +122,7 @@ jobs:
           node --test scripts/test-customer-facing-language.mjs
           node --test scripts/test-organization-email.mjs
           node --test scripts/test-first-sale-monitor.mjs
+          node --test scripts/test-escalation-only-autonomy.mjs
           node --test scripts/test-launch-readiness.mjs
       - name: Lint
         run: bun run lint
