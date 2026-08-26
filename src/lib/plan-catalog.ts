@@ -3,7 +3,12 @@
  * unlocks inside CertivoIQ. Price IDs are stable across test and live.
  */
 
-export type PlanKey = "professional" | "business" | "enterprise" | "enterprise_plus";
+export type PlanKey =
+  | "professional"
+  | "business"
+  | "enterprise"
+  | "enterprise_plus"
+  | "annual";
 
 export interface PlanEntitlement {
   planId: PlanKey;
@@ -21,6 +26,7 @@ export const PLAN_PRICE_IDS: Record<PlanKey, string> = {
   business: "business_monthly",
   enterprise: "enterprise_monthly",
   enterprise_plus: "enterprise_plus_monthly",
+  annual: "certivoiq_enterprise",
 };
 
 export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
@@ -60,6 +66,15 @@ export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
     aiDocAllowance: null,
     statePacks: null,
   },
+  certivoiq_enterprise: {
+    planId: "annual",
+    priceId: "certivoiq_enterprise",
+    name: "CertivoIQ Annual Platform License",
+    unitLimit: null,
+    propertyLimit: null,
+    aiDocAllowance: null,
+    statePacks: null,
+  },
 };
 
 /** Add-on price IDs that layer on top of a platform plan. */
@@ -81,7 +96,7 @@ export const FREE_REVIEW_ENTITLEMENT = {
   aiDocAllowance: 3,
 } as const;
 
-/** Every recurring plan price, used to tell plans apart from add-ons. */
+/** Every recurring/annual plan entitlement key, used to tell plans apart from add-ons. */
 export const PLAN_PRICE_ID_LIST: string[] = Object.values(PLAN_PRICE_IDS);
 
 export function entitlementForPrice(priceId: string | null | undefined): PlanEntitlement | null {
