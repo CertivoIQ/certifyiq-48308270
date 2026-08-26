@@ -22,13 +22,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Affordable Housing Compliance Intelligence from CertivoIQ, available through one $65,000 annual platform license with all currently available features included.",
+          "CertivoIQ annual platform licensing: $65,000/year for standard affordable-housing organizations and $150,000/year for Public Housing Authorities (PHAs), with all currently available features included.",
       },
       { property: "og:title", content: "CertivoIQ Platform Pricing" },
       {
         property: "og:description",
         content:
-          "Affordable Housing Compliance Intelligence. One annual license. All currently available CertivoIQ platform features included.",
+          "Annual organization licensing for affordable-housing enterprises and Public Housing Authorities, with all currently available CertivoIQ platform features included.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -43,40 +43,66 @@ function PricingPage() {
   return (
     <PublicShell
       title="Platform pricing"
-      subtitle="Affordable Housing Compliance Intelligence — one annual license for the complete CertivoIQ platform"
+      subtitle="Annual organization licensing with all currently available CertivoIQ features included"
     >
-      <div className="mx-auto max-w-3xl">
-        <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <Pill tone="seal">Annual platform license</Pill>
-              <h2 className="mt-4 font-display text-[28px]">CertivoIQ</h2>
-              <p className="mt-1 text-[13.5px] text-muted-foreground">
-                Affordable Housing Compliance Intelligence
-              </p>
+      <div className="mx-auto max-w-5xl">
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <Pill tone="seal">Standard organization license</Pill>
+                <h2 className="mt-4 font-display text-[28px]">CertivoIQ</h2>
+                <p className="mt-1 text-[13.5px] text-muted-foreground">
+                  Multifamily and affordable-housing organizations
+                </p>
+              </div>
+              <div className="text-left md:text-right">
+                <p className="font-display text-[40px] leading-none">$65,000</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">per year</p>
+              </div>
             </div>
-            <div className="text-left md:text-right">
-              <p className="font-display text-[40px] leading-none">$65,000</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">per year</p>
-            </div>
-          </div>
-
-          <div className="mt-7 border-t border-border pt-6">
-            <p className="text-[14px] leading-relaxed text-muted-foreground">
-              Every customer receives access to all currently available platform features. There
-              are no public plan tiers, training products, certificate products, state-pack
-              add-ons, document overages, or separately priced API packages.
+            <p className="mt-6 text-[14px] leading-relaxed text-muted-foreground">
+              One organization-level annual license with access to all currently available
+              CertivoIQ platform features.
             </p>
+          </Panel>
 
-            <ul className="mt-6 grid gap-3 md:grid-cols-2">
-              {INCLUDED_CAPABILITIES.map((capability) => (
-                <li key={capability} className="flex gap-2 text-[13.5px]">
-                  <Check className="mt-0.5 size-4 shrink-0 text-seal" />
-                  <span>{capability}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <Pill tone="seal">Public Housing Authority license</Pill>
+                <h2 className="mt-4 font-display text-[28px]">CertivoIQ PHA</h2>
+                <p className="mt-1 text-[13.5px] text-muted-foreground">
+                  Public Housing Authorities and agency-wide PHA operations
+                </p>
+              </div>
+              <div className="text-left md:text-right">
+                <p className="font-display text-[40px] leading-none">$150,000</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">per year</p>
+              </div>
+            </div>
+            <p className="mt-6 text-[14px] leading-relaxed text-muted-foreground">
+              One PHA organization-level annual license with access to all currently available
+              CertivoIQ platform features, including supported PHA review workflows.
+            </p>
+          </Panel>
+        </div>
+
+        <Panel className="mt-5" title="Included with either annual license" bodyClassName="p-7 md:p-9">
+          <p className="text-[14px] leading-relaxed text-muted-foreground">
+            Pricing is determined by organization type, not by unit count or feature tier. There
+            are no public feature tiers, training products, certificate products, state-pack
+            add-ons, document overages, or separately priced API packages.
+          </p>
+
+          <ul className="mt-6 grid gap-3 md:grid-cols-2">
+            {INCLUDED_CAPABILITIES.map((capability) => (
+              <li key={capability} className="flex gap-2 text-[13.5px]">
+                <Check className="mt-0.5 size-4 shrink-0 text-seal" />
+                <span>{capability}</span>
+              </li>
+            ))}
+          </ul>
 
           <div className="mt-7 rounded-lg border border-primary/20 bg-accent px-5 py-4">
             <div className="flex gap-3">
@@ -93,9 +119,14 @@ function PricingPage() {
             </div>
           </div>
 
-          <Button className="mt-7 w-full sm:w-auto" size="lg" asChild>
-            <Link to="/trial">Try CertivoIQ for Free</Link>
-          </Button>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Button size="lg" asChild>
+              <Link to="/trial">Try CertivoIQ for Free</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/pha">Explore PHA Workflows</Link>
+            </Button>
+          </div>
         </Panel>
 
         <Panel className="mt-5" title="Implementation and integrations" bodyClassName="p-5">

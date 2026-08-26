@@ -6,10 +6,13 @@ import {
   type StripeEnv,
 } from "@/lib/stripe.server";
 
-const ANNUAL_LICENSE_CENTS = 6_500_000;
+const STANDARD_ANNUAL_LICENSE_CENTS = 6_500_000;
+const PHA_ANNUAL_LICENSE_CENTS = 15_000_000;
 const PRODUCT_CODE = "certivoiq_enterprise";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export type LicensePricingClass = "standard" | "pha";
 
 type EnterpriseInvoiceInput = {
   organizationId: string;
@@ -21,6 +24,7 @@ type EnterpriseInvoiceInput = {
   allowCard?: boolean;
   environment: StripeEnv;
   workflowMode?: "manual" | "automated" | "sandbox_test";
+  pricingClass: LicensePricingClass;
 };
 
 export type EnterpriseInvoiceResult =
@@ -31,8 +35,22 @@ export type EnterpriseInvoiceResult =
       hostedInvoiceUrl: string | null;
       billingEmail?: string;
       workflowMode?: string;
+      pricingClass: LicensePricingClass;
+      annualPriceCents: number;
     }
   | { error: string };
+
+function annualPriceCents(pricingClass: LicensePricingClass): number {
+  return pricingClass === "pha"
+    ? PHA_ANNUAL_LICENSE_CENTS
+    : STANDARD_ANNUAL_LICENSE_CENTS;
+}
+
+function productLabel(pricingClass: LicensePricingClass): string {
+  return pricingClass === "pha"
+    ? "CertivoIQ PHA Annual License"
+    : "CertivoIQ Annual Organization License";
+}
 
 async function requireStaff(context: {
   supabase: {
@@ -47,8 +65,39 @@ async function requireStaff(context: {
   if (!isStaff) throw new Response("Unauthorized", { status: 403 });
 }
 
-async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<EnterpriseInvoiceResult> {
+async function resolvePricingClass(
+  supabase: unknown,
+  crmAccountId: string,
+): Promise<LicensePricingClass> {
+  const db = supabase as {
+    from: (table: string) => {
+      select: (columns: string) => {
+        eq: (column: string, value: string) => {
+          single: () => PromiseLike<{
+            data: { license_pricing_class?: string } | null;
+            error: { message?: string } | null;
+          }>;
+        };
+      };
+    };
+  };
+  const { data, error } = await db
+    .from("crm_accounts")
+    .select("license_pricing_class")
+    .eq("id", crmAccountId)
+    .single();
+  if (error || !data) throw new Error("CRM pricing class could not be resolved");
+  return data.license_pricing_class === "pha" ? "pha" : "standard";
+}
+
+async function issueEnterpriseInvoice(
+  data: EnterpriseInvoiceInput,
+): Promise<EnterpriseInvoiceResult> {
   const netDays = data.netDays ?? 30;
+  const amountCents = annualPriceCents(data.pricingClass);
+  const label = productLabel(data.pricingClass);
+  const formattedAmount = `$${(amountCents / 100).toLocaleString()}`;
+
   try {
     const stripe = createStripeClient(data.environment);
     const existing = await stripe.customers.list({ email: data.billingEmail, limit: 1 });
@@ -59,6 +108,7 @@ async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<Ent
         email: data.billingEmail,
         metadata: {
           organization_id: data.organizationId,
+          license_pricing_class: data.pricingClass,
           ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
         },
       });
@@ -68,6 +118,7 @@ async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<Ent
         metadata: {
           ...customer.metadata,
           organization_id: data.organizationId,
+          license_pricing_class: data.pricingClass,
           ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
         },
       });
@@ -75,14 +126,15 @@ async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<Ent
 
     await stripe.invoiceItems.create({
       customer: customer.id,
-      amount: ANNUAL_LICENSE_CENTS,
+      amount: amountCents,
       currency: "usd",
-      description:
-        "CertivoIQ Annual Organization License — all currently available platform features",
+      description: `${label} — all currently available platform features`,
       metadata: {
         billing_model: "enterprise_invoice",
         license_product: PRODUCT_CODE,
         organization_id: data.organizationId,
+        license_pricing_class: data.pricingClass,
+        annual_price_cents: String(amountCents),
         workflow_mode: data.workflowMode ?? "manual",
       },
     });
@@ -90,7 +142,8 @@ async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<Ent
     const metadata = {
       billing_model: "enterprise_invoice",
       license_product: PRODUCT_CODE,
-      annual_price_cents: String(ANNUAL_LICENSE_CENTS),
+      annual_price_cents: String(amountCents),
+      license_pricing_class: data.pricingClass,
       organization_id: data.organizationId,
       ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
       organization_name: data.organizationName,
@@ -110,8 +163,8 @@ async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<Ent
       auto_advance: true,
       description:
         data.workflowMode === "sandbox_test"
-          ? "TEST — CertivoIQ annual organization license"
-          : "CertivoIQ annual organization license",
+          ? `TEST — ${label}`
+          : label,
       metadata,
       payment_settings: {
         payment_method_types: data.allowCard
@@ -130,9 +183,11 @@ async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<Ent
         data.workflowMode === "sandbox_test"
           ? `Sandbox test invoice issued — ${data.organizationName}`
           : `Enterprise invoice issued — ${data.organizationName}`,
-      detail: `${sent.number ?? sent.id} · $65,000 · Net ${netDays} · ${
-        data.allowCard ? "ACH/card" : "ACH"
-      } · ${data.workflowMode ?? "manual"}`,
+      detail: `${sent.number ?? sent.id} · ${formattedAmount} · ${
+        data.pricingClass === "pha" ? "PHA" : "Standard"
+      } · Net ${netDays} · ${data.allowCard ? "ACH/card" : "ACH"} · ${
+        data.workflowMode ?? "manual"
+      }`,
       source: "CertivoIQ Enterprise Billing",
     });
 
@@ -143,16 +198,18 @@ async function issueEnterpriseInvoice(data: EnterpriseInvoiceInput): Promise<Ent
       hostedInvoiceUrl: sent.hosted_invoice_url ?? null,
       billingEmail: data.billingEmail,
       workflowMode: data.workflowMode ?? "manual",
+      pricingClass: data.pricingClass,
+      annualPriceCents: amountCents,
     };
   } catch (error) {
     return { error: getStripeErrorMessage(error) };
   }
 }
 
-/** Staff-only manual invoice creation. */
+/** Staff-only manual invoice creation. Pricing is still CRM-authoritative. */
 export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: EnterpriseInvoiceInput) => {
+  .inputValidator((data: Omit<EnterpriseInvoiceInput, "pricingClass">) => {
     if (!UUID_PATTERN.test(data.organizationId)) throw new Error("Invalid organizationId");
     if (data.crmAccountId && !UUID_PATTERN.test(data.crmAccountId)) throw new Error("Invalid crmAccountId");
     if (!data.organizationName.trim()) throw new Error("Organization name is required");
@@ -163,12 +220,14 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<EnterpriseInvoiceResult> => {
     await requireStaff(context);
-    return issueEnterpriseInvoice(data);
+    const crmAccountId = data.crmAccountId ?? data.organizationId;
+    const pricingClass = await resolvePricingClass(context.supabase, crmAccountId);
+    return issueEnterpriseInvoice({ ...data, pricingClass });
   });
 
 /**
  * Staff-triggered automated workflow. The CRM is authoritative for the
- * organization and billing contact; defaults are Net 30 and ACH-only.
+ * organization, pricing class and billing contact; defaults are Net 30 and ACH-only.
  */
 export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -191,24 +250,50 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
   .handler(async ({ data, context }): Promise<EnterpriseInvoiceResult> => {
     await requireStaff(context);
 
-    const { data: account, error: accountError } = await context.supabase
+    const db = context.supabase as unknown as {
+      from: (table: string) => {
+        select: (columns: string) => {
+          eq: (column: string, value: string) => {
+            single: () => PromiseLike<{ data: Record<string, unknown> | null; error: { message?: string } | null }>;
+            order: (column: string, options: { ascending: boolean }) => PromiseLike<{ data: Record<string, unknown>[] | null; error: { message?: string } | null }>;
+          };
+        };
+      };
+    };
+
+    const { data: accountRaw, error: accountError } = await db
       .from("crm_accounts")
-      .select("id,name")
+      .select("id,name,license_pricing_class")
       .eq("id", data.accountId)
       .single();
-    if (accountError || !account) return { error: "CRM organization could not be resolved" };
+    if (accountError || !accountRaw) return { error: "CRM organization could not be resolved" };
 
-    const { data: contacts, error: contactError } = await context.supabase
+    const account = accountRaw as {
+      id: string;
+      name: string;
+      license_pricing_class?: string;
+    };
+    const pricingClass: LicensePricingClass =
+      account.license_pricing_class === "pha" ? "pha" : "standard";
+
+    const { data: contactsRaw, error: contactError } = await db
       .from("crm_contacts")
       .select("id,name,email,title")
       .eq("account_id", data.accountId)
       .order("created_at", { ascending: true });
     if (contactError) return { error: "CRM billing contacts could not be resolved" };
 
-    const withEmail = (contacts ?? []).filter((contact) => Boolean(contact.email));
+    const contacts = (contactsRaw ?? []) as Array<{
+      id: string;
+      name: string;
+      email?: string | null;
+      title?: string | null;
+    }>;
+    const withEmail = contacts.filter((contact) => Boolean(contact.email));
     const billingContact =
-      withEmail.find((contact) => /billing|finance|account|controller|cfo|procurement/i.test(contact.title ?? "")) ??
-      withEmail[0];
+      withEmail.find((contact) =>
+        /billing|finance|account|controller|cfo|procurement/i.test(contact.title ?? ""),
+      ) ?? withEmail[0];
     if (!billingContact?.email) {
       return { error: "No verified billing email is available for this CRM organization" };
     }
@@ -223,5 +308,6 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
       allowCard: data.allowCard ?? false,
       environment: data.environment,
       workflowMode: data.sandboxTest ? "sandbox_test" : "automated",
+      pricingClass,
     });
   });
