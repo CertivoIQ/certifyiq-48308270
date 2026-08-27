@@ -115,7 +115,7 @@ function OperationsControlCenter() {
             <p className="mt-3 max-w-3xl text-sm text-stone-800">
               Routine observation and preparation may run automatically. Compliance authority,
               rule activation, bulk communications, billing, customer access, and production
-              deployment always require human final approval.
+              deployment always require authorized final approval.
             </p>
           </div>
           <ShieldCheck className="size-12" aria-hidden="true" />
@@ -155,7 +155,7 @@ function OperationsControlCenter() {
           </ul>
         </Panel>
 
-        <Panel title="Human approvals" description="Immutable snapshots; requesters cannot approve their own Tier 4 action" bodyClassName="p-0">
+        <Panel title="Authorized approvals" description="Immutable snapshots; requesters cannot approve their own Tier 4 action" bodyClassName="p-0">
           <ul className="divide-y divide-border">
             {data.approvals.map((approval) => (
               <li key={approval.id} className="px-5 py-4">
@@ -204,7 +204,7 @@ function OperationsControlCenter() {
 
       <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
         <div className="flex items-center gap-2 font-semibold"><DollarSign className="size-4" />Cost and authority safeguard</div>
-        <p className="mt-1">When a budget limit or validation gate is reached, work pauses. CertivoIQ never lowers compliance accuracy, removes evidence, or bypasses human authority to reduce cost.</p>
+        <p className="mt-1">When a budget limit or validation gate is reached, work pauses. CertivoIQ never lowers compliance accuracy, removes evidence, or bypasses authorized compliance authority to reduce cost.</p>
       </div>
     </CrmShell>
   );
