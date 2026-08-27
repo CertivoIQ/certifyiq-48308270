@@ -159,7 +159,7 @@ async function updateCrm(
         ? "Enterprise license activated from paid invoice"
         : state === "past_due"
           ? "Enterprise invoice requires payment attention"
-          : "Enterprise invoice routed for human review",
+          : "Enterprise invoice routed for authorized compliance review",
     detail:
       state === "active"
         ? `Annual license active${startsAt ? ` from ${startsAt}` : ""}${expiresAt ? ` through ${expiresAt}` : ""}.`
@@ -318,7 +318,7 @@ async function provisionEnterpriseAdmin(
 /**
  * Invoice-first enterprise activation.
  * Paid invoices activate or renew organization access automatically.
- * Only objective exceptions are routed for human review.
+ * Only objective exceptions are routed for authorized compliance review.
  */
 export async function applyEnterpriseInvoicePaid(
   db: EnterpriseLicenseDb,
