@@ -224,7 +224,7 @@ function MerlinChat({ onActivity }: { onActivity: () => void }) {
           </PromptInputFooter>
         </PromptInput>
         <p className="cite mt-1.5 px-1 text-[10px] uppercase tracking-[0.14em]">
-          Decision support — a human reviewer still signs final approval
+          Decision support — authorized compliance approval remains required
         </p>
       </div>
     </div>
