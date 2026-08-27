@@ -76,6 +76,8 @@ test("the free-review funnel does not resurrect obsolete feature tiers", () => {
   const gate = read("src/components/FreeReviewLeadGate.tsx");
   assert.doesNotMatch(gate, /Professional up to|Business up to|Enterprise above/i);
   assert.match(gate, /there are no public feature tiers/i);
+  assert.match(gate, /lead\.isError/);
+  assert.match(gate, /Sign in before opening the certification queue/);
 });
 
 test("environment configuration is injected and never committed", () => {
