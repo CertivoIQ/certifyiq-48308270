@@ -145,7 +145,7 @@ export const Route = createFileRoute("/api/public/crm/support-email")({
               classification.priority,
               classification.disposition,
               classification.humanRequired
-                ? "human-required"
+                ? "authorized-review-required"
                 : "auto-resolution-eligible",
             ],
             triage_category: classification.category,
