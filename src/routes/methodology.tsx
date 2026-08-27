@@ -41,11 +41,9 @@ export const Route = createFileRoute("/methodology")({
 });
 
 const PROGRAMS = [
-  "LIHTC (IRC §42)",
-  "Project-Based Section 8 (HUD Handbook 4350.3)",
-  "HOME (24 CFR Part 92)",
-  "HOTMA income and asset provisions (24 CFR Part 5)",
-  "Tax-exempt bond financed units",
+  "Federal controls are used for determinations only when their required source versions, inputs, and deterministic rule gates are active.",
+  "Program packs still in validation—including HOME, Project-Based Section 8, HOTMA/PHA, and tax-exempt bond controls—do not produce a supported determination.",
+  "When an inactive or unevaluated requirement could change the outcome, CertivoIQ returns Unable to Determine and routes the file to Manual Review.",
 ];
 
 const INPUTS = [
@@ -90,7 +88,7 @@ function MethodologyPage() {
           Calculation &amp; validation methodology
         </h1>
         <p className="mt-4 text-[14.5px] leading-relaxed text-muted-foreground">
-          CertivoIQ currently evaluates supported federal affordable-housing requirements only.
+          CertivoIQ evaluates only activated federal affordable-housing controls. A listed regulation or program is not determination authority unless its required source and rule gates are active.
           State-agency, allocating-agency, local, and project-specific requirements require
           separate Manual Review.
         </p>
@@ -105,7 +103,7 @@ function MethodologyPage() {
             </p>
           </Section>
 
-          <Section id="scope" title="Supported programs, forms, file types and jurisdictions">
+          <Section id="scope" title="Current determination scope and validation boundaries">
             <ul className="list-disc space-y-1 pl-5">
               {PROGRAMS.map((program) => (
                 <li key={program}>{program}</li>
