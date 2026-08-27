@@ -110,7 +110,7 @@ function FileReview() {
   /**
    * Deterministic gate. If the property's state pack is not validated, a
    * state-specific rule could change the outcome, so CertivoIQ returns
-   * "Unable to determine" and blocks Pass/Fail and human sign-off.
+   * "Unable to determine" and blocks Pass/Fail and authorized compliance approval.
    */
   const statePack = coverageForState(property?.state ?? "");
   const determination = determineReview({
@@ -146,11 +146,11 @@ function FileReview() {
             disabled={signOffBlocked}
             onClick={() => {
               setApproved(true);
-              toast.success("File soft approved", { description: `${file.id} locked with full audit trail retained.` });
+              toast.success("File approval recorded", { description: `${file.id} locked with full audit trail retained.` });
             }}
           >
             <ShieldCheck className="size-4" />
-            {approved ? "Soft approved" : "Soft approve"}
+            {approved ? "Approval recorded" : "Record approval"}
           </Button>
         </>
       }
@@ -204,7 +204,7 @@ function FileReview() {
             <TabsContent value="extraction" className="mt-4">
               <Panel
                 title="Document extraction confidence"
-                description="Every value traced to its source document, page and OCR text — human verification tracked"
+                description="Every value traced to its source document, page and extracted text — authorized compliance verification tracked"
                 bodyClassName="p-0"
               >
                 <ul className="divide-y divide-border">
@@ -225,7 +225,7 @@ function FileReview() {
                         <Meter value={f.confidence} tone={f.confidence >= 95 ? "seal" : f.confidence >= 85 ? "flag" : "reject"} />
                         <div className="mt-2">
                           {f.verified ? (
-                            <Pill tone="seal">Human verified</Pill>
+                            <Pill tone="seal">Authorized compliance agent verified</Pill>
                           ) : (
                             <Pill tone="flag">Needs verification</Pill>
                           )}
@@ -341,7 +341,7 @@ function FileReview() {
                       {approved
                         ? "Final sign-off recorded by Jordan Alvarez, Compliance Reviewer — file locked with full audit trail."
                         : blocking > 0
-                          ? `${blocking} finding(s) must be corrected before a human can give final approval.`
+                          ? `${blocking} finding(s) must be corrected before authorized compliance approval can be recorded.`
                           : "All rules passed — reviewer may give final sign-off."}
                     </p>
                     <Button
@@ -356,7 +356,7 @@ function FileReview() {
                       }}
                     >
                       <ShieldCheck className="size-4" />
-                      {approved ? "Signed off" : "Human final sign-off"}
+                      {approved ? "Signed off" : "Authorized compliance approval"}
                     </Button>
                   </div>
                 </>
