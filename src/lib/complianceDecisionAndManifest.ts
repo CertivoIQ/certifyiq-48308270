@@ -4,7 +4,7 @@
  * AI performs extraction and classification only. Deterministic code in this
  * module decides the outcome. When required evidence is missing, below the
  * confidence policy, unverified, or affected by an unresolved rule conflict,
- * the outcome is `unable_to_determine` — final Pass/Fail and human sign-off
+ * the outcome is `unable_to_determine` — final Pass/Fail and authorized compliance approval
  * are blocked until the blocking reasons are resolved.
  */
 
@@ -60,7 +60,7 @@ export function determineReview(input: DeterminationInput): Determination {
   for (const field of input.fields) {
     if (field.requiredForDecision && !field.humanVerified && field.confidence < input.minimumConfidence) {
       blockingReasons.push(
-        `Field "${field.name}" is below the ${Math.round(input.minimumConfidence * 100)}% confidence policy and is not human-verified.`,
+        `Field "${field.name}" is below the ${Math.round(input.minimumConfidence * 100)}% confidence policy and is not verified by an authorized compliance agent.`,
       );
     }
   }
