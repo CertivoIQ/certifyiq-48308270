@@ -13,12 +13,12 @@ export const Route = createFileRoute("/files/")({
       {
         name: "description",
         content:
-          "Automated review queue for Tenant Income Certifications: extraction confidence, deterministic findings, and soft approval by program.",
+          "Illustrative review queue for certification evidence, deterministic findings, and authorized compliance approval.",
       },
       { property: "og:title", content: "Certification Review Queue — CertivoIQ" },
       {
         property: "og:description",
-        content: "Every TIC scored, every finding cited to a versioned rule, ready for reviewer soft approval.",
+        content: "Every finding stays connected to a versioned rule and remains pending until authorized compliance approval.",
       },
       { property: "og:url", content: "https://certivoiq.com/files" },
     ],
@@ -42,7 +42,7 @@ function FilesPage() {
   return (
     <AppShell
       title="Certification review queue"
-      subtitle="Deterministic rule evaluation with document extraction — reviewer soft-approves by program"
+      subtitle="Deterministic rule evaluation with document extraction — authorized compliance approval remains required"
       actions={
         <Button size="sm" variant="outline">
           Import documents
@@ -52,9 +52,9 @@ function FilesPage() {
       <FreeReviewLeadGate>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Stat label="Files reviewed YTD" value="4,128" hint="Across 14 states" />
-          <Stat label="Awaiting soft approval" value="38" tone="flag" />
+          <Stat label="Awaiting authorized approval" value="38" tone="flag" />
           <Stat label="Mean extraction confidence" value="97.1%" tone="seal" />
-          <Stat label="Mean review time" value="4.2 min" hint="Down from 41 min manual" tone="seal" />
+          <Stat label="Mean review time" value="4.2 min" hint="Illustrative demo value" tone="seal" />
         </div>
 
         <div className="mt-5 flex flex-wrap gap-1.5">
