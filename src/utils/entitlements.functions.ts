@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
-import { AI_DOC_OVERAGE_PRICE_ID } from "@/lib/plan-catalog";
+import { type StripeEnv } from "@/lib/stripe.server";
 import { loadState, periodStartFor, type EntitlementsDb } from "@/lib/entitlements.server";
 
 /** Minimal write surface for the metered usage counters table. */
@@ -39,9 +38,16 @@ export interface AccountState {
 
 type AccountStateResult = AccountState | { error: string };
 type ConsumeResult =
-  | { ok: true; used: number; allowance: number | null; billedNow: number; remaining: number | null }
+  | {
+      ok: true;
+      used: number;
+      allowance: number | null;
+      billedNow: number;
+      remaining: number | null;
+    }
   | { error: string; blocked?: boolean };
-type CapacityResult = { allowed: boolean; used: number; limit: number | null; reason?: string } | { error: string };
+type CapacityResult =
+  { allowed: boolean; used: number; limit: number | null; reason?: string } | { error: string };
 
 /** Plan, limits and current-period usage for the signed-in account. */
 export const getAccountState = createServerFn({ method: "POST" })
@@ -49,17 +55,19 @@ export const getAccountState = createServerFn({ method: "POST" })
   .inputValidator((data: { environment: StripeEnv }) => data)
   .handler(async ({ data, context }): Promise<AccountStateResult> => {
     try {
-      return await loadState(context.supabase as unknown as EntitlementsDb, context.userId, data.environment);
+      return await loadState(
+        context.supabase as unknown as EntitlementsDb,
+        context.userId,
+        data.environment,
+      );
     } catch (error) {
       return { error: error instanceof Error ? error.message : "Could not load account state" };
     }
   });
 
 /**
- * Meters document processing. Documents inside the plan allowance are free;
- * anything beyond a paid plan allowance is billed at $3 per certification onto
- * the next invoice. The FREE review program is capped at exactly three
- * certifications and never creates an overage charge.
+ * Meters document processing. Paid licenses include all currently available
+ * platform features; only the FREE review program has a three-review cap.
  */
 export const recordAiDocuments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -92,39 +100,7 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
       };
     }
 
-    let billedNow = 0;
-    if (!state.isTrial && allowance !== null && after > allowance) {
-      const overageTotal = after - allowance;
-      billedNow = overageTotal - state.usage.aiDocsBilled;
-    }
-
-    if (billedNow > 0) {
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("stripe_customer_id")
-        .eq("user_id", userId)
-        .eq("environment", data.environment)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!sub?.stripe_customer_id) {
-        return { error: "No billing account on file for overage charges.", blocked: true };
-      }
-      try {
-        const stripe = createStripeClient(data.environment);
-        const prices = await stripe.prices.list({ lookup_keys: [AI_DOC_OVERAGE_PRICE_ID] });
-        const price = prices.data[0];
-        if (!price) return { error: "Overage price not configured", blocked: true };
-        await stripe.invoiceItems.create({
-          customer: sub.stripe_customer_id,
-          pricing: { price: price.id },
-          quantity: billedNow,
-          description: `Document processing beyond plan allowance (${billedNow} certifications)`,
-        } as Parameters<typeof stripe.invoiceItems.create>[0]);
-      } catch (error) {
-        return { error: getStripeErrorMessage(error), blocked: true };
-      }
-    }
+    const billedNow = 0;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: writeError } = await (supabaseAdmin as unknown as UsageWriter)
@@ -179,7 +155,8 @@ export const claimCapacity = createServerFn({ method: "POST" })
         allowed: false,
         used: 0,
         limit: 0,
-        reason: "Portfolio capacity and mass imports require a paid CertivoIQ plan. Your 3 FREE reviews are reserved for certification review.",
+        reason:
+          "Portfolio capacity and mass imports require a paid CertivoIQ plan. Your 3 FREE reviews are reserved for certification review.",
       };
     }
 
@@ -214,3 +191,4 @@ export const claimCapacity = createServerFn({ method: "POST" })
 
     return { allowed: true, used: next, limit };
   });
+

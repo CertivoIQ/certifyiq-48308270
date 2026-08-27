@@ -1,23 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
-import {
-  ADDON_PRICE_IDS,
-  FILE_RETENTION_DAYS,
-  PLAN_ENTITLEMENTS,
-  isAddonPrice,
-  isPlanPrice,
-} from "@/lib/plan-catalog";
+import { FILE_RETENTION_DAYS, PLAN_ENTITLEMENTS, isPlanPrice } from "@/lib/plan-catalog";
+import { normalizeLicenseSelection } from "@/lib/license-selection";
 import {
   applyEnterpriseInvoicePaid,
   applyEnterpriseInvoicePastDue,
   type EnterpriseLicenseDb,
 } from "@/lib/enterprise-licensing.server";
-import type {
-  StripeInvoiceLike,
-  StripeLineItemLike,
-  StripeSubscriptionLike,
-} from "@/lib/stripe-webhook-types";
+import type { StripeLineItemLike, StripeSubscriptionLike } from "@/lib/stripe-webhook-types";
 
 type DbRow = Record<string, unknown>;
 interface DbError {
@@ -67,12 +58,7 @@ function isoFromUnix(seconds: number | null | undefined): string | null {
 }
 
 function resolvePriceId(item: StripeLineItemLike | null | undefined): string {
-  return (
-    item?.price?.lookup_key ||
-    item?.price?.metadata?.["lovable_external_id"] ||
-    item?.price?.id ||
-    "unknown"
-  );
+  return item?.price?.lookup_key || item?.price?.id || "unknown";
 }
 
 function planItem(subscription: StripeSubscriptionLike): StripeLineItemLike | undefined {
@@ -100,24 +86,6 @@ function subscriptionRow(subscription: StripeSubscriptionLike, env: StripeEnv) {
   };
 }
 
-function collectAddonEntitlements(subscription: StripeSubscriptionLike): Partial<Record<string, unknown>> {
-  const updates: Partial<Record<string, unknown>> = {};
-  const items = subscription.items?.data ?? [];
-
-  for (const item of items) {
-    const priceId = resolvePriceId(item);
-    if (isPlanPrice(priceId)) continue;
-
-    if (priceId === ADDON_PRICE_IDS.academySeat) {
-      updates["academy_seats"] = Number(item.quantity ?? 1);
-    } else if (priceId === ADDON_PRICE_IDS.academyProperty) {
-      updates["academy_seats"] = -1;
-    }
-  }
-
-  return updates;
-}
-
 async function claimEvent(eventId: string | undefined, eventType: string): Promise<boolean> {
   if (!eventId) return true;
   const { error } = await getSupabase()
@@ -130,7 +98,12 @@ async function claimEvent(eventId: string | undefined, eventType: string): Promi
   return true;
 }
 
-async function activateSubscriber(userId: string, env: StripeEnv, eventId?: string, eventType = "") {
+async function activateSubscriber(
+  userId: string,
+  env: StripeEnv,
+  eventId?: string,
+  eventType = "",
+) {
   if (!(await claimEvent(eventId, eventType))) return;
   const now = new Date().toISOString();
   await getSupabase()
@@ -153,7 +126,28 @@ async function applyPurchase(
     return;
   }
 
+  let selection;
+  try {
+    selection = normalizeLicenseSelection({
+      licenseKind: subscription.metadata?.["license_kind"] ?? "",
+      stateCodes: (subscription.metadata?.["licensed_state_codes"] ?? "")
+        .split(",")
+        .filter(Boolean),
+    });
+  } catch (error) {
+    console.error("Subscription has invalid license jurisdiction metadata", subscription.id, error);
+    return;
+  }
+
   const row = subscriptionRow(subscription, env);
+  const itemQuantity = Number(planItem(subscription)?.quantity ?? 0);
+  if (row.price_id !== selection.priceLookupKey || itemQuantity !== selection.quantity) {
+    console.error(
+      "Subscription price or quantity does not match approved state selection",
+      subscription.id,
+    );
+    return;
+  }
   await supabase
     .from("subscriptions")
     .upsert({ user_id: userId, ...row }, { onConflict: "stripe_subscription_id" });
@@ -189,11 +183,8 @@ async function applyPurchase(
     access["access_until"] = row.cancel_at_period_end ? row.current_period_end : null;
     access["files_purge_at"] = null;
     access["files_purged_at"] = null;
-  }
-
-  const addonEntitlements = collectAddonEntitlements(subscription);
-  for (const [key, value] of Object.entries(addonEntitlements)) {
-    access[key] = value;
+    access["license_kind"] = selection.licenseKind;
+    access["licensed_state_codes"] = selection.stateCodes;
   }
 
   await supabase.from("account_access").upsert(access, { onConflict: "user_id" });
@@ -275,14 +266,6 @@ async function applyCancellation(subscription: StripeSubscriptionLike, env: Stri
   const userId = subscription.metadata?.["userId"];
   if (!userId) return;
 
-  if (isAddonPrice(row.price_id)) {
-    await supabase
-      .from("account_access")
-      .update({ academy_seats: 0, updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
-    return;
-  }
-
   const accessEnd = row.current_period_end ?? new Date().toISOString();
   const purgeAt = new Date(
     new Date(accessEnd).getTime() + FILE_RETENTION_DAYS * 24 * 60 * 60 * 1000,
@@ -297,56 +280,6 @@ async function applyCancellation(subscription: StripeSubscriptionLike, env: Stri
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId);
-}
-
-async function billingRecipient(
-  invoice: StripeInvoiceLike,
-): Promise<{ recipient: string; name?: string | null } | null> {
-  const supabase = getSupabase();
-  const subId = invoice?.subscription ?? invoice?.parent?.subscription_details?.subscription;
-
-  let userId: string | null = null;
-  if (subId) {
-    const { data } = await supabase
-      .from("subscriptions")
-      .select("user_id")
-      .eq("stripe_subscription_id", subId)
-      .maybeSingle();
-    userId = (data?.["user_id"] as string | null | undefined) ?? null;
-  }
-
-  let email: string | null = invoice?.customer_email ?? null;
-  let name: string | null = invoice?.customer_name ?? null;
-  if (userId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("email, full_name")
-      .eq("id", userId)
-      .maybeSingle();
-    email = (profile?.["email"] as string | null | undefined) ?? email;
-    name = (profile?.["full_name"] as string | null | undefined) ?? name;
-  }
-
-  if (!email) return null;
-  return { recipient: email, name: name ?? null };
-}
-
-async function notify(invoice: StripeInvoiceLike, kind: "created" | "paid" | "failed") {
-  try {
-    const ctx = await billingRecipient(invoice);
-    if (!ctx) {
-      console.warn("No recipient for billing email", kind, invoice?.id);
-      return;
-    }
-    const { sendInvoiceCreatedEmail, sendPaymentSucceededEmail, sendPaymentFailedEmail } = await import(
-      "@/lib/billing-emails.server"
-    );
-    if (kind === "created") await sendInvoiceCreatedEmail(invoice, ctx);
-    else if (kind === "paid") await sendPaymentSucceededEmail(invoice, ctx);
-    else await sendPaymentFailedEmail(invoice, ctx);
-  } catch (error) {
-    console.error("Billing email failed", kind, invoice?.id, error);
-  }
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
@@ -365,11 +298,6 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       if (session["payment_status"] === "unpaid") break;
       break;
     }
-    case "invoice.finalized": {
-      const invoice = event.data.object;
-      if ((invoice.amount_due ?? 0) > 0) await notify(invoice, "created");
-      break;
-    }
     case "invoice.payment_failed": {
       const invoice = event.data.object;
       const subId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
@@ -386,7 +314,6 @@ async function handleWebhook(req: Request, env: StripeEnv) {
         invoice,
         event as { id?: string; type?: string },
       );
-      await notify(invoice, "failed");
       break;
     }
     case "invoice.paid": {
@@ -397,7 +324,6 @@ async function handleWebhook(req: Request, env: StripeEnv) {
         env,
         event as { id?: string; type?: string },
       );
-      await notify(invoice, "paid");
       break;
     }
     case "checkout.session.async_payment_succeeded":
@@ -428,3 +354,4 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
     },
   },
 });
+

@@ -1,5 +1,6 @@
 import type { StripeInvoiceLike } from "@/lib/stripe-webhook-types";
 import type { StripeEnv } from "@/lib/stripe.server";
+import { normalizeLicenseSelection, type LicenseSelection } from "./license-selection.ts";
 
 type EnterpriseDbRow = Record<string, unknown>;
 type EnterpriseDbError = { code?: string; message?: string };
@@ -31,9 +32,7 @@ export type EnterpriseLicenseDb = {
   from(table: string): EnterpriseDbTable;
 };
 
-const ANNUAL_LICENSE_CENTS = 6_500_000;
 const PRODUCT_CODE = "certivoiq_enterprise";
-const PLAN_ID = "annual";
 const ACTIVE_DAYS = 365;
 
 function isoFromUnix(seconds: number | null | undefined): string | null {
@@ -60,19 +59,45 @@ function invoiceAdminEmail(invoice: StripeInvoiceLike): string | null {
   return invoiceMetadata(invoice)["billing_email"] || invoice.customer_email || null;
 }
 
-function activationException(invoice: StripeInvoiceLike): string | null {
+function invoiceLicenseSelection(invoice: StripeInvoiceLike): LicenseSelection {
+  const metadata = invoiceMetadata(invoice);
+  return normalizeLicenseSelection({
+    licenseKind: metadata["license_kind"] ?? "",
+    stateCodes: (metadata["licensed_state_codes"] ?? "").split(",").filter(Boolean),
+  });
+}
+
+export function enterpriseInvoiceActivationException(invoice: StripeInvoiceLike): string | null {
   const metadata = invoiceMetadata(invoice);
   if (metadata["license_product"] && metadata["license_product"] !== PRODUCT_CODE) {
     return "wrong_product";
   }
   if (!invoiceOrganizationId(invoice)) return "missing_organization_id";
+  let selection: LicenseSelection;
+  try {
+    selection = invoiceLicenseSelection(invoice);
+  } catch {
+    return "invalid_license_state_selection";
+  }
+  const expectedCents = selection.annualAmountUsd * 100;
+  if (metadata["annual_price_cents"] !== String(expectedCents)) {
+    return "license_price_metadata_mismatch";
+  }
+  if (metadata["price_lookup_key"] !== selection.priceLookupKey) {
+    return "license_price_key_mismatch";
+  }
+  if (metadata["quantity"] !== String(selection.quantity)) {
+    return "license_quantity_mismatch";
+  }
+  if (metadata["state_pack_count"] !== String(selection.stateCodes.length)) {
+    return "license_state_count_mismatch";
+  }
+  if (invoice.amount_due !== expectedCents) return "invoice_amount_mismatch";
   if ((invoice.amount_paid ?? 0) <= 0) return "invoice_not_paid";
-  if (
-    (invoice.amount_due ?? 0) > 0 &&
-    (invoice.amount_paid ?? 0) < (invoice.amount_due ?? 0)
-  ) {
+  if ((invoice.amount_due ?? 0) > 0 && (invoice.amount_paid ?? 0) < (invoice.amount_due ?? 0)) {
     return "partial_payment";
   }
+  if (invoice.amount_paid !== expectedCents) return "payment_amount_mismatch";
   if (metadata["manual_review_required"] === "true") {
     return metadata["manual_review_reason"] || "manual_review_required";
   }
@@ -120,7 +145,10 @@ async function updateCrm(
   };
   if (state === "active") {
     fields.stage = "won";
-    fields.plan = "CertivoIQ Annual Platform License";
+    fields.plan =
+      invoiceMetadata(invoice)["license_kind"] === "pha"
+        ? "CertivoIQ PHA Annual License"
+        : "CertivoIQ Multifamily Enterprise Annual License";
   }
   await db.from("crm_accounts").update(fields).eq("id", crmAccountId);
 
@@ -159,6 +187,7 @@ async function provisionEnterpriseAdmin(
   env: StripeEnv,
   organizationId: string,
   expiresAt: string,
+  selection: LicenseSelection,
 ): Promise<string> {
   const email = invoiceAdminEmail(invoice);
   if (!email) {
@@ -194,7 +223,11 @@ async function provisionEnterpriseAdmin(
 
     if (!userId) {
       if (env === "sandbox") return "sandbox_invite_suppressed";
-      await noteProvisioningIssue(db, invoice, "Admin user could not be resolved after invitation.");
+      await noteProvisioningIssue(
+        db,
+        invoice,
+        "Admin user could not be resolved after invitation.",
+      );
       return "admin_user_unresolved";
     }
 
@@ -205,7 +238,11 @@ async function provisionEnterpriseAdmin(
       .eq("product_code", PRODUCT_CODE)
       .maybeSingle();
     if (licenseReadError || !license?.["id"]) {
-      await noteProvisioningIssue(db, invoice, "Active organization license could not be resolved.");
+      await noteProvisioningIssue(
+        db,
+        invoice,
+        "Active organization license could not be resolved.",
+      );
       return "license_membership_unresolved";
     }
 
@@ -221,7 +258,11 @@ async function provisionEnterpriseAdmin(
       { onConflict: "license_id,user_id" },
     );
     if (memberError) {
-      await noteProvisioningIssue(db, invoice, `Admin membership failed: ${memberError.message ?? "database error"}`);
+      await noteProvisioningIssue(
+        db,
+        invoice,
+        `Admin membership failed: ${memberError.message ?? "database error"}`,
+      );
       return "admin_membership_failed";
     }
 
@@ -230,8 +271,10 @@ async function provisionEnterpriseAdmin(
         user_id: userId,
         environment: env,
         status: "active",
-        plan_id: PLAN_ID,
-        price_id: PRODUCT_CODE,
+        plan_id: selection.licenseKind,
+        price_id: selection.priceLookupKey,
+        license_kind: selection.licenseKind,
+        licensed_state_codes: selection.stateCodes,
         unit_limit: null,
         property_limit: null,
         ai_doc_allowance: null,
@@ -247,7 +290,11 @@ async function provisionEnterpriseAdmin(
       { onConflict: "user_id" },
     );
     if (accessError) {
-      await noteProvisioningIssue(db, invoice, `Admin entitlement failed: ${accessError.message ?? "database error"}`);
+      await noteProvisioningIssue(
+        db,
+        invoice,
+        `Admin entitlement failed: ${accessError.message ?? "database error"}`,
+      );
       return "admin_entitlement_failed";
     }
 
@@ -285,7 +332,7 @@ export async function applyEnterpriseInvoicePaid(
     return { action: "ignored", reason: "not_enterprise_invoice" };
   }
 
-  const exception = activationException(invoice);
+  const exception = enterpriseInvoiceActivationException(invoice);
   if (exception) {
     const organizationId = invoiceOrganizationId(invoice);
     if (organizationId) {
@@ -295,7 +342,7 @@ export async function applyEnterpriseInvoicePaid(
           crm_account_id: invoiceCrmAccountId(invoice),
           product_code: PRODUCT_CODE,
           status: "pending",
-          annual_price_cents: Number(metadata["annual_price_cents"] || ANNUAL_LICENSE_CENTS),
+          annual_price_cents: Number(metadata["annual_price_cents"] || 0),
           currency: invoice.currency ?? "usd",
           stripe_customer_id: invoice.customer ?? null,
           stripe_invoice_id: invoice.id ?? null,
@@ -313,6 +360,7 @@ export async function applyEnterpriseInvoicePaid(
     return { action: "exception", reason: exception };
   }
 
+  const selection = invoiceLicenseSelection(invoice);
   const organizationId = invoiceOrganizationId(invoice)!;
   const now = isoFromUnix(invoice.status_transitions?.paid_at) ?? new Date().toISOString();
   const { data: existing } = await db
@@ -335,8 +383,10 @@ export async function applyEnterpriseInvoicePaid(
       organization_id: organizationId,
       crm_account_id: invoiceCrmAccountId(invoice),
       product_code: PRODUCT_CODE,
+      license_kind: selection.licenseKind,
+      licensed_state_codes: selection.stateCodes,
       status: "active",
-      annual_price_cents: Number(metadata["annual_price_cents"] || ANNUAL_LICENSE_CENTS),
+      annual_price_cents: selection.annualAmountUsd * 100,
       currency: invoice.currency ?? "usd",
       starts_at: existing ? (existing["starts_at"] ?? now) : now,
       expires_at: expiresAt,
@@ -355,7 +405,9 @@ export async function applyEnterpriseInvoicePaid(
     { onConflict: "organization_id,product_code" },
   );
   if (licenseWriteError) {
-    throw new Error(`Enterprise license activation failed: ${licenseWriteError.message ?? "database error"}`);
+    throw new Error(
+      `Enterprise license activation failed: ${licenseWriteError.message ?? "database error"}`,
+    );
   }
 
   await updateCrm(db, invoice, "active", startsAt, expiresAt);
@@ -365,8 +417,15 @@ export async function applyEnterpriseInvoicePaid(
     env,
     organizationId,
     expiresAt,
+    selection,
   );
-  await recordEvent(db, event, invoice, action, `${env}:${PRODUCT_CODE}:${provisioning}`);
+  await recordEvent(
+    db,
+    event,
+    invoice,
+    action,
+    `${env}:${selection.licenseKind}:${selection.stateCodes.join(",")}:${provisioning}`,
+  );
   return { action };
 }
 
@@ -390,3 +449,4 @@ export async function applyEnterpriseInvoicePastDue(
   await updateCrm(db, invoice, "past_due");
   await recordEvent(db, event, invoice, "past_due");
 }
+

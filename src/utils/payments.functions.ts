@@ -1,14 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  type StripeEnv,
-  createStripeClient,
-  getStripeErrorMessage,
-} from "@/lib/stripe.server";
+import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
+import { normalizeLicenseSelection } from "@/lib/license-selection";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
-type PlanChangeResult = { ok: true; effectiveAt: string | null } | { error: string };
 
 const ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
@@ -18,16 +14,82 @@ const ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
  * outside it fall back to tax calculation and collection only.
  */
 const MANAGED_PAYMENTS_COUNTRIES = new Set([
-  "US", "CA", "BR", "CL", "CO", "AR", "PE", "UY",
-  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
-  "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL",
-  "PL", "PT", "RO", "SK", "SI", "ES", "SE",
-  "GB", "NO", "CH", "IS", "LI",
-  "AU", "NZ", "KR", "MY", "TH", "ID", "PH", "VN",
-  "IN", "HK", "TW",
-  "AE", "SA", "ZA", "IL", "TR", "EG", "NG", "KE",
-  "GI", "BH", "GE", "KZ", "BD", "PK", "LK", "MM", "KH", "LA",
-  "RS", "BA", "ME", "MK", "AL", "MD", "AM",
+  "US",
+  "CA",
+  "BR",
+  "CL",
+  "CO",
+  "AR",
+  "PE",
+  "UY",
+  "AT",
+  "BE",
+  "BG",
+  "HR",
+  "CY",
+  "CZ",
+  "DK",
+  "EE",
+  "FI",
+  "FR",
+  "DE",
+  "GR",
+  "HU",
+  "IE",
+  "IT",
+  "LV",
+  "LT",
+  "LU",
+  "MT",
+  "NL",
+  "PL",
+  "PT",
+  "RO",
+  "SK",
+  "SI",
+  "ES",
+  "SE",
+  "GB",
+  "NO",
+  "CH",
+  "IS",
+  "LI",
+  "AU",
+  "NZ",
+  "KR",
+  "MY",
+  "TH",
+  "ID",
+  "PH",
+  "VN",
+  "IN",
+  "HK",
+  "TW",
+  "AE",
+  "SA",
+  "ZA",
+  "IL",
+  "TR",
+  "EG",
+  "NG",
+  "KE",
+  "GI",
+  "BH",
+  "GE",
+  "KZ",
+  "BD",
+  "PK",
+  "LK",
+  "MM",
+  "KH",
+  "LA",
+  "RS",
+  "BA",
+  "ME",
+  "MK",
+  "AL",
+  "MD",
+  "AM",
 ]);
 
 function shouldUseComplianceHandling(customerCountry?: string): boolean {
@@ -74,68 +136,63 @@ async function resolveOrCreateCustomer(
  * only opened when someone converts or upgrades — no `trial_period_days`.
  */
 export const createCheckoutSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: {
-      priceId: string;
-      quantity?: number;
-      customerEmail?: string;
-      userId?: string;
-      customerCountry?: string;
+      licenseKind: string;
+      stateCodes: string[];
       returnUrl: string;
       environment: StripeEnv;
     }) => {
-      if (!ID_PATTERN.test(data.priceId)) throw new Error("Invalid priceId");
-      if (data.quantity !== undefined && (data.quantity < 1 || data.quantity > 10000)) {
-        throw new Error("Invalid quantity");
-      }
+      if (!Array.isArray(data.stateCodes) || data.stateCodes.length > 51)
+        throw new Error("Invalid state rule-pack selection");
+      const url = new URL(data.returnUrl);
+      if (url.protocol !== "https:" && url.hostname !== "localhost")
+        throw new Error("Checkout return URL must be secure");
       return data;
     },
   )
-  .handler(async ({ data }): Promise<CheckoutSessionResult> => {
+  .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
       const stripe = createStripeClient(data.environment);
 
-      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
+      const selection = normalizeLicenseSelection(data);
+      const prices = await stripe.prices.list({
+        lookup_keys: [selection.priceLookupKey],
+        active: true,
+        limit: 1,
+      });
       const stripePrice = prices.data[0];
-      if (!stripePrice) throw new Error("Price not found");
-      const isRecurring = stripePrice.type === "recurring";
-
-      const customerId =
-        data.customerEmail || data.userId
-          ? await resolveOrCreateCustomer(stripe, {
-              ...(data.customerEmail ? { email: data.customerEmail } : {}),
-              ...(data.userId ? { userId: data.userId } : {}),
-            })
-          : undefined;
-
-      let productDescription: string | undefined;
-      if (!isRecurring) {
-        const productId =
-          typeof stripePrice.product === "string" ? stripePrice.product : stripePrice.product.id;
-        const product = await stripe.products.retrieve(productId);
-        productDescription = product.name;
-      }
-
-      const managed = shouldUseComplianceHandling(data.customerCountry);
+      if (
+        !stripePrice ||
+        stripePrice.type !== "recurring" ||
+        stripePrice.recurring?.interval !== "year"
+      )
+        throw new Error("Configured license price must be an active annual recurring Stripe price");
+      if (stripePrice.unit_amount !== (selection.annualAmountUsd * 100) / selection.quantity)
+        throw new Error("Configured Stripe price does not match the authoritative license catalog");
+      const customerId = await resolveOrCreateCustomer(stripe, { userId: context.userId });
+      const stateCodes = selection.stateCodes.join(",");
 
       const session = await stripe.checkout.sessions.create({
-        line_items: [{ price: stripePrice.id, quantity: data.quantity || 1 }],
-        mode: isRecurring ? "subscription" : "payment",
+        line_items: [{ price: stripePrice.id, quantity: selection.quantity }],
+        mode: "subscription",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
-        ...(customerId && { customer: customerId }),
-        ...(!isRecurring && { payment_intent_data: { description: productDescription } }),
+        customer: customerId,
+        integration_identifier: `certivoiq_license_${crypto.randomUUID().replaceAll("-", "").slice(0, 8)}`,
         metadata: {
-          ...(data.userId ? { userId: data.userId } : {}),
-          ...(data.customerCountry ? { customer_country: data.customerCountry } : {}),
-          managed_payments: managed ? "true" : "false",
+          userId: context.userId,
+          license_kind: selection.licenseKind,
+          licensed_state_codes: stateCodes,
         },
-        ...(data.userId && isRecurring
-          ? { subscription_data: { metadata: { userId: data.userId } } }
-          : {}),
-        ...(managed
-          ? { managed_payments: { enabled: true } }
-          : { automatic_tax: { enabled: true } }),
+        subscription_data: {
+          metadata: {
+            userId: context.userId,
+            license_kind: selection.licenseKind,
+            licensed_state_codes: stateCodes,
+          },
+        },
       } as Parameters<typeof stripe.checkout.sessions.create>[0]);
 
       return { clientSecret: session.client_secret ?? "" };
@@ -168,52 +225,6 @@ export const createPortalSession = createServerFn({ method: "POST" })
         ...(data.returnUrl && { return_url: data.returnUrl }),
       });
       return { url: portal.url };
-    } catch (error) {
-      return { error: getStripeErrorMessage(error) };
-    }
-  });
-
-/**
- * Upgrade or downgrade an existing subscription. Both directions take effect
- * at the next renewal with no mid-cycle proration, so the customer keeps the
- * capacity they already paid for until the current period ends.
- */
-export const changePlan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: { priceId: string; environment: StripeEnv }) => {
-    if (!ID_PATTERN.test(data.priceId)) throw new Error("Invalid priceId");
-    return data;
-  })
-  .handler(async ({ data, context }): Promise<PlanChangeResult> => {
-    const { supabase, userId } = context;
-
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("stripe_subscription_id, status, current_period_end")
-      .eq("user_id", userId)
-      .eq("environment", data.environment)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (!sub?.stripe_subscription_id) return { error: "No active subscription to change" };
-
-    try {
-      const stripe = createStripeClient(data.environment);
-      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-      const target = prices.data[0];
-      if (!target) return { error: "Price not found" };
-
-      const current = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
-      const item = current.items.data[0];
-      if (!item) return { error: "Subscription has no billable item" };
-
-      await stripe.subscriptions.update(sub.stripe_subscription_id, {
-        items: [{ id: item.id, price: target.id }],
-        proration_behavior: "none",
-        billing_cycle_anchor: "unchanged",
-      });
-
-      return { ok: true, effectiveAt: sub.current_period_end ?? null };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
@@ -299,51 +310,3 @@ export const setCancellation = createServerFn({ method: "POST" })
     }
   });
 
-/** Add an add-on to the current subscription. Billed at the next billing cycle with no mid-cycle charge. */
-export const addAddonToSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (data: {
-      priceId: string;
-      quantity?: number;
-      environment: StripeEnv;
-    }) => {
-      if (!ID_PATTERN.test(data.priceId)) throw new Error("Invalid priceId");
-      if (data.quantity !== undefined && (data.quantity < 1 || data.quantity > 10000)) {
-        throw new Error("Invalid quantity");
-      }
-      return data;
-    },
-  )
-  .handler(
-    async ({ data, context }): Promise<{ ok: true; effectiveAt: string | null } | { error: string }> => {
-      const { supabase, userId } = context;
-
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("stripe_subscription_id, current_period_end, status")
-        .eq("user_id", userId)
-        .eq("environment", data.environment)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!sub?.stripe_subscription_id) return { error: "No active subscription to add this add-on to" };
-
-      try {
-        const stripe = createStripeClient(data.environment);
-        const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-        const target = prices.data[0];
-        if (!target) return { error: "Add-on price not found" };
-
-        await stripe.subscriptions.update(sub.stripe_subscription_id, {
-          items: [{ price: target.id, quantity: data.quantity ?? 1 }],
-          proration_behavior: "none",
-          billing_cycle_anchor: "unchanged",
-        });
-
-        return { ok: true, effectiveAt: sub.current_period_end ?? null };
-      } catch (error) {
-        return { error: getStripeErrorMessage(error) };
-      }
-    },
-  );

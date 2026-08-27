@@ -12,6 +12,7 @@ import {
   updateLicensePricingClass,
   type LicensePricingClass,
 } from "@/lib/license-pricing.functions";
+import { US_STATE_CODE_LIST } from "@/lib/license-selection";
 import { getStripeEnvironment } from "@/lib/stripe";
 
 type InvoiceContact = {
@@ -45,9 +46,27 @@ export function EnterpriseInvoicePanel({
   const [allowCard, setAllowCard] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pricingClass, setPricingClass] = useState<LicensePricingClass>(initialPricingClass);
+  const [stateCodes, setStateCodes] = useState<string[]>([]);
   const [hostedInvoiceUrl, setHostedInvoiceUrl] = useState<string | null>(null);
   const environment = getStripeEnvironment();
-  const displayedPrice = pricingClass === "pha" ? "$150,000" : "$65,000";
+  const stateSelectionIsValid =
+    pricingClass === "pha" ? stateCodes.length === 1 : stateCodes.length > 0;
+  const displayedPrice =
+    pricingClass === "pha"
+      ? "$150,000"
+      : stateCodes.length
+        ? moneyFromCents(6_500_000 * stateCodes.length)
+        : "$65,000/state";
+
+  const toggleState = (stateCode: string) => {
+    setHostedInvoiceUrl(null);
+    setStateCodes((current) => {
+      if (pricingClass === "pha") return [stateCode];
+      return current.includes(stateCode)
+        ? current.filter((code) => code !== stateCode)
+        : [...current, stateCode].sort();
+    });
+  };
 
   const changePricingClass = async (next: LicensePricingClass) => {
     if (next === pricingClass) return;
@@ -58,11 +77,12 @@ export function EnterpriseInvoicePanel({
       });
       if ("error" in result) throw new Error(result.error);
       setPricingClass(next);
+      setStateCodes((current) => (next === "pha" ? current.slice(0, 1) : current));
       setHostedInvoiceUrl(null);
       toast.success(
         next === "pha"
           ? "PHA pricing applied: $150,000/year."
-          : "Standard organization pricing applied: $65,000/year.",
+          : "Multifamily Enterprise pricing applied: $65,000/state/year.",
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Pricing class update failed");
@@ -74,6 +94,14 @@ export function EnterpriseInvoicePanel({
   const issueInvoice = async () => {
     if (!billingEmail) {
       toast.error("A verified billing email is required before issuing an invoice.");
+      return;
+    }
+    if (!stateSelectionIsValid) {
+      toast.error(
+        pricingClass === "pha"
+          ? "Select one PHA operating state."
+          : "Select at least one licensed state rule pack.",
+      );
       return;
     }
 
@@ -89,6 +117,7 @@ export function EnterpriseInvoicePanel({
           netDays,
           allowCard,
           environment,
+          stateCodes,
         },
       });
       if ("error" in result) throw new Error(result.error);
@@ -110,6 +139,14 @@ export function EnterpriseInvoicePanel({
       toast.error("Switch billing to sandbox before creating a test invoice.");
       return;
     }
+    if (!stateSelectionIsValid) {
+      toast.error(
+        pricingClass === "pha"
+          ? "Select one PHA operating state."
+          : "Select at least one licensed state rule pack.",
+      );
+      return;
+    }
     setBusy(true);
     try {
       const result = await automateEnterpriseLicenseInvoice({
@@ -120,6 +157,7 @@ export function EnterpriseInvoicePanel({
           allowCard,
           environment,
           sandboxTest,
+          stateCodes,
         },
       });
       if ("error" in result) throw new Error(result.error);
@@ -141,13 +179,16 @@ export function EnterpriseInvoicePanel({
   return (
     <Panel
       title="Enterprise license invoice"
-      description="Pricing is controlled by the CRM organization class: standard organizations are $65,000/year and PHAs are $150,000/year. Automation resolves the billing contact and defaults to Net 30 + ACH."
+      description="Multifamily Enterprise is $65,000 per selected state each year; PHA is a flat $150,000 each year. The server validates the selected states and derives every invoice amount."
     >
       <div className="mb-5 grid gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
-          <p className="font-semibold text-emerald-950 dark:text-emerald-50">License pricing class</p>
+          <p className="font-semibold text-emerald-950 dark:text-emerald-50">
+            License pricing class
+          </p>
           <p className="mt-1 text-emerald-800 dark:text-emerald-200">
-            The invoice server reads this CRM classification before creating any invoice. Staff never enters the annual amount manually.
+            The invoice server reads this CRM classification before creating any invoice. Staff
+            never enters the annual amount manually.
           </p>
           <select
             value={pricingClass}
@@ -155,7 +196,7 @@ export function EnterpriseInvoicePanel({
             disabled={busy}
             className="mt-3 h-10 w-full max-w-md rounded-md border border-input bg-background px-3 text-sm text-foreground"
           >
-            <option value="standard">Standard organization — $65,000/year</option>
+            <option value="standard">Multifamily Enterprise — $65,000/state/year</option>
             <option value="pha">Public Housing Authority (PHA) — $150,000/year</option>
           </select>
         </div>
@@ -165,18 +206,57 @@ export function EnterpriseInvoicePanel({
         </div>
       </div>
 
+      <div className="mb-5 rounded-lg border border-input p-4">
+        <p className="text-sm font-semibold">Licensed state rule packs</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {pricingClass === "pha"
+            ? "Select the PHA operating state. The annual price remains $150,000."
+            : "Select every state in which the organization operates. Each selected state is $65,000 annually."}
+        </p>
+        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-7 md:grid-cols-9">
+          {US_STATE_CODE_LIST.map((stateCode) => (
+            <label
+              key={stateCode}
+              className="flex items-center gap-1.5 rounded border border-input px-2 py-1.5 text-xs"
+            >
+              <input
+                type={pricingClass === "pha" ? "radio" : "checkbox"}
+                name={pricingClass === "pha" ? "pha-state" : undefined}
+                checked={stateCodes.includes(stateCode)}
+                onChange={() => toggleState(stateCode)}
+                disabled={busy}
+              />
+              {stateCode}
+            </label>
+          ))}
+        </div>
+        <p className="mt-3 text-xs font-medium">
+          {stateCodes.length
+            ? `${stateCodes.length} selected: ${stateCodes.join(", ")}`
+            : "No state rule pack selected."}
+        </p>
+      </div>
+
       <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
         <p className="font-semibold text-emerald-950 dark:text-emerald-50">Automated workflow</p>
         <p className="mt-1 text-emerald-800 dark:text-emerald-200">
-          CRM organization → pricing class → preferred verified finance/billing contact → PO/terms → ACH/card rules → {displayedPrice} invoice → CRM log → paid-invoice license activation.
+          CRM organization → pricing class → preferred verified finance/billing contact → PO/terms →
+          ACH/card rules → {displayedPrice} invoice → CRM log → paid-invoice license activation.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button onClick={() => void runAutomation(false)} disabled={busy || !verifiedEmails.length}>
+          <Button
+            onClick={() => void runAutomation(false)}
+            disabled={busy || !verifiedEmails.length || !stateSelectionIsValid}
+          >
             <Workflow className="size-4" />
             {busy ? "Running…" : "Run automated invoice workflow"}
           </Button>
           {environment === "sandbox" && (
-            <Button variant="outline" onClick={() => void runAutomation(true)} disabled={busy || !verifiedEmails.length}>
+            <Button
+              variant="outline"
+              onClick={() => void runAutomation(true)}
+              disabled={busy || !verifiedEmails.length || !stateSelectionIsValid}
+            >
               Create sandbox test invoice
             </Button>
           )}
@@ -237,7 +317,11 @@ export function EnterpriseInvoicePanel({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button variant="outline" onClick={issueInvoice} disabled={busy || !billingEmail}>
+        <Button
+          variant="outline"
+          onClick={issueInvoice}
+          disabled={busy || !billingEmail || !stateSelectionIsValid}
+        >
           <FileText className="size-4" />
           {busy ? "Issuing invoice…" : `Issue ${displayedPrice} manually`}
         </Button>
@@ -258,3 +342,4 @@ export function EnterpriseInvoicePanel({
     </Panel>
   );
 }
+

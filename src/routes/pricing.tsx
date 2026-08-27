@@ -22,7 +22,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "CertivoIQ annual platform licensing: $65,000/year for standard affordable-housing organizations and $150,000/year for Public Housing Authorities (PHAs), with all currently available features included.",
+          "CertivoIQ annual platform licensing: Multifamily Enterprise is $65,000 per selected state and PHA is a flat $150,000, with all currently available features included.",
       },
       { property: "og:title", content: "CertivoIQ Platform Pricing" },
       {
@@ -50,20 +50,20 @@ function PricingPage() {
           <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <Pill tone="seal">Standard organization license</Pill>
-                <h2 className="mt-4 font-display text-[28px]">CertivoIQ</h2>
+                <Pill tone="seal">Multifamily Enterprise license</Pill>
+                <h2 className="mt-4 font-display text-[28px]">CertivoIQ Multifamily Enterprise</h2>
                 <p className="mt-1 text-[13.5px] text-muted-foreground">
                   Multifamily and affordable-housing organizations
                 </p>
               </div>
               <div className="text-left md:text-right">
                 <p className="font-display text-[40px] leading-none">$65,000</p>
-                <p className="mt-1 text-[13px] text-muted-foreground">per year</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">per selected state / year</p>
               </div>
             </div>
             <p className="mt-6 text-[14px] leading-relaxed text-muted-foreground">
-              One organization-level annual license with access to all currently available
-              CertivoIQ platform features.
+              Select every state where the organization operates. Each selected state rule pack is
+              licensed at $65,000 annually, with access to all currently available features.
             </p>
           </Panel>
 
@@ -88,11 +88,16 @@ function PricingPage() {
           </Panel>
         </div>
 
-        <Panel className="mt-5" title="Included with either annual license" bodyClassName="p-7 md:p-9">
+        <Panel
+          className="mt-5"
+          title="Included with either annual license"
+          bodyClassName="p-7 md:p-9"
+        >
           <p className="text-[14px] leading-relaxed text-muted-foreground">
-            Pricing is determined by organization type, not by unit count or feature tier. There
-            are no public feature tiers, training products, certificate products, state-pack
-            add-ons, document overages, or separately priced API packages.
+            Pricing is determined by license type and, for Multifamily Enterprise, the number of
+            selected operating states. PHA remains a flat annual fee. There are no public feature
+            tiers, training products, certificate products, document overages, or separately priced
+            API packages.
           </p>
 
           <ul className="mt-6 grid gap-3 md:grid-cols-2">
@@ -111,9 +116,9 @@ function PricingPage() {
                 <p className="font-display text-[15px]">Federal baseline scope</p>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
                   CertivoIQ evaluates supported federal affordable-housing requirements.
-                  State-agency, allocating-agency, local, and project-specific requirements
-                  require separate Manual Review. When an unevaluated requirement could change
-                  the outcome, CertivoIQ returns Unable to Determine.
+                  State-agency, allocating-agency, local, and project-specific requirements require
+                  separate Manual Review. When an unevaluated requirement could change the outcome,
+                  CertivoIQ returns Unable to Determine.
                 </p>
               </div>
             </div>
@@ -132,11 +137,12 @@ function PricingPage() {
         <Panel className="mt-5" title="Implementation and integrations" bodyClassName="p-5">
           <p className="text-[13.5px] leading-relaxed text-muted-foreground">
             Implementation requirements are reviewed during contracting. API and
-            property-management-system connections are scoped only when the applicable
-            end-to-end integration has been verified for the customer&apos;s environment.
+            property-management-system connections are scoped only when the applicable end-to-end
+            integration has been verified for the customer&apos;s environment.
           </p>
         </Panel>
       </div>
     </PublicShell>
   );
 }
+

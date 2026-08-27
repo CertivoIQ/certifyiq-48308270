@@ -3,7 +3,7 @@
  * test-mode connection or a missing live price ID.
  */
 
-import { isPlanPrice } from "@/lib/plan-catalog";
+import { LICENSES } from "@/lib/plan-catalog";
 
 export function assertLiveBillingConfiguration() {
   if (process.env["NODE_ENV"] !== "production") return;
@@ -16,8 +16,13 @@ export function assertLiveBillingConfiguration() {
   if (clientToken?.startsWith("pk_test_")) {
     throw new Error("Production billing detected a test-mode client token.");
   }
-  if (!isPlanPrice(process.env["STRIPE_BUSINESS_PRICE_ID_LIVE"] ?? "business_monthly")) {
-    throw new Error("Missing live Business price ID.");
+  if (
+    !process.env["STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE"] ||
+    !process.env["STRIPE_PHA_PRICE_ID_LIVE"]
+  ) {
+    throw new Error(
+      `Production billing requires configured ${LICENSES.multifamily_enterprise.name} and ${LICENSES.pha.name} prices.`,
+    );
   }
 }
 
@@ -25,3 +30,4 @@ export function assertLiveBillingConfiguration() {
 export function isLiveBillingVerified(): boolean {
   return process.env["PAYMENTS_LIVE_VERIFIED"] === "true";
 }
+

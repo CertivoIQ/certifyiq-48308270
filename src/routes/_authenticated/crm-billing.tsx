@@ -28,10 +28,7 @@ function CrmBillingPage() {
     queryKey: ["crm", "billing", "accounts"],
     enabled: isStaff,
     queryFn: async (): Promise<Account[]> => {
-      const { data, error } = await supabase
-        .from("crm_accounts")
-        .select("*")
-        .order("name");
+      const { data, error } = await supabase.from("crm_accounts").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -78,21 +75,17 @@ function CrmBillingPage() {
 
   const initialPricingClass: LicensePricingClass =
     selectedAccount &&
-    (selectedAccount as Account & { license_pricing_class?: string }).license_pricing_class === "pha"
+    (selectedAccount as Account & { license_pricing_class?: string }).license_pricing_class ===
+      "pha"
       ? "pha"
       : "standard";
 
   return (
-    <CrmShell
-      email={email}
-      isStaff={isStaff}
-      loading={loading}
-      newsItems={news.data ?? []}
-    >
+    <CrmShell email={email} isStaff={isStaff} loading={loading} newsItems={news.data ?? []}>
       <div className="space-y-4">
         <Panel
           title="Enterprise billing console"
-          description="Create organization-level annual invoices after procurement details are confirmed. Standard organizations are $65,000/year; PHAs are $150,000/year. Paid qualifying invoices activate licenses automatically."
+          description="Create annual invoices after procurement details and licensed states are confirmed. Multifamily Enterprise is $65,000 per selected state; PHA is $150,000 flat. Only fully verified paid invoices activate licenses."
         >
           <label className="block max-w-2xl text-sm font-medium">
             CRM organization
@@ -104,9 +97,10 @@ function CrmBillingPage() {
               <option value="">Select organization</option>
               {(accounts.data ?? []).map((account) => {
                 const pricingClass =
-                  (account as Account & { license_pricing_class?: string }).license_pricing_class === "pha"
+                  (account as Account & { license_pricing_class?: string })
+                    .license_pricing_class === "pha"
                     ? "PHA · $150,000"
-                    : "Standard · $65,000";
+                    : "Multifamily Enterprise · $65,000/state";
                 return (
                   <option key={account.id} value={account.id}>
                     {account.name} · {pricingClass} · {account.stage}
@@ -116,8 +110,8 @@ function CrmBillingPage() {
             </select>
           </label>
           <p className="mt-3 text-xs text-muted-foreground">
-            The CRM account ID and pricing class are authoritative for invoicing, renewal,
-            license activation, and entitlement history. Invoice amounts are never entered manually.
+            The CRM account ID and pricing class are authoritative for invoicing, renewal, license
+            activation, and entitlement history. Invoice amounts are never entered manually.
           </p>
         </Panel>
 
@@ -146,3 +140,4 @@ function CrmBillingPage() {
     </CrmShell>
   );
 }
+

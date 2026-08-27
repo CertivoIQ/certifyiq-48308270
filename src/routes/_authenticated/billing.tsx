@@ -94,24 +94,35 @@ function BillingPage() {
                   {cancelAtPeriodEnd && <Pill tone="flag">Cancels at period end</Pill>}
                 </div>
                 <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-                  {isActive && !cancelAtPeriodEnd &&
+                  {isActive &&
+                    !cancelAtPeriodEnd &&
                     "Active. All currently available platform features are included under the organization license."}
-                  {isActive && cancelAtPeriodEnd &&
+                  {isActive &&
+                    cancelAtPeriodEnd &&
                     `Access remains active until ${endsAt?.toLocaleDateString() ?? "the end of the current period"}.`}
                   {!isActive &&
-                    "CertivoIQ is offered through one $65,000 annual organization license. Enterprise purchases begin with an invoice; ACH is preferred and card payment remains available when the customer requests it."}
+                    "CertivoIQ offers two annual licenses: Multifamily Enterprise at $65,000 per selected operating state and PHA at a flat $150,000. Purchases begin with a state-scoped invoice; ACH is preferred and card payment is available when requested."}
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 {isActive ? (
                   <>
-                    <Button size="sm" variant="outline" onClick={openPortal} disabled={busy === "portal"}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={openPortal}
+                      disabled={busy === "portal"}
+                    >
                       <CreditCard className="size-4" /> Payment details & invoices
                       <ExternalLink className="size-3.5" />
                     </Button>
                     {cancelAtPeriodEnd ? (
-                      <Button size="sm" onClick={() => toggleCancel(false)} disabled={busy === "cancel"}>
+                      <Button
+                        size="sm"
+                        onClick={() => toggleCancel(false)}
+                        disabled={busy === "cancel"}
+                      >
                         <Undo2 className="size-4" /> Resume license
                       </Button>
                     ) : (
@@ -140,11 +151,15 @@ function BillingPage() {
             <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
               <div>
                 <dt className="font-semibold">Annual price</dt>
-                <dd className="mt-1 text-muted-foreground">$65,000 per organization, per year</dd>
+                <dd className="mt-1 text-muted-foreground">
+                  Multifamily Enterprise: $65,000 per selected state/year; PHA: $150,000/year flat
+                </dd>
               </div>
               <div>
                 <dt className="font-semibold">Included access</dt>
-                <dd className="mt-1 text-muted-foreground">All currently available platform features</dd>
+                <dd className="mt-1 text-muted-foreground">
+                  All currently available platform features
+                </dd>
               </div>
               <div>
                 <dt className="font-semibold">Default payment path</dt>
@@ -152,15 +167,22 @@ function BillingPage() {
               </div>
               <div>
                 <dt className="font-semibold">Optional payment path</dt>
-                <dd className="mt-1 text-muted-foreground">Credit card when requested or permitted by procurement</dd>
+                <dd className="mt-1 text-muted-foreground">
+                  Credit card when requested or permitted by procurement
+                </dd>
               </div>
               <div>
                 <dt className="font-semibold">Activation</dt>
-                <dd className="mt-1 text-muted-foreground">Automatic after a qualifying paid invoice; exceptions route to review</dd>
+                <dd className="mt-1 text-muted-foreground">
+                  Automatic only after paid amount, license type, quantity, and selected state scope
+                  all verify; exceptions route to review
+                </dd>
               </div>
               <div>
                 <dt className="font-semibold">Purchase orders</dt>
-                <dd className="mt-1 text-muted-foreground">Supported for organizations that require PO-based procurement</dd>
+                <dd className="mt-1 text-muted-foreground">
+                  Supported for organizations that require PO-based procurement
+                </dd>
               </div>
             </dl>
           </Panel>
@@ -178,3 +200,4 @@ function BillingPage() {
     </AppShell>
   );
 }
+

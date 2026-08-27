@@ -42,13 +42,16 @@ export type Verdict = {
 };
 
 export function verdictFor(file: CertFile): Verdict {
-  const critical = file.findings.filter((f) => f.severity === "critical" && f.status !== "approved").length;
+  const critical = file.findings.filter(
+    (f) => f.severity === "critical" && f.status !== "approved",
+  ).length;
   const open = file.findings.filter((f) => f.status !== "approved").length;
   const curable = open - critical;
   const total = 24;
   const passed = Math.max(0, total - open);
   const score = Math.round((passed / total) * 100);
-  const level: ComplianceLevel = critical > 0 ? "noncompliant" : open > 0 ? "corrections" : "compliant";
+  const level: ComplianceLevel =
+    critical > 0 ? "noncompliant" : open > 0 ? "corrections" : "compliant";
   return { level, verdict: LEVEL_META[level].verdict, score, passed, total, critical, curable };
 }
 
@@ -57,7 +60,12 @@ export function correctionSteps(file: CertFile) {
   const open = file.findings.filter((f) => f.status !== "approved");
   if (open.length === 0) {
     return [
-      { rule: "—", step: "No corrections outstanding — proceed to Agent Approval and Agent Signature.", owner: "Compliance Agent", due: "Today" },
+      {
+        rule: "—",
+        step: "No corrections outstanding — proceed to Agent Approval and Agent Signature.",
+        owner: "Compliance Agent",
+        due: "Today",
+      },
     ];
   }
   return open.map((f, i) => ({
@@ -73,7 +81,11 @@ export function correctionSteps(file: CertFile) {
  * ------------------------------------------------------------------ */
 
 export const PROGRAM_OPTIONS: { id: Program | "RD" | "BOND"; label: string; note: string }[] = [
-  { id: "LIHTC", label: "LIHTC (Section 42)", note: "IRC §42 federal baseline; state requirements require Manual Review" },
+  {
+    id: "LIHTC",
+    label: "LIHTC (Section 42)",
+    note: "IRC §42 federal baseline; state requirements require Manual Review",
+  },
   { id: "PBS8", label: "Project-Based Section 8", note: "HUD Handbook 4350.3 / HOTMA" },
   { id: "HOME", label: "HOME Investment Partnerships", note: "24 CFR Part 92" },
   { id: "HOTMA", label: "HOTMA overlay", note: "Sections 102 / 104 asset & income rules" },
@@ -82,7 +94,57 @@ export const PROGRAM_OPTIONS: { id: Program | "RD" | "BOND"; label: string; note
 ];
 
 export const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
+  "DC",
 ];
 
 /* ------------------------------------------------------------------ *
@@ -99,11 +161,11 @@ export const TRIAL = {
 
 export const PLANS = [
   {
-    id: "platform",
-    name: "CertivoIQ",
+    id: "multifamily_enterprise",
+    name: "Multifamily Enterprise",
     price: "$65,000",
-    cadence: "/year",
-    tagline: "Complete annual platform license",
+    cadence: "/state/year",
+    tagline: "Annual license per selected state rule pack",
     features: [
       "All currently available platform features",
       "Federal baseline certification review",
@@ -114,6 +176,21 @@ export const PLANS = [
     ],
     cta: "Try CertivoIQ for Free",
     featured: true,
+    selfServe: false,
+  },
+  {
+    id: "pha",
+    name: "PHA",
+    price: "$150,000",
+    cadence: "/year",
+    tagline: "Flat annual Public Housing Authority license",
+    features: [
+      "All currently available platform features",
+      "One validated operating-state rule pack",
+      "PHA compliance workflows",
+    ],
+    cta: "Try CertivoIQ for Free",
+    featured: false,
     selfServe: false,
   },
 ];
@@ -145,8 +222,6 @@ export const ACADEMY_ADDONS: {
   note: string;
 }[] = [];
 
-
-
 export const LAUNCHPAD_STEPS = [
   {
     id: 1,
@@ -159,35 +234,41 @@ export const LAUNCHPAD_STEPS = [
     id: 2,
     title: "Confirm your organization profile",
     lead: "Review the organization name, operating states, affordable-housing programs, and primary contact.",
-    detail: "Use verified organization information. Do not include resident or applicant data in the organization profile.",
+    detail:
+      "Use verified organization information. Do not include resident or applicant data in the organization profile.",
     cta: "Mark profile complete",
   },
   {
     id: 3,
     title: "Add your portfolio",
     lead: "Create the properties that your organization is authorized to manage.",
-    detail: "Confirm each property's programs and jurisdiction before using it in a compliance workflow.",
+    detail:
+      "Confirm each property's programs and jurisdiction before using it in a compliance workflow.",
     cta: "Mark portfolio complete",
   },
   {
     id: 4,
     title: "Submit your first certification review",
     lead: "Upload a certification package and review the extracted evidence before relying on any finding.",
-    detail: "A submitted file remains subject to the platform's evidence, Manual Review, Agent Approval, and Agent Signature controls.",
+    detail:
+      "A submitted file remains subject to the platform's evidence, Manual Review, Agent Approval, and Agent Signature controls.",
     cta: "Mark first review complete",
   },
   {
     id: 5,
     title: "Set team access",
     lead: "Invite only authorized team members and assign the minimum access needed for their work.",
-    detail: "Verify every recipient and role before sharing property, resident, or certification information.",
+    detail:
+      "Verify every recipient and role before sharing property, resident, or certification information.",
     cta: "Mark access review complete",
   },
   {
     id: 6,
     title: "Confirm operational readiness",
     lead: "Review your saved setup and open SupportIQ if anything is incomplete or unclear.",
-    detail: "Completing onboarding confirms account setup only. It is not a training certificate, compliance determination, or certification approval.",
+    detail:
+      "Completing onboarding confirms account setup only. It is not a training certificate, compliance determination, or certification approval.",
     cta: "Complete onboarding",
   },
 ];
+

@@ -13,7 +13,7 @@ function paymentsEnvironment(): StripeEnv {
   if (clientToken?.startsWith("pk_test_")) return "sandbox";
   if (clientToken?.startsWith("pk_live_")) return "live";
   throw new Error(
-    "Payments are not configured for this build. Complete payments go-live in your Lovable project to enable production checkout.",
+    "Payments are not configured for this build. Configure a Stripe publishable key to enable checkout.",
   );
 }
 
@@ -30,3 +30,4 @@ export function getStripe(): Promise<Stripe | null> {
 export function getStripeEnvironment(): StripeEnv {
   return paymentsEnvironment();
 }
+

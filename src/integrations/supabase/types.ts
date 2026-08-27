@@ -25,6 +25,8 @@ export type Database = {
           files_purge_at: string | null
           files_purged_at: string | null
           launchpad_started_at: string | null
+          license_kind: string | null
+          licensed_state_codes: string[]
           plan_id: string | null
           price_id: string | null
           property_limit: number | null
@@ -46,6 +48,8 @@ export type Database = {
           files_purge_at?: string | null
           files_purged_at?: string | null
           launchpad_started_at?: string | null
+          license_kind?: string | null
+          licensed_state_codes?: string[]
           plan_id?: string | null
           price_id?: string | null
           property_limit?: number | null
@@ -67,6 +71,8 @@ export type Database = {
           files_purge_at?: string | null
           files_purged_at?: string | null
           launchpad_started_at?: string | null
+          license_kind?: string | null
+          licensed_state_codes?: string[]
           plan_id?: string | null
           price_id?: string | null
           property_limit?: number | null
@@ -462,6 +468,8 @@ export type Database = {
           last_contact_on: string | null
           last_touch: string | null
           lead_score: number
+          license_pricing_class: string
+          licensed_state_codes: string[]
           linkedin_url: string | null
           management_company_name: string | null
           name: string
@@ -505,6 +513,8 @@ export type Database = {
           last_contact_on?: string | null
           last_touch?: string | null
           lead_score?: number
+          license_pricing_class?: string
+          licensed_state_codes?: string[]
           linkedin_url?: string | null
           management_company_name?: string | null
           name: string
@@ -548,6 +558,8 @@ export type Database = {
           last_contact_on?: string | null
           last_touch?: string | null
           lead_score?: number
+          license_pricing_class?: string
+          licensed_state_codes?: string[]
           linkedin_url?: string | null
           management_company_name?: string | null
           name?: string
@@ -2131,3 +2143,4 @@ export const Constants = {
     },
   },
 } as const
+
