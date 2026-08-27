@@ -50,6 +50,7 @@ jobs:
           node --test scripts/test-sc-lihtc-compliance-rule-pack.mjs
           node --test scripts/test-sd-lihtc-program-rule-pack.mjs
           node --test scripts/test-ri-lihtc-compliance-rule-pack.mjs
+          node --test scripts/test-pa-lihtc-compliance-rule-pack.mjs
           node --test scripts/test-external-state-pack-attestation.mjs
           bun run test:mfh-hotma
           bun run test:mfh-hotma-operations
