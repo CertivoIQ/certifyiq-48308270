@@ -308,7 +308,7 @@ function SubmissionCenterPage() {
 
         <p className="mt-2 text-muted-foreground">
           CertivoIQ validates the current certification, evidence manifest,
-          findings, and persisted human approvals before creating an HFA
+          findings, and persisted authorized compliance approvals before creating an HFA
           submission draft.
         </p>
       </header>
