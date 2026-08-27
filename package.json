@@ -58,7 +58,8 @@
     "test:mfh-hotma": "node --test scripts/test-mfh-hotma-rule-engine.mjs",
     "test:pha-hotma": "node --test scripts/test-pha-hotma-implementation-engine.mjs",
     "test:mfh-hotma-operations": "node --test scripts/test-mfh-hotma-owner-system-engine.mjs",
-    "test:verified-federal-sources": "node --test scripts/test-fy2026-verified-federal-source-manifest.mjs"
+    "test:verified-federal-sources": "node --test scripts/test-fy2026-verified-federal-source-manifest.mjs",
+    "test:billing": "bun test ./scripts/test-license-selection.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
@@ -169,3 +170,4 @@
     "js-yaml": "^4.3.1"
   }
 }
+
