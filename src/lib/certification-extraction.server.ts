@@ -343,6 +343,9 @@ export async function extractDocumentText(
     return { text, provider: "deterministic-text", documentKind: "pdf" };
   }
 
+  if (!isTextExtractable(mimeType, fileName)) {
+    throw new Error("This file type requires a verified OCR sidecar or is not supported.");
+  }
   return {
     text: new TextDecoder().decode(bytes),
     provider: "deterministic-text",
