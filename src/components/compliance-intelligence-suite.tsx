@@ -7,7 +7,7 @@ import { FEATURE_NAMES } from '@/lib/compliance-intelligence.mjs';
 import { CertificationReviewPanel } from '@/components/certification-review-panel';
 import { FreeReviewLeadGate } from '@/components/FreeReviewLeadGate';
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from '@/lib/ocr-sidecar.mjs';
-import { isPdfFile, prepareCertificationForReview } from '@/lib/pdf-ocr';
+import { isPdfFile, prepareCertificationForReview, isImageFile, prepareImageForReview } from '@/lib/pdf-ocr';
 
 
 /**
@@ -28,7 +28,7 @@ const features: Array<{ name: string; description: string; icon: LucideIcon }> =
   { name: FEATURE_NAMES.massReview, description: 'Upload certification files in bulk for classification, duplicate detection, historical comparison, and findings review.', icon: UploadCloud },
   { name: FEATURE_NAMES.auditSimulator, description: 'Run evidence-backed federal or state audit simulations before a real reviewer arrives.', icon: ClipboardCheck },
   { name: FEATURE_NAMES.portfolioCommandCenter, description: 'See property-by-property readiness, risk, findings, and open corrective actions.', icon: Building2 },
-  { name: FEATURE_NAMES.submissionCenter, description: 'Prepare authority submission packages after mandatory human approval.', icon: Send },
+  { name: FEATURE_NAMES.submissionCenter, description: 'Prepare authority submission packages after authorized compliance approval.', icon: Send },
   { name: FEATURE_NAMES.pmsHub, description: 'Connect normalized property and certification data from supported PMS providers.', icon: Plug },
   { name: FEATURE_NAMES.evidenceIntelligence, description: 'Keep findings tied to the evidence that supports the compliance decision.', icon: FileCheck2 },
 ];
@@ -69,6 +69,7 @@ export function ComplianceIntelligenceSuite() {
       if (!job) throw new Error('The certification import could not be created.');
       for (const file of files) {
         if (file.size > MAX_UPLOAD_BYTES) throw new Error('Each certification file must be 50 MB or smaller.');
+        if (!isPdfFile(file) && !isImageFile(file)) throw new Error('Upload a PDF, PNG, JPEG, or WEBP certification file.');
         const path = `${userId}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
         const { error: uploadError } = await supabase.storage.from('certification-imports').upload(path, file, { upsert: false });
         if (uploadError) throw uploadError;
@@ -86,6 +87,13 @@ export function ComplianceIntelligenceSuite() {
               .upload(sidecarPathFor(path), new Blob([JSON.stringify(prepared.sidecar)], { type: 'application/json' }), { upsert: true });
             if (sidecarError) throw sidecarError;
           }
+        } else if (isImageFile(file)) {
+          setMessage('Preparing certification image for review…');
+          const prepared = await prepareImageForReview(file, setMessage);
+          const { error: sidecarError } = await supabase.storage
+            .from('certification-imports')
+            .upload(sidecarPathFor(path), new Blob([JSON.stringify(prepared.sidecar)], { type: 'application/json' }), { upsert: true });
+          if (sidecarError) throw sidecarError;
         }
 
         const { error: itemError } = await db.from('certification_import_items').insert({
@@ -138,7 +146,7 @@ export function ComplianceIntelligenceSuite() {
             </div>
           )}
 
-          <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30"><UploadCloud className="h-8 w-8 text-muted-foreground" /><span className="mt-3 font-medium">{paidMassUpload ? 'Choose certification files' : 'Choose one certification file'}</span><span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, WEBP, or ZIP • up to 50 MB each</span><input className="sr-only" type="file" multiple={paidMassUpload} accept=".pdf,.png,.jpg,.jpeg,.webp,.zip" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
+          <label className="mt-6 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30"><UploadCloud className="h-8 w-8 text-muted-foreground" /><span className="mt-3 font-medium">{paidMassUpload ? 'Choose certification files' : 'Choose one certification file'}</span><span className="mt-1 text-sm text-muted-foreground">PDF, PNG, JPEG, or WEBP • up to 50 MB each</span><input className="sr-only" type="file" multiple={paidMassUpload} accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>
           {files.length > 0 && <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 p-3 text-sm"><span>{files.length} file{files.length === 1 ? '' : 's'} selected • {(totalBytes / 1024 / 1024).toFixed(1)} MB</span><button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50" disabled={uploading || (!paidMassUpload && files.length > 1)} onClick={queueImport}>{uploading ? 'Queueing…' : paidMassUpload ? 'Start Mass Review' : 'Start FREE Review'}</button></div>}
           {message && <p className="mt-3 text-sm text-muted-foreground" role="status">{message}</p>}
         </section>
