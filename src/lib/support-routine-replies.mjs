@@ -2,12 +2,12 @@ const ROUTINE_RESPONSES = [
   {
     test: /how do i upload/i,
     response:
-      "Use CertivoIQ's certification review upload workflow to add the certification documents, then review the extracted evidence and findings before any human approval or submission step. If the upload itself is failing, describe the failure and SupportIQ will route it as a production/UI issue.",
+      "Use CertivoIQ's certification review upload workflow to add the certification documents, then review the extracted evidence and findings before any authorized compliance approval or submission step. If the upload itself is failing, describe the failure and SupportIQ will route it as a production/UI issue.",
   },
   {
     test: /where .*manifest/i,
     response:
-      "Evidence manifests are associated with the reviewed certification package and are used by the Submission Center to bind human approvals and transmission authority to the exact reviewed evidence. Open the relevant certification/submission workflow to review the current package before authorization.",
+      "Evidence manifests are associated with the reviewed certification package and are used by the Submission Center to bind authorized compliance approvals and transmission authority to the exact reviewed evidence. Open the relevant certification/submission workflow to review the current package before authorization.",
   },
   {
     test: /where .*finding/i,
@@ -17,7 +17,7 @@ const ROUTINE_RESPONSES = [
   {
     test: /where .*invoice/i,
     response:
-      "Open Billing from your authenticated CertivoIQ account to review subscription and invoice information. If you see a duplicate charge, failed payment, disputed invoice, or refund request, tell SupportIQ and it will create a billing escalation for human review.",
+      "Open Billing from your authenticated CertivoIQ account to review subscription and invoice information. If you see a duplicate charge, failed payment, disputed invoice, or refund request, tell SupportIQ and it will create a billing escalation for authorized billing review.",
   },
   {
     test: /invite .* (user|reviewer)/i,
@@ -42,7 +42,7 @@ const ROUTINE_RESPONSES = [
   {
     test: /how .*submission .*work/i,
     response:
-      "CertivoIQ keeps review, human approval, submission authorization, and external delivery separate. A package must satisfy the current evidence and human-approval gates before submission authorization, and submitted status does not by itself mean an external housing authority received the package.",
+      "CertivoIQ keeps review, authorized compliance approval, submission authorization, and external delivery separate. A package must satisfy the current evidence and authorized-compliance-approval gates before submission authorization, and submitted status does not by itself mean an external housing authority received the package.",
   },
 ];
 
@@ -52,5 +52,5 @@ export function resolveRoutineSupportRequest(message) {
     if (item.test.test(text)) return item.response;
   }
 
-  return "I can help with routine CertivoIQ navigation and workflow questions. I do not guess about account-specific, billing, security, legal, or compliance decisions; those requests are routed to the appropriate human queue.";
+  return "I can help with routine CertivoIQ navigation and workflow questions. I do not guess about account-specific, billing, security, legal, or compliance decisions; those requests are routed to the appropriate authorized support queue.";
 }
