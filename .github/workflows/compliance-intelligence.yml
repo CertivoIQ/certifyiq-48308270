@@ -87,6 +87,7 @@ jobs:
           bun run test:state-source-tn
           bun run test:state-source-sd
           bun run test:state-source-id-nm-hi-gu
+          node --test scripts/test-south-carolina-source-audit.mjs
           node --test scripts/test-ga-fl-dc-de-source-audit.mjs
           node --test scripts/test-ct-co-ca-ar-source-audit.mjs
           node --test scripts/test-az-ak-al-source-audit.mjs
