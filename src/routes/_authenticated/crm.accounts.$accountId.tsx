@@ -219,7 +219,7 @@ function CrmAccountProfile() {
               </div>
             </Panel>
 
-            <Panel title="Activity timeline" description="Recent human and campaign actions">
+            <Panel title="Activity timeline" description="Recent team and campaign actions">
               <ol className="space-y-4">
                 {(activities.data ?? []).map((item) => (
                   <li key={item.id} className="relative border-l-2 border-emerald-200 pl-4">
