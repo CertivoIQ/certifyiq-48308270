@@ -94,7 +94,7 @@ export function classifySupportRequest({ message, confidence = 1 } = {}) {
       category: "security_privacy",
       humanRequired: true,
       allowSensitiveAutomation: false,
-      reason: "Potential security or privacy incident requires immediate human review.",
+      reason: "Potential security or privacy incident requires immediate authorized support review.",
     };
   }
 
@@ -104,7 +104,7 @@ export function classifySupportRequest({ message, confidence = 1 } = {}) {
       disposition: SUPPORT_DISPOSITION.escalateHuman,
       category: "production_ui",
       humanRequired: true,
-      reason: "Potential production or user-interface incident requires human review.",
+      reason: "Potential production or user-interface incident requires authorized support review.",
     };
   }
 
@@ -115,7 +115,7 @@ export function classifySupportRequest({ message, confidence = 1 } = {}) {
       category: "billing",
       humanRequired: true,
       allowRefund: false,
-      reason: "Material billing changes and disputes require human authorization.",
+      reason: "Material billing changes and disputes require authorized account approval.",
     };
   }
 
@@ -126,7 +126,7 @@ export function classifySupportRequest({ message, confidence = 1 } = {}) {
       category: "compliance_legal",
       humanRequired: true,
       allowComplianceOverride: false,
-      reason: "Compliance or legal interpretation must remain with an authorized human reviewer.",
+      reason: "Compliance or legal interpretation must remain with an authorized compliance agent.",
     };
   }
 
