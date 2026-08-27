@@ -11,7 +11,7 @@ import { federalProgramPackGate } from "./federal-program-rule-pack-registry.mjs
  *    approved, versioned state pack is supplied. Otherwise the finding is
  *    UNABLE_TO_DETERMINE with a federal-baseline blocking reason.
  *  - Any required fact that is missing, unparsable, or below the confidence
- *    policy without human verification yields UNABLE_TO_DETERMINE — never a
+ *    policy without authorized compliance verification yields UNABLE_TO_DETERMINE — never a
  *    guessed PASS or FAIL.
  */
 
@@ -553,7 +553,7 @@ export function evaluateCertification(input) {
       if (!check.usable) {
         blockingReasons.push(
           check.reason === "low_confidence"
-            ? `Fact "${field}" is below the ${Math.round(minimumConfidence * 100)}% confidence policy and is not human-verified.`
+            ? `Fact "${field}" is below the ${Math.round(minimumConfidence * 100)}% confidence policy and is not verified by an authorized compliance agent.`
             : `Required fact "${field}" is missing from the submitted evidence.`,
         );
         continue;
@@ -604,7 +604,7 @@ export function evaluateCertification(input) {
   };
 }
 
-/** Human sign-off is only offered when nothing is undetermined. */
+/** Authorized compliance approval is only offered when nothing is undetermined. */
 export function signOffAllowed(result) {
   return result.counts.unableToDetermine === 0;
 }
