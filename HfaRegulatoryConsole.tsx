@@ -237,7 +237,7 @@ export default function HfaRegulatoryConsole({
                       )}
                       {(release.reviewRequired || release.vpVerificationRequired) && (
                         <p className="sm:col-span-2 lg:col-span-3 font-medium text-amber-900">
-                          {release.reviewRequired && "Human source review required. "}
+                          {release.reviewRequired && "Authorized source review required. "}
                           {release.vpVerificationRequired && "VP Compliance property-figure verification required."}
                         </p>
                       )}
