@@ -25,7 +25,7 @@ export function certificationDuplicateKey(organizationId: string, sha256: string
   return `${organizationId}:${sha256.toLowerCase()}`;
 }
 
-/** Human approval is mandatory before any authority submission can transition to submitted. */
+/** Authorized compliance approval is mandatory before any authority submission can transition to submitted. */
 export function canSubmitAuthorityCertification(input: { status: string; approvalRequired: boolean; approvedBy?: string | null; approvedAt?: string | null }): boolean {
   if (input.status !== "approved" || !input.approvalRequired) return false;
   return Boolean(input.approvedBy && input.approvedAt);
