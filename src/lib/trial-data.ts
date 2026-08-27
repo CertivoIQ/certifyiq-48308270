@@ -302,6 +302,6 @@ export const PENALTY_RISKS = [
   { risk: "Unsigned or expired verifications", cost: "File rejected at audit", detail: "Third-party verifications older than 120 days, missing signatures and blank certifications are the most common findings." },
   { risk: "HOTMA asset & income errors", cost: "Repayment agreements + HUD sanctions", detail: "The $50,000 asset limit, imputed returns and de minimis rules changed the math on every file after 2024." },
   { risk: "Student-status and set-aside mistakes", cost: "Unit non-compliance", detail: "Full-time student households and blended LIHTC/HOME/Section 8 set-asides trip up even experienced reviewers." },
-  { risk: "Blended-program conflicts", cost: "Findings under two programs at once", detail: "The stricter rule always wins. Human reviewers routinely apply the wrong program's threshold." },
+  { risk: "Blended-program conflicts", cost: "Findings under two programs at once", detail: "The stricter rule always wins. Compliance agents can apply the wrong program's threshold." },
   { risk: "Inconsistent reviewer judgment", cost: "Unpredictable audit outcomes", detail: "Two reviewers, two answers. CertivoIQ applies the same versioned rule pack to every single file." },
 ];
