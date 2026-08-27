@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import type { StripeWebhookObject } from "@/lib/stripe-webhook-types";
+import { assertLiveBillingConfiguration } from "@/lib/billing-config.server";
 
 const getEnv = (key: string): string => {
   const value = process.env[key];
@@ -15,6 +16,7 @@ export function getConnectionApiKey(env: StripeEnv): string {
 
 /** Direct Stripe client. Use a restricted key; no third-party connector is in the payment path. */
 export function createStripeClient(env: StripeEnv): Stripe {
+  if (env === "live") assertLiveBillingConfiguration();
   const connectionApiKey = getConnectionApiKey(env);
   return new Stripe(connectionApiKey, {
     apiVersion: "2026-07-29.dahlia",
