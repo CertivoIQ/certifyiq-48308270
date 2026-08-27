@@ -61,14 +61,7 @@ export function evaluateMoAnnualReporting(input = {}) {
   const portalDue = new Date(`${reportYear}-${schedule.portal_due_month_day}T23:59:59Z`);
   const ownerDue = new Date(`${reportYear}-${schedule.owner_cert_due_month_day}T23:59:59Z`);
   const pass = portalSubmitted <= portalDue && ownerSubmitted <= ownerDue && input.owner_certification_signed === true;
-  return Object.freeze({
-    finding: pass ? "PASS" : "FAIL",
-    status: "EVALUATED",
-    rule_id: "MO-LIHTC-ANNUAL-REPORTING",
-    portal_due_date: `${reportYear}-${schedule.portal_due_month_day}`,
-    owner_certification_due_date: `${reportYear}-${schedule.owner_cert_due_month_day}`,
-    reason: portalSubmitted > portalDue ? "MO_PORTAL_REPORT_SUBMITTED_LATE" : ownerSubmitted > ownerDue ? "MO_OWNER_CERTIFICATION_SUBMITTED_LATE" : input.owner_certification_signed !== true ? "MO_OWNER_CERTIFICATION_MUST_BE_SIGNED_BY_OWNER" : undefined,
-  });
+  return Object.freeze({ finding: pass ? "PASS" : "FAIL", status: "EVALUATED", rule_id: "MO-LIHTC-ANNUAL-REPORTING", portal_due_date: `${reportYear}-${schedule.portal_due_month_day}`, owner_certification_due_date: `${reportYear}-${schedule.owner_cert_due_month_day}`, reason: portalSubmitted > portalDue ? "MO_PORTAL_REPORT_SUBMITTED_LATE" : ownerSubmitted > ownerDue ? "MO_OWNER_CERTIFICATION_SUBMITTED_LATE" : input.owner_certification_signed !== true ? "MO_OWNER_CERTIFICATION_MUST_BE_SIGNED_BY_OWNER" : undefined });
 }
 
 export function evaluateMoForm8609PartII(input = {}) {
@@ -79,29 +72,20 @@ export function evaluateMoForm8609PartII(input = {}) {
   if (!Number.isInteger(year)) return blocked("VALID_MO_FIRST_CREDIT_PERIOD_YEAR_REQUIRED", ["first_credit_period_year"]);
   const submitted = parseDate(input.copy_submitted_to_mhdc_date, "VALID_MO_8609_SUBMISSION_DATE_REQUIRED");
   if (submitted?.status === "BLOCKED") return submitted;
-  const deadline = new Date(Date.UTC(year + 1, 2, 31));
+  const deadline = new Date(Date.UTC(year, 11, 31));
+  deadline.setUTCDate(deadline.getUTCDate() + 90);
   const complete = input.part_ii_completed === true;
-  return Object.freeze({
-    finding: complete && submitted <= deadline ? "PASS" : "FAIL",
-    status: "EVALUATED",
-    rule_id: "MO-LIHTC-8609-PART-II",
-    latest_submission_date: deadline.toISOString().slice(0, 10),
-    reason: !complete ? "FORM_8609_PART_II_MUST_BE_COMPLETED_IN_FIRST_CREDIT_YEAR" : submitted > deadline ? "FORM_8609_COPY_NOT_SUBMITTED_WITHIN_90_DAYS_AFTER_FIRST_CREDIT_YEAR" : undefined,
-  });
+  return Object.freeze({ finding: complete && submitted <= deadline ? "PASS" : "FAIL", status: "EVALUATED", rule_id: "MO-LIHTC-8609-PART-II", latest_submission_date: deadline.toISOString().slice(0, 10), reason: !complete ? "FORM_8609_PART_II_MUST_BE_COMPLETED_IN_FIRST_CREDIT_YEAR" : submitted > deadline ? "FORM_8609_COPY_NOT_SUBMITTED_WITHIN_90_DAYS_AFTER_FIRST_CREDIT_YEAR" : undefined });
 }
 
 export function evaluateMoExhibitURecertificationBoundary(input = {}) {
   for (const field of ["property_100_percent_lihtc_only", "mhdc_exhibit_u_approval", "move_in_income_asset_verification_complete", "following_year_income_asset_verification_complete", "annual_tic_household_composition_complete"]) {
     if (input[field] == null) return blocked("MO_EXHIBIT_U_INPUT_REQUIRED", [field]);
   }
-  if (input.property_100_percent_lihtc_only !== true || input.mhdc_exhibit_u_approval !== true) {
-    return Object.freeze({ finding: "FAIL", status: "EVALUATED", rule_id: "MO-LIHTC-EXHIBIT-U-BOUNDARY", income_recertification_exemption_established: false, reason: "EXHIBIT_U_REQUIRES_MHDC_APPROVAL_FOR_A_100_PERCENT_LIHTC_ONLY_PROPERTY" });
-  }
+  if (input.property_100_percent_lihtc_only !== true || input.mhdc_exhibit_u_approval !== true) return Object.freeze({ finding: "FAIL", status: "EVALUATED", rule_id: "MO-LIHTC-EXHIBIT-U-BOUNDARY", income_recertification_exemption_established: false, reason: "EXHIBIT_U_REQUIRES_MHDC_APPROVAL_FOR_A_100_PERCENT_LIHTC_ONLY_PROPERTY" });
   const requiredEvidence = input.move_in_income_asset_verification_complete === true && input.following_year_income_asset_verification_complete === true && input.annual_tic_household_composition_complete === true;
   if (!requiredEvidence) return Object.freeze({ finding: "FAIL", status: "EVALUATED", rule_id: "MO-LIHTC-EXHIBIT-U-BOUNDARY", income_recertification_exemption_established: true, reason: "EXHIBIT_U_DOES_NOT_REMOVE_MOVE_IN_FOLLOWING_YEAR_OR_ANNUAL_HOUSEHOLD_COMPOSITION_REQUIREMENTS" });
-  if (input.student_status_changed === true && input.student_status_certification_complete !== true) {
-    return Object.freeze({ finding: "FAIL", status: "EVALUATED", rule_id: "MO-LIHTC-EXHIBIT-U-BOUNDARY", income_recertification_exemption_established: true, reason: "STUDENT_STATUS_CERTIFICATION_REQUIRED_WHEN_STUDENT_STATUS_CHANGES" });
-  }
+  if (input.student_status_changed === true && input.student_status_certification_complete !== true) return Object.freeze({ finding: "FAIL", status: "EVALUATED", rule_id: "MO-LIHTC-EXHIBIT-U-BOUNDARY", income_recertification_exemption_established: true, reason: "STUDENT_STATUS_CERTIFICATION_REQUIRED_WHEN_STUDENT_STATUS_CHANGES" });
   return Object.freeze({ finding: "PASS", status: "EVALUATED", rule_id: "MO-LIHTC-EXHIBIT-U-BOUNDARY", income_recertification_exemption_established: true });
 }
 
