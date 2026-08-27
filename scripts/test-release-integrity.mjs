@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
@@ -112,4 +112,18 @@ test("the three-review offer is enforced server-side and serialized", () => {
   assert.doesNotMatch(migration, /application\/zip/);
   assert.match(state, /freeReviewCount/);
   assert.match(state, /isTrial \? freeReviewCount/);
+});
+
+function sourceFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${directory}/${entry.name}`;
+    return entry.isDirectory() ? sourceFiles(path) : [path];
+  });
+}
+
+test("standalone legacy approval wording never returns to application source", () => {
+  const violations = sourceFiles("src")
+    .filter((path) => /\.(?:ts|tsx|mjs|json)$/.test(path))
+    .filter((path) => /\bhuman\b/i.test(read(path)));
+  assert.deepEqual(violations, []);
 });
