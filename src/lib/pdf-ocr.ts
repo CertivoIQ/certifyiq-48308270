@@ -19,7 +19,7 @@ import {
  * the bundled open-source engine. No document bytes are sent to any external
  * OCR service. The output is an OCR sidecar (see ocr-sidecar.mjs) that the
  * normal server-side review pipeline consumes, so OCR text flows through the
- * same evidence -> rule engine -> finding -> human review path.
+ * same evidence -> rule engine -> finding -> authorized compliance review path.
  *
  * Everything is dynamically imported so the PDF and OCR engines never enter the
  * SSR graph or the initial page bundle.
@@ -34,6 +34,57 @@ async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
 
 export function isPdfFile(file: File): boolean {
   return /application\/pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
+}
+
+export function isImageFile(file: File): boolean {
+  return /^image\/(png|jpeg|webp)$/i.test(file.type) || /\.(png|jpe?g|webp)$/i.test(file.name);
+}
+
+/** Creates a source-bound single-page OCR sidecar for an uploaded image. */
+export async function prepareImageForReview(
+  file: File,
+  onProgress?: (message: string) => void,
+): Promise<PrepareResult> {
+  if (!isImageFile(file)) throw new Error('Only PNG, JPEG, and WEBP certification images are supported.');
+  if (file.size < 1 || file.size > MAX_UPLOAD_BYTES) throw new Error(OCR_LIMIT_MESSAGE);
+  onProgress?.('Preparing certification image for review…');
+
+  const sourceBuffer = await file.arrayBuffer();
+  const sourceSha256 = await sha256Hex(sourceBuffer);
+  const { createWorker } = await import('tesseract.js');
+  const ocrWorker = await createWorker('eng');
+  const startedAt = Date.now();
+  try {
+    const { data } = await ocrWorker.recognize(file);
+    if (Date.now() - startedAt > OCR_TIME_BUDGET_MS) throw new Error(OCR_LIMIT_MESSAGE);
+    const text = normalizePageText(data.text);
+    const confidence = Number(data.confidence) / 100;
+    if (!text || !Number.isFinite(confidence) || confidence <= 0) {
+      throw new Error('No reviewable text could be extracted from this image. Upload a clearer image or a machine-readable PDF.');
+    }
+    return {
+      kind: 'ocr',
+      ocrPageCount: 1,
+      sidecar: {
+        schemaVersion: OCR_SIDECAR_VERSION,
+        sourceFileName: file.name,
+        sourceSha256,
+        sourceByteSize: file.size,
+        createdAt: new Date().toISOString(),
+        pageCount: 1,
+        truncated: false,
+        pages: [{
+          page: 1,
+          source: 'ocr',
+          engine: OCR_ENGINE,
+          ocrConfidence: Math.min(1, confidence),
+          text,
+        }],
+      },
+    };
+  } finally {
+    await ocrWorker.terminate().catch(() => undefined);
+  }
 }
 
 type RenderTarget = { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D };
