@@ -32,7 +32,7 @@ function appOrigin(): string {
   return (process.env['APP_URL'] || 'https://certivoiq.com').replace(/\/$/, '')
 }
 
-/** Human-readable plan name for the invoice's first line item. */
+/** Readable plan name for the invoice's first line item. */
 function planNameFor(invoice: StripeInvoiceLike): string {
   const line = invoice?.lines?.data?.[0]
   const priceId =
