@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { Building2, Mail, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,14 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
 
   if (lead.isLoading) {
     return <Panel title="Preparing your 3 FREE certification reviews" description="Checking your review access…"><div className="h-20 animate-pulse rounded-lg bg-muted" /></Panel>;
+  }
+
+  if (lead.isError) {
+    return (
+      <Panel title="Sign in before opening the certification queue" description="Start at the FREE review page to create or verify your CertivoIQ account.">
+        <Button asChild><Link to="/trial">Start my 3 FREE certification reviews</Link></Button>
+      </Panel>
+    );
   }
 
   if (lead.data) return <>{children}</>;
