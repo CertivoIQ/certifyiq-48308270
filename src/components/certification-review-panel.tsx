@@ -14,7 +14,7 @@ import { useAccount } from '@/hooks/use-account';
 /**
  * Live review panel for the compliance vertical slice: run extraction + the
  * deterministic rule engine on an uploaded certification, then record the
- * human reviewer decision. All data here is persisted, not demo content.
+ * authorized compliance decision. All data here is persisted, not demo content.
  */
 
 const STATUS_STYLE: Record<string, { icon: typeof CheckCircle2; className: string; label: string }> = {
@@ -57,7 +57,7 @@ export function CertificationReviewPanel() {
           programs: ['LIHTC'],
           certificationType: certificationType as 'INITIAL' | 'ANNUAL' | 'INTERIM',
           ...(jurisdiction === 'US' ? {} : { jurisdiction }),
-          useAi: true,
+          useAi: false,
         },
       }),
     onSuccess: async (result) => {
@@ -99,7 +99,7 @@ export function CertificationReviewPanel() {
             <h2 className="font-semibold">Live certification review</h2>
             <p className="text-sm text-muted-foreground">
               Extraction captures each fact with its document citation; versioned rules decide Pass, Fail, or Unable to
-              determine. A human records the final decision.
+              determine. An authorized compliance agent records the final decision.
             </p>
           </div>
         </div>
@@ -270,7 +270,7 @@ export function CertificationReviewPanel() {
                 <span className="font-medium text-foreground">{fact.field_name}</span>: {String(fact.field_value)} —{' '}
                 {fact.source_document_ref} p.{fact.source_page ?? '—'} · {Math.round(Number(fact.confidence) * 100)}%
                 confidence · {fact.extraction_provider}
-                {fact.human_verified ? ' · human verified' : ''}
+                {fact.human_verified ? ' · authorized compliance agent verified' : ''}
               </li>
             ))}
           </ul>
