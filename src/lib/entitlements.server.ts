@@ -49,6 +49,15 @@ export async function loadState(
     .eq("period_start", periodStart)
     .maybeSingle();
 
+  let freeReviewCount = 0;
+  if (isTrial) {
+    const result = await supabase
+      .from("certification_import_items")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    freeReviewCount = result.count ?? 0;
+  }
+
   return {
     status: (access?.["status"] as string) ?? "none",
     planId: (entitlement?.planId ?? null) as string | null,
@@ -75,7 +84,7 @@ export async function loadState(
     },
     usage: {
       periodStart,
-      aiDocsUsed: Number(usage?.["ai_docs_used"] ?? 0),
+      aiDocsUsed: isTrial ? freeReviewCount : Number(usage?.["ai_docs_used"] ?? 0),
       aiDocsBilled: Number(usage?.["ai_docs_billed"] ?? 0),
       propertiesUsed: Number(usage?.["properties_used"] ?? 0),
       unitsUsed: Number(usage?.["units_used"] ?? 0),
