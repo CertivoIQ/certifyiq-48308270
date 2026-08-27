@@ -233,3 +233,25 @@ test("MFH reviews promote blocked owner-policy controls into the sign-off decisi
   assert.ok(result.counts.unableToDetermine >= 7);
   assert.equal(signOffAllowed(result), false);
 });
+
+test("blocked federal program packs always add an Unable to Determine activation finding", () => {
+  const result = evaluateFederalCertificationReview({
+    facts: [],
+    programs: ["HCV_TENANT_BASED"],
+    certificationType: "INITIAL",
+    phaHotmaInput: {
+      program_applicability_validated: true,
+      controlled_source_release_approved: true,
+      current_rule_version_validated: true,
+    },
+  });
+
+  const activation = result.findings.find(
+    (finding) => finding.ruleId === "FED-HCV_TENANT_BASED-ACTIVATION-GATE",
+  );
+  assert.equal(activation.status, "UNABLE_TO_DETERMINE");
+  assert.equal(activation.ruleEvaluationStatus, "BLOCKED");
+  assert.match(activation.explanation, /not active for a supported determination/i);
+  assert.deepEqual(result.controlResults.programActivation.blockedPrograms, ["HCV_TENANT_BASED"]);
+  assert.equal(signOffAllowed(result), false);
+});
