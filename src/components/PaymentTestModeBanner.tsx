@@ -5,7 +5,8 @@ export function PaymentTestModeBanner() {
   if (!clientToken) {
     return (
       <div className="w-full border-b border-reject/40 bg-reject/10 px-4 py-2 text-center text-[12.5px] text-reject">
-        Production checkout is not configured yet. Complete payments go-live to accept real payments.
+        Production checkout is not configured yet. Complete payments go-live to accept real
+        payments.
       </div>
     );
   }
@@ -14,15 +15,16 @@ export function PaymentTestModeBanner() {
       <div className="w-full border-b border-flag/40 bg-flag-soft px-4 py-2 text-center text-[12.5px] text-foreground">
         All payments made in the preview are in test mode.{" "}
         <a
-          href="https://docs.lovable.dev/features/payments#test-and-live-environments"
+          href="https://docs.stripe.com/test-mode"
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium underline"
         >
-          Read more
+          Stripe test-mode guide
         </a>
       </div>
     );
   }
   return null;
 }
+
