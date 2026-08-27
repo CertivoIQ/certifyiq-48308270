@@ -1,16 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  createStripeClient,
-  getStripeErrorMessage,
-  type StripeEnv,
-} from "@/lib/stripe.server";
+import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "@/lib/stripe.server";
+import { normalizeLicenseSelection, type LicenseSelection } from "@/lib/license-selection";
 
-const STANDARD_ANNUAL_LICENSE_CENTS = 6_500_000;
-const PHA_ANNUAL_LICENSE_CENTS = 15_000_000;
 const PRODUCT_CODE = "certivoiq_enterprise";
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type LicensePricingClass = "standard" | "pha";
 
@@ -25,6 +19,7 @@ type EnterpriseInvoiceInput = {
   environment: StripeEnv;
   workflowMode?: "manual" | "automated" | "sandbox_test";
   pricingClass: LicensePricingClass;
+  stateCodes: string[];
 };
 
 export type EnterpriseInvoiceResult =
@@ -37,19 +32,24 @@ export type EnterpriseInvoiceResult =
       workflowMode?: string;
       pricingClass: LicensePricingClass;
       annualPriceCents: number;
+      stateCodes: string[];
     }
   | { error: string };
 
-function annualPriceCents(pricingClass: LicensePricingClass): number {
-  return pricingClass === "pha"
-    ? PHA_ANNUAL_LICENSE_CENTS
-    : STANDARD_ANNUAL_LICENSE_CENTS;
+function licenseSelection(
+  pricingClass: LicensePricingClass,
+  stateCodes: string[],
+): LicenseSelection {
+  return normalizeLicenseSelection({
+    licenseKind: pricingClass === "pha" ? "pha" : "multifamily_enterprise",
+    stateCodes,
+  });
 }
 
 function productLabel(pricingClass: LicensePricingClass): string {
   return pricingClass === "pha"
     ? "CertivoIQ PHA Annual License"
-    : "CertivoIQ Annual Organization License";
+    : "CertivoIQ Multifamily Enterprise Annual License";
 }
 
 async function requireStaff(context: {
@@ -72,7 +72,10 @@ async function resolvePricingClass(
   const db = supabase as {
     from: (table: string) => {
       select: (columns: string) => {
-        eq: (column: string, value: string) => {
+        eq: (
+          column: string,
+          value: string,
+        ) => {
           single: () => PromiseLike<{
             data: { license_pricing_class?: string } | null;
             error: { message?: string } | null;
@@ -94,11 +97,13 @@ async function issueEnterpriseInvoice(
   data: EnterpriseInvoiceInput,
 ): Promise<EnterpriseInvoiceResult> {
   const netDays = data.netDays ?? 30;
-  const amountCents = annualPriceCents(data.pricingClass);
-  const label = productLabel(data.pricingClass);
-  const formattedAmount = `$${(amountCents / 100).toLocaleString()}`;
 
   try {
+    const selection = licenseSelection(data.pricingClass, data.stateCodes);
+    const amountCents = selection.annualAmountUsd * 100;
+    const label = productLabel(data.pricingClass);
+    const formattedAmount = `$${(amountCents / 100).toLocaleString()}`;
+    const stateCodes = selection.stateCodes.join(",");
     const stripe = createStripeClient(data.environment);
     const existing = await stripe.customers.list({ email: data.billingEmail, limit: 1 });
     let customer = existing.data[0];
@@ -109,6 +114,8 @@ async function issueEnterpriseInvoice(
         metadata: {
           organization_id: data.organizationId,
           license_pricing_class: data.pricingClass,
+          license_kind: selection.licenseKind,
+          licensed_state_codes: stateCodes,
           ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
         },
       });
@@ -119,6 +126,8 @@ async function issueEnterpriseInvoice(
           ...customer.metadata,
           organization_id: data.organizationId,
           license_pricing_class: data.pricingClass,
+          license_kind: selection.licenseKind,
+          licensed_state_codes: stateCodes,
           ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
         },
       });
@@ -128,12 +137,17 @@ async function issueEnterpriseInvoice(
       customer: customer.id,
       amount: amountCents,
       currency: "usd",
-      description: `${label} — all currently available platform features`,
+      description: `${label} â€” all currently available platform features`,
       metadata: {
         billing_model: "enterprise_invoice",
         license_product: PRODUCT_CODE,
         organization_id: data.organizationId,
         license_pricing_class: data.pricingClass,
+        license_kind: selection.licenseKind,
+        licensed_state_codes: stateCodes,
+        state_pack_count: String(selection.stateCodes.length),
+        price_lookup_key: selection.priceLookupKey,
+        quantity: String(selection.quantity),
         annual_price_cents: String(amountCents),
         workflow_mode: data.workflowMode ?? "manual",
       },
@@ -144,6 +158,11 @@ async function issueEnterpriseInvoice(
       license_product: PRODUCT_CODE,
       annual_price_cents: String(amountCents),
       license_pricing_class: data.pricingClass,
+      license_kind: selection.licenseKind,
+      licensed_state_codes: stateCodes,
+      state_pack_count: String(selection.stateCodes.length),
+      price_lookup_key: selection.priceLookupKey,
+      quantity: String(selection.quantity),
       organization_id: data.organizationId,
       ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
       organization_name: data.organizationName,
@@ -151,9 +170,7 @@ async function issueEnterpriseInvoice(
       payment_method: data.allowCard ? "ach_or_card" : "ach",
       payment_terms: `net_${netDays}`,
       workflow_mode: data.workflowMode ?? "manual",
-      ...(data.purchaseOrderNumber
-        ? { purchase_order_number: data.purchaseOrderNumber }
-        : {}),
+      ...(data.purchaseOrderNumber ? { purchase_order_number: data.purchaseOrderNumber } : {}),
     };
 
     const invoice = await stripe.invoices.create({
@@ -161,15 +178,10 @@ async function issueEnterpriseInvoice(
       collection_method: "send_invoice",
       days_until_due: netDays,
       auto_advance: true,
-      description:
-        data.workflowMode === "sandbox_test"
-          ? `TEST — ${label}`
-          : label,
+      description: data.workflowMode === "sandbox_test" ? `TEST â€” ${label}` : label,
       metadata,
       payment_settings: {
-        payment_method_types: data.allowCard
-          ? ["us_bank_account", "card"]
-          : ["us_bank_account"],
+        payment_method_types: data.allowCard ? ["us_bank_account", "card"] : ["us_bank_account"],
       },
     } as Parameters<typeof stripe.invoices.create>[0]);
 
@@ -181,11 +193,11 @@ async function issueEnterpriseInvoice(
       kind: "billing",
       headline:
         data.workflowMode === "sandbox_test"
-          ? `Sandbox test invoice issued — ${data.organizationName}`
-          : `Enterprise invoice issued — ${data.organizationName}`,
-      detail: `${sent.number ?? sent.id} · ${formattedAmount} · ${
+          ? `Sandbox test invoice issued â€” ${data.organizationName}`
+          : `Enterprise invoice issued â€” ${data.organizationName}`,
+      detail: `${sent.number ?? sent.id} Â· ${formattedAmount} Â· ${
         data.pricingClass === "pha" ? "PHA" : "Standard"
-      } · Net ${netDays} · ${data.allowCard ? "ACH/card" : "ACH"} · ${
+      } Â· Net ${netDays} Â· ${data.allowCard ? "ACH/card" : "ACH"} Â· ${
         data.workflowMode ?? "manual"
       }`,
       source: "CertivoIQ Enterprise Billing",
@@ -200,6 +212,7 @@ async function issueEnterpriseInvoice(
       workflowMode: data.workflowMode ?? "manual",
       pricingClass: data.pricingClass,
       annualPriceCents: amountCents,
+      stateCodes: selection.stateCodes,
     };
   } catch (error) {
     return { error: getStripeErrorMessage(error) };
@@ -211,11 +224,17 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: Omit<EnterpriseInvoiceInput, "pricingClass">) => {
     if (!UUID_PATTERN.test(data.organizationId)) throw new Error("Invalid organizationId");
-    if (data.crmAccountId && !UUID_PATTERN.test(data.crmAccountId)) throw new Error("Invalid crmAccountId");
+    if (data.crmAccountId && !UUID_PATTERN.test(data.crmAccountId))
+      throw new Error("Invalid crmAccountId");
     if (!data.organizationName.trim()) throw new Error("Organization name is required");
-    if (!/^\S+@\S+\.\S+$/.test(data.billingEmail)) throw new Error("Valid billing email is required");
+    if (!/^\S+@\S+\.\S+$/.test(data.billingEmail))
+      throw new Error("Valid billing email is required");
+    if (!Array.isArray(data.stateCodes) || data.stateCodes.length > 51) {
+      throw new Error("Invalid state rule-pack selection");
+    }
     const netDays = data.netDays ?? 30;
-    if (netDays < 0 || netDays > 120) throw new Error("Payment terms must be between Net 0 and Net 120");
+    if (netDays < 0 || netDays > 120)
+      throw new Error("Payment terms must be between Net 0 and Net 120");
     return { ...data, netDays, workflowMode: data.workflowMode ?? "manual" };
   })
   .handler(async ({ data, context }): Promise<EnterpriseInvoiceResult> => {
@@ -231,31 +250,50 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
  */
 export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: {
-    accountId: string;
-    purchaseOrderNumber?: string;
-    netDays?: number;
-    allowCard?: boolean;
-    environment: StripeEnv;
-    sandboxTest?: boolean;
-  }) => {
-    if (!UUID_PATTERN.test(data.accountId)) throw new Error("Invalid accountId");
-    if (data.sandboxTest && data.environment !== "sandbox") {
-      throw new Error("Test invoices may only be created in sandbox");
-    }
-    const netDays = data.netDays ?? 30;
-    if (netDays < 0 || netDays > 120) throw new Error("Payment terms must be between Net 0 and Net 120");
-    return { ...data, netDays };
-  })
+  .inputValidator(
+    (data: {
+      accountId: string;
+      purchaseOrderNumber?: string;
+      netDays?: number;
+      allowCard?: boolean;
+      environment: StripeEnv;
+      sandboxTest?: boolean;
+      stateCodes: string[];
+    }) => {
+      if (!UUID_PATTERN.test(data.accountId)) throw new Error("Invalid accountId");
+      if (data.sandboxTest && data.environment !== "sandbox") {
+        throw new Error("Test invoices may only be created in sandbox");
+      }
+      if (!Array.isArray(data.stateCodes) || data.stateCodes.length > 51) {
+        throw new Error("Invalid state rule-pack selection");
+      }
+      const netDays = data.netDays ?? 30;
+      if (netDays < 0 || netDays > 120)
+        throw new Error("Payment terms must be between Net 0 and Net 120");
+      return { ...data, netDays };
+    },
+  )
   .handler(async ({ data, context }): Promise<EnterpriseInvoiceResult> => {
     await requireStaff(context);
 
     const db = context.supabase as unknown as {
       from: (table: string) => {
         select: (columns: string) => {
-          eq: (column: string, value: string) => {
-            single: () => PromiseLike<{ data: Record<string, unknown> | null; error: { message?: string } | null }>;
-            order: (column: string, options: { ascending: boolean }) => PromiseLike<{ data: Record<string, unknown>[] | null; error: { message?: string } | null }>;
+          eq: (
+            column: string,
+            value: string,
+          ) => {
+            single: () => PromiseLike<{
+              data: Record<string, unknown> | null;
+              error: { message?: string } | null;
+            }>;
+            order: (
+              column: string,
+              options: { ascending: boolean },
+            ) => PromiseLike<{
+              data: Record<string, unknown>[] | null;
+              error: { message?: string } | null;
+            }>;
           };
         };
       };
@@ -309,5 +347,7 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
       environment: data.environment,
       workflowMode: data.sandboxTest ? "sandbox_test" : "automated",
       pricingClass,
+      stateCodes: data.stateCodes,
     });
   });
+
