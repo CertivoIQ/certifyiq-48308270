@@ -64,9 +64,9 @@ const scenes: Scene[] = [
   {
     eyebrow: "3 · Apply rules",
     title: "Activate every applicable rule layer",
-    body: "Supported federal LIHTC, HOME, Project-Based Section 8, and HOTMA requirements are evaluated together.",
+    body: "Activated federal controls are evaluated only when their required inputs and source versions are available.",
     narration:
-      "The platform evaluates supported federal LIHTC, HOME, Project-Based Section 8, and HOTMA requirements using versioned rules. State and project-specific requirements require separate Manual Review.",
+      "The platform applies only activated, versioned federal controls. Inactive, state, local, and project-specific requirements return Unable to Determine or require separate Manual Review.",
     audioSrc: "/audio/welcome/scene-03-rules.mp3",
     fallbackSeconds: 10,
     Visual: RulesVisual,
@@ -511,7 +511,7 @@ function RulesVisual() {
     <StageCard label="Versioned rule engine">
       <div className="relative min-h-56">
         <div className="absolute inset-y-4 left-0 flex w-36 flex-col justify-around">
-          {["LIHTC", "HOME", "SECTION 8", "HOTMA", "STATE PACK"].map(
+          {["SOURCE", "RULE VERSION", "EVIDENCE", "MANUAL REVIEW", "APPROVAL"].map(
             (program) => (
               <span
                 key={program}
