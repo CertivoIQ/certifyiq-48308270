@@ -1,0 +1,67 @@
+{
+  "title": "First-wave LIHTC state-pack controlled source intake",
+  "batch": "WA-WI-TX-MO-OH",
+  "created_at": "2026-08-27T00:00:00.000Z",
+  "activation_policy": "NO_STATE_PACK_MAY_ACTIVATE_FROM_THIS_MANIFEST. Every source must be downloaded from its official publisher, byte-hashed, content-validated, reconciled for currency and supersession, mapped to deterministic fixtures, and independently approved before a release is eligible.",
+  "shared_release_requirements": [
+    "Exact official source bytes and SHA-256 identity",
+    "Publisher, version, publication/effective date, and retrieval timestamp",
+    "Source-content validation and supersession reconciliation",
+    "Page-cited deterministic rules with positive, negative, boundary, layered-program, and supersession fixtures",
+    "Two-person independent compliance approval",
+    "Property-specific authority, limits, and regulatory-agreement terms remain separately verified"
+  ],
+  "states": [
+    {
+      "state_code": "WA",
+      "agency": "Washington State Housing Finance Commission",
+      "scope": "LIHTC compliance monitoring only; excludes allocation scoring and property-specific regulatory-agreement terms",
+      "official_sources": [
+        {"type": "COMPLIANCE_MANUAL_INDEX", "url": "https://wshfc.org/managers/ManualTaxCreditIndex.htm", "status": "OFFICIAL_PUBLIC_SOURCE_IDENTIFIED"},
+        {"type": "COMPLIANCE_MANUAL_STATE_REQUIREMENTS", "url": "https://www.wshfc.org/managers/ManualTaxCredit/50_Chap03WashingtonStateRequirements_Dec2024_Final.pdf", "status": "PENDING_CURRENT_BYTES_AND_SUPERSESSION_VALIDATION"}
+      ],
+      "release_status": "BLOCKED_SOURCE_VALIDATION_AND_INDEPENDENT_APPROVAL"
+    },
+    {
+      "state_code": "WI",
+      "agency": "Wisconsin Housing and Economic Development Authority",
+      "scope": "LIHTC compliance monitoring only; excludes allocation scoring and property-specific regulatory-agreement terms",
+      "official_sources": [
+        {"type": "COMPLIANCE_MANUAL", "url": "https://www.wheda.com/globalassets/documents/forms-manuals-resources/htc-forms/monitoring/htc-monitoring-manual.pdf", "status": "PENDING_CURRENT_BYTES_AND_SUPERSESSION_VALIDATION"}
+      ],
+      "release_status": "BLOCKED_SOURCE_VALIDATION_AND_INDEPENDENT_APPROVAL"
+    },
+    {
+      "state_code": "TX",
+      "agency": "Texas Department of Housing and Community Affairs",
+      "scope": "LIHTC reporting and compliance monitoring only; excludes allocation scoring and property-specific regulatory-agreement terms",
+      "official_sources": [
+        {"type": "COMPLIANCE_MANUAL_AND_RULES_INDEX", "url": "https://www.tdhca.texas.gov/compliance-manuals-and-rules", "status": "OFFICIAL_PUBLIC_SOURCE_IDENTIFIED"},
+        {"type": "STATE_RULE", "url": "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/CM-SubCh-F-Searchable.pdf", "status": "PENDING_CURRENT_BYTES_AND_SUPERSESSION_VALIDATION"}
+      ],
+      "release_status": "BLOCKED_SOURCE_VALIDATION_AND_INDEPENDENT_APPROVAL"
+    },
+    {
+      "state_code": "MO",
+      "agency": "Missouri Housing Development Commission",
+      "scope": "LIHTC annual reporting, Form 8609, and recertification boundary only; excludes allocation scoring and property-specific regulatory-agreement terms",
+      "official_sources": [
+        {"type": "COMPLIANCE_PROGRAM_PAGE", "url": "https://mhdc.com/programs/asset-management/program-compliance/housing-programs/low-income-housing-tax-credit-lihtc-compliance/", "status": "OFFICIAL_PUBLIC_SOURCE_IDENTIFIED"},
+        {"type": "COMPLIANCE_MANUAL", "url": "https://mhdc.com/media/s4shatyr/lihtc-tax-credit-manual.pdf", "status": "PENDING_CURRENT_BYTES_AND_SUPERSESSION_VALIDATION"},
+        {"type": "CERTIFICATION_PORTAL_GUIDANCE", "url": "https://mhdc.com/programs/asset-management/program-compliance/compliance-resources/certification-portal-and-annual-reporting/", "status": "OFFICIAL_PUBLIC_SOURCE_IDENTIFIED"}
+      ],
+      "release_status": "BLOCKED_SOURCE_VALIDATION_AND_INDEPENDENT_APPROVAL"
+    },
+    {
+      "state_code": "OH",
+      "agency": "Ohio Housing Finance Agency",
+      "scope": "LIHTC compliance monitoring only; excludes allocation scoring and property-specific regulatory-agreement terms",
+      "official_sources": [
+        {"type": "COMPLIANCE_POLICIES_INDEX", "url": "https://ohiohome.org/compliance/policies.aspx", "status": "OFFICIAL_PUBLIC_SOURCE_IDENTIFIED"},
+        {"type": "COMPLIANCE_MANUAL", "url": "https://ohio.ohiohome.org/compliance/documents/OHFA-Compliance-Manual.pdf", "status": "PENDING_CURRENT_BYTES_AND_SUPERSESSION_VALIDATION"},
+        {"type": "COMPLIANCE_UPDATE_ARCHIVE", "url": "https://www.ohiohome.org/compliance/messagearchive.aspx", "status": "OFFICIAL_PUBLIC_SOURCE_IDENTIFIED"}
+      ],
+      "release_status": "BLOCKED_SOURCE_VALIDATION_AND_INDEPENDENT_APPROVAL"
+    }
+  ]
+}
