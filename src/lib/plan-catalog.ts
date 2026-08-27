@@ -1,94 +1,49 @@
-/**
- * Single source of truth linking payment-provider price IDs to what a plan
- * unlocks inside CertivoIQ. Price IDs are stable across test and live.
- */
-
-export type PlanKey =
-  | "professional"
-  | "business"
-  | "enterprise"
-  | "enterprise_plus"
-  | "annual";
+/** Authoritative billing catalog. Browser input never selects a Stripe price. */
+export type LicenseKind = "multifamily_enterprise" | "pha";
 
 export interface PlanEntitlement {
-  planId: PlanKey;
+  planId: LicenseKind;
   priceId: string;
   name: string;
-  /** null = unlimited */
-  unitLimit: number | null;
-  propertyLimit: number | null;
-  aiDocAllowance: number | null;
+  unitLimit: null;
+  propertyLimit: null;
+  aiDocAllowance: null;
   statePacks: number | null;
 }
 
-export const PLAN_PRICE_IDS: Record<PlanKey, string> = {
-  professional: "professional_monthly",
-  business: "business_monthly",
-  enterprise: "enterprise_monthly",
-  enterprise_plus: "enterprise_plus_monthly",
-  annual: "certivoiq_enterprise",
-};
-
-export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = {
-  professional_monthly: {
-    planId: "professional",
-    priceId: "professional_monthly",
-    name: "CertivoIQ Professional",
-    unitLimit: 500,
-    propertyLimit: 5,
-    aiDocAllowance: 500,
+export const LICENSES: Record<LicenseKind, PlanEntitlement & { annualAmountUsd: number }> = {
+  multifamily_enterprise: {
+    planId: "multifamily_enterprise",
+    priceId: "multifamily_enterprise_annual",
+    name: "CertivoIQ Multifamily Enterprise",
+    annualAmountUsd: 65_000,
+    unitLimit: null,
+    propertyLimit: null,
+    aiDocAllowance: null,
+    statePacks: null,
+  },
+  pha: {
+    planId: "pha",
+    priceId: "pha_annual",
+    name: "CertivoIQ PHA",
+    annualAmountUsd: 150_000,
+    unitLimit: null,
+    propertyLimit: null,
+    aiDocAllowance: null,
     statePacks: 1,
   },
-  business_monthly: {
-    planId: "business",
-    priceId: "business_monthly",
-    name: "CertivoIQ Business",
-    unitLimit: 10000,
-    propertyLimit: 50,
-    aiDocAllowance: 10000,
-    statePacks: null,
-  },
-  enterprise_monthly: {
-    planId: "enterprise",
-    priceId: "enterprise_monthly",
-    name: "CertivoIQ Enterprise",
-    unitLimit: null,
-    propertyLimit: null,
-    aiDocAllowance: null,
-    statePacks: null,
-  },
-  enterprise_plus_monthly: {
-    planId: "enterprise_plus",
-    priceId: "enterprise_plus_monthly",
-    name: "CertivoIQ Enterprise Plus",
-    unitLimit: null,
-    propertyLimit: null,
-    aiDocAllowance: null,
-    statePacks: null,
-  },
-  certivoiq_enterprise: {
-    planId: "annual",
-    priceId: "certivoiq_enterprise",
-    name: "CertivoIQ Annual Platform License",
-    unitLimit: null,
-    propertyLimit: null,
-    aiDocAllowance: null,
-    statePacks: null,
-  },
 };
 
-/** Add-on price IDs that layer on top of a platform plan. */
-export const ADDON_PRICE_IDS = {
-  academySeat: "academy_seat_monthly",
-  academyProperty: "academy_property_monthly",
-  aiDocOverage: "ai_document_overage_each",
-} as const;
-
-export const ADDON_PRICE_ID_LIST: string[] = Object.values(ADDON_PRICE_IDS);
+export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = Object.fromEntries(
+  Object.values(LICENSES).map((license) => [license.priceId, license]),
+);
+export const PLAN_PRICE_ID_LIST = Object.keys(PLAN_ENTITLEMENTS);
+export const ADDON_PRICE_ID_LIST: string[] = [];
+/** Inert compatibility keys retained while legacy webhook rows drain. */
+export const ADDON_PRICE_IDS = { academySeat: "", academyProperty: "" } as const;
 
 /** Files are held for 14 days after paid access ends, then permanently deleted. */
 export const FILE_RETENTION_DAYS = 14;
-
 /** FREE review capacity. No card or subscription trial is attached. */
 export const FREE_REVIEW_ENTITLEMENT = {
   unitLimit: 0,
@@ -96,30 +51,19 @@ export const FREE_REVIEW_ENTITLEMENT = {
   aiDocAllowance: 3,
 } as const;
 
-/** Every recurring/annual plan entitlement key, used to tell plans apart from add-ons. */
-export const PLAN_PRICE_ID_LIST: string[] = Object.values(PLAN_PRICE_IDS);
-
 export function entitlementForPrice(priceId: string | null | undefined): PlanEntitlement | null {
-  if (!priceId) return null;
-  return PLAN_ENTITLEMENTS[priceId] ?? null;
-}
-
-export function planKeyToPriceId(plan: string): string | null {
-  return PLAN_PRICE_IDS[plan as PlanKey] ?? null;
-}
-
-export function formatLimit(value: number | null): string {
-  return value === null ? "Unlimited" : value.toLocaleString();
+  return priceId ? (PLAN_ENTITLEMENTS[priceId] ?? null) : null;
 }
 
 export function isPlanPrice(priceId: string | null | undefined): boolean {
   return !!priceId && PLAN_PRICE_ID_LIST.includes(priceId);
 }
 
-export function isAddonPrice(priceId: string | null | undefined): boolean {
-  return !!priceId && ADDON_PRICE_ID_LIST.includes(priceId);
+export function isAddonPrice(_priceId: string | null | undefined): boolean {
+  return false;
 }
 
-/** Price charged per certification processed beyond the plan allowance. */
-export const AI_DOC_OVERAGE_PRICE_ID = ADDON_PRICE_IDS.aiDocOverage;
-export const AI_DOC_OVERAGE_AMOUNT_USD = 3;
+export function formatLimit(value: number | null): string {
+  return value === null ? "Unlimited" : value.toLocaleString();
+}
+
