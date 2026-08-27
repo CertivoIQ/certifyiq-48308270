@@ -59,7 +59,7 @@ export const triageSupportRequest = createServerFn({ method: "POST" })
       classification.category,
       classification.priority,
       classification.disposition,
-      classification.humanRequired ? "human-required" : "auto-resolution-eligible",
+      classification.humanRequired ? "authorized-review-required" : "auto-resolution-eligible",
     ];
 
     const { data: supportCase, error } = await supabase
@@ -99,7 +99,7 @@ export const triageSupportRequest = createServerFn({ method: "POST" })
       supportCase,
       reply:
         classification.priority === SUPPORT_PRIORITY.security
-          ? "I created an immediate security/privacy escalation. Do not include additional sensitive resident data unless an authorized human reviewer requests it."
-          : `I created support case ${supportCase.case_number} for human review.`,
+          ? "I created an immediate security/privacy escalation. Do not include additional sensitive resident data unless an authorized support agent requests it."
+          : `I created support case ${supportCase.case_number} for authorized support review.`,
     } as const;
   });
