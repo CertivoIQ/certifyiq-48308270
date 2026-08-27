@@ -139,7 +139,7 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
       </Button>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        Your portfolio unit count determines the initial plan recommendation: Professional up to 500 units, Business up to 10,000, and Enterprise above 10,000.
+        CertivoIQ uses organization-level annual licensing. Final scope and pricing are confirmed during contracting; there are no public feature tiers.
       </p>
     </Panel>
   );
