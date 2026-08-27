@@ -58,7 +58,7 @@ export function ProductionDashboard() {
             <span>
               <span className="block font-display text-[15px]">Upload certifications</span>
               <span className="mt-1 block text-[13px] text-muted-foreground">
-                Every file gets a Pass/Fail verdict with cited rules and correction steps before human sign-off.
+                Every file gets a Pass/Fail verdict with cited rules and correction steps before authorized compliance approval.
               </span>
             </span>
           </Link>
