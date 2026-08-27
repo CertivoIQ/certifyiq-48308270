@@ -100,3 +100,16 @@ test("every advertised upload format has a verified processing path", () => {
   assert.match(ocr, /ocrConfidence/);
   assert.match(extraction, /requires a verified OCR sidecar or is not supported/);
 });
+
+test("the three-review offer is enforced server-side and serialized", () => {
+  const migration = read("supabase/migrations/20260827200000_enforce_free_review_limit.sql");
+  const state = read("src/lib/entitlements.server.ts");
+
+  assert.match(migration, /before insert on public\.certification_import_items/);
+  assert.match(migration, /pg_advisory_xact_lock/);
+  assert.match(migration, /existing_reviews >= 3/);
+  assert.match(migration, /has_active_subscription/);
+  assert.doesNotMatch(migration, /application\/zip/);
+  assert.match(state, /freeReviewCount/);
+  assert.match(state, /isTrial \? freeReviewCount/);
+});
