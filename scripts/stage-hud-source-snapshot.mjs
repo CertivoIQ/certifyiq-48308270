@@ -63,7 +63,7 @@ if (!snapshot) {
   throw new Error(`HUD source validation blocked: ${retrievalFailures.join(",") || "NO_VALID_RESPONSE"}`);
 }
 
-const endpoint = `${process.env.CERTIVOIQ_SUPABASE_URL.replace(/\\/$/, "")}/rest/v1/rpc/operations_stage_hud_source_v1`;
+const endpoint = `${process.env.CERTIVOIQ_SUPABASE_URL.replace(/\/$/, "")}/rest/v1/rpc/operations_stage_hud_source_v1`;
 const staged = await fetch(endpoint, {
   method: "POST",
   headers: {
