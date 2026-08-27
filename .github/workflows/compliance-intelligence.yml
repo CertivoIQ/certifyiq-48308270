@@ -60,6 +60,7 @@ jobs:
           node --test scripts/test-nj-lihtc-compliance-rule-pack.mjs
           node --test scripts/test-ny-scoped-lihtc-compliance-rule-pack.mjs
           node --test scripts/test-mo-lihtc-compliance-rule-pack.mjs
+          node --test scripts/test-ne-lihtc-compliance-rule-pack.mjs
           node --test scripts/test-external-state-pack-attestation.mjs
           bun run test:mfh-hotma
           bun run test:mfh-hotma-operations
