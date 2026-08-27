@@ -20,6 +20,7 @@ import {
 import { classifyAllMfhHotmaOwnerSystemControls } from "./mfh-hotma-owner-system-engine.mjs";
 import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
 import { classifyAllPhaHotmaImplementationModules } from "./pha-hotma-implementation-engine.mjs";
+import { FEDERAL_PROGRAM_RULE_PACKS } from "./federal-program-rule-pack-registry.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
   "federal-review-orchestrator-2026.08.5";
@@ -48,6 +49,11 @@ const CONTROL = Object.freeze({
     ruleId: "FED-CERTIFICATION-TYPE-SCOPE-GATE-001",
     title: "Certification event type scope",
     citation: "Applicable federal program certification-cycle authority",
+  }),
+  programActivation: Object.freeze({
+    ruleId: "FED-PROGRAM-ACTIVATION-GATE-001",
+    title: "Federal program rule-pack activation",
+    citation: "CertivoIQ controlled-source and rule-pack activation registry",
   }),
   mfhHotmaOperations: Object.freeze({
     ruleId: "MFH-HOTMA-OPERATIONAL-CONTROL",
@@ -155,6 +161,9 @@ function countsFor(findings) {
  */
 export function evaluateFederalCertificationReview(input = {}) {
   const programs = normalizeCertificationPrograms(input.programs);
+  const blockedPrograms = programs.filter(
+    (program) => FEDERAL_PROGRAM_RULE_PACKS[program]?.activationStatus === "BLOCKED",
+  );
   const core = evaluateCertification({
     facts: input.facts ?? [],
     programs,
@@ -230,7 +239,19 @@ export function evaluateFederalCertificationReview(input = {}) {
         controlFinding(CONTROL.mfhHotmaOperations, classification),
       ) ?? [];
 
+  const programActivationFindings = blockedPrograms.map((program) =>
+    controlFinding(
+      { ...CONTROL.programActivation, ruleId: `FED-${program}-ACTIVATION-GATE` },
+      blockedControl(
+        "PROGRAM_RULE_PACK_NOT_ACTIVE",
+        `${program} is not active for a supported determination. The review remains Unable to Determine and requires Manual Review.`,
+        FEDERAL_PROGRAM_RULE_PACKS[program]?.requiredControls ?? [],
+      ),
+    ),
+  );
+
   const controlFindings = [
+    ...programActivationFindings,
     controlFinding(CONTROL.tenantEligibility, tenantEligibility),
     ...(recertification
       ? [controlFinding(
@@ -262,6 +283,10 @@ export function evaluateFederalCertificationReview(input = {}) {
       mfhHotma,
       mfhHotmaOperations,
       phaHotma,
+      programActivation: {
+        blockedPrograms,
+        status: blockedPrograms.length ? "BLOCKED" : "ALLOWED",
+      },
     },
   };
 }
