@@ -87,3 +87,16 @@ test("environment configuration is injected and never committed", () => {
   assert.match(read(".gitignore"), /^\.env$/m);
   assert.match(read(".gitignore"), /^\.env\.\*$/m);
 });
+
+test("every advertised upload format has a verified processing path", () => {
+  const upload = read("src/components/compliance-intelligence-suite.tsx");
+  const ocr = read("src/lib/pdf-ocr.ts");
+  const extraction = read("src/lib/certification-extraction.server.ts");
+
+  assert.doesNotMatch(upload, /\.zip|or ZIP/);
+  assert.match(upload, /prepareImageForReview/);
+  assert.match(ocr, /isImageFile/);
+  assert.match(ocr, /sourceSha256/);
+  assert.match(ocr, /ocrConfidence/);
+  assert.match(extraction, /requires a verified OCR sidecar or is not supported/);
+});
