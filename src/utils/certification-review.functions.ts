@@ -9,9 +9,9 @@ import { evaluateSubmissionAuthority } from "@/lib/certification-authority.mjs";
  * upload (storage + certification_import_items)
  *   -> extraction with per-fact citations (certification_facts)
  *   -> validated/versioned rule pack selection (state_rule_pack_releases + registry)
- *   -> deterministic evaluation (compliance-rule-engine.mjs — AI never decides)
+ *   -> deterministic evaluation (compliance-rule-engine.mjs — deterministic rules decide)
  *   -> persisted findings (compliance_findings)
- *   -> human decision recorded append-only (finding_reviews)
+ *   -> authorized compliance decision recorded append-only (finding_reviews)
  *   -> immutable evidence manifest (evidence_manifests)
  *
  * Row-level security scopes every read and write to the signed-in user.
@@ -383,7 +383,7 @@ export const listCertificationItems = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
-/** Human sign-off. Recorded append-only; a determination is never auto-approved. */
+/** Authorized compliance approval. Recorded append-only; a determination is never auto-approved. */
 export const recordFindingDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
@@ -457,7 +457,7 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
     if (!manifest?.manifest_sha256) {
       return {
         error:
-          "A current evidence manifest is required before a human decision can be recorded.",
+          "A current evidence manifest is required before an authorized compliance decision can be recorded.",
       } as const;
     }
 
@@ -505,7 +505,7 @@ export const recordFindingDecision = createServerFn({ method: "POST" })
       manifestSha256: manifest.manifest_sha256,
     } as const;
   });
-/** Explicit human revocation. Appends a new immutable review record; prior approvals are never mutated. */
+/** Explicit authorized revocation. Appends a new immutable review record; prior approvals are never mutated. */
 export const revokeFindingApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
