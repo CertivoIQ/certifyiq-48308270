@@ -122,7 +122,7 @@ export function evaluateSubmissionAuthority({
       submissionAuthority: SUBMISSION_AUTHORITY.blocked,
       submissionStatus: SUBMISSION_STATUS.revokedApproval,
       reason:
-        "One or more human approvals have been revoked.",
+        "One or more authorized compliance approvals have been revoked.",
       affectedFindingIds: revokedApproval,
     };
   }
@@ -132,7 +132,7 @@ export function evaluateSubmissionAuthority({
       submissionAuthority: SUBMISSION_AUTHORITY.blocked,
       submissionStatus: SUBMISSION_STATUS.expiredApproval,
       reason:
-        "One or more human approvals have expired.",
+        "One or more authorized compliance approvals have expired.",
       affectedFindingIds: expiredApproval,
     };
   }
@@ -152,7 +152,7 @@ export function evaluateSubmissionAuthority({
       submissionAuthority: SUBMISSION_AUTHORITY.blocked,
       submissionStatus: SUBMISSION_STATUS.reviewRequired,
       reason:
-        "Every current finding requires human approval before submission.",
+        "Every current finding requires authorized compliance approval before submission.",
       affectedFindingIds: missingApproval,
     };
   }
