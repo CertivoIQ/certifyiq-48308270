@@ -41,7 +41,7 @@ const pages: Record<PhaPersona, PersonaPage> = {
     eyebrow: "Compliance / QA Director",
     headline: "Give Your Review Team an Independent Review Layer",
     subhead:
-      "Prioritize the certifications that need human attention and keep every finding connected to its evidence and governing rule.",
+      "Prioritize the certifications that need authorized compliance review and keep every finding connected to its evidence and governing rule.",
     cta: "Request a Compliance Demo",
     commercialHook: "Your team reviews the files. CertivoIQ helps them focus on the exceptions that matter.",
     risks: ["Manual sampling that misses isolated errors", "Evidence conflicts buried across documents", "Review standards varying by reviewer or office"],
