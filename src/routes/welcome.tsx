@@ -298,7 +298,7 @@ function WelcomePage() {
           <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-9 w-auto object-contain dark:block" /><p className="mt-1 text-[11px] text-muted-foreground">FIND COMPLIANCE RISK BEFORE THE AUDITOR.</p></div>
           <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/privacy">Privacy</Link><Link className="underline" to="/terms">Terms</Link><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
         </div>
-        <p className="cite mt-4 text-center">Federal baseline review only. State-agency, allocating-agency, local, and project-specific requirements require separate Manual Review.</p>
+        <p className="cite mt-4 text-center">CertivoIQ reviews the federal requirements it has been specifically built and validated to apply, including supported LIHTC, HOME, Project-Based Section 8, and HOTMA requirements. Other requirements may require separate Manual Review.</p>
       </footer>
     </div>
   );
