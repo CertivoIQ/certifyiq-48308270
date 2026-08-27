@@ -223,9 +223,6 @@ export const createPortalSession = createServerFn({ method: "POST" })
     if (subError || !sub?.stripe_customer_id) return { error: "No subscription found" };
 
     try {
-      if (data.environment === "live" && !isLiveBillingVerified()) {
-        return { error: "Live billing is not verified for release." };
-      }
       const stripe = createStripeClient(data.environment);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id,
@@ -254,9 +251,6 @@ export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<SessionStatusResult> => {
     try {
-      if (data.environment === "live" && !isLiveBillingVerified()) {
-        return { error: "Live billing is not verified for release." };
-      }
       const stripe = createStripeClient(data.environment);
       const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
         expand: ["line_items.data.price"],
@@ -306,9 +300,6 @@ export const setCancellation = createServerFn({ method: "POST" })
     if (!sub?.stripe_subscription_id) return { error: "No active subscription found" };
 
     try {
-      if (data.environment === "live" && !isLiveBillingVerified()) {
-        return { error: "Live billing is not verified for release." };
-      }
       const stripe = createStripeClient(data.environment);
       await stripe.subscriptions.update(sub.stripe_subscription_id, {
         cancel_at_period_end: data.cancel,
