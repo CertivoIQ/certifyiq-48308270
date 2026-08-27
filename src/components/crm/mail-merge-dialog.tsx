@@ -25,7 +25,7 @@ const DEFAULT_BODY = `Hi {{first_name}},
 
 {{company}} manages {{units}} affordable units across {{states}} — every one of those files has to survive a {{programs}} audit.
 
-CertivoIQ reviews tenant income certifications and TICs against program rules before an auditor ever sees them, gives a pass/fail score with correction steps, and keeps a human sign-off on record.
+CertivoIQ reviews tenant income certifications and TICs against program rules before an auditor ever sees them, gives a pass/fail score with correction steps, and keeps authorized compliance approval on record.
 
 Worth a 15-minute look at how it would score your last 10 certifications?`;
 
