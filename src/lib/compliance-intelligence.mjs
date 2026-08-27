@@ -84,7 +84,7 @@ export function canSubmitCertification({ status, approvedBy, approvedAt }) {
 
 export function createSubmissionRequest(input) {
   if (!canSubmitCertification(input)) {
-    throw new Error('Certification must receive human approval before submission.');
+    throw new Error('Certification must receive authorized compliance approval before submission.');
   }
   return {
     authorityName: input.authorityName,
