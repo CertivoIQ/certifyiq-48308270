@@ -82,7 +82,7 @@ const EXECUTIVE_OUTCOMES = [
   { title: "Scale capacity", detail: "Give compliance leaders more review capacity without turning the workflow into another administrative burden." },
 ] as const;
 
-const PROGRAMS = ["LIHTC (IRC §42)", "Project-Based Section 8", "HOME", "HOTMA income & asset provisions"] as const;
+const PROGRAMS = ["Activated federal controls only", "Versioned rule provenance", "Evidence traceability", "Unable to Determine safeguards"] as const;
 
 function WelcomePage() {
   const { isActive: isSubscriber } = useSubscription();
@@ -249,9 +249,9 @@ function WelcomePage() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[.16em] text-gold">Program scope</p>
-                <p className="mt-2 font-display text-lg">Built around the federal program rules your team already works with.</p>
+                <p className="mt-2 font-display text-lg">Determinations are limited to controls whose required sources, inputs, and rule versions are active.</p>
               </div>
-              <Link className="text-[12.5px] font-semibold underline" to="/methodology">Review supported programs</Link>
+              <Link className="text-[12.5px] font-semibold underline" to="/methodology">Review scope and limitations</Link>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {PROGRAMS.map((program) => <Pill key={program} tone="neutral">{program}</Pill>)}
@@ -298,7 +298,7 @@ function WelcomePage() {
           <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-9 w-auto object-contain dark:hidden" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-9 w-auto object-contain dark:block" /><p className="mt-1 text-[11px] text-muted-foreground">FIND COMPLIANCE RISK BEFORE THE AUDITOR.</p></div>
           <div className="flex flex-wrap justify-center gap-4 text-[11px] text-muted-foreground sm:justify-end"><Link className="underline" to="/privacy">Privacy</Link><Link className="underline" to="/terms">Terms</Link><Link className="underline" to="/security">Security &amp; data use</Link><Link className="underline" to="/methodology">Methodology</Link><Link className="underline" to="/contact-support">Contact</Link></div>
         </div>
-        <p className="cite mt-4 text-center">CertivoIQ reviews the federal requirements it has been specifically built and validated to apply, including supported LIHTC, HOME, Project-Based Section 8, and HOTMA requirements. Other requirements may require separate Manual Review.</p>
+        <p className="cite mt-4 text-center">CertivoIQ makes a determination only when the required federal controls, source versions, and inputs are active. Inactive, non-federal, local, and project-specific requirements return Unable to Determine or require separate Manual Review.</p>
       </footer>
     </div>
   );
