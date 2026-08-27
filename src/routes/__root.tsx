@@ -14,6 +14,8 @@ import videoPrivacyCss from "../styles/video-privacy.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { WizardHelper } from "@/components/merlin";
+
+const PUBLIC_MERLIN_ENABLED = import.meta.env.VITE_MERLIN_PUBLIC_CHAT_ENABLED === "true";
 import { LanguageProvider, useT } from "@/lib/i18n/provider";
 
 function NotFoundComponent() {
@@ -84,7 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Affordable Housing Compliance Intelligence. CertivoIQ reviews LIHTC, Section 8, HOME and HOTMA certifications against supported federal requirements with versioned rules and traceable evidence.",
+          "Affordable Housing Compliance Intelligence. CertivoIQ applies only activated, versioned federal controls and keeps every finding connected to traceable evidence.",
       },
       { name: "author", content: "CertivoIQ" },
       { property: "og:title", content: "CertivoIQ — Affordable Housing Compliance Intelligence" },
@@ -147,7 +149,7 @@ function RootShell({ children }: { children: ReactNode }) {
               url: "https://certivoiq.com",
               logo: "https://certivoiq.com/certivoiq-mark.png",
               image: "https://certivoiq.com/certivoiq-social-card.png",
-              description: "Affordable Housing Compliance Intelligence for LIHTC, Section 8, HOME and HOTMA programs.",
+              description: "Affordable Housing Compliance Intelligence with activated federal controls, evidence traceability, Manual Review routing, and authorized compliance approval.",
             }),
           }}
         />
@@ -168,7 +170,7 @@ function RootComponent() {
       <LanguageProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        <WizardHelper />
+        {PUBLIC_MERLIN_ENABLED ? <WizardHelper /> : null}
         <Toaster />
       </LanguageProvider>
     </QueryClientProvider>
