@@ -247,7 +247,7 @@ async function applyPurchase(
 
   await supabase.from("crm_news").insert({
     kind: "subscriber",
-    headline: `New subscriber paid â€” ${accountName ?? contactEmail ?? "New customer"} on ${plan.name}`,
+    headline: `New subscriber paid — ${accountName ?? contactEmail ?? "New customer"} on ${plan.name}`,
     detail: `${plan.name} subscription started. Trial converted, file retention hold cleared, LaunchPad onboarding started.`,
     source: "CertivoIQ Payments",
   });

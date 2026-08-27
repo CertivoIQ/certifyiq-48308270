@@ -196,8 +196,8 @@ export function EnterpriseInvoicePanel({
             disabled={busy}
             className="mt-3 h-10 w-full max-w-md rounded-md border border-input bg-background px-3 text-sm text-foreground"
           >
-            <option value="standard">Multifamily Enterprise â€” $65,000/state/year</option>
-            <option value="pha">Public Housing Authority (PHA) â€” $150,000/year</option>
+            <option value="standard">Multifamily Enterprise — $65,000/state/year</option>
+            <option value="pha">Public Housing Authority (PHA) — $150,000/year</option>
           </select>
         </div>
         <div className="rounded-md border border-emerald-300 bg-white px-4 py-3 text-right dark:border-emerald-800 dark:bg-emerald-950">
@@ -240,8 +240,8 @@ export function EnterpriseInvoicePanel({
       <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
         <p className="font-semibold text-emerald-950 dark:text-emerald-50">Automated workflow</p>
         <p className="mt-1 text-emerald-800 dark:text-emerald-200">
-          CRM organization â†’ pricing class â†’ preferred verified finance/billing contact â†’ PO/terms â†’
-          ACH/card rules â†’ {displayedPrice} invoice â†’ CRM log â†’ paid-invoice license activation.
+          CRM organization → pricing class → preferred verified finance/billing contact → PO/terms →
+          ACH/card rules → {displayedPrice} invoice → CRM log → paid-invoice license activation.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button
@@ -249,7 +249,7 @@ export function EnterpriseInvoicePanel({
             disabled={busy || !verifiedEmails.length || !stateSelectionIsValid}
           >
             <Workflow className="size-4" />
-            {busy ? "Runningâ€¦" : "Run automated invoice workflow"}
+            {busy ? "Running…" : "Run automated invoice workflow"}
           </Button>
           {environment === "sandbox" && (
             <Button
@@ -274,7 +274,7 @@ export function EnterpriseInvoicePanel({
             <option value="">Select verified contact</option>
             {verifiedEmails.map((contact) => (
               <option key={contact.id} value={contact.email ?? ""}>
-                {contact.name} â€” {contact.email}
+                {contact.name} — {contact.email}
               </option>
             ))}
           </select>
@@ -323,7 +323,7 @@ export function EnterpriseInvoicePanel({
           disabled={busy || !billingEmail || !stateSelectionIsValid}
         >
           <FileText className="size-4" />
-          {busy ? "Issuing invoiceâ€¦" : `Issue ${displayedPrice} manually`}
+          {busy ? "Issuing invoice…" : `Issue ${displayedPrice} manually`}
         </Button>
         {hostedInvoiceUrl && (
           <Button variant="outline" asChild>

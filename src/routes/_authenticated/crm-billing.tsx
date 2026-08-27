@@ -13,7 +13,7 @@ import type { LicensePricingClass } from "@/lib/license-pricing.functions";
 export const Route = createFileRoute("/_authenticated/crm-billing")({
   head: () => ({
     meta: [
-      { title: "Enterprise billing â€” CertivoIQ CRM" },
+      { title: "Enterprise billing — CertivoIQ CRM" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -99,11 +99,11 @@ function CrmBillingPage() {
                 const pricingClass =
                   (account as Account & { license_pricing_class?: string })
                     .license_pricing_class === "pha"
-                    ? "PHA Â· $150,000"
-                    : "Multifamily Enterprise Â· $65,000/state";
+                    ? "PHA · $150,000"
+                    : "Multifamily Enterprise · $65,000/state";
                 return (
                   <option key={account.id} value={account.id}>
-                    {account.name} Â· {pricingClass} Â· {account.stage}
+                    {account.name} · {pricingClass} · {account.stage}
                   </option>
                 );
               })}

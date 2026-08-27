@@ -14,13 +14,13 @@ import { AlertTriangle, CreditCard, ExternalLink, FileText, Undo2 } from "lucide
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
     meta: [
-      { title: "Account & Billing â€” CertivoIQ" },
+      { title: "Account & Billing — CertivoIQ" },
       {
         name: "description",
         content:
           "Manage invoices, ACH or approved card payment, renewal, and licensing for the CertivoIQ annual platform license.",
       },
-      { property: "og:title", content: "Account & Billing â€” CertivoIQ" },
+      { property: "og:title", content: "Account & Billing — CertivoIQ" },
       { property: "og:description", content: "Invoice-first annual enterprise licensing." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -74,7 +74,7 @@ function BillingPage() {
       </div>
 
       {loading && (
-        <Panel bodyClassName="p-6 text-[13px] text-muted-foreground">Loading your accountâ€¦</Panel>
+        <Panel bodyClassName="p-6 text-[13px] text-muted-foreground">Loading your account…</Panel>
       )}
 
       {!loading && account && (
@@ -189,9 +189,9 @@ function BillingPage() {
 
           {subscription && (
             <p className="cite mt-4">
-              Subscription {subscription.stripe_subscription_id} Â· status {subscription.status}
+              Subscription {subscription.stripe_subscription_id} · status {subscription.status}
               {subscription.current_period_end
-                ? ` Â· renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                ? ` · renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
                 : ""}
             </p>
           )}

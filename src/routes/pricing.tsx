@@ -18,7 +18,7 @@ const INCLUDED_CAPABILITIES = [
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Platform Pricing â€” CertivoIQ" },
+      { title: "Platform Pricing — CertivoIQ" },
       {
         name: "description",
         content:

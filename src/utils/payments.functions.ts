@@ -133,7 +133,7 @@ async function resolveOrCreateCustomer(
 /**
  * Creates an embedded checkout session for a plan or add-on price.
  * The 3 FREE certification reviews runs inside CertivoIQ (no card required), so checkout is
- * only opened when someone converts or upgrades â€” no `trial_period_days`.
+ * only opened when someone converts or upgrades — no `trial_period_days`.
  */
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

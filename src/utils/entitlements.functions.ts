@@ -92,7 +92,7 @@ export const recordAiDocuments = createServerFn({ method: "POST" })
     const before = state.usage.aiDocsUsed;
     const after = before + data.count;
 
-    // FREE reviews are a hard three-certification allowance â€” never overage bill.
+    // FREE reviews are a hard three-certification allowance — never overage bill.
     if (state.isTrial && allowance !== null && after > allowance) {
       return {
         error: `Your 3 FREE certification reviews have been used. Choose a plan to keep reviewing certifications.`,

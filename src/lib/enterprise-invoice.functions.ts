@@ -137,7 +137,7 @@ async function issueEnterpriseInvoice(
       customer: customer.id,
       amount: amountCents,
       currency: "usd",
-      description: `${label} â€” all currently available platform features`,
+      description: `${label} — all currently available platform features`,
       metadata: {
         billing_model: "enterprise_invoice",
         license_product: PRODUCT_CODE,
@@ -178,7 +178,7 @@ async function issueEnterpriseInvoice(
       collection_method: "send_invoice",
       days_until_due: netDays,
       auto_advance: true,
-      description: data.workflowMode === "sandbox_test" ? `TEST â€” ${label}` : label,
+      description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
       metadata,
       payment_settings: {
         payment_method_types: data.allowCard ? ["us_bank_account", "card"] : ["us_bank_account"],
@@ -193,11 +193,11 @@ async function issueEnterpriseInvoice(
       kind: "billing",
       headline:
         data.workflowMode === "sandbox_test"
-          ? `Sandbox test invoice issued â€” ${data.organizationName}`
-          : `Enterprise invoice issued â€” ${data.organizationName}`,
-      detail: `${sent.number ?? sent.id} Â· ${formattedAmount} Â· ${
+          ? `Sandbox test invoice issued — ${data.organizationName}`
+          : `Enterprise invoice issued — ${data.organizationName}`,
+      detail: `${sent.number ?? sent.id} · ${formattedAmount} · ${
         data.pricingClass === "pha" ? "PHA" : "Standard"
-      } Â· Net ${netDays} Â· ${data.allowCard ? "ACH/card" : "ACH"} Â· ${
+      } · Net ${netDays} · ${data.allowCard ? "ACH/card" : "ACH"} · ${
         data.workflowMode ?? "manual"
       }`,
       source: "CertivoIQ Enterprise Billing",

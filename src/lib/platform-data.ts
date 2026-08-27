@@ -1,8 +1,8 @@
 import type { CertFile, Program } from "./demo-data";
 
 /* ------------------------------------------------------------------ *
- * Review verdicts â€” Pass / Fail with a compliance level
- * green = Compliant Â· yellow = Corrections required Â· red = Non-compliant
+ * Review verdicts — Pass / Fail with a compliance level
+ * green = Compliant · yellow = Corrections required · red = Non-compliant
  * ------------------------------------------------------------------ */
 
 export type ComplianceLevel = "compliant" | "corrections" | "noncompliant";
@@ -27,7 +27,7 @@ export const LEVEL_META: Record<
     label: "Non-compliant",
     tone: "reject",
     verdict: "Fail",
-    blurb: "Critical program violation. Escalate before any approval â€” 8823 exposure.",
+    blurb: "Critical program violation. Escalate before any approval — 8823 exposure.",
   },
 };
 
@@ -61,8 +61,8 @@ export function correctionSteps(file: CertFile) {
   if (open.length === 0) {
     return [
       {
-        rule: "â€”",
-        step: "No corrections outstanding â€” proceed to Agent Approval and Agent Signature.",
+        rule: "—",
+        step: "No corrections outstanding — proceed to Agent Approval and Agent Signature.",
         owner: "Compliance Agent",
         due: "Today",
       },
@@ -77,20 +77,20 @@ export function correctionSteps(file: CertFile) {
 }
 
 /* ------------------------------------------------------------------ *
- * Property registration â€” programs an admin can assign
+ * Property registration — programs an admin can assign
  * ------------------------------------------------------------------ */
 
 export const PROGRAM_OPTIONS: { id: Program | "RD" | "BOND"; label: string; note: string }[] = [
   {
     id: "LIHTC",
     label: "LIHTC (Section 42)",
-    note: "IRC Â§42 federal baseline; state requirements require Manual Review",
+    note: "IRC §42 federal baseline; state requirements require Manual Review",
   },
   { id: "PBS8", label: "Project-Based Section 8", note: "HUD Handbook 4350.3 / HOTMA" },
   { id: "HOME", label: "HOME Investment Partnerships", note: "24 CFR Part 92" },
   { id: "HOTMA", label: "HOTMA overlay", note: "Sections 102 / 104 asset & income rules" },
   { id: "RD", label: "Rural Development (515/521)", note: "USDA RD Handbook HB-2-3560" },
-  { id: "BOND", label: "Tax-Exempt Bonds", note: "IRC Â§142(d) set-aside election" },
+  { id: "BOND", label: "Tax-Exempt Bonds", note: "IRC §142(d) set-aside election" },
 ];
 
 export const US_STATES = [
@@ -148,7 +148,7 @@ export const US_STATES = [
 ];
 
 /* ------------------------------------------------------------------ *
- * Trial Â· pricing Â· LaunchPad Â· success coach
+ * Trial · pricing · LaunchPad · success coach
  * ------------------------------------------------------------------ */
 
 export const TRIAL = {
@@ -197,7 +197,7 @@ export const PLANS = [
 
 export const ADDONS: { name: string; price: string }[] = [];
 
-/** Sales email already used for CertivoIQ outreach â€” no new address invented. */
+/** Sales email already used for CertivoIQ outreach — no new address invented. */
 export const SALES_EMAIL = "sales@certivoiq.com";
 
 /**
