@@ -12,13 +12,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { verifyAndDisableRecoveryCode } from "@/utils/mfa.functions";
 
 type Mode = "signin" | "signup" | "forgot";
-type AuthTarget = "/" | "/pricing" | "/launchpad" | "/trial";
+type AuthTarget = "/dashboard" | "/pricing" | "/launchpad" | "/trial";
 
 function afterAuthTarget(): AuthTarget {
   const saved = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("certivoiq:after-auth") : null;
   if (saved) sessionStorage.removeItem("certivoiq:after-auth");
   if (saved === "/pricing" || saved === "/launchpad" || saved === "/trial") return saved;
-  return "/";
+  return "/dashboard";
 }
 
 function isFreeReviewReturn() {
