@@ -1,0 +1,1291 @@
+{
+  "title": "Nationwide LIHTC state-source discovery inventory",
+  "generated_at": "2026-08-27T00:00:00.000Z",
+  "coverage_status": "SOURCE_CANDIDATES_ONLY",
+  "activation_policy": "CANDIDATE DISCOVERY DOES NOT ACTIVATE A STATE PACK. Current official bytes, SHA-256 identities, effective dates, content validation, supersession reconciliation, deterministic fixtures, independent compliance approval, and property authority are required.",
+  "counts": {
+    "state_and_district_codes": 51,
+    "territory_codes": 4,
+    "jurisdiction_scopes": 56,
+    "source_candidates": 152
+  },
+  "jurisdictions": [
+    {
+      "state_code": "AK",
+      "scope": "STATEWIDE",
+      "agency": "Alaska Housing Finance Corporation",
+      "official_domain": "ahfc.us",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.ahfc.us/pros/homelessness/development-grants/low-income-housing-tax-credit",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "GOAL_PROGRAM_QAP",
+          "url": "https://www.ahfc.us/pros/homelessness/development-grants/goal",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "GOAL_FORMS_DOCUMENTS",
+          "url": "https://www.ahfc.us/pros/homelessness/development-grants/goal/goal-dow",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "AFFORDABLE_HOUSING_COMPLIANCE_REFERENCE_MANUAL",
+          "url": "https://www.ahfc.us/download_file/view/1607/800",
+          "status": "BLOCKED_COMPLIANCE_MANUAL_CURRENCY_REVIEW"
+        }
+      ],
+      "origin": "final-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "AL",
+      "scope": "STATEWIDE",
+      "agency": "Alabama Housing Finance Authority",
+      "official_domain": "ahfa.com",
+      "sources": [
+        {
+          "type": "HOUSING_CREDITS_HOME_PROGRAM",
+          "url": "https://www.ahfa.com/programs/rental-housing/multifamily-programs/home-housing-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CURRENT_YEAR_ALLOCATION_PLANS",
+          "url": "https://www.ahfa.com/programs/rental-housing/allocation-application-information/current-year-allocation-plans",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_UPDATES_FORMS_LIMITS",
+          "url": "https://www.ahfa.com/programs/rental-housing/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "MULTIFAMILY_NOTICES",
+          "url": "https://www.ahfa.com/programs/rental-housing/multifamily-notices",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "final-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "AR",
+      "scope": "STATEWIDE",
+      "agency": "Arkansas Development Finance Authority",
+      "official_domain": "adfa.arkansas.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://adfa.arkansas.gov/programs/housing-development/low-income-housing-tax-credit/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_DOCUMENT_ARCHIVE",
+          "url": "https://adfa.arkansas.gov/document_category/lihtc-documents/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_AND_MONITORING",
+          "url": "https://adfa.arkansas.gov/compliance-and-monitoring/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL_FORMS_LIMITS_ARCHIVE",
+          "url": "https://adfa.arkansas.gov/document_category/compliance-and-monitoring/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "thirteenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "AZ",
+      "scope": "STATEWIDE",
+      "agency": "Arizona Department of Housing",
+      "official_domain": "housing.az.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://housing.az.gov/programs/rental-development/low-income-housing-tax-credit-lihtc-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_2026_2027_QAP_FINAL",
+          "url": "https://housing.az.gov/resources/2026-2027-qap-final",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "RENTAL_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://housing.az.gov/programs/rental-compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CONTROLLED_RESOURCE_INDEX",
+          "url": "https://housing.az.gov/resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "final-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "CA",
+      "scope": "STATEWIDE",
+      "agency": "California Tax Credit Allocation Committee",
+      "official_domain": [
+        "treasurer.ca.gov",
+        "calhfa.ca.gov"
+      ],
+      "sources": [
+        {
+          "type": "CTCAC_LIHTC_PROGRAM",
+          "url": "https://www.treasurer.ca.gov/ctcac/tax",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CTCAC_QUALIFIED_ALLOCATION_PLAN_REGULATIONS",
+          "url": "https://www.treasurer.ca.gov/ctcac/programreg/regulations",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CTCAC_COMPLIANCE",
+          "url": "https://www.treasurer.ca.gov/ctcac/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CTCAC_COMPLIANCE_MANUAL",
+          "url": "https://www.treasurer.ca.gov/ctcac/compliance/manual",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CTCAC_COMPLIANCE_FORMS",
+          "url": "https://www.treasurer.ca.gov/ctcac/compliance/forms",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CALHFA_FINANCING_LIMIT_OVERLAY",
+          "url": "https://www.calhfa.ca.gov/multifamily/asset/mtsp/index.htm",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "thirteenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "CO",
+      "scope": "STATEWIDE",
+      "agency": "Colorado Housing and Finance Authority",
+      "official_domain": "chfainfo.com",
+      "sources": [
+        {
+          "type": "QUALIFIED_ALLOCATION_PLAN",
+          "url": "https://www.chfainfo.com/rental-housing/housing-credit/qualified-allocation-plan",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_PROGRAM_COMPLIANCE",
+          "url": "https://www.chfainfo.com/rental-housing/asset-management/lihtc-program-compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS",
+          "url": "https://www.chfainfo.com/rental-housing/asset-management/compliance-forms",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "MULTIFAMILY_COMPLIANCE_UPDATES",
+          "url": "https://www.chfainfo.com/rental-housing/asset-management/multifamily-program-compliance/multifamily-loan-compliance-enews",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "thirteenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "CT",
+      "scope": "STATEWIDE",
+      "agency": "Connecticut Housing Finance Authority",
+      "official_domain": "chfa.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP_GUIDELINES_FORMS",
+          "url": "https://www.chfa.org/developers/tax-credit-program/lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE",
+          "url": "https://www.chfa.org/owners-property-managers/lihtc-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "INCOME_LIMITS_GROSS_RENTS",
+          "url": "https://www.chfa.org/rental-housing-for-owners-and-management-agents-tools-calculators-look-ups/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CONTROLLED_DOCUMENT_INDEX",
+          "url": "https://www.chfa.org/documents/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "thirteenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "DC",
+      "scope": "STATEWIDE",
+      "agency": "District of Columbia Department of Housing and Community Development",
+      "official_domain": [
+        "dhcd.dc.gov",
+        "dchfa.org"
+      ],
+      "sources": [
+        {
+          "type": "LIHTC_ALLOCATOR_PROGRAM_QAP",
+          "url": "https://dhcd.dc.gov/page/low-income-housing-tax-credit-lihtc-program",
+          "status": "BLOCKED_CURRENT_QAP_CURRENCY_NOT_VERIFIED"
+        },
+        {
+          "type": "DCHFA_MULTIFAMILY_FINANCING_GUIDE",
+          "url": "https://www.dchfa.org/wp-content/uploads/2024/06/Multifamily-Underwriting-and-Program-Guidelines-06.24.pdf",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "twelfth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "DE",
+      "scope": "STATEWIDE",
+      "agency": "Delaware State Housing Authority",
+      "official_domain": "destatehousing.com",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_APPLICATIONS",
+          "url": "https://www.destatehousing.com/build/lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_2025_2026_QAP",
+          "url": "https://www.destatehousing.com/wp-content/uploads/2026/06/2025-2026-LIHTC-QAP.pdf",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "twelfth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "FL",
+      "scope": "STATEWIDE",
+      "agency": "Florida Housing Finance Corporation",
+      "official_domain": "floridahousing.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.floridahousing.org/programs/developers-multifamily-programs/low-income-housing-tax-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "NONCOMPETITIVE_QAP_DOCUMENTS",
+          "url": "https://www.floridahousing.org/programs/developers-multifamily-programs/non-competitive/related-references-and-links",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_GUIDEBOOK",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance/compliance-guidebook",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_LIMITS_FORMS_UPDATES",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "twelfth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "GA",
+      "scope": "STATEWIDE",
+      "agency": "Georgia Department of Community Affairs",
+      "official_domain": "dca.georgia.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLANS_AMENDMENTS",
+          "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/qualified-allocation-plans-and",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL_DOCUMENTS",
+          "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/housing-tax-credit-compliance-11",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "RENT_INCOME_LIMITS",
+          "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/housing-tax-credit-compliance-5",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "twelfth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "GU",
+      "scope": "STATEWIDE",
+      "agency": "Guam Housing and Urban Renewal Authority",
+      "official_domain": "ghura.org",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_PUBLIC_NOTICE",
+          "url": "https://ghura.org/available-public-comment-2025-low-income-housing-tax-credit-lihtc-program-qualified-allocation-plan",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_2025_QAP_FINAL",
+          "url": "https://www.ghura.org/sites/default/files/2025_lihtc_qap_final_to_publish.pdf",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eleventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "HI",
+      "scope": "STATEWIDE",
+      "agency": "Hawaii Housing Finance and Development Corporation",
+      "official_domain": "dbedt.hawaii.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_COMPLIANCE_RESOURCES",
+          "url": "https://dbedt.hawaii.gov/hhfdc/developers/lihtc_html/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLAN",
+          "url": "https://dbedt.hawaii.gov/hhfdc/hhfdc-qualified-application-plan-qap-landing-page/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CONSOLIDATED_APPLICATION_2026",
+          "url": "https://dbedt.hawaii.gov/hhfdc/consolidated-application-for-financing-2026/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eleventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "IA",
+      "scope": "STATEWIDE",
+      "agency": "Iowa Finance Authority",
+      "official_domain": "opportunityiowa.gov",
+      "sources": [
+        {
+          "type": "HOUSING_TAX_CREDIT_PROGRAM",
+          "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/housing-tax-credit-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_QAP_APPLICATION_RESOURCES",
+          "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/housing-tax-credit-program/resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/home-program/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "tenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "ID",
+      "scope": "STATEWIDE",
+      "agency": "Idaho Housing and Finance Association",
+      "official_domain": "idahohousing.com",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://www.idahohousing.com/partners/project-financing/developers/low-income-housing-tax-credits/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "TAX_CREDIT_COMPLIANCE_MANUAL_FORMS",
+          "url": "https://www.idahohousing.com/partners/property-managers/housing-compliance/tax-credit-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eleventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "IL",
+      "scope": "STATEWIDE",
+      "agency": "Illinois Housing Development Authority",
+      "official_domain": "ihda.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://www.ihda.org/developers/tax-credits/low-income-tax-credit/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "DEVELOPER_MULTIFAMILY_DOCUMENT_LIBRARY",
+          "url": "https://www.ihda.org/developers/developer-resource-center/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROPERTY_MANAGER_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://www.ihda.org/rental-housing-main/property-managers/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "tenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "IN",
+      "scope": "STATEWIDE",
+      "agency": "Indiana Housing and Community Development Authority",
+      "official_domain": "in.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://www.in.gov/ihcda/developers/rental-housing-tax-credits-rhtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "REAL_ESTATE_COMPLIANCE_MANUAL_FORMS",
+          "url": "https://www.in.gov/ihcda/developers/red-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "REAL_ESTATE_DEPARTMENT_NOTICES",
+          "url": "https://www.in.gov/ihcda/newsroom/red-notices/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "tenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "KS",
+      "scope": "STATEWIDE",
+      "agency": "Kansas Housing Resources Corporation",
+      "official_domain": "kshousingcorp.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP_APPLICATIONS",
+          "url": "https://kshousingcorp.org/housing-partners/housing-development-lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "HOUSING_COMPLIANCE_MANUAL_FORMS_LIMITS",
+          "url": "https://kshousingcorp.org/housing-partners/khrc-housing-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "tenth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "KY",
+      "scope": "STATEWIDE",
+      "agency": "Kentucky Housing Corporation",
+      "official_domain": "kyhousing.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.kyhousing.org/programs/low-income-housing-tax-credit-lihtc-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QAP_GUIDES_LIMITS",
+          "url": "https://www.kyhousing.org/page/qaps-guides-and-resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE",
+          "url": "https://www.kyhousing.org/page/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "REQUIRED_DOCUMENTATION_FORMS",
+          "url": "https://www.kyhousing.org/page/required-documentation",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "ninth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "LA",
+      "scope": "STATEWIDE",
+      "agency": "Louisiana Housing Corporation",
+      "official_domain": "lhc.la.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.lhc.la.gov/low-income-housing-tax-credit-lihtc-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "HOUSING_DEVELOPMENT_RESOURCES",
+          "url": "https://www.lhc.la.gov/resources-for-housing-development",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "ninth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MA",
+      "scope": "STATEWIDE",
+      "agency": "Executive Office of Housing and Livable Communities",
+      "official_domain": "mass.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.mass.gov/info-details/low-income-housing-tax-credit-lihtc",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLAN",
+          "url": "https://www.mass.gov/info-details/qualified-allocation-plan",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eighth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MD",
+      "scope": "STATEWIDE",
+      "agency": "Maryland Department of Housing and Community Development",
+      "official_domain": "dhcd.maryland.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://dhcd.maryland.gov/HousingDevelopment/pages/lihtc/default.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "MULTIFAMILY_DEVELOPMENT_DOCUMENT_LIBRARY",
+          "url": "https://dhcd.maryland.gov/housing/multifamily-housing-development-document-library",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "MULTIFAMILY_ASSET_MANAGEMENT_COMPLIANCE",
+          "url": "https://dhcd.maryland.gov/Credit-Assurance/Pages/Multifamily-Lending.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "ninth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "ME",
+      "scope": "STATEWIDE",
+      "agency": "Maine State Housing Authority",
+      "official_domain": "mainehousing.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://www.mainehousing.org/programs-services/housing-development/developmentdetails/low-income-housing-tax-credit-program",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROPERTY_MANAGEMENT_FORMS",
+          "url": "https://www.mainehousing.org/partners/partner-type/asset-management/property-management-forms",
+          "status": "BLOCKED_FORMS_PAGE_UNDER_UPDATE"
+        },
+        {
+          "type": "ASSET_MANAGEMENT_NOTICES",
+          "url": "https://www.mainehousing.org/partners/partner-type/asset-management/asset-management-notices",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "ninth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MI",
+      "scope": "STATEWIDE",
+      "agency": "Michigan State Housing Development Authority",
+      "official_domain": "michigan.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.michigan.gov/mshda/developers/low-income-housing-tax-credits-lihtc",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLAN",
+          "url": "https://www.michigan.gov/mshda/developers/lihtc/lihtc/qualified-allocation-plan",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "INCOME_RENT_UTILITY_LIMITS",
+          "url": "https://www.michigan.gov/mshda/rental/property-managers/compliance/income_rent_and_utility_limits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eighth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MN",
+      "scope": "STATEWIDE",
+      "agency": "Minnesota Housing Finance Agency",
+      "official_domain": "mnhousing.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.mnhousing.gov/home/rental-housing/housing-development-and-capital-programs/housing-tax-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLAN",
+          "url": "https://www.mnhousing.gov/home/rental-housing/housing-development-and-capital-programs/housing-tax-credits/qualified-allocation-plan-qap",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROPERTY_MANAGEMENT_FORMS_RESOURCES",
+          "url": "https://www.mnhousing.gov/home/rental-housing/property-managers/documents-forms-and-resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "RENT_INCOME_LIMITS",
+          "url": "https://www.mnhousing.gov/home/rental-housing/post-selection/rent-income-limits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eighth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MO",
+      "scope": "STATEWIDE",
+      "agency": "Missouri Housing Development Commission",
+      "official_domain": "mhdc.com",
+      "sources": [
+        {
+          "type": "MULTIFAMILY_QAP_PROGRAM",
+          "url": "https://mhdc.com/programs/multifamily/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE",
+          "url": "https://mhdc.com/programs/asset-management/program-compliance/housing-programs/low-income-housing-tax-credit-lihtc-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "MULTIFAMILY_APPLICATION",
+          "url": "https://mhdc.com/programs/multifamily/multifamily-application/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "seventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MP",
+      "scope": "STATEWIDE",
+      "agency": "Northern Marianas Housing Corporation",
+      "official_domain": "nmhcgov.net",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_APPLICATION_AND_FORMS",
+          "url": "https://www.nmhcgov.net/low-income-housing-tax-credit-lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "fifth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MS",
+      "scope": "STATEWIDE",
+      "agency": "Mississippi Home Corporation",
+      "official_domain": "mshomecorp.com",
+      "sources": [
+        {
+          "type": "HFA_PROGRAM_ROOT",
+          "url": "https://www.mshomecorp.com/",
+          "status": "BLOCKED_REQUIRED_DOCUMENT_INDEX_NOT_VERIFIED"
+        },
+        {
+          "type": "LIHTC_QAP_OVERVIEW",
+          "url": "https://developer-guide.mshomecorp.com/securing-funding",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROPERTY_STEWARDSHIP_OVERVIEW",
+          "url": "https://developer-guide.mshomecorp.com/stewardship",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eighth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "MT",
+      "scope": "STATEWIDE",
+      "agency": "Montana Board of Housing",
+      "official_domain": "commerce.mt.gov",
+      "sources": [
+        {
+          "type": "HOUSING_AGENCY_ROOT",
+          "url": "https://commerce.mt.gov/housing/",
+          "status": "BLOCKED_REQUIRED_DOCUMENT_INDEX_NOT_VERIFIED"
+        }
+      ],
+      "origin": "seventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NC",
+      "scope": "STATEWIDE",
+      "agency": "North Carolina Housing Finance Agency",
+      "official_domain": "nchfa.com",
+      "sources": [
+        {
+          "type": "FINAL_2026_QAP_AND_APPENDICES",
+          "url": "https://www.nchfa.com/rental-housing-partners/rental-developers/qualified-allocation-plan/2026-qualified-allocation-plan-qap",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROGRAM_COMPLIANCE",
+          "url": "https://www.nchfa.com/rental-housing-partners/rental-owners-managers/program-compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "OWNERSHIP_MANAGEMENT_FORMS",
+          "url": "https://www.nchfa.com/rental-housing-partners/rental-owners-managers/policies-resources-forms/ownershipmanagement",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "fifth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "ND",
+      "scope": "STATEWIDE",
+      "agency": "North Dakota Housing Finance Agency",
+      "official_domain": "ndhousing.nd.gov",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_PROGRAM_AND_APPLICATION",
+          "url": "https://www.ndhousing.nd.gov/development",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "fifth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NE",
+      "scope": "STATEWIDE",
+      "agency": "Nebraska Investment Finance Authority",
+      "official_domain": "nifa.org",
+      "sources": [
+        {
+          "type": "QAP_APPLICATION_COMPLIANCE_FORMS",
+          "url": "https://www.nifa.org/developers-property-managers/forms-docs",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_ALLOCATION",
+          "url": "https://www.nifa.org/developers-property-managers/lihtc-allocation",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "seventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NH",
+      "scope": "STATEWIDE",
+      "agency": "New Hampshire Housing",
+      "official_domain": "nhhousing.org",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_AND_APPLICATION",
+          "url": "https://www.nhhousing.org/developer-financing/lihtc/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE_MANUALS_FORMS_AND_LIMITS",
+          "url": "https://www.nhhousing.org/developer-financing/asset-management/low-income-housing-tax-credit/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "sixth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NJ",
+      "scope": "STATEWIDE",
+      "agency": "New Jersey Housing and Mortgage Finance Agency",
+      "official_domain": "njhousing.gov",
+      "sources": [
+        {
+          "type": "UNIAP_LIHTC_APPLICATION_AND_QAP_RESOURCES",
+          "url": "https://njhousing.gov/developers/uniap/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "AGENCY_LIHTC_AND_COMPLIANCE_PORTAL_INDEX",
+          "url": "https://www.njhousing.gov/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "sixth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NM",
+      "scope": "STATEWIDE",
+      "agency": "New Mexico Mortgage Finance Authority (Housing New Mexico)",
+      "official_domain": "housingnm.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://housingnm.org/developers/lihtc",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "CURRENT_AND_PRIOR_TAX_CREDIT_ROUNDS",
+          "url": "https://housingnm.org/developers/lihtc/current-and-prior-tax-credit-rounds",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "QUALIFIED_ALLOCATION_PLANS",
+          "url": "https://housingnm.org/developers/lihtc/qaps",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_COMPLIANCE_PLAN_LIMITS",
+          "url": "https://housingnm.org/property-owners-agents-and-managers/lihtc",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PROPERTY_MANAGER_FORMS",
+          "url": "https://housingnm.org/forms/property-owners-agents-manager-forms",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "eleventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NV",
+      "scope": "STATEWIDE",
+      "agency": "Nevada Housing Division",
+      "official_domain": "housing.nv.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_QAP",
+          "url": "https://housing.nv.gov/Programs/LIHTC_Program/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL_FORMS_EXHIBITS",
+          "url": "https://housing.nv.gov/layouts/Page_Style_1.aspx?id=50733",
+          "status": "BLOCKED_COMPLIANCE_MANUAL_CURRENCY_REVIEW"
+        }
+      ],
+      "origin": "seventh-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NY",
+      "scope": "NEW_YORK_CITY",
+      "agency": "New York City Housing Development Corporation",
+      "official_domain": "nychdc.com",
+      "sources": [
+        {
+          "type": "AGENCY_DISCOVERY_ROOT",
+          "url": "https://www.nychdc.com/",
+          "status": "BLOCKED_REQUIRED_LIHTC_SOURCE_PAGES_NOT_VERIFIED"
+        }
+      ],
+      "origin": "sixth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "NY",
+      "scope": "STATEWIDE",
+      "agency": "New York State Homes and Community Renewal / HFA",
+      "official_domain": "hcr.ny.gov",
+      "sources": [
+        {
+          "type": "2026_9_PERCENT_RFP_AND_QAP",
+          "url": "https://hcr.ny.gov/2026-multifamily-finance-9-lihtc-rfp",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "2026_CAPITAL_PROGRAMS_MANUAL",
+          "url": "https://hcr.ny.gov/capital-programs-manual-2026",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FOUR_PERCENT_LIHTC",
+          "url": "https://hcr.ny.gov/low-income-housing-tax-credit-program-4pct",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "sixth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "OH",
+      "scope": "STATEWIDE",
+      "agency": "Ohio Housing Finance Agency",
+      "official_domain": "ohiohome.org",
+      "sources": [
+        {
+          "type": "QAP_GUIDELINES",
+          "url": "https://ohiohome.org/compliance/qaps.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL",
+          "url": "https://ohiohome.org/compliance/default.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS",
+          "url": "https://ohiohome.org/compliance/forms.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_POLICIES",
+          "url": "https://ohiohome.org/compliance/policies.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "fifth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "OK",
+      "scope": "STATEWIDE",
+      "agency": "Oklahoma Housing Finance Agency",
+      "official_domain": "ohfa.org",
+      "sources": [
+        {
+          "type": "QAP_APPLICATION_COMPLIANCE_AND_FORMS",
+          "url": "https://www.ohfa.org/affordable-housing-tax-credits/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "fourth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "OR",
+      "scope": "STATEWIDE",
+      "agency": "Oregon Housing and Community Services",
+      "official_domain": "ohcs.oregon.gov",
+      "sources": [
+        {
+          "type": "AGENCY_DISCOVERY_ROOT",
+          "url": "https://ohcs.oregon.gov/",
+          "status": "BLOCKED_REQUIRED_LIHTC_SOURCE_PAGES_NOT_VERIFIED"
+        }
+      ],
+      "origin": "fourth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "PA",
+      "scope": "STATEWIDE",
+      "agency": "Pennsylvania Housing Finance Agency",
+      "official_domain": "phfa.org",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_AND_PROGRAM",
+          "url": "https://www.phfa.org/mhp/developers/lihtc.aspx",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "fourth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "PR",
+      "scope": "STATEWIDE",
+      "agency": "Puerto Rico Housing Finance Authority",
+      "official_domain": "afv.pr.gov",
+      "sources": [
+        {
+          "type": "NOFA_QAP_AND_FORMS",
+          "url": "https://www.afv.pr.gov/nofa-2016/",
+          "status": "BLOCKED_OBSOLETE_2016_SOURCE"
+        }
+      ],
+      "origin": "fourth-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "RI",
+      "scope": "STATEWIDE",
+      "agency": "Rhode Island Housing",
+      "official_domain": "rihousing.com",
+      "sources": [
+        {
+          "type": "DEVELOPER_HANDBOOK_QAP_COMPLIANCE",
+          "url": "https://www.rihousing.com/partners/builders-developers/developers-handbook/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.rihousing.com/partners/builders-developers/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "third-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "SC",
+      "scope": "STATEWIDE",
+      "agency": "South Carolina State Housing Finance and Development Authority",
+      "official_domain": "schousing.com",
+      "sources": [
+        {
+          "type": "LIHTC_QAP_AND_PROGRAM",
+          "url": "https://www.schousing.com/home/HousingTaxCredits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FOUR_PERCENT_TEB",
+          "url": "https://schousing.com/Home/MultifamilyTaxExempt",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "third-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "SD",
+      "scope": "STATEWIDE",
+      "agency": "South Dakota Housing",
+      "official_domain": "sdhda.org",
+      "sources": [
+        {
+          "type": "AGENCY_AND_PROGRAM_RESOURCES",
+          "url": "https://www.sdhda.org/",
+          "status": "BLOCKED_REQUIRED_DOCUMENT_LINKS_NOT_INDEPENDENTLY_VERIFIED"
+        }
+      ],
+      "origin": "third-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "TN",
+      "scope": "STATEWIDE",
+      "agency": "Tennessee Housing Development Agency",
+      "official_domain": "thda.org",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://thda.org/rental-housing-partn/lihtc-program/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "HOUSING_CREDIT_COMPLIANCE",
+          "url": "https://thda.org/rental-housing-partn/housing-credit-compliance/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_ASSET_MANAGEMENT",
+          "url": "https://thda.org/rental-housing-partn/compliance-asset-management/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "THOMAS_DOCUMENTS",
+          "url": "https://thda.org/rental-housing-partn/thomas-documents/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "third-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "TX",
+      "scope": "STATEWIDE",
+      "agency": "Texas Department of Housing and Community Affairs",
+      "official_domain": "tdhca.texas.gov",
+      "sources": [
+        {
+          "type": "QAP_AND_9_PERCENT_PROGRAM",
+          "url": "https://www.tdhca.texas.gov/competitive-9-housing-tax-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "APPLICATION_MATERIALS",
+          "url": "https://www.tdhca.texas.gov/apply-funds",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUALS_AND_RULES",
+          "url": "https://www.tdhca.texas.gov/compliance-manuals-and-rules",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS",
+          "url": "https://www.tdhca.texas.gov/compliance-forms",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_INDEX",
+          "url": "https://www.tdhca.texas.gov/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "POST_AWARD_MANUAL",
+          "url": "https://www.tdhca.texas.gov/post-award-activities-manual",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "second-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "UT",
+      "scope": "STATEWIDE",
+      "agency": "Utah Housing Corporation",
+      "official_domain": "utahhousingcorp.org",
+      "sources": [
+        {
+          "type": "AGENCY_DISCOVERY_ROOT",
+          "url": "https://www.utahhousingcorp.org/",
+          "status": "BLOCKED_REQUIRED_LIHTC_SOURCE_PAGES_NOT_VERIFIED"
+        }
+      ],
+      "origin": "second-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "VA",
+      "scope": "STATEWIDE",
+      "agency": "Virginia Housing",
+      "official_domain": "virginiahousing.com",
+      "sources": [
+        {
+          "type": "QAP_AND_PROGRAM_PAGE",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/rental-housing-tax-credits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "APPLICATION_PAGE",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/tax-credit-application-process",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MONITORING",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/compliance-monitoring",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS_INDEX",
+          "url": "https://www.virginiahousing.com/partners/rental-housing/compliance-forms-and-documents",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "first-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "VI",
+      "scope": "STATEWIDE",
+      "agency": "Virgin Islands Housing Finance Authority",
+      "official_domain": "vihfa.gov",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM_AND_QAP_PAGE",
+          "url": "https://vihfa.gov/low-income-housing-tax-credit-services/",
+          "status": "BLOCKED_CURRENCY_REVIEW_2015_FINAL_AND_2023_DRAFT_LISTED"
+        }
+      ],
+      "origin": "second-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "VT",
+      "scope": "STATEWIDE",
+      "agency": "Vermont Housing Finance Agency",
+      "official_domain": "vhfa.org",
+      "sources": [
+        {
+          "type": "PROGRAM_MATERIALS",
+          "url": "https://vhfa.org/developers/lihtc/program-materials",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FORMS_LIMITS_AND_COMPLIANCE",
+          "url": "https://vhfa.org/managing-agents/forms-documents",
+          "status": "BLOCKED_COMPLIANCE_MANUAL_CURRENCY_REVIEW"
+        },
+        {
+          "type": "QAP_DRAFT",
+          "url": "https://vhfa.org/comparison-may-11-2026-and-march-24-2026-qap-drafts",
+          "status": "BLOCKED_DRAFT_NOT_FINAL"
+        }
+      ],
+      "origin": "second-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "WA",
+      "scope": "STATEWIDE",
+      "agency": "Washington State Housing Finance Commission",
+      "official_domain": "wshfc.org",
+      "sources": [
+        {
+          "type": "QAP_AND_9_PERCENT_PROGRAM",
+          "url": "https://www.wshfc.org/mhcf/9percent/2026application.htm",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "FOUR_PERCENT_PROGRAM",
+          "url": "https://www.wshfc.org/mhcf/4percent/index.htm",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_MANUAL",
+          "url": "https://www.wshfc.org/managers/manualtaxcreditindex.htm",
+          "status": "PENDING_CHAPTER_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "first-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "WI",
+      "scope": "STATEWIDE",
+      "agency": "Wisconsin Housing and Economic Development Authority",
+      "official_domain": "wheda.com",
+      "sources": [
+        {
+          "type": "QAP_PAGE",
+          "url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc/qap",
+          "status": "PENDING_EXACT_BYTES_AND_CURRENCY_REVIEW"
+        },
+        {
+          "type": "PROGRAM_PAGE",
+          "url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc",
+          "status": "PENDING_2027_2028_QAP_PUBLICATION_REVIEW"
+        },
+        {
+          "type": "FORMS_MANUALS_INDEX",
+          "url": "https://www.wheda.com/developers-and-property-managers/forms-manuals-and-resources",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "REPORTING_PAGE",
+          "url": "https://www.wheda.com/developers-and-property-managers/property-managers/reporting--schedule",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "first-state-source-batch-candidates.json"
+    },
+    {
+      "state_code": "WV",
+      "scope": "STATEWIDE",
+      "agency": "West Virginia Housing Development Fund",
+      "official_domain": "wvhdf.com",
+      "sources": [
+        {
+          "type": "LIHTC_PROGRAM",
+          "url": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/low-income-housing-tax-credit-program/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_RESOURCES",
+          "url": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "west-virginia-state-pack-candidate.json"
+    },
+    {
+      "state_code": "WY",
+      "scope": "STATEWIDE",
+      "agency": "Wyoming Community Development Authority",
+      "official_domain": "wyomingcda.com",
+      "sources": [
+        {
+          "type": "ALLOCATION_AND_PROGRAM_PAGE",
+          "url": "https://www.wyomingcda.com/affordable-housing/",
+          "evidence": [
+            "2026 Affordable Housing Allocation Plan",
+            "2027 Affordable Housing Allocation Plan",
+            "2025-2026 Compliance Manual",
+            "Required Forms",
+            "HOME materials"
+          ],
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        }
+      ],
+      "origin": "first-state-source-batch-candidates.json"
+    }
+  ]
+}
