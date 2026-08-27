@@ -265,7 +265,7 @@ function validateLayer(layer, index, eventDate) {
     return {
       error: blocked(
         "LAYER_AUTHORITY_CITATIONS_MISSING",
-        "Every layer requires at least one human-readable authority citation.",
+        "Every layer requires at least one readable authority citation.",
         [`${prefix}.authority_citations`],
       ),
     };
