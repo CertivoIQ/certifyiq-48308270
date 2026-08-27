@@ -6,9 +6,9 @@ import { PLANS } from "@/lib/platform-data";
 export const Route = createFileRoute("/_authenticated/marketing-kit")({
   head: () => ({
     meta: [
-      { title: "CertivoIQ Marketing Kit — Printable Intro One-Pager" },
+      { title: "CertivoIQ Marketing Kit â€” Printable Intro One-Pager" },
       { name: "description", content: "Printable CertivoIQ introduction leave-behind for sales agents: platform overview, enterprise benefits, non-compliance risk infographics and the landing page link." },
-      { property: "og:title", content: "CertivoIQ Marketing Kit — printable intro one-pager" },
+      { property: "og:title", content: "CertivoIQ Marketing Kit â€” printable intro one-pager" },
       { property: "og:description", content: "Agent-ready, print-optimized CertivoIQ introduction material with infographics and landing page link." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -63,24 +63,25 @@ function MarketingKitPage() {
       `}</style>
       <div className="no-print border-b border-border">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <div><h1 className="font-display text-[18px]">Marketing kit — intro leave-behind</h1><p className="text-[12.5px] text-muted-foreground">Same content as the “Cold intro” email. Print or save as PDF for prospect meetings.</p></div>
+          <div><h1 className="font-display text-[18px]">Marketing kit â€” intro leave-behind</h1><p className="text-[12.5px] text-muted-foreground">Same content as the â€œCold introâ€ email. Print or save as PDF for prospect meetings.</p></div>
           <div className="flex items-center gap-2"><Button size="sm" variant="outline" asChild><Link to="/crm"><ArrowLeft className="size-4" /> CRM</Link></Button><Button size="sm" onClick={() => window.print()}><Printer className="size-4" /> Print / Save as PDF</Button></div>
         </div>
       </div>
       <article className="print-sheet mx-auto my-8 max-w-3xl rounded-lg border border-border bg-card p-8 shadow-ledger print:my-0">
         <header className="flex items-start justify-between gap-4 border-b border-border pb-5">
-          <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-14 w-auto object-contain dark:hidden print:block" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-14 w-auto object-contain dark:block print:hidden" /><p className="mt-1.5 text-[12.5px] text-muted-foreground">Compliance intelligence infrastructure — LIHTC · HOME · Project-Based Section 8 · HOTMA</p></div>
+          <div><img src="/certivoiq-logo.png" alt="CertivoIQ" className="h-14 w-auto object-contain dark:hidden print:block" /><img src="/certivoiq-logo-dark.png" alt="" aria-hidden="true" className="hidden h-14 w-auto object-contain dark:block print:hidden" /><p className="mt-1.5 text-[12.5px] text-muted-foreground">Compliance intelligence infrastructure â€” LIHTC Â· HOME Â· Project-Based Section 8 Â· HOTMA</p></div>
           <p className="text-right text-[11.5px] leading-snug text-muted-foreground">certivoiq.com/welcome<br />Federal baseline compliance intelligence</p>
         </header>
         <section className="print-avoid-break mt-6"><h2 className="font-display text-[26px] leading-[1.15]">One missed certification can cost <span className="text-reject">years of tax credits</span></h2><p className="mt-3 text-[13.5px] leading-relaxed text-muted-foreground">CertivoIQ evaluates certification evidence against supported, versioned federal requirements and returns traceable findings or Unable to Determine when evidence or scope is incomplete. An authorized compliance agent retains Agent Approval authority and provides an Agent Signature.</p></section>
         <section className="print-avoid-break mt-6"><h3 className="cite font-mono">WHAT THE PLATFORM DOES</h3><div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{STATS.map((s) => <div key={s.label} className="rounded-lg border border-border p-3 text-center"><p className={`font-display text-[22px] leading-none ${s.tone === "green" ? "text-seal" : ""}`}>{s.value}</p><p className="mt-2 text-[11.5px] leading-snug text-muted-foreground">{s.label}</p></div>)}</div></section>
-        <section className="print-avoid-break mt-6"><h3 className="cite font-mono">TRACEABLE REVIEW WORKFLOW</h3><div className="mt-3 space-y-3">{BARS.map((b) => <div key={b.label}><p className="text-[12.5px] font-medium">{b.label} — <span className="text-muted-foreground">{b.value}</span></p><div className="mt-1 h-3 w-full overflow-hidden rounded-full bg-muted"><div className="h-3 rounded-full" style={{ width: `${b.pct}%`, backgroundColor: b.color }} /></div></div>)}</div></section>
+        <section className="print-avoid-break mt-6"><h3 className="cite font-mono">TRACEABLE REVIEW WORKFLOW</h3><div className="mt-3 space-y-3">{BARS.map((b) => <div key={b.label}><p className="text-[12.5px] font-medium">{b.label} â€” <span className="text-muted-foreground">{b.value}</span></p><div className="mt-1 h-3 w-full overflow-hidden rounded-full bg-muted"><div className="h-3 rounded-full" style={{ width: `${b.pct}%`, backgroundColor: b.color }} /></div></div>)}</div></section>
         <section className="print-avoid-break mt-6"><h3 className="cite font-mono">HOW ENTERPRISES BENEFIT</h3><ul className="mt-3 space-y-2">{BENEFITS.map((b) => <li key={b} className="flex gap-2 text-[13px] leading-relaxed"><span className="mt-[7px] size-1.5 shrink-0 rounded-full bg-gold" />{b}</li>)}</ul></section>
         <section className="print-avoid-break mt-6"><h3 className="cite font-mono">ANNUAL PLATFORM LICENSE</h3><div className="mt-3 divide-y divide-border">{PLANS.map((p) => <div key={p.id} className="flex items-baseline justify-between gap-4 py-2"><div><p className="text-[13px] font-medium">{p.name}</p><p className="text-[11.5px] text-muted-foreground">{p.tagline}</p></div><p className="whitespace-nowrap font-display text-[15px]">{p.price}<span className="text-[11.5px] text-muted-foreground">{p.cadence}</span></p></div>)}</div></section>
         <section className="print-avoid-break mt-6"><h3 className="cite font-mono text-reject">THE COST OF NON-COMPLIANCE</h3><div className="mt-3 grid gap-3 sm:grid-cols-2">{RISKS.map((r) => <div key={r.risk} className="border-l-2 border-reject pl-3"><p className="text-[13px] font-medium">{r.risk}</p><p className="mt-0.5 text-[12px] text-reject">{r.cost}</p></div>)}</div></section>
-        <section className="print-avoid-break mt-7 rounded-lg border border-primary/25 bg-accent px-5 py-5 text-center"><p className="font-display text-[18px] text-accent-foreground">Try CertivoIQ for Free with three certification reviews</p><p className="mt-1.5 text-[13px] text-muted-foreground">One $65,000 annual platform license · all currently available features included</p><p className="mt-3 font-mono text-[14px] font-semibold">{LANDING}</p><Button className="no-print mt-4" asChild><a href={LANDING} target="_blank" rel="noreferrer">Open the landing page</a></Button></section>
-        <footer className="mt-6 border-t border-border pt-4"><p className="cite">CertivoIQ · hello@certivoiq.com · Leave-behind for authorized sales-agent use — claims reflect the current federal baseline scope.</p></footer>
+        <section className="print-avoid-break mt-7 rounded-lg border border-primary/25 bg-accent px-5 py-5 text-center"><p className="font-display text-[18px] text-accent-foreground">Try CertivoIQ for Free with three certification reviews</p><p className="mt-1.5 text-[13px] text-muted-foreground">Multifamily Enterprise: $65,000 per selected state/year Â· PHA: $150,000/year flat</p><p className="mt-3 font-mono text-[14px] font-semibold">{LANDING}</p><Button className="no-print mt-4" asChild><a href={LANDING} target="_blank" rel="noreferrer">Open the landing page</a></Button></section>
+        <footer className="mt-6 border-t border-border pt-4"><p className="cite">CertivoIQ Â· hello@certivoiq.com Â· Leave-behind for authorized sales-agent use â€” claims reflect the current federal baseline scope.</p></footer>
       </article>
     </div>
   );
 }
+
