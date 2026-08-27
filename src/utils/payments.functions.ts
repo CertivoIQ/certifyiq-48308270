@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 import { normalizeLicenseSelection } from "@/lib/license-selection";
+import { isLiveBillingVerified } from "@/lib/billing-config.server";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
@@ -154,6 +155,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
+      if (data.environment === "live" && !isLiveBillingVerified()) {
+        return { error: "Live billing is not verified for release." };
+      }
       const stripe = createStripeClient(data.environment);
 
       const selection = normalizeLicenseSelection(data);
@@ -219,6 +223,9 @@ export const createPortalSession = createServerFn({ method: "POST" })
     if (subError || !sub?.stripe_customer_id) return { error: "No subscription found" };
 
     try {
+      if (data.environment === "live" && !isLiveBillingVerified()) {
+        return { error: "Live billing is not verified for release." };
+      }
       const stripe = createStripeClient(data.environment);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id,
@@ -247,6 +254,9 @@ export const getCheckoutSessionStatus = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<SessionStatusResult> => {
     try {
+      if (data.environment === "live" && !isLiveBillingVerified()) {
+        return { error: "Live billing is not verified for release." };
+      }
       const stripe = createStripeClient(data.environment);
       const session = await stripe.checkout.sessions.retrieve(data.sessionId, {
         expand: ["line_items.data.price"],
@@ -296,6 +306,9 @@ export const setCancellation = createServerFn({ method: "POST" })
     if (!sub?.stripe_subscription_id) return { error: "No active subscription found" };
 
     try {
+      if (data.environment === "live" && !isLiveBillingVerified()) {
+        return { error: "Live billing is not verified for release." };
+      }
       const stripe = createStripeClient(data.environment);
       await stripe.subscriptions.update(sub.stripe_subscription_id, {
         cancel_at_period_end: data.cancel,
