@@ -1,0 +1,77 @@
+{
+  "test_id": 92,
+  "state_code": "SC",
+  "pack_id": "sc-lihtc",
+  "candidate_version": "2026.1-candidate",
+  "program_codes": ["LIHTC", "HOME", "NHTF", "SC_HTF", "TAX_EXEMPT_BOND", "STATE_LIHTC"],
+  "release_status": "BLOCKED_PENDING_EXACT_BINARY_IDENTITIES_RULE_FIXTURES_AND_APPROVAL",
+  "source_capture": {
+    "captured_at": "2026-08-22T22:10:00Z",
+    "supplied_official_url": "https://www.schousing.com/",
+    "redirected_official_url": "https://schousing.sc.gov/",
+    "official_program_url": "https://schousing.sc.gov/development/housing-tax-credit-lihtc",
+    "official_compliance_url": "https://schousing.sc.gov/development/compliance-monitoring-resources",
+    "official_limits_url": "https://schousing.sc.gov/development/income-rent-limits",
+    "official_utility_url": "https://schousing.sc.gov/development/development-utility-allowances",
+    "exact_binary_count": 0,
+    "official_link_candidate_count": 14,
+    "method": "OFFICIAL_PAGE_AND_EXACT_FILE_LINK_INVENTORY_BINARY_HASH_CAPTURE_UNAVAILABLE"
+  },
+  "agency": {"name":"South Carolina State Housing Finance and Development Authority","short_name":"SC Housing","official_domain":"schousing.sc.gov","legacy_domain":"schousing.com"},
+  "official_page_findings": [
+    {"finding_id":"SC-2026-QAP-CURRENT","official_url":"https://schousing.sc.gov/development/housing-tax-credit-lihtc","description":"The official program page identifies the 2026 QAP as revised March 31, 2026 and separately links a signed certification of approval."},
+    {"finding_id":"SC-2027-DRAFT-NONOPERATIVE","official_url":"https://schousing.sc.gov/development/housing-tax-credit-lihtc","description":"The official page labels the 2027 QAP and appendices as drafts; they cannot replace the adopted 2026 materials."},
+    {"finding_id":"SC-2026-COMPLIANCE-STACK","official_url":"https://schousing.sc.gov/development/compliance-monitoring-resources","description":"SC Housing publishes separate LIHTC, federal/state, and multiple-program manuals revised February 12, 2026 plus program-scoped tenant forms."},
+    {"finding_id":"SC-2026-LIMIT-EFFECTIVE-DATES","official_url":"https://schousing.sc.gov/development/income-rent-limits","description":"The page lists 2026 MTSP limits effective May 1, 2026 and HOME/NHTF limits effective June 1, 2026; each program and event date must remain separate."},
+    {"finding_id":"SC-2026-UTILITY-REGIONS","official_url":"https://schousing.sc.gov/development/development-utility-allowances","description":"SC Housing publishes separate 2026 Upstate, Midlands, and Low Country schedules and conditions Green Discount use on property certification."}
+  ],
+  "official_link_candidates": [
+    {"source_type":"CURRENT_QAP_WITH_AMENDMENTS","title":"2026 Qualified Allocation Plan revised March 31, 2026","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/LIHTC/2026%20LIHTC%20Program/2026_QAP_Updates_%20Combined.20260331.pdf","observed_page_count":23,"status":"OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"},
+    {"source_type":"QAP_APPROVAL_CERTIFICATION","title":"2026 QAP Certification of Approval","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/LIHTC/2026%20LIHTC%20Program/2026_Certification_Signed.pdf","observed_page_count":1,"status":"OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"},
+    {"source_type":"PROSPECTIVE_DRAFT_TAX_CREDIT_MANUAL","title":"2027 Appendix E Tax Credit Manual draft","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/LIHTC/2027%20LIHTC%20Information/2027-Appendix-E-Tax-Credit-Manual%20%281%29.pdf","observed_page_count":8,"status":"OFFICIAL_EXACT_LINK_OBSERVED_DRAFT_NONOPERATIVE_BINARY_HASH_NOT_CAPTURED"},
+    {"source_type":"LIHTC_COMPLIANCE_MANUAL","title":"LIHTC Compliance Manual revised February 12, 2026","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/LIHTC%20Compliance%20Manual%20-%20Revised%202.12.2026.pdf","observed_page_count":81,"status":"OFFICIAL_EXACT_LINK_OBSERVED_BINARY_HASH_NOT_CAPTURED"},
+    {"source_type":"FEDERAL_STATE_PROGRAMS_COMPLIANCE_MANUAL","title":"Federal and State Programs Compliance Manual revised February 12, 2026","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/Federal%20and%20State%20Programs%20Compliance%20Manual%2002.12.2026.pdf","observed_page_count":59,"status":"OFFICIAL_EXACT_LINK_OBSERVED_LAYERED_SCOPE_BINARY_HASH_NOT_CAPTURED"},
+    {"source_type":"MULTIPLE_PROGRAM_GUIDEBOOK","title":"Multiple Program Compliance Guidebook revised February 12, 2026","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/Multiple%20Program%20Compliance%20Guidebook%20-%20revised%2002.12.2026.pdf","observed_page_count":43,"status":"OFFICIAL_EXACT_LINK_OBSERVED_LAYERED_SCOPE_BINARY_HASH_NOT_CAPTURED"},
+    {"source_type":"TENANT_INCOME_CERTIFICATION","title":"Tenant Income Certification effective October 1, 2024","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/Tenant-Income-Certification-FINAL-2024.pdf","observed_page_count":2,"status":"OFFICIAL_EXACT_LINK_OBSERVED_FORM_CURRENCY_REQUIRES_VALIDATION"},
+    {"source_type":"ASSET_SELF_CERTIFICATION","title":"Asset Self-Certification effective October 1, 2024","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/Ex%206%20-%20Asset-Self-Certification-FINAL%202.0-2024.pdf","observed_page_count":1,"status":"OFFICIAL_EXACT_LINK_OBSERVED_FORM_CURRENCY_REQUIRES_VALIDATION"},
+    {"source_type":"STUDENT_SELF_CERTIFICATION","title":"Student Self-Certification effective October 1, 2024","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/NCSHA-Student-Self-Certification-Form-FINAL-2024.pdf","observed_page_count":2,"status":"OFFICIAL_EXACT_LINK_OBSERVED_FORM_CURRENCY_REQUIRES_VALIDATION"},
+    {"source_type":"LAYERED_ANNUAL_OWNER_CERTIFICATION","title":"HOME SCHTF NHTF Annual Owner Certification revised November 26, 2024","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/HOME_SCHTF_NHTF_AOC_2024.pdf","observed_page_count":2,"status":"OFFICIAL_EXACT_LINK_OBSERVED_NON_LIHTC_LAYERED_SCOPE"},
+    {"source_type":"HOME_HTF_RENT_APPROVAL_NOTICE","title":"2026 HOME and HTF Annual Rent Approval Notice","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Manuals%20and%20Forms/2026%20HOME%20and%20HTF%20Rent%20Approval%20Notice.pdf","observed_page_count":2,"status":"OFFICIAL_EXACT_LINK_OBSERVED_PROPERTY_AND_LAYERED_SCOPE"},
+    {"source_type":"UTILITY_ALLOWANCE_UPSTATE_2026","title":"2026 Upstate Region Utility Allowance","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Development%20Utility%20Allowances/Upstate_2026.pdf","observed_page_count":10,"status":"OFFICIAL_EXACT_LINK_OBSERVED_PROPERTY_REGION_AND_METHOD_REQUIRED"},
+    {"source_type":"UTILITY_ALLOWANCE_MIDLANDS_2026","title":"2026 Midlands Region Utility Allowance","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Development%20Utility%20Allowances/Midlands_2026.pdf","observed_page_count":10,"status":"OFFICIAL_EXACT_LINK_OBSERVED_PROPERTY_REGION_AND_METHOD_REQUIRED"},
+    {"source_type":"UTILITY_ALLOWANCE_LOW_COUNTRY_2026","title":"2026 Low Country Region Utility Allowance","observed_url":"https://schousing.sc.gov/sites/schousing/files/Documents/Development/Development%20Utility%20Allowances/Low_Country_2026.pdf","observed_page_count":10,"status":"OFFICIAL_EXACT_LINK_OBSERVED_PROPERTY_REGION_AND_METHOD_REQUIRED"}
+  ],
+  "blocking_conflicts": [
+    {"conflict_id":"SC-BINARY-IDENTITY-001","status":"UNRESOLVED","description":"Official exact links and observed page counts are recorded, but byte lengths and SHA-256 identities have not been captured and no source may be activated."},
+    {"conflict_id":"SC-QAP-COMPOSITION-001","status":"UNRESOLVED","description":"The current 2026 operative authority must bind the signed approval, base QAP, March 31 amendment compilation, applicable appendices, bulletins and award cycle without substituting 2027 drafts."},
+    {"conflict_id":"SC-MANUAL-PRIORITY-001","status":"UNRESOLVED","description":"LIHTC, federal/state and multiple-program manuals require page-cited reconciliation so one program cannot silently replace another."},
+    {"conflict_id":"SC-FORM-CURRENCY-001","status":"UNRESOLVED","description":"Tenant, asset and student forms are labeled effective October 1, 2024 while guidance was revised in 2026; applicability and later notices require validation."},
+    {"conflict_id":"SC-LIMITS-001","status":"UNRESOLVED","description":"MTSP, HOME, NHTF and SC HTF figures have distinct sources and effective dates and must be selected from validated property geography, household, election and event facts."},
+    {"conflict_id":"SC-UTILITY-ALLOWANCE-001","status":"UNRESOLVED","description":"Region, building type, tenant-paid utilities, allowable method, Green Discount qualification, evidence and effective date are property-specific and cannot be inferred from a generic statewide figure."},
+    {"conflict_id":"SC-LAYERED-OWNER-CERT-001","status":"UNRESOLVED","description":"The published annual owner certification is scoped to HOME, SCHTF and NHTF and cannot be treated as a universal LIHTC annual certification."}
+  ],
+  "enterprise_boundary": "Only exact blank official forms and adopted public guidance belong in this shared pack. Completed tenant certifications, owner submissions, Forms 8609, reservation and carryover documents, extended-use agreements, utility schedules, waivers, approvals and inspection records remain enterprise/property records.",
+  "enterprise_activation_requires": "VP_COMPLIANCE_PROPERTY_FIGURE_VERIFICATION",
+  "property_figure_verification_scope": [
+    "HUD-confirmed county and property-specific income and rent limits with program effective dates",
+    "placed-in-service and gross-rent-floor dates",
+    "LIHTC, HOME, NHTF, SC HTF, tax-exempt bond and state LIHTC layering",
+    "Average Income Test election and unit designations",
+    "approved utility allowance region, building type, method, evidence and effective date",
+    "Green Discount or other property certification and supporting evidence",
+    "extended-use set-asides and property commitments",
+    "effective QAP, amendments, appendices, manuals, notices and award cycle"
+  ],
+  "activation_requirements": [
+    "Capture exact bytes, SHA-256 identities and byte lengths for all relied-on sources",
+    "Bind the adopted 2026 QAP, approval certification, amendments and applicable appendices",
+    "Keep all 2027 draft material non-operative until final adoption and effective-date validation",
+    "Reconcile LIHTC, federal/state and multiple-program manuals with page-cited rules",
+    "Validate tenant, asset and student form currency against 2026 guidance and notices",
+    "Bind program limits and utility allowances to property facts and event dates",
+    "Resolve source, scope, currency, layering and supersession conflicts",
+    "Add positive, negative, boundary, layered-program and supersession fixtures",
+    "Independent compliance-expert approval bound to the exact release",
+    "Enterprise VP Compliance property-figure verification at onboarding"
+  ]
+}
