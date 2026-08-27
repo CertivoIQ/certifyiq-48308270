@@ -40,7 +40,7 @@ function SupportIqPage() {
         data: {
           message,
           // This confidence applies only to the approved deterministic routine library.
-          // Unknown or high-risk categories are still forced into human review.
+          // Unknown or high-risk categories are still forced into authorized support review.
           confidence: 0.95,
         },
       }),
@@ -61,7 +61,7 @@ function SupportIqPage() {
           CertivoIQ virtual customer support
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-          Ask a product question. Routine usage questions can be answered immediately from approved CertivoIQ guidance. Billing, production, security, privacy, low-confidence, and compliance/legal questions are routed to a human rather than guessed.
+          Ask a product question. Routine usage questions can be answered immediately from approved CertivoIQ guidance. Billing, production, security, privacy, low-confidence, and compliance/legal questions are routed to an authorized support agent rather than guessed.
         </p>
       </div>
 
@@ -139,7 +139,7 @@ function SupportIqPage() {
                 )}
                 <div>
                   <p className="font-medium">
-                    {isEscalated ? "Human review created" : "SupportIQ response"}
+                    {isEscalated ? "Authorized review created" : "SupportIQ response"}
                   </p>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">{result.reply}</p>
                   {result.supportCase?.case_number ? (
@@ -169,15 +169,15 @@ function SupportIqPage() {
           </Panel>
 
           <Panel
-            title="Human-required issues"
+            title="Authorized-review issues"
             description="SupportIQ creates or routes a case instead of taking sensitive action"
             bodyClassName="p-5"
           >
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Security/privacy: immediate escalation</li>
-              <li>• Production/UI outage: human escalation</li>
-              <li>• Billing disputes/refunds: human authorization</li>
-              <li>• Compliance/legal interpretation: qualified human review</li>
+              <li>• Production/UI outage: authorized escalation</li>
+              <li>• Billing disputes/refunds: authorized account approval</li>
+              <li>• Compliance/legal interpretation: authorized compliance review</li>
               <li>• Unknown or low-confidence questions: support queue</li>
             </ul>
           </Panel>
