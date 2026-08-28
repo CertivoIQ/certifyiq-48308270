@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   LayoutDashboard, Building2, FileCheck2, AlertTriangle, Scale, Sparkles, Rocket,
   Menu, X, Briefcase, Shield, CreditCard, HelpCircle, Users, ClipboardList,
-  ClipboardCheck, ShieldCheck, SlidersHorizontal, UserPlus, MailCheck,
+  ClipboardCheck, ShieldCheck, SlidersHorizontal, UserPlus, MailCheck, ArrowLeftRight,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IQText } from "@/components/iq-text";
@@ -31,6 +31,7 @@ const PHA_NAV = [
   { to: "/dashboard", label: "Command Center", icon: LayoutDashboard, key: "command" },
   { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus, key: "family_write" },
   { to: "/pha-families", label: "Families & Reexaminations", icon: Users, key: "family_read" },
+  { to: "/pha-portability", label: "HCV Portability", icon: ArrowLeftRight, key: "hcv_operations" },
   { to: "/pha-notices", label: "Family Notices", icon: MailCheck, key: "family_write" },
   { to: "/pha-50058", label: "HUD-50058 Queue", icon: ClipboardList, key: "family_read" },
   { to: "/pha-inspections", label: "Inspections / NSPIRE", icon: ClipboardCheck, key: "inspections" },
@@ -49,9 +50,8 @@ function phaNavAllowed(role: PhaAgencyRole | null, key: (typeof PHA_NAV)[number]
   if (key === "command" || key === "support") return true;
   if (role === "executive") return ["family_read", "compliance", "findings"].includes(key);
   if (role === "inspection_staff") return ["inspections", "findings"].includes(key);
-  if (role === "hcv_pbv_specialist" || role === "public_housing_specialist") {
-    return ["family_write", "family_read", "compliance", "findings"].includes(key);
-  }
+  if (role === "hcv_pbv_specialist") return ["family_write", "family_read", "hcv_operations", "compliance", "findings"].includes(key);
+  if (role === "public_housing_specialist") return ["family_write", "family_read", "compliance", "findings"].includes(key);
   return false;
 }
 
