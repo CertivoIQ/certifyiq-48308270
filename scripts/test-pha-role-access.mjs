@@ -4,6 +4,9 @@ import { readFileSync } from "node:fs";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260828110000_pha_role_access.sql");
+const inspectionMigration = read("supabase/migrations/20260828150000_pha_nspire_inspections.sql");
+const inspectionsWorkspace = read("src/components/pha-inspections-workspace.tsx");
+const inspectionsRoute = read("src/routes/_authenticated/pha-inspections.tsx");
 const profileHook = read("src/hooks/use-workspace-profile.ts");
 const appShell = read("src/components/app-shell.tsx");
 
@@ -44,6 +47,32 @@ test("family EIV calculation notice and HUD-50058 RLS use agency role functions"
   assert.match(migration, /PHA family calculations read/);
   assert.match(migration, /PHA 50058 transactions read/);
   assert.match(migration, /PHA EIV exceptions read/);
+});
+
+test("inspection staff receive inspection-only database access", () => {
+  assert.match(inspectionMigration, /PHA inspection staff write inspections/);
+  assert.match(inspectionMigration, /PHA inspection staff write deficiencies/);
+  assert.match(inspectionMigration, /agency_role = 'inspection_staff'/);
+  assert.match(inspectionMigration, /pha_inspection_transition_profiles/);
+  assert.match(inspectionMigration, /pha_inspections/);
+  assert.match(inspectionMigration, /pha_inspection_deficiencies/);
+});
+
+test("NSPIRE transition logic keeps Public Housing on NSPIRE and voucher programs within February 1 2027", () => {
+  assert.match(inspectionMigration, /program_code = 'public_housing' and current_standard = 'nspire'/);
+  assert.match(inspectionMigration, /planned_nspire_date <= date '2027-02-01'/);
+  assert.match(inspectionMigration, /cannot be later than February 1, 2027/);
+  assert.match(inspectionMigration, /new\.standard_used := parent_row\.standard_used/);
+});
+
+test("PHA inspection route is a live transition and scheduling workspace", () => {
+  assert.match(inspectionsRoute, /PhaInspectionsWorkspace/);
+  assert.match(inspectionsWorkspace, /NSPIRE transition controls/);
+  assert.match(inspectionsWorkspace, /HUD notification/);
+  assert.match(inspectionsWorkspace, /Owners and families notified of NSPIRE transition/);
+  assert.match(inspectionsWorkspace, /Inspectors trained for selected standard/);
+  assert.match(inspectionsWorkspace, /Schedule inspection/);
+  assert.match(inspectionsWorkspace, /Inspection register/);
 });
 
 test("workspace hook resolves a member to the PHA owner's workspace and role", () => {
