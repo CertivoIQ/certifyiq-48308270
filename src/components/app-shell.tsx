@@ -33,6 +33,7 @@ const PHA_NAV = [
   { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus, key: "family_write" },
   { to: "/pha-families", label: "Families & Reexaminations", icon: Users, key: "family_read" },
   { to: "/pha-portability", label: "HCV Portability", icon: ArrowLeftRight, key: "hcv_operations" },
+  { to: "/pha-hcv-lease-up", label: "HCV Lease-Up", icon: ClipboardCheck, key: "hcv_operations" },
   { to: "/pha-pbv-operations", label: "PBV Operations", icon: Building2, key: "pbv_operations" },
   { to: "/pha-pbv-waiting-lists", label: "PBV Waiting Lists", icon: ClipboardList, key: "pbv_operations" },
   { to: "/pha-public-housing-operations", label: "Public Housing Operations", icon: Building2, key: "ph_operations" },
