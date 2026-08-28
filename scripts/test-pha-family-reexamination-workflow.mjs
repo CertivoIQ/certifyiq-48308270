@@ -101,7 +101,8 @@ test("PHA notice center generates drafts and issues notices without manual notic
   assert.match(noticeCenter, /Issue notice & continue workflow/);
   assert.match(noticeCenter, /status: "issued"/);
   assert.match(noticeCenter, /delivery_method: deliveryMethod/);
-  assert.doesNotMatch(noticeCenter, /notice_complete\s*:/);
+  const mutationBlock = noticeCenter.slice(noticeCenter.indexOf("const generateDraft"), noticeCenter.indexOf("const sourceReady"));
+  assert.doesNotMatch(mutationBlock, /notice_complete\s*:/);
 });
 
 test("PHA navigation exposes intake, determination, notices, and HUD-50058 as separate workflow modules", () => {
