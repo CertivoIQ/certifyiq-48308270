@@ -92,7 +92,7 @@ for each row execute function public.sync_pha_family_action_readiness();
 create or replace function public.enqueue_pha_50058_from_family_action()
 returns trigger language plpgsql security invoker as $$
 begin
-  if new.workflow_status = 'ready_to_route' and old.workflow_status is distinct from 'ready_to_route' then
+  if new.workflow_status = 'ready_to_route' and coalesce(old.workflow_status, '') <> 'ready_to_route' then
     insert into public.pha_50058_transactions (
       user_id, family_reference, program_code, transaction_type, effective_date,
       program_applicability_validated, controlled_source_release_approved,
@@ -106,9 +106,12 @@ begin
       new.full_hotma_policy_set_validated, new.reporting_path_validated,
       new.software_compatibility_validated, new.id
     ) on conflict (source_family_action_id) where source_family_action_id is not null do nothing;
-    new.workflow_status := 'routed';
+
+    update public.pha_family_actions
+       set workflow_status = 'routed', updated_at = now()
+     where id = new.id and user_id = new.user_id and workflow_status = 'ready_to_route';
   end if;
-  return new;
+  return null;
 end;
 $$;
 
