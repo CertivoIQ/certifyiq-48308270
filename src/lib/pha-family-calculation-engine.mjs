@@ -1,4 +1,4 @@
-export const PHA_FAMILY_CALCULATION_ENGINE_BUILD = "pha-family-calculation-engine-2026.08.1";
+export const PHA_FAMILY_CALCULATION_ENGINE_BUILD = "pha-family-calculation-engine-2026.08.2";
 
 const SUPPORTED_PROGRAMS = new Set(["hcv", "pbv", "public_housing", "mod_rehab"]);
 
@@ -106,12 +106,12 @@ export function calculatePhaFamilyDetermination(input = {}) {
     engine_build: PHA_FAMILY_CALCULATION_ENGINE_BUILD,
   };
 
-  if (program === "hcv" || program === "pbv") {
+  if (program === "hcv") {
     const missingVoucher = ["payment_standard", "gross_rent"].filter((key) => input[key] === undefined || input[key] === null || input[key] === "");
     if (missingVoucher.length) {
       return blocked(
-        "PHA_CALC_VOUCHER_RENT_INPUT_REQUIRED",
-        "Payment standard and gross rent are required to calculate the voucher housing assistance payment.",
+        "PHA_CALC_HCV_RENT_INPUT_REQUIRED",
+        "Payment standard and gross rent are required to calculate tenant-based HCV housing assistance.",
         missingVoucher,
         base,
       );
@@ -119,7 +119,7 @@ export function calculatePhaFamilyDetermination(input = {}) {
     const paymentStandard = Number(input.payment_standard);
     const grossRent = Number(input.gross_rent);
     if (![paymentStandard, grossRent].every((value) => Number.isFinite(value) && value >= 0)) {
-      return blocked("PHA_CALC_INVALID_VOUCHER_RENT_AMOUNT", "Payment standard and gross rent must be non-negative numbers.", [], base);
+      return blocked("PHA_CALC_INVALID_HCV_RENT_AMOUNT", "Payment standard and gross rent must be non-negative numbers.", [], base);
     }
     const housingAssistancePayment = Math.max(0, Math.min(paymentStandard - totalTenantPayment, grossRent - totalTenantPayment));
     const familyShare = Math.max(0, grossRent - housingAssistancePayment);
@@ -130,6 +130,31 @@ export function calculatePhaFamilyDetermination(input = {}) {
       gross_rent: money(grossRent),
       housing_assistance_payment: money(housingAssistancePayment),
       family_share: money(familyShare),
+    };
+  }
+
+  if (program === "pbv") {
+    if (input.rent_to_owner == null || input.rent_to_owner === "") {
+      return blocked(
+        "PHA_CALC_PBV_RENT_TO_OWNER_REQUIRED",
+        "The controlled PBV rent to owner is required before tenant rent and HAP can be validated.",
+        ["rent_to_owner"],
+        base,
+      );
+    }
+    const rentToOwner = Number(input.rent_to_owner);
+    if (!Number.isFinite(rentToOwner) || rentToOwner < 0) {
+      return blocked("PHA_CALC_INVALID_PBV_RENT_TO_OWNER", "PBV rent to owner must be a non-negative number.", [], base);
+    }
+    const tenantRent = Math.max(totalTenantPayment - utilityAllowance, 0);
+    const utilityReimbursement = Math.max(utilityAllowance - totalTenantPayment, 0);
+    return {
+      ...base,
+      status: "VALIDATED",
+      rent_to_owner: money(rentToOwner),
+      tenant_rent: money(tenantRent),
+      utility_reimbursement: money(utilityReimbursement),
+      housing_assistance_payment: money(Math.max(rentToOwner - tenantRent, 0)),
     };
   }
 
