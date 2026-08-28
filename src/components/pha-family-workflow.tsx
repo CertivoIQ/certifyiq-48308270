@@ -125,7 +125,7 @@ export function PhaFamilyWorkflow() {
       </Panel>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Federal calculation controls"><p className="text-sm leading-6 text-muted-foreground">The determination calculates annual and adjusted income, monthly income, Total Tenant Payment, and the applicable program rent or voucher assistance result. HCV/PBV require payment standard and gross rent. Public Housing preserves the documented flat-rent versus income-based-rent choice.</p></Panel>
+        <Panel title="Federal calculation controls"><p className="text-sm leading-6 text-muted-foreground">The determination calculates annual and adjusted income, monthly income, Total Tenant Payment, and the applicable program rent or assistance result. Tenant-based HCV requires payment standard and gross rent; PBV requires the controlled rent to owner; Public Housing preserves the documented flat-rent versus income-based-rent choice.</p></Panel>
         <Panel title="Fail-closed evidence handling"><p className="text-sm leading-6 text-muted-foreground">A conflicting verification/EIV item or controlled-source conflict blocks the substantive determination. The family action cannot mark calculation complete or generate its HUD-50058 record until the calculation status is validated.</p></Panel>
       </div>
     </AppShell>
