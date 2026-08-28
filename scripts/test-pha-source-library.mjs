@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const read=(p)=>readFileSync(new URL(`../${p}`,import.meta.url),"utf8");
 const migration=read("supabase/migrations/20260828250000_pha_source_library_forms.sql");
 const nspireActivation=read("supabase/migrations/20260828270000_pha_nspire_standards_activation.sql");
+const nspireBundleIntegrity=read("supabase/migrations/20260828292000_pha_nspire_bundle_integrity.sql");
 const workspace=read("src/components/pha-source-library-workspace.tsx");
 const route=read("src/routes/_authenticated/pha-source-library.tsx");
 const nspireWorkspace=read("src/components/pha-nspire-standards-workspace.tsx");
@@ -47,4 +48,15 @@ test("NSPIRE standards control exposes release and registry state",()=>{
  assert.match(nspireWorkspace,/No deficiency rows loaded\. Activation is correctly blocked/);
  assert.match(nspireWorkspace,/hcv_correction_hours/);
  assert.match(nspireWorkspace,/hcv_pass_fail/);
+});
+
+test("NSPIRE activation requires the current official HUD bundle and manifest reconciliation",()=>{
+ assert.match(nspireBundleIntegrity,/NSPIRE-Standards-ALL-STANDARDS\.zip/);
+ assert.match(nspireBundleIntegrity,/expected_standard_count=63/);
+ assert.match(nspireBundleIntegrity,/count\(distinct standard_name\)/);
+ assert.match(nspireBundleIntegrity,/standard count does not match the controlled HUD manifest/);
+ assert.match(nspireBundleIntegrity,/Verified HUD NSPIRE bundle artifact and checksum are required/);
+ assert.match(nspireBundleIntegrity,/pha_nspire_source_artifacts/);
+ assert.match(nspireWorkspace,/Official bundle control/);
+ assert.match(nspireWorkspace,/Imported count must match HUD manifest/);
 });
