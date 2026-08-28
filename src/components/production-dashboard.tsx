@@ -1,69 +1,118 @@
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { Panel, Stat } from "@/components/ui-kit";
+import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { Building2, FileUp, Rocket } from "lucide-react";
-import { useT } from "@/lib/i18n/provider";
+import { Building2, CalendarDays, FileUp, ListChecks, Rocket, Search, ShieldCheck } from "lucide-react";
+import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
 
-/**
- * Clean production dashboard for active subscribers. The demo/mock portfolio is
- * gated to visitors and trial users, so a paying account starts empty and fills
- * with its own real properties and certifications.
- */
+const PROGRAM_LABELS: Record<string, string> = {
+  lihtc: "LIHTC",
+  home: "HOME",
+  htf: "HTF",
+  section8_pbra: "Section 8 PBRA",
+  section202_8: "Section 202/8",
+  section202_811_prac: "Section 202/811 PRAC",
+  section811_pra: "Section 811 PRA",
+  section236_irp: "Section 236 / IRP",
+  sprac: "SPRAC",
+  tax_exempt_bonds: "Tax-Exempt Bonds",
+  rural_development: "USDA Rural Development",
+};
+
 export function ProductionDashboard() {
-  const t = useT();
+  const { profile } = useWorkspaceProfile();
+  const hotmaApplicable = profile.derived_overlays.some((item) => item.startsWith("hotma_"));
 
   return (
     <AppShell
-      title={t("dash.title")}
-      subtitle={t("dash.subtitle")}
+      title="Portfolio Operations"
+      subtitle="Real-time certifications, findings, deadlines, and audit readiness across your affordable housing portfolio"
       actions={
         <Button size="sm" asChild>
-          <Link to="/launchpad">
-            <Rocket className="size-3.5" /> LaunchPad
-          </Link>
+          <Link to="/launchpad"><Rocket className="size-3.5" /> Portfolio setup</Link>
         </Button>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label={t("dash.stat.properties")} value={0} hint="No properties added yet" />
-        <Stat label={t("dash.stat.openFindings")} value={0} hint="Findings appear after your first certification review" />
-        <Stat label={t("dash.stat.exposure")} value="$0" hint="Exposure is calculated from real findings" />
-        <Stat label={t("dash.stat.autoApproval")} value="—" hint="Available once reviews are completed" />
+      <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
+            <Search className="size-4" />
+            <span>Search property, household, unit, certification, or finding...</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild><Link to="/properties"><Building2 className="size-4" /> Add property</Link></Button>
+            <Button variant="outline" size="sm" asChild><Link to="/files"><FileUp className="size-4" /> Upload certification</Link></Button>
+          </div>
+        </div>
       </div>
 
-      <Panel
-        className="mt-4"
-        title="Your workspace is ready"
-        description="Sample data has been removed now that your subscription is active. Add your portfolio to begin real compliance reviews."
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Link
-            to="/properties"
-            className="flex items-start gap-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted/50"
-          >
-            <Building2 className="mt-0.5 size-5 text-primary" />
-            <span>
-              <span className="block font-display text-[15px]">Register your properties</span>
-              <span className="mt-1 block text-[13px] text-muted-foreground">
-                Assign each property its program rule pack (LIHTC, Section 8, HOME, HOTMA, Bond, RD).
-              </span>
-            </span>
-          </Link>
-          <Link
-            to="/files"
-            className="flex items-start gap-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted/50"
-          >
-            <FileUp className="mt-0.5 size-5 text-primary" />
-            <span>
-              <span className="block font-display text-[15px]">Upload certifications</span>
-              <span className="mt-1 block text-[13px] text-muted-foreground">
-                Every file gets a Pass/Fail verdict with cited rules and correction steps before human sign-off.
-              </span>
-            </span>
-          </Link>
-        </div>
-      </Panel>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {(profile.selected_programs.length ? profile.selected_programs : ["lihtc", "home", "section8_pbra"]).map((program) => (
+          <Pill key={program}>{PROGRAM_LABELS[program] ?? program}</Pill>
+        ))}
+        {hotmaApplicable ? <Pill tone="seal">HOTMA derived</Pill> : null}
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <Stat label="Audit readiness" value="—" hint="Calculated after portfolio data is loaded" />
+        <Stat label="Certifications awaiting review" value={0} hint="Certification work queue" />
+        <Stat label="Open compliance findings" value={0} hint="Unresolved findings requiring action" />
+        <Stat label="Recertifications due" value={0} hint="Next 30 days" />
+        <Stat label="Properties requiring attention" value={0} hint="Risk and deadline driven" />
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-[1.45fr_1fr]">
+        <Panel title="Needs Your Attention" description="Priority work queue ordered by urgency, due date, and compliance consequence.">
+          <div className="rounded-lg border border-dashed border-border p-7 text-center">
+            <ListChecks className="mx-auto size-6 text-muted-foreground" />
+            <p className="mt-3 font-display text-[15px]">No outstanding work yet</p>
+            <p className="mt-1 text-[12.5px] text-muted-foreground">Upload certifications and register properties to populate the operational queue.</p>
+            <Button className="mt-4" size="sm" asChild><Link to="/files">Open review queue</Link></Button>
+          </div>
+        </Panel>
+
+        <Panel title="Upcoming Compliance" description="The next 30 days of certifications, notices, audits, and regulatory deadlines.">
+          <div className="space-y-2">
+            {[
+              ["Annual recertifications", "0"],
+              ["Interim certifications", "0"],
+              ["Tenant notices", "0"],
+              ["Audits / file reviews", "0"],
+              ["Regulatory deadlines", "0"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm">
+                <span>{label}</span><span className="font-mono">{value}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Panel title="Portfolio Status" description="Property-level operating view with layered program designations and next actions.">
+          <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No properties have been registered yet. Program applicability can be assigned at the property, building, or unit level.
+          </div>
+          <Button variant="outline" className="mt-4" asChild><Link to="/properties"><Building2 className="size-4" /> Register properties</Link></Button>
+        </Panel>
+
+        {hotmaApplicable ? (
+          <Panel title="HOTMA Readiness" description="Shown only when a selected HUD program makes HOTMA applicable.">
+            <div className="flex items-center gap-3 rounded-lg border border-border p-4">
+              <ShieldCheck className="size-6 text-primary" />
+              <div><p className="font-display text-[15px]">Derived regulatory overlay active</p><p className="mt-1 text-[12.5px] text-muted-foreground">CertivoIQ applies HOTMA requirements because of your program stack; HOTMA is not a user-selected program.</p></div>
+            </div>
+            <Button variant="outline" className="mt-4" asChild><Link to="/rules">Review applicable rules</Link></Button>
+          </Panel>
+        ) : (
+          <Panel title="Program Configuration" description="CertivoIQ derives regulatory overlays from the programs and coverage you configure.">
+            <div className="flex items-center gap-3 rounded-lg border border-border p-4">
+              <CalendarDays className="size-6 text-primary" />
+              <p className="text-[12.5px] text-muted-foreground">Complete portfolio setup to activate program-specific deadlines, state requirements, and compliance workflows.</p>
+            </div>
+          </Panel>
+        )}
+      </div>
     </AppShell>
   );
 }
