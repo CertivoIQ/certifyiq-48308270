@@ -11,12 +11,15 @@ export const sendPhaWorkspaceInvitationEmail = createServerFn({ method: "POST" }
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    // Generated Supabase types lag the PHA invitation and membership migrations.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const client = supabaseAdmin as any;
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(data.accessToken);
     const requester = authData.user;
     if (authError || !requester) throw new Error("Authenticated PHA administrator is required.");
 
-    const { data: invitation, error: invitationError } = await (supabaseAdmin as any)
+    const { data: invitation, error: invitationError } = await client
       .from("pha_workspace_invitations")
       .select("id, workspace_user_id, invite_email, agency_role, status, expires_at, delivery_status, delivery_attempt_count")
       .eq("id", data.invitationId)
@@ -26,9 +29,9 @@ export const sendPhaWorkspaceInvitationEmail = createServerFn({ method: "POST" }
     if (new Date(invitation.expires_at).getTime() <= Date.now()) throw new Error("PHA invitation has expired.");
 
     const [{ data: ownerProfile }, { data: staffRole }, { data: membership }] = await Promise.all([
-      (supabaseAdmin as any).from("customer_workspace_profiles").select("user_id, organization_type").eq("user_id", invitation.workspace_user_id).maybeSingle(),
-      (supabaseAdmin as any).from("user_roles").select("role").eq("user_id", requester.id).eq("role", "staff").maybeSingle(),
-      (supabaseAdmin as any).from("pha_workspace_memberships").select("agency_role, active").eq("workspace_user_id", invitation.workspace_user_id).eq("member_user_id", requester.id).eq("active", true).maybeSingle(),
+      client.from("customer_workspace_profiles").select("user_id, organization_type").eq("user_id", invitation.workspace_user_id).maybeSingle(),
+      client.from("user_roles").select("role").eq("user_id", requester.id).eq("role", "staff").maybeSingle(),
+      client.from("pha_workspace_memberships").select("agency_role, active").eq("workspace_user_id", invitation.workspace_user_id).eq("member_user_id", requester.id).eq("active", true).maybeSingle(),
     ]);
 
     const requesterIsOwner = ownerProfile?.organization_type === "pha" && ownerProfile.user_id === requester.id;
@@ -39,7 +42,7 @@ export const sendPhaWorkspaceInvitationEmail = createServerFn({ method: "POST" }
     }
 
     const attemptedAt = new Date().toISOString();
-    await (supabaseAdmin as any).from("pha_workspace_invitations").update({
+    await client.from("pha_workspace_invitations").update({
       delivery_attempted_at: attemptedAt,
       delivery_attempt_count: Number(invitation.delivery_attempt_count ?? 0) + 1,
       delivery_error: null,
@@ -56,14 +59,14 @@ export const sendPhaWorkspaceInvitationEmail = createServerFn({ method: "POST" }
       });
 
       if (!result.sent) {
-        await (supabaseAdmin as any).from("pha_workspace_invitations").update({
+        await client.from("pha_workspace_invitations").update({
           delivery_status: "suppressed",
           delivery_error: result.reason,
         }).eq("id", invitation.id);
         return { sent: false as const, status: "suppressed" as const };
       }
 
-      await (supabaseAdmin as any).from("pha_workspace_invitations").update({
+      await client.from("pha_workspace_invitations").update({
         delivery_status: "sent",
         delivered_at: new Date().toISOString(),
         delivery_error: null,
@@ -71,7 +74,7 @@ export const sendPhaWorkspaceInvitationEmail = createServerFn({ method: "POST" }
       return { sent: true as const, status: "sent" as const };
     } catch (error) {
       const message = error instanceof Error ? error.message.slice(0, 500) : "Invitation email delivery failed";
-      await (supabaseAdmin as any).from("pha_workspace_invitations").update({
+      await client.from("pha_workspace_invitations").update({
         delivery_status: "failed",
         delivery_error: message,
       }).eq("id", invitation.id);
