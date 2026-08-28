@@ -904,6 +904,140 @@ export type Database = {
           },
         ]
       }
+      crm_staff_access: {
+        Row: {
+          access_level: string
+          disabled_at: string | null
+          disabled_by: string | null
+          granted_at: string
+          granted_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_level: string
+          disabled_at?: string | null
+          disabled_by?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_level?: string
+          disabled_at?: string | null
+          disabled_by?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crm_staff_access_events: {
+        Row: {
+          access_level: string | null
+          actor_id: string | null
+          detail: Json
+          event_type: string
+          id: number
+          invitation_id: string | null
+          occurred_at: string
+          target_user_id: string | null
+        }
+        Insert: {
+          access_level?: string | null
+          actor_id?: string | null
+          detail?: Json
+          event_type: string
+          id?: never
+          invitation_id?: string | null
+          occurred_at?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          access_level?: string | null
+          actor_id?: string | null
+          detail?: Json
+          event_type?: string
+          id?: never
+          invitation_id?: string | null
+          occurred_at?: string
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_staff_access_events_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "crm_staff_invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_staff_invitations: {
+        Row: {
+          accepted_at: string | null
+          access_level: string
+          auth_user_id: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_attempt_count: number
+          delivery_attempted_at: string | null
+          delivery_error: string | null
+          delivery_status: string
+          expires_at: string
+          id: string
+          invite_email: string
+          invited_by: string
+          revoked_at: string | null
+          revoked_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          access_level: string
+          auth_user_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_attempt_count?: number
+          delivery_attempted_at?: string | null
+          delivery_error?: string | null
+          delivery_status?: string
+          expires_at?: string
+          id?: string
+          invite_email: string
+          invited_by: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          access_level?: string
+          auth_user_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_attempt_count?: number
+          delivery_attempted_at?: string | null
+          delivery_error?: string | null
+          delivery_status?: string
+          expires_at?: string
+          id?: string
+          invite_email?: string
+          invited_by?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_templates: {
         Row: {
           body: string
@@ -6219,6 +6353,9 @@ export type Database = {
         Args: { target_family_action_id: string }
         Returns: Json
       }
+      claim_crm_staff_invitation: { Args: never; Returns: Json }
+      crm_staff_can_manage: { Args: { _user_id: string }; Returns: boolean }
+      crm_staff_is_admin: { Args: { _user_id: string }; Returns: boolean }
       crm_verified_sale_trigger_reason: {
         Args: { p_contract_verified_at: string; p_payment_verified_at: string }
         Returns: string
