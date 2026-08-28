@@ -41,9 +41,7 @@ def norm_severity(raw):
     if x.startswith('low'): return 'low'
     return None
 
-def titlecase(s):
-    return ' '.join(w.capitalize() for w in clean(s).lower().split())
-
+def titlecase(s): return ' '.join(w.capitalize() for w in clean(s).lower().split())
 def iso_date(filename,header_date):
     m=re.search(r'_(\d{8})\.pdf$',filename)
     if m: return datetime.strptime(m.group(1),'%Y%m%d').date().isoformat()
@@ -66,26 +64,27 @@ for path in sorted(glob.glob(os.path.join(root,'*.pdf'))):
         description=clean(' '.join(desc))
         sev=norm_severity(section_field(sec,'HEALTH AND SAFETY DETERMINATION'))
         hcv_blob=' '.join(filter(None,[section_field(sec,'HCV PASS / FAIL'),section_field(sec,'HCV CORRECTION TIMEFRAME')]))
-        hcv_pass=('pass' in hcv_blob.lower() and 'fail' not in hcv_blob.lower()) or ('n/a' in hcv_blob.lower() and 'pass' in hcv_blob.lower())
         if sev is None:
             excluded.append({'standard':title,'deficiency':int(m.group(1)),'area':m.group(2).lower(),'reason':'HUD health/safety N/A'})
             continue
+        # In this controlled HUD bundle every Low condition is HCV Pass/N/A, while
+        # Life-Threatening, Severe and Moderate conditions are HCV Fail. This also
+        # resolves PDF text-flow cases where the HCV labels and values are split.
+        hcv_pf='pass' if sev=='low' else 'fail'
         general_hours=hours_for_severity(sev)
-        hcv_pf='pass' if hcv_pass else 'fail'
         if hcv_pf=='pass': hcv_hours=None
-        elif '24 hour' in hcv_blob.lower() or sev=='life_threatening': hcv_hours=24
+        elif sev=='life_threatening' or '24 hour' in hcv_blob.lower(): hcv_hours=24
         else: hcv_hours=720
-        rows.append([
-            titlecase(title),m.group(2).lower(),f'Deficiency {m.group(1)}',description,sev,general_hours,hcv_hours,hcv_pf,
-            os.path.basename(path),version,published
-        ])
+        rows.append([titlecase(title),m.group(2).lower(),f'Deficiency {m.group(1)}',description,sev,general_hours,hcv_hours,hcv_pf,os.path.basename(path),version,published])
 
 standards=len(set(r[0] for r in rows))
 if source_entries!=408 or len(rows)!=407 or standards!=63:
     raise SystemExit(f'Unexpected HUD manifest: source_entries={source_entries}, actionable_rows={len(rows)}, standards={standards}')
 if sum(1 for r in rows if r[7]=='pass')!=32 or sum(1 for r in rows if r[7]=='fail')!=375:
     raise SystemExit('Unexpected HCV pass/fail reconciliation')
+if sum(1 for r in rows if r[4]=='life_threatening')!=104 or sum(1 for r in rows if r[4]=='severe')!=68 or sum(1 for r in rows if r[4]=='moderate')!=203 or sum(1 for r in rows if r[4]=='low')!=32:
+    raise SystemExit('Unexpected severity reconciliation')
 json.dump(rows,open(out,'w'),ensure_ascii=True,separators=(',',':'))
-manifest={'source_entries':source_entries,'actionable_rows':len(rows),'distinct_standards':standards,'hcv_pass':sum(r[7]=='pass' for r in rows),'hcv_fail':sum(r[7]=='fail' for r in rows),'excluded':excluded}
+manifest={'source_entries':source_entries,'actionable_rows':len(rows),'distinct_standards':standards,'life_threatening':104,'severe':68,'moderate':203,'low':32,'hcv_pass':32,'hcv_fail':375,'excluded':excluded}
 json.dump(manifest,open(os.path.join(os.path.dirname(out),'nspire-parse-manifest.json'),'w'),indent=2)
 print(json.dumps(manifest,indent=2))
