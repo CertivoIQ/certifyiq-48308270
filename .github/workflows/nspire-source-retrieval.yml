@@ -27,8 +27,8 @@ jobs:
           unzip -l nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip | tee nspire-source/zip-list.txt
           mkdir -p nspire-source/extracted
           unzip -q nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip -d nspire-source/extracted
-          find nspire-source/extracted -type f -printf '%P\n' | sort | tee nspire-source/file-manifest.txt
-          find nspire-source/extracted -type f -iname '*.pdf' | wc -l | tee nspire-source/pdf-count.txt
+          find nspire-source/extracted/NSPIRE-Standards-ALL-STANDARDS -type f -printf '%P\n' | sort | tee nspire-source/file-manifest.txt
+          find nspire-source/extracted/NSPIRE-Standards-ALL-STANDARDS -type f -iname '*.pdf' | wc -l | tee nspire-source/pdf-count.txt
       - name: Parse controlled HUD deficiency registry
         shell: bash
         run: |
