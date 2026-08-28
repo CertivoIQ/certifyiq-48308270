@@ -2,7 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, CalendarDays, ClipboardCheck, FileCheck2, ShieldCheck, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, ClipboardCheck, FileCheck2, Users } from "lucide-react";
 import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
 
 const PROGRAM_LABELS: Record<string, string> = {
@@ -32,7 +32,7 @@ export function PhaDashboard() {
         <Stat label="Families requiring action" value={0} hint="Populates from agency workflow queues" />
         <Stat label="Annual reexaminations due" value={0} hint="Upcoming agency reexamination workload" />
         <Stat label="HUD-50058 exceptions" value={0} hint="Transactions blocked or needing correction" />
-        <Stat label="HOTMA readiness" value="—" hint="Calculated from configured agency controls" />
+        <Stat label="HOTMA readiness" value="-" hint="Calculated from configured agency controls" />
         <Stat label="Inspections requiring action" value={0} hint="Inspection findings and follow-up queue" />
       </div>
 
