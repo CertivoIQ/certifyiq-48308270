@@ -45,6 +45,7 @@ jobs:
           node --test scripts/test-pha-authoritative-control-state.mjs
           node --test scripts/test-pha-role-access.mjs
           node --test scripts/test-pha-reasonable-accommodations.mjs
+          node --test scripts/test-pha-program-specific-operations.mjs
           node --test scripts/test-pha-user-invitations.mjs
           bun run test:compliance
           bun run test:slice

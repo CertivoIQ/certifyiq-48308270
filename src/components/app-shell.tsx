@@ -32,6 +32,8 @@ const PHA_NAV = [
   { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus, key: "family_write" },
   { to: "/pha-families", label: "Families & Reexaminations", icon: Users, key: "family_read" },
   { to: "/pha-portability", label: "HCV Portability", icon: ArrowLeftRight, key: "hcv_operations" },
+  { to: "/pha-pbv-operations", label: "PBV Operations", icon: Building2, key: "pbv_operations" },
+  { to: "/pha-public-housing-operations", label: "Public Housing Operations", icon: Building2, key: "ph_operations" },
   { to: "/pha-waiting-lists", label: "Waiting Lists", icon: ClipboardList, key: "waiting_lists" },
   { to: "/pha-accommodations", label: "Reasonable Accommodations", icon: ShieldCheck, key: "accommodations" },
   { to: "/pha-notices", label: "Family Notices", icon: MailCheck, key: "family_write" },
@@ -52,10 +54,10 @@ const PHA_NAV = [
 function phaNavAllowed(role: PhaAgencyRole | null, key: (typeof PHA_NAV)[number]["key"]) {
   if (!role || role === "workspace_owner" || role === "agency_admin" || role === "compliance_admin") return true;
   if (key === "command" || key === "support") return true;
-  if (role === "executive") return ["family_read", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
+  if (role === "executive") return ["family_read", "pbv_operations", "ph_operations", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
   if (role === "inspection_staff") return ["inspections", "accommodations", "reports", "findings"].includes(key);
-  if (role === "hcv_pbv_specialist") return ["family_write", "family_read", "hcv_operations", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
-  if (role === "public_housing_specialist") return ["family_write", "family_read", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
+  if (role === "hcv_pbv_specialist") return ["family_write", "family_read", "hcv_operations", "pbv_operations", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
+  if (role === "public_housing_specialist") return ["family_write", "family_read", "ph_operations", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
   return false;
 }
 function Wordmark(){return <Link to="/dashboard" className="flex items-center gap-2.5"><img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" /></Link>;}
