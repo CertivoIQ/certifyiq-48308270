@@ -61,6 +61,8 @@ function assertCanAssign(requesterLevel: "manager" | "admin", accessLevel: Acces
 }
 
 async function writeEvent(
+  // Generated types lag the staff access migration until schema types refresh.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client: any,
   input: {
     actorId: string;
