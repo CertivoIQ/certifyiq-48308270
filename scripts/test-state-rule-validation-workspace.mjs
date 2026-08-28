@@ -24,7 +24,7 @@ test("exposes a dedicated Manager/Admin validation workspace", () => {
   assert.match(workspace, /state_rule_source_candidates/);
   assert.match(workspace, /review_state_rule_source_candidate/);
   assert.match(shell, /to:\s*["']\/state-rule-validation["']/);
-  assert.match(tasks, /destination:\s*["']\/state-rule-validation["']/);
+  assert.match(tasks, /destination:\s*active\s*\?\s*["']\/state-rule-validation["']/);
 });
 
 test("requires exact-source evidence before verification", () => {
@@ -47,4 +47,3 @@ test("keeps review fail closed and denies employee decisions", () => {
   assert.match(migration, /grant execute on function[\s\S]*to authenticated/);
   assert.doesNotMatch(migration, /compliance_activation_allowed\s*=\s*true/);
 });
-
