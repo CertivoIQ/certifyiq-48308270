@@ -160,6 +160,7 @@ export function evaluateFederalCertificationReview(input = {}) {
     programs,
     jurisdiction: input.jurisdiction,
     statePack: input.statePack,
+    hotmaApplicable: input.hotmaApplicable,
     hotmaApplicabilityInput: input.hotmaApplicabilityInput,
   });
 
