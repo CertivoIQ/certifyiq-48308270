@@ -12,6 +12,7 @@ create table if not exists public.pha_family_calculations (
   welfare_housing_amount numeric(14,2) check (welfare_housing_amount >= 0),
   payment_standard numeric(14,2) check (payment_standard >= 0),
   gross_rent numeric(14,2) check (gross_rent >= 0),
+  rent_to_owner numeric(14,2) check (rent_to_owner >= 0),
   public_housing_rent_choice text check (public_housing_rent_choice in ('income_based','flat_rent')),
   flat_rent_amount numeric(14,2) check (flat_rent_amount >= 0),
   alternative_non_public_housing_rent_applicable boolean not null default false,
@@ -28,7 +29,7 @@ create table if not exists public.pha_family_calculations (
   calculation_status text not null default 'pending' check (calculation_status in ('pending','validated','blocked')),
   reason_code text,
   reason text,
-  engine_build text not null default 'pha-family-calculation-engine-2026.08.1',
+  engine_build text not null default 'pha-family-calculation-engine-2026.08.2',
   calculated_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -55,6 +56,7 @@ declare
   ttp numeric(14,2);
   basis text;
   hap numeric(14,2);
+  pbv_tenant_rent numeric(14,2);
 begin
   select a.source_status_conflict,
          exists (
@@ -69,6 +71,7 @@ begin
 
   new.updated_at := now();
   new.calculated_at := now();
+  new.engine_build := 'pha-family-calculation-engine-2026.08.2';
   new.adjusted_income := null;
   new.monthly_income := null;
   new.monthly_adjusted_income := null;
@@ -93,10 +96,6 @@ begin
   c10 := round(monthly * 0.10);
   cminimum := round(new.minimum_rent);
   cwelfare := case when new.welfare_housing_amount is null then null else round(new.welfare_housing_amount) end;
-  coverincome := case
-    when new.program_code = 'public_housing' and new.alternative_non_public_housing_rent_applicable
-    then round(new.alternative_non_public_housing_rent)
-    else null end;
 
   if new.program_code = 'public_housing'
      and new.alternative_non_public_housing_rent_applicable
@@ -106,6 +105,11 @@ begin
     new.reason := 'Alternative non-public housing rent is required when the over-income rent path applies.';
     return new;
   end if;
+
+  coverincome := case
+    when new.program_code = 'public_housing' and new.alternative_non_public_housing_rent_applicable
+    then round(new.alternative_non_public_housing_rent)
+    else null end;
 
   ttp := greatest(c30, c10, cminimum, coalesce(cwelfare, 0), coalesce(coverincome, 0));
   basis := case
@@ -122,16 +126,33 @@ begin
   new.total_tenant_payment := ttp;
   new.ttp_basis := basis;
 
-  if new.program_code in ('hcv','pbv') then
+  if new.program_code = 'hcv' then
     if new.payment_standard is null or new.gross_rent is null then
       new.calculation_status := 'blocked';
-      new.reason_code := 'PHA_CALC_VOUCHER_RENT_INPUT_REQUIRED';
-      new.reason := 'Payment standard and gross rent are required for HCV/PBV housing assistance calculation.';
+      new.reason_code := 'PHA_CALC_HCV_RENT_INPUT_REQUIRED';
+      new.reason := 'Payment standard and gross rent are required for tenant-based HCV housing assistance.';
       return new;
     end if;
     hap := greatest(least(new.payment_standard - ttp, new.gross_rent - ttp), 0);
     new.housing_assistance_payment := round(hap, 2);
     new.family_share := round(greatest(new.gross_rent - hap, 0), 2);
+    new.calculation_status := 'validated';
+    new.reason_code := null;
+    new.reason := null;
+    return new;
+  end if;
+
+  if new.program_code = 'pbv' then
+    if new.rent_to_owner is null then
+      new.calculation_status := 'blocked';
+      new.reason_code := 'PHA_CALC_PBV_RENT_TO_OWNER_REQUIRED';
+      new.reason := 'The controlled PBV rent to owner is required before tenant rent and HAP can be validated.';
+      return new;
+    end if;
+    pbv_tenant_rent := greatest(ttp - new.utility_allowance, 0);
+    new.tenant_rent := pbv_tenant_rent;
+    new.utility_reimbursement := greatest(new.utility_allowance - ttp, 0);
+    new.housing_assistance_payment := greatest(new.rent_to_owner - pbv_tenant_rent, 0);
     new.calculation_status := 'validated';
     new.reason_code := null;
     new.reason := null;
