@@ -20,16 +20,17 @@ comment on table public.customer_workspace_profiles is
 
 create table if not exists public.property_program_applicability (
   id uuid primary key default gen_random_uuid(),
-  property_id uuid not null,
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  property_id text not null,
   program_code text not null,
   coverage_level text not null default 'property'
     check (coverage_level in ('property', 'building', 'unit')),
-  building_id uuid,
-  unit_id uuid,
+  building_id text,
+  unit_id text,
   effective_from date,
   effective_to date,
   source_note text,
-  created_by uuid references auth.users(id),
+  created_by uuid not null default auth.uid() references auth.users(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (
@@ -39,10 +40,12 @@ create table if not exists public.property_program_applicability (
   )
 );
 
+create index if not exists property_program_applicability_user_idx
+  on public.property_program_applicability(user_id);
 create index if not exists property_program_applicability_property_idx
-  on public.property_program_applicability(property_id);
+  on public.property_program_applicability(user_id, property_id);
 create index if not exists property_program_applicability_program_idx
-  on public.property_program_applicability(program_code);
+  on public.property_program_applicability(user_id, program_code);
 
 alter table public.customer_workspace_profiles enable row level security;
 alter table public.property_program_applicability enable row level security;
@@ -62,12 +65,16 @@ create policy "Staff view workspace profiles"
   on public.customer_workspace_profiles for select to authenticated
   using (public.has_role(auth.uid(), 'staff'));
 
--- Property applicability is tenant data. Existing authorization helpers continue
--- to be the enforcement boundary until portfolio membership is normalized.
-drop policy if exists "Authenticated manage property program applicability" on public.property_program_applicability;
-create policy "Authenticated manage property program applicability"
+drop policy if exists "Users manage own property program applicability" on public.property_program_applicability;
+create policy "Users manage own property program applicability"
   on public.property_program_applicability for all to authenticated
-  using (true) with check (true);
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid() and created_by = auth.uid());
+
+drop policy if exists "Staff view property program applicability" on public.property_program_applicability;
+create policy "Staff view property program applicability"
+  on public.property_program_applicability for select to authenticated
+  using (public.has_role(auth.uid(), 'staff'));
 
 create or replace function public.derive_workspace_overlays(programs text[], pha_programs text[] default '{}')
 returns text[] language sql immutable as $$
