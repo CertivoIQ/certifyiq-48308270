@@ -10,7 +10,7 @@ interface Props {
 }
 
 const Email = ({ role = 'agency user', expiresOn = 'in 7 days', dashboardUrl = 'https://certivoiq.com/dashboard' }: Props) => (
-  <Html lang="en" dir="ltr">">
+  <Html lang="en" dir="ltr">
     <Head />
     <Preview>You have been invited to a CertivoIQ PHA workspace.</Preview>
     <Body style={main}>
