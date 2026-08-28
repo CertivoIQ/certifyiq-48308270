@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import {
   LayoutDashboard, Building2, FileCheck2, AlertTriangle, Scale, Sparkles, Rocket,
-  Tag, Menu, X, Briefcase, Shield, CreditCard, HelpCircle, Users, ClipboardList,
-  ClipboardCheck, ShieldCheck,
+  Menu, X, Briefcase, Shield, CreditCard, HelpCircle, Users, ClipboardList,
+  ClipboardCheck, ShieldCheck, SlidersHorizontal,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IQText } from "@/components/iq-text";
@@ -12,7 +12,6 @@ import { useIsStaff, useSession } from "@/hooks/use-session";
 import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
 import { PublicShell } from "@/components/public-shell";
 import { useT } from "@/lib/i18n/provider";
-import type { TranslationKey } from "@/lib/i18n/en";
 
 const MULTIFAMILY_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -21,6 +20,7 @@ const MULTIFAMILY_NAV = [
   { to: "/findings", label: "Findings & Corrections", icon: AlertTriangle },
   { to: "/rules", label: "Program Compliance", icon: Scale },
   { to: "/copilot", label: "Compliance Assistant", icon: Sparkles },
+  { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal },
   { to: "/launchpad", label: "Portfolio Setup", icon: Rocket },
   { to: "/account/security", label: "Users & Security", icon: Shield },
   { to: "/billing", label: "Billing", icon: CreditCard },
@@ -35,6 +35,7 @@ const PHA_NAV = [
   { to: "/pha-hotma", label: "HOTMA Readiness", icon: ShieldCheck },
   { to: "/findings", label: "Findings", icon: AlertTriangle },
   { to: "/rules", label: "Policies & Source Rules", icon: Scale },
+  { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal },
   { to: "/launchpad", label: "Agency Setup", icon: Rocket },
   { to: "/account/security", label: "Users & Security", icon: Shield },
   { to: "/billing", label: "Billing", icon: CreditCard },
