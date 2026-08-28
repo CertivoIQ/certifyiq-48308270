@@ -37,19 +37,38 @@ test("welfare housing amount and minimum rent remain TTP candidates", () => {
     minimum_rent: 50,
     welfare_housing_amount: 425,
     program: "pbv",
-    payment_standard: 900,
-    gross_rent: 850,
+    rent_to_owner: 850,
   });
   assert.equal(result.status, "VALIDATED");
   assert.equal(result.total_tenant_payment, 425);
   assert.equal(result.ttp_basis, "WELFARE_HOUSING_AMOUNT");
 });
 
-test("HCV and PBV require payment standard and gross rent before validation", () => {
+test("tenant-based HCV requires payment standard and gross rent", () => {
   const result = calculatePhaFamilyDetermination({ ...base, program: "hcv" });
   assert.equal(result.status, "BLOCKED");
-  assert.equal(result.reason_code, "PHA_CALC_VOUCHER_RENT_INPUT_REQUIRED");
+  assert.equal(result.reason_code, "PHA_CALC_HCV_RENT_INPUT_REQUIRED");
   assert.deepEqual(result.missing_inputs, ["payment_standard", "gross_rent"]);
+});
+
+test("PBV uses controlled rent to owner rather than tenant-based payment-standard HAP formula", () => {
+  const result = calculatePhaFamilyDetermination({
+    ...base,
+    program: "pbv",
+    rent_to_owner: 900,
+  });
+  assert.equal(result.status, "VALIDATED");
+  assert.equal(result.total_tenant_payment, 750);
+  assert.equal(result.tenant_rent, 650);
+  assert.equal(result.utility_reimbursement, 0);
+  assert.equal(result.housing_assistance_payment, 250);
+  assert.equal(result.payment_standard, undefined);
+});
+
+test("PBV blocks without a controlled rent to owner", () => {
+  const result = calculatePhaFamilyDetermination({ ...base, program: "pbv" });
+  assert.equal(result.status, "BLOCKED");
+  assert.equal(result.reason_code, "PHA_CALC_PBV_RENT_TO_OWNER_REQUIRED");
 });
 
 test("Public Housing income-based rent subtracts utility allowance and preserves reimbursement", () => {
@@ -110,7 +129,7 @@ test("evidence conflicts fail closed before monetary determination", () => {
   assert.equal(result.reason_code, "PHA_CALC_EVIDENCE_CONFLICT");
 });
 
-test("Mod Rehab does not reuse the HCV rent formula without its controlled program module", () => {
+test("Mod Rehab does not reuse HCV or PBV rent formulas without its controlled program module", () => {
   const result = calculatePhaFamilyDetermination({ ...base, program: "mod_rehab" });
   assert.equal(result.status, "BLOCKED");
   assert.equal(result.reason_code, "PHA_CALC_MOD_REHAB_RENT_MODULE_PENDING");
@@ -123,7 +142,8 @@ test("database calculation records are tenant-isolated and calculation completio
   assert.match(migration, /user_id = auth\.uid\(\)/);
   assert.match(migration, /new\.calculation_complete := calculation_validated/);
   assert.match(migration, /PHA_CALC_EVIDENCE_CONFLICT/);
-  assert.match(migration, /PHA_CALC_VOUCHER_RENT_INPUT_REQUIRED/);
+  assert.match(migration, /PHA_CALC_HCV_RENT_INPUT_REQUIRED/);
+  assert.match(migration, /PHA_CALC_PBV_RENT_TO_OWNER_REQUIRED/);
   assert.match(migration, /PHA_CALC_MOD_REHAB_RENT_MODULE_PENDING/);
   assert.doesNotMatch(migration, /using \(true\)/);
 });
