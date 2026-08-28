@@ -5,6 +5,7 @@ import { readFileSync, existsSync } from "node:fs";
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
 const migration = read("supabase/migrations/20260828012000_workspace_profiles_and_program_applicability.sql");
+const hotmaCorrection = read("supabase/migrations/20260828022000_split_hotma_section_overlays.sql");
 const configurator = read("src/components/workspace-profile-configurator.tsx");
 const dashboardRoute = read("src/routes/_authenticated/dashboard.tsx");
 const appShell = read("src/components/app-shell.tsx");
@@ -17,11 +18,20 @@ test("workspace profile stores organization type and multiple programs", () => {
 });
 
 test("HOTMA is derived instead of offered as a selectable program", () => {
-  assert.match(migration, /derive_workspace_overlays/);
-  assert.match(migration, /hotma_102_104/);
-  assert.match(migration, /hotma_103/);
+  assert.match(hotmaCorrection, /derive_workspace_overlays/);
+  assert.match(hotmaCorrection, /hotma_102/);
+  assert.match(hotmaCorrection, /hotma_103/);
+  assert.match(hotmaCorrection, /hotma_104/);
   assert.doesNotMatch(configurator, /\["hotma"\s*,/i);
   assert.match(configurator, /HOTMA is not a selectable program/);
+});
+
+test("multifamily HOTMA section 104 is limited to PBRA and Section 202\/8", () => {
+  assert.match(hotmaCorrection, /programs && array\['section8_pbra','section202_8'\]::text\[]/);
+  assert.match(hotmaCorrection, /'section202_811_prac','section811_pra','section236_irp','sprac'/);
+  const section104Case = hotmaCorrection.match(/case when programs && array\['section8_pbra','section202_8'\][\s\S]*?then 'hotma_104' end/);
+  assert.ok(section104Case, "HOTMA 104 overlay must use the narrow MFH program set");
+  assert.doesNotMatch(section104Case[0], /section202_811_prac|section811_pra|section236_irp|sprac/);
 });
 
 test("program applicability supports property, building, and unit scope with tenant isolation", () => {
