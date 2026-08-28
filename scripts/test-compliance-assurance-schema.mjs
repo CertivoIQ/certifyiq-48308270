@@ -6,8 +6,13 @@ const migrationUrl = new URL(
   "../supabase/migrations/20260828360000_compliance_assurance_control_plane.sql",
   import.meta.url,
 );
+const optimizationUrl = new URL(
+  "../supabase/migrations/20260828361000_optimize_compliance_assurance_rls.sql",
+  import.meta.url,
+);
 
 const sql = await readFile(migrationUrl, "utf8");
+const optimizationSql = await readFile(optimizationUrl, "utf8");
 const statements = sql
   .split(";")
   .map((statement) => statement.trim())
@@ -39,6 +44,20 @@ test("anonymous and authenticated grants are revoked before narrow grants", () =
 test("authorization does not rely on user-editable metadata or deprecated auth.role", () => {
   assert.doesNotMatch(sql, /user_metadata|raw_user_meta_data|auth\.role\s*\(/i);
   assert.match(sql, /crm_staff_access[\s\S]+access_level in \('admin', 'manager'\)/i);
+});
+
+test("reviewer update policies cache auth identity once per statement", () => {
+  for (const policy of [
+    "reviewers update assurance cases",
+    "reviewers update regulatory reviews",
+    "reviewers update remediation actions",
+  ]) {
+    assert.match(optimizationSql, new RegExp(`alter policy "${policy}"`, "i"));
+  }
+  assert.equal(
+    (optimizationSql.match(/private\.certivoiq_assurance_reviewer\(\(select auth\.uid\(\)\)\)/gi) ?? []).length,
+    6,
+  );
 });
 
 test("service-only production observations require real reviewed customer files", () => {
