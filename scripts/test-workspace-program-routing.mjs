@@ -6,7 +6,9 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 
 const migration = read("supabase/migrations/20260828012000_workspace_profiles_and_program_applicability.sql");
 const hotmaCorrection = read("supabase/migrations/20260828022000_split_hotma_section_overlays.sql");
+const phaRoutingMigration = read("supabase/migrations/20260828030000_pha_hotma_cohort_profile.sql");
 const configurator = read("src/components/workspace-profile-configurator.tsx");
+const phaDashboard = read("src/components/pha-dashboard.tsx");
 const dashboardRoute = read("src/routes/_authenticated/dashboard.tsx");
 const appShell = read("src/components/app-shell.tsx");
 
@@ -32,6 +34,24 @@ test("multifamily HOTMA section 104 is limited to PBRA and Section 202\/8", () =
   const section104Case = hotmaCorrection.match(/case when programs && array\['section8_pbra','section202_8'\][\s\S]*?then 'hotma_104' end/);
   assert.ok(section104Case, "HOTMA 104 overlay must use the narrow MFH program set");
   assert.doesNotMatch(section104Case[0], /section202_811_prac|section811_pra|section236_irp|sprac/);
+});
+
+test("PHA workspace requires cohort and HUD-50058 reporting path for HOTMA routing", () => {
+  assert.match(phaRoutingMigration, /pha_hotma_cohort/);
+  assert.match(phaRoutingMigration, /NON_MTW_NON_FRS/);
+  assert.match(phaRoutingMigration, /INITIAL_MTW/);
+  assert.match(phaRoutingMigration, /MTW_EXPANSION/);
+  assert.match(phaRoutingMigration, /FRS_EXCLUSIVE/);
+  assert.match(phaRoutingMigration, /hud_50058_reporting_path/);
+  assert.match(configurator, /PHA cohort and HUD-50058 reporting path are required/);
+});
+
+test("PHA command center routes implementation timing through the deterministic HOTMA engine", () => {
+  assert.match(phaDashboard, /classifyPhaHotmaImplementation/);
+  assert.match(phaDashboard, /PHA-HOTMA-FULL-SECTIONS-102-104/);
+  assert.match(phaDashboard, /PHA_HOTMA_DEADLINE_PENDING_HUD_GUIDANCE/);
+  assert.match(phaDashboard, /transaction_effective_date: "2027-01-01"/);
+  assert.doesNotMatch(phaDashboard, /January 1, 2027 is treated as the full-compliance target/);
 });
 
 test("program applicability supports property, building, and unit scope with tenant isolation", () => {
