@@ -2,6 +2,29 @@ import { supabase } from "@/integrations/supabase/client";
 
 type AccessLevel = "employee" | "manager" | "admin";
 
+type Member = {
+  user_id: string;
+  access_level: AccessLevel;
+  status: "active" | "disabled";
+  granted_at: string;
+  disabled_at: string | null;
+  email: string | null;
+  fullName: string | null;
+};
+
+type Invitation = {
+  id: string;
+  invite_email: string;
+  access_level: AccessLevel;
+  status: "pending" | "accepted" | "revoked" | "expired";
+  expires_at: string;
+  accepted_at: string | null;
+  delivery_status: "pending" | "sent" | "failed" | "suppressed";
+  delivery_attempt_count: number;
+  delivery_error: string | null;
+  created_at: string;
+};
+
 type ListInput = { data: { accessToken: string } };
 type ActionInput = {
   data:
@@ -20,8 +43,8 @@ async function invoke<T>(body: Record<string, unknown>): Promise<T> {
 export async function listCrmStaffAccess(_input: ListInput) {
   return invoke<{
     requesterLevel: "manager" | "admin";
-    members: Array<Record<string, unknown>>;
-    invitations: Array<Record<string, unknown>>;
+    members: Member[];
+    invitations: Invitation[];
   }>({ action: "list" });
 }
 
