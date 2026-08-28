@@ -42,6 +42,7 @@ jobs:
           node --test scripts/test-workspace-program-routing.mjs
           node --test scripts/test-pha-family-reexamination-workflow.mjs
           node --test scripts/test-pha-family-calculation-engine.mjs
+          node --test scripts/test-pha-authoritative-control-state.mjs
           bun run test:compliance
           bun run test:slice
           bun run test:orchestrator
