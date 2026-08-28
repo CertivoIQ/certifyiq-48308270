@@ -6,7 +6,10 @@ const migration=read("supabase/migrations/20260828230000_pha_pbv_public_housing_
 const pbvWaiting=read("supabase/migrations/20260828280000_pha_pbv_waiting_lists.sql");
 const phOverIncome=read("supabase/migrations/20260828290000_pha_public_housing_over_income_notices.sql");
 const phOverIncomeDeadlineFix=read("supabase/migrations/20260828291000_fix_pha_over_income_termination_deadline.sql");
+const phAdmissions=read("supabase/migrations/20260828300000_pha_public_housing_admission_controls.sql");
 const workspace=read("src/components/pha-program-operations.tsx");
+const phAdmissionsWorkspace=read("src/components/pha-public-housing-admissions-workspace.tsx");
+const phAdmissionsRoute=read("src/routes/_authenticated/pha-public-housing-admissions.tsx");
 const pbvWaitingWorkspace=read("src/components/pha-pbv-waiting-list-workspace.tsx");
 const pbvWaitingRoute=read("src/routes/_authenticated/pha-pbv-waiting-lists.tsx");
 const shell=read("src/components/app-shell.tsx");
@@ -90,4 +93,26 @@ test("Public Housing termination deadline is measured from the 24-month notice d
   assert.match(phOverIncomeDeadlineFix,/notice_issued_at::date \+ interval '6 months'/);
   assert.match(phOverIncomeDeadlineFix,/cannot exceed six months after the 24-month notice/);
   assert.doesNotMatch(phOverIncomeDeadlineFix,/income_examination_date \+ interval '7 months'/);
+});
+
+test("Public Housing final unit offers enforce targeting and development admission layers",()=>{
+  assert.match(phAdmissions,/pha_public_housing_admission_year_controls/);
+  assert.match(phAdmissions,/pha_public_housing_development_profiles/);
+  assert.match(phAdmissions,/pha_public_housing_unit_offers/);
+  assert.match(phAdmissions,/0\.40/);
+  assert.match(phAdmissions,/hcv_excess_eli_admissions/);
+  assert.match(phAdmissions,/qualifying_high_poverty_low_income_occupancies/);
+  assert.match(phAdmissions,/deconcentration strategy/i);
+  assert.match(phAdmissions,/designated_elderly/);
+  assert.match(phAdmissions,/mixed_population/);
+  assert.match(phAdmissions,/Accessible unit requires confirmation/);
+  assert.match(phAdmissions,/two-or-more-bedroom Public Housing unit/);
+});
+
+test("Public Housing admissions workspace is routed and role-scoped",()=>{
+  assert.match(phAdmissionsRoute,/PhaPublicHousingAdmissionsWorkspace/);
+  assert.match(phAdmissionsWorkspace,/Public Housing Admissions/);
+  assert.match(phAdmissionsWorkspace,/40% annual targeting requirement/);
+  assert.match(shell,/\/pha-public-housing-admissions/);
+  assert.match(shell,/ph_operations/);
 });
