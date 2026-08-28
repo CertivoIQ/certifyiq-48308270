@@ -236,6 +236,78 @@ begin
 end;
 $function$;
 
+-- auth.users is inserted before an invited employee confirms the email. Grant CRM access on that
+-- confirmation update as well as on immediately confirmed inserts handled above.
+create or replace function public.accept_crm_staff_invitation_on_confirmation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $function$
+declare
+  invitation public.crm_staff_invitations%rowtype;
+begin
+  if old.email_confirmed_at is null
+     and new.email_confirmed_at is not null
+     and lower(split_part(new.email, '@', 2)) = 'certivoiq.com' then
+    select *
+      into invitation
+      from public.crm_staff_invitations
+     where invite_email = lower(new.email)
+       and status = 'pending'
+       and expires_at > now()
+     order by created_at desc
+     limit 1;
+
+    if found then
+      insert into public.user_roles (user_id, role)
+      values (new.id, 'staff')
+      on conflict (user_id, role) do nothing;
+
+      insert into public.crm_staff_access (
+        user_id, access_level, status, granted_by, granted_at,
+        disabled_by, disabled_at, updated_at
+      )
+      values (
+        new.id, invitation.access_level, 'active', invitation.invited_by, now(),
+        null, null, now()
+      )
+      on conflict (user_id) do update
+        set access_level = excluded.access_level,
+            status = 'active',
+            granted_by = excluded.granted_by,
+            granted_at = now(),
+            disabled_by = null,
+            disabled_at = null,
+            updated_at = now();
+
+      update public.crm_staff_invitations
+         set status = 'accepted',
+             auth_user_id = new.id,
+             accepted_at = now(),
+             updated_at = now()
+       where id = invitation.id;
+
+      insert into public.crm_staff_access_events (
+        actor_id, target_user_id, invitation_id, event_type, access_level
+      )
+      values (
+        invitation.invited_by, new.id, invitation.id, 'accepted', invitation.access_level
+      );
+    end if;
+  end if;
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists accept_crm_staff_invitation_after_confirmation on auth.users;
+create trigger accept_crm_staff_invitation_after_confirmation
+after update of email_confirmed_at on auth.users
+for each row
+when (old.email_confirmed_at is null and new.email_confirmed_at is not null)
+execute function public.accept_crm_staff_invitation_on_confirmation();
+
 comment on table public.crm_staff_access is 'Current internal CRM access level and activation status.';
 comment on table public.crm_staff_invitations is 'Audited CertivoIQ-domain staff invitations created only through the server-side CRM access workflow.';
 comment on table public.crm_staff_access_events is 'Append-only evidence for internal CRM invitations and access changes.';
