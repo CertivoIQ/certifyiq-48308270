@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Building2, FileCheck2, AlertTriangle, Scale, Sparkles, Rocket,
   Menu, X, Briefcase, Shield, CreditCard, HelpCircle, Users, ClipboardList,
   ClipboardCheck, ShieldCheck, SlidersHorizontal, UserPlus, MailCheck, ArrowLeftRight,
+  Library,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IQText } from "@/components/iq-text";
@@ -42,6 +43,7 @@ const PHA_NAV = [
   { to: "/pha-inspections", label: "Inspections / NSPIRE", icon: ClipboardCheck, key: "inspections" },
   { to: "/pha-hotma", label: "HOTMA Readiness", icon: ShieldCheck, key: "compliance" },
   { to: "/pha-policies", label: "Policies & Notice Controls", icon: Scale, key: "compliance" },
+  { to: "/pha-source-library", label: "Source Library & Forms", icon: Library, key: "compliance" },
   { to: "/pha-reports", label: "Reports & Evidence", icon: FileCheck2, key: "reports" },
   { to: "/findings", label: "Findings", icon: AlertTriangle, key: "findings" },
   { to: "/rules", label: "Federal & Source Rules", icon: Scale, key: "compliance" },
