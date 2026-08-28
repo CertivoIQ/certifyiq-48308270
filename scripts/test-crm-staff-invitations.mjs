@@ -18,7 +18,7 @@ test("staff invitation migration creates the access, invitation, and append-only
   assert.match(migration, /crm_staff_is_admin/i);
   assert.match(migration, /rjwatkins@certivoiq\.com/i);
   assert.match(migration, /'admin'/i);
-  assert.match(migration, /audit records are append-only/i);
+  assert.match(migration, /access events are append-only/i);
 });
 
 test("new staff access is controlled by an exact pending invitation, not the email domain alone", () => {
