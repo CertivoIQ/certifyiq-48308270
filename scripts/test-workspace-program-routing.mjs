@@ -24,11 +24,15 @@ test("HOTMA is derived instead of offered as a selectable program", () => {
   assert.match(configurator, /HOTMA is not a selectable program/);
 });
 
-test("program applicability supports property, building, and unit scope", () => {
+test("program applicability supports property, building, and unit scope with tenant isolation", () => {
   assert.match(migration, /property_program_applicability/);
   assert.match(migration, /coverage_level in \('property', 'building', 'unit'\)/);
-  assert.match(migration, /building_id uuid/);
-  assert.match(migration, /unit_id uuid/);
+  assert.match(migration, /building_id text/);
+  assert.match(migration, /unit_id text/);
+  assert.match(migration, /user_id uuid not null default auth\.uid\(\)/);
+  assert.match(migration, /Users manage own property program applicability/);
+  assert.match(migration, /using \(user_id = auth\.uid\(\)\)/);
+  assert.doesNotMatch(migration, /using \(true\) with check \(true\)/);
 });
 
 test("PHA accounts route to an agency-specific command center and modules", () => {
