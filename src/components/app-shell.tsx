@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   LayoutDashboard, Building2, FileCheck2, AlertTriangle, Scale, Sparkles, Rocket,
   Menu, X, Briefcase, Shield, CreditCard, HelpCircle, Users, ClipboardList,
-  ClipboardCheck, ShieldCheck, SlidersHorizontal, UserPlus,
+  ClipboardCheck, ShieldCheck, SlidersHorizontal, UserPlus, MailCheck,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IQText } from "@/components/iq-text";
@@ -31,6 +31,7 @@ const PHA_NAV = [
   { to: "/dashboard", label: "Command Center", icon: LayoutDashboard },
   { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus },
   { to: "/pha-families", label: "Families & Reexaminations", icon: Users },
+  { to: "/pha-notices", label: "Family Notices", icon: MailCheck },
   { to: "/pha-50058", label: "HUD-50058 Queue", icon: ClipboardList },
   { to: "/pha-inspections", label: "Inspections / NSPIRE", icon: ClipboardCheck },
   { to: "/pha-hotma", label: "HOTMA Readiness", icon: ShieldCheck },
