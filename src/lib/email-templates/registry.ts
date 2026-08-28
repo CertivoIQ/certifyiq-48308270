@@ -5,7 +5,7 @@ import { template as paymentFailedTemplate } from './payment-failed'
 import { template as introColdTemplate } from './intro-cold'
 import { template as supportRequestReceivedTemplate } from './support-request-received'
 import { template as mailMergeTemplate } from './mail-merge'
-
+import { template as phaWorkspaceInvitationTemplate } from './pha-workspace-invitation'
 
 /** Values a rendered email template may receive (scalars only). */
 export type EmailTemplateData = Record<string, string | number | boolean | null | undefined>
@@ -19,10 +19,7 @@ export interface TemplateEntry {
   to?: string
 }
 
-/**
- * Template registry — maps template names to their React Email components.
- * Import and register new templates here after creating them in this directory.
- */
+/** Template registry — maps template names to their React Email components. */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'invoice-created': invoiceCreatedTemplate,
   'payment-succeeded': paymentSucceededTemplate,
@@ -30,5 +27,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'intro-cold': introColdTemplate,
   'support-request-received': supportRequestReceivedTemplate,
   'mail-merge': mailMergeTemplate,
+  'pha-workspace-invitation': phaWorkspaceInvitationTemplate,
 }
-

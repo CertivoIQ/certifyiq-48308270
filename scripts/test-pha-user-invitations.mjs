@@ -4,10 +4,14 @@ import { readFileSync } from "node:fs";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260828120000_pha_user_invitations.sql");
+const deliveryMigration = read("supabase/migrations/20260828130000_pha_invitation_email_delivery.sql");
 const users = read("src/routes/_authenticated/pha-users.tsx");
 const gate = read("src/components/pha-invitation-gate.tsx");
 const dashboard = read("src/routes/_authenticated/dashboard.tsx");
 const shell = read("src/components/app-shell.tsx");
+const delivery = read("src/lib/pha-invitation-email.functions.ts");
+const registry = read("src/lib/email-templates/registry.ts");
+const template = read("src/lib/email-templates/pha-workspace-invitation.tsx");
 
 test("PHA invitations are email-bound, expiring, and auditable", () => {
   assert.match(migration, /pha_workspace_invitations/);
@@ -35,12 +39,13 @@ test("workspace owner and agency admin manage invitations while agency admin can
 });
 
 test("PHA users page creates, revokes, activates, and deactivates controlled access records", () => {
-  assert.match(users, /Create secure invitation/);
+  assert.match(users, /Create & send invitation/);
   assert.match(users, /pha_workspace_invitations/);
   assert.match(users, /pha_workspace_memberships/);
   assert.match(users, /status: "revoked"/);
   assert.match(users, /Deactivate/);
   assert.match(users, /Reactivate/);
+  assert.match(users, /Resend/);
 });
 
 test("pending invitations surface on dashboard and invoke only the controlled acceptance function", () => {
@@ -49,6 +54,33 @@ test("pending invitations surface on dashboard and invoke only the controlled ac
   assert.match(gate, /accept_pha_workspace_invitation/);
   assert.match(gate, /target_invitation_id/);
   assert.doesNotMatch(gate, /pha_workspace_memberships.*insert/s);
+});
+
+test("PHA invitation delivery is tracked separately from acceptance", () => {
+  assert.match(deliveryMigration, /delivery_status/);
+  assert.match(deliveryMigration, /delivery_attempted_at/);
+  assert.match(deliveryMigration, /delivered_at/);
+  assert.match(deliveryMigration, /delivery_attempt_count/);
+  assert.match(deliveryMigration, /not_sent','sent','suppressed','failed/);
+});
+
+test("server email delivery authenticates requester and rechecks PHA admin authority", () => {
+  assert.match(delivery, /supabaseAdmin\.auth\.getUser\(data\.accessToken\)/);
+  assert.match(delivery, /requesterIsOwner/);
+  assert.match(delivery, /requesterIsStaff/);
+  assert.match(delivery, /requesterIsAgencyAdmin/);
+  assert.match(delivery, /Only pending PHA invitations can be delivered/);
+  assert.match(delivery, /delivery_status: "failed"/);
+  assert.match(delivery, /delivery_status: "suppressed"/);
+  assert.match(delivery, /delivery_status: "sent"/);
+});
+
+test("PHA invitation uses existing managed transactional email transport with idempotency", () => {
+  assert.match(registry, /pha-workspace-invitation/);
+  assert.match(delivery, /sendTemplateEmail\("pha-workspace-invitation"/);
+  assert.match(delivery, /idempotencyKey: `pha-workspace-invitation-\$\{invitation\.id\}`/);
+  assert.match(template, /matching authenticated email address/);
+  assert.doesNotMatch(template, /invitation token/i);
 });
 
 test("PHA navigation routes admins to the dedicated users and permissions module", () => {
