@@ -1,0 +1,30 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read=(p)=>readFileSync(new URL(`../${p}`,import.meta.url),"utf8");
+const migration=read("supabase/migrations/20260828250000_pha_source_library_forms.sql");
+const workspace=read("src/components/pha-source-library-workspace.tsx");
+const route=read("src/routes/_authenticated/pha-source-library.tsx");
+const shell=read("src/components/app-shell.tsx");
+
+test("source library separates federal and agency governance",()=>{
+ assert.match(migration,/source_scope in \('federal','agency'\)/);
+ assert.match(migration,/Staff manage federal source library/);
+ assert.match(migration,/PHA admins manage agency source library/);
+ assert.match(migration,/current source requires reference and validation record/i);
+});
+
+test("controlled templates fail closed on source and policy state",()=>{
+ assert.match(migration,/pha_controlled_templates/);
+ assert.match(migration,/current source-library record/);
+ assert.match(migration,/active and validated/);
+ assert.match(migration,/Validated template requires validator and timestamp/);
+});
+
+test("PHA source library workspace is routed and navigated",()=>{
+ assert.match(route,/PhaSourceLibraryWorkspace/);
+ assert.match(workspace,/Source Library & Forms/);
+ assert.match(workspace,/pha_source_library/);
+ assert.match(workspace,/pha_controlled_templates/);
+ assert.match(shell,/\/pha-source-library/);
+});
