@@ -1,4 +1,4 @@
-export const PHA_FAMILY_CALCULATION_ENGINE_BUILD = "pha-family-calculation-engine-2026.08.2";
+export const PHA_FAMILY_CALCULATION_ENGINE_BUILD = "pha-family-calculation-engine-2026.08.3";
 
 const SUPPORTED_PROGRAMS = new Set(["hcv", "pbv", "public_housing", "mod_rehab"]);
 
@@ -194,10 +194,102 @@ export function calculatePhaFamilyDetermination(input = {}) {
     };
   }
 
-  return blocked(
-    "PHA_CALC_MOD_REHAB_RENT_MODULE_PENDING",
-    "Income and TTP are calculated, but Mod Rehab rent assistance requires its program-specific rent module before the determination can be validated.",
-    ["mod_rehab_rent_module"],
-    base,
+  if (input.mod_rehab_source_validated !== true) {
+    return blocked(
+      "PHA_CALC_MOD_REHAB_SOURCE_REQUIRED",
+      "The controlled Mod Rehab HAP/rent source must be validated before the program-specific calculation can run.",
+      ["mod_rehab_source_validated"],
+      base,
+    );
+  }
+
+  const missingModRehab = ["current_base_rent", "rehab_debt_service"].filter(
+    (key) => input[key] === undefined || input[key] === null || input[key] === "",
   );
+  if (missingModRehab.length) {
+    return blocked(
+      "PHA_CALC_MOD_REHAB_RENT_INPUT_REQUIRED",
+      "Current base rent and monthly rehabilitation debt service are required for Mod Rehab.",
+      missingModRehab,
+      base,
+    );
+  }
+
+  const currentBaseRent = Number(input.current_base_rent);
+  const rehabDebtService = Number(input.rehab_debt_service);
+  if (![currentBaseRent, rehabDebtService].every((value) => Number.isFinite(value) && value >= 0)) {
+    return blocked(
+      "PHA_CALC_INVALID_MOD_REHAB_RENT_AMOUNT",
+      "Mod Rehab base rent and rehabilitation debt service must be non-negative numbers.",
+      [],
+      base,
+    );
+  }
+
+  const contractRentToOwner = currentBaseRent + rehabDebtService;
+  const grossRent = contractRentToOwner + utilityAllowance;
+  const normalTotalHap = Math.max(grossRent - totalTenantPayment, 0);
+
+  if (input.mixed_family_proration_applicable === true) {
+    const missingMixed = ["eligible_family_members", "total_family_members"].filter(
+      (key) => input[key] === undefined || input[key] === null || input[key] === "",
+    );
+    if (missingMixed.length) {
+      return blocked(
+        "PHA_CALC_MOD_REHAB_MIXED_FAMILY_INPUT_REQUIRED",
+        "Eligible and total family-member counts are required for Mod Rehab mixed-family proration.",
+        missingMixed,
+        { ...base, contract_rent_to_owner: money(contractRentToOwner), gross_rent: money(grossRent) },
+      );
+    }
+    const eligibleMembers = Number(input.eligible_family_members);
+    const totalMembers = Number(input.total_family_members);
+    if (!Number.isInteger(eligibleMembers) || !Number.isInteger(totalMembers) || eligibleMembers < 0 || totalMembers <= 0 || eligibleMembers > totalMembers) {
+      return blocked(
+        "PHA_CALC_INVALID_MOD_REHAB_MIXED_FAMILY_COUNTS",
+        "Mixed-family member counts must be whole numbers with eligible members between zero and total family members.",
+        [],
+        { ...base, contract_rent_to_owner: money(contractRentToOwner), gross_rent: money(grossRent) },
+      );
+    }
+    const prorationPercentage = eligibleMembers / totalMembers;
+    const proratedTotalHap = normalTotalHap * prorationPercentage;
+    const mixedFamilyTtp = grossRent - proratedTotalHap;
+    const tenantRent = Math.max(mixedFamilyTtp - utilityAllowance, 0);
+    const utilityReimbursement = Math.max(utilityAllowance - mixedFamilyTtp, 0);
+    return {
+      ...base,
+      status: "VALIDATED",
+      current_base_rent: money(currentBaseRent),
+      rehab_debt_service: money(rehabDebtService),
+      contract_rent_to_owner: money(contractRentToOwner),
+      gross_rent: money(grossRent),
+      normal_total_hap: money(normalTotalHap),
+      mixed_family_proration_applicable: true,
+      eligible_family_members: eligibleMembers,
+      total_family_members: totalMembers,
+      proration_percentage: money(prorationPercentage),
+      prorated_total_hap: money(proratedTotalHap),
+      mixed_family_total_tenant_payment: money(mixedFamilyTtp),
+      tenant_rent: money(tenantRent),
+      utility_reimbursement: money(utilityReimbursement),
+      housing_assistance_payment: money(Math.max(contractRentToOwner - tenantRent, 0)),
+    };
+  }
+
+  const tenantRent = Math.max(totalTenantPayment - utilityAllowance, 0);
+  const utilityReimbursement = Math.max(utilityAllowance - totalTenantPayment, 0);
+  return {
+    ...base,
+    status: "VALIDATED",
+    current_base_rent: money(currentBaseRent),
+    rehab_debt_service: money(rehabDebtService),
+    contract_rent_to_owner: money(contractRentToOwner),
+    gross_rent: money(grossRent),
+    normal_total_hap: money(normalTotalHap),
+    mixed_family_proration_applicable: false,
+    tenant_rent: money(tenantRent),
+    utility_reimbursement: money(utilityReimbursement),
+    housing_assistance_payment: money(Math.max(contractRentToOwner - tenantRent, 0)),
+  };
 }
