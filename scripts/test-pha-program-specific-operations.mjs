@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const read=(p)=>readFileSync(new URL(`../${p}`,import.meta.url),"utf8");
 const migration=read("supabase/migrations/20260828230000_pha_pbv_public_housing_operations.sql");
 const pbvWaiting=read("supabase/migrations/20260828280000_pha_pbv_waiting_lists.sql");
+const phOverIncome=read("supabase/migrations/20260828290000_pha_public_housing_over_income_notices.sql");
 const workspace=read("src/components/pha-program-operations.tsx");
 const pbvWaitingWorkspace=read("src/components/pha-pbv-waiting-list-workspace.tsx");
 const pbvWaitingRoute=read("src/routes/_authenticated/pha-pbv-waiting-lists.tsx");
@@ -61,4 +62,25 @@ test("owner-maintained PBV decisions preserve notice and informal-review control
   assert.match(pbvWaitingRoute,/PhaPbvWaitingListWorkspace/);
   assert.match(pbvWaitingWorkspace,/PBV Waiting Lists/);
   assert.match(pbvWaitingWorkspace,/PHA final/);
+});
+
+test("Public Housing over-income notices enforce federal timing and hearing controls",()=>{
+  assert.match(phOverIncome,/pha_public_housing_over_income_notices/);
+  assert.match(phOverIncome,/notice_due_date:=new\.income_examination_date \+ 30/);
+  assert.match(phOverIncome,/30-day federal notice deadline/);
+  assert.match(phOverIncome,/Part 966 hearing right/);
+  assert.match(phOverIncome,/twelve_month/);
+  assert.match(phOverIncome,/twenty_four_month/);
+  assert.match(phOverIncome,/State\/local notice-to-vacate authority reference/);
+});
+
+test("alternative non-public housing lease uses the 60-day or earlier renewal deadline",()=>{
+  assert.match(phOverIncome,/pha_public_housing_non_public_leases/);
+  assert.match(phOverIncome,/n\.notice_issued_at::date \+ 60/);
+  assert.match(phOverIncome,/next_lease_renewal_date < federal_due/);
+  assert.match(phOverIncome,/24 CFR 960\.509 minimum lease provisions/);
+  assert.match(phOverIncome,/retroactive alternative-rent difference due/);
+  assert.match(phOverIncome,/termination_required/);
+  assert.match(workspace,/Alternative-rent lease/);
+  assert.match(workspace,/60 days/);
 });
