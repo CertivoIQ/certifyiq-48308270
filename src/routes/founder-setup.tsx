@@ -44,8 +44,8 @@ function FounderSetupPage() {
   const [verificationSent, setVerificationSent] = useState(false);
 
   async function claimFounder() {
-    // SupabaseClient.rpc reads this.rest internally, so preserve the client receiver.\n    const rpc = supabase.rpc.bind(supabase) as unknown as FounderRpc;
-    const { data, error } = await rpc("claim_certivoiq_founder_admin");
+    const founderClient = supabase as unknown as { rpc: FounderRpc };
+    const { data, error } = await founderClient.rpc("claim_certivoiq_founder_admin");
     if (error) throw new Error(error.message);
     if (!data?.claimed) {
       const messages: Record<string, string> = {

@@ -5,6 +5,7 @@ import test from "node:test";
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260828350000_founder_admin_bootstrap.sql");
 const route = read("src/routes/founder-setup.tsx");
+const client = read("src/integrations/supabase/client.ts");
 
 test("founder bootstrap is exact-email, verified, one-time, and fail-closed", () => {
   assert.match(migration, /auth\.uid\(\) is null/i);
@@ -24,8 +25,11 @@ test("founder setup is separate from trial and requires verification before clai
   assert.match(route, /does not start a trial or require billing/i);
   assert.match(route, /emailRedirectTo: `\$\{window\.location\.origin\}\/founder-setup`/i);
   assert.match(route, /claim_certivoiq_founder_admin/i);
-  assert.match(route, /supabase\.rpc\.bind\(supabase\)/i);
-  assert.doesNotMatch(route, /const rpc = supabase\.rpc as unknown as FounderRpc/i);
+  assert.match(route, /founderClient\.rpc\("claim_certivoiq_founder_admin"\)/i);
+  assert.doesNotMatch(route, /supabase\.rpc\.bind\(supabase\)/i);
+  assert.doesNotMatch(route, /\\n\s+const rpc/);
+  assert.match(client, /Reflect\.get\(_supabase, prop, _supabase\)/);
+  assert.match(client, /value\.bind\(_supabase\)/);
   assert.doesNotMatch(route, /\/trial/);
   assert.match(route, /noindex, nofollow/i);
 });
