@@ -30,23 +30,54 @@ import { Route as AuthenticatedAuditSimulatorRouteImport } from './routes/_authe
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedComplianceIntelligenceRouteImport } from './routes/_authenticated/compliance-intelligence'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedCrmBillingRouteImport } from './routes/_authenticated/crm-billing'
 import { Route as AuthenticatedCrmDocumentsRouteImport } from './routes/_authenticated/crm-documents'
+import { Route as AuthenticatedCrmPhaControlsRouteImport } from './routes/_authenticated/crm-pha-controls'
+import { Route as AuthenticatedCrmStaffRouteImport } from './routes/_authenticated/crm-staff'
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
+import { Route as AuthenticatedPha50058RouteImport } from './routes/_authenticated/pha-50058'
+import { Route as AuthenticatedPhaAccommodationsRouteImport } from './routes/_authenticated/pha-accommodations'
+import { Route as AuthenticatedPhaAgencySettingsRouteImport } from './routes/_authenticated/pha-agency-settings'
+import { Route as AuthenticatedPhaFamiliesRouteImport } from './routes/_authenticated/pha-families'
+import { Route as AuthenticatedPhaFamilyIntakeRouteImport } from './routes/_authenticated/pha-family-intake'
+import { Route as AuthenticatedPhaHcvLeaseUpRouteImport } from './routes/_authenticated/pha-hcv-lease-up'
+import { Route as AuthenticatedPhaHotmaRouteImport } from './routes/_authenticated/pha-hotma'
+import { Route as AuthenticatedPhaInspectionsRouteImport } from './routes/_authenticated/pha-inspections'
+import { Route as AuthenticatedPhaModRehabOperationsRouteImport } from './routes/_authenticated/pha-mod-rehab-operations'
+import { Route as AuthenticatedPhaNoticesRouteImport } from './routes/_authenticated/pha-notices'
+import { Route as AuthenticatedPhaNspireStandardsRouteImport } from './routes/_authenticated/pha-nspire-standards'
+import { Route as AuthenticatedPhaPbvOperationsRouteImport } from './routes/_authenticated/pha-pbv-operations'
+import { Route as AuthenticatedPhaPbvWaitingListsRouteImport } from './routes/_authenticated/pha-pbv-waiting-lists'
+import { Route as AuthenticatedPhaPoliciesRouteImport } from './routes/_authenticated/pha-policies'
+import { Route as AuthenticatedPhaPortabilityRouteImport } from './routes/_authenticated/pha-portability'
+import { Route as AuthenticatedPhaPublicHousingAdmissionsRouteImport } from './routes/_authenticated/pha-public-housing-admissions'
+import { Route as AuthenticatedPhaPublicHousingOccupancyRouteImport } from './routes/_authenticated/pha-public-housing-occupancy'
+import { Route as AuthenticatedPhaPublicHousingOperationsRouteImport } from './routes/_authenticated/pha-public-housing-operations'
+import { Route as AuthenticatedPhaReportsRouteImport } from './routes/_authenticated/pha-reports'
+import { Route as AuthenticatedPhaSourceLibraryRouteImport } from './routes/_authenticated/pha-source-library'
+import { Route as AuthenticatedPhaUsersRouteImport } from './routes/_authenticated/pha-users'
+import { Route as AuthenticatedPhaWaitingListsRouteImport } from './routes/_authenticated/pha-waiting-lists'
 import { Route as AuthenticatedPmsHubRouteImport } from './routes/_authenticated/pms-hub'
 import { Route as AuthenticatedPortfolioComplianceRouteImport } from './routes/_authenticated/portfolio-compliance'
 import { Route as AuthenticatedSubmissionCenterRouteImport } from './routes/_authenticated/submission-center'
 import { Route as AuthenticatedSupportiqRouteImport } from './routes/_authenticated/supportiq'
+import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
+import { Route as AuthenticatedWorkspaceSetupRouteImport } from './routes/_authenticated/workspace-setup'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as FilesFileIdRouteImport } from './routes/files.$fileId'
+import { Route as PhaIndexRouteImport } from './routes/pha/index'
+import { Route as PhaPersonaRouteImport } from './routes/pha/$persona'
 import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
 import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
+import { Route as AuthenticatedCrmOperationsRouteImport } from './routes/_authenticated/crm/operations'
 import { Route as ApiPublicFederalHousingNewsRouteImport } from './routes/api/public/federal-housing-news'
 import { Route as AuthenticatedCrmAccountsAccountIdRouteImport } from './routes/_authenticated/crm.accounts.$accountId'
+import { Route as ApiInternalOperationsTickRouteImport } from './routes/api/internal/operations/tick'
 import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -159,12 +190,28 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCrmBillingRoute = AuthenticatedCrmBillingRouteImport.update({
+  id: '/crm-billing',
+  path: '/crm-billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCrmDocumentsRoute =
   AuthenticatedCrmDocumentsRouteImport.update({
     id: '/crm-documents',
     path: '/crm-documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCrmPhaControlsRoute =
+  AuthenticatedCrmPhaControlsRouteImport.update({
+    id: '/crm-pha-controls',
+    path: '/crm-pha-controls',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCrmStaffRoute = AuthenticatedCrmStaffRouteImport.update({
+  id: '/crm-staff',
+  path: '/crm-staff',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCrmSupportRoute = AuthenticatedCrmSupportRouteImport.update({
   id: '/crm-support',
   path: '/crm-support',
@@ -179,6 +226,133 @@ const AuthenticatedMarketingKitRoute =
   AuthenticatedMarketingKitRouteImport.update({
     id: '/marketing-kit',
     path: '/marketing-kit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPha50058Route = AuthenticatedPha50058RouteImport.update({
+  id: '/pha-50058',
+  path: '/pha-50058',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPhaAccommodationsRoute =
+  AuthenticatedPhaAccommodationsRouteImport.update({
+    id: '/pha-accommodations',
+    path: '/pha-accommodations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaAgencySettingsRoute =
+  AuthenticatedPhaAgencySettingsRouteImport.update({
+    id: '/pha-agency-settings',
+    path: '/pha-agency-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaFamiliesRoute =
+  AuthenticatedPhaFamiliesRouteImport.update({
+    id: '/pha-families',
+    path: '/pha-families',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaFamilyIntakeRoute =
+  AuthenticatedPhaFamilyIntakeRouteImport.update({
+    id: '/pha-family-intake',
+    path: '/pha-family-intake',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaHcvLeaseUpRoute =
+  AuthenticatedPhaHcvLeaseUpRouteImport.update({
+    id: '/pha-hcv-lease-up',
+    path: '/pha-hcv-lease-up',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaHotmaRoute = AuthenticatedPhaHotmaRouteImport.update({
+  id: '/pha-hotma',
+  path: '/pha-hotma',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPhaInspectionsRoute =
+  AuthenticatedPhaInspectionsRouteImport.update({
+    id: '/pha-inspections',
+    path: '/pha-inspections',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaModRehabOperationsRoute =
+  AuthenticatedPhaModRehabOperationsRouteImport.update({
+    id: '/pha-mod-rehab-operations',
+    path: '/pha-mod-rehab-operations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaNoticesRoute = AuthenticatedPhaNoticesRouteImport.update({
+  id: '/pha-notices',
+  path: '/pha-notices',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPhaNspireStandardsRoute =
+  AuthenticatedPhaNspireStandardsRouteImport.update({
+    id: '/pha-nspire-standards',
+    path: '/pha-nspire-standards',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaPbvOperationsRoute =
+  AuthenticatedPhaPbvOperationsRouteImport.update({
+    id: '/pha-pbv-operations',
+    path: '/pha-pbv-operations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaPbvWaitingListsRoute =
+  AuthenticatedPhaPbvWaitingListsRouteImport.update({
+    id: '/pha-pbv-waiting-lists',
+    path: '/pha-pbv-waiting-lists',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaPoliciesRoute =
+  AuthenticatedPhaPoliciesRouteImport.update({
+    id: '/pha-policies',
+    path: '/pha-policies',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaPortabilityRoute =
+  AuthenticatedPhaPortabilityRouteImport.update({
+    id: '/pha-portability',
+    path: '/pha-portability',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaPublicHousingAdmissionsRoute =
+  AuthenticatedPhaPublicHousingAdmissionsRouteImport.update({
+    id: '/pha-public-housing-admissions',
+    path: '/pha-public-housing-admissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaPublicHousingOccupancyRoute =
+  AuthenticatedPhaPublicHousingOccupancyRouteImport.update({
+    id: '/pha-public-housing-occupancy',
+    path: '/pha-public-housing-occupancy',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaPublicHousingOperationsRoute =
+  AuthenticatedPhaPublicHousingOperationsRouteImport.update({
+    id: '/pha-public-housing-operations',
+    path: '/pha-public-housing-operations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaReportsRoute = AuthenticatedPhaReportsRouteImport.update({
+  id: '/pha-reports',
+  path: '/pha-reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPhaSourceLibraryRoute =
+  AuthenticatedPhaSourceLibraryRouteImport.update({
+    id: '/pha-source-library',
+    path: '/pha-source-library',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPhaUsersRoute = AuthenticatedPhaUsersRouteImport.update({
+  id: '/pha-users',
+  path: '/pha-users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPhaWaitingListsRoute =
+  AuthenticatedPhaWaitingListsRouteImport.update({
+    id: '/pha-waiting-lists',
+    path: '/pha-waiting-lists',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPmsHubRoute = AuthenticatedPmsHubRouteImport.update({
@@ -203,6 +377,17 @@ const AuthenticatedSupportiqRoute = AuthenticatedSupportiqRouteImport.update({
   path: '/supportiq',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWorkspaceSetupRoute =
+  AuthenticatedWorkspaceSetupRouteImport.update({
+    id: '/workspace-setup',
+    path: '/workspace-setup',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -223,6 +408,16 @@ const FilesFileIdRoute = FilesFileIdRouteImport.update({
   path: '/files/$fileId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PhaIndexRoute = PhaIndexRouteImport.update({
+  id: '/pha/',
+  path: '/pha/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhaPersonaRoute = PhaPersonaRouteImport.update({
+  id: '/pha/$persona',
+  path: '/pha/$persona',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PropertiesIndexRoute = PropertiesIndexRouteImport.update({
   id: '/properties/',
   path: '/properties/',
@@ -239,6 +434,12 @@ const AuthenticatedAccountSecurityRoute =
     path: '/account/security',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCrmOperationsRoute =
+  AuthenticatedCrmOperationsRouteImport.update({
+    id: '/operations',
+    path: '/operations',
+    getParentRoute: () => AuthenticatedCrmRoute,
+  } as any)
 const ApiPublicFederalHousingNewsRoute =
   ApiPublicFederalHousingNewsRouteImport.update({
     id: '/api/public/federal-housing-news',
@@ -250,6 +451,12 @@ const AuthenticatedCrmAccountsAccountIdRoute =
     id: '/accounts/$accountId',
     path: '/accounts/$accountId',
     getParentRoute: () => AuthenticatedCrmRoute,
+  } as any)
+const ApiInternalOperationsTickRoute =
+  ApiInternalOperationsTickRouteImport.update({
+    id: '/api/internal/operations/tick',
+    path: '/api/internal/operations/tick',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicCrmSupportEmailRoute =
   ApiPublicCrmSupportEmailRouteImport.update({
@@ -301,23 +508,54 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AuthenticatedBillingRoute
   '/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
   '/crm': typeof AuthenticatedCrmRouteWithChildren
+  '/crm-billing': typeof AuthenticatedCrmBillingRoute
   '/crm-documents': typeof AuthenticatedCrmDocumentsRoute
+  '/crm-pha-controls': typeof AuthenticatedCrmPhaControlsRoute
+  '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
+  '/pha-50058': typeof AuthenticatedPha50058Route
+  '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
+  '/pha-agency-settings': typeof AuthenticatedPhaAgencySettingsRoute
+  '/pha-families': typeof AuthenticatedPhaFamiliesRoute
+  '/pha-family-intake': typeof AuthenticatedPhaFamilyIntakeRoute
+  '/pha-hcv-lease-up': typeof AuthenticatedPhaHcvLeaseUpRoute
+  '/pha-hotma': typeof AuthenticatedPhaHotmaRoute
+  '/pha-inspections': typeof AuthenticatedPhaInspectionsRoute
+  '/pha-mod-rehab-operations': typeof AuthenticatedPhaModRehabOperationsRoute
+  '/pha-notices': typeof AuthenticatedPhaNoticesRoute
+  '/pha-nspire-standards': typeof AuthenticatedPhaNspireStandardsRoute
+  '/pha-pbv-operations': typeof AuthenticatedPhaPbvOperationsRoute
+  '/pha-pbv-waiting-lists': typeof AuthenticatedPhaPbvWaitingListsRoute
+  '/pha-policies': typeof AuthenticatedPhaPoliciesRoute
+  '/pha-portability': typeof AuthenticatedPhaPortabilityRoute
+  '/pha-public-housing-admissions': typeof AuthenticatedPhaPublicHousingAdmissionsRoute
+  '/pha-public-housing-occupancy': typeof AuthenticatedPhaPublicHousingOccupancyRoute
+  '/pha-public-housing-operations': typeof AuthenticatedPhaPublicHousingOperationsRoute
+  '/pha-reports': typeof AuthenticatedPhaReportsRoute
+  '/pha-source-library': typeof AuthenticatedPhaSourceLibraryRoute
+  '/pha-users': typeof AuthenticatedPhaUsersRoute
+  '/pha-waiting-lists': typeof AuthenticatedPhaWaitingListsRoute
   '/pms-hub': typeof AuthenticatedPmsHubRoute
   '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
   '/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/supportiq': typeof AuthenticatedSupportiqRoute
+  '/tasks': typeof AuthenticatedTasksRoute
+  '/workspace-setup': typeof AuthenticatedWorkspaceSetupRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/files/$fileId': typeof FilesFileIdRoute
+  '/pha/$persona': typeof PhaPersonaRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/files/': typeof FilesIndexRoute
+  '/pha/': typeof PhaIndexRoute
   '/properties/': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
+  '/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
+  '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -345,23 +583,54 @@ export interface FileRoutesByTo {
   '/billing': typeof AuthenticatedBillingRoute
   '/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
   '/crm': typeof AuthenticatedCrmRouteWithChildren
+  '/crm-billing': typeof AuthenticatedCrmBillingRoute
   '/crm-documents': typeof AuthenticatedCrmDocumentsRoute
+  '/crm-pha-controls': typeof AuthenticatedCrmPhaControlsRoute
+  '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
+  '/pha-50058': typeof AuthenticatedPha50058Route
+  '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
+  '/pha-agency-settings': typeof AuthenticatedPhaAgencySettingsRoute
+  '/pha-families': typeof AuthenticatedPhaFamiliesRoute
+  '/pha-family-intake': typeof AuthenticatedPhaFamilyIntakeRoute
+  '/pha-hcv-lease-up': typeof AuthenticatedPhaHcvLeaseUpRoute
+  '/pha-hotma': typeof AuthenticatedPhaHotmaRoute
+  '/pha-inspections': typeof AuthenticatedPhaInspectionsRoute
+  '/pha-mod-rehab-operations': typeof AuthenticatedPhaModRehabOperationsRoute
+  '/pha-notices': typeof AuthenticatedPhaNoticesRoute
+  '/pha-nspire-standards': typeof AuthenticatedPhaNspireStandardsRoute
+  '/pha-pbv-operations': typeof AuthenticatedPhaPbvOperationsRoute
+  '/pha-pbv-waiting-lists': typeof AuthenticatedPhaPbvWaitingListsRoute
+  '/pha-policies': typeof AuthenticatedPhaPoliciesRoute
+  '/pha-portability': typeof AuthenticatedPhaPortabilityRoute
+  '/pha-public-housing-admissions': typeof AuthenticatedPhaPublicHousingAdmissionsRoute
+  '/pha-public-housing-occupancy': typeof AuthenticatedPhaPublicHousingOccupancyRoute
+  '/pha-public-housing-operations': typeof AuthenticatedPhaPublicHousingOperationsRoute
+  '/pha-reports': typeof AuthenticatedPhaReportsRoute
+  '/pha-source-library': typeof AuthenticatedPhaSourceLibraryRoute
+  '/pha-users': typeof AuthenticatedPhaUsersRoute
+  '/pha-waiting-lists': typeof AuthenticatedPhaWaitingListsRoute
   '/pms-hub': typeof AuthenticatedPmsHubRoute
   '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
   '/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/supportiq': typeof AuthenticatedSupportiqRoute
+  '/tasks': typeof AuthenticatedTasksRoute
+  '/workspace-setup': typeof AuthenticatedWorkspaceSetupRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/files/$fileId': typeof FilesFileIdRoute
+  '/pha/$persona': typeof PhaPersonaRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/files': typeof FilesIndexRoute
+  '/pha': typeof PhaIndexRoute
   '/properties': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
+  '/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
+  '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -391,23 +660,54 @@ export interface FileRoutesById {
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRouteWithChildren
+  '/_authenticated/crm-billing': typeof AuthenticatedCrmBillingRoute
   '/_authenticated/crm-documents': typeof AuthenticatedCrmDocumentsRoute
+  '/_authenticated/crm-pha-controls': typeof AuthenticatedCrmPhaControlsRoute
+  '/_authenticated/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
+  '/_authenticated/pha-50058': typeof AuthenticatedPha50058Route
+  '/_authenticated/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
+  '/_authenticated/pha-agency-settings': typeof AuthenticatedPhaAgencySettingsRoute
+  '/_authenticated/pha-families': typeof AuthenticatedPhaFamiliesRoute
+  '/_authenticated/pha-family-intake': typeof AuthenticatedPhaFamilyIntakeRoute
+  '/_authenticated/pha-hcv-lease-up': typeof AuthenticatedPhaHcvLeaseUpRoute
+  '/_authenticated/pha-hotma': typeof AuthenticatedPhaHotmaRoute
+  '/_authenticated/pha-inspections': typeof AuthenticatedPhaInspectionsRoute
+  '/_authenticated/pha-mod-rehab-operations': typeof AuthenticatedPhaModRehabOperationsRoute
+  '/_authenticated/pha-notices': typeof AuthenticatedPhaNoticesRoute
+  '/_authenticated/pha-nspire-standards': typeof AuthenticatedPhaNspireStandardsRoute
+  '/_authenticated/pha-pbv-operations': typeof AuthenticatedPhaPbvOperationsRoute
+  '/_authenticated/pha-pbv-waiting-lists': typeof AuthenticatedPhaPbvWaitingListsRoute
+  '/_authenticated/pha-policies': typeof AuthenticatedPhaPoliciesRoute
+  '/_authenticated/pha-portability': typeof AuthenticatedPhaPortabilityRoute
+  '/_authenticated/pha-public-housing-admissions': typeof AuthenticatedPhaPublicHousingAdmissionsRoute
+  '/_authenticated/pha-public-housing-occupancy': typeof AuthenticatedPhaPublicHousingOccupancyRoute
+  '/_authenticated/pha-public-housing-operations': typeof AuthenticatedPhaPublicHousingOperationsRoute
+  '/_authenticated/pha-reports': typeof AuthenticatedPhaReportsRoute
+  '/_authenticated/pha-source-library': typeof AuthenticatedPhaSourceLibraryRoute
+  '/_authenticated/pha-users': typeof AuthenticatedPhaUsersRoute
+  '/_authenticated/pha-waiting-lists': typeof AuthenticatedPhaWaitingListsRoute
   '/_authenticated/pms-hub': typeof AuthenticatedPmsHubRoute
   '/_authenticated/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
   '/_authenticated/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/_authenticated/supportiq': typeof AuthenticatedSupportiqRoute
+  '/_authenticated/tasks': typeof AuthenticatedTasksRoute
+  '/_authenticated/workspace-setup': typeof AuthenticatedWorkspaceSetupRoute
   '/api/chat': typeof ApiChatRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/files/$fileId': typeof FilesFileIdRoute
+  '/pha/$persona': typeof PhaPersonaRoute
   '/properties/$propertyId': typeof PropertiesPropertyIdRoute
   '/files/': typeof FilesIndexRoute
+  '/pha/': typeof PhaIndexRoute
   '/properties/': typeof PropertiesIndexRoute
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
+  '/_authenticated/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
   '/_authenticated/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
+  '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -437,23 +737,54 @@ export interface FileRouteTypes {
     | '/billing'
     | '/compliance-intelligence'
     | '/crm'
+    | '/crm-billing'
     | '/crm-documents'
+    | '/crm-pha-controls'
+    | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
+    | '/pha-50058'
+    | '/pha-accommodations'
+    | '/pha-agency-settings'
+    | '/pha-families'
+    | '/pha-family-intake'
+    | '/pha-hcv-lease-up'
+    | '/pha-hotma'
+    | '/pha-inspections'
+    | '/pha-mod-rehab-operations'
+    | '/pha-notices'
+    | '/pha-nspire-standards'
+    | '/pha-pbv-operations'
+    | '/pha-pbv-waiting-lists'
+    | '/pha-policies'
+    | '/pha-portability'
+    | '/pha-public-housing-admissions'
+    | '/pha-public-housing-occupancy'
+    | '/pha-public-housing-operations'
+    | '/pha-reports'
+    | '/pha-source-library'
+    | '/pha-users'
+    | '/pha-waiting-lists'
     | '/pms-hub'
     | '/portfolio-compliance'
     | '/submission-center'
     | '/supportiq'
+    | '/tasks'
+    | '/workspace-setup'
     | '/api/chat'
     | '/checkout/return'
     | '/files/$fileId'
+    | '/pha/$persona'
     | '/properties/$propertyId'
     | '/files/'
+    | '/pha/'
     | '/properties/'
     | '/account/security'
+    | '/crm/operations'
     | '/api/public/federal-housing-news'
     | '/crm/accounts/$accountId'
+    | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -481,23 +812,54 @@ export interface FileRouteTypes {
     | '/billing'
     | '/compliance-intelligence'
     | '/crm'
+    | '/crm-billing'
     | '/crm-documents'
+    | '/crm-pha-controls'
+    | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
     | '/marketing-kit'
+    | '/pha-50058'
+    | '/pha-accommodations'
+    | '/pha-agency-settings'
+    | '/pha-families'
+    | '/pha-family-intake'
+    | '/pha-hcv-lease-up'
+    | '/pha-hotma'
+    | '/pha-inspections'
+    | '/pha-mod-rehab-operations'
+    | '/pha-notices'
+    | '/pha-nspire-standards'
+    | '/pha-pbv-operations'
+    | '/pha-pbv-waiting-lists'
+    | '/pha-policies'
+    | '/pha-portability'
+    | '/pha-public-housing-admissions'
+    | '/pha-public-housing-occupancy'
+    | '/pha-public-housing-operations'
+    | '/pha-reports'
+    | '/pha-source-library'
+    | '/pha-users'
+    | '/pha-waiting-lists'
     | '/pms-hub'
     | '/portfolio-compliance'
     | '/submission-center'
     | '/supportiq'
+    | '/tasks'
+    | '/workspace-setup'
     | '/api/chat'
     | '/checkout/return'
     | '/files/$fileId'
+    | '/pha/$persona'
     | '/properties/$propertyId'
     | '/files'
+    | '/pha'
     | '/properties'
     | '/account/security'
+    | '/crm/operations'
     | '/api/public/federal-housing-news'
     | '/crm/accounts/$accountId'
+    | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -526,23 +888,54 @@ export interface FileRouteTypes {
     | '/_authenticated/billing'
     | '/_authenticated/compliance-intelligence'
     | '/_authenticated/crm'
+    | '/_authenticated/crm-billing'
     | '/_authenticated/crm-documents'
+    | '/_authenticated/crm-pha-controls'
+    | '/_authenticated/crm-staff'
     | '/_authenticated/crm-support'
     | '/_authenticated/dashboard'
     | '/_authenticated/marketing-kit'
+    | '/_authenticated/pha-50058'
+    | '/_authenticated/pha-accommodations'
+    | '/_authenticated/pha-agency-settings'
+    | '/_authenticated/pha-families'
+    | '/_authenticated/pha-family-intake'
+    | '/_authenticated/pha-hcv-lease-up'
+    | '/_authenticated/pha-hotma'
+    | '/_authenticated/pha-inspections'
+    | '/_authenticated/pha-mod-rehab-operations'
+    | '/_authenticated/pha-notices'
+    | '/_authenticated/pha-nspire-standards'
+    | '/_authenticated/pha-pbv-operations'
+    | '/_authenticated/pha-pbv-waiting-lists'
+    | '/_authenticated/pha-policies'
+    | '/_authenticated/pha-portability'
+    | '/_authenticated/pha-public-housing-admissions'
+    | '/_authenticated/pha-public-housing-occupancy'
+    | '/_authenticated/pha-public-housing-operations'
+    | '/_authenticated/pha-reports'
+    | '/_authenticated/pha-source-library'
+    | '/_authenticated/pha-users'
+    | '/_authenticated/pha-waiting-lists'
     | '/_authenticated/pms-hub'
     | '/_authenticated/portfolio-compliance'
     | '/_authenticated/submission-center'
     | '/_authenticated/supportiq'
+    | '/_authenticated/tasks'
+    | '/_authenticated/workspace-setup'
     | '/api/chat'
     | '/checkout/return'
     | '/files/$fileId'
+    | '/pha/$persona'
     | '/properties/$propertyId'
     | '/files/'
+    | '/pha/'
     | '/properties/'
     | '/_authenticated/account/security'
+    | '/_authenticated/crm/operations'
     | '/api/public/federal-housing-news'
     | '/_authenticated/crm/accounts/$accountId'
+    | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -571,10 +964,13 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   FilesFileIdRoute: typeof FilesFileIdRoute
+  PhaPersonaRoute: typeof PhaPersonaRoute
   PropertiesPropertyIdRoute: typeof PropertiesPropertyIdRoute
   FilesIndexRoute: typeof FilesIndexRoute
+  PhaIndexRoute: typeof PhaIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
   ApiPublicFederalHousingNewsRoute: typeof ApiPublicFederalHousingNewsRoute
+  ApiInternalOperationsTickRoute: typeof ApiInternalOperationsTickRoute
   ApiPublicCrmSupportEmailRoute: typeof ApiPublicCrmSupportEmailRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -731,11 +1127,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/crm-billing': {
+      id: '/_authenticated/crm-billing'
+      path: '/crm-billing'
+      fullPath: '/crm-billing'
+      preLoaderRoute: typeof AuthenticatedCrmBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/crm-documents': {
       id: '/_authenticated/crm-documents'
       path: '/crm-documents'
       fullPath: '/crm-documents'
       preLoaderRoute: typeof AuthenticatedCrmDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/crm-pha-controls': {
+      id: '/_authenticated/crm-pha-controls'
+      path: '/crm-pha-controls'
+      fullPath: '/crm-pha-controls'
+      preLoaderRoute: typeof AuthenticatedCrmPhaControlsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/crm-staff': {
+      id: '/_authenticated/crm-staff'
+      path: '/crm-staff'
+      fullPath: '/crm-staff'
+      preLoaderRoute: typeof AuthenticatedCrmStaffRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/crm-support': {
@@ -757,6 +1174,160 @@ declare module '@tanstack/react-router' {
       path: '/marketing-kit'
       fullPath: '/marketing-kit'
       preLoaderRoute: typeof AuthenticatedMarketingKitRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-50058': {
+      id: '/_authenticated/pha-50058'
+      path: '/pha-50058'
+      fullPath: '/pha-50058'
+      preLoaderRoute: typeof AuthenticatedPha50058RouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-accommodations': {
+      id: '/_authenticated/pha-accommodations'
+      path: '/pha-accommodations'
+      fullPath: '/pha-accommodations'
+      preLoaderRoute: typeof AuthenticatedPhaAccommodationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-agency-settings': {
+      id: '/_authenticated/pha-agency-settings'
+      path: '/pha-agency-settings'
+      fullPath: '/pha-agency-settings'
+      preLoaderRoute: typeof AuthenticatedPhaAgencySettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-families': {
+      id: '/_authenticated/pha-families'
+      path: '/pha-families'
+      fullPath: '/pha-families'
+      preLoaderRoute: typeof AuthenticatedPhaFamiliesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-family-intake': {
+      id: '/_authenticated/pha-family-intake'
+      path: '/pha-family-intake'
+      fullPath: '/pha-family-intake'
+      preLoaderRoute: typeof AuthenticatedPhaFamilyIntakeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-hcv-lease-up': {
+      id: '/_authenticated/pha-hcv-lease-up'
+      path: '/pha-hcv-lease-up'
+      fullPath: '/pha-hcv-lease-up'
+      preLoaderRoute: typeof AuthenticatedPhaHcvLeaseUpRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-hotma': {
+      id: '/_authenticated/pha-hotma'
+      path: '/pha-hotma'
+      fullPath: '/pha-hotma'
+      preLoaderRoute: typeof AuthenticatedPhaHotmaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-inspections': {
+      id: '/_authenticated/pha-inspections'
+      path: '/pha-inspections'
+      fullPath: '/pha-inspections'
+      preLoaderRoute: typeof AuthenticatedPhaInspectionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-mod-rehab-operations': {
+      id: '/_authenticated/pha-mod-rehab-operations'
+      path: '/pha-mod-rehab-operations'
+      fullPath: '/pha-mod-rehab-operations'
+      preLoaderRoute: typeof AuthenticatedPhaModRehabOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-notices': {
+      id: '/_authenticated/pha-notices'
+      path: '/pha-notices'
+      fullPath: '/pha-notices'
+      preLoaderRoute: typeof AuthenticatedPhaNoticesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-nspire-standards': {
+      id: '/_authenticated/pha-nspire-standards'
+      path: '/pha-nspire-standards'
+      fullPath: '/pha-nspire-standards'
+      preLoaderRoute: typeof AuthenticatedPhaNspireStandardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-pbv-operations': {
+      id: '/_authenticated/pha-pbv-operations'
+      path: '/pha-pbv-operations'
+      fullPath: '/pha-pbv-operations'
+      preLoaderRoute: typeof AuthenticatedPhaPbvOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-pbv-waiting-lists': {
+      id: '/_authenticated/pha-pbv-waiting-lists'
+      path: '/pha-pbv-waiting-lists'
+      fullPath: '/pha-pbv-waiting-lists'
+      preLoaderRoute: typeof AuthenticatedPhaPbvWaitingListsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-policies': {
+      id: '/_authenticated/pha-policies'
+      path: '/pha-policies'
+      fullPath: '/pha-policies'
+      preLoaderRoute: typeof AuthenticatedPhaPoliciesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-portability': {
+      id: '/_authenticated/pha-portability'
+      path: '/pha-portability'
+      fullPath: '/pha-portability'
+      preLoaderRoute: typeof AuthenticatedPhaPortabilityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-public-housing-admissions': {
+      id: '/_authenticated/pha-public-housing-admissions'
+      path: '/pha-public-housing-admissions'
+      fullPath: '/pha-public-housing-admissions'
+      preLoaderRoute: typeof AuthenticatedPhaPublicHousingAdmissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-public-housing-occupancy': {
+      id: '/_authenticated/pha-public-housing-occupancy'
+      path: '/pha-public-housing-occupancy'
+      fullPath: '/pha-public-housing-occupancy'
+      preLoaderRoute: typeof AuthenticatedPhaPublicHousingOccupancyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-public-housing-operations': {
+      id: '/_authenticated/pha-public-housing-operations'
+      path: '/pha-public-housing-operations'
+      fullPath: '/pha-public-housing-operations'
+      preLoaderRoute: typeof AuthenticatedPhaPublicHousingOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-reports': {
+      id: '/_authenticated/pha-reports'
+      path: '/pha-reports'
+      fullPath: '/pha-reports'
+      preLoaderRoute: typeof AuthenticatedPhaReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-source-library': {
+      id: '/_authenticated/pha-source-library'
+      path: '/pha-source-library'
+      fullPath: '/pha-source-library'
+      preLoaderRoute: typeof AuthenticatedPhaSourceLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-users': {
+      id: '/_authenticated/pha-users'
+      path: '/pha-users'
+      fullPath: '/pha-users'
+      preLoaderRoute: typeof AuthenticatedPhaUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pha-waiting-lists': {
+      id: '/_authenticated/pha-waiting-lists'
+      path: '/pha-waiting-lists'
+      fullPath: '/pha-waiting-lists'
+      preLoaderRoute: typeof AuthenticatedPhaWaitingListsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pms-hub': {
@@ -787,6 +1358,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSupportiqRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tasks': {
+      id: '/_authenticated/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedTasksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/workspace-setup': {
+      id: '/_authenticated/workspace-setup'
+      path: '/workspace-setup'
+      fullPath: '/workspace-setup'
+      preLoaderRoute: typeof AuthenticatedWorkspaceSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -815,6 +1400,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FilesFileIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pha/': {
+      id: '/pha/'
+      path: '/pha'
+      fullPath: '/pha/'
+      preLoaderRoute: typeof PhaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pha/$persona': {
+      id: '/pha/$persona'
+      path: '/pha/$persona'
+      fullPath: '/pha/$persona'
+      preLoaderRoute: typeof PhaPersonaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/properties/': {
       id: '/properties/'
       path: '/properties'
@@ -836,6 +1435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/crm/operations': {
+      id: '/_authenticated/crm/operations'
+      path: '/operations'
+      fullPath: '/crm/operations'
+      preLoaderRoute: typeof AuthenticatedCrmOperationsRouteImport
+      parentRoute: typeof AuthenticatedCrmRoute
+    }
     '/api/public/federal-housing-news': {
       id: '/api/public/federal-housing-news'
       path: '/api/public/federal-housing-news'
@@ -849,6 +1455,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/crm/accounts/$accountId'
       preLoaderRoute: typeof AuthenticatedCrmAccountsAccountIdRouteImport
       parentRoute: typeof AuthenticatedCrmRoute
+    }
+    '/api/internal/operations/tick': {
+      id: '/api/internal/operations/tick'
+      path: '/api/internal/operations/tick'
+      fullPath: '/api/internal/operations/tick'
+      preLoaderRoute: typeof ApiInternalOperationsTickRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/crm/support-email': {
       id: '/api/public/crm/support-email'
@@ -889,10 +1502,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedCrmRouteChildren {
+  AuthenticatedCrmOperationsRoute: typeof AuthenticatedCrmOperationsRoute
   AuthenticatedCrmAccountsAccountIdRoute: typeof AuthenticatedCrmAccountsAccountIdRoute
 }
 
 const AuthenticatedCrmRouteChildren: AuthenticatedCrmRouteChildren = {
+  AuthenticatedCrmOperationsRoute: AuthenticatedCrmOperationsRoute,
   AuthenticatedCrmAccountsAccountIdRoute:
     AuthenticatedCrmAccountsAccountIdRoute,
 }
@@ -905,14 +1520,41 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedComplianceIntelligenceRoute: typeof AuthenticatedComplianceIntelligenceRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRouteWithChildren
+  AuthenticatedCrmBillingRoute: typeof AuthenticatedCrmBillingRoute
   AuthenticatedCrmDocumentsRoute: typeof AuthenticatedCrmDocumentsRoute
+  AuthenticatedCrmPhaControlsRoute: typeof AuthenticatedCrmPhaControlsRoute
+  AuthenticatedCrmStaffRoute: typeof AuthenticatedCrmStaffRoute
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
+  AuthenticatedPha50058Route: typeof AuthenticatedPha50058Route
+  AuthenticatedPhaAccommodationsRoute: typeof AuthenticatedPhaAccommodationsRoute
+  AuthenticatedPhaAgencySettingsRoute: typeof AuthenticatedPhaAgencySettingsRoute
+  AuthenticatedPhaFamiliesRoute: typeof AuthenticatedPhaFamiliesRoute
+  AuthenticatedPhaFamilyIntakeRoute: typeof AuthenticatedPhaFamilyIntakeRoute
+  AuthenticatedPhaHcvLeaseUpRoute: typeof AuthenticatedPhaHcvLeaseUpRoute
+  AuthenticatedPhaHotmaRoute: typeof AuthenticatedPhaHotmaRoute
+  AuthenticatedPhaInspectionsRoute: typeof AuthenticatedPhaInspectionsRoute
+  AuthenticatedPhaModRehabOperationsRoute: typeof AuthenticatedPhaModRehabOperationsRoute
+  AuthenticatedPhaNoticesRoute: typeof AuthenticatedPhaNoticesRoute
+  AuthenticatedPhaNspireStandardsRoute: typeof AuthenticatedPhaNspireStandardsRoute
+  AuthenticatedPhaPbvOperationsRoute: typeof AuthenticatedPhaPbvOperationsRoute
+  AuthenticatedPhaPbvWaitingListsRoute: typeof AuthenticatedPhaPbvWaitingListsRoute
+  AuthenticatedPhaPoliciesRoute: typeof AuthenticatedPhaPoliciesRoute
+  AuthenticatedPhaPortabilityRoute: typeof AuthenticatedPhaPortabilityRoute
+  AuthenticatedPhaPublicHousingAdmissionsRoute: typeof AuthenticatedPhaPublicHousingAdmissionsRoute
+  AuthenticatedPhaPublicHousingOccupancyRoute: typeof AuthenticatedPhaPublicHousingOccupancyRoute
+  AuthenticatedPhaPublicHousingOperationsRoute: typeof AuthenticatedPhaPublicHousingOperationsRoute
+  AuthenticatedPhaReportsRoute: typeof AuthenticatedPhaReportsRoute
+  AuthenticatedPhaSourceLibraryRoute: typeof AuthenticatedPhaSourceLibraryRoute
+  AuthenticatedPhaUsersRoute: typeof AuthenticatedPhaUsersRoute
+  AuthenticatedPhaWaitingListsRoute: typeof AuthenticatedPhaWaitingListsRoute
   AuthenticatedPmsHubRoute: typeof AuthenticatedPmsHubRoute
   AuthenticatedPortfolioComplianceRoute: typeof AuthenticatedPortfolioComplianceRoute
   AuthenticatedSubmissionCenterRoute: typeof AuthenticatedSubmissionCenterRoute
   AuthenticatedSupportiqRoute: typeof AuthenticatedSupportiqRoute
+  AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
+  AuthenticatedWorkspaceSetupRoute: typeof AuthenticatedWorkspaceSetupRoute
   AuthenticatedAccountSecurityRoute: typeof AuthenticatedAccountSecurityRoute
 }
 
@@ -922,14 +1564,45 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComplianceIntelligenceRoute:
     AuthenticatedComplianceIntelligenceRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRouteWithChildren,
+  AuthenticatedCrmBillingRoute: AuthenticatedCrmBillingRoute,
   AuthenticatedCrmDocumentsRoute: AuthenticatedCrmDocumentsRoute,
+  AuthenticatedCrmPhaControlsRoute: AuthenticatedCrmPhaControlsRoute,
+  AuthenticatedCrmStaffRoute: AuthenticatedCrmStaffRoute,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
+  AuthenticatedPha50058Route: AuthenticatedPha50058Route,
+  AuthenticatedPhaAccommodationsRoute: AuthenticatedPhaAccommodationsRoute,
+  AuthenticatedPhaAgencySettingsRoute: AuthenticatedPhaAgencySettingsRoute,
+  AuthenticatedPhaFamiliesRoute: AuthenticatedPhaFamiliesRoute,
+  AuthenticatedPhaFamilyIntakeRoute: AuthenticatedPhaFamilyIntakeRoute,
+  AuthenticatedPhaHcvLeaseUpRoute: AuthenticatedPhaHcvLeaseUpRoute,
+  AuthenticatedPhaHotmaRoute: AuthenticatedPhaHotmaRoute,
+  AuthenticatedPhaInspectionsRoute: AuthenticatedPhaInspectionsRoute,
+  AuthenticatedPhaModRehabOperationsRoute:
+    AuthenticatedPhaModRehabOperationsRoute,
+  AuthenticatedPhaNoticesRoute: AuthenticatedPhaNoticesRoute,
+  AuthenticatedPhaNspireStandardsRoute: AuthenticatedPhaNspireStandardsRoute,
+  AuthenticatedPhaPbvOperationsRoute: AuthenticatedPhaPbvOperationsRoute,
+  AuthenticatedPhaPbvWaitingListsRoute: AuthenticatedPhaPbvWaitingListsRoute,
+  AuthenticatedPhaPoliciesRoute: AuthenticatedPhaPoliciesRoute,
+  AuthenticatedPhaPortabilityRoute: AuthenticatedPhaPortabilityRoute,
+  AuthenticatedPhaPublicHousingAdmissionsRoute:
+    AuthenticatedPhaPublicHousingAdmissionsRoute,
+  AuthenticatedPhaPublicHousingOccupancyRoute:
+    AuthenticatedPhaPublicHousingOccupancyRoute,
+  AuthenticatedPhaPublicHousingOperationsRoute:
+    AuthenticatedPhaPublicHousingOperationsRoute,
+  AuthenticatedPhaReportsRoute: AuthenticatedPhaReportsRoute,
+  AuthenticatedPhaSourceLibraryRoute: AuthenticatedPhaSourceLibraryRoute,
+  AuthenticatedPhaUsersRoute: AuthenticatedPhaUsersRoute,
+  AuthenticatedPhaWaitingListsRoute: AuthenticatedPhaWaitingListsRoute,
   AuthenticatedPmsHubRoute: AuthenticatedPmsHubRoute,
   AuthenticatedPortfolioComplianceRoute: AuthenticatedPortfolioComplianceRoute,
   AuthenticatedSubmissionCenterRoute: AuthenticatedSubmissionCenterRoute,
   AuthenticatedSupportiqRoute: AuthenticatedSupportiqRoute,
+  AuthenticatedTasksRoute: AuthenticatedTasksRoute,
+  AuthenticatedWorkspaceSetupRoute: AuthenticatedWorkspaceSetupRoute,
   AuthenticatedAccountSecurityRoute: AuthenticatedAccountSecurityRoute,
 }
 
@@ -957,10 +1630,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   FilesFileIdRoute: FilesFileIdRoute,
+  PhaPersonaRoute: PhaPersonaRoute,
   PropertiesPropertyIdRoute: PropertiesPropertyIdRoute,
   FilesIndexRoute: FilesIndexRoute,
+  PhaIndexRoute: PhaIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
   ApiPublicFederalHousingNewsRoute: ApiPublicFederalHousingNewsRoute,
+  ApiInternalOperationsTickRoute: ApiInternalOperationsTickRoute,
   ApiPublicCrmSupportEmailRoute: ApiPublicCrmSupportEmailRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
