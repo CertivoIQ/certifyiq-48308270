@@ -1,0 +1,36 @@
+name: NSPIRE Source Retrieval
+
+on:
+  push:
+    branches: [ops/nspire-source-retrieval]
+
+permissions:
+  contents: read
+
+jobs:
+  retrieve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve official HUD NSPIRE bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p nspire-source
+          url='https://www.hud.gov/sites/dfiles/PIH/documents/NSPIRE-Standards-ALL-STANDARDS.zip'
+          curl --fail --location --retry 5 --retry-all-errors --user-agent 'Mozilla/5.0 CertivoIQ controlled-source retrieval' "$url" -o nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip
+          file nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip
+          sha256sum nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip | tee nspire-source/sha256.txt
+          stat -c '%s' nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip | tee nspire-source/byte-size.txt
+          unzip -l nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip | tee nspire-source/zip-list.txt
+          mkdir -p nspire-source/extracted
+          unzip -q nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip -d nspire-source/extracted
+          find nspire-source/extracted -type f -printf '%P\n' | sort | tee nspire-source/file-manifest.txt
+          find nspire-source/extracted -type f -iname '*.pdf' | wc -l | tee nspire-source/pdf-count.txt
+      - name: Upload controlled source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hud-nspire-official-bundle
+          path: nspire-source/
+          if-no-files-found: error
+          retention-days: 7
