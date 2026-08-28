@@ -24,9 +24,10 @@ export function Pill({
   children,
   className,
 }: {
-  tone?: Tone;
+  tone?: Tone | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
+
 }) {
   return (
     <span
