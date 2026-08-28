@@ -38,6 +38,7 @@ const PHA_NAV = [
   { to: "/pha-pbv-waiting-lists", label: "PBV Waiting Lists", icon: ClipboardList, key: "pbv_operations" },
   { to: "/pha-public-housing-operations", label: "Public Housing Operations", icon: Building2, key: "ph_operations" },
   { to: "/pha-public-housing-admissions", label: "Public Housing Admissions", icon: ClipboardCheck, key: "ph_operations" },
+  { to: "/pha-public-housing-occupancy", label: "Public Housing Occupancy", icon: Building2, key: "ph_operations" },
   { to: "/pha-mod-rehab-operations", label: "Mod Rehab Operations", icon: Building2, key: "mod_rehab_operations" },
   { to: "/pha-waiting-lists", label: "Waiting Lists", icon: ClipboardList, key: "waiting_lists" },
   { to: "/pha-accommodations", label: "Reasonable Accommodations", icon: ShieldCheck, key: "accommodations" },
