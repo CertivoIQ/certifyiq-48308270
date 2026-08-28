@@ -1,22 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExecutiveDashboard } from "@/components/executive-dashboard";
 import { ProductionDashboard } from "@/components/production-dashboard";
+import { PhaDashboard } from "@/components/pha-dashboard";
 import { useViewerState } from "@/hooks/use-viewer-state";
-
+import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "CertivoIQ Dashboard — Portfolio Compliance Overview" },
+      { title: "CertivoIQ Dashboard - Compliance Operations" },
       {
         name: "description",
         content:
-          "Your CertivoIQ dashboard: open findings, 8823 exposure, HOTMA and NSPIRE readiness, and property-level risk scores across the portfolio.",
-      },
-      { property: "og:title", content: "CertivoIQ Dashboard — Portfolio Compliance Overview" },
-      {
-        property: "og:description",
-        content: "Executive portfolio view of LIHTC, Section 8, HOME and HOTMA compliance risk.",
+          "Role-appropriate CertivoIQ workspace for multifamily compliance operations or public housing agency program administration.",
       },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -24,10 +20,17 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-/** Subscribers get a clean production dashboard; trial users see the sample portfolio. */
+/**
+ * Dashboard routing is account-aware. Demo users retain the sample executive
+ * portfolio; production PHA accounts receive the PHA command center; all other
+ * production accounts receive the multifamily operations workspace.
+ */
 function DashboardPage() {
-  const { showDemoData, loading } = useViewerState();
-  if (loading) return <ExecutiveDashboard demo />;
-  return showDemoData ? <ExecutiveDashboard demo /> : <ProductionDashboard />;
-}
+  const { showDemoData, loading: viewerLoading } = useViewerState();
+  const { profile, loading: profileLoading } = useWorkspaceProfile();
 
+  if (viewerLoading || profileLoading) return <ExecutiveDashboard demo />;
+  if (showDemoData) return <ExecutiveDashboard demo />;
+  if (profile.organization_type === "pha") return <PhaDashboard />;
+  return <ProductionDashboard />;
+}
