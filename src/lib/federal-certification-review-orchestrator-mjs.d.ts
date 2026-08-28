@@ -14,6 +14,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     PhaHotmaAllModuleResult,
     PhaHotmaImplementationInput,
   } from "@/lib/pha-hotma-implementation-engine.mjs";
+  import type { HotmaApplicabilityInput, HotmaApplicabilityResult } from "@/lib/hotma-applicability-gate.mjs";
 
   export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD: string;
   export const FEDERAL_REVIEW_PACK_VERSION: string;
@@ -25,6 +26,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     jurisdiction?: string;
     statePack?: StatePackInput | null;
     hotmaApplicable?: boolean;
+    hotmaApplicabilityInput?: HotmaApplicabilityInput;
     tenantFileInput?: Record<string, unknown>;
     layeredProgramInput?: Record<string, unknown>;
     recertificationInput?: Record<string, unknown>;
@@ -37,6 +39,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     findings: EngineFinding[];
     controlResults: {
       tenantEligibility: Record<string, unknown>;
+      hotmaApplicability: HotmaApplicabilityResult | null;
       recertification: Record<string, unknown> | null;
       layeredPrograms: Record<string, unknown> | null;
       mfhHotma: MfhHotmaAllModuleResult | null;
