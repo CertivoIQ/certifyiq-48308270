@@ -61,7 +61,7 @@ test("PHA HUD-50058 transaction queue is tenant isolated and routed deterministi
   assert.match(transactionMigration, /pha_50058_transactions/);
   assert.match(transactionMigration, /using \(user_id = auth\.uid\(\)\)/);
   assert.match(phaModulePage, /routePha50058Transaction/);
-  assert.match(phaModulePage, /AWAITING HUD GUIDANCE|AWAITING_HUD_GUIDANCE/);
+  assert.match(phaModulePage, /awaiting HUD guidance/i);
 });
 
 const validatedTransaction = {
