@@ -5,6 +5,7 @@ const read=(p)=>readFileSync(new URL(`../${p}`,import.meta.url),"utf8");
 const migration=read("supabase/migrations/20260828230000_pha_pbv_public_housing_operations.sql");
 const pbvWaiting=read("supabase/migrations/20260828280000_pha_pbv_waiting_lists.sql");
 const phOverIncome=read("supabase/migrations/20260828290000_pha_public_housing_over_income_notices.sql");
+const phOverIncomeDeadlineFix=read("supabase/migrations/20260828291000_fix_pha_over_income_termination_deadline.sql");
 const workspace=read("src/components/pha-program-operations.tsx");
 const pbvWaitingWorkspace=read("src/components/pha-pbv-waiting-list-workspace.tsx");
 const pbvWaitingRoute=read("src/routes/_authenticated/pha-pbv-waiting-lists.tsx");
@@ -83,4 +84,10 @@ test("alternative non-public housing lease uses the 60-day or earlier renewal de
   assert.match(phOverIncome,/termination_required/);
   assert.match(workspace,/Alternative-rent lease/);
   assert.match(workspace,/60 days/);
+});
+
+test("Public Housing termination deadline is measured from the 24-month notice date",()=>{
+  assert.match(phOverIncomeDeadlineFix,/notice_issued_at::date \+ interval '6 months'/);
+  assert.match(phOverIncomeDeadlineFix,/cannot exceed six months after the 24-month notice/);
+  assert.doesNotMatch(phOverIncomeDeadlineFix,/income_examination_date \+ interval '7 months'/);
 });
