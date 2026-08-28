@@ -7,6 +7,28 @@ alter table public.pha_50058_transactions
   add column if not exists last_submission_at timestamptz,
   add column if not exists last_response_at timestamptz;
 
+create or replace function public.derive_pha_50058_routing_status()
+returns trigger language plpgsql security invoker as $$
+declare p public.customer_workspace_profiles%rowtype;
+begin
+  select * into p from public.customer_workspace_profiles where user_id=new.user_id;
+  if not found or p.pha_hotma_cohort is null or p.hud_50058_reporting_path is null then
+    new.routing_status:='BLOCKED';
+  elsif not new.program_applicability_validated or not new.controlled_source_release_approved or not new.current_rule_version_validated or new.source_status_conflict or not new.full_hotma_policy_set_validated or not new.reporting_path_validated or not new.software_compatibility_validated then
+    new.routing_status:='BLOCKED';
+  elsif p.pha_hotma_cohort in ('INITIAL_MTW','MTW_EXPANSION','FRS_EXCLUSIVE') then
+    new.routing_status:='AWAITING_HUD_GUIDANCE';
+  elsif new.effective_date < date '2027-01-01' then
+    new.routing_status:='PRE_IMPLEMENTATION';
+  else
+    new.routing_status:='READY';
+  end if;
+  return new;
+end; $$;
+drop trigger if exists pha_50058_routing_status_before_write on public.pha_50058_transactions;
+create trigger pha_50058_routing_status_before_write before insert or update on public.pha_50058_transactions for each row execute function public.derive_pha_50058_routing_status();
+update public.pha_50058_transactions set updated_at=now();
+
 create table if not exists public.pha_50058_transport_profiles (
   id uuid primary key default gen_random_uuid(),
   workspace_user_id uuid not null references auth.users(id) on delete cascade,
@@ -81,7 +103,7 @@ begin
    if not found then raise exception 'Validated HUD-50058 API transport is not configured'; end if;
  end if;
  select coalesce(max(attempt_number),0)+1 into attempt_no from public.pha_50058_submission_attempts where transaction_id=t.id;
- payload:=jsonb_build_object('transaction_id',t.id,'family_reference',t.family_reference,'program_code',t.program_code,'transaction_type',t.transaction_type,'effective_date',t.effective_date,'reporting_path',p.hud_50058_reporting_path,'source_family_action_id',t.source_family_action_id,'prepared_at',now());
+ payload:=jsonb_build_object('transaction_id',t.id,'family_reference',t.family_reference,'program_code',t.program_code,'transaction_type',t.transaction_type,'effective_date',t.effective_date,'reporting_path',p.hud_50058_reporting_path,'source_family_action_id',t.source_family_action_id,'routing_status',t.routing_status,'prepared_at',now());
  insert into public.pha_50058_submission_attempts(transaction_id,workspace_user_id,attempt_number,transport_mode,payload_snapshot,status) values(t.id,t.user_id,attempt_no,requested_transport_mode,payload,'ready_for_transport') returning id into attempt_id;
  insert into public.pha_50058_submission_events(transaction_id,submission_attempt_id,event_type,event_snapshot) values(t.id,attempt_id,'prepared',payload);
  update public.pha_50058_transactions set submission_status='ready_for_transport',updated_at=now() where id=t.id;
