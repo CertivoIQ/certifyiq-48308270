@@ -9,7 +9,7 @@ import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useIsStaff, useSession } from "@/hooks/use-session";
-import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
+import { useWorkspaceProfile, type PhaAgencyRole } from "@/hooks/use-workspace-profile";
 import { PublicShell } from "@/components/public-shell";
 import { useT } from "@/lib/i18n/provider";
 
@@ -28,21 +28,32 @@ const MULTIFAMILY_NAV = [
 ] as const;
 
 const PHA_NAV = [
-  { to: "/dashboard", label: "Command Center", icon: LayoutDashboard },
-  { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus },
-  { to: "/pha-families", label: "Families & Reexaminations", icon: Users },
-  { to: "/pha-notices", label: "Family Notices", icon: MailCheck },
-  { to: "/pha-50058", label: "HUD-50058 Queue", icon: ClipboardList },
-  { to: "/pha-inspections", label: "Inspections / NSPIRE", icon: ClipboardCheck },
-  { to: "/pha-hotma", label: "HOTMA Readiness", icon: ShieldCheck },
-  { to: "/findings", label: "Findings", icon: AlertTriangle },
-  { to: "/rules", label: "Policies & Source Rules", icon: Scale },
-  { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal },
-  { to: "/launchpad", label: "Agency Setup", icon: Rocket },
-  { to: "/account/security", label: "Users & Security", icon: Shield },
-  { to: "/billing", label: "Billing", icon: CreditCard },
-  { to: "/contact-support", label: "Support", icon: HelpCircle },
+  { to: "/dashboard", label: "Command Center", icon: LayoutDashboard, key: "command" },
+  { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus, key: "family_write" },
+  { to: "/pha-families", label: "Families & Reexaminations", icon: Users, key: "family_read" },
+  { to: "/pha-notices", label: "Family Notices", icon: MailCheck, key: "family_write" },
+  { to: "/pha-50058", label: "HUD-50058 Queue", icon: ClipboardList, key: "family_read" },
+  { to: "/pha-inspections", label: "Inspections / NSPIRE", icon: ClipboardCheck, key: "inspections" },
+  { to: "/pha-hotma", label: "HOTMA Readiness", icon: ShieldCheck, key: "compliance" },
+  { to: "/findings", label: "Findings", icon: AlertTriangle, key: "findings" },
+  { to: "/rules", label: "Policies & Source Rules", icon: Scale, key: "compliance" },
+  { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal, key: "admin" },
+  { to: "/launchpad", label: "Agency Setup", icon: Rocket, key: "admin" },
+  { to: "/account/security", label: "Users & Security", icon: Shield, key: "admin" },
+  { to: "/billing", label: "Billing", icon: CreditCard, key: "owner_admin" },
+  { to: "/contact-support", label: "Support", icon: HelpCircle, key: "support" },
 ] as const;
+
+function phaNavAllowed(role: PhaAgencyRole | null, key: (typeof PHA_NAV)[number]["key"]) {
+  if (!role || role === "workspace_owner" || role === "agency_admin" || role === "compliance_admin") return true;
+  if (key === "command" || key === "support") return true;
+  if (role === "executive") return ["family_read", "compliance", "findings"].includes(key);
+  if (role === "inspection_staff") return ["inspections", "findings"].includes(key);
+  if (role === "hcv_pbv_specialist" || role === "public_housing_specialist") {
+    return ["family_write", "family_read", "compliance", "findings"].includes(key);
+  }
+  return false;
+}
 
 function Wordmark() {
   return <Link to="/dashboard" className="flex items-center gap-2.5"><img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" /></Link>;
@@ -50,12 +61,14 @@ function Wordmark() {
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { isStaff } = useIsStaff();
-  const { profile } = useWorkspaceProfile();
+  const { profile, phaRole } = useWorkspaceProfile();
   const isPha = profile.organization_type === "pha";
-  const items = [...(isPha ? PHA_NAV : MULTIFAMILY_NAV), ...(isStaff ? [{ to: "/crm", label: "CRM", icon: Briefcase } as const] : [])];
+  const phaItems = PHA_NAV.filter((item) => phaNavAllowed(phaRole, item.key));
+  const items = [...(isPha ? phaItems : MULTIFAMILY_NAV), ...(isStaff ? [{ to: "/crm", label: "CRM", icon: Briefcase } as const] : [])];
   return (
     <nav className="flex flex-col gap-0.5">
       <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">{isPha ? "PHA workspace" : "Multifamily workspace"}</p>
+      {isPha && phaRole ? <p className="mb-2 px-3 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40">{phaRole.replaceAll("_", " ")}</p> : null}
       {items.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
