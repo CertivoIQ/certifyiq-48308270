@@ -342,23 +342,48 @@ test("LIHTC-only reviews never activate the HOTMA asset-cap overlay", () => {
   );
 });
 
-test("HOTMA cannot be activated for an LIHTC-only certification", () => {
-  assert.throws(
-    () =>
-      evaluateCertification({
-        facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
-        programs: ["LIHTC"],
-        hotmaApplicable: true,
-      }),
-    /LIHTC alone is not sufficient/i,
+test("a caller HOTMA flag cannot activate an LIHTC-only certification", () => {
+  const result = evaluateCertification({
+    facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
+    programs: ["LIHTC"],
+    hotmaApplicable: true,
+  });
+  assert.equal(
+    result.findings.some((finding) => finding.ruleId === "HOTMA-ASSET-CAP"),
+    false,
+  );
+  assert.equal(
+    result.hotmaApplicability.applicability_status,
+    "UNABLE_TO_DETERMINE",
+  );
+  assert.equal(
+    result.hotmaApplicability.reason_code,
+    "HOTMA_PROGRAM_INVENTORY_NOT_VALIDATED",
   );
 });
 
-test("an explicit applicable HUD overlay evaluates HOTMA but blocks unsupported program sign-off", () => {
+test("documented applicable HUD authority evaluates HOTMA but blocks unsupported program sign-off", () => {
   const result = evaluateCertification({
     facts: withLihtcAuthority(extract(CERTIFICATION_TEXT)),
     programs: ["LIHTC", "HUD_MFH_PROJECT_BASED"],
-    hotmaApplicable: true,
+    hotmaApplicable: false,
+    hotmaApplicabilityInput: {
+      property_id: "PROP-0001",
+      program_inventory_validated: true,
+      assistance_sources_reconciled: true,
+      mfh_program_subtype: "SECTION_8_PBRA",
+      program_authority_records: [
+        {
+          program_code: "HUD_MFH_PROJECT_BASED",
+          authority_document_id: "PBRA-HAP-001",
+          authority_document_sha256: "a".repeat(64),
+          citation: "PBRA HAP Contract, page 1",
+          program_applicability_validated: true,
+          effective_for_event_date_validated: true,
+          source_status_conflict: false,
+        },
+      ],
+    },
   });
   const hotmaFinding = result.findings.find(
     (finding) => finding.ruleId === "HOTMA-ASSET-CAP",
@@ -368,6 +393,7 @@ test("an explicit applicable HUD overlay evaluates HOTMA but blocks unsupported 
       finding.ruleId ===
       "FED-HUD_MFH_PROJECT_BASED-SUBSTANTIVE-PACK-GATE",
   );
+  assert.equal(result.hotmaApplicability.applicability_status, "APPLICABLE");
   assert.equal(hotmaFinding.status, FINDING_STATUS.pass);
   assert.equal(substantivePackGate.status, FINDING_STATUS.unableToDetermine);
   assert.equal(signOffAllowed(result), false);
