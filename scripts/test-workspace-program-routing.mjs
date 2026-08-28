@@ -9,8 +9,11 @@ const migration = read("supabase/migrations/20260828012000_workspace_profiles_an
 const hotmaCorrection = read("supabase/migrations/20260828022000_split_hotma_section_overlays.sql");
 const phaRoutingMigration = read("supabase/migrations/20260828030000_pha_hotma_cohort_profile.sql");
 const transactionMigration = read("supabase/migrations/20260828031000_pha_50058_transaction_queue.sql");
+const controlVisibilityMigration = read("supabase/migrations/20260828210000_pha_control_member_visibility.sql");
 const configurator = read("src/components/workspace-profile-configurator.tsx");
 const phaDashboard = read("src/components/pha-dashboard.tsx");
+const phaHotma = read("src/components/pha-hotma-readiness-workspace.tsx");
+const phaHotmaRoute = read("src/routes/_authenticated/pha-hotma.tsx");
 const phaModulePage = read("src/components/pha-module-page.tsx");
 const dashboardRoute = read("src/routes/_authenticated/dashboard.tsx");
 const appShell = read("src/components/app-shell.tsx");
@@ -30,3 +33,5 @@ test("program applicability supports property, building, and unit scope with ten
 test("PHA accounts route to an agency-specific command center and modules", () => { assert.match(dashboardRoute, /organization_type === "pha"/); assert.match(dashboardRoute, /<PhaDashboard/); for (const route of ["pha-families", "pha-50058", "pha-inspections", "pha-hotma"]) { assert.ok(existsSync(new URL(`../src/routes/_authenticated/${route}.tsx`, import.meta.url))); assert.match(appShell, new RegExp(route)); } });
 test("multifamily navigation exposes organization and program configuration", () => { assert.match(appShell, /workspace-setup/); assert.match(appShell, /Multifamily workspace/); assert.match(appShell, /PHA workspace/); });
 test("PHA command center changes title, actions, and live metrics by agency role",()=>{ assert.match(phaDashboard,/Executive Command Center/); assert.match(phaDashboard,/HCV \/ PBV Operations/); assert.match(phaDashboard,/Public Housing Operations/); assert.match(phaDashboard,/Inspection Operations/); assert.match(phaDashboard,/phaRole/); assert.match(phaDashboard,/pha_reasonable_accommodation_requests/); assert.match(phaDashboard,/pha_waiting_list_applicants/); assert.match(phaDashboard,/pha_portability_cases/); assert.match(phaDashboard,/role-filtered/); });
+test("PHA HOTMA route is a live readiness workspace instead of the generic placeholder",()=>{ assert.match(phaHotmaRoute,/PhaHotmaReadinessWorkspace/); assert.doesNotMatch(phaHotmaRoute,/PhaModulePage/); assert.match(phaHotma,/pha_authoritative_control_state/); assert.match(phaHotma,/pha_notice_policy_overlays/); assert.match(phaHotma,/pha_50058_transactions/); assert.match(phaHotma,/source_release_status/); assert.match(phaHotma,/rule_version_status/); assert.match(phaHotma,/software_compatibility_status/); assert.match(phaHotma,/January 1, 2027/); assert.match(phaHotma,/HUD guidance pending/); });
+test("authorized PHA members can read but not mutate agency authoritative controls",()=>{ assert.match(controlVisibilityMigration,/PHA users read agency authoritative controls/); assert.match(controlVisibilityMigration,/pha_workspace_memberships/); assert.match(controlVisibilityMigration,/m\.active = true/); assert.doesNotMatch(controlVisibilityMigration,/for all to authenticated/); });
