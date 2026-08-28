@@ -39,7 +39,7 @@ const PHA_NAV = [
   { to: "/rules", label: "Policies & Source Rules", icon: Scale, key: "compliance" },
   { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal, key: "admin" },
   { to: "/launchpad", label: "Agency Setup", icon: Rocket, key: "admin" },
-  { to: "/account/security", label: "Users & Security", icon: Shield, key: "admin" },
+  { to: "/pha-users", label: "Users & Permissions", icon: Shield, key: "admin" },
   { to: "/billing", label: "Billing", icon: CreditCard, key: "owner_admin" },
   { to: "/contact-support", label: "Support", icon: HelpCircle, key: "support" },
 ] as const;
