@@ -22,8 +22,8 @@ import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
 import { classifyAllPhaHotmaImplementationModules } from "./pha-hotma-implementation-engine.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
-  "federal-review-orchestrator-2026.08.5";
-export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.5";
+  "federal-review-orchestrator-2026.08.6";
+export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.6";
 
 const CONTROL = Object.freeze({
   tenantEligibility: Object.freeze({
@@ -160,7 +160,7 @@ export function evaluateFederalCertificationReview(input = {}) {
     programs,
     jurisdiction: input.jurisdiction,
     statePack: input.statePack,
-    hotmaApplicable: input.hotmaApplicable,
+    hotmaApplicabilityInput: input.hotmaApplicabilityInput,
   });
 
   const tenantEligibility = evaluateTenantFileEligibility({
@@ -261,6 +261,7 @@ export function evaluateFederalCertificationReview(input = {}) {
       layeredPrograms,
       mfhHotma,
       mfhHotmaOperations,
+      hotmaApplicability: core.hotmaApplicability,
       phaHotma,
     },
   };
