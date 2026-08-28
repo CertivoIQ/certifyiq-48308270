@@ -6,10 +6,13 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 const migration = read("supabase/migrations/20260828110000_pha_role_access.sql");
 const inspectionMigration = read("supabase/migrations/20260828150000_pha_nspire_inspections.sql");
 const portabilityMigration = read("supabase/migrations/20260828160000_pha_hcv_portability.sql");
+const legalNoticeMigration = read("supabase/migrations/20260828140000_pha_legal_notice_controls.sql");
 const inspectionsWorkspace = read("src/components/pha-inspections-workspace.tsx");
 const inspectionsRoute = read("src/routes/_authenticated/pha-inspections.tsx");
 const portabilityWorkspace = read("src/components/pha-portability-workspace.tsx");
 const portabilityRoute = read("src/routes/_authenticated/pha-portability.tsx");
+const policyConsole = read("src/components/pha-policy-overlay-console.tsx");
+const policyRoute = read("src/routes/_authenticated/pha-policies.tsx");
 const profileHook = read("src/hooks/use-workspace-profile.ts");
 const appShell = read("src/components/app-shell.tsx");
 
@@ -108,6 +111,34 @@ test("HCV portability route is role-scoped and operational", () => {
   assert.match(appShell, /\/pha-portability/);
   assert.match(appShell, /hcv_operations/);
   assert.match(appShell, /role === "hcv_pbv_specialist"/);
+});
+
+test("agency notice policy overlays remain distinct from federal authority profiles", () => {
+  assert.match(legalNoticeMigration, /pha_notice_requirement_profiles/);
+  assert.match(legalNoticeMigration, /pha_notice_policy_overlays/);
+  assert.match(legalNoticeMigration, /administrative_plan/);
+  assert.match(legalNoticeMigration, /acop/);
+  assert.match(legalNoticeMigration, /mod_rehab_policy/);
+});
+
+test("PHA policy console creates unvalidated versions and validates explicitly", () => {
+  assert.match(policyRoute, /PhaPolicyOverlayConsole/);
+  assert.match(policyConsole, /Save unvalidated policy version/);
+  assert.match(policyConsole, /validated: false/);
+  assert.match(policyConsole, /validated_by: user\.id/);
+  assert.match(policyConsole, /validated_at: new Date\(\)\.toISOString\(\)/);
+  assert.match(policyConsole, /Validate version/);
+  assert.match(policyConsole, /hearing_request_deadline_rule/);
+  assert.match(policyConsole, /language_access_requirements/);
+  assert.match(policyConsole, /accessibility_requirements/);
+});
+
+test("PHA policy console deactivates older program versions without deleting history", () => {
+  assert.match(policyConsole, /update\(\{ active: false \}\)/);
+  assert.match(policyConsole, /\.neq\("id", overlay\.id\)/);
+  assert.match(policyConsole, /Policy version history/);
+  assert.match(appShell, /\/pha-policies/);
+  assert.match(appShell, /Policies & Notice Controls/);
 });
 
 test("workspace hook resolves a member to the PHA owner's workspace and role", () => {
