@@ -21,6 +21,10 @@ declare
   derived_template text;
   derived_summary text;
 begin
+  if tg_op = 'UPDATE' and old.status = 'issued' and new.status <> 'issued' then
+    raise exception 'Issued PHA family notices are immutable and cannot be reverted';
+  end if;
+
   select * into action_row
     from public.pha_family_actions
    where id = new.family_action_id and user_id = new.user_id;
@@ -92,7 +96,11 @@ begin
     if new.delivery_method is null then
       raise exception 'Delivery method is required before notice issuance';
     end if;
-    new.issued_at := coalesce(new.issued_at, now());
+    if tg_op = 'UPDATE' and old.status = 'issued' then
+      new.issued_at := old.issued_at;
+    else
+      new.issued_at := coalesce(new.issued_at, now());
+    end if;
   else
     new.issued_at := null;
   end if;
@@ -109,10 +117,18 @@ for each row execute function public.prepare_pha_family_notice();
 create or replace function public.refresh_pha_family_action_from_notice()
 returns trigger language plpgsql security invoker as $$
 declare
-  action_id uuid := coalesce(new.family_action_id, old.family_action_id);
-  owner_id uuid := coalesce(new.user_id, old.user_id);
+  action_id uuid;
+  owner_id uuid;
   has_issued_notice boolean := false;
 begin
+  if tg_op = 'DELETE' then
+    action_id := old.family_action_id;
+    owner_id := old.user_id;
+  else
+    action_id := new.family_action_id;
+    owner_id := new.user_id;
+  end if;
+
   select exists (
     select 1 from public.pha_family_notices n
      where n.family_action_id = action_id
