@@ -13,7 +13,7 @@ test("staff invitation migration creates the access, invitation, and append-only
   for (const table of ["crm_staff_access", "crm_staff_invitations", "crm_staff_access_events"]) {
     assert.match(migration, new RegExp(`create table if not exists public\\.${table}`, "i"));
   }
-  assert.match(migration, /access_level in \('employee', 'manager', 'admin'\)/i);
+  assert.match(migration, /access_level in \\('employee',\\s*'manager',\\s*'admin'\\)/i);
   assert.match(migration, /crm_staff_can_manage/i);
   assert.match(migration, /crm_staff_is_admin/i);
   assert.match(migration, /rjwatkins@certivoiq\.com/i);
