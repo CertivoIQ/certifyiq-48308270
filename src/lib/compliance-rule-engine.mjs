@@ -317,10 +317,17 @@ function hotmaApplicabilityGateRule(applicability) {
  */
 export function buildCertificationRulePack(input = {}) {
   const programs = normalizeCertificationPrograms(input.programs);
-  const hotmaApplicability = classifyHotmaApplicability({
-    ...(input.hotmaApplicabilityInput ?? {}),
-    programs,
-  });
+  const hasApplicabilityInput =
+    input.hotmaApplicabilityInput &&
+    typeof input.hotmaApplicabilityInput === "object" &&
+    !Array.isArray(input.hotmaApplicabilityInput);
+  const hotmaApplicability =
+    hasApplicabilityInput || input.hotmaApplicable === true
+      ? classifyHotmaApplicability({
+          ...(hasApplicabilityInput ? input.hotmaApplicabilityInput : {}),
+          programs,
+        })
+      : null;
   const rules = [];
   if (programs.includes(CERTIFICATION_PROGRAM.lihtc)) {
     rules.push(...FEDERAL_LIHTC_PACK.rules);
@@ -330,12 +337,12 @@ export function buildCertificationRulePack(input = {}) {
   }
 
   if (
-    hotmaApplicability.applicability_status === "APPLICABLE" &&
-    hotmaApplicability.asset_cap_applicable === true
+    hotmaApplicability?.applicability_status === "APPLICABLE" &&
+    hotmaApplicability?.asset_cap_applicable === true
   ) {
     rules.push(...HOTMA_ASSET_CAP_OVERLAY_PACK.rules);
   }
-  if (hotmaApplicability.applicability_status === "UNABLE_TO_DETERMINE") {
+  if (hotmaApplicability?.applicability_status === "UNABLE_TO_DETERMINE") {
     rules.push(hotmaApplicabilityGateRule(hotmaApplicability));
   }
 
@@ -344,11 +351,11 @@ export function buildCertificationRulePack(input = {}) {
   }
 
   const overlayIds = [
-    hotmaApplicability.applicability_status === "APPLICABLE" &&
-    hotmaApplicability.asset_cap_applicable === true
+    hotmaApplicability?.applicability_status === "APPLICABLE" &&
+    hotmaApplicability?.asset_cap_applicable === true
       ? "hotma-asset-cap"
       : null,
-    hotmaApplicability.applicability_status === "UNABLE_TO_DETERMINE"
+    hotmaApplicability?.applicability_status === "UNABLE_TO_DETERMINE"
       ? "hotma-applicability-gate"
       : null,
     String(input.jurisdiction ?? "US").toUpperCase() !== "US" ? "state-qap" : null,
