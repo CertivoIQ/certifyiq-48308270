@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/tasks")({
 });
 
 type TaskCategory = "approval" | "verification" | "rule_pack" | "incident";
-type TaskDestination = "/pha-nspire-standards" | "/rules" | "/crm/operations";
+type TaskDestination = "/pha-nspire-standards" | "/rules" | "/state-rule-validation" | "/crm/operations";
 type TaskItem = {
   id: string;
   category: TaskCategory;
@@ -205,7 +205,7 @@ async function loadTasks(): Promise<TaskItem[]> {
       status: pack.status,
       active,
       occurredAt: pack.approved_at ?? pack.updated_at ?? pack.created_at,
-      destination: "/rules",
+      destination: active ? "/state-rule-validation" : "/rules",
       actionLabel: active ? "Review rule pack" : "View rules",
       attention: pack.status === "suspended",
     });
