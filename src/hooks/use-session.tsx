@@ -26,9 +26,9 @@ export function useSession() {
 }
 
 /**
- * CertivoIQ staff check. The `staff` role is granted server-side by a database
- * trigger only for verified @certivoiq.com accounts, so this can never be
- * spoofed from the client — RLS enforces the same rule on every CRM table.
+ * CertivoIQ staff check. The `staff` role is granted server-side only after an
+ * active administrator- or manager-issued invitation is accepted. Client code
+ * cannot grant the role, and RLS enforces staff authorization on CRM tables.
  */
 export function useIsStaff() {
   const { user, ready } = useSession();
