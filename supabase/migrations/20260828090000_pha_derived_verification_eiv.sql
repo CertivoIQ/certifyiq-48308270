@@ -149,13 +149,11 @@ begin
   update public.pha_family_actions
      set verification_complete = derived_verification,
          eiv_review_complete = derived_eiv,
-         source_status_conflict = has_conflict or action_row.source_status_conflict,
          updated_at = now()
    where id = target_action_id and user_id = target_user_id
      and (
        verification_complete is distinct from derived_verification
        or eiv_review_complete is distinct from derived_eiv
-       or (has_conflict and source_status_conflict = false)
      );
 end;
 $$;
@@ -238,9 +236,6 @@ begin
 
   new.verification_complete := general_requirement_active and has_verified_general and not has_conflict;
   new.eiv_review_complete := eiv_requirement_active and (has_verified_eiv or has_controlled_eiv_exception) and not has_conflict;
-  if has_conflict then
-    new.source_status_conflict := true;
-  end if;
   return new;
 end;
 $$;
