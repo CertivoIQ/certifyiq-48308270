@@ -1,8 +1,8 @@
 name: NSPIRE Source Retrieval
 
 on:
-  push:
-    branches: [ops/nspire-source-retrieval]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
