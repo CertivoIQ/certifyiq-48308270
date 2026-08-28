@@ -90,7 +90,6 @@ type SourceVersion = {
   parsing_status: string;
   validation_status: string;
   retrieved_at: string;
-  updated_at: string;
 };
 
 function categoryLabel(category: TaskCategory) {
@@ -148,8 +147,8 @@ async function loadTasks(): Promise<TaskItem[]> {
         .limit(100),
       client
         .from("operations_source_versions")
-        .select("id,authority,program,jurisdiction,parsing_status,validation_status,retrieved_at,updated_at")
-        .order("updated_at", { ascending: false })
+        .select("id,authority,program,jurisdiction,parsing_status,validation_status,retrieved_at")
+        .order("retrieved_at", { ascending: false })
         .limit(100),
     ]);
 
@@ -241,7 +240,7 @@ async function loadTasks(): Promise<TaskItem[]> {
       description: `${source.program} · ${source.jurisdiction} · parsing ${source.parsing_status} · validation ${source.validation_status}`,
       status: active ? source.validation_status : "complete",
       active,
-      occurredAt: source.updated_at ?? source.retrieved_at,
+      occurredAt: source.retrieved_at,
       destination: "/crm/operations",
       actionLabel: active ? "Review source" : "View source",
       attention:
@@ -360,10 +359,10 @@ function TasksWorkspace() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="Active tasks" value={activeTasks.length} hint="Cleared when the underlying control completes" tone={activeTasks.length ? "flag" : "seal"} />
-            <Stat label="Awaiting approval" value={awaitingApproval} hint="Separate approver controls remain enforced" />
-            <Stat label="Verification required" value={verifications} hint="Sources and rule packs" />
-            <Stat label="Exceptions" value={exceptions} hint="Blocked, conflicting, or open incidents" tone={exceptions ? "reject" : "seal"} />
+            <Stat label="Active tasks" value={query.error ? "—" : activeTasks.length} hint="Cleared when the underlying control completes" tone={query.error ? "reject" : activeTasks.length ? "flag" : "seal"} />
+            <Stat label="Awaiting approval" value={query.error ? "—" : awaitingApproval} hint="Separate approver controls remain enforced" />
+            <Stat label="Verification required" value={query.error ? "—" : verifications} hint="Sources and rule packs" />
+            <Stat label="Exceptions" value={query.error ? "—" : exceptions} hint="Blocked, conflicting, or open incidents" tone={query.error || exceptions ? "reject" : "seal"} />
           </div>
 
           {query.error ? (
@@ -383,10 +382,10 @@ function TasksWorkspace() {
             actions={
               <div className="flex gap-2">
                 <Button size="sm" variant={view === "active" ? "default" : "outline"} onClick={() => setView("active")}>
-                  <Clock3 className="size-4" /> Active ({activeTasks.length})
+                  <Clock3 className="size-4" /> Active ({query.error ? "—" : activeTasks.length})
                 </Button>
                 <Button size="sm" variant={view === "history" ? "default" : "outline"} onClick={() => setView("history")}>
-                  <CheckCircle2 className="size-4" /> History ({history.length})
+                  <CheckCircle2 className="size-4" /> History ({query.error ? "—" : history.length})
                 </Button>
               </div>
             }
@@ -394,6 +393,17 @@ function TasksWorkspace() {
           >
             {query.isLoading ? (
               <div className="px-5 py-10 text-sm text-muted-foreground">Loading governance tasks…</div>
+            ) : query.error ? (
+              <div className="px-5 py-10 text-center">
+                <AlertTriangle className="mx-auto size-8 text-reject" />
+                <p className="mt-3 font-medium">Task sources are unavailable</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  The queue has not been represented as empty. No control state was changed.
+                </p>
+                <Button className="mt-4" size="sm" variant="outline" onClick={() => void query.refetch()}>
+                  Retry loading tasks
+                </Button>
+              </div>
             ) : (
               <TaskList tasks={visibleTasks} />
             )}
