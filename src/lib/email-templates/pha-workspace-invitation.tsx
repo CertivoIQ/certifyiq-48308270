@@ -10,7 +10,7 @@ interface Props {
 }
 
 const Email = ({ role = 'agency user', expiresOn = 'in 7 days', dashboardUrl = 'https://certivoiq.com/dashboard' }: Props) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="en" dir="ltr">">
     <Head />
     <Preview>You have been invited to a CertivoIQ PHA workspace.</Preview>
     <Body style={main}>
@@ -23,7 +23,7 @@ const Email = ({ role = 'agency user', expiresOn = 'in 7 days', dashboardUrl = '
         </Section>
         <Section style={{ paddingBottom: '14px' }}><CtaButton href={dashboardUrl}>Open CertivoIQ</CtaButton></Section>
         <Hr style={hr} />
-        <Text style={small}>If you were not expecting this invitation, you can ignore this message. No workspace access is granted until the invitation is accepted by the matching authenticated account.</Text>
+        <Text style={small}>If you were not expecting this invitation, you can ignore this message. No workspace access is granted until the invitation is accepted by the matching authenticated email address.</Text>
       </Container>
     </Body>
   </Html>
