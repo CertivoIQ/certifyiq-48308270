@@ -259,5 +259,7 @@ test("Families page exposes program-specific determination inputs and writes thr
   assert.match(workbench, /Rehab debt service/);
   assert.match(workbench, /Mixed-family proration applies/);
   assert.match(workbench, /upsert\(payload, \{ onConflict: "family_action_id" \}\)/);
-  assert.doesNotMatch(workbench, /calculation_complete\s*:/);
+  const payloadBlock = workbench.match(/const payload = \{([\s\S]*?)\n\s*\};/)?.[1] ?? "";
+  assert.ok(payloadBlock.length > 0, "calculation mutation payload should be discoverable");
+  assert.doesNotMatch(payloadBlock, /calculation_complete/);
 });
