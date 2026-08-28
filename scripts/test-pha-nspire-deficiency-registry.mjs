@@ -49,3 +49,11 @@ test("controlled registry is loaded pending and remains fail closed until attest
  assert.match(activation,/verified_by=null/);
  assert.match(activation,/verified_at=null/);
 });
+
+
+test("legacy rows are replaced only when provisional inactive and unreferenced",()=>{
+ assert.match(activation,/Existing NSPIRE rows are active, non-provisional, or referenced by inspection evidence/);
+ assert.match(activation,/s\.active=false/);
+ assert.match(activation,/s\.source_status='pending_source'/);
+ assert.match(activation,/not exists\([\s\S]*pha_inspection_deficiencies/);
+});
