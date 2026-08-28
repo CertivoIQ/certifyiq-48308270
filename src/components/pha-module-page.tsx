@@ -1,8 +1,26 @@
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
+import { supabase } from "@/integrations/supabase/client";
+import { routePha50058Transaction } from "@/lib/pha-50058-transaction-router.mjs";
 
 export type PhaModuleKind = "families" | "50058" | "inspections" | "hotma";
+
+type TransactionRow = {
+  id: string;
+  family_reference: string;
+  program_code: string;
+  transaction_type: string;
+  effective_date: string;
+  program_applicability_validated: boolean;
+  controlled_source_release_approved: boolean;
+  current_rule_version_validated: boolean;
+  source_status_conflict: boolean;
+  full_hotma_policy_set_validated: boolean;
+  reporting_path_validated: boolean;
+  software_compatibility_validated: boolean;
+};
 
 const CONTENT: Record<PhaModuleKind, { title: string; subtitle: string; stats: [string, string, string][]; sections: [string, string][] }> = {
   families: {
@@ -31,8 +49,91 @@ const CONTENT: Record<PhaModuleKind, { title: string; subtitle: string; stats: [
   },
 };
 
+function statusTone(status: string) {
+  if (status === "READY") return "seal" as const;
+  return undefined;
+}
+
+function Pha50058Queue() {
+  const { profile } = useWorkspaceProfile();
+  const query = useQuery<TransactionRow[]>({
+    queryKey: ["pha-50058-transactions"],
+    queryFn: async () => {
+      // Generated Supabase types lag the new migration until the next schema type refresh.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = supabase as any;
+      const { data, error } = await client
+        .from("pha_50058_transactions")
+        .select("id, family_reference, program_code, transaction_type, effective_date, program_applicability_validated, controlled_source_release_approved, current_rule_version_validated, source_status_conflict, full_hotma_policy_set_validated, reporting_path_validated, software_compatibility_validated")
+        .order("effective_date", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const routed = (query.data ?? []).map((row) => ({
+    row,
+    result: routePha50058Transaction({
+      program: row.program_code,
+      transaction_type: row.transaction_type,
+      effective_date: row.effective_date,
+      pha_hotma_cohort: profile.pha_hotma_cohort,
+      hud_50058_reporting_path: profile.hud_50058_reporting_path,
+      program_applicability_validated: row.program_applicability_validated,
+      controlled_source_release_approved: row.controlled_source_release_approved,
+      current_rule_version_validated: row.current_rule_version_validated,
+      source_status_conflict: row.source_status_conflict,
+      full_hotma_policy_set_validated: row.full_hotma_policy_set_validated,
+      reporting_path_validated: row.reporting_path_validated,
+      software_compatibility_validated: row.software_compatibility_validated,
+    }),
+  }));
+
+  const ready = routed.filter(({ result }) => result.status === "READY").length;
+  const blocked = routed.filter(({ result }) => result.status === "BLOCKED").length;
+  const review = routed.length - ready - blocked;
+
+  return (
+    <AppShell title="HUD-50058 Queue" subtitle="Transaction-level HOTMA routing, readiness, exceptions, and reporting-path validation">
+      <div className="flex flex-wrap gap-2">
+        <Pill>{profile.pha_hotma_cohort ?? "PHA cohort not configured"}</Pill>
+        <Pill>{profile.hud_50058_reporting_path ?? "Reporting path not configured"}</Pill>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <Stat label="Ready" value={ready} hint="Eligible for downstream rule evaluation and submission review" />
+        <Stat label="Needs review" value={review} hint="Pre-implementation, not applicable, or awaiting HUD guidance" />
+        <Stat label="Blocked" value={blocked} hint="Missing or conflicting controls prevent routing" />
+      </div>
+      <Panel className="mt-4" title="Transaction routing" description="Each row is routed using program, transaction type, effective date, PHA cohort, reporting path, and validated controls.">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+              <tr><th className="pb-3">Family</th><th className="pb-3">Program</th><th className="pb-3">Action</th><th className="pb-3">Effective</th><th className="pb-3">Status</th><th className="pb-3">Reason</th></tr>
+            </thead>
+            <tbody>
+              {query.isLoading ? <tr className="border-t border-border"><td colSpan={6} className="py-8 text-center text-muted-foreground">Loading transaction queue…</td></tr> : null}
+              {!query.isLoading && routed.length === 0 ? <tr className="border-t border-border"><td colSpan={6} className="py-8 text-center text-muted-foreground">No HUD-50058 transactions have been loaded yet.</td></tr> : null}
+              {routed.map(({ row, result }) => (
+                <tr key={row.id} className="border-t border-border align-top">
+                  <td className="py-3 pr-3 font-medium">{row.family_reference}</td>
+                  <td className="py-3 pr-3">{row.program_code.replaceAll("_", " ").toUpperCase()}</td>
+                  <td className="py-3 pr-3">{row.transaction_type.replaceAll("_", " ")}</td>
+                  <td className="py-3 pr-3 font-mono text-xs">{row.effective_date}</td>
+                  <td className="py-3 pr-3"><Pill tone={statusTone(result.status)}>{result.status.replaceAll("_", " ")}</Pill></td>
+                  <td className="py-3 text-xs text-muted-foreground">{result.reason ?? "Routing controls satisfied."}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </AppShell>
+  );
+}
+
 export function PhaModulePage({ kind }: { kind: PhaModuleKind }) {
   const { profile } = useWorkspaceProfile();
+  if (kind === "50058") return <Pha50058Queue />;
   const content = CONTENT[kind];
   const show103 = profile.derived_overlays.includes("hotma_103");
   return (
