@@ -60,7 +60,9 @@
     "test:mfh-hotma-operations": "node --test scripts/test-mfh-hotma-owner-system-engine.mjs",
     "test:verified-federal-sources": "node --test scripts/test-fy2026-verified-federal-source-manifest.mjs",
     "test:billing": "bun test ./scripts/test-license-selection.ts",
-    "test:state-source-first-wave": "node --test scripts/test-first-wave-state-pack-source-intake.mjs"
+    "test:state-source-first-wave": "node --test scripts/test-first-wave-state-pack-source-intake.mjs",
+    "test:assurance": "node --test scripts/test-compliance-assurance-control-plane.mjs",
+    "test:assurance-schema": "node --test scripts/test-compliance-assurance-schema.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",

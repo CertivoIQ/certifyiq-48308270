@@ -86,6 +86,8 @@ jobs:
           bun run test:pha-hotma
           bun run test:billing
           bun run test:layered
+          bun run test:assurance
+          bun run test:assurance-schema
           bun run test:tenant
           bun run test:recert
           bun run test:limits
