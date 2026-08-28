@@ -50,6 +50,7 @@ jobs:
           node --test scripts/test-pha-source-library.mjs
           node --test scripts/test-pha-agency-settings.mjs
           node --test scripts/test-pha-user-invitations.mjs
+          node --test scripts/test-crm-staff-invitations.mjs
           bun run test:compliance
           bun run test:slice
           bun run test:orchestrator
