@@ -36,8 +36,9 @@ const PHA_NAV = [
   { to: "/pha-50058", label: "HUD-50058 Queue", icon: ClipboardList, key: "family_read" },
   { to: "/pha-inspections", label: "Inspections / NSPIRE", icon: ClipboardCheck, key: "inspections" },
   { to: "/pha-hotma", label: "HOTMA Readiness", icon: ShieldCheck, key: "compliance" },
+  { to: "/pha-policies", label: "Policies & Notice Controls", icon: Scale, key: "compliance" },
   { to: "/findings", label: "Findings", icon: AlertTriangle, key: "findings" },
-  { to: "/rules", label: "Policies & Source Rules", icon: Scale, key: "compliance" },
+  { to: "/rules", label: "Federal & Source Rules", icon: Scale, key: "compliance" },
   { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal, key: "admin" },
   { to: "/launchpad", label: "Agency Setup", icon: Rocket, key: "admin" },
   { to: "/pha-users", label: "Users & Permissions", icon: Shield, key: "admin" },
@@ -70,15 +71,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
       <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">{isPha ? "PHA workspace" : "Multifamily workspace"}</p>
       {isPha && phaRole ? <p className="mb-2 px-3 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40">{phaRole.replaceAll("_", " ")}</p> : null}
       {items.map(({ to, label, icon: Icon }) => (
-        <Link
-          key={to}
-          to={to}
-          onClick={onNavigate}
-          activeOptions={{ exact: to === "/dashboard" }}
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]" }}
-          inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent/55" }}
-          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors"
-        >
+        <Link key={to} to={to} onClick={onNavigate} activeOptions={{ exact: to === "/dashboard" }} activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]" }} inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent/55" }} className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors">
           <Icon className="size-4 shrink-0" strokeWidth={1.9} />{label}
         </Link>
       ))}
