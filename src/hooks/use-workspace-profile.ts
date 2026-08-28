@@ -33,6 +33,8 @@ export function useWorkspaceProfile() {
     queryKey: ["workspace-profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      // Generated Supabase types lag this new migration until the next schema type refresh.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const { data, error } = await client
         .from("customer_workspace_profiles")
@@ -46,6 +48,8 @@ export function useWorkspaceProfile() {
 
   useEffect(() => {
     if (!user) return;
+    // Generated Supabase types lag this new migration until the next schema type refresh.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
     const channel = client
       .channel(`workspace-profile-${user.id}-${crypto.randomUUID()}`)
