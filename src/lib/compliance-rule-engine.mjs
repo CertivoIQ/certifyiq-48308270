@@ -1,4 +1,8 @@
 import { federalProgramPackGate } from "./federal-program-rule-pack-registry.mjs";
+import {
+  HOTMA_APPLICABILITY_RULE_ID,
+  classifyHotmaApplicability,
+} from "./hotma-applicability-gate.mjs";
 
 /**
  * Deterministic compliance rule engine.
@@ -15,7 +19,7 @@ import { federalProgramPackGate } from "./federal-program-rule-pack-registry.mjs
  *    guessed PASS or FAIL.
  */
 
-export const ENGINE_BUILD = "rule-engine-2026.08.4";
+export const ENGINE_BUILD = "rule-engine-2026.08.5";
 export const MINIMUM_CONFIDENCE = 0.85;
 
 export const FINDING_STATUS = Object.freeze({
@@ -42,7 +46,7 @@ export const RULE_EVALUATION_STATUS = Object.freeze({
  */
 const CERTIFICATION_RULE_CATALOG = Object.freeze({
   id: "certification-rule-catalog",
-  version: "2026.08.4",
+  version: "2026.08.5",
   jurisdiction: "US",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -232,16 +236,9 @@ export const CERTIFICATION_PROGRAM = Object.freeze({
 });
 
 const CERTIFICATION_PROGRAM_VALUES = new Set(Object.values(CERTIFICATION_PROGRAM));
-const HOTMA_ASSET_CAP_PROGRAMS = new Set([
-  CERTIFICATION_PROGRAM.publicHousing,
-  CERTIFICATION_PROGRAM.hcvTenantBased,
-  CERTIFICATION_PROGRAM.hudPbv,
-  CERTIFICATION_PROGRAM.hudMfhProjectBased,
-]);
-
 export const FEDERAL_LIHTC_PACK = Object.freeze({
   id: "federal-lihtc",
-  version: "2026.08.4",
+  version: "2026.08.5",
   jurisdiction: "US",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -253,7 +250,7 @@ export const FEDERAL_LIHTC_PACK = Object.freeze({
 
 export const HOTMA_ASSET_CAP_OVERLAY_PACK = Object.freeze({
   id: "federal-hotma-asset-cap-overlay",
-  version: "2026.08.4",
+  version: "2026.08.5",
   jurisdiction: "US",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -262,7 +259,7 @@ export const HOTMA_ASSET_CAP_OVERLAY_PACK = Object.freeze({
 
 export const STATE_QAP_OVERLAY_PACK = Object.freeze({
   id: "state-qap-overlay",
-  version: "2026.08.4",
+  version: "2026.08.5",
   jurisdiction: "state",
   status: "validated",
   effectiveFrom: "2026-01-01",
@@ -293,12 +290,37 @@ function substantivePackGate(program) {
   return federalProgramPackGate(program);
 }
 
+function hotmaApplicabilityGateRule(applicability) {
+  return {
+    id: HOTMA_APPLICABILITY_RULE_ID,
+    version: "1.0.0",
+    jurisdiction: "federal",
+    severity: "critical",
+    requires: [],
+    citation: "24 CFR 5.601; documented property assistance authority",
+    description:
+      "HOTMA applicability could not be determined from the documented property program inventory.",
+    activationStatus: "blocked",
+    evaluate: () => ({
+      status: FINDING_STATUS.unableToDetermine,
+      explanation:
+        applicability.reason ??
+        "A complete, documented HOTMA program applicability determination is required.",
+    }),
+  };
+}
+
 /**
  * Build the only pack that the vertical slice may evaluate for this review.
- * HOTMA is an explicit overlay and is never inferred from LIHTC participation.
+ * HOTMA scope is determined from documented property assistance authority and
+ * is never inferred from LIHTC participation, state, county, or a caller flag.
  */
 export function buildCertificationRulePack(input = {}) {
   const programs = normalizeCertificationPrograms(input.programs);
+  const hotmaApplicability = classifyHotmaApplicability({
+    ...(input.hotmaApplicabilityInput ?? {}),
+    programs,
+  });
   const rules = [];
   if (programs.includes(CERTIFICATION_PROGRAM.lihtc)) {
     rules.push(...FEDERAL_LIHTC_PACK.rules);
@@ -307,16 +329,14 @@ export function buildCertificationRulePack(input = {}) {
     if (program !== CERTIFICATION_PROGRAM.lihtc) rules.push(substantivePackGate(program));
   }
 
-  if (input.hotmaApplicable === true) {
-    const hasApplicableHudProgram = programs.some((program) =>
-      HOTMA_ASSET_CAP_PROGRAMS.has(program),
-    );
-    if (!hasApplicableHudProgram) {
-      throw new RangeError(
-        "The HOTMA asset-cap overlay requires an applicable Public Housing or Section 8 program; LIHTC alone is not sufficient.",
-      );
-    }
+  if (
+    hotmaApplicability.applicability_status === "APPLICABLE" &&
+    hotmaApplicability.asset_cap_applicable === true
+  ) {
     rules.push(...HOTMA_ASSET_CAP_OVERLAY_PACK.rules);
+  }
+  if (hotmaApplicability.applicability_status === "UNABLE_TO_DETERMINE") {
+    rules.push(hotmaApplicabilityGateRule(hotmaApplicability));
   }
 
   if (String(input.jurisdiction ?? "US").toUpperCase() !== "US") {
@@ -324,17 +344,27 @@ export function buildCertificationRulePack(input = {}) {
   }
 
   const overlayIds = [
-    input.hotmaApplicable === true ? "hotma-asset-cap" : null,
+    hotmaApplicability.applicability_status === "APPLICABLE" &&
+    hotmaApplicability.asset_cap_applicable === true
+      ? "hotma-asset-cap"
+      : null,
+    hotmaApplicability.applicability_status === "UNABLE_TO_DETERMINE"
+      ? "hotma-applicability-gate"
+      : null,
     String(input.jurisdiction ?? "US").toUpperCase() !== "US" ? "state-qap" : null,
   ].filter(Boolean);
 
   return Object.freeze({
-    id: `program-applicable:${programs.join("+")}${overlayIds.length ? `+${overlayIds.join("+")}` : ""}`,
-    version: "2026.08.4",
+    id:
+      "program-applicable:" +
+      programs.join("+") +
+      (overlayIds.length ? "+" + overlayIds.join("+") : ""),
+    version: "2026.08.5",
     jurisdiction: "US",
     status: "validated",
     effectiveFrom: "2026-01-01",
     programs: Object.freeze(programs),
+    hotmaApplicability,
     rules: Object.freeze(rules),
   });
 }
@@ -462,7 +492,7 @@ export function evaluateCertification(input) {
     input.pack ??
     buildCertificationRulePack({
       programs: input.programs,
-      hotmaApplicable: input.hotmaApplicable,
+      hotmaApplicabilityInput: input.hotmaApplicabilityInput,
       jurisdiction,
     });
   const minimumConfidence = Number.isFinite(input.minimumConfidence)
@@ -591,6 +621,7 @@ export function evaluateCertification(input) {
     rulePackId: pack.id,
     rulePackVersion: pack.version,
     statePackApplied: statePackUsable,
+    hotmaApplicability: pack.hotmaApplicability ?? null,
     findings,
     counts: findings.reduce(
       (acc, finding) => {
