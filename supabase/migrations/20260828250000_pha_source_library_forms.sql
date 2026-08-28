@@ -18,9 +18,9 @@ create table if not exists public.pha_source_library (
   validated_at timestamptz,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
-  check ((source_scope='federal' and workspace_user_id is null) or (source_scope='agency' and workspace_user_id is not null)),
-  unique(source_scope,workspace_user_id,authority_key,coalesce(version_label,''))
+  check ((source_scope='federal' and workspace_user_id is null) or (source_scope='agency' and workspace_user_id is not null))
 );
+create unique index if not exists pha_source_library_version_uidx on public.pha_source_library(source_scope,coalesce(workspace_user_id,'00000000-0000-0000-0000-000000000000'::uuid),authority_key,coalesce(version_label,''));
 
 create table if not exists public.pha_controlled_templates (
   id uuid primary key default gen_random_uuid(),
@@ -42,17 +42,12 @@ create table if not exists public.pha_controlled_templates (
 
 alter table public.pha_source_library enable row level security;
 alter table public.pha_controlled_templates enable row level security;
-grant select on public.pha_source_library to authenticated;
-grant select,insert,update on public.pha_controlled_templates to authenticated;
+grant select,insert,update,delete on public.pha_source_library,public.pha_controlled_templates to authenticated;
 grant all on public.pha_source_library,public.pha_controlled_templates to service_role;
 
-create policy "PHA users read applicable source library" on public.pha_source_library for select to authenticated using (
-  source_scope='federal' or workspace_user_id=public.current_pha_workspace_user_id() or public.has_role(auth.uid(),'staff')
-);
-create policy "Staff manage federal source library" on public.pha_source_library for all to authenticated using (public.has_role(auth.uid(),'staff')) with check (public.has_role(auth.uid(),'staff'));
-create policy "PHA admins manage agency source library" on public.pha_source_library for all to authenticated using (
-  source_scope='agency' and public.pha_workspace_admin_access(workspace_user_id)
-) with check (source_scope='agency' and public.pha_workspace_admin_access(workspace_user_id));
+create policy "PHA users read applicable source library" on public.pha_source_library for select to authenticated using (source_scope='federal' or workspace_user_id=public.current_pha_workspace_user_id() or public.has_role(auth.uid(),'staff'));
+create policy "Staff manage federal source library" on public.pha_source_library for all to authenticated using (source_scope='federal' and public.has_role(auth.uid(),'staff')) with check (source_scope='federal' and public.has_role(auth.uid(),'staff'));
+create policy "PHA admins manage agency source library" on public.pha_source_library for all to authenticated using (source_scope='agency' and public.pha_workspace_admin_access(workspace_user_id)) with check (source_scope='agency' and public.pha_workspace_admin_access(workspace_user_id));
 create policy "PHA users read controlled templates" on public.pha_controlled_templates for select to authenticated using (public.pha_program_access(workspace_user_id,program_code,false));
 create policy "PHA admins manage controlled templates" on public.pha_controlled_templates for all to authenticated using (public.pha_workspace_admin_access(workspace_user_id)) with check (public.pha_workspace_admin_access(workspace_user_id));
 
@@ -70,6 +65,7 @@ begin
  select * into s from public.pha_source_library where id=new.source_library_id;
  if not found or s.status <> 'current' then raise exception 'Controlled template requires a current source-library record'; end if;
  if s.program_code is not null and s.program_code <> new.program_code then raise exception 'Template program does not match controlled source'; end if;
+ if s.source_scope='agency' and s.workspace_user_id <> new.workspace_user_id then raise exception 'Agency source belongs to a different PHA workspace'; end if;
  if new.policy_overlay_id is not null then
    select * into p from public.pha_notice_policy_overlays where id=new.policy_overlay_id and workspace_user_id=new.workspace_user_id and program_code=new.program_code and active=true and validated=true;
    if not found then raise exception 'Controlled template policy overlay must be active and validated'; end if;
