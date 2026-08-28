@@ -11,11 +11,23 @@ export type OrganizationType =
   | "housing_agency"
   | "other";
 
+export type PhaHotmaCohort =
+  | "NON_MTW_NON_FRS"
+  | "INITIAL_MTW"
+  | "MTW_EXPANSION"
+  | "FRS_EXCLUSIVE";
+
+export type Hud50058ReportingPath =
+  | "HUD_50058_2024"
+  | "HUD_50058_2020_ALTERNATIVE";
+
 export type WorkspaceProfile = {
   organization_type: OrganizationType;
   selected_programs: string[];
   pha_programs: string[];
   derived_overlays: string[];
+  pha_hotma_cohort: PhaHotmaCohort | null;
+  hud_50058_reporting_path: Hud50058ReportingPath | null;
 };
 
 const DEFAULT_PROFILE: WorkspaceProfile = {
@@ -23,6 +35,8 @@ const DEFAULT_PROFILE: WorkspaceProfile = {
   selected_programs: [],
   pha_programs: [],
   derived_overlays: [],
+  pha_hotma_cohort: null,
+  hud_50058_reporting_path: null,
 };
 
 export function useWorkspaceProfile() {
@@ -38,7 +52,7 @@ export function useWorkspaceProfile() {
       const client = supabase as any;
       const { data, error } = await client
         .from("customer_workspace_profiles")
-        .select("organization_type, selected_programs, pha_programs, derived_overlays")
+        .select("organization_type, selected_programs, pha_programs, derived_overlays, pha_hotma_cohort, hud_50058_reporting_path")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
