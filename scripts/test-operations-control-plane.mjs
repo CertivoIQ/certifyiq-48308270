@@ -138,6 +138,10 @@ test("governance work is centralized in the Tasks workspace", () => {
     new URL("../src/routes/_authenticated/tasks.tsx", import.meta.url),
     "utf8",
   );
+  const operationsMigration = readFileSync(
+    new URL("../supabase/migrations/20260824220000_operations_control_plane.sql", import.meta.url),
+    "utf8",
+  );
 
   assert.match(appShell, /to:"\/tasks",label:"Tasks"/);
   assert.doesNotMatch(appShell, /NspireActivationAlert/);
@@ -147,4 +151,17 @@ test("governance work is centralized in the Tasks workspace", () => {
   assert.match(tasksRoute, /operations_source_versions/);
   assert.match(tasksRoute, /operations_incidents/);
   assert.match(tasksRoute, /Completed history/);
+
+  const sourceTable = operationsMigration.match(
+    /create table if not exists public\.operations_source_versions \([\s\S]*?\n\);/,
+  )?.[0];
+  assert.ok(sourceTable, "operations_source_versions schema is present");
+  assert.doesNotMatch(sourceTable, /updated_at/);
+  assert.match(tasksRoute, /\.order\("retrieved_at", \{ ascending: false \}\)/);
+  assert.doesNotMatch(
+    tasksRoute,
+    /from\("operations_source_versions"\)[\s\S]{0,260}updated_at/,
+  );
+  assert.match(tasksRoute, /Task sources are unavailable/);
+  assert.match(tasksRoute, /query\.error \? "—"/);
 });
