@@ -27,7 +27,10 @@ export function OperationsApprovalActions({
       decide(approvalId, action, reason),
     onSuccess: async (_, variables) => {
       toast.success(`${actionType} ${variables.action === "approve" ? "approved" : "rejected"}`);
-      await queryClient.invalidateQueries({ queryKey: ["crm", "operations-control-center"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["crm", "operations-control-center"] }),
+        queryClient.invalidateQueries({ queryKey: ["governance-tasks"] }),
+      ]);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Approval action failed"),
   });

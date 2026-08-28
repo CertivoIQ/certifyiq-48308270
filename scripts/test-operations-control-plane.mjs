@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 
 import {
   RISK_TIERS,
@@ -125,4 +126,25 @@ test("platform recipients require authenticated user preference and no suppressi
     }),
     false,
   );
+});
+
+
+test("governance work is centralized in the Tasks workspace", () => {
+  const appShell = readFileSync(
+    new URL("../src/components/app-shell.tsx", import.meta.url),
+    "utf8",
+  );
+  const tasksRoute = readFileSync(
+    new URL("../src/routes/_authenticated/tasks.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(appShell, /to:"\/tasks",label:"Tasks"/);
+  assert.doesNotMatch(appShell, /NspireActivationAlert/);
+  assert.match(tasksRoute, /pha_nspire_standard_releases/);
+  assert.match(tasksRoute, /state_rule_pack_releases/);
+  assert.match(tasksRoute, /operations_approvals/);
+  assert.match(tasksRoute, /operations_source_versions/);
+  assert.match(tasksRoute, /operations_incidents/);
+  assert.match(tasksRoute, /Completed history/);
 });

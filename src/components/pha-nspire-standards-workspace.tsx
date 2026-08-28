@@ -147,7 +147,10 @@ export function PhaNspireStandardsWorkspace() {
           ? "The verified NSPIRE release is active."
           : `Integrity attestation ${result.attestations} of ${result.required_attestations} recorded.`,
       );
-      await queryClient.invalidateQueries({ queryKey: ["pha-nspire-standards-control"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["pha-nspire-standards-control"] }),
+        queryClient.invalidateQueries({ queryKey: ["governance-tasks"] }),
+      ]);
     },
     onError: (error) => toast.error(attestationErrorMessage(error)),
   });
