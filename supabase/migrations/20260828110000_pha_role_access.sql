@@ -12,23 +12,35 @@ create table if not exists public.pha_workspace_memberships (
   created_by uuid not null default auth.uid() references auth.users(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (workspace_user_id, member_user_id)
+  unique (workspace_user_id, member_user_id),
+  check (workspace_user_id <> member_user_id)
 );
+
+create unique index if not exists pha_workspace_memberships_one_active_workspace_uidx
+  on public.pha_workspace_memberships(member_user_id)
+  where active = true;
 
 alter table public.pha_workspace_memberships enable row level security;
 grant select, insert, update, delete on public.pha_workspace_memberships to authenticated;
 grant all on public.pha_workspace_memberships to service_role;
 
+create or replace function public.is_pha_workspace_owner(target_workspace_user_id uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select target_workspace_user_id = auth.uid()
+     and exists (
+       select 1 from public.customer_workspace_profiles p
+        where p.user_id = target_workspace_user_id
+          and p.organization_type = 'pha'
+     )
+$$;
+
 drop policy if exists "PHA owners manage memberships" on public.pha_workspace_memberships;
 create policy "PHA owners manage memberships" on public.pha_workspace_memberships
 for all to authenticated
-using (workspace_user_id = auth.uid())
+using (public.is_pha_workspace_owner(workspace_user_id))
 with check (
-  workspace_user_id = auth.uid()
-  and exists (
-    select 1 from public.customer_workspace_profiles p
-    where p.user_id = auth.uid() and p.organization_type = 'pha'
-  )
+  public.is_pha_workspace_owner(workspace_user_id)
+  and workspace_user_id <> member_user_id
 );
 
 drop policy if exists "PHA members read own membership" on public.pha_workspace_memberships;
@@ -41,14 +53,17 @@ for all to authenticated
 using (public.has_role(auth.uid(), 'staff'))
 with check (public.has_role(auth.uid(), 'staff'));
 
+create trigger pha_workspace_memberships_touch_updated_at
+before update on public.pha_workspace_memberships
+for each row execute function public.touch_updated_at();
+
 create or replace function public.current_pha_workspace_user_id()
 returns uuid language sql stable security definer set search_path = public as $$
   select coalesce(
     (select p.user_id from public.customer_workspace_profiles p
       where p.user_id = auth.uid() and p.organization_type = 'pha' limit 1),
     (select m.workspace_user_id from public.pha_workspace_memberships m
-      where m.member_user_id = auth.uid() and m.active = true
-      order by m.created_at asc limit 1),
+      where m.member_user_id = auth.uid() and m.active = true limit 1),
     auth.uid()
   )
 $$;
