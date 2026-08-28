@@ -55,6 +55,15 @@ type AttestationResult = {
   activated: boolean;
 };
 
+function attestationErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return "NSPIRE attestation failed";
+}
+
 export function PhaNspireStandardsWorkspace() {
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -140,8 +149,7 @@ export function PhaNspireStandardsWorkspace() {
       );
       await queryClient.invalidateQueries({ queryKey: ["pha-nspire-standards-control"] });
     },
-    onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "NSPIRE attestation failed"),
+    onError: (error) => toast.error(attestationErrorMessage(error)),
   });
 
   const attest = () => {
