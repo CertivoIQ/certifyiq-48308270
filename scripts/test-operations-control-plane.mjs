@@ -164,4 +164,11 @@ test("governance work is centralized in the Tasks workspace", () => {
   );
   assert.match(tasksRoute, /Task sources are unavailable/);
   assert.match(tasksRoute, /query\.error \? "—"/);
+  assert.match(tasksRoute, /isMissingRelationError/);
+  assert.match(tasksRoute, /source-unavailable:pha-nspire/);
+  assert.match(tasksRoute, /NSPIRE controls remain unavailable and are not represented as complete/);
+  assert.match(
+    tasksRoute,
+    /result\.error && !isMissingRelationError\(result\.error\)/,
+  );
 });
