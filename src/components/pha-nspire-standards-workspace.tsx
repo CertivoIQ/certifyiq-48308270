@@ -170,7 +170,7 @@ export function PhaNspireStandardsWorkspace() {
         <Stat
           label="HUD standard count"
           value={target?.expected_standard_count ?? "—"}
-          hint={countReady ? "Imported counts reconciled" : "Imported counts must match HUD manifest"}
+          hint={countReady ? "Imported counts reconciled" : "Imported count must match HUD manifest"}
         />
         <Stat
           label="Imported standards"
