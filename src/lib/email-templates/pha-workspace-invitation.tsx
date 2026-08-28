@@ -1,6 +1,6 @@
 import React from 'react'
 import { Preview } from '@react-email/components'
-import type { EmailTemplateData, TemplateEntry } from './registry'
+import type { TemplateEntry } from './registry'
 import { Body, Container, CtaButton, Head, Heading, Html, Brand, Section, Text, Hr, hr, small, container, heading, main, text } from './shared'
 
 interface Props {
