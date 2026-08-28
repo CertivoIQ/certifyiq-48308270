@@ -86,6 +86,7 @@ function blocked(reasonCode, reason, missingInputs = [], details = {}) {
     reason_code: reasonCode,
     reason,
     missing_inputs: [...new Set(missingInputs)].sort(),
+    asset_cap_applicable: false,
     state_or_county_used_for_applicability: false,
     agent_approval_required: true,
     human_approval_required: true,
