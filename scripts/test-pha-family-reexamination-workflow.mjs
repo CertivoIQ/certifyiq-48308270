@@ -6,6 +6,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 const migration = read("supabase/migrations/20260828050000_pha_family_reexamination_workflow.sql");
 const noticeMigration = read("supabase/migrations/20260828080000_pha_notice_issuance.sql");
 const verificationMigration = read("supabase/migrations/20260828090000_pha_derived_verification_eiv.sql");
+const legalNoticeMigration = read("supabase/migrations/20260828140000_pha_legal_notice_controls.sql");
 const workflow = read("src/components/pha-family-workflow.tsx");
 const route = read("src/routes/_authenticated/pha-families.tsx");
 const intake = read("src/components/pha-family-intake.tsx");
@@ -121,6 +122,42 @@ test("notice content snapshot is generated server-side from the validated determ
   assert.match(noticeMigration, /housing_assistance_payment/);
   assert.match(noticeMigration, /contract_rent_to_owner/);
   assert.match(noticeMigration, /PHA_ANNUAL_REEXAMINATION_DETERMINATION/);
+});
+
+test("controlled legal notice profiles separate federal authority from agency policy", () => {
+  assert.match(legalNoticeMigration, /pha_notice_requirement_profiles/);
+  assert.match(legalNoticeMigration, /pha_notice_policy_overlays/);
+  assert.match(legalNoticeMigration, /administrative_plan/);
+  assert.match(legalNoticeMigration, /acop/);
+  assert.match(legalNoticeMigration, /24 CFR 982\.554/);
+  assert.match(legalNoticeMigration, /24 CFR 982\.555/);
+  assert.match(legalNoticeMigration, /24 CFR 960\.208/);
+  assert.match(legalNoticeMigration, /24 CFR 966\.50-966\.57/);
+  assert.match(legalNoticeMigration, /24 CFR 882\.514\(f\)/);
+});
+
+test("legal notice issuance fails closed on missing outcome, authority, or local policy overlay", () => {
+  assert.match(legalNoticeMigration, /Determination outcome is required before legal notice issuance/);
+  assert.match(legalNoticeMigration, /No active controlled legal notice profile applies/);
+  assert.match(legalNoticeMigration, /Controlled legal notice authority is not current/);
+  assert.match(legalNoticeMigration, /Validated agency Administrative Plan, ACOP, or program policy overlay is required/);
+  assert.match(legalNoticeMigration, /legal_requirements_validated := false/);
+  assert.match(legalNoticeMigration, /source_status = 'current' and overlay_found/);
+});
+
+test("issued legal notice preserves federal and local rights authority snapshots", () => {
+  assert.match(legalNoticeMigration, /legal_notice_snapshot/);
+  assert.match(legalNoticeMigration, /authority_code/);
+  assert.match(legalNoticeMigration, /required_elements/);
+  assert.match(legalNoticeMigration, /rights/);
+  assert.match(legalNoticeMigration, /local_policy_version/);
+  assert.match(legalNoticeMigration, /language_access_requirements/);
+  assert.match(legalNoticeMigration, /accessibility_requirements/);
+  assert.match(legalNoticeMigration, /legal_requirements_validated = true/);
+});
+
+test("unresolved Mod Rehab participant notice authority is blocked rather than guessed", () => {
+  assert.match(legalNoticeMigration, /'mod_rehab','24 CFR 882\.514\(f\)'.*'pending_source'/s);
 });
 
 test("PHA notice center generates drafts and issues notices without manual notice completion bypass", () => {
