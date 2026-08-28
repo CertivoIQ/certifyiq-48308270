@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 const read=(path)=>readFileSync(new URL(`../${path}`,import.meta.url),"utf8");
 const migration=read("supabase/migrations/20260828190000_pha_nspire_deficiency_registry.sql");
+const activation=read("supabase/migrations/20260828310000_load_verified_nspire_registry.sql");
 
 test("NSPIRE deficiencies require a current controlled standard",()=>{
  assert.match(migration,/pha_nspire_deficiency_standards/);
@@ -23,4 +24,28 @@ test("deficiency source authority is snapshotted",()=>{
  assert.match(migration,/source_url/);
  assert.match(migration,/source_version/);
  assert.match(migration,/standard_id/);
+});
+
+
+test("verified HUD registry preserves HCV pass rows without an invented deadline",()=>{
+ assert.match(activation,/hcv_pass_fail='pass' and hcv_correction_hours is null/);
+ assert.match(activation,/hcv_pass_fail='fail'.*hcv_correction_hours is not null/s);
+ assert.match(activation,/expected_deficiency_count=407/);
+ assert.match(activation,/loaded_standard_count<>63 or loaded_deficiency_count<>407/);
+});
+
+test("activation requires checksum integrity and two distinct staff attestations",()=>{
+ assert.match(activation,/9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254/);
+ assert.match(activation,/unique\(release_id, verifier_id\)/);
+ assert.match(activation,/count\(distinct verifier_id\)/);
+ assert.match(activation,/attestation_count>=2/);
+ assert.match(activation,/activate_pha_nspire_standard_release/);
+});
+
+test("controlled registry is loaded pending and remains fail closed until attested",()=>{
+ assert.match(activation,/source_status='pending_source'/);
+ assert.match(activation,/active=false/);
+ assert.match(activation,/import_status='parsed'/);
+ assert.match(activation,/verified_by=null/);
+ assert.match(activation,/verified_at=null/);
 });
