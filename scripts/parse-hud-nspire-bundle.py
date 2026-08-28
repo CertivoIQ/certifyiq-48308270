@@ -80,10 +80,13 @@ for path in sorted(glob.glob(os.path.join(root,'*.pdf'))):
 standards=len(set(r[0] for r in rows))
 if source_entries!=408 or len(rows)!=407 or standards!=63:
     raise SystemExit(f'Unexpected HUD manifest: source_entries={source_entries}, actionable_rows={len(rows)}, standards={standards}')
-if sum(1 for r in rows if r[7]=='pass')!=32 or sum(1 for r in rows if r[7]=='fail')!=375:
-    raise SystemExit('Unexpected HCV pass/fail reconciliation')
-if sum(1 for r in rows if r[4]=='life_threatening')!=104 or sum(1 for r in rows if r[4]=='severe')!=68 or sum(1 for r in rows if r[4]=='moderate')!=203 or sum(1 for r in rows if r[4]=='low')!=32:
-    raise SystemExit('Unexpected severity reconciliation')
+counts={key:sum(1 for r in rows if r[4]==key) for key in ('life_threatening','severe','moderate','low')}
+hcv_counts={key:sum(1 for r in rows if r[7]==key) for key in ('pass','fail')}
+print(json.dumps({'severity_counts':counts,'hcv_counts':hcv_counts},indent=2))
+if hcv_counts!={'pass':32,'fail':375}:
+    raise SystemExit(f'Unexpected HCV pass/fail reconciliation: {hcv_counts}')
+if counts!={'life_threatening':104,'severe':68,'moderate':203,'low':32}:
+    raise SystemExit(f'Unexpected severity reconciliation: {counts}')
 json.dump(rows,open(out,'w'),ensure_ascii=True,separators=(',',':'))
 manifest={'source_entries':source_entries,'actionable_rows':len(rows),'distinct_standards':standards,'life_threatening':104,'severe':68,'moderate':203,'low':32,'hcv_pass':32,'hcv_fail':375,'excluded':excluded}
 json.dump(manifest,open(os.path.join(os.path.dirname(out),'nspire-parse-manifest.json'),'w'),indent=2)
