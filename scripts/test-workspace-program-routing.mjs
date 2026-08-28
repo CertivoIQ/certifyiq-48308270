@@ -1,14 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
+import { routePha50058Transaction } from "../src/lib/pha-50058-transaction-router.mjs";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
 const migration = read("supabase/migrations/20260828012000_workspace_profiles_and_program_applicability.sql");
 const hotmaCorrection = read("supabase/migrations/20260828022000_split_hotma_section_overlays.sql");
 const phaRoutingMigration = read("supabase/migrations/20260828030000_pha_hotma_cohort_profile.sql");
+const transactionMigration = read("supabase/migrations/20260828031000_pha_50058_transaction_queue.sql");
 const configurator = read("src/components/workspace-profile-configurator.tsx");
 const phaDashboard = read("src/components/pha-dashboard.tsx");
+const phaModulePage = read("src/components/pha-module-page.tsx");
 const dashboardRoute = read("src/routes/_authenticated/dashboard.tsx");
 const appShell = read("src/components/app-shell.tsx");
 
@@ -52,6 +55,48 @@ test("PHA command center routes implementation timing through the deterministic 
   assert.match(phaDashboard, /PHA_HOTMA_DEADLINE_PENDING_HUD_GUIDANCE/);
   assert.match(phaDashboard, /transaction_effective_date: "2027-01-01"/);
   assert.doesNotMatch(phaDashboard, /January 1, 2027 is treated as the full-compliance target/);
+});
+
+test("PHA HUD-50058 transaction queue is tenant isolated and routed deterministically", () => {
+  assert.match(transactionMigration, /pha_50058_transactions/);
+  assert.match(transactionMigration, /using \(user_id = auth\.uid\(\)\)/);
+  assert.match(phaModulePage, /routePha50058Transaction/);
+  assert.match(phaModulePage, /awaiting HUD guidance/i);
+});
+
+const validatedTransaction = {
+  program: "hcv",
+  transaction_type: "annual_reexamination",
+  pha_hotma_cohort: "NON_MTW_NON_FRS",
+  hud_50058_reporting_path: "HUD_50058_2024",
+  program_applicability_validated: true,
+  controlled_source_release_approved: true,
+  current_rule_version_validated: true,
+  full_hotma_policy_set_validated: true,
+  reporting_path_validated: true,
+  software_compatibility_validated: true,
+};
+
+test("non-MTW transaction before full implementation is classified pre-implementation", () => {
+  const result = routePha50058Transaction({ ...validatedTransaction, effective_date: "2026-12-01" });
+  assert.equal(result.status, "PRE_IMPLEMENTATION");
+});
+
+test("non-MTW transaction on the full-compliance date is ready when controls are validated", () => {
+  const result = routePha50058Transaction({ ...validatedTransaction, effective_date: "2027-01-01" });
+  assert.equal(result.status, "READY");
+});
+
+test("MTW transaction does not inherit the non-MTW January 2027 enforcement date", () => {
+  const result = routePha50058Transaction({ ...validatedTransaction, pha_hotma_cohort: "INITIAL_MTW", effective_date: "2027-01-01" });
+  assert.equal(result.status, "AWAITING_HUD_GUIDANCE");
+  assert.equal(result.reason_code, "PHA_HOTMA_DEADLINE_PENDING_HUD_GUIDANCE");
+});
+
+test("transaction routing blocks when required operational controls are unresolved", () => {
+  const result = routePha50058Transaction({ ...validatedTransaction, full_hotma_policy_set_validated: false, effective_date: "2027-01-01" });
+  assert.equal(result.status, "BLOCKED");
+  assert.ok(result.missing_inputs?.includes("full_hotma_policy_set_validated"));
 });
 
 test("program applicability supports property, building, and unit scope with tenant isolation", () => {
