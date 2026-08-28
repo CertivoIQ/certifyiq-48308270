@@ -1,0 +1,19 @@
+{
+  "source_entries": 408,
+  "actionable_rows": 407,
+  "distinct_standards": 63,
+  "life_threatening": 104,
+  "severe": 68,
+  "moderate": 203,
+  "low": 32,
+  "hcv_pass": 32,
+  "hcv_fail": 375,
+  "excluded": [
+    {
+      "standard": "HANDRAIL",
+      "deficiency": 4,
+      "area": "unit",
+      "reason": "HUD health/safety N/A"
+    }
+  ]
+}

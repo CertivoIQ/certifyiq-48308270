@@ -1,0 +1,63 @@
+name: NSPIRE Source Retrieval
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  retrieve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/nspire-source-retrieval
+      - name: Retrieve official HUD NSPIRE bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p nspire-source
+          url='https://www.hud.gov/sites/dfiles/PIH/documents/NSPIRE-Standards-ALL-STANDARDS.zip'
+          curl --fail --location --retry 5 --retry-all-errors --user-agent 'Mozilla/5.0 CertivoIQ controlled-source retrieval' "$url" -o nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip
+          file nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip
+          sha256sum nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip | tee nspire-source/sha256.txt
+          stat -c '%s' nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip | tee nspire-source/byte-size.txt
+          unzip -l nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip | tee nspire-source/zip-list.txt
+          mkdir -p nspire-source/extracted
+          unzip -q nspire-source/NSPIRE-Standards-ALL-STANDARDS.zip -d nspire-source/extracted
+          find nspire-source/extracted/NSPIRE-Standards-ALL-STANDARDS -type f -printf '%P\n' | sort | tee nspire-source/file-manifest.txt
+          find nspire-source/extracted/NSPIRE-Standards-ALL-STANDARDS -type f -iname '*.pdf' | wc -l | tee nspire-source/pdf-count.txt
+      - name: Parse controlled HUD deficiency registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python scripts/parse-hud-nspire-bundle.py nspire-source/extracted/NSPIRE-Standards-ALL-STANDARDS nspire-source/nspire-deficiency-registry.json
+          test "$(cat nspire-source/pdf-count.txt | tr -d '[:space:]')" = "63"
+          test "$(cut -d' ' -f1 nspire-source/sha256.txt)" = "9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254"
+      - name: Preserve machine-readable controlled dataset on branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/controlled-sources/nspire
+          cp nspire-source/nspire-deficiency-registry.json data/controlled-sources/nspire/hud-nspire-deficiency-registry.json
+          cp nspire-source/nspire-parse-manifest.json data/controlled-sources/nspire/hud-nspire-parse-manifest.json
+          cp nspire-source/sha256.txt data/controlled-sources/nspire/hud-nspire-bundle-sha256.txt
+          cp nspire-source/file-manifest.txt data/controlled-sources/nspire/hud-nspire-file-manifest.txt
+          git config user.name 'certivoiq-source-bot'
+          git config user.email 'source-bot@users.noreply.github.com'
+          git add data/controlled-sources/nspire
+          if ! git diff --cached --quiet; then
+            git commit -m 'Capture verified HUD NSPIRE controlled dataset'
+            git push origin HEAD:ops/nspire-source-retrieval
+          fi
+      - name: Upload controlled source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hud-nspire-official-bundle
+          path: nspire-source/
+          if-no-files-found: error
+          retention-days: 7
