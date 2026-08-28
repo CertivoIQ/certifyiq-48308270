@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "@/lib/stripe.server";
 import { normalizeLicenseSelection, type LicenseSelection } from "@/lib/license-selection";
+import { isLiveBillingVerified } from "@/lib/billing-config.server";
 
 const PRODUCT_CODE = "certivoiq_enterprise";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -97,6 +98,10 @@ async function issueEnterpriseInvoice(
   data: EnterpriseInvoiceInput,
 ): Promise<EnterpriseInvoiceResult> {
   const netDays = data.netDays ?? 30;
+
+  if (data.environment === "live" && !isLiveBillingVerified()) {
+    return { error: "Live billing is not verified for release." };
+  }
 
   try {
     const selection = licenseSelection(data.pricingClass, data.stateCodes);
