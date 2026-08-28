@@ -109,12 +109,13 @@ export const listCrmStaffAccess = createServerFn({ method: "POST" })
       : { data: [], error: null };
     if (profileError) throw profileError;
 
-    const profileById = new Map(
+    const profileById = new Map<string, { id: string; email: string | null; full_name: string | null }>(
       (profiles ?? []).map((profile: { id: string; email: string | null; full_name: string | null }) => [
         profile.id,
         profile,
       ]),
     );
+
 
     return {
       requesterLevel,
