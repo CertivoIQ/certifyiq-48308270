@@ -23,7 +23,9 @@ test("founder setup is separate from trial and requires verification before clai
   assert.match(route, /This one-time flow creates the permanent CertivoIQ founder account/i);
   assert.match(route, /does not start a trial or require billing/i);
   assert.match(route, /emailRedirectTo: `\$\{window\.location\.origin\}\/founder-setup`/i);
-  assert.match(route, /claim_certivoiq_founder_admin/i);\n  assert.match(route, /supabase\\.rpc\\.bind\\(supabase\\)/i);\n  assert.doesNotMatch(route, /const rpc = supabase\\.rpc as unknown as FounderRpc/i);
+  assert.match(route, /claim_certivoiq_founder_admin/i);
+  assert.match(route, /supabase\.rpc\.bind\(supabase\)/i);
+  assert.doesNotMatch(route, /const rpc = supabase\.rpc as unknown as FounderRpc/i);
   assert.doesNotMatch(route, /\/trial/);
   assert.match(route, /noindex, nofollow/i);
 });
