@@ -27,8 +27,10 @@ test("new staff access is controlled by an exact pending invitation, not the ema
   assert.match(handler, /status = 'pending'/i);
   assert.match(handler, /expires_at > now\(\)/i);
   assert.match(handler, /insert into public\.user_roles/i);
-  assert.match(migration, /after update of email_confirmed_at on auth\.users/i);
-  assert.match(migration, /accept_crm_staff_invitation_on_confirmation/i);
+  assert.match(migration, /create or replace function public\.claim_crm_staff_invitation\(\)/i);
+  assert.match(migration, /select \* into v_user from auth\.users where id = auth\.uid\(\)/i);
+  assert.match(migration, /grant execute on function public\.claim_crm_staff_invitation\(\) to authenticated, service_role/i);
+  assert.doesNotMatch(migration, /create trigger accept_crm_staff_invitation_after_confirmation/i);
   assert.doesNotMatch(handler, /if v_email_domain = 'certivoiq\.com' then[\s\S]*insert into public\.user_roles/i);
   assert.match(session, /administrator- or manager-issued invitation/i);
 });
