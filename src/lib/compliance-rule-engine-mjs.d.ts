@@ -1,4 +1,8 @@
 declare module "@/lib/compliance-rule-engine.mjs" {
+  import type {
+    HotmaApplicabilityInput,
+    HotmaApplicabilityResult,
+  } from "@/lib/hotma-applicability-gate.mjs";
   export const ENGINE_BUILD: string;
   export const LAYERED_ENGINE_BUILD: string;
   export const LAYERED_RULE_ID: "FED-LAYERED-PROGRAM-RESTRICTIONS-001";
@@ -78,6 +82,7 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     jurisdiction: string;
     status: string;
     effectiveFrom: string;
+    hotmaApplicability?: HotmaApplicabilityResult | null;
     rules: readonly {
       id: string;
       version: string;
@@ -103,6 +108,7 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     rulePackId: string;
     rulePackVersion: string;
     statePackApplied: boolean;
+    hotmaApplicability: HotmaApplicabilityResult | null;
     findings: EngineFinding[];
     counts: { pass: number; fail: number; unableToDetermine: number };
   }
@@ -169,6 +175,7 @@ declare module "@/lib/compliance-rule-engine.mjs" {
   export function buildCertificationRulePack(input?: {
     programs?: CertificationProgram | readonly CertificationProgram[];
     hotmaApplicable?: boolean;
+    hotmaApplicabilityInput?: HotmaApplicabilityInput;
     jurisdiction?: string;
   }): RulePack;
 
@@ -205,6 +212,7 @@ declare module "@/lib/compliance-rule-engine.mjs" {
     pack?: RulePack;
     programs?: readonly CertificationProgram[];
     hotmaApplicable?: boolean;
+    hotmaApplicabilityInput?: HotmaApplicabilityInput;
     statePack?: StatePackInput | null;
     jurisdiction?: string;
     minimumConfidence?: number;
