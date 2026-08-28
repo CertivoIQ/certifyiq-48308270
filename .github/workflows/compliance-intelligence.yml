@@ -48,6 +48,7 @@ jobs:
           node --test scripts/test-pha-program-specific-operations.mjs
           node --test scripts/test-pha-mod-rehab-operations.mjs
           node --test scripts/test-pha-source-library.mjs
+          node --test scripts/test-pha-agency-settings.mjs
           node --test scripts/test-pha-user-invitations.mjs
           bun run test:compliance
           bun run test:slice
