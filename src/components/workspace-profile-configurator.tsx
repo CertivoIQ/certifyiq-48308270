@@ -46,7 +46,7 @@ export function WorkspaceProfileConfigurator({ userId }: { userId: string }) {
     setOrganizationType(profile.organization_type);
     setPrograms(profile.selected_programs);
     setPhaPrograms(profile.pha_programs);
-  }, [profile.organization_type, profile.selected_programs.join("|"), profile.pha_programs.join("|")]);
+  }, [profile.organization_type, profile.selected_programs, profile.pha_programs]);
 
   function toggle(value: string, current: string[], setter: (next: string[]) => void) {
     setter(current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
@@ -55,6 +55,8 @@ export function WorkspaceProfileConfigurator({ userId }: { userId: string }) {
 
   async function save() {
     setSaving(true); setError(null); setSaved(false);
+    // Generated Supabase types lag this new migration until the next schema type refresh.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = supabase as any;
     const { error: saveError } = await client.from("customer_workspace_profiles").upsert({
       user_id: userId,
