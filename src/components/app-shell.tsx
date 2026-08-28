@@ -49,6 +49,7 @@ const PHA_NAV = [
   { to: "/rules", label: "Federal & Source Rules", icon: Scale, key: "compliance" },
   { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal, key: "admin" },
   { to: "/launchpad", label: "Agency Setup", icon: Rocket, key: "admin" },
+  { to: "/pha-agency-settings", label: "Agency Settings & Integrations", icon: SlidersHorizontal, key: "admin" },
   { to: "/pha-users", label: "Users & Permissions", icon: Shield, key: "admin" },
   { to: "/billing", label: "Billing", icon: CreditCard, key: "owner_admin" },
   { to: "/contact-support", label: "Support", icon: HelpCircle, key: "support" },
