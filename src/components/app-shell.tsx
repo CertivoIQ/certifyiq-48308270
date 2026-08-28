@@ -55,10 +55,15 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="flex flex-col gap-0.5">
       <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">{isPha ? "PHA workspace" : "Multifamily workspace"}</p>
       {items.map(({ to, label, icon: Icon }) => (
-        <Link key={to} to={to as any} onClick={onNavigate} activeOptions={{ exact: to === "/dashboard" }}
+        <Link
+          key={to}
+          to={to}
+          onClick={onNavigate}
+          activeOptions={{ exact: to === "/dashboard" }}
           activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]" }}
           inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent/55" }}
-          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors">
+          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors"
+        >
           <Icon className="size-4 shrink-0" strokeWidth={1.9} />{label}
         </Link>
       ))}
