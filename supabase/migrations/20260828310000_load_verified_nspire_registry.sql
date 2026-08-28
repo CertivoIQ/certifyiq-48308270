@@ -60,6 +60,33 @@ begin
          updated_at=now()
    where id=rid;
 
+  if exists(
+    select 1
+    from public.pha_nspire_deficiency_standards s
+    where s.release_id=rid
+      and (
+        s.active
+        or s.source_status<>'pending_source'
+        or exists(
+          select 1 from public.pha_inspection_deficiencies d
+          where d.nspire_standard_id=s.id
+        )
+      )
+  ) then
+    raise exception 'Existing NSPIRE rows are active, non-provisional, or referenced by inspection evidence';
+  end if;
+
+  -- Replace only the inactive, unreferenced provisional seed rows from the earlier
+  -- fail-closed registry migration. Verified inspection evidence is never removed.
+  delete from public.pha_nspire_deficiency_standards s
+  where s.release_id=rid
+    and s.active=false
+    and s.source_status='pending_source'
+    and not exists(
+      select 1 from public.pha_inspection_deficiencies d
+      where d.nspire_standard_id=s.id
+    );
+
   insert into public.pha_nspire_deficiency_standards(
     release_id,standard_name,inspectable_area,deficiency_reference,deficiency_description,
     severity,correction_hours,hcv_correction_hours,hcv_pass_fail,source_url,
