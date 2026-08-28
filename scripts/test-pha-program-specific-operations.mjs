@@ -7,9 +7,12 @@ const pbvWaiting=read("supabase/migrations/20260828280000_pha_pbv_waiting_lists.
 const phOverIncome=read("supabase/migrations/20260828290000_pha_public_housing_over_income_notices.sql");
 const phOverIncomeDeadlineFix=read("supabase/migrations/20260828291000_fix_pha_over_income_termination_deadline.sql");
 const phAdmissions=read("supabase/migrations/20260828300000_pha_public_housing_admission_controls.sql");
+const hcvLeaseUp=read("supabase/migrations/20260828310000_pha_hcv_lease_up.sql");
 const workspace=read("src/components/pha-program-operations.tsx");
 const phAdmissionsWorkspace=read("src/components/pha-public-housing-admissions-workspace.tsx");
 const phAdmissionsRoute=read("src/routes/_authenticated/pha-public-housing-admissions.tsx");
+const hcvLeaseUpWorkspace=read("src/components/pha-hcv-lease-up-workspace.tsx");
+const hcvLeaseUpRoute=read("src/routes/_authenticated/pha-hcv-lease-up.tsx");
 const pbvWaitingWorkspace=read("src/components/pha-pbv-waiting-list-workspace.tsx");
 const pbvWaitingRoute=read("src/routes/_authenticated/pha-pbv-waiting-lists.tsx");
 const shell=read("src/components/app-shell.tsx");
@@ -115,4 +118,26 @@ test("Public Housing admissions workspace is routed and role-scoped",()=>{
   assert.match(phAdmissionsWorkspace,/40% annual targeting requirement/);
   assert.match(shell,/\/pha-public-housing-admissions/);
   assert.match(shell,/ph_operations/);
+});
+
+test("HCV voucher and RFTA controls enforce voucher term and tenancy approval requirements",()=>{
+  assert.match(hcvLeaseUp,/pha_hcv_vouchers/);
+  assert.match(hcvLeaseUp,/pha_hcv_rfta_requests/);
+  assert.match(hcvLeaseUp,/RFTA must be submitted during the voucher term/);
+  assert.match(hcvLeaseUp,/lease copy and HUD tenancy addendum/);
+  assert.match(hcvLeaseUp,/rent reasonableness/);
+  assert.match(hcvLeaseUp,/40 percent of monthly adjusted income/);
+  assert.match(hcvLeaseUp,/controlled initial inspection clearance/);
+});
+
+test("HCV HAP execution blocks payment until a timely or HUD-approved contract exists",()=>{
+  assert.match(hcvLeaseUp,/pha_hcv_hap_contracts/);
+  assert.match(hcvLeaseUp,/execution_deadline:=new\.lease_start\+60/);
+  assert.match(hcvLeaseUp,/hud_extension_requested_at/);
+  assert.match(hcvLeaseUp,/hud_extension_approved/);
+  assert.match(hcvLeaseUp,/payment_authorized:=true/);
+  assert.match(hcvLeaseUpWorkspace,/HCV Lease-Up/);
+  assert.match(hcvLeaseUpWorkspace,/60 calendar days/);
+  assert.match(hcvLeaseUpRoute,/PhaHcvLeaseUpWorkspace/);
+  assert.match(shell,/\/pha-hcv-lease-up/);
 });
