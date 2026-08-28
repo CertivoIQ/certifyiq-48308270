@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Building2, FileCheck2, AlertTriangle, Scale, Sparkles, Rocket,
   Menu, X, Briefcase, Shield, CreditCard, HelpCircle, Users, ClipboardList,
   ClipboardCheck, ShieldCheck, SlidersHorizontal, UserPlus, MailCheck, ArrowLeftRight,
-  Library, LogOut,
+  Library, LogOut, FileSearch,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IQText } from "@/components/iq-text";
