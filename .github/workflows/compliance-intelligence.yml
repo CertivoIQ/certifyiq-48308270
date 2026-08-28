@@ -135,6 +135,7 @@ jobs:
           node --test scripts/test-delivery-receipt.mjs
           node --test scripts/test-support-triage.mjs
           node --test scripts/test-customer-facing-language.mjs
+          node --test scripts/test-release-integrity.mjs
           node --test scripts/test-organization-email.mjs
           node --test scripts/test-first-sale-monitor.mjs
           node --test scripts/test-escalation-only-autonomy.mjs
