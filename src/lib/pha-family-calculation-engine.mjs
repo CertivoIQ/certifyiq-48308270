@@ -12,13 +12,13 @@ function wholeDollar(value) {
 
 function blocked(reason_code, reason, missing_inputs = [], partial = {}) {
   return {
+    ...partial,
     status: "BLOCKED",
     reason_code,
     reason,
     missing_inputs,
     human_review_required: true,
     engine_build: PHA_FAMILY_CALCULATION_ENGINE_BUILD,
-    ...partial,
   };
 }
 
