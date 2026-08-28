@@ -112,6 +112,7 @@ jobs:
           node --test scripts/test-nationwide-state-source-discovery.mjs
           node --test scripts/test-nationwide-state-source-evidence-pipeline.mjs
           node --test scripts/test-state-pack-agent-verification-queue.mjs
+          node --test scripts/test-state-rule-validation-workspace.mjs
           bun run test:state-source-wv
           bun run test:state-source-wy
           bun run test:state-source-wi

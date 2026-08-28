@@ -10,6 +10,7 @@ import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useIsStaff, useSession } from "@/hooks/use-session";
+import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
 import { useWorkspaceProfile, type PhaAgencyRole } from "@/hooks/use-workspace-profile";
 import { PublicShell } from "@/components/public-shell";
 import { useT } from "@/lib/i18n/provider";
@@ -74,6 +75,7 @@ function phaNavAllowed(role: PhaAgencyRole | null, key: (typeof PHA_NAV)[number]
 function Wordmark(){return <Link to="/dashboard" className="flex items-center gap-2.5"><img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" /></Link>;}
 function NavLinks({onNavigate}:{onNavigate?:()=>void}){
   const{isStaff}=useIsStaff();
+  const{canManageStaff}=useCrmStaffAuthority();
   const{profile,phaRole}=useWorkspaceProfile();
   const isPha=profile.organization_type==="pha";
   const workspaceItems=isPha?PHA_NAV.filter(item=>phaNavAllowed(phaRole,item.key)):MULTIFAMILY_NAV;
@@ -81,6 +83,7 @@ function NavLinks({onNavigate}:{onNavigate?:()=>void}){
     ? [
         workspaceItems[0],
         {to:"/tasks",label:"Tasks",icon:ClipboardCheck} as const,
+        ...(canManageStaff ? [{to:"/state-rule-validation",label:"State Rule Validation",icon:FileSearch} as const] : []),
         ...workspaceItems.slice(1),
         {to:"/crm",label:"CRM",icon:Briefcase} as const,
       ]
