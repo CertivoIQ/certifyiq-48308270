@@ -64,12 +64,13 @@ export function Panel({
   className,
   bodyClassName,
 }: {
-  title?: ReactNode;
-  description?: ReactNode;
-  actions?: ReactNode;
-  children: ReactNode;
-  className?: string;
-  bodyClassName?: string;
+  title?: ReactNode | undefined;
+  description?: ReactNode | undefined;
+  actions?: ReactNode | undefined;
+  children?: ReactNode | undefined;
+  className?: string | undefined;
+  bodyClassName?: string | undefined;
+
 }) {
   return (
     <section className={cn("rounded-lg border border-border bg-card shadow-ledger", className)}>
