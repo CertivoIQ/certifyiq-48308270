@@ -116,6 +116,17 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
 
+type TaskSourceError = { code?: string; message?: string } | null;
+
+function isMissingRelationError(error: TaskSourceError) {
+  if (!error) return false;
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    /relation .* does not exist|table .* schema cache/i.test(error.message ?? "")
+  );
+}
+
 async function loadTasks(): Promise<TaskItem[]> {
   // Generated Supabase types lag the controlled governance tables until schema types refresh.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,19 +163,21 @@ async function loadTasks(): Promise<TaskItem[]> {
         .limit(100),
     ]);
 
-  const results = [
-    releaseResult,
-    attestationResult,
-    packResult,
-    approvalResult,
-    incidentResult,
-    sourceResult,
-  ];
-  const failed = results.find((result) => result.error);
+  const nspireResults = [releaseResult, attestationResult];
+  const requiredResults = [packResult, approvalResult, incidentResult, sourceResult];
+  const failed = [...requiredResults, ...nspireResults].find(
+    (result) => result.error && !isMissingRelationError(result.error),
+  );
   if (failed?.error) throw failed.error;
 
-  const releases = (releaseResult.data ?? []) as NspireRelease[];
-  const attestations = (attestationResult.data ?? []) as NspireAttestation[];
+  // Some deployments do not include the optional PHA module yet. Keep that gap visible
+  // as an active exception instead of failing the entire governance queue or treating
+  // the unavailable source as complete.
+  const nspireSourceUnavailable = nspireResults.some((result) =>
+    isMissingRelationError(result.error),
+  );
+  const releases = (nspireSourceUnavailable ? [] : releaseResult.data ?? []) as NspireRelease[];
+  const attestations = (nspireSourceUnavailable ? [] : attestationResult.data ?? []) as NspireAttestation[];
   const packs = (packResult.data ?? []) as RulePackRelease[];
   const approvals = (approvalResult.data ?? []) as Approval[];
   const incidents = (incidentResult.data ?? []) as Incident[];
@@ -177,6 +190,22 @@ async function loadTasks(): Promise<TaskItem[]> {
   }
 
   const tasks: TaskItem[] = [];
+
+  if (nspireSourceUnavailable) {
+    tasks.push({
+      id: "source-unavailable:pha-nspire",
+      category: "incident",
+      title: "Restore NSPIRE task source",
+      description:
+        "The optional PHA schema is not deployed. NSPIRE controls remain unavailable and are not represented as complete.",
+      status: "source_unavailable",
+      active: true,
+      occurredAt: new Date().toISOString(),
+      destination: "/pha-nspire-standards",
+      actionLabel: "Open NSPIRE controls",
+      attention: true,
+    });
+  }
 
   for (const release of releases) {
     const count = attestationCounts.get(release.id) ?? 0;
