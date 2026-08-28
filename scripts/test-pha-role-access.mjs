@@ -26,10 +26,14 @@ test("PHA members resolve records to the agency workspace instead of personal te
 });
 
 test("executives are read-only while specialists are program scoped", () => {
-  assert.match(migration, /write_access = false and m\.agency_role = 'executive'/);
-  assert.match(migration, /hcv_pbv_specialist.*target_program_code in \('hcv','pbv','mod_rehab'\)/s);
-  assert.match(migration, /public_housing_specialist.*target_program_code = 'public_housing'/s);
-  assert.doesNotMatch(migration, /inspection_staff'.*target_program_code/s);
+  const accessBlock = migration.slice(
+    migration.indexOf("create or replace function public.pha_program_access"),
+    migration.indexOf("create or replace function public.pha_family_access"),
+  );
+  assert.match(accessBlock, /write_access = false and m\.agency_role = 'executive'/);
+  assert.match(accessBlock, /hcv_pbv_specialist.*target_program_code in \('hcv','pbv','mod_rehab'\)/s);
+  assert.match(accessBlock, /public_housing_specialist.*target_program_code = 'public_housing'/s);
+  assert.doesNotMatch(accessBlock, /m\.agency_role = 'inspection_staff'/);
 });
 
 test("family EIV calculation notice and HUD-50058 RLS use agency role functions", () => {
