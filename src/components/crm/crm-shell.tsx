@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { IQText } from "@/components/iq-text";
 import { NewsTicker } from "@/components/crm/news-ticker";
+import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
 import type { NewsItem } from "@/lib/crm";
 
 function Denied() {
@@ -38,6 +39,7 @@ export function CrmShell({
   loading?: boolean;
   newsItems?: NewsItem[];
 }) {
+  const { canManageStaff } = useCrmStaffAuthority();
   const federalNews = useQuery({
     queryKey: ["crm", "official-federal-housing-news"],
     enabled: isStaff === true,
@@ -112,6 +114,11 @@ export function CrmShell({
             <Button size="sm" variant="ghost" asChild>
               <Link to="/crm-pha-controls">PHA Controls</Link>
             </Button>
+            {canManageStaff ? (
+              <Button size="sm" variant="ghost" asChild>
+                <Link to="/crm-staff">Staff Access</Link>
+              </Button>
+            ) : null}
             <Button size="sm" variant="outline" asChild>
               <Link to="/welcome">
                 <ArrowLeft className="size-4" /> Product
