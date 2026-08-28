@@ -34,6 +34,7 @@ const PHA_NAV = [
   { to: "/pha-families", label: "Families & Reexaminations", icon: Users, key: "family_read" },
   { to: "/pha-portability", label: "HCV Portability", icon: ArrowLeftRight, key: "hcv_operations" },
   { to: "/pha-pbv-operations", label: "PBV Operations", icon: Building2, key: "pbv_operations" },
+  { to: "/pha-pbv-waiting-lists", label: "PBV Waiting Lists", icon: ClipboardList, key: "pbv_operations" },
   { to: "/pha-public-housing-operations", label: "Public Housing Operations", icon: Building2, key: "ph_operations" },
   { to: "/pha-mod-rehab-operations", label: "Mod Rehab Operations", icon: Building2, key: "mod_rehab_operations" },
   { to: "/pha-waiting-lists", label: "Waiting Lists", icon: ClipboardList, key: "waiting_lists" },
