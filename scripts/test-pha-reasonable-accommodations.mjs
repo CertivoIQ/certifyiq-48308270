@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 const read=(path)=>readFileSync(new URL(`../${path}`,import.meta.url),"utf8");
 const migration=read("supabase/migrations/20260828180000_pha_reasonable_accommodations.sql");
+const nspireRegistry=read("supabase/migrations/20260828190000_pha_nspire_deficiency_registry.sql");
 const workspace=read("src/components/pha-reasonable-accommodation-workspace.tsx");
 const route=read("src/routes/_authenticated/pha-accommodations.tsx");
 const shell=read("src/components/app-shell.tsx");
@@ -35,4 +36,14 @@ test("PHA accommodation workspace is live and role navigated",()=>{
  assert.match(workspace,/Record request/);
  assert.match(shell,/\/pha-accommodations/);
  assert.match(shell,/Reasonable Accommodations/);
+});
+
+test("NSPIRE deficiencies require current controlled deficiency authority",()=>{
+ assert.match(nspireRegistry,/pha_nspire_deficiency_standards/);
+ assert.match(nspireRegistry,/Current controlled NSPIRE deficiency standard is required/);
+ assert.match(nspireRegistry,/source_status='current'/);
+ assert.match(nspireRegistry,/hcv_correction_hours/);
+ assert.match(nspireRegistry,/hcv_pass_fail/);
+ assert.match(nspireRegistry,/correction_timeframe_hours/);
+ assert.match(nspireRegistry,/source_snapshot/);
 });
