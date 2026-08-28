@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260828050000_pha_family_reexamination_workflow.sql");
 const noticeMigration = read("supabase/migrations/20260828080000_pha_notice_issuance.sql");
+const verificationMigration = read("supabase/migrations/20260828090000_pha_derived_verification_eiv.sql");
 const workflow = read("src/components/pha-family-workflow.tsx");
 const route = read("src/routes/_authenticated/pha-families.tsx");
 const intake = read("src/components/pha-family-intake.tsx");
@@ -66,6 +67,33 @@ test("PHA evidence intake captures verification and conflict state against the s
   assert.match(intake, /conflict_detected: evidenceDraft\.conflict_detected/);
   assert.match(intake, /Evidence conflicts/);
   assert.match(intake, /pha_family_evidence/);
+});
+
+test("verification and EIV completion are derived from a controlled requirement matrix", () => {
+  assert.match(verificationMigration, /pha_verification_requirement_matrix/);
+  assert.match(verificationMigration, /general_verification/);
+  assert.match(verificationMigration, /eiv_review/);
+  assert.match(verificationMigration, /verified_non_eiv_evidence/);
+  assert.match(verificationMigration, /verified_eiv_or_controlled_exception/);
+  assert.match(verificationMigration, /new\.verification_complete :=/);
+  assert.match(verificationMigration, /new\.eiv_review_complete :=/);
+  assert.match(verificationMigration, /Fail closed when the controlled matrix is absent or inactive/);
+});
+
+test("EIV exception requires controlled source readiness and cannot itself bypass evidence conflicts", () => {
+  assert.match(verificationMigration, /pha_family_eiv_exceptions/);
+  assert.match(verificationMigration, /controlled_source_release_approved/);
+  assert.match(verificationMigration, /current_rule_version_validated/);
+  assert.match(verificationMigration, /not action_row\.source_status_conflict/);
+  assert.match(verificationMigration, /and not has_conflict/);
+  assert.doesNotMatch(verificationMigration, /using \(true\)/);
+});
+
+test("evidence and EIV exception changes automatically recompute compatibility completion fields", () => {
+  assert.match(verificationMigration, /refresh_pha_family_verification_state/);
+  assert.match(verificationMigration, /after insert or update or delete on public\.pha_family_evidence/);
+  assert.match(verificationMigration, /after insert or update or delete on public\.pha_family_eiv_exceptions/);
+  assert.match(verificationMigration, /pha_family_action_derived_verification_before_write/);
 });
 
 test("notice issuance requires validated calculation and current controlled sources", () => {
