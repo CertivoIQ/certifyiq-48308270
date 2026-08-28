@@ -5,6 +5,7 @@ import { calculatePhaFamilyDetermination } from "../src/lib/pha-family-calculati
 
 const baseMigration = readFileSync(new URL("../supabase/migrations/20260828060000_pha_substantive_calculations.sql", import.meta.url), "utf8");
 const modRehabMigration = readFileSync(new URL("../supabase/migrations/20260828070000_mod_rehab_rent_module.sql", import.meta.url), "utf8");
+const workbench = readFileSync(new URL("../src/components/pha-family-workflow.tsx", import.meta.url), "utf8");
 
 const base = {
   annual_income: 36000,
@@ -246,4 +247,17 @@ test("Mod Rehab migration adds controlled source, rent, and mixed-family fields 
   assert.match(modRehabMigration, /PHA_CALC_MOD_REHAB_MIXED_FAMILY_INPUT_REQUIRED/);
   assert.doesNotMatch(modRehabMigration, /payment_standard.*mod_rehab|mod_rehab.*payment_standard/i);
   assert.doesNotMatch(modRehabMigration, /using \(true\)/);
+});
+
+test("Families page exposes program-specific determination inputs and writes through the calculation trigger", () => {
+  assert.match(workbench, /Determination workbench/);
+  assert.match(workbench, /Payment standard/);
+  assert.match(workbench, /Controlled rent to owner/);
+  assert.match(workbench, /Rent choice/);
+  assert.match(workbench, /Controlled Mod Rehab HAP\/rent source validated/);
+  assert.match(workbench, /Current base rent/);
+  assert.match(workbench, /Rehab debt service/);
+  assert.match(workbench, /Mixed-family proration applies/);
+  assert.match(workbench, /upsert\(payload, \{ onConflict: "family_action_id" \}\)/);
+  assert.doesNotMatch(workbench, /calculation_complete\s*:/);
 });
