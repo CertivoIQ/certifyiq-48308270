@@ -10,34 +10,34 @@ export const REQUIRED_STATE_DOCUMENT_FAMILIES = Object.freeze([
 
 const FAMILY_PATTERNS = Object.freeze({
   COMPLIANCE_RULE_CHANGES: [
-    /compliance\s+(?:rule|procedure)/i,
-    /rule\s+changes?/i,
+    /compliance[-_\s]+(?:rule|procedure)/i,
+    /rule[-_\s]+changes?/i,
     /monitoring\s+rule/i,
     /chapter\s+\d+[\w.-]*\s+compliance/i,
   ],
   COMPLIANCE_GUIDEBOOK: [
-    /compliance\s+(?:manual|guidebook|handbook|guide)/i,
+    /compliance[-_\s]+(?:manual|guidebook|handbook|guide)/i,
     /property\s+management\s+manual/i,
     /asset\s+management\s+manual/i,
     /monitoring\s+manual/i,
   ],
   INCOME_LIMITS: [
-    /income\s+limits?/i,
+    /income(?:[-_\s]+and[-_\s]+rent)?[-_\s]+limits?/i,
     /maximum\s+income/i,
     /mtsp[^a-z0-9]+income/i,
   ],
   RENT_LIMITS: [
-    /rent\s+limits?/i,
+    /(?:income[-_\s]+and[-_\s]+)?rent[-_\s]+limits?/i,
     /maximum\s+rents?/i,
     /gross\s+rent/i,
   ],
   UTILITY_ALLOWANCE: [
-    /utility\s+allowance/i,
+    /utility[-_\s]+allowance/i,
     /utility\s+schedule/i,
     /energy\s+consumption\s+model/i,
   ],
   COMPLIANCE_FORMS: [
-    /compliance\s+forms?/i,
+    /compliance[-_\s]+forms?/i,
     /tenant\s+income\s+certification/i,
     /\btic[-_\s.]/i,
     /employment\s+verification/i,
@@ -46,9 +46,9 @@ const FAMILY_PATTERNS = Object.freeze({
     /owner(?:'s)?\s+certification/i,
   ],
   COMPLIANCE_TRAINING: [
-    /compliance\s+training/i,
-    /compliance\s+workshop/i,
-    /compliance\s+webinar/i,
+    /compliance[-_\s]+training/i,
+    /compliance[-_\s]+workshop/i,
+    /compliance[-_\s]+webinar/i,
     /training\s+(?:presentation|manual|materials?)/i,
   ],
 });
