@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useServerFn } from "@tanstack/react-start";
-import { generateRecoveryCodes, countRecoveryCodes, verifyAndDisableRecoveryCode } from "@/utils/mfa.functions";
+import {
+  clearUnverifiedMfaFactors,
+  generateRecoveryCodes,
+  countRecoveryCodes,
+  verifyAndDisableRecoveryCode,
+} from "@/utils/mfa.functions";
 import { Shield, ShieldCheck, ShieldAlert, Loader2, Download, Copy, Check, RotateCcw, Lock, KeyRound } from "lucide-react";
 import type { AuthMFAEnrollTOTPResponse } from "@supabase/supabase-js";
 
@@ -55,6 +60,7 @@ function SecurityPage() {
   const [disableMode, setDisableMode] = useState(false);
   const [recoveryCount, setRecoveryCount] = useState(0);
 
+  const clearStaleFactors = useServerFn(clearUnverifiedMfaFactors);
   const generateCodes = useServerFn(generateRecoveryCodes);
   const getRecoveryCount = useServerFn(countRecoveryCodes);
   const submitRecoveryCode = useServerFn(verifyAndDisableRecoveryCode);
@@ -80,12 +86,10 @@ function SecurityPage() {
     setEnrolling(true);
     try {
       // Supabase does not return a TOTP secret again after the enrollment page
-      // is left. Remove only stale, unverified factors so the user can restart
-      // safely without ever touching an active factor.
-      for (const factor of factors.filter((item) => item.status === "unverified")) {
-        const { error: cleanupError } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
-        if (cleanupError) throw cleanupError;
-      }
+      // is left, and its browser factor list can omit unverified factors. The
+      // authenticated server operation removes only this user's abandoned,
+      // unverified enrollments; verified factors are never touched.
+      await clearStaleFactors();
 
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
