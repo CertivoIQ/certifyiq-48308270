@@ -160,8 +160,8 @@ function CrmStaffAccessPage() {
 
           <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(340px,0.7fr)_minmax(0,1.3fr)]">
             <Panel
-              title="Invite a CertivoIQ employee"
-              description="Only verified @certivoiq.com addresses can receive internal CRM access."
+              title="Invite a CertivoIQ employee or beta tester"
+              description="Beta email policy: verified @certivoiq.com, Gmail, Outlook, Hotmail, and Live addresses may be invited. External domains will be removed before launch."
             >
               <form
                 className="space-y-3"
@@ -182,7 +182,7 @@ function CrmStaffAccessPage() {
                     className={inputClass}
                     value={invite.email}
                     onChange={(event) => setInvite((value) => ({ ...value, email: event.target.value }))}
-                    placeholder="name@certivoiq.com"
+                    placeholder="name@gmail.com or name@outlook.com"
                   />
                 </label>
                 <label className="block text-xs font-medium">

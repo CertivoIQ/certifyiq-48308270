@@ -38,7 +38,11 @@ test("new staff access is controlled by an exact pending invitation, not the ema
 test("Edge Function enforces manager and administrator authority", () => {
   assert.match(edge, /Only an active CertivoIQ administrator or manager/i);
   assert.match(edge, /requesterLevel === "manager" && level !== "employee"/i);
-  assert.match(edge, /CRM invitations require a @certivoiq\.com employee address/i);
+  assert.match(edge, /BETA EMAIL POLICY — revert this set to only "certivoiq\.com" before launch/i);
+  for (const domain of ["certivoiq.com", "gmail.com", "outlook.com", "hotmail.com", "live.com"]) {
+    assert.match(edge, new RegExp(`"${domain.replace(".", "\\.")}"`, "i"));
+  }
+  assert.match(edge, /allowedStaffEmailDomains\.has\(emailDomain\)/i);
   assert.match(edge, /auth\.admin\.inviteUserByEmail/i);
   assert.match(edge, /APP_ORIGIN \+ "\/reset-password"/i);
   assert.match(edge, /You cannot change your own CRM access/i);
@@ -59,6 +63,8 @@ test("CRM visibly exposes staff access only to managers and administrators", () 
   assert.match(route, /Administrator or manager access required/i);
   assert.match(route, /Employee accounts cannot invite, activate, or deactivate CRM users/i);
   assert.match(route, /Send CRM invitation/i);
+  assert.match(route, /Beta email policy/i);
+  assert.match(route, /External domains will be removed before launch/i);
   assert.match(route, /Manager — may invite employees/i);
   assert.match(route, /Administrator — full staff-access authority/i);
   for (const action of ["Resend", "Revoke", "Deactivate", "Reactivate"]) {
