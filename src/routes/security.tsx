@@ -22,7 +22,80 @@ export type SecurityFact = {
 };
 
 /** Populate only after technical and legal verification. */
-export const publishedSecurityFacts: SecurityFact[] = [];
+export const publishedSecurityFacts: SecurityFact[] = [
+  {
+    id: "data-collected-1",
+    statement:
+      "CertivoIQ receives account, organization, portfolio, certification, evidence, support, and billing-related information through disclosed product workflows.",
+    evidenceUrl: "/security-controls.json",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "encryption-1",
+    statement:
+      "Public production traffic is served over HTTPS with HTTP Strict Transport Security enabled.",
+    evidenceUrl: "/security-controls.json",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "isolation-1",
+    statement:
+      "Every public production table has Row Level Security enabled; all production Storage buckets are private and policy-controlled.",
+    evidenceUrl: "/security-controls.json",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "authentication-1",
+    statement:
+      "CertivoIQ supports authenticated sessions, TOTP enrollment, recovery codes, and server-authorized role checks. MFA is available but is not represented as universally enforced.",
+    evidenceUrl: "/security-controls.json",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "audit-logs-1",
+    statement:
+      "Compliance review, source verification, PHA, staff-access, operations, and retention workflows record attributable events and timestamps where implemented.",
+    evidenceUrl: "/security-controls.json",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "retention-1",
+    statement:
+      "Customer certification-import and correction-evidence objects are scheduled for deletion 14 days after paid access ends. The supervised worker records completion or failure and fails closed on deletion errors.",
+    evidenceUrl: "/security-controls.json",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "subprocessors-1",
+    statement:
+      "The application is hosted through Lovable; the primary production database, authentication, and storage services use Supabase in Canada Central. Billing workflows use Stripe where configured.",
+    evidenceUrl: "/security-controls.json",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "vulnerability-1",
+    statement:
+      "Suspected vulnerabilities can be reported through the CertivoIQ support channel identified in security.txt.",
+    evidenceUrl: "/.well-known/security.txt",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Engineering",
+  },
+  {
+    id: "documents-1",
+    statement:
+      "DPA and security-questionnaire requests are accepted through CertivoIQ support and require contract-specific review.",
+    evidenceUrl: "/contact-support",
+    verifiedAt: "2026-08-29",
+    owner: "CertivoIQ Operations",
+  },
+];
 
 type Section = { id: string; heading: string; intent: string };
 
