@@ -1,0 +1,36 @@
+name: Remaining State Source Evidence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - config/remaining-state-validation-sources.json
+      - scripts/capture-remaining-state-validation-sources.mjs
+      - scripts/test-remaining-state-validation-source-capture.mjs
+      - .github/workflows/remaining-state-source-evidence.yml
+permissions:
+  contents: read
+concurrency:
+  group: remaining-state-source-evidence-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate fail-closed capture controls
+        run: node --test scripts/test-remaining-state-validation-source-capture.mjs
+      - name: Capture exact response bytes for remaining validation links
+        run: node scripts/capture-remaining-state-validation-sources.mjs
+      - name: Validate captured manifest
+        run: node --test scripts/test-remaining-state-validation-source-capture.mjs
+      - name: Upload controlled-source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remaining-state-source-evidence
+          path: artifacts/remaining-state-source-evidence.json
+          if-no-files-found: error
+          retention-days: 30
