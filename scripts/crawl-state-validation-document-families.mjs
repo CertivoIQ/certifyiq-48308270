@@ -219,7 +219,10 @@ async function worker() {
       blocked_count: documents.length - captured.length,
       discovery_failures: discovery.discoveryFailures,
       documents,
-      coverage_gaps: coverageGaps(jurisdiction.state_code, captured),
+      coverage_gaps: coverageGaps(
+        jurisdiction.state_code,
+        captured.map((item) => ({ families: item.document_families })),
+      ),
     };
     console.log(JSON.stringify({
       stateCode: jurisdiction.state_code,
@@ -231,11 +234,40 @@ async function worker() {
 }
 
 await Promise.all(Array.from({ length: 5 }, () => worker()));
-const documents = results.flatMap((item) => item.documents);
+const states = [...results.reduce((byState, item) => {
+  const current = byState.get(item.state_code) ?? {
+    state_code: item.state_code,
+    agency: item.agency,
+    candidate_count: 0,
+    captured_count: 0,
+    blocked_count: 0,
+    discovery_failures: [],
+    documents: [],
+    coverage_gaps: [],
+  };
+  current.candidate_count += item.candidate_count;
+  current.captured_count += item.captured_count;
+  current.blocked_count += item.blocked_count;
+  current.discovery_failures.push(...item.discovery_failures);
+  current.documents.push(...item.documents);
+  byState.set(item.state_code, current);
+  return byState;
+}, new Map()).values()].map((item) => {
+  const captured = item.documents.filter((document) => document.capture_status === "captured_unvalidated");
+  return {
+    ...item,
+    coverage_gaps: coverageGaps(
+      item.state_code,
+      captured.map((document) => ({ families: document.document_families })),
+    ),
+  };
+}).sort((left, right) => left.state_code.localeCompare(right.state_code));
+
+const documents = states.flatMap((item) => item.documents);
 const manifest = {
-  schema_version: "2026-08-29.1",
+  schema_version: "2026-08-29.2",
   captured_at: new Date().toISOString(),
-  state_count: results.length,
+  state_count: states.length,
   required_document_families: [
     "COMPLIANCE_RULE_CHANGES",
     "COMPLIANCE_GUIDEBOOK",
@@ -248,10 +280,10 @@ const manifest = {
   document_count: documents.length,
   captured_count: documents.filter((item) => item.capture_status === "captured_unvalidated").length,
   blocked_count: documents.filter((item) => item.capture_status === "blocked").length,
-  coverage_gap_count: results.reduce((sum, item) => sum + item.coverage_gaps.length, 0),
+  coverage_gap_count: states.reduce((sum, item) => sum + item.coverage_gaps.length, 0),
   independent_validation_required: true,
   compliance_activation_allowed: false,
-  states: results,
+  states,
 };
 await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(outputPath, JSON.stringify(manifest, null, 2) + "\n");
