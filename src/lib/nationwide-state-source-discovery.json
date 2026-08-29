@@ -7,7 +7,7 @@
     "state_and_district_codes": 51,
     "territory_codes": 4,
     "jurisdiction_scopes": 56,
-    "source_candidates": 162
+    "source_candidates": 166
   },
   "jurisdictions": [
     {
@@ -341,6 +341,26 @@
         {
           "type": "INSURANCE_GUIDE",
           "url": "https://www.floridahousing.org/data-docs-reports/insurance-guide",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "NHTF_2026_INCOME_AND_RENT_LIMITS",
+          "url": "https://www.floridahousing.org/docs/default-source/developers-and-property-managers/compliance/limits/nhtf-program-florida-housing-2026-income-and-rent-limits-%28eff-6-1-2026%29.pdf?sfvrsn=c06d92ec_1",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "HOME_2026_INCOME_LIMITS",
+          "url": "https://www.floridahousing.org/docs/default-source/developers-and-property-managers/compliance/limits/income-limits/2026/home-program---2026-income-limits-%28eff-6-1-2026%29.pdf?sfvrsn=d3719ae2_1",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_TRAINING_2026_V26_2",
+          "url": "https://www.floridahousing.org/docs/default-source/developers-and-property-managers/compliance/compliance-training/florida_housing_compliance_training_workshop_presentation-%28for-note-taking%29-v-26-2.pdf?sfvrsn=6b39f07b_3",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS_ANNUAL_OWNER_CERTIFICATE",
+          "url": "https://www.floridahousing.org/docs/default-source/developers-and-property-managers/compliance/forms/compliance-guidebook/140_appendix_y_-_annual_owner_certificate_form_aoc-1_%281-2009%29_-_due_april_30.doc?sfvrsn=2",
           "status": "PENDING_EXACT_BYTES_AND_HASHES"
         }
       ],
