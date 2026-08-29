@@ -18,6 +18,7 @@ const inventoryPath = resolve(root, "src/lib/nationwide-state-source-discovery.j
 const outputPath = resolve(root, process.argv[2] ?? "artifacts/state-validation-document-families.json");
 const inventory = JSON.parse(await readFile(inventoryPath, "utf8"));
 const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
+const EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const execFileAsync = promisify(execFile);
 const STATES = new Set([
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY",
@@ -75,7 +76,8 @@ async function fetchFloridaWithPinnedTlsException(jurisdiction, url, timeoutMs) 
     if (!Number.isInteger(httpStatus) || httpStatus < 200 || httpStatus > 299) {
       throw new Error("http_status:" + statusText);
     }
-    const bytes = new Uint8Array(await readFile(output));
+    const file = await readFile(output);
+    const bytes = new Uint8Array(file.buffer, file.byteOffset, file.byteLength);
     if (!bytes.byteLength || bytes.byteLength > MAX_DOCUMENT_BYTES) {
       throw new Error("document_size_invalid");
     }
@@ -266,9 +268,16 @@ async function captureDocument(jurisdiction, candidate) {
     if (/text\/html|application\/xhtml\+xml/.test(response.contentType)) {
       throw new Error("candidate_resolved_to_html_not_document");
     }
+    if (!response.bytes.byteLength) throw new Error("empty_response");
+    const byteSize = response.bytes.byteLength;
+    const sourceSha256 = createHash("sha256").update(response.bytes).digest("hex");
+    if (sourceSha256 === EMPTY_SHA256) throw new Error("empty_document_hash");
+
+    // PDF.js may transfer and detach the supplied ArrayBuffer. Parse an isolated copy
+    // after preserving the exact source byte count and digest.
     const extractedText = response.contentType === "application/pdf"
-      ? await extractPdfText(response.bytes)
-      : Buffer.from(response.bytes).toString("utf8", 0, Math.min(response.bytes.byteLength, 200_000));
+      ? await extractPdfText(Uint8Array.from(response.bytes))
+      : Buffer.from(response.bytes).toString("utf8", 0, Math.min(byteSize, 200_000));
     const effective = extractDeclaredEffectiveDate(
       candidate.label + " " + candidate.url + " " + extractedText,
     );
@@ -287,8 +296,8 @@ async function captureDocument(jurisdiction, candidate) {
       discovery_url: candidate.discovery_url,
       official_domains: domainsFor(jurisdiction),
       content_type: response.contentType || null,
-      byte_size: response.bytes.byteLength,
-      source_sha256: createHash("sha256").update(response.bytes).digest("hex"),
+      byte_size: byteSize,
+      source_sha256: sourceSha256,
       retrieved_at: new Date().toISOString(),
       etag: response.etag,
       last_modified: response.lastModified,
