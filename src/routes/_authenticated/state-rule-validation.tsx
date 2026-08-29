@@ -13,7 +13,25 @@ import { Panel, Pill, Stat, type Tone } from "@/components/ui-kit";
 import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
 import { supabase } from "@/integrations/supabase/client";
 
+const VALIDATION_STATUSES = new Set([
+  "active",
+  "queued_for_agent_verification",
+  "captured_unvalidated",
+  "verified",
+  "blocked",
+  "rejected",
+  "all",
+]);
+
 export const Route = createFileRoute("/_authenticated/state-rule-validation")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const requestedState = typeof search.state === "string" ? search.state.toUpperCase() : "";
+    const requestedStatus = typeof search.status === "string" ? search.status : "";
+    return {
+      state: /^(?:[A-Z]{2}|ALL)$/.test(requestedState) ? requestedState : undefined,
+      status: VALIDATION_STATUSES.has(requestedStatus) ? requestedStatus : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "State & Federal Rule Validation — CertivoIQ" },
@@ -278,9 +296,10 @@ function SourceReviewCard({
 
 function StateRuleValidationWorkspace() {
   const { canManageStaff, isCrmAdmin, loading } = useCrmStaffAuthority();
+  const routeSearch = Route.useSearch();
   const queryClient = useQueryClient();
-  const [stateCode, setStateCode] = useState("ALL");
-  const [status, setStatus] = useState("active");
+  const [stateCode, setStateCode] = useState(() => routeSearch.state ?? "ALL");
+  const [status, setStatus] = useState(() => routeSearch.status ?? "active");
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [showNewSource, setShowNewSource] = useState(false);

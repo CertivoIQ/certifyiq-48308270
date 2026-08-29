@@ -41,6 +41,7 @@ type TaskItem = {
   actionLabel: string;
   approvalId?: string;
   approvalType?: string;
+  validationStateCode?: string;
   attention?: boolean;
 };
 
@@ -285,6 +286,7 @@ async function loadTasks(): Promise<TaskItem[]> {
       occurredAt: candidate.updated_at,
       destination: active ? "/state-rule-validation" : "/rules",
       actionLabel: active ? "Validate state pack" : "View rules",
+      validationStateCode: active ? candidate.state_code : undefined,
       attention: candidate.blocked_source_count > 0,
     });
   }
@@ -306,6 +308,7 @@ async function loadTasks(): Promise<TaskItem[]> {
       occurredAt: candidate.updated_at ?? candidate.retrieved_at ?? new Date().toISOString(),
       destination: "/state-rule-validation",
       actionLabel: "Verify source",
+      validationStateCode: candidate.state_code,
       attention:
         ["blocked", "failed", "conflicting"].includes(candidate.candidate_status) ||
         ["rejected", "conflicting"].includes(candidate.agent_verification_status ?? ""),
@@ -324,6 +327,7 @@ async function loadTasks(): Promise<TaskItem[]> {
       occurredAt: pack.approved_at ?? pack.updated_at ?? pack.created_at,
       destination: active ? "/state-rule-validation" : "/rules",
       actionLabel: active ? "Review rule pack" : "View rules",
+      validationStateCode: active ? pack.state_code : undefined,
       attention: pack.status === "suspended",
     });
   }
@@ -428,7 +432,16 @@ function TaskList({ tasks }: { tasks: TaskItem[] }) {
               ) : null}
             </div>
             <Button size="sm" variant="outline" asChild className="shrink-0">
-              <Link to={task.destination}>{task.actionLabel}</Link>
+              {task.validationStateCode ? (
+                <Link
+                  to="/state-rule-validation"
+                  search={{ state: task.validationStateCode, status: "active" }}
+                >
+                  {task.actionLabel}
+                </Link>
+              ) : (
+                <Link to={task.destination}>{task.actionLabel}</Link>
+              )}
             </Button>
           </div>
         </li>
