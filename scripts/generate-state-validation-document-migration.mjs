@@ -31,7 +31,14 @@ const documents = manifest.states
     tls_exception_scope: document.tls_exception_scope,
   }));
 
+const stateCoverage = manifest.states.map((state) => ({
+  state_code: state.state_code,
+  captured_count: state.captured_count,
+  blocked_count: state.blocked_count,
+  required_document_family_gaps: state.coverage_gaps.map((gap) => gap.document_family),
+}));
 const payload = JSON.stringify(documents).replaceAll("$state_docs$", "$state_docs_escape$");
+const coveragePayload = JSON.stringify(stateCoverage).replaceAll("$state_coverage$", "$state_coverage_escape$");
 const sql = `-- Generated from artifacts/state-validation-document-families.json.
 -- Each row is an exact official document capture with an independent SHA-256.
 -- Captures remain fail-closed pending human validation and cannot activate rules.
@@ -175,6 +182,35 @@ from (
 where pack.state_code = counts.state_code
   and pack.inventory_generated_at = counts.inventory_generated_at;
 
+with coverage as (
+  select *
+  from jsonb_to_recordset(\$state_coverage\${coveragePayload}\$state_coverage\$::jsonb) as state(
+    state_code text,
+    captured_count integer,
+    blocked_count integer,
+    required_document_family_gaps jsonb
+  )
+)
+update public.state_rule_pack_candidates pack
+set
+  status = case
+    when jsonb_array_length(coverage.required_document_family_gaps) > 0 then 'blocked'
+    else pack.status
+  end,
+  compliance_activation_allowed = false,
+  candidate_manifest = coalesce(pack.candidate_manifest, '{}'::jsonb)
+    || jsonb_build_object(
+      'required_document_family_capture', true,
+      'required_document_family_manifest', 'artifacts/state-validation-document-families.json',
+      'required_document_family_captured_count', coverage.captured_count,
+      'required_document_family_blocked_count', coverage.blocked_count,
+      'required_document_family_gaps', coverage.required_document_family_gaps,
+      'required_document_family_complete', jsonb_array_length(coverage.required_document_family_gaps) = 0
+    ),
+  updated_at = now()
+from coverage
+where pack.state_code = coverage.state_code;
+
 do \$\$
 begin
   if exists (
@@ -200,5 +236,7 @@ console.log(JSON.stringify({
   manifestPath,
   outputPath,
   capturedDocumentCount: documents.length,
-  stateCount: new Set(documents.map((document) => document.state_code)).size,
+  stateCount: manifest.state_count,
+  statesWithCapturedDocuments: new Set(documents.map((document) => document.state_code)).size,
+  coverageGapCount: manifest.coverage_gap_count,
 }));
