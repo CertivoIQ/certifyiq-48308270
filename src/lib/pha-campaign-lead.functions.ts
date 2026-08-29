@@ -81,7 +81,7 @@ export const capturePhaCampaignLead = createServerFn({ method: "POST" })
       account_type: "enterprise" as const,
       units: data.units ?? 0,
       stage: "new" as const,
-      plan: "Annual Platform License",
+      plan: "PHA Annual License — $150,000/year flat",
       owner: "Unassigned",
       source,
       corporate_email: data.email,
