@@ -72,3 +72,11 @@ test("effective date extraction recognizes versioned schedule labels", () => {
     "2026-01-15",
   );
 });
+
+
+test("effective date extraction recognizes abbreviated effective labels in versioned URLs", () => {
+  assert.equal(
+    extractDeclaredEffectiveDate("NHTF 2026 Income and Rent Limits (Eff. 6/1/2026)").effective_date,
+    "2026-06-01",
+  );
+});
