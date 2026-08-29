@@ -54,7 +54,9 @@ export function ProductionDashboard() {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <Stat label="Audit readiness" value="—" hint="Calculated after portfolio data is loaded" />
+        <Link to="/audit-readiness" className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Stat label="Audit readiness" value="Open" hint="Prepare evidence, findings, and corrections" tone="flag" />
+        </Link>
         <Stat label="Certifications awaiting review" value={0} hint="Certification work queue" />
         <Stat label="Open compliance findings" value={0} hint="Unresolved findings requiring action" />
         <Stat label="Recertifications due" value={0} hint="Next 30 days" />
