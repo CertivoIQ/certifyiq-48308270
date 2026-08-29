@@ -38,7 +38,7 @@ function isAllowed(jurisdiction, url) {
   }
 }
 
-async function fetchOfficial(jurisdiction, url, { attempts = 2 } = {}) {
+async function fetchOfficial(jurisdiction, url, { attempts = 2, timeoutMs = 25_000 } = {}) {
   let lastError;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
@@ -50,7 +50,7 @@ async function fetchOfficial(jurisdiction, url, { attempts = 2 } = {}) {
           "accept-language": "en-US,en;q=0.9",
           "cache-control": "no-cache",
         },
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!response.ok) throw new Error("http_status:" + response.status);
       if (!isAllowed(jurisdiction, response.url)) {
@@ -87,12 +87,12 @@ async function discoverSitemapSources(jurisdiction) {
     .map((domain) => "https://" + domain + "/sitemap.xml");
   const visitedSitemaps = new Set();
 
-  while (sitemapQueue.length && visitedSitemaps.size < 8) {
+  while (sitemapQueue.length && visitedSitemaps.size < 4) {
     const sitemapUrl = sitemapQueue.shift();
     if (!sitemapUrl || visitedSitemaps.has(sitemapUrl) || !isAllowed(jurisdiction, sitemapUrl)) continue;
     visitedSitemaps.add(sitemapUrl);
     try {
-      const response = await fetchOfficial(jurisdiction, sitemapUrl, { attempts: 1 });
+      const response = await fetchOfficial(jurisdiction, sitemapUrl, { attempts: 1, timeoutMs: 8_000 });
       const xml = Buffer.from(response.bytes).toString("utf8");
       for (const location of sitemapLocations(xml)) {
         if (!isAllowed(jurisdiction, location)) continue;
@@ -115,7 +115,7 @@ async function discoverSitemapSources(jurisdiction) {
       const rightYear = Number(right.match(/\b(20\d{2})\b/)?.[1] ?? 0);
       return rightYear - leftYear || left.localeCompare(right);
     })
-    .slice(0, 30)
+    .slice(0, 15)
     .map((url) => ({
       type: "SITEMAP_VALIDATION_DOCUMENT_DISCOVERY",
       url,
@@ -149,7 +149,13 @@ async function discoverJurisdiction(jurisdiction) {
   ).values()];
   for (const source of discoverySources) {
     try {
-      const response = await fetchOfficial(jurisdiction, source.url);
+      const response = await fetchOfficial(
+        jurisdiction,
+        source.url,
+        source.type === "SITEMAP_VALIDATION_DOCUMENT_DISCOVERY"
+          ? { attempts: 1, timeoutMs: 10_000 }
+          : undefined,
+      );
       const isHtml = /text\/html|application\/xhtml\+xml/.test(response.contentType);
       if (isHtml) {
         const html = Buffer.from(response.bytes).toString("utf8");
