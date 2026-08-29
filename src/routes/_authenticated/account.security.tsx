@@ -58,7 +58,7 @@ function SecurityPage() {
   const [disableCode, setDisableCode] = useState("");
   const [disableRecoveryCode, setDisableRecoveryCode] = useState("");
   const [disableMode, setDisableMode] = useState(false);
-  const [recoveryCount, setRecoveryCount] = useState(0);
+  const [recoveryCount, setRecoveryCount] = useState(0);\n  const [setupError, setSetupError] = useState<string | null>(null);
 
   const clearStaleFactors = useServerFn(clearUnverifiedMfaFactors);
   const generateCodes = useServerFn(generateRecoveryCodes);
@@ -85,17 +85,6 @@ function SecurityPage() {
   async function startEnrollment() {
     setEnrolling(true);
     try {
-      // Supabase does not return a TOTP secret again after the enrollment page
-      // is left, and its browser factor list can omit unverified factors. The
-      // authenticated server operation removes only this user's abandoned,
-      // unverified enrollments; verified factors are never touched.
-      try {
-        await clearStaleFactors();
-      } catch {
-        // Cleanup is best-effort. A temporary server-side cleanup failure must
-        // not prevent the browser from attempting a fresh enrollment.
-      }
-
       let enrollment = await supabase.auth.mfa.enroll({
         factorType: "totp",
         friendlyName: "CertivoIQ Authenticator",
@@ -283,10 +272,17 @@ function SecurityPage() {
                 </div>
               </div>
             ) : (
-              <Button onClick={startEnrollment} disabled={enrolling} className="w-full sm:w-auto">
-                {enrolling && <Loader2 className="mr-2 size-4 animate-spin" />}
-                Set up authenticator
-              </Button>
+              <div className="space-y-3">
+                <Button onClick={startEnrollment} disabled={enrolling} className="w-full sm:w-auto">
+                  {enrolling && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  Set up authenticator
+                </Button>
+                {setupError && (
+                  <p role="alert" className="text-[13px] text-destructive">
+                    Setup could not start: {setupError}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>
