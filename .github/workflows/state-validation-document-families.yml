@@ -18,6 +18,8 @@ concurrency:
 jobs:
   capture:
     runs-on: ubuntu-latest
+    env:
+      PDFJS_DIST_PATH: /tmp/state-capture/node_modules/pdfjs-dist/legacy/build/pdf.mjs
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +27,7 @@ jobs:
         with:
           node-version: 22
       - name: Install pinned PDF parser without changing the lockfile
-        run: npm install --no-save --package-lock=false --ignore-scripts pdfjs-dist@6.2.108
+        run: npm install --prefix /tmp/state-capture --no-save --package-lock=false --ignore-scripts pdfjs-dist@6.2.108
       - name: Validate document-family controls
         run: node --test scripts/test-state-validation-document-families.mjs scripts/test-nationwide-state-source-evidence-pipeline.mjs
       - name: Crawl and hash current official documents
