@@ -50,7 +50,7 @@ The first public reference should use **authorized compliance agent**. Shorter i
 Do not claim or imply guaranteed avoidance of penalties, fines, tax-credit loss, HUD findings, regulatory action, audit findings, enforcement, or violations. Do not present CertivoIQ as legal advice, complete jurisdictional approval, or a guarantee that an audit will have no findings.
 
 ## Pricing
-CertivoIQ has one **$65,000 annual platform license**. Do not publish plan tiers, Academy or training products, certificates, state-pack add-ons, per-file overages, or separate API prices. All currently available platform features are included. The primary sales action is **Try CertivoIQ for Free**.
+CertivoIQ has two annual enterprise license types: **Multifamily Enterprise is $65,000 per selected state per year**, and **PHA is $150,000 per year, flat**. Do not publish Academy or training products, certificates, per-file overages, or separate API prices. All currently available platform features are included in the applicable license. The primary sales action is **Try CertivoIQ for Free**.
 
 ## Brand identity
 Approved colors:
