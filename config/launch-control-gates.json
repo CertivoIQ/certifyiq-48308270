@@ -80,7 +80,8 @@
       "status": "pending_technical",
       "blocking": true,
       "ownerRole": "engineering",
-      "action": "Run and document a non-destructive customer-file restore drill."
+      "action": "Run a non-destructive copy-and-checksum restore using a representative, consented customer object; synthetic isolation UAT has passed.",
+      "evidence": "docs/CUSTOMER-FILE-RECOVERY-DRILL.md"
     }
   ]
 }
