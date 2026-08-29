@@ -62,6 +62,6 @@ test("stale-factor cleanup cannot block a fresh TOTP enrollment", () => {
 
   assert.match(security, /try \{\s*await clearStaleFactors\(\)/);
   assert.match(security, /enrollment\.error\?\.code === "mfa_factor_name_conflict"/);
-  assert.match(security, /CertivoIQ Authenticator \\$\{Date\.now\(\)\}/);
+  assert.match(security, /CertivoIQ Authenticator \$\{Date\.now\(\)\}/);
   assert.match(security, /if \(enrollment\.error\) throw enrollment\.error/);
 });
