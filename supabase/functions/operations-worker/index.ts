@@ -187,7 +187,9 @@ Deno.serve(async (request) => {
   if (claimError) return json({ ok: false, stage: "claim", retention, error: claimError.message }, 500);
 
   const job = Array.isArray(claimedData) ? claimedData[0] : claimedData;
-  if (!job) return json({ ok: true, retention, reaped: reaped ?? 0, claimed: false });
+  if (!job?.id || !job?.job_type) {
+    return json({ ok: true, retention, reaped: reaped ?? 0, claimed: false });
+  }
 
   const jobId = String(job.id);
   const jobType = String(job.job_type);
