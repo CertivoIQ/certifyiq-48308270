@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/audit-readiness")({
       {
         name: "description",
         content:
-          "Prepare evidence, findings remediation, program records, and human-review history for affordable housing audits.",
+          "Prepare evidence, findings remediation, program records, and approval and final-review history for affordable housing audits.",
       },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -117,7 +117,7 @@ type AssuranceCase = {
   assurance_status: string;
   engine_build: string;
   manifest_sha256: string;
-  human_decision: string | null;
+  final_decision: string | null;
   created_at: string;
 };
 
@@ -219,9 +219,9 @@ const CORE_REQUIREMENTS: ChecklistItem[] = [
     confirmed: false,
   },
   {
-    id: "human-review-history",
+    id: "final-review-history",
     category: "Defensible audit package",
-    label: "Human approvals, exceptions, and review history",
+    label: "Final approvals, exceptions, and review history",
     description: "Preserve reviewer identity and the disposition of unresolved or unusual issues.",
     required: true,
     confirmed: false,
@@ -368,7 +368,7 @@ async function loadAuditWorkspace() {
       .limit(250),
     client
       .from("compliance_assurance_cases")
-      .select("id,property_key,event_date,applicable_program_codes,regulatory_status,audit_status,assurance_status,engine_build,manifest_sha256,human_decision,created_at")
+      .select("id,property_key,event_date,applicable_program_codes,regulatory_status,audit_status,assurance_status,engine_build,manifest_sha256,final_decision:human_decision,created_at")
       .order("created_at", { ascending: false })
       .limit(250),
     client
@@ -470,7 +470,7 @@ function AuditReadinessWorkspace() {
       setSelectedRunId(run.id);
       setShowStart(false);
       toast.success("Audit preparation started", {
-        description: "The checklist is program-aware and remains subject to human review.",
+        description: "The checklist is program-aware and remains subject to final compliance review.",
       });
       void queryClient.invalidateQueries({ queryKey: ["audit-readiness-workspace"] });
     },
@@ -530,14 +530,14 @@ function AuditReadinessWorkspace() {
       package_type: "CERTIVOIQ_AFFORDABLE_HOUSING_AUDIT_PREPARATION",
       generated_at: new Date().toISOString(),
       disclaimer:
-        "Preparation status is not an agency determination or a guarantee of audit outcome. Human review remains required.",
+        "Preparation status is not an agency determination or a guarantee of audit outcome. Final compliance review remains required.",
       audit_run: {
         ...selectedRun,
         readiness_score: score,
         evidence_manifest: checklist,
       },
       package_gate: {
-        ready_for_human_review: packageReady,
+        ready_for_final_review: packageReady,
         critical_open_findings: criticalFindings.length,
         open_remediation_actions: openActions.length,
         evidence_manifest_count: query.data?.manifests.length ?? 0,
@@ -687,7 +687,7 @@ function AuditReadinessWorkspace() {
             <Stat
               label="Preparation progress"
               value={`${score}%`}
-              hint={packageReady ? "Package ready for human review" : "Confirmed required items"}
+              hint={packageReady ? "Package ready for final review" : "Confirmed required items"}
               tone={toneForScore(score, blocked)}
             />
             <Stat
@@ -718,11 +718,11 @@ function AuditReadinessWorkspace() {
 
           <Panel
             className="mt-4"
-            title={packageReady ? "Ready for human package review" : blocked ? "Preparation blocked" : "Preparation in progress"}
+            title={packageReady ? "Ready for final package review" : blocked ? "Preparation blocked" : "Preparation in progress"}
             description={`${selectedRun.jurisdiction} · ${selectedRun.scope.replaceAll("_", " ")} · ${selectedRun.framework.replaceAll("_", " ")}`}
             actions={
               <Pill tone={packageReady ? "seal" : blocked ? "reject" : "flag"}>
-                {packageReady ? "HUMAN REVIEW READY" : blocked ? "CRITICAL FINDING OPEN" : "NOT YET COMPLETE"}
+                {packageReady ? "FINAL REVIEW READY" : blocked ? "CRITICAL FINDING OPEN" : "NOT YET COMPLETE"}
               </Pill>
             }
           >
