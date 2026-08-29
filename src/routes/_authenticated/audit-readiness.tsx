@@ -117,7 +117,6 @@ type AssuranceCase = {
   assurance_status: string;
   engine_build: string;
   manifest_sha256: string;
-  final_decision: string | null;
   created_at: string;
 };
 
@@ -368,7 +367,7 @@ async function loadAuditWorkspace() {
       .limit(250),
     client
       .from("compliance_assurance_cases")
-      .select("id,property_key,event_date,applicable_program_codes,regulatory_status,audit_status,assurance_status,engine_build,manifest_sha256,final_decision:human_decision,created_at")
+      .select("id,property_key,event_date,applicable_program_codes,regulatory_status,audit_status,assurance_status,engine_build,manifest_sha256,created_at")
       .order("created_at", { ascending: false })
       .limit(250),
     client
