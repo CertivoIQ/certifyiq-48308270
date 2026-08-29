@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-29",
+  "gates": [
+    {
+      "id": "production_auth_rls_uat",
+      "category": "security",
+      "status": "technical_complete",
+      "blocking": true,
+      "ownerRole": "engineering",
+      "evidence": "supabase/tests/production_role_cross_tenant_uat.sql"
+    },
+    {
+      "id": "privileged_rpc_surface",
+      "category": "security",
+      "status": "technical_complete",
+      "blocking": true,
+      "ownerRole": "engineering",
+      "evidence": "supabase/migrations/20260829020000_harden_privileged_rpc_surface.sql"
+    },
+    {
+      "id": "leaked_password_protection",
+      "category": "security",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "founder",
+      "action": "Enable leaked-password protection in Supabase Auth settings and retain a screenshot/export."
+    },
+    {
+      "id": "founder_mfa_enrollment",
+      "category": "security",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "founder",
+      "action": "Enroll the founder account in MFA, store recovery codes offline, and confirm a recovery sign-in."
+    },
+    {
+      "id": "stripe_sandbox_checkout",
+      "category": "billing",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "founder",
+      "action": "Complete one Stripe-hosted sandbox checkout, renewal/update event, cancellation, and customer-portal return."
+    },
+    {
+      "id": "nspire_independent_attestations",
+      "category": "regulatory",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "compliance_reviewers",
+      "action": "Two distinct staff reviewers must attest to the controlled NSPIRE checksum before activation."
+    },
+    {
+      "id": "tn_tx_independent_source_validation",
+      "category": "regulatory",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "compliance_reviewers",
+      "action": "Independently validate the 4 Tennessee and 6 Texas captures, effective dates, supersession status, and rule mappings."
+    },
+    {
+      "id": "terms_privacy_counsel_review",
+      "category": "legal",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "qualified_counsel",
+      "action": "Approve Terms, Privacy Notice, DPA, limitation of liability, indemnity, warranty, and state privacy disclosures."
+    },
+    {
+      "id": "support_incident_routing",
+      "category": "operations",
+      "status": "technical_complete",
+      "blocking": true,
+      "ownerRole": "operations",
+      "evidence": "docs/LAUNCH-OPERATIONS-RUNBOOK.md"
+    },
+    {
+      "id": "backup_restore_drill",
+      "category": "reliability",
+      "status": "pending_technical",
+      "blocking": true,
+      "ownerRole": "engineering",
+      "action": "Run and document a non-destructive customer-file restore drill."
+    }
+  ]
+}
