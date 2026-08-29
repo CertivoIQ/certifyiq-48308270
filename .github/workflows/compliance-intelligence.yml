@@ -98,6 +98,7 @@ jobs:
           bun run test:layered
           bun run test:assurance
           bun run test:assurance-schema
+          node --test scripts/test-audit-readiness-workspace.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
