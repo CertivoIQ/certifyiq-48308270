@@ -152,6 +152,11 @@ test("governance work is centralized in the Tasks workspace", () => {
   assert.match(tasksRoute, /rule-pack-candidate:/);
   assert.match(tasksRoute, /rule-source-candidate:/);
   assert.match(tasksRoute, /const active = !candidate\.compliance_activation_allowed/);
+  assert.match(tasksRoute, /if \(status === "verified"\) continue/);
+  assert.doesNotMatch(
+    tasksRoute,
+    /for \(const candidate of sourceCandidates\) \{[\s\S]{0,220}const active = !candidate\.compliance_activation_allowed/,
+  );
   assert.match(tasksRoute, /independent validation required/);
   assert.match(tasksRoute, /exact bytes .*required/);
   assert.match(tasksRoute, /operations_approvals/);
