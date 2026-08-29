@@ -6,6 +6,16 @@ type AccessLevel = "employee" | "manager" | "admin";
 const APP_ORIGIN = "https://certivoiq.com";
 const allowedOrigins = new Set([APP_ORIGIN, "https://www.certivoiq.com"]);
 
+// BETA EMAIL POLICY — revert this set to only "certivoiq.com" before launch.
+// Access is still invitation-bound and limited to authorized CRM managers/admins.
+const allowedStaffEmailDomains = new Set([
+  "certivoiq.com",
+  "gmail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+]);
+
 function headers(origin: string | null) {
   const allowOrigin = origin && allowedOrigins.has(origin) ? origin : APP_ORIGIN;
   return {
@@ -119,8 +129,11 @@ Deno.serve(async (req) => {
     if (action === "invite") {
       const email = cleanEmail(body.email);
       const accessLevel = body.accessLevel;
-      if (!email || email.split("@")[1] !== "certivoiq.com") {
-        throw new Error("CRM invitations require a @certivoiq.com employee address.");
+      const emailDomain = email.split("@")[1] || "";
+      if (!email || !allowedStaffEmailDomains.has(emailDomain)) {
+        throw new Error(
+          "During beta, CRM invitations require @certivoiq.com, @gmail.com, @outlook.com, @hotmail.com, or @live.com.",
+        );
       }
       if (!validLevel(accessLevel)) throw new Error("Select a valid CRM role.");
       assertCanAssign(accessLevel);
