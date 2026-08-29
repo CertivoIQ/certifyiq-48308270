@@ -24,9 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - name: Install locked dependencies
-        run: npm ci
+      - name: Install pinned PDF parser without changing the lockfile
+        run: npm install --no-save --package-lock=false --ignore-scripts pdfjs-dist@6.2.108
       - name: Validate document-family controls
         run: node --test scripts/test-state-validation-document-families.mjs scripts/test-nationwide-state-source-evidence-pipeline.mjs
       - name: Crawl and hash current official documents
