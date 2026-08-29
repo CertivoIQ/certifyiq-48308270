@@ -1,0 +1,1208 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-29T06:37:15.690Z",
+  "purpose": "exact-byte evidence capture for all remaining state validation source links",
+  "sourceCount": 119,
+  "independentValidationRequired": true,
+  "complianceActivationAllowed": false,
+  "sources": [
+    {
+      "stateCode": "AL",
+      "sourceType": "MULTIFAMILY_NOTICES",
+      "url": "https://www.ahfa.com/programs/rental-housing/multifamily-notices",
+      "allowedHosts": [
+        "www.ahfa.com",
+        "ahfa.com"
+      ],
+      "priorStatus": "blocked"
+    },
+    {
+      "stateCode": "AR",
+      "sourceType": "COMPLIANCE_AND_MONITORING",
+      "url": "https://adfa.arkansas.gov/compliance-and-monitoring/",
+      "allowedHosts": [
+        "adfa.arkansas.gov",
+        "www.adfa.arkansas.gov"
+      ],
+      "priorStatus": "blocked"
+    },
+    {
+      "stateCode": "AZ",
+      "sourceType": "CONTROLLED_RESOURCE_INDEX",
+      "url": "https://housing.az.gov/resources",
+      "allowedHosts": [
+        "housing.az.gov",
+        "www.housing.az.gov"
+      ],
+      "priorStatus": "blocked"
+    },
+    {
+      "stateCode": "AZ",
+      "sourceType": "RENTAL_COMPLIANCE_MANUAL_FORMS_LIMITS",
+      "url": "https://housing.az.gov/programs/rental-compliance",
+      "allowedHosts": [
+        "housing.az.gov",
+        "www.housing.az.gov"
+      ],
+      "priorStatus": "blocked"
+    },
+    {
+      "stateCode": "CA",
+      "sourceType": "CALHFA_FINANCING_LIMIT_OVERLAY",
+      "url": "https://www.calhfa.ca.gov/multifamily/asset/mtsp/index.htm",
+      "allowedHosts": [
+        "www.calhfa.ca.gov",
+        "calhfa.ca.gov",
+        "treasurer.ca.gov",
+        "www.treasurer.ca.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CA",
+      "sourceType": "CTCAC_LIHTC_PROGRAM",
+      "url": "https://www.treasurer.ca.gov/ctcac/tax",
+      "allowedHosts": [
+        "www.treasurer.ca.gov",
+        "treasurer.ca.gov",
+        "calhfa.ca.gov",
+        "www.calhfa.ca.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CO",
+      "sourceType": "COMPLIANCE_FORMS",
+      "url": "https://www.chfainfo.com/rental-housing/asset-management/compliance-forms",
+      "allowedHosts": [
+        "www.chfainfo.com",
+        "chfainfo.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CO",
+      "sourceType": "LIHTC_PROGRAM_COMPLIANCE",
+      "url": "https://www.chfainfo.com/rental-housing/asset-management/lihtc-program-compliance",
+      "allowedHosts": [
+        "www.chfainfo.com",
+        "chfainfo.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CO",
+      "sourceType": "MULTIFAMILY_COMPLIANCE_UPDATES",
+      "url": "https://www.chfainfo.com/rental-housing/asset-management/multifamily-program-compliance/multifamily-loan-compliance-enews",
+      "allowedHosts": [
+        "www.chfainfo.com",
+        "chfainfo.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CO",
+      "sourceType": "QUALIFIED_ALLOCATION_PLAN",
+      "url": "https://www.chfainfo.com/rental-housing/housing-credit/qualified-allocation-plan",
+      "allowedHosts": [
+        "www.chfainfo.com",
+        "chfainfo.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CT",
+      "sourceType": "CONTROLLED_DOCUMENT_INDEX",
+      "url": "https://www.chfa.org/documents/",
+      "allowedHosts": [
+        "www.chfa.org",
+        "chfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CT",
+      "sourceType": "INCOME_LIMITS_GROSS_RENTS",
+      "url": "https://www.chfa.org/rental-housing-for-owners-and-management-agents-tools-calculators-look-ups/",
+      "allowedHosts": [
+        "www.chfa.org",
+        "chfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CT",
+      "sourceType": "LIHTC_COMPLIANCE",
+      "url": "https://www.chfa.org/owners-property-managers/lihtc-compliance/",
+      "allowedHosts": [
+        "www.chfa.org",
+        "chfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "CT",
+      "sourceType": "LIHTC_PROGRAM_QAP_GUIDELINES_FORMS",
+      "url": "https://www.chfa.org/developers/tax-credit-program/lihtc/",
+      "allowedHosts": [
+        "www.chfa.org",
+        "chfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "DE",
+      "sourceType": "LIHTC_2025_2026_QAP",
+      "url": "https://www.destatehousing.com/wp-content/uploads/2026/06/2025-2026-LIHTC-QAP.pdf",
+      "allowedHosts": [
+        "www.destatehousing.com",
+        "destatehousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "DE",
+      "sourceType": "LIHTC_PROGRAM_APPLICATIONS",
+      "url": "https://www.destatehousing.com/build/lihtc/",
+      "allowedHosts": [
+        "www.destatehousing.com",
+        "destatehousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "FL",
+      "sourceType": "COMPLIANCE_GUIDEBOOK",
+      "url": "https://www.floridahousing.org/owners-and-managers/compliance/compliance-guidebook",
+      "allowedHosts": [
+        "www.floridahousing.org",
+        "floridahousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "FL",
+      "sourceType": "COMPLIANCE_LIMITS_FORMS_UPDATES",
+      "url": "https://www.floridahousing.org/owners-and-managers/compliance",
+      "allowedHosts": [
+        "www.floridahousing.org",
+        "floridahousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "FL",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.floridahousing.org/programs/developers-multifamily-programs/low-income-housing-tax-credits",
+      "allowedHosts": [
+        "www.floridahousing.org",
+        "floridahousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "FL",
+      "sourceType": "NONCOMPETITIVE_QAP_DOCUMENTS",
+      "url": "https://www.floridahousing.org/programs/developers-multifamily-programs/non-competitive/related-references-and-links",
+      "allowedHosts": [
+        "www.floridahousing.org",
+        "floridahousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "GA",
+      "sourceType": "COMPLIANCE_MANUAL_DOCUMENTS",
+      "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/housing-tax-credit-compliance-11",
+      "allowedHosts": [
+        "dca.georgia.gov",
+        "www.dca.georgia.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "GA",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program",
+      "allowedHosts": [
+        "dca.georgia.gov",
+        "www.dca.georgia.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "GA",
+      "sourceType": "QUALIFIED_ALLOCATION_PLANS_AMENDMENTS",
+      "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/qualified-allocation-plans-and",
+      "allowedHosts": [
+        "dca.georgia.gov",
+        "www.dca.georgia.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "GA",
+      "sourceType": "RENT_INCOME_LIMITS",
+      "url": "https://dca.georgia.gov/affordable-housing/housing-development/housing-tax-credit-program/housing-tax-credit-compliance-5",
+      "allowedHosts": [
+        "dca.georgia.gov",
+        "www.dca.georgia.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "HI",
+      "sourceType": "CONSOLIDATED_APPLICATION_2026",
+      "url": "https://dbedt.hawaii.gov/hhfdc/consolidated-application-for-financing-2026/",
+      "allowedHosts": [
+        "dbedt.hawaii.gov",
+        "www.dbedt.hawaii.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "HI",
+      "sourceType": "LIHTC_PROGRAM_COMPLIANCE_RESOURCES",
+      "url": "https://dbedt.hawaii.gov/hhfdc/developers/lihtc_html/",
+      "allowedHosts": [
+        "dbedt.hawaii.gov",
+        "www.dbedt.hawaii.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "HI",
+      "sourceType": "QUALIFIED_ALLOCATION_PLAN",
+      "url": "https://dbedt.hawaii.gov/hhfdc/hhfdc-qualified-application-plan-qap-landing-page/",
+      "allowedHosts": [
+        "dbedt.hawaii.gov",
+        "www.dbedt.hawaii.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IA",
+      "sourceType": "HOUSING_TAX_CREDIT_PROGRAM",
+      "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/housing-tax-credit-program",
+      "allowedHosts": [
+        "opportunityiowa.gov",
+        "www.opportunityiowa.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IA",
+      "sourceType": "LIHTC_COMPLIANCE_MANUAL_FORMS_LIMITS",
+      "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/home-program/compliance",
+      "allowedHosts": [
+        "opportunityiowa.gov",
+        "www.opportunityiowa.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IA",
+      "sourceType": "LIHTC_QAP_APPLICATION_RESOURCES",
+      "url": "https://opportunityiowa.gov/housing/rental-programs/programs-developers-communities-and-property-owners/housing-tax-credit-program/resources",
+      "allowedHosts": [
+        "opportunityiowa.gov",
+        "www.opportunityiowa.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "ID",
+      "sourceType": "LIHTC_PROGRAM_QAP",
+      "url": "https://www.idahohousing.com/partners/project-financing/developers/low-income-housing-tax-credits/",
+      "allowedHosts": [
+        "www.idahohousing.com",
+        "idahohousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "ID",
+      "sourceType": "TAX_CREDIT_COMPLIANCE_MANUAL_FORMS",
+      "url": "https://www.idahohousing.com/partners/property-managers/housing-compliance/tax-credit-compliance/",
+      "allowedHosts": [
+        "www.idahohousing.com",
+        "idahohousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IL",
+      "sourceType": "DEVELOPER_MULTIFAMILY_DOCUMENT_LIBRARY",
+      "url": "https://www.ihda.org/developers/developer-resource-center/",
+      "allowedHosts": [
+        "www.ihda.org",
+        "ihda.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IL",
+      "sourceType": "LIHTC_PROGRAM_QAP",
+      "url": "https://www.ihda.org/developers/tax-credits/low-income-tax-credit/",
+      "allowedHosts": [
+        "www.ihda.org",
+        "ihda.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IL",
+      "sourceType": "PROPERTY_MANAGER_COMPLIANCE_MANUAL_FORMS_LIMITS",
+      "url": "https://www.ihda.org/rental-housing-main/property-managers/",
+      "allowedHosts": [
+        "www.ihda.org",
+        "ihda.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IN",
+      "sourceType": "LIHTC_PROGRAM_QAP",
+      "url": "https://www.in.gov/ihcda/developers/rental-housing-tax-credits-rhtc/",
+      "allowedHosts": [
+        "www.in.gov",
+        "in.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IN",
+      "sourceType": "REAL_ESTATE_COMPLIANCE_MANUAL_FORMS",
+      "url": "https://www.in.gov/ihcda/developers/red-compliance/",
+      "allowedHosts": [
+        "www.in.gov",
+        "in.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "IN",
+      "sourceType": "REAL_ESTATE_DEPARTMENT_NOTICES",
+      "url": "https://www.in.gov/ihcda/newsroom/red-notices/",
+      "allowedHosts": [
+        "www.in.gov",
+        "in.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "KS",
+      "sourceType": "HOUSING_COMPLIANCE_MANUAL_FORMS_LIMITS",
+      "url": "https://kshousingcorp.org/housing-partners/khrc-housing-compliance/",
+      "allowedHosts": [
+        "kshousingcorp.org",
+        "www.kshousingcorp.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "KS",
+      "sourceType": "LIHTC_PROGRAM_QAP_APPLICATIONS",
+      "url": "https://kshousingcorp.org/housing-partners/housing-development-lihtc/",
+      "allowedHosts": [
+        "kshousingcorp.org",
+        "www.kshousingcorp.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "KY",
+      "sourceType": "COMPLIANCE",
+      "url": "https://www.kyhousing.org/page/compliance",
+      "allowedHosts": [
+        "www.kyhousing.org",
+        "kyhousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "KY",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.kyhousing.org/programs/low-income-housing-tax-credit-lihtc-program",
+      "allowedHosts": [
+        "www.kyhousing.org",
+        "kyhousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "KY",
+      "sourceType": "QAP_GUIDES_LIMITS",
+      "url": "https://www.kyhousing.org/page/qaps-guides-and-resources",
+      "allowedHosts": [
+        "www.kyhousing.org",
+        "kyhousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "KY",
+      "sourceType": "REQUIRED_DOCUMENTATION_FORMS",
+      "url": "https://www.kyhousing.org/page/required-documentation",
+      "allowedHosts": [
+        "www.kyhousing.org",
+        "kyhousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "LA",
+      "sourceType": "HOUSING_DEVELOPMENT_RESOURCES",
+      "url": "https://www.lhc.la.gov/resources-for-housing-development",
+      "allowedHosts": [
+        "www.lhc.la.gov",
+        "lhc.la.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "LA",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.lhc.la.gov/low-income-housing-tax-credit-lihtc-program",
+      "allowedHosts": [
+        "www.lhc.la.gov",
+        "lhc.la.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MA",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.mass.gov/info-details/low-income-housing-tax-credit-lihtc",
+      "allowedHosts": [
+        "www.mass.gov",
+        "mass.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MA",
+      "sourceType": "QUALIFIED_ALLOCATION_PLAN",
+      "url": "https://www.mass.gov/info-details/qualified-allocation-plan",
+      "allowedHosts": [
+        "www.mass.gov",
+        "mass.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MD",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://dhcd.maryland.gov/HousingDevelopment/pages/lihtc/default.aspx",
+      "allowedHosts": [
+        "dhcd.maryland.gov",
+        "www.dhcd.maryland.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MD",
+      "sourceType": "MULTIFAMILY_ASSET_MANAGEMENT_COMPLIANCE",
+      "url": "https://dhcd.maryland.gov/Credit-Assurance/Pages/Multifamily-Lending.aspx",
+      "allowedHosts": [
+        "dhcd.maryland.gov",
+        "www.dhcd.maryland.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MD",
+      "sourceType": "MULTIFAMILY_DEVELOPMENT_DOCUMENT_LIBRARY",
+      "url": "https://dhcd.maryland.gov/housing/multifamily-housing-development-document-library",
+      "allowedHosts": [
+        "dhcd.maryland.gov",
+        "www.dhcd.maryland.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "ME",
+      "sourceType": "ASSET_MANAGEMENT_NOTICES",
+      "url": "https://www.mainehousing.org/partners/partner-type/asset-management/asset-management-notices",
+      "allowedHosts": [
+        "www.mainehousing.org",
+        "mainehousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "ME",
+      "sourceType": "LIHTC_PROGRAM_QAP",
+      "url": "https://www.mainehousing.org/programs-services/housing-development/developmentdetails/low-income-housing-tax-credit-program",
+      "allowedHosts": [
+        "www.mainehousing.org",
+        "mainehousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "ME",
+      "sourceType": "PROPERTY_MANAGEMENT_FORMS",
+      "url": "https://www.mainehousing.org/partners/partner-type/asset-management/property-management-forms",
+      "allowedHosts": [
+        "www.mainehousing.org",
+        "mainehousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MI",
+      "sourceType": "INCOME_RENT_UTILITY_LIMITS",
+      "url": "https://www.michigan.gov/mshda/rental/property-managers/compliance/income_rent_and_utility_limits",
+      "allowedHosts": [
+        "www.michigan.gov",
+        "michigan.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MI",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.michigan.gov/mshda/developers/low-income-housing-tax-credits-lihtc",
+      "allowedHosts": [
+        "www.michigan.gov",
+        "michigan.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MI",
+      "sourceType": "QUALIFIED_ALLOCATION_PLAN",
+      "url": "https://www.michigan.gov/mshda/developers/lihtc/lihtc/qualified-allocation-plan",
+      "allowedHosts": [
+        "www.michigan.gov",
+        "michigan.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MN",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.mnhousing.gov/home/rental-housing/housing-development-and-capital-programs/housing-tax-credits",
+      "allowedHosts": [
+        "www.mnhousing.gov",
+        "mnhousing.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MN",
+      "sourceType": "PROPERTY_MANAGEMENT_FORMS_RESOURCES",
+      "url": "https://www.mnhousing.gov/home/rental-housing/property-managers/documents-forms-and-resources",
+      "allowedHosts": [
+        "www.mnhousing.gov",
+        "mnhousing.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MN",
+      "sourceType": "QUALIFIED_ALLOCATION_PLAN",
+      "url": "https://www.mnhousing.gov/home/rental-housing/housing-development-and-capital-programs/housing-tax-credits/qualified-allocation-plan-qap",
+      "allowedHosts": [
+        "www.mnhousing.gov",
+        "mnhousing.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MN",
+      "sourceType": "RENT_INCOME_LIMITS",
+      "url": "https://www.mnhousing.gov/home/rental-housing/post-selection/rent-income-limits",
+      "allowedHosts": [
+        "www.mnhousing.gov",
+        "mnhousing.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MO",
+      "sourceType": "LIHTC_COMPLIANCE",
+      "url": "https://mhdc.com/programs/asset-management/program-compliance/housing-programs/low-income-housing-tax-credit-lihtc-compliance/",
+      "allowedHosts": [
+        "mhdc.com",
+        "www.mhdc.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MO",
+      "sourceType": "MULTIFAMILY_APPLICATION",
+      "url": "https://mhdc.com/programs/multifamily/multifamily-application/",
+      "allowedHosts": [
+        "mhdc.com",
+        "www.mhdc.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MO",
+      "sourceType": "MULTIFAMILY_QAP_PROGRAM",
+      "url": "https://mhdc.com/programs/multifamily/",
+      "allowedHosts": [
+        "mhdc.com",
+        "www.mhdc.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MS",
+      "sourceType": "LIHTC_COMPLIANCE_PROGRAM_RESOURCES",
+      "url": "https://www.mshomecorp.com/property-managers/compliance-htc/",
+      "allowedHosts": [
+        "www.mshomecorp.com",
+        "mshomecorp.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MS",
+      "sourceType": "LIHTC_QAP_OVERVIEW",
+      "url": "https://developer-guide.mshomecorp.com/securing-funding",
+      "allowedHosts": [
+        "developer-guide.mshomecorp.com",
+        "www.developer-guide.mshomecorp.com",
+        "mshomecorp.com",
+        "www.mshomecorp.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MS",
+      "sourceType": "PROPERTY_STEWARDSHIP_OVERVIEW",
+      "url": "https://developer-guide.mshomecorp.com/stewardship",
+      "allowedHosts": [
+        "developer-guide.mshomecorp.com",
+        "www.developer-guide.mshomecorp.com",
+        "mshomecorp.com",
+        "www.mshomecorp.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "MT",
+      "sourceType": "LIHTC_QUALIFIED_ALLOCATION_PLAN",
+      "url": "https://commerce.mt.gov/Housing/Developers/Housing-Credit/Qualified-Allocation-Plan",
+      "allowedHosts": [
+        "commerce.mt.gov",
+        "www.commerce.mt.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NC",
+      "sourceType": "FINAL_2026_QAP_AND_APPENDICES",
+      "url": "https://www.nchfa.com/rental-housing-partners/rental-developers/qualified-allocation-plan/2026-qualified-allocation-plan-qap",
+      "allowedHosts": [
+        "www.nchfa.com",
+        "nchfa.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NC",
+      "sourceType": "OWNERSHIP_MANAGEMENT_FORMS",
+      "url": "https://www.nchfa.com/rental-housing-partners/rental-owners-managers/policies-resources-forms/ownershipmanagement",
+      "allowedHosts": [
+        "www.nchfa.com",
+        "nchfa.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NC",
+      "sourceType": "PROGRAM_COMPLIANCE",
+      "url": "https://www.nchfa.com/rental-housing-partners/rental-owners-managers/program-compliance",
+      "allowedHosts": [
+        "www.nchfa.com",
+        "nchfa.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "ND",
+      "sourceType": "LIHTC_QAP_PROGRAM_AND_APPLICATION",
+      "url": "https://www.ndhousing.nd.gov/development",
+      "allowedHosts": [
+        "www.ndhousing.nd.gov",
+        "ndhousing.nd.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NE",
+      "sourceType": "LIHTC_ALLOCATION",
+      "url": "https://www.nifa.org/developers-property-managers/lihtc-allocation",
+      "allowedHosts": [
+        "www.nifa.org",
+        "nifa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NE",
+      "sourceType": "QAP_APPLICATION_COMPLIANCE_FORMS",
+      "url": "https://www.nifa.org/developers-property-managers/forms-docs",
+      "allowedHosts": [
+        "www.nifa.org",
+        "nifa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NH",
+      "sourceType": "LIHTC_COMPLIANCE_MANUALS_FORMS_AND_LIMITS",
+      "url": "https://www.nhhousing.org/developer-financing/asset-management/low-income-housing-tax-credit/",
+      "allowedHosts": [
+        "www.nhhousing.org",
+        "nhhousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NH",
+      "sourceType": "LIHTC_QAP_AND_APPLICATION",
+      "url": "https://www.nhhousing.org/developer-financing/lihtc/",
+      "allowedHosts": [
+        "www.nhhousing.org",
+        "nhhousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NJ",
+      "sourceType": "AGENCY_LIHTC_AND_COMPLIANCE_PORTAL_INDEX",
+      "url": "https://www.njhousing.gov/",
+      "allowedHosts": [
+        "www.njhousing.gov",
+        "njhousing.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NJ",
+      "sourceType": "UNIAP_LIHTC_APPLICATION_AND_QAP_RESOURCES",
+      "url": "https://njhousing.gov/developers/uniap/",
+      "allowedHosts": [
+        "njhousing.gov",
+        "www.njhousing.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NM",
+      "sourceType": "CURRENT_AND_PRIOR_TAX_CREDIT_ROUNDS",
+      "url": "https://housingnm.org/developers/lihtc/current-and-prior-tax-credit-rounds",
+      "allowedHosts": [
+        "housingnm.org",
+        "www.housingnm.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NM",
+      "sourceType": "LIHTC_COMPLIANCE_PLAN_LIMITS",
+      "url": "https://housingnm.org/property-owners-agents-and-managers/lihtc",
+      "allowedHosts": [
+        "housingnm.org",
+        "www.housingnm.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NM",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://housingnm.org/developers/lihtc",
+      "allowedHosts": [
+        "housingnm.org",
+        "www.housingnm.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NM",
+      "sourceType": "PROPERTY_MANAGER_FORMS",
+      "url": "https://housingnm.org/forms/property-owners-agents-manager-forms",
+      "allowedHosts": [
+        "housingnm.org",
+        "www.housingnm.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NM",
+      "sourceType": "QUALIFIED_ALLOCATION_PLANS",
+      "url": "https://housingnm.org/developers/lihtc/qaps",
+      "allowedHosts": [
+        "housingnm.org",
+        "www.housingnm.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NV",
+      "sourceType": "COMPLIANCE_MANUAL_FORMS_EXHIBITS",
+      "url": "https://housing.nv.gov/Programs/MFC/Multi-Family_Compliance_Manuals___Exhibits/",
+      "allowedHosts": [
+        "housing.nv.gov",
+        "www.housing.nv.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NV",
+      "sourceType": "LIHTC_PROGRAM_QAP",
+      "url": "https://housing.nv.gov/Programs/LIHTC_Program/",
+      "allowedHosts": [
+        "housing.nv.gov",
+        "www.housing.nv.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NY",
+      "sourceType": "2026_9_PERCENT_RFP_AND_QAP",
+      "url": "https://hcr.ny.gov/2026-multifamily-finance-9-lihtc-rfp",
+      "allowedHosts": [
+        "hcr.ny.gov",
+        "www.hcr.ny.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NY",
+      "sourceType": "2026_CAPITAL_PROGRAMS_MANUAL",
+      "url": "https://hcr.ny.gov/capital-programs-manual-2026",
+      "allowedHosts": [
+        "hcr.ny.gov",
+        "www.hcr.ny.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NY",
+      "sourceType": "FOUR_PERCENT_LIHTC",
+      "url": "https://hcr.ny.gov/low-income-housing-tax-credit-program-4pct",
+      "allowedHosts": [
+        "hcr.ny.gov",
+        "www.hcr.ny.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "NY",
+      "sourceType": "NYC_HDC_ANNUAL_COMPLIANCE_MONITORING",
+      "url": "https://www.nychdc.com/manage",
+      "allowedHosts": [
+        "www.nychdc.com",
+        "nychdc.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "OH",
+      "sourceType": "COMPLIANCE_FORMS",
+      "url": "https://ohiohome.org/compliance/forms.aspx",
+      "allowedHosts": [
+        "ohiohome.org",
+        "www.ohiohome.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "OH",
+      "sourceType": "COMPLIANCE_MANUAL",
+      "url": "https://ohiohome.org/compliance/default.aspx",
+      "allowedHosts": [
+        "ohiohome.org",
+        "www.ohiohome.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "OH",
+      "sourceType": "COMPLIANCE_POLICIES",
+      "url": "https://ohiohome.org/compliance/policies.aspx",
+      "allowedHosts": [
+        "ohiohome.org",
+        "www.ohiohome.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "OH",
+      "sourceType": "QAP_GUIDELINES",
+      "url": "https://ohiohome.org/compliance/qaps.aspx",
+      "allowedHosts": [
+        "ohiohome.org",
+        "www.ohiohome.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "OK",
+      "sourceType": "QAP_APPLICATION_COMPLIANCE_AND_FORMS",
+      "url": "https://www.ohfa.org/affordable-housing-tax-credits/",
+      "allowedHosts": [
+        "www.ohfa.org",
+        "ohfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "OR",
+      "sourceType": "LIHTC_PROGRAM_QAP_AND_RESOURCES",
+      "url": "https://www.oregon.gov/ohcs/rental-housing/housing-development/development-resources/pages/low-income-housing-tax-credits.aspx",
+      "allowedHosts": [
+        "www.oregon.gov",
+        "oregon.gov"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "PA",
+      "sourceType": "LIHTC_QAP_AND_PROGRAM",
+      "url": "https://www.phfa.org/mhp/developers/lihtc.aspx",
+      "allowedHosts": [
+        "www.phfa.org",
+        "phfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "RI",
+      "sourceType": "DEVELOPER_HANDBOOK_QAP_COMPLIANCE",
+      "url": "https://www.rihousing.com/partners/builders-developers/developers-handbook/",
+      "allowedHosts": [
+        "www.rihousing.com",
+        "rihousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "RI",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.rihousing.com/partners/builders-developers/",
+      "allowedHosts": [
+        "www.rihousing.com",
+        "rihousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "SC",
+      "sourceType": "FOUR_PERCENT_TEB",
+      "url": "https://schousing.com/Home/MultifamilyTaxExempt",
+      "allowedHosts": [
+        "schousing.com",
+        "www.schousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "SC",
+      "sourceType": "LIHTC_QAP_AND_PROGRAM",
+      "url": "https://www.schousing.com/home/HousingTaxCredits",
+      "allowedHosts": [
+        "www.schousing.com",
+        "schousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "SD",
+      "sourceType": "LIHTC_PROGRAM_QAP_AND_RESOURCES",
+      "url": "https://www.sdhousing.org/develop-housing/available-development-programs/housing-tax-credits",
+      "allowedHosts": [
+        "www.sdhousing.org",
+        "sdhousing.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "UT",
+      "sourceType": "LIHTC_APPLICATION_AND_QAP_INDEX",
+      "url": "https://utahhousingcorp.org/multifamily/applicationInfo/",
+      "allowedHosts": [
+        "utahhousingcorp.org",
+        "www.utahhousingcorp.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "VA",
+      "sourceType": "APPLICATION_PAGE",
+      "url": "https://www.virginiahousing.com/partners/rental-housing/tax-credit-application-process",
+      "allowedHosts": [
+        "www.virginiahousing.com",
+        "virginiahousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "VA",
+      "sourceType": "COMPLIANCE_FORMS_INDEX",
+      "url": "https://www.virginiahousing.com/partners/rental-housing/compliance-forms-and-documents",
+      "allowedHosts": [
+        "www.virginiahousing.com",
+        "virginiahousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "VA",
+      "sourceType": "COMPLIANCE_MONITORING",
+      "url": "https://www.virginiahousing.com/partners/rental-housing/compliance-monitoring",
+      "allowedHosts": [
+        "www.virginiahousing.com",
+        "virginiahousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "VA",
+      "sourceType": "QAP_AND_PROGRAM_PAGE",
+      "url": "https://www.virginiahousing.com/partners/rental-housing/rental-housing-tax-credits",
+      "allowedHosts": [
+        "www.virginiahousing.com",
+        "virginiahousing.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "VT",
+      "sourceType": "CURRENT_QAP",
+      "url": "https://vhfa.org/developers/lihtc/qap",
+      "allowedHosts": [
+        "vhfa.org",
+        "www.vhfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "VT",
+      "sourceType": "FORMS_LIMITS_AND_COMPLIANCE",
+      "url": "https://vhfa.org/managing-agents/forms-documents",
+      "allowedHosts": [
+        "vhfa.org",
+        "www.vhfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "VT",
+      "sourceType": "PROGRAM_MATERIALS",
+      "url": "https://vhfa.org/developers/lihtc/program-materials",
+      "allowedHosts": [
+        "vhfa.org",
+        "www.vhfa.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WA",
+      "sourceType": "COMPLIANCE_MANUAL",
+      "url": "https://www.wshfc.org/managers/manualtaxcreditindex.htm",
+      "allowedHosts": [
+        "www.wshfc.org",
+        "wshfc.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WA",
+      "sourceType": "FOUR_PERCENT_PROGRAM",
+      "url": "https://www.wshfc.org/mhcf/4percent/index.htm",
+      "allowedHosts": [
+        "www.wshfc.org",
+        "wshfc.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WA",
+      "sourceType": "QAP_AND_9_PERCENT_PROGRAM",
+      "url": "https://www.wshfc.org/mhcf/9percent/2026application.htm",
+      "allowedHosts": [
+        "www.wshfc.org",
+        "wshfc.org"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WI",
+      "sourceType": "FORMS_MANUALS_INDEX",
+      "url": "https://www.wheda.com/developers-and-property-managers/forms-manuals-and-resources",
+      "allowedHosts": [
+        "www.wheda.com",
+        "wheda.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WI",
+      "sourceType": "PROGRAM_PAGE",
+      "url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc",
+      "allowedHosts": [
+        "www.wheda.com",
+        "wheda.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WI",
+      "sourceType": "QAP_PAGE",
+      "url": "https://www.wheda.com/developers-and-property-managers/tax-credits/htc/qap",
+      "allowedHosts": [
+        "www.wheda.com",
+        "wheda.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WI",
+      "sourceType": "REPORTING_PAGE",
+      "url": "https://www.wheda.com/developers-and-property-managers/property-managers/reporting--schedule",
+      "allowedHosts": [
+        "www.wheda.com",
+        "wheda.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WV",
+      "sourceType": "COMPLIANCE_RESOURCES",
+      "url": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/",
+      "allowedHosts": [
+        "www.wvhdf.com",
+        "wvhdf.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WV",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://www.wvhdf.com/programs/multi-family-programs-and-resources/low-income-housing-tax-credit-program/",
+      "allowedHosts": [
+        "www.wvhdf.com",
+        "wvhdf.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    },
+    {
+      "stateCode": "WY",
+      "sourceType": "ALLOCATION_AND_PROGRAM_PAGE",
+      "url": "https://www.wyomingcda.com/affordable-housing/",
+      "allowedHosts": [
+        "www.wyomingcda.com",
+        "wyomingcda.com"
+      ],
+      "priorStatus": "queued_for_agent_verification"
+    }
+  ]
+}
