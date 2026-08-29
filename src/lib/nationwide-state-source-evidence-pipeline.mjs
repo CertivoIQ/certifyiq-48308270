@@ -63,7 +63,7 @@ function parseDateText(value) {
 export function extractDeclaredEffectiveDate(value) {
   const text = normalizeText(value);
   const patterns = [
-    /\beffective(?:\s+(?:date|as\s+of|on|from))?\s*[:\-]?\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s*20\d{2}|20\d{2}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/20\d{2})\b/ig,
+    /\b(?:effective|eff\.)(?:\s+(?:date|as\s+of|on|from))?\s*[:\-]?\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s*20\d{2}|20\d{2}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/20\d{2})\b/ig,
     /\b(?:this\s+)?(?:manual|document|requirements|rules|plan)\s+(?:are\s+|is\s+)?effective\s*[:\-]?\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s*20\d{2}|20\d{2}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/20\d{2})\b/ig,
   ];
   for (const pattern of patterns) {
