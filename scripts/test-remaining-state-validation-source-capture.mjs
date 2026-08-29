@@ -19,7 +19,7 @@ test("capture hashes exact bytes and pins redirect authorities", () => {
   assert.match(script, /response\.arrayBuffer\(\)/);
   assert.match(script, /createHash\("sha256"\)/);
   assert.match(script, /isAllowedHost\(source, finalUrl\.hostname/);
-  assert.match(script, /AbortSignal\.timeout\(45_000\)/);
+  assert.match(script, /AbortSignal\.timeout\(20_000\)/);
 });
 test("capture cannot activate rules or represent independent validation", () => {
   assert.match(script, /captureStatus: "captured_unvalidated"/);
