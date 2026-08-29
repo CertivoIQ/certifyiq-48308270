@@ -182,15 +182,19 @@ function SourceReviewCard({
   busy: boolean;
   inheritedByState?: string;
 }) {
-  const requiresReplacement = ["blocked", "rejected"].includes(source.agent_verification_status);
+  const excludedRedundant =
+    source.agent_verification_status === "rejected" &&
+    source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE";
+  const requiresReplacement =
+    !excludedRedundant && ["blocked", "rejected"].includes(source.agent_verification_status);
   return (
     <Panel bodyClassName="p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-sm font-semibold">{source.state_code === "US" ? "FEDERAL" : source.state_code}</span>
-            <Pill tone={toneFor(source.agent_verification_status)}>
-              {labelFor(source.agent_verification_status)}
+            <Pill tone={excludedRedundant ? "seal" : toneFor(source.agent_verification_status)}>
+              {excludedRedundant ? "Excluded redundant source" : labelFor(source.agent_verification_status)}
             </Pill>
             <Pill>{source.program}</Pill>
             <Pill>{source.scope.replaceAll("_", " ")}</Pill>
@@ -414,9 +418,16 @@ function StateRuleValidationWorkspace() {
       const inheritedFederal =
         stateCode !== "ALL" && stateCode !== "US" && federalShared;
       if (stateCode !== "ALL" && source.state_code !== stateCode && !inheritedFederal) return false;
+      const excludedRedundant =
+        source.agent_verification_status === "rejected" &&
+        source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE";
       // A selected state always shows its inherited federal baseline, even when
-      // the "All remaining" queue filter would normally hide a verified source.
-      if (!inheritedFederal && status === "active" && source.agent_verification_status === "verified") return false;
+      // the "All remaining" queue filter would normally hide a completed source.
+      if (
+        !inheritedFederal &&
+        status === "active" &&
+        (source.agent_verification_status === "verified" || excludedRedundant)
+      ) return false;
       if (
         !inheritedFederal &&
         status !== "active" &&
