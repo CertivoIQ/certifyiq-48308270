@@ -34,17 +34,13 @@ test("PHA owners and admins can reach account security", () => {
   );
 });
 
-test("incomplete TOTP enrollment is cleared by an authenticated server operation", () => {
-  const security = read("src/routes/_authenticated/account.security.tsx");
+test("authenticated maintenance cleanup only deletes unverified factors", () => {
   const recovery = read("src/utils/mfa.functions.ts");
 
-  assert.match(security, /useServerFn\(clearUnverifiedMfaFactors\)/);
-  assert.match(security, /await clearStaleFactors\(\)/);
   assert.match(recovery, /supabaseAdmin\.auth\.admin\.mfa\.listFactors/);
   assert.match(recovery, /factor\.status !== "unverified"/);
   assert.match(recovery, /supabaseAdmin\.auth\.admin\.mfa\.deleteFactor/);
   assert.doesNotMatch(recovery, /factor\.status === "verified".*deleteFactor/s);
-  assert.match(security, /friendlyName: "CertivoIQ Authenticator"/);
 });
 
 
@@ -57,11 +53,13 @@ test("TOTP enrollment renders Supabase QR data without double-encoding", () => {
 });
 
 
-test("stale-factor cleanup cannot block a fresh TOTP enrollment", () => {
+test("CertivoIQ starts TOTP enrollment directly and reports persistent errors", () => {
   const security = read("src/routes/_authenticated/account.security.tsx");
 
-  assert.match(security, /try \{\s*await clearStaleFactors\(\)/);
+  assert.match(security, /let enrollment = await supabase\.auth\.mfa\.enroll/);
+  assert.doesNotMatch(security, /clearStaleFactors/);
   assert.match(security, /enrollment\.error\?\.code === "mfa_factor_name_conflict"/);
   assert.match(security, /CertivoIQ Authenticator \$\{Date\.now\(\)\}/);
-  assert.match(security, /if \(enrollment\.error\) throw enrollment\.error/);
+  assert.match(security, /setSetupError\(message\)/);
+  assert.match(security, /role="alert"/);
 });
