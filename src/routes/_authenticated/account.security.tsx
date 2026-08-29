@@ -79,12 +79,22 @@ function SecurityPage() {
   async function startEnrollment() {
     setEnrolling(true);
     try {
+      // Supabase does not return a TOTP secret again after the enrollment page
+      // is left. Remove only stale, unverified factors so the user can restart
+      // safely without ever touching an active factor.
+      for (const factor of factors.filter((item) => item.status === "unverified")) {
+        const { error: cleanupError } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+        if (cleanupError) throw cleanupError;
+      }
+
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
         friendlyName: "CertivoIQ Authenticator",
       });
       if (error) throw error;
       setEnrollData(data as AuthMFAEnrollTOTPResponse["data"]);
+      setVerifyCode("");
+      await refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not start MFA setup");
     } finally {
