@@ -28,6 +28,20 @@ test("classifies the required Florida validation document families", () => {
   );
 });
 
+test("classifies direct versioned source identifiers with underscores and combined limits", () => {
+  assert.ok(
+    classifyDocument({ label: "", url: "https://agency.gov/file.pdf", sourceType: "HOME_2026_INCOME_LIMITS" })
+      .families.includes("INCOME_LIMITS"),
+  );
+  const combined = classifyDocument({
+    label: "",
+    url: "https://agency.gov/file.pdf",
+    sourceType: "NHTF_2026_INCOME_AND_RENT_LIMITS",
+  }).families;
+  assert.ok(combined.includes("INCOME_LIMITS"));
+  assert.ok(combined.includes("RENT_LIMITS"));
+});
+
 test("extracts only HTTPS links remaining on the official authority domain", () => {
   const html = `
     <a href="/docs/compliance-manual.pdf">Compliance Manual</a>
