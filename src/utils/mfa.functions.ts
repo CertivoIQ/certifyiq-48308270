@@ -6,13 +6,13 @@ const RECOVERY_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const CODE_COUNT = 10;
 
 function generateRawCode() {
-  const bytes = randomBytes(6);
+  const bytes = randomBytes(12);
   let out = "";
   for (let i = 0; i < bytes.length; i++) {
     const idx = bytes[i]! % RECOVERY_CODE_ALPHABET.length;
     out += RECOVERY_CODE_ALPHABET[idx];
   }
-  return `${out.slice(0, 4)}-${out.slice(4, 8)}-${out.slice(8)}`;
+  return `${out.slice(0, 4)}-${out.slice(4, 8)}-${out.slice(8, 12)}`;
 }
 
 function hashCode(code: string) {
@@ -50,7 +50,7 @@ export const generateRecoveryCodes = createServerFn({ method: "POST" })
 export const verifyAndDisableRecoveryCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { code: string }) => {
-    if (!data.code || typeof data.code !== "string" || data.code.length < 8) {
+    if (!data.code || typeof data.code !== "string" || data.code.length < 14) {
       throw new Error("Invalid recovery code");
     }
     return { code: data.code.replace(/\s+/g, "").toUpperCase() };
