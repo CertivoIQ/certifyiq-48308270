@@ -203,7 +203,7 @@ where pack.state_code = counts.state_code
 
 with coverage as (
   select *
-  from jsonb_to_recordset(\$state_coverage\${coveragePayload}\$state_coverage\$::jsonb) as state(
+  from jsonb_to_recordset(\$state_coverage\$\${coveragePayload}\$state_coverage\$::jsonb) as state(
     state_code text,
     captured_count integer,
     blocked_count integer,
