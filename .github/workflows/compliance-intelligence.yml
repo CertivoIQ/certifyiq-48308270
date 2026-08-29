@@ -89,6 +89,8 @@ jobs:
           bun run test:mfh-hotma-operations
           bun run test:pha-hotma
           bun run test:billing
+          bun test ./scripts/test-stripe-webhook-security.ts
+          node --test scripts/test-stripe-webhook-fail-closed.mjs
           bun run test:layered
           bun run test:assurance
           bun run test:assurance-schema

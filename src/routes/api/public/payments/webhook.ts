@@ -91,11 +91,11 @@ async function claimEvent(eventId: string | undefined, eventType: string): Promi
   const { error } = await getSupabase()
     .from("stripe_processed_events")
     .insert({ event_id: eventId, event_type: eventType });
-  if (error) {
-    if ((error as { code?: string }).code === "23505") return false;
-    console.error("Event ledger write failed", eventId, error);
-  }
-  return true;
+  if (!error) return true;
+  if ((error as { code?: string }).code === "23505") return false;
+  console.error("Event ledger write failed", eventId, error);
+  throw new Error("Event ledger write failed");
+
 }
 
 async function activateSubscriber(

@@ -82,7 +82,11 @@ export async function verifyWebhook(
 
   if (!timestamp || v1Signatures.length === 0) throw new Error("Invalid signature format");
 
-  const age = Math.abs(Date.now() / 1000 - Number(timestamp));
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isInteger(timestampSeconds) || timestampSeconds <= 0) {
+    throw new Error("Invalid webhook timestamp");
+  }
+  const age = Math.abs(Date.now() / 1000 - timestampSeconds);
   if (age > 300) throw new Error("Webhook timestamp too old");
 
   const key = await crypto.subtle.importKey(
@@ -90,16 +94,25 @@ export async function verifyWebhook(
     new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["verify"],
   );
-  const signed = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(`${timestamp}.${body}`),
-  );
-  const expected = Buffer.from(new Uint8Array(signed)).toString("hex");
+  const payload = new TextEncoder().encode(`${timestamp}.${body}`);
+  let validSignature = false;
+  for (const signatureHex of v1Signatures) {
+    if (!/^[0-9a-f]{64}$/i.test(signatureHex)) continue;
+    const verified = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      Buffer.from(signatureHex, "hex"),
+      payload,
+    );
+    if (verified) {
+      validSignature = true;
+      break;
+    }
+  }
 
-  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
+  if (!validSignature) throw new Error("Invalid webhook signature");
 
   return JSON.parse(body);
 }
