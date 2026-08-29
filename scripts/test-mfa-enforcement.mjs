@@ -34,11 +34,15 @@ test("PHA owners and admins can reach account security", () => {
   );
 });
 
-test("incomplete TOTP enrollment can be restarted without deleting verified factors", () => {
+test("incomplete TOTP enrollment is cleared by an authenticated server operation", () => {
   const security = read("src/routes/_authenticated/account.security.tsx");
+  const recovery = read("src/utils/mfa.functions.ts");
 
-  assert.match(security, /factors\.filter\(\(item\) => item\.status === "unverified"\)/);
-  assert.match(security, /mfa\.unenroll\(\{ factorId: factor\.id \}\)/);
-  assert.doesNotMatch(security, /factors\.filter\(\(item\) => item\.status === "verified"\)/);
+  assert.match(security, /useServerFn\(clearUnverifiedMfaFactors\)/);
+  assert.match(security, /await clearStaleFactors\(\)/);
+  assert.match(recovery, /supabaseAdmin\.auth\.admin\.mfa\.listFactors/);
+  assert.match(recovery, /factor\.status !== "unverified"/);
+  assert.match(recovery, /supabaseAdmin\.auth\.admin\.mfa\.deleteFactor/);
+  assert.doesNotMatch(recovery, /factor\.status === "verified".*deleteFactor/s);
   assert.match(security, /friendlyName: "CertivoIQ Authenticator"/);
 });
