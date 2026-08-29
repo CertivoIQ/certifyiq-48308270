@@ -98,6 +98,23 @@ function normalizeIdentifier(value: string) {
     .replace(/^_+/, "");
 }
 
+function officialDomainFor(sourceUrl: string) {
+  try {
+    return new URL(sourceUrl.trim()).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function messageForError(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 function toneFor(status: string): Tone {
   if (status === "verified") return "seal";
   if (status === "blocked" || status === "rejected") return "reject";
@@ -303,7 +320,7 @@ function StateRuleValidationWorkspace() {
     },
     onError: (error) => {
       if (error instanceof Error && error.message === "Decision cancelled") return;
-      toast.error(error instanceof Error ? error.message : "Source review could not be recorded");
+      toast.error(messageForError(error, "Source review could not be recorded"));
     },
   });
 
@@ -311,9 +328,10 @@ function StateRuleValidationWorkspace() {
     mutationFn: async (source: NewSourceDraft) => {
       if (!source.stateCode) throw new Error("Select a state");
       if (!source.authorityName.trim()) throw new Error("Enter the issuing authority");
-      if (!source.officialDomain.trim()) throw new Error("Enter the official domain");
       if (!source.sourceType.trim()) throw new Error("Enter a source type");
       if (!source.sourceUrl.trim()) throw new Error("Enter the exact official file URL");
+      const officialDomain = officialDomainFor(source.sourceUrl);
+      if (!officialDomain) throw new Error("Enter a valid HTTPS official file URL");
       // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
@@ -321,7 +339,7 @@ function StateRuleValidationWorkspace() {
         p_state_code: source.stateCode,
         p_scope: source.scope,
         p_authority_name: source.authorityName.trim(),
-        p_official_domain: source.officialDomain.trim().toLowerCase(),
+        p_official_domain: officialDomain,
         p_program: source.program,
         p_source_type: source.sourceType,
         p_source_url: source.sourceUrl.trim(),
@@ -341,7 +359,7 @@ function StateRuleValidationWorkspace() {
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Source record could not be created");
+      toast.error(messageForError(error, "Source record could not be created"));
     },
   });
 
@@ -474,17 +492,14 @@ function StateRuleValidationWorkspace() {
                     <Label htmlFor="new-source-domain">Official domain</Label>
                     <Input
                       id="new-source-domain"
-                      required
+                      readOnly
                       maxLength={253}
-                      placeholder="housing.az.gov"
+                      placeholder="Derived from the official file URL"
                       value={newSource.officialDomain}
-                      onChange={(event) =>
-                        setNewSource((current) => ({
-                          ...current,
-                          officialDomain: event.target.value.toLowerCase().trim(),
-                        }))
-                      }
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Automatically derived from the exact official file URL.
+                    </p>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="new-source-program">Program</Label>
@@ -541,9 +556,14 @@ function StateRuleValidationWorkspace() {
                       maxLength={2000}
                       placeholder="https://housing.az.gov/.../document.pdf"
                       value={newSource.sourceUrl}
-                      onChange={(event) =>
-                        setNewSource((current) => ({ ...current, sourceUrl: event.target.value }))
-                      }
+                      onChange={(event) => {
+                        const sourceUrl = event.target.value;
+                        setNewSource((current) => ({
+                          ...current,
+                          sourceUrl,
+                          officialDomain: officialDomainFor(sourceUrl),
+                        }));
+                      }}
                     />
                     <p className="text-xs text-muted-foreground">
                       Use the direct PDF, spreadsheet, ZIP, or other immutable official file—not a landing page.
