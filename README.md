@@ -43,9 +43,12 @@ CertivoIQ is compliance intelligence infrastructure, not legal advice or complet
 
 ## Pricing Architecture
 
-CertivoIQ has one **$65,000 annual platform license** with all currently available platform features included. There are no public plan tiers, training or Academy products, certificates, state-pack add-ons, per-file overages, or separately priced API products.
+CertivoIQ has two annual enterprise license types with all currently available platform features included:
 
-The application, sales materials, agreement, Stripe catalog, and public website must use the same annual price and entitlement language.
+- **Multifamily Enterprise: $65,000 per selected state per year.** Each selected state is a separately licensed state rule pack.
+- **PHA: $150,000 per year, flat.**
+
+There are no public training or Academy products, certificates, per-file overages, or separately priced API products. The application, sales materials, agreements, invoice and payment catalog, email templates, and public website must use this same pricing and entitlement language.
 
 ## API Direction
 
@@ -55,7 +58,7 @@ API and property-management-system integration capabilities must not be marketed
 
 ## Stripe Architecture
 
-Stripe is the billing source of truth for the single annual platform license. Customer-facing descriptions must match the application, agreement, and public pricing experience.
+Stripe and the enterprise invoice workflow are billing sources of truth for the applicable annual license. Customer-facing descriptions must match the application, agreement, and public pricing experience.
 
 ## Security
 
@@ -87,7 +90,8 @@ Deploy through the configured production pipeline. Verify domain, authentication
 - **Colors:** Dark Blue `#012447`, Navy `#082B56`, White `#FFFFFF`, Subtle Yellow `#FEC229`
 - **Pronunciation:** “SUR-duh-voe-eye-cue” — `[ˈsərdəvoʊ aɪˈkjuː]`
 - **Primary CTA:** Try CertivoIQ for Free
-- **Price:** $65,000 annually
+- **Multifamily Enterprise price:** $65,000 per selected state per year
+- **PHA price:** $150,000 per year, flat
 - **Green is not part of the approved brand palette.**
 
 ## Source Specification
