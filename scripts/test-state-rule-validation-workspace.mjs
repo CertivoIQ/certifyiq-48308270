@@ -80,3 +80,11 @@ test("surfaces actionable creation errors and derives the official domain", () =
   assert.match(workspace, /Automatically derived from the exact official file URL/);
   assert.match(workspace, /toast\.error\(messageForError\(error, "Source record could not be created"\)\)/);
 });
+
+
+test("deep-links each state task into its filtered validation queue", () => {
+  assert.match(workspace, /validateSearch/);
+  assert.match(workspace, /routeSearch\.state \?\? "ALL"/);
+  assert.match(tasks, /validationStateCode:\s*active \? candidate\.state_code : undefined/);
+  assert.match(tasks, /search=\{\{ state: task\.validationStateCode, status: "active" \}\}/);
+});
