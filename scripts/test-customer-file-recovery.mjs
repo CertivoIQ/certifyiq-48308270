@@ -87,3 +87,13 @@ test("storage migration removes the permissive bypass and constrains evidence", 
   assert.match(migration, /application\/pdf/);
   assert.match(migration, /bucket_public is distinct from false/);
 });
+
+test("import-job migration preserves the subscription gate", () => {
+  const migration = readFileSync(
+    new URL("../supabase/migrations/20260829061000_harden_certification_import_jobs.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /drop policy if exists "users manage own import jobs"/);
+  assert.match(migration, /policyname = 'users manage import jobs'/);
+  assert.match(migration, /legacy_policies <> 0/);
+});
