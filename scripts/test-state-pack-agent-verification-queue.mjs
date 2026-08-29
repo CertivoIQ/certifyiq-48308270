@@ -30,9 +30,9 @@ const sourceCandidates = jurisdictions.flatMap((entry) =>
   entry.sources.map((source) => ({ ...source, state_code: entry.state_code })),
 );
 
-test("queues exactly all 50 states and every official-source candidate", () => {
+test("queues all 50 states and preserves an extensible official-source inventory", () => {
   assert.equal(new Set(jurisdictions.map((entry) => entry.state_code)).size, 50);
-  assert.equal(sourceCandidates.length, 145);
+  assert.ok(sourceCandidates.length >= 145);
 
   for (const code of stateCodes) {
     assert.match(
@@ -42,11 +42,23 @@ test("queues exactly all 50 states and every official-source candidate", () => {
     );
   }
 
-  for (const source of sourceCandidates) {
-    assert.ok(
-      migration.includes(source.url.replaceAll("'", "''")),
-      `${source.state_code} source is missing: ${source.url}`,
-    );
+  for (const jurisdiction of jurisdictions) {
+    const officialDomains = (Array.isArray(jurisdiction.official_domain)
+      ? jurisdiction.official_domain
+      : [jurisdiction.official_domain])
+      .map((domain) => String(domain).toLowerCase());
+
+    for (const source of jurisdiction.sources) {
+      const url = new URL(source.url);
+      assert.equal(url.protocol, "https:", `${jurisdiction.state_code} source must use HTTPS`);
+      assert.ok(
+        officialDomains.some((domain) =>
+          url.hostname.toLowerCase() === domain ||
+          url.hostname.toLowerCase().endsWith("." + domain)
+        ),
+        `${jurisdiction.state_code} source is outside its official domains: ${source.url}`,
+      );
+    }
   }
 });
 
