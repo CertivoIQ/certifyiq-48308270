@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-29T08:15:00.000Z",
+  "purpose": "replace six mutable or inaccessible authority landing pages with exact official controlled documents",
+  "sourceCount": 6,
+  "independentValidationRequired": true,
+  "complianceActivationAllowed": false,
+  "sources": [
+    {
+      "recordId": "0f75073f-8e3d-4ff5-a567-3b3aabb05478",
+      "stateCode": "AZ",
+      "sourceType": "CONTROLLED_RESOURCE_INDEX",
+      "discoveryUrl": "https://housing.az.gov/resources",
+      "documentTitle": "LIHTC Compliance Manual (2025)",
+      "allowedHosts": ["housing.az.gov", "www.housing.az.gov"],
+      "urls": [
+        "https://housing.az.gov/sites/default/files/2025-08/LIHTC-Compliance-Manual_2025.pdf",
+        "https://housing.az.gov/sites/default/files/2025-07/LIHTC-Compliance-Manual_2025.pdf",
+        "https://housing.az.gov/sites/default/files/2025-06/LIHTC-Compliance-Manual_2025.pdf",
+        "https://housing.az.gov/sites/default/files/documents/files/LIHTC-Compliance-Manual_2025.pdf",
+        "https://housing.az.gov/sites/default/files/2025-08/Overview-of-2025-Compliance-Manual-Updates_Slides.pdf"
+      ],
+      "authorityEvidence": "ADOH official search result identifies LIHTC-Compliance-Manual_2025.pdf; the final fallback is ADOH's dated overview of that manual's 2025 changes."
+    },
+    {
+      "recordId": "33876369-3545-49d1-af97-cf3d4beb9eaa",
+      "stateCode": "AZ",
+      "sourceType": "RENTAL_COMPLIANCE_MANUAL_FORMS_LIMITS",
+      "discoveryUrl": "https://housing.az.gov/programs/rental-compliance",
+      "documentTitle": "2026 LIHTC Income and Rent Limits for Post-1989 Projects",
+      "allowedHosts": ["housing.az.gov", "www.housing.az.gov"],
+      "urls": [
+        "https://housing.az.gov/sites/default/files/2026-05/IB-25-2026-LIHTC-IncomeandRent-Limits.pdf",
+        "https://housing.az.gov/sites/default/files/2026-06/IB-25-2026-LIHTC-IncomeandRent-Limits.pdf",
+        "https://housing.az.gov/sites/default/files/2026-04/IB-25-2026-LIHTC-IncomeandRent-Limits.pdf",
+        "https://housing.az.gov/sites/default/files/2026-05/2026%20LIHTC%20Rent%20%26%20Income%20Limits%20%28Post%201989%29%20%28Effective%205%201%202026%29%20-5.1.26.pdf"
+      ],
+      "authorityEvidence": "ADOH official search results identify the 2026 post-1989 limits as effective May 1, 2026 and name IB-25-2026-LIHTC-IncomeandRent-Limits.pdf."
+    },
+    {
+      "recordId": "365827bd-2633-45f2-9871-05169432408a",
+      "stateCode": "FL",
+      "sourceType": "COMPLIANCE_GUIDEBOOK",
+      "discoveryUrl": "https://www.floridahousing.org/owners-and-managers/compliance/compliance-guidebook",
+      "documentTitle": "Florida Housing Compliance Training Workshop v26.2",
+      "allowedHosts": ["www.floridahousing.org", "floridahousing.org"],
+      "tlsCertificateException": true,
+      "urls": [
+        "https://www.floridahousing.org/docs/default-source/developers-and-property-managers/compliance/compliance-training/florida_housing_compliance_training_workshop_presentation-%28for-note-taking%29-v-26-2.pdf?sfvrsn=6b39f07b_3"
+      ],
+      "authorityEvidence": "Current official Florida Housing compliance workshop, including monitoring, HOTMA and Tenant Income Certification controls."
+    },
+    {
+      "recordId": "483fdc90-5d9a-40bf-86b1-abb5bf17000a",
+      "stateCode": "FL",
+      "sourceType": "COMPLIANCE_LIMITS_FORMS_UPDATES",
+      "discoveryUrl": "https://www.floridahousing.org/owners-and-managers/compliance",
+      "documentTitle": "Florida Housing Compliance Training Workshop v26.2 — forms and limits controls",
+      "allowedHosts": ["www.floridahousing.org", "floridahousing.org"],
+      "tlsCertificateException": true,
+      "urls": [
+        "https://www.floridahousing.org/docs/default-source/developers-and-property-managers/compliance/compliance-training/florida_housing_compliance_training_workshop_presentation-%28for-note-taking%29-v-26-2.pdf?sfvrsn=6b39f07b_3"
+      ],
+      "authorityEvidence": "Current official Florida Housing compliance workshop expressly references Appendix Q Tenant Income Certification and current compliance controls."
+    },
+    {
+      "recordId": "88cbcd66-63b8-4d9b-ab7d-e9d6f608b4c0",
+      "stateCode": "FL",
+      "sourceType": "LIHTC_PROGRAM",
+      "discoveryUrl": "https://www.floridahousing.org/programs/developers-multifamily-programs/low-income-housing-tax-credits",
+      "documentTitle": "2026 Rule 67-48 and Qualified Allocation Plan rulemaking notice",
+      "allowedHosts": ["www.floridahousing.org", "floridahousing.org"],
+      "tlsCertificateException": true,
+      "urls": [
+        "https://www.floridahousing.org/docs/default-source/programs/competitive/2026-rule-development-process/notice-of-development-of-rulemaking-67-48---for-2-24-26-workshop.pdf?Status=Master&sfvrsn=200d86d8_1"
+      ],
+      "authorityEvidence": "Official 2026 Florida Housing notice for Rule Chapter 67-48 and amendments to the 2026 QAP."
+    },
+    {
+      "recordId": "a9f4f294-33ad-4b18-8400-f0564b6c9476",
+      "stateCode": "FL",
+      "sourceType": "NONCOMPETITIVE_QAP_DOCUMENTS",
+      "discoveryUrl": "https://www.floridahousing.org/programs/developers-multifamily-programs/non-competitive/related-references-and-links",
+      "documentTitle": "2026 Rule 67-21 proposed rule and hearing notice",
+      "allowedHosts": ["www.floridahousing.org", "floridahousing.org"],
+      "tlsCertificateException": true,
+      "urls": [
+        "https://www.floridahousing.org/docs/default-source/programs/competitive/2026-rule-development-process/notice-of-proposed-rule---67-21---includes-notice-of-hearing.pdf?Status=Master&sfvrsn=aa922464_1"
+      ],
+      "authorityEvidence": "Official 2026 Florida Housing proposed Rule 67-21 notice governing noncompetitive bond-financed developments."
+    }
+  ]
+}
