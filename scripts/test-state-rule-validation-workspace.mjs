@@ -72,3 +72,11 @@ test("lets active administrators create audited exact-file source records", () =
   assert.match(creationMigration, /revoke all on function[\s\S]*from anon/);
   assert.doesNotMatch(creationMigration, /compliance_activation_allowed\s*=\s*true/);
 });
+
+
+test("surfaces actionable creation errors and derives the official domain", () => {
+  assert.match(workspace, /messageForError/);
+  assert.match(workspace, /officialDomainFor/);
+  assert.match(workspace, /Automatically derived from the exact official file URL/);
+  assert.match(workspace, /toast\.error\(messageForError\(error, "Source record could not be created"\)\)/);
+});
