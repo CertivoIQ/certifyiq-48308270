@@ -29,7 +29,7 @@ create or replace function public.normalize_state_rule_pack_activation()
 returns trigger
 language plpgsql
 set search_path = pg_catalog, public
-as $
+as $normalize$
 begin
   if new.status = 'active' then
     if not new.compliance_activation_allowed or new.validated_on is null then
@@ -43,7 +43,7 @@ begin
   end if;
   return new;
 end;
-$;
+$normalize$;
 
 drop trigger if exists normalize_state_rule_pack_activation
   on public.state_rule_pack_candidates;
