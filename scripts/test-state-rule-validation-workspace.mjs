@@ -9,6 +9,13 @@ const migration = await readFile(
   ),
   "utf8",
 );
+const creationMigration = await readFile(
+  new URL(
+    "../supabase/migrations/20260829070000_admin_add_state_source_records.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const workspace = await readFile(
   new URL("../src/routes/_authenticated/state-rule-validation.tsx", import.meta.url),
   "utf8",
@@ -47,4 +54,21 @@ test("keeps review fail closed and denies employee decisions", () => {
   assert.match(migration, /revoke all on function[\s\S]*from anon/);
   assert.match(migration, /grant execute on function[\s\S]*to authenticated/);
   assert.doesNotMatch(migration, /compliance_activation_allowed\s*=\s*true/);
+});
+
+
+test("lets active administrators create audited exact-file source records", () => {
+  assert.match(workspace, /Add source record/);
+  assert.match(workspace, /Create validation record/);
+  assert.match(workspace, /isCrmAdmin/);
+  assert.match(workspace, /create_state_rule_source_candidate/);
+  assert.match(creationMigration, /access_level = 'admin'/);
+  assert.match(creationMigration, /state_rule_source_creation_events/);
+  assert.match(creationMigration, /agent_verification_status[\s\S]*'queued_for_agent_verification'/);
+  assert.match(creationMigration, /exact_bytes_captured[\s\S]*false/);
+  assert.match(creationMigration, /compliance_activation_allowed[\s\S]*false/);
+  assert.match(creationMigration, /Official source URL must match the official domain/);
+  assert.match(creationMigration, /revoke all on function[\s\S]*from public/);
+  assert.match(creationMigration, /revoke all on function[\s\S]*from anon/);
+  assert.doesNotMatch(creationMigration, /compliance_activation_allowed\s*=\s*true/);
 });
