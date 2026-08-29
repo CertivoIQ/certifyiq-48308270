@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: certivoiq-operations-worker
@@ -18,20 +19,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Validate required secrets
-        env:
-          WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-        run: |
-          test -n "$WORKER_SECRET"
-
       - name: Run worker tick
         env:
           SUPABASE_URL: https://emnkzxkcpnyvglwxraxm.supabase.co
-          WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
         run: |
+          oidc_response="$(curl --silent --show-error --fail-with-body \
+            --header "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=certivoiq-operations-worker")"
+          oidc_token="$(jq -er '.value' <<< "$oidc_response")"
           curl --silent --show-error --fail-with-body \
             --request POST \
             --url "${SUPABASE_URL%/}/functions/v1/operations-worker" \
-            --header "Authorization: Bearer $WORKER_SECRET" \
+            --header "Authorization: Bearer $oidc_token" \
             --header "Content-Type: application/json" \
             --data '{}'
