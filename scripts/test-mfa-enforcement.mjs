@@ -46,3 +46,12 @@ test("incomplete TOTP enrollment is cleared by an authenticated server operation
   assert.doesNotMatch(recovery, /factor\.status === "verified".*deleteFactor/s);
   assert.match(security, /friendlyName: "CertivoIQ Authenticator"/);
 });
+
+
+test("TOTP enrollment renders Supabase QR data without double-encoding", () => {
+  const security = read("src/routes/_authenticated/account.security.tsx");
+
+  assert.match(security, /src=\{enrollData\.totp\.qr_code\}/);
+  assert.doesNotMatch(security, /encodeURIComponent\(enrollData\.totp\.qr_code\)/);
+  assert.match(security, /value=\{enrollData\.totp\.secret\}/);
+});
