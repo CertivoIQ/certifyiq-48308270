@@ -25,6 +25,37 @@ alter table public.state_rule_pack_candidates
 alter table public.state_rule_pack_candidates
   add column if not exists validated_on date;
 
+create or replace function public.normalize_state_rule_pack_activation()
+returns trigger
+language plpgsql
+set search_path = pg_catalog, public
+as $
+begin
+  if new.status = 'active' then
+    if not new.compliance_activation_allowed or new.validated_on is null then
+      raise exception 'An active state rule pack requires controlled validation';
+    end if;
+    new.agent_verification_required := false;
+  else
+    new.compliance_activation_allowed := false;
+    new.agent_verification_required := true;
+    new.validated_on := null;
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists normalize_state_rule_pack_activation
+  on public.state_rule_pack_candidates;
+create trigger normalize_state_rule_pack_activation
+before insert or update of status, compliance_activation_allowed, agent_verification_required, validated_on
+on public.state_rule_pack_candidates
+for each row execute function public.normalize_state_rule_pack_activation();
+
+revoke all on function public.normalize_state_rule_pack_activation() from public;
+revoke all on function public.normalize_state_rule_pack_activation() from anon;
+revoke all on function public.normalize_state_rule_pack_activation() from authenticated;
+
 alter table public.state_rule_pack_candidates
   drop constraint if exists state_rule_pack_candidates_activation_state_check;
 alter table public.state_rule_pack_candidates
