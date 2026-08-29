@@ -48,6 +48,7 @@ type Pack = {
   source_candidate_count: number;
   blocked_source_count: number;
   compliance_activation_allowed: boolean;
+  validated_on: string | null;
   updated_at: string;
 };
 
@@ -134,7 +135,7 @@ function messageForError(error: unknown, fallback: string) {
 }
 
 function toneFor(status: string): Tone {
-  if (status === "verified") return "seal";
+  if (status === "verified" || status === "active") return "seal";
   if (status === "blocked" || status === "rejected") return "reject";
   return "flag";
 }
@@ -150,7 +151,7 @@ async function loadValidationQueue() {
   const [packResult, sourceResult] = await Promise.all([
     client
       .from("state_rule_pack_candidates")
-      .select("id,state_code,status,source_candidate_count,blocked_source_count,compliance_activation_allowed,updated_at")
+      .select("id,state_code,status,source_candidate_count,blocked_source_count,compliance_activation_allowed,validated_on,updated_at")
       .order("state_code"),
     client
       .from("state_rule_source_candidates")
@@ -289,7 +290,7 @@ function SourceReviewCard({
             </Button>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Every decision is appended to the audit history. Verification never activates compliance rules.
+            Every decision is appended to the audit history. Complete packs activate automatically.
           </p>
         </div>
       </div>
@@ -337,11 +338,18 @@ function StateRuleValidationWorkspace() {
         p_supersession_notes: draft.supersessionNotes || null,
       });
       if (error) throw error;
-      return data as { source_status: string; pack_status: string };
+      return data as {
+        source_status: string;
+        pack_status: string;
+        compliance_activation_allowed: boolean;
+        validated_on: string | null;
+      };
     },
     onSuccess: (result, variables) => {
       toast.success(`${variables.source.state_code} source ${labelFor(result.source_status)}`, {
-        description: `Pack status: ${labelFor(result.pack_status)}. Compliance activation remains disabled.`,
+        description: result.compliance_activation_allowed
+          ? `Pack activated automatically. Validation date: ${result.validated_on ?? "recorded"}.`
+          : `Pack status: ${labelFor(result.pack_status)}. Activation remains closed until the full pack passes.`,
       });
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
     },
@@ -392,6 +400,8 @@ function StateRuleValidationWorkspace() {
 
   const packs = query.data?.packs ?? [];
   const statePacks = packs.filter((pack) => pack.state_code !== "US");
+  const selectedPack = statePacks.find((pack) => pack.state_code === stateCode);
+  const activatedPacks = statePacks.filter((pack) => pack.compliance_activation_allowed).length;
   const sources = query.data?.sources ?? [];
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => ["blocked", "rejected"].includes(source.agent_verification_status)).length;
@@ -437,8 +447,9 @@ function StateRuleValidationWorkspace() {
         </Panel>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <Stat label="State packs" value={query.error ? "—" : statePacks.length} hint="Exactly 50 state candidates" />
+            <Stat label="Active packs" value={query.error ? "—" : activatedPacks} hint="Fully validated" tone={activatedPacks ? "seal" : "flag"} />
             <Stat label="Source candidates" value={query.error ? "—" : sources.length} hint="Official-source queue" />
             <Stat label="Remaining" value={query.error ? "—" : active} hint="Includes blocked items" tone={active ? "flag" : "seal"} />
             <Stat label="Verified sources" value={query.error ? "—" : verified} hint="Source review only" tone={verified ? "seal" : "flag"} />
@@ -447,11 +458,15 @@ function StateRuleValidationWorkspace() {
 
           <div className="mt-4 rounded-lg border border-flag/30 bg-flag-soft p-4 text-sm">
             <p className="flex items-start gap-2 font-medium">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Source verification is not rule-pack activation.
+              <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Complete packs activate automatically.
             </p>
             <p className="mt-1 text-muted-foreground">
-              Deterministic rules, fixtures, expected results, supersession controls, and independent approval remain required before release.
+              Activation occurs only after every required state source and the shared federal baseline pass controlled validation.
+              Reviewer and approver emails remain hidden from operational screens and are available only through controlled reporting.
             </p>
+            {selectedPack?.validated_on ? (
+              <p className="mt-2 font-medium">Validation date: {selectedPack.validated_on}</p>
+            ) : null}
           </div>
 
           {isCrmAdmin ? (
@@ -612,7 +627,7 @@ function StateRuleValidationWorkspace() {
                       {createSource.isPending ? "Creating…" : "Create validation record"}
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      New records remain queued and cannot activate compliance rules.
+                      A new record returns the pack to validation until every required source passes.
                     </p>
                   </div>
                 </form>
