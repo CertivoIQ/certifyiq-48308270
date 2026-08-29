@@ -51,6 +51,7 @@ function SecurityPage() {
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [copied, setCopied] = useState(false);
   const [disableCode, setDisableCode] = useState("");
+  const [disableRecoveryCode, setDisableRecoveryCode] = useState("");
   const [disableMode, setDisableMode] = useState(false);
   const [recoveryCount, setRecoveryCount] = useState(0);
 
@@ -148,6 +149,7 @@ function SecurityPage() {
       await refresh();
       setDisableMode(false);
       setDisableCode("");
+      setDisableRecoveryCode("");
       setRecoveryCount(0);
       toast.success("Two-factor authentication disabled");
     } catch (err) {
@@ -158,14 +160,15 @@ function SecurityPage() {
   }
 
   async function disableWithRecoveryCode() {
-    if (!disableCode) return;
+    if (disableRecoveryCode.length !== 14) return;
     setEnrolling(true);
     try {
-      const result = await submitRecoveryCode({ data: { code: disableCode } });
+      const result = await submitRecoveryCode({ data: { code: disableRecoveryCode } });
       if ("error" in result) throw new Error(result.error);
       await refresh();
       setDisableMode(false);
       setDisableCode("");
+      setDisableRecoveryCode("");
       setRecoveryCount(0);
       toast.success("Two-factor authentication disabled using recovery code");
     } catch (err) {
@@ -376,6 +379,21 @@ function SecurityPage() {
                 </InputOTPGroup>
               </InputOTP>
             </div>
+            <div className="mt-4">
+              <Label htmlFor="disable-recovery" className="text-[12px] uppercase tracking-wide">
+                Recovery code
+              </Label>
+              <Input
+                id="disable-recovery"
+                value={disableRecoveryCode}
+                onChange={(event) => setDisableRecoveryCode(event.target.value.toUpperCase())}
+                placeholder="XXXX-XXXX-XXXX"
+                maxLength={14}
+                autoComplete="off"
+                disabled={enrolling}
+                className="mt-2 max-w-xs font-mono"
+              />
+            </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button
                 variant="destructive"
@@ -387,12 +405,20 @@ function SecurityPage() {
               </Button>
               <Button
                 variant="outline"
-                disabled={disableCode.length < 8 || enrolling}
+                disabled={disableRecoveryCode.length !== 14 || enrolling}
                 onClick={disableWithRecoveryCode}
               >
                 Use recovery code
               </Button>
-              <Button variant="ghost" onClick={() => setDisableMode(false)} disabled={enrolling}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setDisableMode(false);
+                  setDisableCode("");
+                  setDisableRecoveryCode("");
+                }}
+                disabled={enrolling}
+              >
                 Cancel
               </Button>
             </div>
