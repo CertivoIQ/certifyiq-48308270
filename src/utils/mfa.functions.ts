@@ -19,6 +19,35 @@ function hashCode(code: string) {
   return createHash("sha256").update(code).digest("hex");
 }
 
+/**
+ * Remove abandoned enrollment factors for the authenticated user. Supabase
+ * cannot return a TOTP secret after navigation, and the browser factor list may
+ * omit unverified factors, so restart cleanup must use the authenticated admin
+ * API. Verified factors are never removed here.
+ */
+export const clearUnverifiedMfaFactors = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.auth.admin.mfa.listFactors({
+      userId: context.userId,
+    });
+    if (error) throw error;
+
+    let removed = 0;
+    for (const factor of data?.factors ?? []) {
+      if (factor.status !== "unverified") continue;
+      const { error: deleteError } = await supabaseAdmin.auth.admin.mfa.deleteFactor({
+        id: factor.id,
+        userId: context.userId,
+      });
+      if (deleteError) throw deleteError;
+      removed += 1;
+    }
+
+    return { removed };
+  });
+
 /** Generate a fresh set of recovery codes for the authenticated user. */
 export const generateRecoveryCodes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
