@@ -1,0 +1,41 @@
+name: Nationwide State Validation Document Families
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - src/lib/nationwide-state-source-discovery.json
+      - src/lib/nationwide-state-source-evidence-pipeline.mjs
+      - src/lib/state-validation-document-families.mjs
+      - scripts/crawl-state-validation-document-families.mjs
+      - scripts/test-state-validation-document-families.mjs
+      - .github/workflows/state-validation-document-families.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: state-validation-document-families-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Validate document-family controls
+        run: node --test scripts/test-state-validation-document-families.mjs scripts/test-nationwide-state-source-evidence-pipeline.mjs
+      - name: Crawl and hash current official documents
+        run: node scripts/crawl-state-validation-document-families.mjs
+      - name: Upload nationwide validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-validation-document-families
+          path: artifacts/state-validation-document-families.json
+          if-no-files-found: error
+          retention-days: 30
