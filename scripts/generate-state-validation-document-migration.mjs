@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 const manifestPath = resolve(process.argv[2] ?? "artifacts/state-validation-document-families.json");
 const outputPath = resolve(process.argv[3] ?? "supabase/migrations/20260829203000_add_state_validation_document_families.sql");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-const documents = manifest.states
+const rawDocuments = manifest.states
   .flatMap((state) => state.documents)
   .filter((document) => document.capture_status === "captured_unvalidated")
   .map((document) => ({
@@ -30,6 +30,25 @@ const documents = manifest.states
     tls_peer_verification: document.tls_peer_verification,
     tls_exception_scope: document.tls_exception_scope,
   }));
+
+const documentsBySource = new Map();
+for (const document of rawDocuments) {
+  const key = [document.state_code, document.scope, document.source_url].join("|");
+  const existing = documentsBySource.get(key);
+  if (!existing) {
+    documentsBySource.set(key, document);
+    continue;
+  }
+  if (existing.source_sha256 !== document.source_sha256) {
+    throw new Error("Duplicate source URL produced conflicting hashes: " + document.source_url);
+  }
+  existing.document_families = [...new Set([
+    ...existing.document_families,
+    ...document.document_families,
+  ])].sort();
+  existing.source_type = existing.document_families.join("_AND_").slice(0, 150);
+}
+const documents = [...documentsBySource.values()];
 
 const stateCoverage = manifest.states.map((state) => ({
   state_code: state.state_code,
