@@ -10,8 +10,8 @@ const delay = (ms) => new Promise((resolveDelay) => setTimeout(resolveDelay, ms)
 const isAllowedHost = (source, hostname) =>
   source.allowedHosts.some((allowed) => hostname === allowed || hostname.endsWith(`.${allowed}`));
 
-async function request(source, attempt) {
-  const response = await fetch(source.url, {
+async function request(source, attempt, requestUrl) {
+  const response = await fetch(requestUrl, {
     redirect: "follow",
     headers: {
       "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 CertivoIQ-Controlled-Capture/2.0",
@@ -43,11 +43,14 @@ async function request(source, attempt) {
 
 async function capture(source) {
   let lastError;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    try { return await request(source, attempt); }
-    catch (error) {
-      lastError = error;
-      if (attempt < 2) await delay(attempt * 1500);
+  const requestUrls = [source.url, ...(source.fallbackUrls ?? [])];
+  for (const requestUrl of requestUrls) {
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try { return await request(source, attempt, requestUrl); }
+      catch (error) {
+        lastError = error;
+        if (attempt < 2) await delay(attempt * 1500);
+      }
     }
   }
   return {
