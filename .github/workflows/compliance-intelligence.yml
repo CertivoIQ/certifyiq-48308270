@@ -53,6 +53,7 @@ jobs:
           node --test scripts/test-crm-staff-invitations.mjs
           node --test scripts/test-privileged-rpc-surface.mjs
           node --test scripts/test-nspire-production-recovery.mjs
+          node --test scripts/test-nspire-rpc-surface.mjs
           bun run test:compliance
           bun run test:slice
           bun run test:orchestrator
