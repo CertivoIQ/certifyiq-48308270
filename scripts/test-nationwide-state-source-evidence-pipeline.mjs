@@ -60,3 +60,15 @@ test("a redirect to a non-official host is blocked before any source can be trus
   assert.equal(record.reason_code, "FINAL_URL_NOT_OFFICIAL_ALLOWLISTED");
   assert.equal(record.compliance_activation_allowed, false);
 });
+
+
+test("effective date extraction recognizes versioned schedule labels", () => {
+  assert.equal(
+    extractDeclaredEffectiveDate("2026 Income and Rent Limits — Effective: 6/1/2026").effective_date,
+    "2026-06-01",
+  );
+  assert.equal(
+    extractDeclaredEffectiveDate("Utility Allowance procedures effective 2026-01-15").effective_date,
+    "2026-01-15",
+  );
+});
