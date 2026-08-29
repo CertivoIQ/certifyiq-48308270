@@ -125,7 +125,7 @@ async function discoverSitemapSources(jurisdiction) {
 
 async function extractPdfText(bytes) {
   try {
-    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const pdfjs = await import(process.env.PDFJS_DIST_PATH ?? "pdfjs-dist/legacy/build/pdf.mjs");
     const document = await pdfjs.getDocument({ data: bytes, disableWorker: true }).promise;
     const pages = [];
     for (let pageNumber = 1; pageNumber <= Math.min(document.numPages, 12); pageNumber += 1) {
