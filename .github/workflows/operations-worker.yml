@@ -34,11 +34,10 @@ jobs:
           SUPABASE_KEY: ${{ secrets.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY }}
           WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
         run: |
-          payload="$(jq -n --arg secret "$WORKER_SECRET" '{worker_secret: $secret}')"
           curl --silent --show-error --fail-with-body \
             --request POST \
-            --url "${SUPABASE_URL%/}/rest/v1/rpc/operations_github_tick_v2" \
+            --url "${SUPABASE_URL%/}/functions/v1/operations-worker" \
             --header "apikey: $SUPABASE_KEY" \
-            --header "Authorization: Bearer $SUPABASE_KEY" \
+            --header "Authorization: Bearer $WORKER_SECRET" \
             --header "Content-Type: application/json" \
-            --data "$payload"
+            --data '{}'

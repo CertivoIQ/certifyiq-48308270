@@ -101,12 +101,15 @@ test("repository is marked proprietary", () => {
 });
 
 
-test("public pricing uses the single annual platform license", () => {
+test("public pricing uses the two authoritative annual license types", () => {
   const pricing = read("src/routes/pricing.tsx");
   const catalog = read("src/lib/platform-data.ts");
   const combined = pricing + catalog;
 
   assert.match(combined, /\$65,000/);
+  assert.match(combined, /\$150,000/);
+  assert.match(combined, /selected state/i);
+  assert.match(combined, /PHA/i);
   assert.match(pricing, /Try CertivoIQ for Free/i);
   assert.doesNotMatch(combined, /\$999|\$4,999|\$9,999|\$14,999/);
   assert.doesNotMatch(pricing, /Professional|Enterprise Plus|CertivoIQ Academy/i);
