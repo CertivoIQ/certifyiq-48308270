@@ -89,14 +89,30 @@ function SecurityPage() {
       // is left, and its browser factor list can omit unverified factors. The
       // authenticated server operation removes only this user's abandoned,
       // unverified enrollments; verified factors are never touched.
-      await clearStaleFactors();
+      try {
+        await clearStaleFactors();
+      } catch {
+        // Cleanup is best-effort. A temporary server-side cleanup failure must
+        // not prevent the browser from attempting a fresh enrollment.
+      }
 
-      const { data, error } = await supabase.auth.mfa.enroll({
+      let enrollment = await supabase.auth.mfa.enroll({
         factorType: "totp",
         friendlyName: "CertivoIQ Authenticator",
       });
-      if (error) throw error;
-      setEnrollData(data as AuthMFAEnrollTOTPResponse["data"]);
+
+      // If an abandoned factor is still hidden from cleanup, use a unique
+      // friendly name so Supabase can issue a new QR code instead of leaving
+      // the user blocked by mfa_factor_name_conflict.
+      if (enrollment.error?.code === "mfa_factor_name_conflict") {
+        enrollment = await supabase.auth.mfa.enroll({
+          factorType: "totp",
+          friendlyName: `CertivoIQ Authenticator ${Date.now()}`,
+        });
+      }
+
+      if (enrollment.error) throw enrollment.error;
+      setEnrollData(enrollment.data as AuthMFAEnrollTOTPResponse["data"]);
       setVerifyCode("");
       await refresh();
     } catch (err) {
