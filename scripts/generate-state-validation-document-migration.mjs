@@ -27,6 +27,8 @@ const documents = manifest.states
     effective_date: document.effective_date,
     effective_date_status: document.effective_date_status,
     effective_date_evidence: document.effective_date_evidence,
+    tls_peer_verification: document.tls_peer_verification,
+    tls_exception_scope: document.tls_exception_scope,
   }));
 
 const payload = JSON.stringify(documents).replaceAll("$state_docs$", "$state_docs_escape$");
@@ -55,7 +57,9 @@ with captured as (
     declared_year integer,
     effective_date date,
     effective_date_status text,
-    effective_date_evidence text
+    effective_date_evidence text,
+    tls_peer_verification boolean,
+    tls_exception_scope text
   )
 ),
 prepared as (
@@ -116,6 +120,8 @@ select
     'effective_date', effective_date,
     'effective_date_status', effective_date_status,
     'effective_date_evidence', effective_date_evidence,
+    'tls_peer_verification', tls_peer_verification,
+    'tls_exception_scope', tls_exception_scope,
     'independent_validation_required', true,
     'human_verified', false,
     'compliance_activation_allowed', false
