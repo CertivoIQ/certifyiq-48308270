@@ -1,0 +1,38 @@
+name: Final Blocked Source Replacements
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - config/final-blocked-source-replacements.json
+      - scripts/capture-final-blocked-source-replacements.mjs
+      - scripts/test-final-blocked-source-replacements.mjs
+      - .github/workflows/final-blocked-source-replacements.yml
+      - artifacts/final-blocked-source-replacements.json
+      - supabase/migrations/20260829090000_resolve_final_six_source_blocks.sql
+permissions:
+  contents: read
+concurrency:
+  group: final-blocked-source-replacements-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate replacement controls
+        run: node --test scripts/test-final-blocked-source-replacements.mjs
+      - name: Capture exact official document bytes
+        run: node scripts/capture-final-blocked-source-replacements.mjs
+      - name: Validate captured manifest
+        run: node --test scripts/test-final-blocked-source-replacements.mjs
+      - name: Upload replacement evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-blocked-source-replacements
+          path: artifacts/final-blocked-source-replacements.json
+          if-no-files-found: error
+          retention-days: 30
