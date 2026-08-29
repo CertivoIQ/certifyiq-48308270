@@ -88,3 +88,11 @@ test("deep-links each state task into its filtered validation queue", () => {
   assert.match(tasks, /validationStateCode:\s*active \? candidate\.state_code : undefined/);
   assert.match(tasks, /search=\{\{ state: task\.validationStateCode, status: "active" \}\}/);
 });
+
+
+test("shows the shared federal baseline inside every selected state queue", () => {
+  assert.match(workspace, /source\.state_code === "US" \|\| source\.scope === "FEDERAL_SHARED"/);
+  assert.match(workspace, /inheritedFederal/);
+  assert.match(workspace, /inherited by/);
+  assert.match(workspace, /!inheritedFederal && status === "active"/);
+});
