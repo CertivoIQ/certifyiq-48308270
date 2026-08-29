@@ -20,24 +20,18 @@ jobs:
     steps:
       - name: Validate required secrets
         env:
-          SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY }}
           WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
         run: |
-          test -n "$SUPABASE_URL"
-          test -n "$SUPABASE_KEY"
           test -n "$WORKER_SECRET"
 
       - name: Run worker tick
         env:
-          SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_URL: https://emnkzxkcpnyvglwxraxm.supabase.co
           WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
         run: |
           curl --silent --show-error --fail-with-body \
             --request POST \
             --url "${SUPABASE_URL%/}/functions/v1/operations-worker" \
-            --header "apikey: $SUPABASE_KEY" \
             --header "Authorization: Bearer $WORKER_SECRET" \
             --header "Content-Type: application/json" \
             --data '{}'
