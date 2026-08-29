@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "states": ["TN", "TX"],
+  "sources": [
+    {
+      "stateCode": "TN",
+      "sourceType": "COMPLIANCE_ASSET_MANAGEMENT",
+      "url": "https://thda.org/rental-housing-partn/compliance-asset-management/",
+      "allowedHosts": ["thda.org", "www.thda.org"]
+    },
+    {
+      "stateCode": "TN",
+      "sourceType": "HOUSING_CREDIT_COMPLIANCE",
+      "url": "https://thda.org/rental-housing-partn/housing-credit-compliance/",
+      "allowedHosts": ["thda.org", "www.thda.org"]
+    },
+    {
+      "stateCode": "TN",
+      "sourceType": "LIHTC_PROGRAM",
+      "url": "https://thda.org/rental-housing-partn/lihtc-program/",
+      "allowedHosts": ["thda.org", "www.thda.org"]
+    },
+    {
+      "stateCode": "TN",
+      "sourceType": "THOMAS_DOCUMENTS",
+      "url": "https://thda.org/rental-housing-partn/thomas-documents/",
+      "allowedHosts": ["thda.org", "www.thda.org"]
+    },
+    {
+      "stateCode": "TX",
+      "sourceType": "APPLICATION_MATERIALS",
+      "url": "https://www.tdhca.texas.gov/apply-funds",
+      "allowedHosts": ["tdhca.texas.gov", "www.tdhca.texas.gov"]
+    },
+    {
+      "stateCode": "TX",
+      "sourceType": "COMPLIANCE_FORMS",
+      "url": "https://www.tdhca.texas.gov/compliance-forms",
+      "allowedHosts": ["tdhca.texas.gov", "www.tdhca.texas.gov"]
+    },
+    {
+      "stateCode": "TX",
+      "sourceType": "COMPLIANCE_INDEX",
+      "url": "https://www.tdhca.texas.gov/compliance",
+      "allowedHosts": ["tdhca.texas.gov", "www.tdhca.texas.gov"]
+    },
+    {
+      "stateCode": "TX",
+      "sourceType": "COMPLIANCE_MANUALS_AND_RULES",
+      "url": "https://www.tdhca.texas.gov/compliance-manuals-and-rules",
+      "allowedHosts": ["tdhca.texas.gov", "www.tdhca.texas.gov"]
+    },
+    {
+      "stateCode": "TX",
+      "sourceType": "POST_AWARD_MANUAL",
+      "url": "https://www.tdhca.texas.gov/post-award-activities-manual",
+      "allowedHosts": ["tdhca.texas.gov", "www.tdhca.texas.gov"]
+    },
+    {
+      "stateCode": "TX",
+      "sourceType": "QAP_AND_9_PERCENT_PROGRAM",
+      "url": "https://www.tdhca.texas.gov/competitive-9-housing-tax-credits",
+      "allowedHosts": ["tdhca.texas.gov", "www.tdhca.texas.gov"]
+    }
+  ]
+}
