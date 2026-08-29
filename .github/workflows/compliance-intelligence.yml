@@ -54,6 +54,7 @@ jobs:
           node --test scripts/test-privileged-rpc-surface.mjs
           node --test scripts/test-nspire-production-recovery.mjs
           node --test scripts/test-nspire-rpc-surface.mjs
+          node --test scripts/test-production-role-uat.mjs
           bun run test:compliance
           bun run test:slice
           bun run test:orchestrator
