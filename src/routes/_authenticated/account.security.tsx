@@ -301,7 +301,7 @@ function SecurityPage() {
           <div className="mt-5 grid gap-6 sm:grid-cols-[auto_1fr] sm:items-start">
             <div className="overflow-hidden rounded-lg border border-border bg-white p-2">
               <img
-                src={`data:image/svg+xml;utf-8,${encodeURIComponent(enrollData.totp.qr_code)}`}
+                src={enrollData.totp.qr_code}
                 alt="Authenticator QR code"
                 className="size-44"
               />
