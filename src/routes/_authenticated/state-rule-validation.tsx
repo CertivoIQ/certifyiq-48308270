@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, ExternalLink, FileSearch, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ExternalLink, FileSearch, Plus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -67,6 +67,36 @@ const EMPTY_DRAFT: Draft = {
   effectiveDate: "",
   supersessionNotes: "",
 };
+
+type NewSourceDraft = {
+  stateCode: string;
+  scope: string;
+  authorityName: string;
+  officialDomain: string;
+  program: string;
+  sourceType: string;
+  sourceUrl: string;
+  candidateStatus: string;
+};
+
+const EMPTY_NEW_SOURCE: NewSourceDraft = {
+  stateCode: "",
+  scope: "STATEWIDE",
+  authorityName: "",
+  officialDomain: "",
+  program: "LIHTC",
+  sourceType: "",
+  sourceUrl: "",
+  candidateStatus: "PENDING_EXACT_BYTES_AND_HASHES",
+};
+
+function normalizeIdentifier(value: string) {
+  return value
+    .toUpperCase()
+    .trimStart()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+/, "");
+}
 
 function toneFor(status: string): Tone {
   if (status === "verified") return "seal";
@@ -225,12 +255,14 @@ function SourceReviewCard({
 }
 
 function StateRuleValidationWorkspace() {
-  const { canManageStaff, loading } = useCrmStaffAuthority();
+  const { canManageStaff, isCrmAdmin, loading } = useCrmStaffAuthority();
   const queryClient = useQueryClient();
   const [stateCode, setStateCode] = useState("ALL");
   const [status, setStatus] = useState("active");
   const [search, setSearch] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [showNewSource, setShowNewSource] = useState(false);
+  const [newSource, setNewSource] = useState<NewSourceDraft>(EMPTY_NEW_SOURCE);
 
   const query = useQuery({
     queryKey: ["state-rule-validation-queue"],
@@ -272,6 +304,44 @@ function StateRuleValidationWorkspace() {
     onError: (error) => {
       if (error instanceof Error && error.message === "Decision cancelled") return;
       toast.error(error instanceof Error ? error.message : "Source review could not be recorded");
+    },
+  });
+
+  const createSource = useMutation({
+    mutationFn: async (source: NewSourceDraft) => {
+      if (!source.stateCode) throw new Error("Select a state");
+      if (!source.authorityName.trim()) throw new Error("Enter the issuing authority");
+      if (!source.officialDomain.trim()) throw new Error("Enter the official domain");
+      if (!source.sourceType.trim()) throw new Error("Enter a source type");
+      if (!source.sourceUrl.trim()) throw new Error("Enter the exact official file URL");
+      // Generated database types intentionally lag controlled launch migrations.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = supabase as any;
+      const { data, error } = await client.rpc("create_state_rule_source_candidate", {
+        p_state_code: source.stateCode,
+        p_scope: source.scope,
+        p_authority_name: source.authorityName.trim(),
+        p_official_domain: source.officialDomain.trim().toLowerCase(),
+        p_program: source.program,
+        p_source_type: source.sourceType,
+        p_source_url: source.sourceUrl.trim(),
+        p_candidate_status: source.candidateStatus,
+      });
+      if (error) throw error;
+      return data as { candidate_id: string; state_code: string; source_candidate_count: number };
+    },
+    onSuccess: (result) => {
+      toast.success(`${result.state_code} source record created`, {
+        description: "The exact-file source is queued for independent validation and remains fail-closed.",
+      });
+      setNewSource(EMPTY_NEW_SOURCE);
+      setShowNewSource(false);
+      setStateCode(result.state_code);
+      setStatus("active");
+      void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Source record could not be created");
     },
   });
 
@@ -327,6 +397,170 @@ function StateRuleValidationWorkspace() {
               Deterministic rules, fixtures, expected results, supersession controls, and independent approval remain required before release.
             </p>
           </div>
+
+          {isCrmAdmin ? (
+            <Panel
+              className="mt-4"
+              title="Exact-file source records"
+              description="Split mutable landing pages and document collections into independently hashable source records."
+              actions={
+                <Button
+                  size="sm"
+                  variant={showNewSource ? "outline" : "default"}
+                  onClick={() => setShowNewSource((current) => !current)}
+                >
+                  <Plus className="size-4" />
+                  {showNewSource ? "Cancel" : "Add source record"}
+                </Button>
+              }
+              bodyClassName={showNewSource ? "p-5" : "hidden"}
+            >
+              {showNewSource ? (
+                <form
+                  className="grid gap-4 md:grid-cols-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    createSource.mutate(newSource);
+                  }}
+                >
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-source-state">State</Label>
+                    <select
+                      id="new-source-state"
+                      required
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      value={newSource.stateCode}
+                      onChange={(event) =>
+                        setNewSource((current) => ({ ...current, stateCode: event.target.value }))
+                      }
+                    >
+                      <option value="">Select a state</option>
+                      {packs.map((pack) => (
+                        <option key={pack.id} value={pack.state_code}>
+                          {pack.state_code}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-source-scope">Scope</Label>
+                    <Input
+                      id="new-source-scope"
+                      required
+                      maxLength={100}
+                      value={newSource.scope}
+                      onChange={(event) =>
+                        setNewSource((current) => ({
+                          ...current,
+                          scope: normalizeIdentifier(event.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label htmlFor="new-source-authority">Issuing authority</Label>
+                    <Input
+                      id="new-source-authority"
+                      required
+                      maxLength={250}
+                      placeholder="Arizona Department of Housing"
+                      value={newSource.authorityName}
+                      onChange={(event) =>
+                        setNewSource((current) => ({ ...current, authorityName: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-source-domain">Official domain</Label>
+                    <Input
+                      id="new-source-domain"
+                      required
+                      maxLength={253}
+                      placeholder="housing.az.gov"
+                      value={newSource.officialDomain}
+                      onChange={(event) =>
+                        setNewSource((current) => ({
+                          ...current,
+                          officialDomain: event.target.value.toLowerCase().trim(),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-source-program">Program</Label>
+                    <Input
+                      id="new-source-program"
+                      required
+                      maxLength={100}
+                      value={newSource.program}
+                      onChange={(event) =>
+                        setNewSource((current) => ({
+                          ...current,
+                          program: normalizeIdentifier(event.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-source-type">Source type</Label>
+                    <Input
+                      id="new-source-type"
+                      required
+                      maxLength={150}
+                      placeholder="COMPLIANCE_MANUAL"
+                      value={newSource.sourceType}
+                      onChange={(event) =>
+                        setNewSource((current) => ({
+                          ...current,
+                          sourceType: normalizeIdentifier(event.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-source-condition">Intake condition</Label>
+                    <Input
+                      id="new-source-condition"
+                      required
+                      maxLength={150}
+                      value={newSource.candidateStatus}
+                      onChange={(event) =>
+                        setNewSource((current) => ({
+                          ...current,
+                          candidateStatus: normalizeIdentifier(event.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label htmlFor="new-source-url">Exact official file URL</Label>
+                    <Input
+                      id="new-source-url"
+                      type="url"
+                      required
+                      maxLength={2000}
+                      placeholder="https://housing.az.gov/.../document.pdf"
+                      value={newSource.sourceUrl}
+                      onChange={(event) =>
+                        setNewSource((current) => ({ ...current, sourceUrl: event.target.value }))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use the direct PDF, spreadsheet, ZIP, or other immutable official file—not a landing page.
+                    </p>
+                  </div>
+                  <div className="md:col-span-2 flex flex-wrap items-center gap-3">
+                    <Button type="submit" disabled={createSource.isPending}>
+                      {createSource.isPending ? "Creating…" : "Create validation record"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      New records remain queued and cannot activate compliance rules.
+                    </p>
+                  </div>
+                </form>
+              ) : null}
+            </Panel>
+          ) : null}
 
           <Panel className="mt-4" title="Queue filters" bodyClassName="p-5">
             <div className="grid gap-4 md:grid-cols-3">
