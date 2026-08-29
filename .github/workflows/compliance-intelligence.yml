@@ -58,6 +58,7 @@ jobs:
           node --test scripts/test-pilot-state-capture-recording.mjs
           node --test scripts/test-launch-control-gates.mjs
           node --test scripts/test-customer-file-recovery.mjs
+          node --test scripts/test-california-ctcac-compliance-forms.mjs
           bun run test:compliance
           bun run test:slice
           bun run test:orchestrator

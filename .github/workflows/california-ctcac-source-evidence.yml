@@ -1,0 +1,36 @@
+name: California CTCAC Source Evidence
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - config/california-ctcac-compliance-forms.json
+      - scripts/capture-california-ctcac-forms.mjs
+      - scripts/test-california-ctcac-compliance-forms.mjs
+      - src/lib/california-ctcac-form-applicability.mjs
+      - .github/workflows/california-ctcac-source-evidence.yml
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate fail-closed CTCAC form controls
+        run: node --test scripts/test-california-ctcac-compliance-forms.mjs
+      - name: Capture exact official CTCAC bytes
+        run: node scripts/capture-california-ctcac-forms.mjs
+      - name: Upload controlled-source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: california-ctcac-source-evidence
+          path: artifacts/california-ctcac-compliance-forms.json
+          if-no-files-found: error
+          retention-days: 30
