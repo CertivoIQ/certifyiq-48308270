@@ -14,9 +14,12 @@ async function request(source, attempt) {
   const response = await fetch(source.url, {
     redirect: "follow",
     headers: {
-      "user-agent": "CertivoIQ-Controlled-Source-Capture/2.0 (+https://certivoiq.com)",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 CertivoIQ-Controlled-Capture/2.0",
       accept: "application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/html,application/xhtml+xml,*/*;q=0.8",
       "accept-language": "en-US,en;q=0.9",
+      "sec-fetch-site": "none",
+      "sec-fetch-mode": "navigate",
+      "upgrade-insecure-requests": "1",
       "cache-control": "no-cache",
     },
     signal: AbortSignal.timeout(20_000),
