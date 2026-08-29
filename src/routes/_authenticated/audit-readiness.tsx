@@ -66,6 +66,22 @@ type MockAuditRun = {
   created_at: string;
 };
 
+type AuditReviewConfirmation = {
+  id: string;
+  audit_run_id: string;
+  user_id: string;
+  responsible_party_name: string;
+  responsible_party_position: string;
+  signature_text: string;
+  attestation: string;
+  confirmation_snapshot: {
+    package_gate?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+  confirmed_at: string;
+  created_at: string;
+};
+
 type Finding = {
   id: string;
   rule_id: string;
@@ -356,6 +372,10 @@ async function loadAuditWorkspace() {
   const results = await Promise.all([
     client.from("mock_audit_runs").select("*").order("created_at", { ascending: false }),
     client
+      .from("audit_review_confirmations")
+      .select("id,audit_run_id,user_id,responsible_party_name,responsible_party_position,signature_text,attestation,confirmation_snapshot,confirmed_at,created_at")
+      .order("confirmed_at", { ascending: false }),
+    client
       .from("evidence_manifests")
       .select("id,review_id,property_id,certification_id,outcome,engine_build,manifest_sha256,created_at")
       .order("created_at", { ascending: false })
@@ -385,11 +405,12 @@ async function loadAuditWorkspace() {
   if (error) throw error;
   return {
     runs: (results[0].data ?? []) as MockAuditRun[],
-    manifests: (results[1].data ?? []) as EvidenceManifest[],
-    findings: (results[2].data ?? []) as Finding[],
-    cases: (results[3].data ?? []) as AssuranceCase[],
-    remediations: (results[4].data ?? []) as Remediation[],
-    imports: (results[5].data ?? []) as ImportItem[],
+    confirmations: (results[1].data ?? []) as AuditReviewConfirmation[],
+    manifests: (results[2].data ?? []) as EvidenceManifest[],
+    findings: (results[3].data ?? []) as Finding[],
+    cases: (results[4].data ?? []) as AssuranceCase[],
+    remediations: (results[5].data ?? []) as Remediation[],
+    imports: (results[6].data ?? []) as ImportItem[],
   };
 }
 
@@ -402,6 +423,10 @@ function AuditReadinessWorkspace() {
   const [jurisdiction, setJurisdiction] = useState("MULTI_STATE");
   const [framework, setFramework] = useState<MockAuditRun["framework"]>("custom");
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [responsiblePartyName, setResponsiblePartyName] = useState("");
+  const [responsiblePartyPosition, setResponsiblePartyPosition] = useState("");
+  const [signatureText, setSignatureText] = useState("");
+  const [attestationAccepted, setAttestationAccepted] = useState(false);
 
   const query = useQuery({
     queryKey: ["audit-readiness-workspace"],
@@ -428,12 +453,16 @@ function AuditReadinessWorkspace() {
     (action) => action.due_at && new Date(action.due_at).valueOf() < Date.now(),
   );
   const blocked = criticalFindings.length > 0;
-  const packageReady =
+  const selectedConfirmation =
+    query.data?.confirmations.find((confirmation) => confirmation.audit_run_id === selectedRun?.id) ?? null;
+  const pendingFinalReview =
     Boolean(selectedRun) &&
+    !selectedConfirmation &&
     score === 100 &&
     !blocked &&
     openActions.length === 0 &&
     (query.data?.manifests.length ?? 0) > 0;
+  const finalReviewConfirmed = Boolean(selectedConfirmation);
 
   const createRun = useMutation({
     mutationFn: async () => {
@@ -494,10 +523,6 @@ function AuditReadinessWorkspace() {
       const nextScore = required.length
         ? Math.round((required.filter((item) => item.confirmed).length / required.length) * 100)
         : 0;
-      const nextStatus =
-        nextScore === 100 && criticalFindings.length === 0 && openActions.length === 0
-          ? "completed"
-          : "running";
       // Database types intentionally lag controlled audit-readiness migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
@@ -506,11 +531,11 @@ function AuditReadinessWorkspace() {
         .update({
           evidence_manifest: next,
           readiness_score: nextScore,
-          status: nextStatus,
+          status: "running",
           critical_count: criticalFindings.length,
           major_count: openFindings.filter((finding) => finding.severity.toLowerCase() === "major").length,
           minor_count: openFindings.filter((finding) => finding.severity.toLowerCase() === "minor").length,
-          completed_at: nextStatus === "completed" ? new Date().toISOString() : null,
+          completed_at: null,
         })
         .eq("id", run.id);
       if (error) throw error;
@@ -520,6 +545,58 @@ function AuditReadinessWorkspace() {
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Checklist item could not be updated");
+    },
+  });
+
+  const confirmFinalReview = useMutation({
+    mutationFn: async () => {
+      const userId = session?.user.id;
+      if (!userId || !selectedRun) throw new Error("Select an audit-preparation run");
+      if (!pendingFinalReview) throw new Error("Complete every preparation gate before final review");
+      if (responsiblePartyName.trim().length < 2) throw new Error("Enter the responsible party's full name");
+      if (responsiblePartyPosition.trim().length < 2) throw new Error("Enter the responsible party's position");
+      if (signatureText.trim().length < 2) throw new Error("Enter the responsible party's signature");
+      if (!attestationAccepted) throw new Error("Accept the final-review confirmation statement");
+
+      // Database types intentionally lag controlled audit-readiness migrations.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = supabase as any;
+      const { error } = await client.from("audit_review_confirmations").insert({
+        audit_run_id: selectedRun.id,
+        user_id: userId,
+        responsible_party_name: responsiblePartyName.trim(),
+        responsible_party_position: responsiblePartyPosition.trim(),
+        signature_text: signatureText.trim(),
+        attestation:
+          "I confirm that I reviewed this audit-preparation package and that the information recorded is accurate to the best of my knowledge. This confirmation does not guarantee an agency outcome.",
+        confirmation_snapshot: {
+          audit_run: {
+            id: selectedRun.id,
+            jurisdiction: selectedRun.jurisdiction,
+            scope: selectedRun.scope,
+            framework: selectedRun.framework,
+            readiness_score: score,
+          },
+          checklist,
+          package_gate: {
+            required_items_confirmed: score === 100,
+            critical_open_findings: criticalFindings.length,
+            open_remediation_actions: openActions.length,
+            evidence_manifest_count: query.data?.manifests.length ?? 0,
+          },
+        },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setAttestationAccepted(false);
+      toast.success("Final review confirmed", {
+        description: "The signed confirmation record is now locked.",
+      });
+      void queryClient.invalidateQueries({ queryKey: ["audit-readiness-workspace"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Final review could not be confirmed");
     },
   });
 
@@ -536,11 +613,13 @@ function AuditReadinessWorkspace() {
         evidence_manifest: checklist,
       },
       package_gate: {
-        ready_for_final_review: packageReady,
+        pending_final_review: pendingFinalReview,
+        final_review_confirmed: finalReviewConfirmed,
         critical_open_findings: criticalFindings.length,
         open_remediation_actions: openActions.length,
         evidence_manifest_count: query.data?.manifests.length ?? 0,
       },
+      final_review_confirmation: selectedConfirmation,
       controlled_evidence_manifests: query.data?.manifests ?? [],
       assurance_cases: query.data?.cases ?? [],
       findings,
@@ -686,7 +765,7 @@ function AuditReadinessWorkspace() {
             <Stat
               label="Preparation progress"
               value={`${score}%`}
-              hint={packageReady ? "Package ready for final review" : "Confirmed required items"}
+              hint={finalReviewConfirmed ? "Final review confirmed" : pendingFinalReview ? "Pending final review" : "Confirmed required items"}
               tone={toneForScore(score, blocked)}
             />
             <Stat
@@ -717,11 +796,25 @@ function AuditReadinessWorkspace() {
 
           <Panel
             className="mt-4"
-            title={packageReady ? "Ready for final package review" : blocked ? "Preparation blocked" : "Preparation in progress"}
+            title={
+              finalReviewConfirmed
+                ? "Final review confirmed"
+                : pendingFinalReview
+                  ? "Pending final review"
+                  : blocked
+                    ? "Preparation blocked"
+                    : "Preparation in progress"
+            }
             description={`${selectedRun.jurisdiction} · ${selectedRun.scope.replaceAll("_", " ")} · ${selectedRun.framework.replaceAll("_", " ")}`}
             actions={
-              <Pill tone={packageReady ? "seal" : blocked ? "reject" : "flag"}>
-                {packageReady ? "FINAL REVIEW READY" : blocked ? "CRITICAL FINDING OPEN" : "NOT YET COMPLETE"}
+              <Pill tone={finalReviewConfirmed ? "seal" : pendingFinalReview ? "flag" : blocked ? "reject" : "flag"}>
+                {finalReviewConfirmed
+                  ? "FINAL REVIEW CONFIRMED"
+                  : pendingFinalReview
+                    ? "PENDING FINAL REVIEW"
+                    : blocked
+                      ? "CRITICAL FINDING OPEN"
+                      : "NOT YET COMPLETE"}
               </Pill>
             }
           >
@@ -764,6 +857,97 @@ function AuditReadinessWorkspace() {
             </div>
           </Panel>
 
+          {pendingFinalReview ? (
+            <Panel
+              className="mt-4"
+              title="Final review confirmation"
+              description="A responsible party must sign before this preparation run can be completed."
+            >
+              <form
+                className="grid gap-4 md:grid-cols-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  confirmFinalReview.mutate();
+                }}
+              >
+                <div className="space-y-1.5">
+                  <Label htmlFor="responsible-party-name">Responsible party name</Label>
+                  <Input
+                    id="responsible-party-name"
+                    value={responsiblePartyName}
+                    maxLength={200}
+                    onChange={(event) => setResponsiblePartyName(event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="responsible-party-position">Position</Label>
+                  <Input
+                    id="responsible-party-position"
+                    value={responsiblePartyPosition}
+                    maxLength={200}
+                    placeholder="Compliance Director"
+                    onChange={(event) => setResponsiblePartyPosition(event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label htmlFor="responsible-party-signature">Signature</Label>
+                  <Input
+                    id="responsible-party-signature"
+                    value={signatureText}
+                    maxLength={200}
+                    placeholder="Type the responsible party's signature"
+                    onChange={(event) => setSignatureText(event.target.value)}
+                    required
+                  />
+                </div>
+                <label className="flex items-start gap-3 rounded-md border border-border p-3 text-sm md:col-span-2">
+                  <input
+                    type="checkbox"
+                    className="mt-1 size-4 accent-primary"
+                    checked={attestationAccepted}
+                    onChange={(event) => setAttestationAccepted(event.target.checked)}
+                  />
+                  <span>
+                    I confirm that I reviewed this audit-preparation package and that the information recorded is
+                    accurate to the best of my knowledge. This confirmation does not guarantee an agency outcome.
+                  </span>
+                </label>
+                <div className="md:col-span-2">
+                  <Button type="submit" disabled={confirmFinalReview.isPending}>
+                    {confirmFinalReview.isPending ? "Recording…" : "Confirm final review"}
+                  </Button>
+                </div>
+              </form>
+            </Panel>
+          ) : selectedConfirmation ? (
+            <Panel
+              className="mt-4"
+              title="Signed final review confirmation"
+              description="This confirmation is append-only and the preparation run is locked."
+            >
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Responsible party</p>
+                  <p className="font-medium">{selectedConfirmation.responsible_party_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-medium">{selectedConfirmation.responsible_party_position}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Signature</p>
+                  <p className="font-serif text-lg italic">{selectedConfirmation.signature_text}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Confirmed</p>
+                  <p className="font-medium">{new Date(selectedConfirmation.confirmed_at).toLocaleString()}</p>
+                </div>
+              </div>
+            </Panel>
+          ) : null}
+
           <div className="mt-4 grid gap-4 xl:grid-cols-[1.45fr_1fr]">
             <Panel
               title="Affordable-housing audit checklist"
@@ -783,7 +967,7 @@ function AuditReadinessWorkspace() {
                             type="checkbox"
                             className="mt-1 size-4 accent-primary"
                             checked={item.confirmed}
-                            disabled={updateChecklist.isPending}
+                            disabled={updateChecklist.isPending || finalReviewConfirmed}
                             onChange={() => updateChecklist.mutate({ run: selectedRun, itemId: item.id })}
                           />
                           <span>
@@ -854,7 +1038,7 @@ function AuditReadinessWorkspace() {
           <Panel
             className="mt-4"
             title="Findings and corrective-action gate"
-            description="Critical findings and open remediation prevent a package-ready status."
+            description="Critical findings and open remediation prevent a pending-final-review status."
           >
             {!openFindings.length && !openActions.length ? (
               <div className="flex items-center gap-3 rounded-md border border-seal/25 bg-seal-soft p-4">
