@@ -1,10 +1,41 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createRemoteJWKSet, jwtVerify } from "https://esm.sh/jose@5.9.6";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "content-type": "application/json; charset=utf-8" },
   });
+
+const githubKeys = createRemoteJWKSet(
+  new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
+);
+
+async function authorizedGitHubWorkflow(request: Request): Promise<boolean> {
+  const authorization = request.headers.get("authorization") ?? "";
+  if (!authorization.startsWith("Bearer ")) return false;
+  const token = authorization.slice("Bearer ".length).trim();
+  if (!token) return false;
+
+  try {
+    const { payload } = await jwtVerify(token, githubKeys, {
+      issuer: "https://token.actions.githubusercontent.com",
+      audience: "certivoiq-operations-worker",
+      algorithms: ["RS256"],
+    });
+    return (
+      payload.repository === "Watkin5/certifyiq-48308270" &&
+      payload.repository_id === "1326099740" &&
+      payload.ref === "refs/heads/main" &&
+      payload.workflow_ref ===
+        "Watkin5/certifyiq-48308270/.github/workflows/operations-worker.yml@refs/heads/main" &&
+      (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch") &&
+      payload.runner_environment === "github-hosted"
+    );
+  } catch {
+    return false;
+  }
+}
 
 type PurgeTarget = {
   user_id: string;
@@ -117,9 +148,7 @@ async function purgeExpiredCustomerFiles(db: ReturnType<typeof createClient>) {
 Deno.serve(async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const expected = Deno.env.get("OPERATIONS_WORKER_SECRET");
-  const supplied = request.headers.get("authorization");
-  if (!expected || supplied !== `Bearer ${expected}`) {
+  if (!(await authorizedGitHubWorkflow(request))) {
     return json({ error: "Unauthorized" }, 401);
   }
 
