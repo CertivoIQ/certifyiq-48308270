@@ -393,6 +393,22 @@ const states = [...results.reduce((byState, item) => {
 }).sort((left, right) => left.state_code.localeCompare(right.state_code));
 
 const documents = states.flatMap((item) => item.documents);
+const invalidCapturedDocuments = documents.filter((item) =>
+  item.capture_status === "captured_unvalidated" &&
+  (
+    !Number.isInteger(item.byte_size) ||
+    item.byte_size <= 0 ||
+    !/^[a-f0-9]{64}$/.test(item.source_sha256 ?? "") ||
+    item.source_sha256 === EMPTY_SHA256
+  )
+);
+if (invalidCapturedDocuments.length > 0) {
+  throw new Error(
+    "Captured-document integrity invariant failed for " +
+    invalidCapturedDocuments.map((item) => item.state_code + ":" + item.source_url).join(", "),
+  );
+}
+
 const manifest = {
   schema_version: "2026-08-29.2",
   captured_at: new Date().toISOString(),
