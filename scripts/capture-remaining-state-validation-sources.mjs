@@ -19,7 +19,7 @@ async function request(source, attempt) {
       "accept-language": "en-US,en;q=0.9",
       "cache-control": "no-cache",
     },
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(20_000),
   });
   const finalUrl = new URL(response.url);
   if (!isAllowedHost(source, finalUrl.hostname.toLowerCase())) throw new Error(`redirected_to_unapproved_host:${finalUrl.hostname}`);
@@ -40,11 +40,11 @@ async function request(source, attempt) {
 
 async function capture(source) {
   let lastError;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
     try { return await request(source, attempt); }
     catch (error) {
       lastError = error;
-      if (attempt < 3) await delay(attempt * 1500);
+      if (attempt < 2) await delay(attempt * 1500);
     }
   }
   return {
@@ -54,12 +54,19 @@ async function capture(source) {
   };
 }
 
-const sources = [];
-for (const source of config.sources) {
-  sources.push(await capture(source));
-  const latest = sources.at(-1);
-  console.log(JSON.stringify({stateCode:latest.stateCode,sourceType:latest.sourceType,status:latest.captureStatus,blocker:latest.blocker}));
+const sources = new Array(config.sources.length);
+let cursor = 0;
+async function worker() {
+  while (true) {
+    const index = cursor;
+    cursor += 1;
+    if (index >= config.sources.length) return;
+    const latest = await capture(config.sources[index]);
+    sources[index] = latest;
+    console.log(JSON.stringify({stateCode:latest.stateCode,sourceType:latest.sourceType,status:latest.captureStatus,blocker:latest.blocker}));
+  }
 }
+await Promise.all(Array.from({ length: Math.min(8, config.sources.length) }, () => worker()));
 const manifest = {
   schemaVersion: config.schemaVersion, capturedAt: new Date().toISOString(),
   sourceCount: sources.length,
