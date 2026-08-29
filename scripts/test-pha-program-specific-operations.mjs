@@ -9,6 +9,7 @@ const phOverIncomeDeadlineFix=read("supabase/migrations/20260828291000_fix_pha_o
 const phAdmissions=read("supabase/migrations/20260828300000_pha_public_housing_admission_controls.sql");
 const hcvLeaseUp=read("supabase/migrations/20260828310000_pha_hcv_lease_up.sql");
 const phOccupancy=read("supabase/migrations/20260828320000_pha_public_housing_occupancy_transfers.sql");
+const phOccupancyHardening=read("supabase/migrations/20260829160000_pha_public_housing_occupancy_completion.sql");
 const workspace=read("src/components/pha-program-operations.tsx");
 const phAdmissionsWorkspace=read("src/components/pha-public-housing-admissions-workspace.tsx");
 const phAdmissionsRoute=read("src/routes/_authenticated/pha-public-housing-admissions.tsx");
@@ -51,4 +52,6 @@ test("HCV HAP execution blocks payment until a timely or HUD-approved contract e
 
 test("Public Housing occupancy and transfer controls preserve lease and grievance protections",()=>{
   assert.match(phOccupancy,/pha_public_housing_leases/); assert.match(phOccupancy,/pha_public_housing_transfers/); assert.match(phOccupancy,/24 CFR 966\.4 required lease provisions/); assert.match(phOccupancy,/applicable grievance procedure/); assert.match(phOccupancy,/Family-composition transfer requires an available appropriate-size dwelling unit/); assert.match(phOccupancy,/Adverse transfer requires specific-ground notice/); assert.match(phOccupancy,/cannot take effect before the grievance request period/); assert.match(phOccupancy,/accommodation request is approved/); assert.match(phOccupancyWorkspace,/Public Housing Occupancy & Transfers/); assert.match(phOccupancyRoute,/PhaPublicHousingOccupancyWorkspace/); assert.match(shell,/\/pha-public-housing-occupancy/);
+  assert.match(phOccupancyHardening,/specific_reasons/); assert.match(phOccupancyHardening,/adverse_action_notice_id/); assert.match(phOccupancyHardening,/lease_document_reference/); assert.match(phOccupancyHardening,/tenant_signed_at/); assert.match(phOccupancyHardening,/Transfer ground must match/); assert.match(phOccupancyHardening,/requested_status='completed'/);
+  assert.match(phOccupancyWorkspace,/useMutation/); assert.match(phOccupancyWorkspace,/Execute controlled lease/); assert.match(phOccupancyWorkspace,/Create transfer/); assert.match(phOccupancyWorkspace,/role="alert"/);
 });
