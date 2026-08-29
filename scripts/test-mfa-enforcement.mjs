@@ -55,3 +55,13 @@ test("TOTP enrollment renders Supabase QR data without double-encoding", () => {
   assert.doesNotMatch(security, /encodeURIComponent\(enrollData\.totp\.qr_code\)/);
   assert.match(security, /value=\{enrollData\.totp\.secret\}/);
 });
+
+
+test("stale-factor cleanup cannot block a fresh TOTP enrollment", () => {
+  const security = read("src/routes/_authenticated/account.security.tsx");
+
+  assert.match(security, /try \{\s*await clearStaleFactors\(\)/);
+  assert.match(security, /enrollment\.error\?\.code === "mfa_factor_name_conflict"/);
+  assert.match(security, /CertivoIQ Authenticator \$\{Date\.now\(\)\}/);
+  assert.match(security, /if \(enrollment\.error\) throw enrollment\.error/);
+});
