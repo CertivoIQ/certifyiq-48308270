@@ -7,6 +7,8 @@ on:
       - scripts/capture-remaining-state-validation-sources.mjs
       - scripts/test-remaining-state-validation-source-capture.mjs
       - .github/workflows/remaining-state-source-evidence.yml
+      - artifacts/remaining-state-source-evidence.json
+      - supabase/migrations/20260829065300_record_remaining_state_source_captures.sql
 permissions:
   contents: read
 concurrency:
