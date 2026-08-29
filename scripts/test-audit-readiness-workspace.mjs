@@ -7,6 +7,10 @@ const workspace = await readFile(
   "utf8",
 );
 const shell = await readFile(new URL("../src/components/app-shell.tsx", import.meta.url), "utf8");
+const migration = await readFile(
+  new URL("../supabase/migrations/20260829225804_audit_final_review_confirmations.sql", import.meta.url),
+  "utf8",
+);
 
 test("installs a dedicated affordable-housing audit readiness workspace", () => {
   assert.match(workspace, /Affordable Housing Audit Readiness/);
