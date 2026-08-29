@@ -172,12 +172,14 @@ function SourceReviewCard({
   onDraft,
   onDecision,
   busy,
+  inheritedByState,
 }: {
   source: SourceCandidate;
   draft: Draft;
   onDraft: (draft: Draft) => void;
   onDecision: (decision: "captured_unvalidated" | "verified" | "blocked" | "rejected") => void;
   busy: boolean;
+  inheritedByState?: string;
 }) {
   const requiresReplacement = ["blocked", "rejected"].includes(source.agent_verification_status);
   return (
@@ -209,7 +211,8 @@ function SourceReviewCard({
           </p>
           {source.scope === "FEDERAL_SHARED" ? (
             <p className="mt-2 text-sm text-muted-foreground">
-              One controlled federal source shared by all 50 state rule packs.
+              One controlled federal source shared by all 50 state rule packs
+              {inheritedByState ? `; inherited by ${inheritedByState}.` : "."}
             </p>
           ) : null}
           {requiresReplacement ? (
@@ -397,9 +400,19 @@ function StateRuleValidationWorkspace() {
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return sources.filter((source) => {
-      if (stateCode !== "ALL" && source.state_code !== stateCode) return false;
-      if (status === "active" && source.agent_verification_status === "verified") return false;
-      if (status !== "active" && status !== "all" && source.agent_verification_status !== status) return false;
+      const federalShared = source.state_code === "US" || source.scope === "FEDERAL_SHARED";
+      const inheritedFederal =
+        stateCode !== "ALL" && stateCode !== "US" && federalShared;
+      if (stateCode !== "ALL" && source.state_code !== stateCode && !inheritedFederal) return false;
+      // A selected state always shows its inherited federal baseline, even when
+      // the "All remaining" queue filter would normally hide a verified source.
+      if (!inheritedFederal && status === "active" && source.agent_verification_status === "verified") return false;
+      if (
+        !inheritedFederal &&
+        status !== "active" &&
+        status !== "all" &&
+        source.agent_verification_status !== status
+      ) return false;
       if (!needle) return true;
       return [source.state_code, source.authority_name, source.source_type, source.source_url]
         .join(" ")
@@ -684,6 +697,11 @@ function StateRuleValidationWorkspace() {
                     source={source}
                     draft={draft}
                     busy={review.isPending && review.variables?.source.id === source.id}
+                    inheritedByState={
+                      source.scope === "FEDERAL_SHARED" && stateCode !== "ALL" && stateCode !== "US"
+                        ? stateCode
+                        : undefined
+                    }
                     onDraft={(next) => setDrafts((current) => ({ ...current, [source.id]: next }))}
                     onDecision={(decision) => review.mutate({ source, decision })}
                   />
