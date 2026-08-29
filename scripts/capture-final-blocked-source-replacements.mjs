@@ -56,6 +56,21 @@ function pinnedHttpsGet(source, inputUrl, redirects = 0) {
 }
 
 async function capture(source) {
+  if (source.supersededBy?.length) {
+    for (const replacement of source.supersededBy) {
+      if (!/^[0-9a-f]{64}$/.test(replacement.sha256)) throw new Error(`invalid_existing_hash:${replacement.recordId}`);
+      const url = new URL(replacement.sourceUrl);
+      if (!allowedHost(source, url.hostname.toLowerCase())) throw new Error(`unapproved_existing_host:${url.hostname}`);
+    }
+    return {
+      ...source,
+      captureStatus: "superseded_by_verified_exact_sources",
+      supersededAt: new Date().toISOString(),
+      exactBytesCapturedOnSupersedingRecords: true,
+      independentValidationRequired: false,
+      complianceActivationAllowed: false
+    };
+  }
   const errors = [];
   for (const url of source.urls) {
     try {
@@ -97,6 +112,7 @@ const manifest = {
   capturedAt: new Date().toISOString(),
   sourceCount: sources.length,
   capturedCount: sources.filter((source) => source.captureStatus === "captured_unvalidated").length,
+  supersededCount: sources.filter((source) => source.captureStatus === "superseded_by_verified_exact_sources").length,
   blockedCount: sources.filter((source) => source.captureStatus === "blocked").length,
   independentValidationRequired: true,
   complianceActivationAllowed: false,
