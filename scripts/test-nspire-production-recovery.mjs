@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL("../supabase/migrations/20260829030000_restore_nspire_registry_schema.sql", import.meta.url),
   "utf8",
 );
+const verifiedLoad = readFileSync(
+  new URL("../supabase/migrations/20260828310000_load_verified_nspire_registry.sql", import.meta.url),
+  "utf8",
+);
 
 test("NSPIRE bootstrap defaults every registry row to fail closed", () => {
   assert.match(migration, /source_status text not null default 'pending_source'/);
@@ -27,4 +31,13 @@ test("NSPIRE bootstrap is compatible with controlled release migrations", () => 
   ]) {
     assert.ok(migration.includes(column), `missing compatibility column: ${column}`);
   }
+});
+
+test("verified registry load tolerates production without inspection tables", () => {
+  assert.match(
+    verifiedLoad,
+    /to_regclass\('public\.pha_inspection_deficiencies'\) is null/,
+  );
+  assert.match(verifiedLoad, /expected_deficiency_count=407/);
+  assert.match(verifiedLoad, /attestation_count>=2/);
 });
