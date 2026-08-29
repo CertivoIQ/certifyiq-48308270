@@ -4,6 +4,10 @@ import test from "node:test";
 const config = JSON.parse(readFileSync(new URL("../config/remaining-state-validation-sources.json", import.meta.url), "utf8"));
 const script = readFileSync(new URL("./capture-remaining-state-validation-sources.mjs", import.meta.url), "utf8");
 const evidenceUrl = new URL("../artifacts/remaining-state-source-evidence.json", import.meta.url);
+const migration = readFileSync(
+  new URL("../supabase/migrations/20260829065300_record_remaining_state_source_captures.sql", import.meta.url),
+  "utf8",
+);
 
 test("inventory covers every remaining unique validation link", () => {
   assert.equal(config.sources.length, config.sourceCount);
@@ -37,4 +41,13 @@ test("committed evidence is structurally complete when present", () => {
     assert.ok(source.byteSize > 0);
     assert.equal(source.complianceActivationAllowed, false);
   }
+});
+
+test("database reconciliation remains fail closed", () => {
+  assert.match(migration, /captured_updates <> 113/);
+  assert.match(migration, /blocked_updates <> 6/);
+  assert.match(migration, /agent_verification_in_progress/);
+  assert.match(migration, /independent_validation_required/);
+  assert.match(migration, /compliance_activation_allowed = false/);
+  assert.doesNotMatch(migration, /compliance_activation_allowed\s*=\s*true/);
 });
