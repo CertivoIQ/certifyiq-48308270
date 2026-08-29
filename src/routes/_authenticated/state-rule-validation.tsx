@@ -423,11 +423,10 @@ function StateRuleValidationWorkspace() {
         source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE";
       // A selected state always shows its inherited federal baseline, even when
       // the "All remaining" queue filter would normally hide a completed source.
-      if (
-        !inheritedFederal &&
-        status === "active" &&
-        (source.agent_verification_status === "verified" || excludedRedundant)
-      ) return false;
+      if (!inheritedFederal && status === "active" && source.agent_verification_status === "verified") {
+        return false;
+      }
+      if (!inheritedFederal && status === "active" && excludedRedundant) return false;
       if (
         !inheritedFederal &&
         status !== "active" &&
