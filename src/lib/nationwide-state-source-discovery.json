@@ -1,13 +1,13 @@
 {
   "title": "Nationwide LIHTC state-source discovery inventory",
-  "generated_at": "2026-08-27T00:00:00.000Z",
+  "generated_at": "2026-08-29T19:00:00.000Z",
   "coverage_status": "SOURCE_CANDIDATES_ONLY",
   "activation_policy": "CANDIDATE DISCOVERY DOES NOT ACTIVATE A STATE PACK. Current official bytes, SHA-256 identities, effective dates, content validation, supersession reconciliation, deterministic fixtures, independent compliance approval, and property authority are required.",
   "counts": {
     "state_and_district_codes": 51,
     "territory_codes": 4,
     "jurisdiction_scopes": 56,
-    "source_candidates": 152
+    "source_candidates": 162
   },
   "jurisdictions": [
     {
@@ -291,6 +291,56 @@
         {
           "type": "COMPLIANCE_LIMITS_FORMS_UPDATES",
           "url": "https://www.floridahousing.org/owners-and-managers/compliance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_RULE_CHANGES",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance-rule",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "INCOME_LIMITS",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance/income-limits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "RENT_LIMITS",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance/rent-limits",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "OCCUPANCY_REPORTS",
+          "url": "https://www.floridahousing.org/data-docs-reports/occupancy-reports",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "NONCOMPLIANCE_REPORT",
+          "url": "https://www.floridahousing.org/data-docs-reports/noncompliance-report",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "PAST_DUE_REPORT",
+          "url": "https://www.floridahousing.org/data-docs-reports/past-due-reports",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_FORMS",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance/forms",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "COMPLIANCE_TRAINING",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance/compliance-training",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "UTILITY_ALLOWANCE",
+          "url": "https://www.floridahousing.org/owners-and-managers/compliance/utility-allowance",
+          "status": "PENDING_EXACT_BYTES_AND_HASHES"
+        },
+        {
+          "type": "INSURANCE_GUIDE",
+          "url": "https://www.floridahousing.org/data-docs-reports/insurance-guide",
           "status": "PENDING_EXACT_BYTES_AND_HASHES"
         }
       ],
