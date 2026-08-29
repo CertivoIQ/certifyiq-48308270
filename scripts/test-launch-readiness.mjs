@@ -106,7 +106,10 @@ test("public pricing uses the two authoritative annual license types", () => {
   const catalog = read("src/lib/platform-data.ts");
   const combined = pricing + catalog;
 
-  assert.match(combined, /\$65,000/);\n  assert.match(combined, /\$150,000/);\n  assert.match(combined, /selected state/i);\n  assert.match(combined, /PHA/i);
+  assert.match(combined, /\$65,000/);
+  assert.match(combined, /\$150,000/);
+  assert.match(combined, /selected state/i);
+  assert.match(combined, /PHA/i);
   assert.match(pricing, /Try CertivoIQ for Free/i);
   assert.doesNotMatch(combined, /\$999|\$4,999|\$9,999|\$14,999/);
   assert.doesNotMatch(pricing, /Professional|Enterprise Plus|CertivoIQ Academy/i);
