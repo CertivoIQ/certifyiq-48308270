@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  clearUnverifiedMfaFactors,
   generateRecoveryCodes,
   countRecoveryCodes,
   verifyAndDisableRecoveryCode,
@@ -58,9 +57,9 @@ function SecurityPage() {
   const [disableCode, setDisableCode] = useState("");
   const [disableRecoveryCode, setDisableRecoveryCode] = useState("");
   const [disableMode, setDisableMode] = useState(false);
-  const [recoveryCount, setRecoveryCount] = useState(0);\n  const [setupError, setSetupError] = useState<string | null>(null);
+  const [recoveryCount, setRecoveryCount] = useState(0);
+  const [setupError, setSetupError] = useState<string | null>(null);
 
-  const clearStaleFactors = useServerFn(clearUnverifiedMfaFactors);
   const generateCodes = useServerFn(generateRecoveryCodes);
   const getRecoveryCount = useServerFn(countRecoveryCodes);
   const submitRecoveryCode = useServerFn(verifyAndDisableRecoveryCode);
@@ -84,6 +83,7 @@ function SecurityPage() {
 
   async function startEnrollment() {
     setEnrolling(true);
+    setSetupError(null);
     try {
       let enrollment = await supabase.auth.mfa.enroll({
         factorType: "totp",
@@ -105,7 +105,9 @@ function SecurityPage() {
       setVerifyCode("");
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not start MFA setup");
+      const message = err instanceof Error ? err.message : "Could not start MFA setup";
+      setSetupError(message);
+      toast.error(message);
     } finally {
       setEnrolling(false);
     }
