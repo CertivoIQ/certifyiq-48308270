@@ -94,7 +94,7 @@ export async function verifyWebhook(
     new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["verify"],
   );
   const payload = new TextEncoder().encode(`${timestamp}.${body}`);
   let validSignature = false;
