@@ -176,9 +176,13 @@
       "url": "https://www.floridahousing.org/owners-and-managers/compliance/compliance-guidebook",
       "allowedHosts": [
         "www.floridahousing.org",
-        "floridahousing.org"
+        "floridahousing.org",
+        "ftp.floridahousing.org"
       ],
-      "priorStatus": "queued_for_agent_verification"
+      "priorStatus": "queued_for_agent_verification",
+      "fallbackUrls": [
+        "https://ftp.floridahousing.org/owners-and-managers/compliance/compliance-guidebook"
+      ]
     },
     {
       "stateCode": "FL",
@@ -186,9 +190,13 @@
       "url": "https://www.floridahousing.org/owners-and-managers/compliance",
       "allowedHosts": [
         "www.floridahousing.org",
-        "floridahousing.org"
+        "floridahousing.org",
+        "ftp.floridahousing.org"
       ],
-      "priorStatus": "queued_for_agent_verification"
+      "priorStatus": "queued_for_agent_verification",
+      "fallbackUrls": [
+        "https://ftp.floridahousing.org/owners-and-managers/compliance"
+      ]
     },
     {
       "stateCode": "FL",
@@ -196,9 +204,13 @@
       "url": "https://www.floridahousing.org/programs/developers-multifamily-programs/low-income-housing-tax-credits",
       "allowedHosts": [
         "www.floridahousing.org",
-        "floridahousing.org"
+        "floridahousing.org",
+        "ftp.floridahousing.org"
       ],
-      "priorStatus": "queued_for_agent_verification"
+      "priorStatus": "queued_for_agent_verification",
+      "fallbackUrls": [
+        "https://ftp.floridahousing.org/programs/developers-multifamily-programs/low-income-housing-tax-credits"
+      ]
     },
     {
       "stateCode": "FL",
@@ -206,9 +218,13 @@
       "url": "https://www.floridahousing.org/programs/developers-multifamily-programs/non-competitive/related-references-and-links",
       "allowedHosts": [
         "www.floridahousing.org",
-        "floridahousing.org"
+        "floridahousing.org",
+        "ftp.floridahousing.org"
       ],
-      "priorStatus": "queued_for_agent_verification"
+      "priorStatus": "queued_for_agent_verification",
+      "fallbackUrls": [
+        "https://ftp.floridahousing.org/programs/developers-multifamily-programs/non-competitive/related-references-and-links"
+      ]
     },
     {
       "stateCode": "GA",
