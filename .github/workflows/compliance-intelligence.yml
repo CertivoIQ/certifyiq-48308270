@@ -56,6 +56,7 @@ jobs:
           node --test scripts/test-nspire-rpc-surface.mjs
           node --test scripts/test-production-role-uat.mjs
           node --test scripts/test-pilot-state-capture-recording.mjs
+          node --test scripts/test-launch-control-gates.mjs
           bun run test:compliance
           bun run test:slice
           bun run test:orchestrator
