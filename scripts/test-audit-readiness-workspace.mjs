@@ -42,5 +42,5 @@ test("keeps audit preparation fail closed and uses final-review language", () =>
   assert.match(workspace, /does not predict or guarantee an agency audit outcome/);
   assert.match(workspace, /criticalFindings\.length === 0/);
   assert.match(workspace, /openActions\.length === 0/);
-  assert.doesNotMatch(workspace, />[^<]*(?:human|artificial intelligence)[^<]*</i);
+  assert.doesNotMatch(workspace, /human|artificial intelligence|\\bAI\\b/i);
 });
