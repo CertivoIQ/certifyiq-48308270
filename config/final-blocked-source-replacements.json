@@ -13,14 +13,15 @@
       "discoveryUrl": "https://housing.az.gov/resources",
       "documentTitle": "LIHTC Compliance Manual (2025)",
       "allowedHosts": ["housing.az.gov", "www.housing.az.gov"],
-      "urls": [
-        "https://housing.az.gov/sites/default/files/2025-08/LIHTC-Compliance-Manual_2025.pdf",
-        "https://housing.az.gov/sites/default/files/2025-07/LIHTC-Compliance-Manual_2025.pdf",
-        "https://housing.az.gov/sites/default/files/2025-06/LIHTC-Compliance-Manual_2025.pdf",
-        "https://housing.az.gov/sites/default/files/documents/files/LIHTC-Compliance-Manual_2025.pdf",
-        "https://housing.az.gov/sites/default/files/2025-08/Overview-of-2025-Compliance-Manual-Updates_Slides.pdf"
+      "supersededBy": [
+        {
+          "recordId": "536e5df1-0b8a-4d58-ab5e-08dfa4082fbc",
+          "sourceType": "COMPLIANCE_MANUAL",
+          "sourceUrl": "https://housing.az.gov/sites/default/files/2025-08/LIHTC-Compliance-Manual_2025.pdf",
+          "sha256": "da5d5bf4c96630baf383e8c3503a504f45054e5d49fa30fa12e1e4508fc05ceb"
+        }
       ],
-      "authorityEvidence": "ADOH official search result identifies LIHTC-Compliance-Manual_2025.pdf; the final fallback is ADOH's dated overview of that manual's 2025 changes."
+      "authorityEvidence": "The umbrella resource index is redundant with an existing exact-file, SHA-256 captured, independently verified ADOH 2025 compliance manual record."
     },
     {
       "recordId": "33876369-3545-49d1-af97-cf3d4beb9eaa",
@@ -29,13 +30,27 @@
       "discoveryUrl": "https://housing.az.gov/programs/rental-compliance",
       "documentTitle": "2026 LIHTC Income and Rent Limits for Post-1989 Projects",
       "allowedHosts": ["housing.az.gov", "www.housing.az.gov"],
-      "urls": [
-        "https://housing.az.gov/sites/default/files/2026-05/IB-25-2026-LIHTC-IncomeandRent-Limits.pdf",
-        "https://housing.az.gov/sites/default/files/2026-06/IB-25-2026-LIHTC-IncomeandRent-Limits.pdf",
-        "https://housing.az.gov/sites/default/files/2026-04/IB-25-2026-LIHTC-IncomeandRent-Limits.pdf",
-        "https://housing.az.gov/sites/default/files/2026-05/2026%20LIHTC%20Rent%20%26%20Income%20Limits%20%28Post%201989%29%20%28Effective%205%201%202026%29%20-5.1.26.pdf"
+      "supersededBy": [
+        {
+          "recordId": "536e5df1-0b8a-4d58-ab5e-08dfa4082fbc",
+          "sourceType": "COMPLIANCE_MANUAL",
+          "sourceUrl": "https://housing.az.gov/sites/default/files/2025-08/LIHTC-Compliance-Manual_2025.pdf",
+          "sha256": "da5d5bf4c96630baf383e8c3503a504f45054e5d49fa30fa12e1e4508fc05ceb"
+        },
+        {
+          "recordId": "2764f179-2264-4277-87e7-f3eb5237576d",
+          "sourceType": "INCOME_AND_RENT_LIMITS",
+          "sourceUrl": "https://housing.az.gov/resources/2026-lihtc-rent-income-limits-post-1989-effective-512026",
+          "sha256": "6bd9899a3675243fc023d55939f58a68f143b812c4f7b98da03318a3d64fefdb"
+        },
+        {
+          "recordId": "538da30b-17d0-4ce4-9e44-5f0c002fe0ec",
+          "sourceType": "TENANT_INCOME_CERTIFICATION",
+          "sourceUrl": "https://housing.az.gov/sites/default/files/2025-01/LIHTC-ADOH-TIC-Printable%20Version_Revised%2001_30_2025.pdf",
+          "sha256": "51461cccc8de1c95e31000da744d3924826fb14393951cab924e444d1e17579e"
+        }
       ],
-      "authorityEvidence": "ADOH official search results identify the 2026 post-1989 limits as effective May 1, 2026 and name IB-25-2026-LIHTC-IncomeandRent-Limits.pdf."
+      "authorityEvidence": "The umbrella rental-compliance page is redundant with existing exact-byte, SHA-256 captured and independently verified ADOH manual, 2026 limits and TIC records."
     },
     {
       "recordId": "365827bd-2633-45f2-9871-05169432408a",
