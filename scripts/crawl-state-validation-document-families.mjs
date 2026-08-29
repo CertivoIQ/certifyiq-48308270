@@ -75,6 +75,54 @@ async function fetchOfficial(jurisdiction, url, { attempts = 2 } = {}) {
   throw lastError;
 }
 
+function sitemapLocations(xml) {
+  return [...String(xml ?? "").matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi)]
+    .map((match) => match[1].replace(/&amp;/gi, "&").trim())
+    .filter(Boolean);
+}
+
+async function discoverSitemapSources(jurisdiction) {
+  const pages = new Set();
+  const sitemapQueue = domainsFor(jurisdiction)
+    .map((domain) => "https://" + domain + "/sitemap.xml");
+  const visitedSitemaps = new Set();
+
+  while (sitemapQueue.length && visitedSitemaps.size < 8) {
+    const sitemapUrl = sitemapQueue.shift();
+    if (!sitemapUrl || visitedSitemaps.has(sitemapUrl) || !isAllowed(jurisdiction, sitemapUrl)) continue;
+    visitedSitemaps.add(sitemapUrl);
+    try {
+      const response = await fetchOfficial(jurisdiction, sitemapUrl, { attempts: 1 });
+      const xml = Buffer.from(response.bytes).toString("utf8");
+      for (const location of sitemapLocations(xml)) {
+        if (!isAllowed(jurisdiction, location)) continue;
+        if (/\.xml(?:\?|$)/i.test(location) && sitemapQueue.length < 12) {
+          sitemapQueue.push(location);
+          continue;
+        }
+        if (/compliance|asset.management|property.manag|lihtc|tax.credit|income.{0,8}limit|rent.{0,8}limit|utility.{0,8}allow|training|forms?/i.test(location)) {
+          pages.add(location);
+        }
+      }
+    } catch {
+      // Sitemap coverage is supplemental; configured authority pages remain primary.
+    }
+  }
+
+  return [...pages]
+    .sort((left, right) => {
+      const leftYear = Number(left.match(/\b(20\d{2})\b/)?.[1] ?? 0);
+      const rightYear = Number(right.match(/\b(20\d{2})\b/)?.[1] ?? 0);
+      return rightYear - leftYear || left.localeCompare(right);
+    })
+    .slice(0, 30)
+    .map((url) => ({
+      type: "SITEMAP_VALIDATION_DOCUMENT_DISCOVERY",
+      url,
+      status: "PENDING_EXACT_BYTES_AND_HASHES",
+    }));
+}
+
 async function extractPdfText(bytes) {
   try {
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
@@ -94,7 +142,12 @@ async function extractPdfText(bytes) {
 async function discoverJurisdiction(jurisdiction) {
   const candidates = [];
   const discoveryFailures = [];
-  for (const source of jurisdiction.sources ?? []) {
+  const configuredSources = jurisdiction.sources ?? [];
+  const sitemapSources = await discoverSitemapSources(jurisdiction);
+  const discoverySources = [...new Map(
+    [...configuredSources, ...sitemapSources].map((source) => [source.url, source]),
+  ).values()];
+  for (const source of discoverySources) {
     try {
       const response = await fetchOfficial(jurisdiction, source.url);
       const isHtml = /text\/html|application\/xhtml\+xml/.test(response.contentType);
