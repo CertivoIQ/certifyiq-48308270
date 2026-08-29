@@ -1,6 +1,9 @@
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { promisify } from "node:util";
 
 import { extractDeclaredEffectiveDate } from "../src/lib/nationwide-state-source-evidence-pipeline.mjs";
 import {
@@ -15,6 +18,7 @@ const inventoryPath = resolve(root, "src/lib/nationwide-state-source-discovery.j
 const outputPath = resolve(root, process.argv[2] ?? "artifacts/state-validation-document-families.json");
 const inventory = JSON.parse(await readFile(inventoryPath, "utf8"));
 const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
+const execFileAsync = promisify(execFile);
 const STATES = new Set([
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY",
   "LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND",
@@ -35,6 +39,58 @@ function isAllowed(jurisdiction, url) {
       .some((domain) => host === domain || host.endsWith("." + domain));
   } catch {
     return false;
+  }
+}
+
+async function fetchFloridaWithPinnedTlsException(jurisdiction, url, timeoutMs) {
+  const requested = new URL(url);
+  if (
+    jurisdiction.state_code !== "FL" ||
+    requested.protocol !== "https:" ||
+    !requested.hostname.toLowerCase().endsWith("floridahousing.org")
+  ) {
+    throw new Error("tls_exception_not_authorized");
+  }
+
+  const tempDirectory = await mkdtemp(join(tmpdir(), "certivoiq-florida-"));
+  const output = join(tempDirectory, "response.bin");
+  try {
+    const { stdout } = await execFileAsync("curl", [
+      "--insecure",
+      "--location",
+      "--fail",
+      "--silent",
+      "--show-error",
+      "--max-time", String(Math.max(10, Math.ceil(timeoutMs / 1000))),
+      "--proto", "=https",
+      "--output", output,
+      "--write-out", "%{url_effective}\\n%{http_code}\\n%{content_type}",
+      url,
+    ], { maxBuffer: 1024 * 1024 });
+    const [finalUrl, statusText, contentType = ""] = stdout.trim().split("\n");
+    if (!isAllowed(jurisdiction, finalUrl)) {
+      throw new Error("tls_exception_redirected_to_unapproved_host");
+    }
+    const httpStatus = Number(statusText);
+    if (!Number.isInteger(httpStatus) || httpStatus < 200 || httpStatus > 299) {
+      throw new Error("http_status:" + statusText);
+    }
+    const bytes = new Uint8Array(await readFile(output));
+    if (!bytes.byteLength || bytes.byteLength > MAX_DOCUMENT_BYTES) {
+      throw new Error("document_size_invalid");
+    }
+    return {
+      bytes,
+      finalUrl,
+      contentType: contentType.split(";", 1)[0].toLowerCase(),
+      etag: null,
+      lastModified: null,
+      attempt: 1,
+      tlsPeerVerification: false,
+      tlsExceptionScope: "Pinned Florida Housing hosts only; final redirect host revalidated before hashing.",
+    };
+  } finally {
+    await rm(tempDirectory, { recursive: true, force: true });
   }
 }
 
@@ -71,6 +127,9 @@ async function fetchOfficial(jurisdiction, url, { attempts = 2, timeoutMs = 25_0
       lastError = error;
       if (attempt < attempts) await delay(attempt * 1250);
     }
+  }
+  if (jurisdiction.state_code === "FL") {
+    return fetchFloridaWithPinnedTlsException(jurisdiction, url, timeoutMs);
   }
   throw lastError;
 }
@@ -235,6 +294,8 @@ async function captureDocument(jurisdiction, candidate) {
       last_modified: response.lastModified,
       declared_year: candidate.declared_year,
       ...effective,
+      tls_peer_verification: response.tlsPeerVerification ?? true,
+      tls_exception_scope: response.tlsExceptionScope ?? null,
       capture_status: "captured_unvalidated",
       independent_validation_required: true,
       compliance_activation_allowed: false,
