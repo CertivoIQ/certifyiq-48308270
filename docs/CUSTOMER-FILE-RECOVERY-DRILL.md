@@ -26,5 +26,6 @@ The source remains intact throughout the drill. Any collision, tenant mismatch, 
 - Automated control tests: `scripts/test-customer-file-recovery.mjs`
 - Rollback-only production isolation UAT: `supabase/tests/customer_file_storage_uat.sql`
 - Storage hardening: `supabase/migrations/20260829060000_harden_customer_file_storage.sql`
+- Import-job subscription gate: `supabase/migrations/20260829061000_harden_certification_import_jobs.sql`
 
-On 2026-08-29, the rollback-only production UAT passed one-tenant visibility and rejected cross-tenant and unbacked uploads. The synthetic objects were rolled back. A representative customer-object copy remains required to close the launch gate because production storage currently has no suitable customer object.
+On 2026-08-29, the rollback-only production UAT passed one-tenant visibility, rejected cross-tenant and unbacked uploads, blocked an unsubscribed multi-file job, and allowed a single-file job. The synthetic records were rolled back. A representative customer-object copy remains required to close the launch gate because production storage currently has no suitable customer object.
