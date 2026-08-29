@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-08-29",
+  "owner": "CertivoIQ Engineering",
+  "scope": "CertivoIQ production application at certivoiq.com and Supabase project emnkzxkcpnyvglwxraxm",
+  "controls": [
+    {
+      "id": "data-collected-1",
+      "status": "verified",
+      "evidence": "Published privacy notice and inspected submission workflows",
+      "statement": "CertivoIQ receives account, organization, portfolio, certification, evidence, support, and billing-related information only through disclosed product workflows."
+    },
+    {
+      "id": "encryption-1",
+      "status": "verified",
+      "evidence": "Live HTTPS response-header inspection",
+      "statement": "Public production traffic is served over HTTPS with HTTP Strict Transport Security enabled."
+    },
+    {
+      "id": "isolation-1",
+      "status": "verified",
+      "evidence": "Production catalog and policy audit",
+      "statement": "Every public production table has Row Level Security enabled; all production Storage buckets are private and policy-controlled."
+    },
+    {
+      "id": "authentication-1",
+      "status": "verified",
+      "evidence": "Production Auth and account-security workflow inspection",
+      "statement": "CertivoIQ supports authenticated sessions, TOTP enrollment, recovery codes, and server-authorized role checks. MFA is available but is not represented as universally enforced."
+    },
+    {
+      "id": "audit-logs-1",
+      "status": "verified",
+      "evidence": "Production schema and append-only event-control audit",
+      "statement": "Compliance review, source verification, PHA, staff-access, operations, and retention workflows record attributable events and timestamps where implemented."
+    },
+    {
+      "id": "retention-1",
+      "status": "verified",
+      "evidence": "Deployed operations-worker v1 and retention_purge_events control",
+      "statement": "Customer certification-import and correction-evidence objects are scheduled for deletion 14 days after paid access ends. The supervised worker records completion or failure and fails closed on deletion errors."
+    },
+    {
+      "id": "subprocessors-1",
+      "status": "verified",
+      "evidence": "Production project and hosting configuration inspection",
+      "statement": "The application is hosted through Lovable; the primary production database, authentication, and storage services use Supabase in Canada Central. Billing workflows use Stripe where configured."
+    },
+    {
+      "id": "vulnerability-1",
+      "status": "verified",
+      "evidence": "Published /.well-known/security.txt",
+      "statement": "Suspected vulnerabilities can be reported through the CertivoIQ support channel identified in security.txt."
+    },
+    {
+      "id": "documents-1",
+      "status": "verified",
+      "evidence": "Published support workflow",
+      "statement": "DPA and security-questionnaire requests are accepted through CertivoIQ support and require contract-specific review."
+    }
+  ]
+}
