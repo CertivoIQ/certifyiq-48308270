@@ -61,6 +61,7 @@ const PHA_NAV = [
   { to: "/launchpad", label: "Agency Setup", icon: Rocket, key: "admin" },
   { to: "/pha-agency-settings", label: "Agency Settings & Integrations", icon: SlidersHorizontal, key: "admin" },
   { to: "/pha-users", label: "Users & Permissions", icon: Shield, key: "admin" },
+  { to: "/account/security", label: "Account Security", icon: ShieldCheck, key: "owner_admin" },
   { to: "/billing", label: "Billing", icon: CreditCard, key: "owner_admin" },
   { to: "/contact-support", label: "Support", icon: HelpCircle, key: "support" },
 ] as const;
