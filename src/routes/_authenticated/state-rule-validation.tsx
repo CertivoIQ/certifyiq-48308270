@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/state-rule-validation")({
   head: () => ({
     meta: [
-      { title: "State Rule Validation — CertivoIQ" },
+      { title: "State & Federal Rule Validation — CertivoIQ" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -167,7 +167,7 @@ function SourceReviewCard({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-sm font-semibold">{source.state_code}</span>
+            <span className="font-mono text-sm font-semibold">{source.state_code === "US" ? "FEDERAL" : source.state_code}</span>
             <Pill tone={toneFor(source.agent_verification_status)}>
               {labelFor(source.agent_verification_status)}
             </Pill>
@@ -189,6 +189,11 @@ function SourceReviewCard({
           <p className="mt-2 text-xs text-muted-foreground">
             Intake condition: {source.candidate_status.replaceAll("_", " ")}
           </p>
+          {source.scope === "FEDERAL_SHARED" ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              One controlled federal source shared by all 50 state rule packs.
+            </p>
+          ) : null}
           {requiresReplacement ? (
             <p className="mt-2 flex items-center gap-1.5 text-sm text-reject">
               <AlertTriangle className="size-4" /> This source blocks pack completion until resolved.
@@ -364,6 +369,7 @@ function StateRuleValidationWorkspace() {
   });
 
   const packs = query.data?.packs ?? [];
+  const statePacks = packs.filter((pack) => pack.state_code !== "US");
   const sources = query.data?.sources ?? [];
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => ["blocked", "rejected"].includes(source.agent_verification_status)).length;
@@ -385,8 +391,8 @@ function StateRuleValidationWorkspace() {
 
   return (
     <AppShell
-      title="State Rule Validation"
-      subtitle="Controlled exact-source review for the nationwide state rule-pack queue"
+      title="State & Federal Rule Validation"
+      subtitle="Controlled exact-source review for 50 state packs and shared federal authorities"
     >
       {loading ? (
         <Panel bodyClassName="p-8">Checking validation authority…</Panel>
@@ -400,7 +406,7 @@ function StateRuleValidationWorkspace() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <Stat label="State packs" value={query.error ? "—" : packs.length} hint="Fail-closed candidates" />
+            <Stat label="State packs" value={query.error ? "—" : statePacks.length} hint="Exactly 50 state candidates" />
             <Stat label="Source candidates" value={query.error ? "—" : sources.length} hint="Official-source queue" />
             <Stat label="Remaining" value={query.error ? "—" : active} hint="Includes blocked items" tone={active ? "flag" : "seal"} />
             <Stat label="Verified sources" value={query.error ? "—" : verified} hint="Source review only" tone={verified ? "seal" : "flag"} />
@@ -453,7 +459,7 @@ function StateRuleValidationWorkspace() {
                       }
                     >
                       <option value="">Select a state</option>
-                      {packs.map((pack) => (
+                      {statePacks.map((pack) => (
                         <option key={pack.id} value={pack.state_code}>
                           {pack.state_code}
                         </option>
@@ -585,15 +591,16 @@ function StateRuleValidationWorkspace() {
           <Panel className="mt-4" title="Queue filters" bodyClassName="p-5">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1.5">
-                <Label htmlFor="state-filter">State</Label>
+                <Label htmlFor="state-filter">Source jurisdiction</Label>
                 <select
                   id="state-filter"
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                   value={stateCode}
                   onChange={(event) => setStateCode(event.target.value)}
                 >
-                  <option value="ALL">All states</option>
-                  {packs.map((pack) => (
+                  <option value="ALL">All state and federal sources</option>
+                  <option value="US">Federal shared — all 50 states</option>
+                  {statePacks.map((pack) => (
                     <option key={pack.id} value={pack.state_code}>
                       {pack.state_code} — {labelFor(pack.status)}
                     </option>

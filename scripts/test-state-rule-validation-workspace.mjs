@@ -24,7 +24,7 @@ const shell = await readFile(new URL("../src/components/app-shell.tsx", import.m
 const tasks = await readFile(new URL("../src/routes/_authenticated/tasks.tsx", import.meta.url), "utf8");
 
 test("exposes a dedicated Manager/Admin validation workspace", () => {
-  assert.match(workspace, /State Rule Validation/);
+  assert.match(workspace, /State & Federal Rule Validation/);
   assert.match(workspace, /useCrmStaffAuthority/);
   assert.match(workspace, /!canManageStaff/);
   assert.match(workspace, /state_rule_pack_candidates/);
