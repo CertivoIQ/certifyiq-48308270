@@ -65,6 +65,29 @@ type RulePackRelease = {
   created_at: string;
   updated_at: string;
 };
+type RulePackCandidate = {
+  id: string;
+  state_code: string;
+  status: string;
+  source_candidate_count: number;
+  blocked_source_count: number;
+  compliance_activation_allowed: boolean;
+  updated_at: string;
+};
+type RuleSourceCandidate = {
+  id: string;
+  state_code: string;
+  authority_name: string;
+  program: string;
+  scope: string;
+  source_type: string;
+  candidate_status: string;
+  agent_verification_status: string | null;
+  exact_bytes_captured: boolean;
+  compliance_activation_allowed: boolean;
+  retrieved_at: string | null;
+  updated_at: string;
+};
 type Approval = {
   id: string;
   action_type: string;
@@ -131,8 +154,16 @@ async function loadTasks(): Promise<TaskItem[]> {
   // Generated Supabase types lag the controlled governance tables until schema types refresh.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = supabase as any;
-  const [releaseResult, attestationResult, packResult, approvalResult, incidentResult, sourceResult] =
-    await Promise.all([
+  const [
+    releaseResult,
+    attestationResult,
+    packResult,
+    packCandidateResult,
+    sourceCandidateResult,
+    approvalResult,
+    incidentResult,
+    sourceResult,
+  ] = await Promise.all([
       client
         .from("pha_nspire_standard_releases")
         .select("id,source_version,status,imported_standard_count,imported_deficiency_count,created_at,updated_at,activated_at")
@@ -146,6 +177,16 @@ async function loadTasks(): Promise<TaskItem[]> {
         .select("id,state_code,version,status,validated_rule_count,approved_at,created_at,updated_at")
         .order("updated_at", { ascending: false })
         .limit(100),
+      client
+        .from("state_rule_pack_candidates")
+        .select("id,state_code,status,source_candidate_count,blocked_source_count,compliance_activation_allowed,updated_at")
+        .order("state_code", { ascending: true })
+        .limit(100),
+      client
+        .from("state_rule_source_candidates")
+        .select("id,state_code,authority_name,program,scope,source_type,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,retrieved_at,updated_at")
+        .order("state_code", { ascending: true })
+        .limit(250),
       client
         .from("operations_approvals")
         .select("id,action_type,status,requested_at,decided_at,expires_at,snapshot_sha256")
@@ -164,7 +205,14 @@ async function loadTasks(): Promise<TaskItem[]> {
     ]);
 
   const nspireResults = [releaseResult, attestationResult];
-  const requiredResults = [packResult, approvalResult, incidentResult, sourceResult];
+  const requiredResults = [
+    packResult,
+    packCandidateResult,
+    sourceCandidateResult,
+    approvalResult,
+    incidentResult,
+    sourceResult,
+  ];
   const failed = [...requiredResults, ...nspireResults].find(
     (result) => result.error && !isMissingRelationError(result.error),
   );
@@ -179,6 +227,8 @@ async function loadTasks(): Promise<TaskItem[]> {
   const releases = (nspireSourceUnavailable ? [] : releaseResult.data ?? []) as NspireRelease[];
   const attestations = (nspireSourceUnavailable ? [] : attestationResult.data ?? []) as NspireAttestation[];
   const packs = (packResult.data ?? []) as RulePackRelease[];
+  const packCandidates = (packCandidateResult.data ?? []) as RulePackCandidate[];
+  const sourceCandidates = (sourceCandidateResult.data ?? []) as RuleSourceCandidate[];
   const approvals = (approvalResult.data ?? []) as Approval[];
   const incidents = (incidentResult.data ?? []) as Incident[];
   const sources = (sourceResult.data ?? []) as SourceVersion[];
@@ -221,6 +271,41 @@ async function loadTasks(): Promise<TaskItem[]> {
       destination: "/pha-nspire-standards",
       actionLabel: active ? "Review and attest" : "View release",
       attention: release.status === "blocked",
+    });
+  }
+
+  for (const candidate of packCandidates) {
+    const active = !candidate.compliance_activation_allowed;
+    tasks.push({
+      id: `rule-pack-candidate:${candidate.id}`,
+      category: "rule_pack",
+      title: `${candidate.state_code} state rule-pack validation`,
+      description: `${candidate.source_candidate_count} candidate sources · ${candidate.blocked_source_count} blocked · ${active ? "independent validation required" : "activation controls satisfied"}`,
+      status: candidate.status,
+      active,
+      occurredAt: candidate.updated_at,
+      destination: active ? "/state-rule-validation" : "/rules",
+      actionLabel: active ? "Validate state pack" : "View rules",
+      attention: candidate.blocked_source_count > 0,
+    });
+  }
+
+  for (const candidate of sourceCandidates) {
+    const active = !candidate.compliance_activation_allowed;
+    const status = candidate.agent_verification_status ?? candidate.candidate_status;
+    tasks.push({
+      id: `rule-source-candidate:${candidate.id}`,
+      category: "verification",
+      title: `Verify ${candidate.state_code} · ${candidate.authority_name}`,
+      description: `${candidate.program} · ${candidate.scope} · ${candidate.source_type} · exact bytes ${candidate.exact_bytes_captured ? "captured" : "required"}`,
+      status,
+      active,
+      occurredAt: candidate.updated_at ?? candidate.retrieved_at ?? new Date().toISOString(),
+      destination: "/state-rule-validation",
+      actionLabel: active ? "Verify source" : "View evidence",
+      attention:
+        ["blocked", "failed", "conflicting"].includes(candidate.candidate_status) ||
+        ["rejected", "conflicting"].includes(candidate.agent_verification_status ?? ""),
     });
   }
 

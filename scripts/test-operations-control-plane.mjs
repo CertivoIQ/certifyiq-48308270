@@ -147,6 +147,13 @@ test("governance work is centralized in the Tasks workspace", () => {
   assert.doesNotMatch(appShell, /NspireActivationAlert/);
   assert.match(tasksRoute, /pha_nspire_standard_releases/);
   assert.match(tasksRoute, /state_rule_pack_releases/);
+  assert.match(tasksRoute, /state_rule_pack_candidates/);
+  assert.match(tasksRoute, /state_rule_source_candidates/);
+  assert.match(tasksRoute, /rule-pack-candidate:/);
+  assert.match(tasksRoute, /rule-source-candidate:/);
+  assert.match(tasksRoute, /const active = !candidate\.compliance_activation_allowed/);
+  assert.match(tasksRoute, /independent validation required/);
+  assert.match(tasksRoute, /exact bytes .*required/);
   assert.match(tasksRoute, /operations_approvals/);
   assert.match(tasksRoute, /operations_source_versions/);
   assert.match(tasksRoute, /operations_incidents/);
