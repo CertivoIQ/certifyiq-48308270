@@ -33,3 +33,12 @@ test("PHA owners and admins can reach account security", () => {
     /\{ to: "\/account\/security", label: "Account Security", icon: ShieldCheck, key: "owner_admin" \}/,
   );
 });
+
+test("incomplete TOTP enrollment can be restarted without deleting verified factors", () => {
+  const security = read("src/routes/_authenticated/account.security.tsx");
+
+  assert.match(security, /factors\.filter\(\(item\) => item\.status === "unverified"\)/);
+  assert.match(security, /mfa\.unenroll\(\{ factorId: factor\.id \}\)/);
+  assert.doesNotMatch(security, /factors\.filter\(\(item\) => item\.status === "verified"\)/);
+  assert.match(security, /friendlyName: "CertivoIQ Authenticator"/);
+});
