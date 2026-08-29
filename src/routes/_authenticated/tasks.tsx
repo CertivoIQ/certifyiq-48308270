@@ -84,7 +84,6 @@ type RuleSourceCandidate = {
   candidate_status: string;
   agent_verification_status: string | null;
   exact_bytes_captured: boolean;
-  compliance_activation_allowed: boolean;
   retrieved_at: string | null;
   updated_at: string;
 };
@@ -184,7 +183,7 @@ async function loadTasks(): Promise<TaskItem[]> {
         .limit(100),
       client
         .from("state_rule_source_candidates")
-        .select("id,state_code,authority_name,program,scope,source_type,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,retrieved_at,updated_at")
+        .select("id,state_code,authority_name,program,scope,source_type,candidate_status,agent_verification_status,exact_bytes_captured,retrieved_at,updated_at")
         .order("state_code", { ascending: true })
         .limit(250),
       client
@@ -291,18 +290,22 @@ async function loadTasks(): Promise<TaskItem[]> {
   }
 
   for (const candidate of sourceCandidates) {
-    const active = !candidate.compliance_activation_allowed;
     const status = candidate.agent_verification_status ?? candidate.candidate_status;
+
+    // Verified source evidence remains available in State Rule Validation history,
+    // but it is no longer outstanding governance work and must leave Tasks entirely.
+    if (status === "verified") continue;
+
     tasks.push({
       id: `rule-source-candidate:${candidate.id}`,
       category: "verification",
       title: `Verify ${candidate.state_code} · ${candidate.authority_name}`,
       description: `${candidate.program} · ${candidate.scope} · ${candidate.source_type} · exact bytes ${candidate.exact_bytes_captured ? "captured" : "required"}`,
       status,
-      active,
+      active: true,
       occurredAt: candidate.updated_at ?? candidate.retrieved_at ?? new Date().toISOString(),
       destination: "/state-rule-validation",
-      actionLabel: active ? "Verify source" : "View evidence",
+      actionLabel: "Verify source",
       attention:
         ["blocked", "failed", "conflicting"].includes(candidate.candidate_status) ||
         ["rejected", "conflicting"].includes(candidate.agent_verification_status ?? ""),
