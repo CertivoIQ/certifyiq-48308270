@@ -780,7 +780,9 @@
       "url": "https://www.njhousing.gov/",
       "allowedHosts": [
         "www.njhousing.gov",
-        "njhousing.gov"
+        "njhousing.gov",
+        "nj.gov",
+        "www.nj.gov"
       ],
       "priorStatus": "queued_for_agent_verification"
     },
@@ -790,7 +792,9 @@
       "url": "https://njhousing.gov/developers/uniap/",
       "allowedHosts": [
         "njhousing.gov",
-        "www.njhousing.gov"
+        "www.njhousing.gov",
+        "nj.gov",
+        "www.nj.gov"
       ],
       "priorStatus": "queued_for_agent_verification"
     },
@@ -1000,7 +1004,9 @@
       "url": "https://schousing.com/Home/MultifamilyTaxExempt",
       "allowedHosts": [
         "schousing.com",
-        "www.schousing.com"
+        "www.schousing.com",
+        "schousing.sc.gov",
+        "www.schousing.sc.gov"
       ],
       "priorStatus": "queued_for_agent_verification"
     },
@@ -1010,7 +1016,9 @@
       "url": "https://www.schousing.com/home/HousingTaxCredits",
       "allowedHosts": [
         "www.schousing.com",
-        "schousing.com"
+        "schousing.com",
+        "schousing.sc.gov",
+        "www.schousing.sc.gov"
       ],
       "priorStatus": "queued_for_agent_verification"
     },
