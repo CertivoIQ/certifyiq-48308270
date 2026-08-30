@@ -145,6 +145,7 @@ jobs:
           node --test scripts/test-az-ak-al-source-audit.mjs
           node --test scripts/test-ks-ia-in-il-source-audit.mjs
           bun run test:operations-source
+          node --test scripts/test-certification-task-workflow.mjs
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
