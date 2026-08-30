@@ -2,3 +2,6 @@ project_id = "emnkzxkcpnyvglwxraxm"
 
 [functions.operations-worker]
 verify_jwt = false
+
+[functions.merlin-procedure-worker]
+verify_jwt = false
