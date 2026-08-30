@@ -225,6 +225,55 @@ $$;
 revoke all on function public.merlin_search_procedures(text,text,text,integer) from public, anon;
 grant execute on function public.merlin_search_procedures(text,text,text,integer) to authenticated, service_role;
 
+create or replace function public.merlin_claim_procedure_job(
+  _worker text,
+  _lease_seconds integer default 600
+)
+returns public.operations_jobs
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare claimed public.operations_jobs;
+begin
+  if current_user not in ('postgres','service_role') then
+    raise exception 'service role required';
+  end if;
+  if nullif(btrim(_worker),'') is null then raise exception 'worker required'; end if;
+  if _lease_seconds < 60 or _lease_seconds > 900 then raise exception 'invalid lease duration'; end if;
+
+  select * into claimed
+  from public.operations_jobs
+  where job_type = 'merlin_state_procedure_crawl'
+    and worker = 'certivoiq-merlin-procedure'
+    and status in ('queued','retry_wait')
+    and scheduled_at <= now()
+    and (lease_expires_at is null or lease_expires_at <= now())
+  order by scheduled_at, created_at
+  for update skip locked
+  limit 1;
+
+  if claimed.id is null then return null; end if;
+  update public.operations_jobs
+  set status='running', lease_owner=btrim(_worker),
+      lease_expires_at=now()+make_interval(secs=>_lease_seconds),
+      heartbeat_at=now(), started_at=coalesce(started_at,now()),
+      attempts=attempts+1, updated_at=now()
+  where id=claimed.id returning * into claimed;
+
+  insert into public.operations_audit_events(
+    actor_kind,action,target_type,target_id,correlation_id,detail
+  ) values (
+    'worker','merlin.procedure_job.claimed','operations_job',claimed.id::text,
+    claimed.correlation_id,jsonb_build_object('worker',_worker,'attempt',claimed.attempts)
+  );
+  return claimed;
+end;
+$$;
+
+revoke all on function public.merlin_claim_procedure_job(text,integer) from public, anon, authenticated;
+grant execute on function public.merlin_claim_procedure_job(text,integer) to service_role;
+
 -- Seed one document and one idempotent crawl job for every captured, verified source.
 insert into public.merlin_procedure_documents (
   source_candidate_id, state_code, program, source_type, authority_name,
@@ -268,7 +317,7 @@ insert into public.operations_jobs (
 )
 select
   'merlin_state_procedure_crawl',
-  'certivoiq-control-plane',
+  'certivoiq-merlin-procedure',
   'state_rule_source_candidates',
   'tier_2_prepare',
   jsonb_build_object(
