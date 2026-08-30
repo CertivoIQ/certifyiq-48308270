@@ -55,6 +55,7 @@ test("verified sources no longer show Verify source", () => {
 
 test("Tasks distinguishes source verification from pack activation", () => {
   assert.match(tasksRoute, /\.neq\("state_code", "US"\)/);
+  assert.match(tasksRoute, /\.neq\("candidate_status", "EXCLUDED_REDUNDANT_SOURCE"\)/);
   assert.match(tasksRoute, /awaitingActivation/);
   assert.match(tasksRoute, /Activate state pack/);
   assert.match(tasksRoute, /independent Administrator activation required/);
