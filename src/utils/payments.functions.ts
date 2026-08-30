@@ -3,6 +3,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 import { normalizeLicenseSelection } from "@/lib/license-selection";
 import { isLiveBillingVerified } from "@/lib/billing-config.server";
+import { LICENSES } from "@/lib/plan-catalog";
+import {
+  FOUNDERS_PROMOTION,
+  FOUNDERS_PROMOTION_EXPIRES_AT,
+  foundersPromotionAvailable,
+} from "@/lib/founders-promotion";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
@@ -98,6 +104,116 @@ function shouldUseComplianceHandling(customerCountry?: string): boolean {
   return MANAGED_PAYMENTS_COUNTRIES.has(customerCountry.toUpperCase());
 }
 
+function isMissingStripeResource(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: string; raw?: { code?: string } };
+  return (candidate.raw?.code ?? candidate.code) === "resource_missing";
+}
+
+async function ensureFoundersPromotion(
+  stripe: ReturnType<typeof createStripeClient>,
+): Promise<void> {
+  if (!foundersPromotionAvailable()) return;
+
+  let coupon: Awaited<ReturnType<typeof stripe.coupons.retrieve>> | null = null;
+  try {
+    coupon = await stripe.coupons.retrieve(FOUNDERS_PROMOTION.couponId);
+  } catch (error) {
+    if (!isMissingStripeResource(error)) throw error;
+  }
+
+  if (!coupon) {
+    const licensePrices = await stripe.prices.list({
+      lookup_keys: Object.values(LICENSES).map((license) => license.priceId),
+      active: true,
+      limit: 10,
+    });
+    const productIds = [
+      ...new Set(
+        licensePrices.data.map((price) =>
+          typeof price.product === "string" ? price.product : price.product.id,
+        ),
+      ),
+    ];
+    if (productIds.length !== Object.keys(LICENSES).length) {
+      throw new Error("Founder's Special requires both live annual license products");
+    }
+    coupon = await stripe.coupons.create({
+      id: FOUNDERS_PROMOTION.couponId,
+      name: FOUNDERS_PROMOTION.name,
+      percent_off: FOUNDERS_PROMOTION.percentOff,
+      duration: FOUNDERS_PROMOTION.duration,
+      redeem_by: FOUNDERS_PROMOTION_EXPIRES_AT,
+      applies_to: { products: productIds },
+      metadata: {
+        certivoiq_offer: "founders_special",
+        redemption_deadline: "2026-11-30",
+        discount_term: "first_12_months",
+      },
+    });
+  }
+
+  const couponRecord = coupon as unknown as {
+    deleted?: boolean;
+    valid?: boolean;
+    percent_off?: number | null;
+    duration?: string;
+    redeem_by?: number | null;
+  };
+  if (
+    couponRecord.deleted ||
+    couponRecord.valid === false ||
+    couponRecord.percent_off !== FOUNDERS_PROMOTION.percentOff ||
+    couponRecord.duration !== FOUNDERS_PROMOTION.duration ||
+    couponRecord.redeem_by !== FOUNDERS_PROMOTION_EXPIRES_AT
+  ) {
+    throw new Error("Existing Founder's Special coupon does not match approved billing terms");
+  }
+
+  const activeCodes = await stripe.promotionCodes.list({
+    code: FOUNDERS_PROMOTION.code,
+    active: true,
+    limit: 10,
+  });
+  const existingCode = activeCodes.data[0];
+  if (existingCode) {
+    const record = existingCode as unknown as {
+      expires_at?: number | null;
+      promotion?: { coupon?: string | { id?: string } };
+      coupon?: { id?: string };
+    };
+    const promotionCoupon = record.promotion?.coupon;
+    const couponId =
+      typeof promotionCoupon === "string"
+        ? promotionCoupon
+        : promotionCoupon?.id ?? record.coupon?.id;
+    if (
+      couponId !== FOUNDERS_PROMOTION.couponId ||
+      record.expires_at !== FOUNDERS_PROMOTION_EXPIRES_AT
+    ) {
+      throw new Error("Existing FOUNDERS50 code does not match approved billing terms");
+    }
+    return;
+  }
+
+  await stripe.promotionCodes.create({
+    code: FOUNDERS_PROMOTION.code,
+    promotion: {
+      type: "coupon",
+      coupon: FOUNDERS_PROMOTION.couponId,
+    },
+    expires_at: FOUNDERS_PROMOTION_EXPIRES_AT,
+    restrictions: {
+      first_time_transaction: FOUNDERS_PROMOTION.firstTimeTransactionOnly,
+    },
+    metadata: {
+      certivoiq_offer: "founders_special",
+      redemption_deadline: "2026-11-30",
+      discount_term: "first_12_months",
+    },
+  } as Parameters<typeof stripe.promotionCodes.create>[0]);
+}
+
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
   options: { email?: string; userId?: string },
@@ -159,6 +275,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         return { error: "Live billing is not verified for release." };
       }
       const stripe = createStripeClient(data.environment);
+      const foundersPromotionEnabled = foundersPromotionAvailable();
+      if (foundersPromotionEnabled) await ensureFoundersPromotion(stripe);
 
       const selection = normalizeLicenseSelection(data);
       const prices = await stripe.prices.list({
@@ -185,6 +303,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         customer: customerId,
         integration_identifier: `certivoiq_license_${crypto.randomUUID().replaceAll("-", "").slice(0, 8)}`,
+        allow_promotion_codes: foundersPromotionEnabled,
         metadata: {
           userId: context.userId,
           license_kind: selection.licenseKind,
