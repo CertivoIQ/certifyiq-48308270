@@ -52,6 +52,20 @@ type Pack = {
   updated_at: string;
 };
 
+type ActivationReadiness = {
+  pack_candidate_id: string;
+  state_code: string;
+  inventory_generated_at: string;
+  pack_status: string;
+  sources_ready: boolean;
+  activation_recorded: boolean;
+  first_reviewer_count: number;
+  viewer_is_first_reviewer: boolean;
+  viewer_can_activate: boolean;
+  validated_on: string | null;
+  activated_on: string | null;
+};
+
 type SourceCandidate = {
   id: string;
   state_code: string;
@@ -148,7 +162,7 @@ async function loadValidationQueue() {
   // Generated database types intentionally lag controlled launch migrations.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = supabase as any;
-  const [packResult, sourceResult] = await Promise.all([
+  const [packResult, sourceResult, activationResult] = await Promise.all([
     client
       .from("state_rule_pack_candidates")
       .select("id,state_code,status,source_candidate_count,blocked_source_count,compliance_activation_allowed,validated_on,updated_at")
@@ -158,12 +172,15 @@ async function loadValidationQueue() {
       .select("id,state_code,scope,authority_name,official_domain,program,source_type,source_url,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,source_sha256,retrieved_at,verification_evidence,updated_at")
       .order("state_code")
       .order("authority_name"),
+    client.rpc("state_rule_pack_activation_readiness"),
   ]);
   if (packResult.error) throw packResult.error;
   if (sourceResult.error) throw sourceResult.error;
+  if (activationResult.error) throw activationResult.error;
   return {
     packs: (packResult.data ?? []) as Pack[],
     sources: (sourceResult.data ?? []) as SourceCandidate[],
+    activations: (activationResult.data ?? []) as ActivationReadiness[],
   };
 }
 
@@ -279,23 +296,37 @@ function SourceReviewCard({
               />
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("captured_unvalidated")}>
-              Save capture
-            </Button>
-            <Button size="sm" disabled={busy} onClick={() => onDecision("verified")}>
-              <CheckCircle2 className="size-4" /> Verify source
-            </Button>
-            <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("blocked")}>
-              Mark blocked
-            </Button>
-            <Button size="sm" variant="destructive" disabled={busy} onClick={() => onDecision("rejected")}>
-              Reject source
-            </Button>
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Every decision is appended to the audit history. Complete packs activate automatically.
-          </p>
+          {source.agent_verification_status === "verified" ? (
+            <div className="mt-4 rounded-md border border-seal/30 bg-seal-soft p-4 text-sm">
+              <p className="flex items-center gap-2 font-medium text-seal">
+                <CheckCircle2 className="size-4" /> First verification complete
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                This source no longer requires verification. State-pack activation is a separate action
+                that must be completed by a different Administrator.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("captured_unvalidated")}>
+                  Save capture
+                </Button>
+                <Button size="sm" disabled={busy} onClick={() => onDecision("verified")}>
+                  <CheckCircle2 className="size-4" /> Verify source
+                </Button>
+                <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("blocked")}>
+                  Mark blocked
+                </Button>
+                <Button size="sm" variant="destructive" disabled={busy} onClick={() => onDecision("rejected")}>
+                  Reject source
+                </Button>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Every decision is appended to the audit history. Source verification never activates a pack by itself.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </Panel>
@@ -363,6 +394,35 @@ function StateRuleValidationWorkspace() {
     },
   });
 
+  const activatePack = useMutation({
+    mutationFn: async (pack: ActivationReadiness) => {
+      const confirmed = window.confirm(
+        `Activate the ${pack.state_code} state rule pack? This records your independent second validation.`,
+      );
+      if (!confirmed) throw new Error("Activation cancelled");
+      // Generated database types intentionally lag controlled launch migrations.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = supabase as any;
+      const { data, error } = await client.rpc("activate_state_rule_pack", {
+        p_pack_candidate_id: pack.pack_candidate_id,
+        p_notes: "Independent second validation completed in the State Rule Validation workspace.",
+      });
+      if (error) throw error;
+      return data as { state_code: string; validated_on: string; pack_status: string };
+    },
+    onSuccess: (result) => {
+      toast.success(`${result.state_code} state pack activated`, {
+        description: `Independent activation recorded for ${result.validated_on}.`,
+      });
+      void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
+      void queryClient.invalidateQueries({ queryKey: ["governance-tasks"] });
+    },
+    onError: (error) => {
+      if (error instanceof Error && error.message === "Activation cancelled") return;
+      toast.error(messageForError(error, "State pack could not be activated"));
+    },
+  });
+
   const createSource = useMutation({
     mutationFn: async (source: NewSourceDraft) => {
       if (!source.stateCode) throw new Error("Select a state");
@@ -406,6 +466,10 @@ function StateRuleValidationWorkspace() {
   const statePacks = packs.filter((pack) => pack.state_code !== "US");
   const selectedPack = statePacks.find((pack) => pack.state_code === stateCode);
   const activatedPacks = statePacks.filter((pack) => pack.compliance_activation_allowed).length;
+  const activations = query.data?.activations ?? [];
+  const pendingActivations = activations.filter(
+    (pack) => pack.sources_ready && !pack.activation_recorded,
+  );
   const sources = query.data?.sources ?? [];
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => ["blocked", "rejected"].includes(source.agent_verification_status)).length;
@@ -468,16 +532,60 @@ function StateRuleValidationWorkspace() {
 
           <div className="mt-4 rounded-lg border border-flag/30 bg-flag-soft p-4 text-sm">
             <p className="flex items-start gap-2 font-medium">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Complete packs activate automatically.
+              <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Two independent validation stages are required.
             </p>
             <p className="mt-1 text-muted-foreground">
-              Activation occurs only after every required state source and the shared federal baseline pass controlled validation.
-              Reviewer and approver emails remain hidden from operational screens and are available only through controlled reporting.
+              First, every required state source and the shared federal baseline must be verified. Then a different
+              Administrator must activate the state pack. Reviewer and activator emails remain hidden from operational
+              screens and are available only through controlled reporting.
             </p>
             {selectedPack?.validated_on ? (
               <p className="mt-2 font-medium">Validation date: {selectedPack.validated_on}</p>
             ) : null}
           </div>
+
+          <Panel
+            className="mt-4"
+            title="State packs awaiting independent activation"
+            description="These packs completed first verification and require a different Administrator to activate them."
+            bodyClassName="p-0"
+          >
+            {pendingActivations.length ? (
+              <ul className="divide-y divide-border">
+                {pendingActivations.map((pack) => (
+                  <li key={pack.pack_candidate_id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-semibold">{pack.state_code}</span>
+                        <Pill tone="flag">Awaiting second validation</Pill>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {pack.first_reviewer_count} first-stage reviewer{pack.first_reviewer_count === 1 ? "" : "s"} recorded.
+                        {pack.viewer_is_first_reviewer
+                          ? " A different Administrator must activate this pack."
+                          : " You are eligible to complete the independent activation."}
+                      </p>
+                    </div>
+                    {pack.viewer_can_activate ? (
+                      <Button
+                        size="sm"
+                        disabled={activatePack.isPending}
+                        onClick={() => activatePack.mutate(pack)}
+                      >
+                        <ShieldCheck className="size-4" /> Activate state pack
+                      </Button>
+                    ) : (
+                      <Pill>Different Administrator required</Pill>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+                No state packs are awaiting independent activation.
+              </div>
+            )}
+          </Panel>
 
           {isCrmAdmin ? (
             <Panel
