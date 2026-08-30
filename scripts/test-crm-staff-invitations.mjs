@@ -38,6 +38,11 @@ test("new staff access is controlled by an exact pending invitation, not the ema
 test("Edge Function enforces manager and administrator authority", () => {
   assert.match(edge, /Only an active CertivoIQ administrator or manager/i);
   assert.match(edge, /requesterLevel === "manager" && level !== "employee"/i);
+  assert.match(edge, /action === "invitePha"/i);
+  assert.match(edge, /requesterLevel !== "admin"/i);
+  assert.match(edge, /validPhaRole\(agencyRole\)/i);
+  assert.match(edge, /organization_type", "pha"/i);
+  assert.match(edge, /pha_workspace_invitations/i);
   assert.match(edge, /BETA EMAIL POLICY — revert this set to only "certivoiq\.com" before launch/i);
   for (const domain of ["certivoiq.com", "gmail.com", "outlook.com", "hotmail.com", "live.com"]) {
     assert.match(edge, new RegExp(`"${domain.replace(".", "\\.")}"`, "i"));
@@ -53,6 +58,7 @@ test("Edge Function enforces manager and administrator authority", () => {
 
 test("browser client invokes the protected Edge Function without exposing server credentials", () => {
   assert.match(client, /supabase\.functions\.invoke\("crm-staff-access"/i);
+  assert.match(client, /action: "invitePha"/i);
   assert.doesNotMatch(client, /SUPABASE_SERVICE_ROLE_KEY|sb_secret_/i);
 });
 
@@ -66,7 +72,7 @@ test("CRM visibly exposes staff access only to managers and administrators", () 
   assert.match(route, /Account role/i);
   assert.match(route, /Public Housing Agency/i);
   assert.match(route, /PHA workspace/i);
-  assert.match(route, /pha_workspace_invitations/i);
+  assert.match(route, /action: "invitePha"/i);
   assert.match(route, /sendPhaWorkspaceInvitationEmail/i);
   for (const role of [
     "executive",
