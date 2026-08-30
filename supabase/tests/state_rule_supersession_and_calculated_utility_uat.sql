@@ -3,11 +3,13 @@ begin;
 
 do $$
 declare
-  v_pack constant uuid := 'cac5d285-98ec-4ba9-a195-86c263a78cfd';
+  v_pack uuid;
   v_rule uuid;
   v_result jsonb;
   v_count integer;
 begin
+  select id into strict v_pack from public.state_rule_pack_candidates
+    where state_code='IL' order by inventory_generated_at desc limit 1;
   if not exists (
     select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
     where n.nspname='public' and c.relname='state_rule_supersession_events' and c.relrowsecurity
