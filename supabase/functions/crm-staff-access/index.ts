@@ -2,6 +2,13 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 type AccessLevel = "employee" | "manager" | "admin";
+type PhaAgencyRole =
+  | "executive"
+  | "agency_admin"
+  | "compliance_admin"
+  | "hcv_pbv_specialist"
+  | "public_housing_specialist"
+  | "inspection_staff";
 
 const APP_ORIGIN = "https://certivoiq.com";
 const allowedOrigins = new Set([APP_ORIGIN, "https://www.certivoiq.com"]);
@@ -37,6 +44,15 @@ function cleanEmail(value: unknown) {
 
 function validLevel(value: unknown): value is AccessLevel {
   return value === "employee" || value === "manager" || value === "admin";
+}
+
+function validPhaRole(value: unknown): value is PhaAgencyRole {
+  return value === "executive"
+    || value === "agency_admin"
+    || value === "compliance_admin"
+    || value === "hcv_pbv_specialist"
+    || value === "public_housing_specialist"
+    || value === "inspection_staff";
 }
 
 Deno.serve(async (req) => {
@@ -124,6 +140,59 @@ Deno.serve(async (req) => {
         })),
         invitations: invitations || [],
       });
+    }
+
+    if (action === "invitePha") {
+      if (requesterLevel !== "admin") {
+        throw new Error("Administrator access is required to assign a PHA role.");
+      }
+      const email = cleanEmail(body.email);
+      const emailDomain = email.split("@")[1] || "";
+      const agencyRole = body.agencyRole;
+      const workspaceUserId = typeof body.workspaceUserId === "string" ? body.workspaceUserId : "";
+      if (!email || !allowedStaffEmailDomains.has(emailDomain)) {
+        throw new Error(
+          "During beta, invitations require @certivoiq.com, @gmail.com, @outlook.com, @hotmail.com, or @live.com.",
+        );
+      }
+      if (!validPhaRole(agencyRole)) throw new Error("Select a valid PHA agency role.");
+      if (!workspaceUserId) throw new Error("Select the PHA workspace this user will access.");
+
+      const { data: workspace, error: workspaceError } = await admin
+        .from("customer_workspace_profiles")
+        .select("user_id")
+        .eq("user_id", workspaceUserId)
+        .eq("organization_type", "pha")
+        .maybeSingle();
+      if (workspaceError) throw workspaceError;
+      if (!workspace) throw new Error("The selected PHA workspace is not configured or no longer exists.");
+
+      const { data: existingPending, error: existingError } = await admin
+        .from("pha_workspace_invitations")
+        .select("id")
+        .eq("workspace_user_id", workspaceUserId)
+        .eq("invite_email", email)
+        .eq("status", "pending")
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (existingPending) {
+        throw new Error("A pending PHA invitation already exists for this address and workspace.");
+      }
+
+      const { data: invitation, error: invitationError } = await admin
+        .from("pha_workspace_invitations")
+        .insert({
+          workspace_user_id: workspaceUserId,
+          invite_email: email,
+          agency_role: agencyRole,
+          created_by: requester.id,
+        })
+        .select("id")
+        .single();
+      if (invitationError || !invitation) {
+        throw invitationError || new Error("PHA invitation record was not created.");
+      }
+      return json(origin, { status: "created", invitationId: invitation.id });
     }
 
     if (action === "invite") {
