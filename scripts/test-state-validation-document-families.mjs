@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES,
   REQUIRED_STATE_DOCUMENT_FAMILIES,
   classifyDocument,
   coverageGaps,
   extractOfficialLinks,
+  releaseCoverageGaps,
   selectCurrentDocuments,
 } from "../src/lib/state-validation-document-families.mjs";
 
@@ -25,6 +27,29 @@ test("classifies the required Florida validation document families", () => {
   assert.ok(
     classifyDocument({ label: "Florida Housing Compliance Training Workshop v26.2", url: "https://www.floridahousing.org/training.pdf" })
       .families.includes("COMPLIANCE_TRAINING"),
+  );
+});
+
+test("classifies West Virginia release-critical compliance resources", () => {
+  assert.ok(
+    classifyDocument({ label: "WVHDF Section 42 Tax Credit Compliance Manual", url: "https://www.wvhdf.com/manual.pdf" })
+      .families.includes("COMPLIANCE_GUIDEBOOK"),
+  );
+  assert.ok(
+    classifyDocument({ label: "2026 Income Limits Report", url: "https://www.wvhdf.com/income.pdf" })
+      .families.includes("INCOME_LIMITS"),
+  );
+  assert.ok(
+    classifyDocument({ label: "Tax Credit Eligibility and Maximum Rent", url: "https://www.wvhdf.com/rent.pdf" })
+      .families.includes("RENT_LIMITS"),
+  );
+  assert.ok(
+    classifyDocument({ label: "Lease Addendum Utility Allowance", url: "https://www.wvhdf.com/utility.pdf" })
+      .families.includes("UTILITY_ALLOWANCE"),
+  );
+  assert.ok(
+    classifyDocument({ label: "Household Eligibility Questionnaire", url: "https://www.wvhdf.com/forms.pdf" })
+      .families.includes("COMPLIANCE_FORMS"),
   );
 });
 
@@ -71,10 +96,35 @@ test("keeps the newest versioned schedules and preserves unversioned current man
   ]);
 });
 
-test("reports every unpublished or undiscovered family as a fail-closed gap", () => {
+test("reports every unpublished or undiscovered intake family as a fail-closed gap", () => {
   const gaps = coverageGaps("FL", [
     { families: ["COMPLIANCE_GUIDEBOOK", "COMPLIANCE_TRAINING"] },
   ]);
   assert.equal(gaps.length, REQUIRED_STATE_DOCUMENT_FAMILIES.length - 2);
   assert.ok(gaps.every((gap) => gap.compliance_activation_allowed === false));
+});
+
+test("release coverage requires compliance evidence but not training publication", () => {
+  const releaseComplete = [
+    {
+      families: [
+        "COMPLIANCE_GUIDEBOOK",
+        "INCOME_LIMITS",
+        "RENT_LIMITS",
+        "UTILITY_ALLOWANCE",
+        "COMPLIANCE_FORMS",
+      ],
+    },
+  ];
+  assert.deepEqual(releaseCoverageGaps("WV", releaseComplete), []);
+  assert.equal(RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES.length, 5);
+
+  const incomplete = releaseCoverageGaps("WV", [
+    { families: ["COMPLIANCE_GUIDEBOOK", "COMPLIANCE_FORMS"] },
+  ]);
+  assert.deepEqual(
+    incomplete.map((gap) => gap.document_family),
+    ["INCOME_LIMITS", "RENT_LIMITS", "UTILITY_ALLOWANCE"],
+  );
+  assert.ok(incomplete.every((gap) => gap.compliance_activation_allowed === false));
 });

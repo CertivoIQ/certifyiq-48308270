@@ -60,7 +60,9 @@ const payload = JSON.stringify(documents).replaceAll("$state_docs$", "$state_doc
 const coveragePayload = JSON.stringify(stateCoverage).replaceAll("$state_coverage$", "$state_coverage_escape$");
 const sql = `-- Generated from artifacts/state-validation-document-families.json.
 -- Each row is an exact official document capture with an independent SHA-256.
--- Captures remain fail-closed pending human validation and cannot activate rules.
+-- Captures remain fail-closed pending independent validation and cannot activate rules.
+-- If a previously validated URL returns different bytes, the old validation is
+-- invalidated automatically and the new hash must complete independent validation.
 
 with captured as (
   select *
@@ -149,22 +151,50 @@ select
     'tls_peer_verification', tls_peer_verification,
     'tls_exception_scope', tls_exception_scope,
     'independent_validation_required', true,
-    'human_verified', false,
+    'independent_validation_completed', false,
     'compliance_activation_allowed', false
   ))
 from prepared
 on conflict (state_code, inventory_generated_at, scope, source_url)
 do update set
   source_type = excluded.source_type,
-  candidate_status = excluded.candidate_status,
+  candidate_status = case
+    when public.state_rule_source_candidates.source_sha256 is distinct from excluded.source_sha256
+      then 'CAPTURED_EXACT_BYTES_PENDING_INDEPENDENT_VALIDATION'
+    else public.state_rule_source_candidates.candidate_status
+  end,
+  agent_verification_status = case
+    when public.state_rule_source_candidates.source_sha256 is distinct from excluded.source_sha256
+      then 'captured_unvalidated'
+    else public.state_rule_source_candidates.agent_verification_status
+  end,
   exact_bytes_captured = true,
   compliance_activation_allowed = false,
   source_sha256 = excluded.source_sha256,
-  retrieved_at = excluded.retrieved_at,
+  retrieved_at = case
+    when public.state_rule_source_candidates.source_sha256 is distinct from excluded.source_sha256
+      then excluded.retrieved_at
+    else public.state_rule_source_candidates.retrieved_at
+  end,
   verification_evidence = public.state_rule_source_candidates.verification_evidence
-    || excluded.verification_evidence,
-  updated_at = now()
-where public.state_rule_source_candidates.agent_verification_status <> 'verified';
+    || excluded.verification_evidence
+    || case
+      when public.state_rule_source_candidates.source_sha256 is distinct from excluded.source_sha256
+        then jsonb_build_object(
+          'prior_validated_sha256', public.state_rule_source_candidates.source_sha256,
+          'source_bytes_changed', true,
+          'independent_validation_completed', false
+        )
+      else jsonb_build_object(
+        'last_currency_check_at', excluded.retrieved_at,
+        'source_bytes_changed', false
+      )
+    end,
+  updated_at = case
+    when public.state_rule_source_candidates.source_sha256 is distinct from excluded.source_sha256
+      then now()
+    else public.state_rule_source_candidates.updated_at
+  end;
 
 update public.state_rule_pack_candidates pack
 set
@@ -241,7 +271,6 @@ begin
         or source_sha256 !~ '^[0-9a-f]{64}$'
         or exact_bytes_captured is not true
         or compliance_activation_allowed is not false
-        or agent_verification_status = 'verified'
       )
   ) then
     raise exception 'Nationwide document-family capture violated fail-closed evidence controls';
