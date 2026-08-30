@@ -52,6 +52,7 @@ jobs:
           node --test scripts/test-pha-user-invitations.mjs
           node --test scripts/test-crm-staff-invitations.mjs
           node --test scripts/test-feature-suggestions.mjs
+          node --test scripts/test-controlled-mass-portfolio-intake.mjs
           node --test scripts/test-privileged-rpc-surface.mjs
           node --test scripts/test-nspire-production-recovery.mjs
           node --test scripts/test-nspire-rpc-surface.mjs

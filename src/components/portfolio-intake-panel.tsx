@@ -1,0 +1,181 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Building2, Download, FileSpreadsheet, UploadCloud } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/use-subscription";
+import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
+import { isPdfFile, prepareCertificationForReview } from "@/lib/pdf-ocr";
+import { PORTFOLIO_IMPORT_TEMPLATE, parsePortfolioIntakeCsv } from "@/lib/portfolio-intake";
+import {
+  createPortfolioIntake,
+  finalizePortfolioIntake,
+  listPortfolioSummary,
+} from "@/lib/portfolio-intake.functions";
+
+type Db = any;
+
+export function PortfolioIntakePanel() {
+  const queryClient = useQueryClient();
+  const createIntake = useServerFn(createPortfolioIntake);
+  const finalizeIntake = useServerFn(finalizePortfolioIntake);
+  const listSummary = useServerFn(listPortfolioSummary);
+  const { isActive: hasPaidSubscription } = useSubscription();
+  const [manifest, setManifest] = useState<File | null>(null);
+  const [documents, setDocuments] = useState<File[]>([]);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  const summary = useQuery({ queryKey: ["portfolio-intake-summary"], queryFn: () => listSummary() });
+  const totalBytes = useMemo(() => documents.reduce((sum, file) => sum + file.size, 0), [documents]);
+
+  function downloadTemplate() {
+    const url = URL.createObjectURL(new Blob([PORTFOLIO_IMPORT_TEMPLATE], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "certivoiq-portfolio-tenant-intake-template.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importPortfolio() {
+    if (!manifest || busy) return;
+    setBusy(true);
+    setMessage("Validating property, unit, tenant, and document mappings…");
+    setProgress({ current: 0, total: documents.length });
+    let jobId: string | null = null;
+    let uploaded = 0;
+    try {
+      const rows = parsePortfolioIntakeCsv(await manifest.text());
+      if ((rows.length > 1 || documents.length > 1) && !hasPaidSubscription) {
+        throw new Error("Mass property and tenant intake requires an active CertivoIQ subscription.");
+      }
+      for (const file of documents) {
+        if (file.size > MAX_UPLOAD_BYTES) throw new Error(`${file.name} exceeds the 50 MB per-file limit.`);
+      }
+      const filesByName = new Map(documents.map((file) => [file.name.toLowerCase(), file]));
+      const referencedNames = new Set(rows.map((row) => row.documentFileName?.toLowerCase()).filter(Boolean));
+      const missing = [...referencedNames].filter((name) => !filesByName.has(name!));
+      if (missing.length) throw new Error(`The manifest references document files that were not selected: ${missing.join(", ")}`);
+      const unmatched = documents.filter((file) => !referencedNames.has(file.name.toLowerCase()));
+      if (unmatched.length) throw new Error(`Selected documents must be assigned in document_file_name: ${unmatched.map((file) => file.name).join(", ")}`);
+
+      const intake = await createIntake({ data: {
+        rows,
+        documentCount: documents.length,
+        sourceName: manifest.name,
+      } });
+      jobId = intake.jobId;
+      const mappingByName = new Map(intake.documentMappings.map((mapping) => [mapping.documentFileName.toLowerCase(), mapping]));
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
+      if (!user) throw new Error("Please sign in before importing portfolio data.");
+      const db = supabase as unknown as Db;
+
+      for (let sequence = 0; sequence < documents.length; sequence += 1) {
+        const file = documents[sequence]!;
+        const mapping = mappingByName.get(file.name.toLowerCase());
+        if (!mapping) throw new Error(`No tenant mapping was created for ${file.name}.`);
+        setProgress({ current: sequence + 1, total: documents.length });
+        setMessage(`Uploading ${sequence + 1} of ${documents.length}: ${file.name}`);
+        const path = `${user.id}/${intake.jobId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        const { error: uploadError } = await supabase.storage.from("certification-imports").upload(path, file, { upsert: false });
+        if (uploadError) throw uploadError;
+        if (isPdfFile(file)) {
+          const prepared = await prepareCertificationForReview(file, (status) => setMessage(`${file.name}: ${status}`));
+          if (prepared.sidecar) {
+            const { error: sidecarError } = await supabase.storage.from("certification-imports")
+              .upload(sidecarPathFor(path), new Blob([JSON.stringify(prepared.sidecar)], { type: "application/json" }), { upsert: true });
+            if (sidecarError) throw sidecarError;
+          }
+        }
+        const { data: item, error: itemError } = await db.from("certification_import_items").insert({
+          job_id: intake.jobId, user_id: user.id, storage_path: path, original_file_name: file.name,
+          mime_type: file.type || "application/octet-stream", size_bytes: file.size,
+          property_id: mapping.propertyId, unit_id: mapping.unitId, tenant_profile_id: mapping.tenantProfileId,
+          upload_sequence: sequence, certification_type: mapping.certificationType,
+          jurisdiction: mapping.jurisdiction, program_codes: mapping.programCodes,
+          review_queue_status: "not_queued",
+        }).select("id").single();
+        if (itemError) throw itemError;
+        const { error: documentError } = await db.from("portfolio_tenant_documents").insert({
+          user_id: user.id, tenant_profile_id: mapping.tenantProfileId,
+          certification_import_item_id: item.id, storage_path: path, original_file_name: file.name,
+          document_category: "certification_support",
+        });
+        if (documentError) throw documentError;
+        uploaded += 1;
+      }
+
+      await finalizeIntake({ data: { jobId: intake.jobId, itemCount: uploaded, errorCount: 0 } });
+      setManifest(null);
+      setDocuments([]);
+      setMessage(`Intake complete: ${intake.propertyCount} properties, ${intake.unitCount} units, ${intake.tenantCount} tenant profiles, and ${uploaded} documents. Nothing was queued for compliance review.`);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["portfolio-intake-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["certification-items"] }),
+      ]);
+    } catch (error) {
+      if (jobId) {
+        try { await finalizeIntake({ data: { jobId, itemCount: uploaded, errorCount: 1 } }); } catch { /* preserve the original intake failure */ }
+      }
+      setMessage(error instanceof Error ? error.message : "The portfolio intake could not be completed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border bg-card p-6 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <Building2 className="mt-0.5 size-5 text-primary" />
+          <div>
+            <h2 className="font-semibold">Property, unit & tenant intake</h2>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+              Import structured tenant certification data into property and unit profiles, then attach each document to the correct tenant. Uploading never starts a compliance review.
+            </p>
+          </div>
+        </div>
+        <button type="button" onClick={downloadTemplate} className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium">
+          <Download className="size-4" /> Download CSV template
+        </button>
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center hover:bg-muted/30">
+          <FileSpreadsheet className="size-7 text-muted-foreground" />
+          <span className="mt-2 font-medium">Choose property/unit/tenant CSV</span>
+          <span className="mt-1 text-xs text-muted-foreground">{manifest?.name ?? "One row per tenant certification document"}</span>
+          <input className="sr-only" type="file" accept=".csv,text/csv" onChange={(event) => setManifest(event.target.files?.[0] ?? null)} />
+        </label>
+        <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center hover:bg-muted/30">
+          <UploadCloud className="size-7 text-muted-foreground" />
+          <span className="mt-2 font-medium">{hasPaidSubscription ? "Choose tenant certification documents" : "Choose one certification document"}</span>
+          <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · 50 MB each · filenames must match the CSV</span>
+          <input className="sr-only" type="file" multiple={hasPaidSubscription} accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(event) => setDocuments(Array.from(event.target.files ?? []))} />
+        </label>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-sm">
+        <span>{documents.length} document{documents.length === 1 ? "" : "s"} · {(totalBytes / 1024 / 1024).toFixed(1)} MB</span>
+        <button type="button" disabled={!manifest || busy} onClick={importPortfolio} className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50">
+          {busy ? "Importing…" : "Import profiles & documents"}
+        </button>
+      </div>
+      {busy && progress.total > 0 ? <p className="mt-2 text-xs text-muted-foreground">Document {progress.current} of {progress.total}</p> : null}
+      {message ? <p className="mt-3 rounded-lg border bg-background p-3 text-sm" role="status">{message}</p> : null}
+
+      {summary.data?.length ? (
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b text-xs text-muted-foreground"><tr><th className="py-2 pr-4">Property</th><th className="py-2 pr-4">State</th><th className="py-2 pr-4">Units</th><th className="py-2">Tenants</th></tr></thead>
+            <tbody>{summary.data.map((property) => <tr key={property.id} className="border-b last:border-0"><td className="py-2 pr-4 font-medium">{property.name}</td><td className="py-2 pr-4">{property.state_code}</td><td className="py-2 pr-4">{property.unitCount}</td><td className="py-2">{property.tenantCount}</td></tr>)}</tbody>
+          </table>
+        </div>
+      ) : null}
+    </section>
+  );
+}

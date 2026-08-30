@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { PackRelease, StateCoverage } from "@/lib/stateCoverageRegistry";
@@ -54,36 +55,48 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     jurisdiction?: string;
     useAi?: boolean;
     programs?: CertificationProgram[];
-    certificationType: "INITIAL" | "ANNUAL" | "INTERIM";
+    certificationType?: "INITIAL" | "ANNUAL" | "INTERIM";
   }) => {
     if (!data?.itemId || data.itemId.length > 100) throw new Error("A certification item id is required.");
     if (data.jurisdiction && !/^[A-Za-z]{2}$/.test(data.jurisdiction)) throw new Error("Jurisdiction must be a two-letter state code.");
-    if (!["INITIAL", "ANNUAL", "INTERIM"].includes(data.certificationType)) {
+    if (data.certificationType && !["INITIAL", "ANNUAL", "INTERIM"].includes(data.certificationType)) {
       throw new Error("Certification type must be INITIAL, ANNUAL, or INTERIM.");
     }
-    const programs = data.programs ?? ["LIHTC"];
-    if (!programs.length || programs.some((program) => !CERTIFICATION_PROGRAMS.has(program))) {
-      throw new Error("At least one supported certification program must be declared.");
+    if (data.programs && (!data.programs.length || data.programs.some((program) => !CERTIFICATION_PROGRAMS.has(program)))) {
+      throw new Error("Every declared certification program must be supported.");
     }
-    return { ...data, programs: [...new Set(programs)] };
+    return { ...data, ...(data.programs ? { programs: [...new Set(data.programs)] } : {}) };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const organizationId = organizationIdFor(userId);
-    const jurisdiction = (data.jurisdiction ?? "US").toUpperCase();
 
     const { assertProductionTenant } = await import("@/lib/demo-tenant");
     assertProductionTenant(organizationId);
 
     const { data: item, error: itemError } = await supabase
       .from("certification_import_items")
-      .select("id, storage_path, original_file_name, mime_type, status")
+      .select("id, storage_path, original_file_name, mime_type, status, certification_type, jurisdiction, program_codes")
       .eq("id", data.itemId)
       .maybeSingle();
     if (itemError) throw itemError;
     if (!item) return { error: "That certification file is not available." } as const;
 
-    await supabase.from("certification_import_items").update({ status: "processing" }).eq("id", item.id);
+    const certificationType = data.certificationType ?? item.certification_type;
+    if (!certificationType || !["INITIAL", "ANNUAL", "INTERIM"].includes(certificationType)) {
+      return { error: "Select a certification type before review." } as const;
+    }
+    const importedPrograms = Array.isArray(item.program_codes) ? item.program_codes : [];
+    const programs = (data.programs?.length ? data.programs : importedPrograms.length ? importedPrograms : ["LIHTC"]) as CertificationProgram[];
+    if (programs.some((program) => !CERTIFICATION_PROGRAMS.has(program))) {
+      return { error: "This certification contains an unsupported program code." } as const;
+    }
+    const jurisdiction = (data.jurisdiction ?? item.jurisdiction ?? "US").toUpperCase();
+
+    await supabase.from("certification_import_items").update({
+      status: "processing", review_queue_status: "processing", review_started_at: new Date().toISOString(),
+      review_finished_at: null, error_message: null,
+    }).eq("id", item.id);
 
     const extraction = await import("@/lib/certification-extraction.server");
     const orchestrator = await import(
@@ -211,8 +224,8 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     // --- deterministic evaluation ----------------------------------------
     const evaluation = orchestrator.evaluateFederalCertificationReview({
       facts: result.facts,
-      programs: data.programs,
-      certificationType: data.certificationType,
+      programs,
+      certificationType: certificationType as "INITIAL" | "ANNUAL" | "INTERIM",
       jurisdiction,
       ...(statePack
         ? {
@@ -320,6 +333,8 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         extracted_data: Object.fromEntries(result.facts.map((fact) => [fact.field, fact.value])) as never,
         processed_at: new Date().toISOString(),
         error_message: null,
+        review_queue_status: "completed",
+        review_finished_at: new Date().toISOString(),
       })
       .eq("id", item.id);
 
@@ -374,13 +389,19 @@ export const getCertificationReview = createServerFn({ method: "GET" })
 export const listCertificationItems = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const db = context.supabase as any;
+    const { data, error } = await db
       .from("certification_import_items")
-      .select("id, original_file_name, mime_type, status, extraction_provider, created_at, processed_at, error_message")
+      .select("id, original_file_name, mime_type, status, extraction_provider, created_at, processed_at, error_message, upload_sequence, certification_type, jurisdiction, program_codes, review_queue_status, queued_for_review_at, tenant_profile_id, unit_id, property_id, portfolio_tenant_profiles(household_name), portfolio_units(unit_number), portfolio_properties(name)")
       .order("created_at", { ascending: false })
-      .limit(25);
+      .limit(500);
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).map((item: any) => ({
+      ...item,
+      household_name: item.portfolio_tenant_profiles?.household_name ?? null,
+      unit_number: item.portfolio_units?.unit_number ?? null,
+      property_name: item.portfolio_properties?.name ?? null,
+    }));
   });
 
 /** Human sign-off. Recorded append-only; a determination is never auto-approved. */
