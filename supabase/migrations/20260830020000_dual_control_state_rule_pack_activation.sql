@@ -174,7 +174,7 @@ as $$
         and source_reviews.reviewer_id is not null
     )::integer as verified_source_count,
     encode(
-      digest(
+      extensions.digest(
         coalesce(
           string_agg(
             source_reviews.id::text || ':' ||
@@ -187,7 +187,7 @@ as $$
           ),
           ''
         ),
-        'sha256'
+        'sha256'::text
       ),
       'hex'
     ) as source_snapshot_sha256
