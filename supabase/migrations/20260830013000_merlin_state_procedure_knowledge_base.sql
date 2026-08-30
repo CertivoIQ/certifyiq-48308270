@@ -231,7 +231,7 @@ create or replace function public.merlin_claim_procedure_job(
 )
 returns public.operations_jobs
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare claimed public.operations_jobs;
