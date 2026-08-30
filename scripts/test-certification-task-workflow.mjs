@@ -24,6 +24,7 @@ test("certification findings route to assignees and rerun after final resolution
   assert.match(migration, /'finding_assigned'/);
   assert.match(migration, /'certification_rerun_requested'/);
   assert.match(migration, /'certification_rerun_completed'/);
+  assert.equal((migration.match(/extensions\\.digest\\(/g) ?? []).length, 2);
   assert.match(migration, /all_assigned_findings_resolved/);
   assert.match(actions, /resolve_certification_finding/);
 });
