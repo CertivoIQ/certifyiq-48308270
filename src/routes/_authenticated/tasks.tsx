@@ -276,16 +276,21 @@ async function loadTasks(): Promise<TaskItem[]> {
 
   for (const candidate of packCandidates) {
     const active = !candidate.compliance_activation_allowed;
+    const awaitingActivation = candidate.status === "awaiting_second_verification";
     tasks.push({
       id: `rule-pack-candidate:${candidate.id}`,
       category: "rule_pack",
-      title: `${candidate.state_code} state rule-pack validation`,
-      description: `${candidate.source_candidate_count} candidate sources · ${candidate.blocked_source_count} blocked · ${active ? "independent validation required" : "activation controls satisfied"}`,
+      title: awaitingActivation
+        ? `Activate ${candidate.state_code} state rule pack`
+        : `${candidate.state_code} state rule-pack validation`,
+      description: awaitingActivation
+        ? `${candidate.source_candidate_count} verified source records · independent Administrator activation required`
+        : `${candidate.source_candidate_count} candidate sources · ${candidate.blocked_source_count} blocked · ${active ? "first verification required" : "dual-control activation satisfied"}`,
       status: candidate.status,
       active,
       occurredAt: candidate.updated_at,
       destination: active ? "/state-rule-validation" : "/rules",
-      actionLabel: active ? "Validate state pack" : "View rules",
+      actionLabel: awaitingActivation ? "Activate state pack" : active ? "Validate sources" : "View rules",
       validationStateCode: active ? candidate.state_code : undefined,
       attention: candidate.blocked_source_count > 0,
     });
