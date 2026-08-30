@@ -37,6 +37,7 @@ test("activation covers state sources and the shared federal baseline", () => {
 
 test("activation evidence is immutable and snapshot-bound", () => {
   assert.match(migration, /source_snapshot_sha256/);
+  assert.match(migration, /extensions\.digest/);
   assert.match(migration, /events are immutable/);
   assert.match(migration, /before update or delete/);
   assert.match(migration, /revoke all on table .* from public, anon/s);
