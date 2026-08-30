@@ -96,12 +96,12 @@ function BillingPage() {
                 <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
                   {isActive &&
                     !cancelAtPeriodEnd &&
-                    "Active. All currently available platform features are included under the organization license."}
+                    "Active. Access is governed by the organization's licensed platform, jurisdictions, programs, and add-ons."}
                   {isActive &&
                     cancelAtPeriodEnd &&
                     `Access remains active until ${endsAt?.toLocaleDateString() ?? "the end of the current period"}.`}
                   {!isActive &&
-                    "CertivoIQ offers two annual licenses: Multifamily Enterprise at $65,000 per selected operating state and PHA at a flat $150,000. Purchases begin with a state-scoped invoice; ACH is preferred and card payment is available when requested."}
+                    "CertivoIQ offers Multifamily Enterprise at $65,000 per selected operating state and PHA at $150,000 per organization. Merlin is an optional $5,000/month add-on under a 12-month agreement, and standard implementation is $15,000 one time. Purchases begin with an enterprise invoice; ACH is preferred and card payment is available when requested."}
                 </p>
               </div>
 
@@ -152,13 +152,13 @@ function BillingPage() {
               <div>
                 <dt className="font-semibold">Annual price</dt>
                 <dd className="mt-1 text-muted-foreground">
-                  Multifamily Enterprise: $65,000 per selected state/year; PHA: $150,000/year flat
+                  Multifamily: $65,000 per state/year; PHA: $150,000 per organization/year
                 </dd>
               </div>
               <div>
-                <dt className="font-semibold">Included access</dt>
+                <dt className="font-semibold">Optional Merlin add-on</dt>
                 <dd className="mt-1 text-muted-foreground">
-                  All currently available platform features
+                  $5,000/month under a 12-month agreement; 50,000 analyses/month included
                 </dd>
               </div>
               <div>
