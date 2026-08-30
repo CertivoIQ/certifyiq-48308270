@@ -9,6 +9,7 @@
  */
 
 import { evaluateRecertificationOccupancyControls } from "./recertification-occupancy-controls.mjs";
+import { getStateComplianceRuleGuide } from "./state-compliance-rule-guide-registry.mjs";
 import * as mo from "./mo-lihtc-compliance-rule-pack.mjs";
 import * as nc from "./nc-lihtc-compliance-rule-pack.mjs";
 import * as nd from "./nd-lihtc-compliance-rule-pack.mjs";
@@ -250,11 +251,13 @@ export function scanRecertificationComplianceProcedures(input = {}) {
     input.recertificationInput ?? {},
   );
   const stateCode = String(input.stateCode ?? input.jurisdiction ?? "").toUpperCase();
+  const stateRuleGuide = getStateComplianceRuleGuide(stateCode);
   if (!stateCode || stateCode === "US") {
     return {
       registryBuild: COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
       baseline,
       stateCode: null,
+      stateRuleGuide: null,
       selectedProcedureCount: 0,
       findings: [],
     };
@@ -271,12 +274,13 @@ export function scanRecertificationComplianceProcedures(input = {}) {
       category: "CONTINUING_COMPLIANCE",
       jurisdiction: stateCode,
       engineBuild: COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
-      citation: "Controlled state compliance rule pack",
+      citation: stateRuleGuide?.source?.url ?? "Controlled state compliance rule pack",
     };
     return {
       registryBuild: COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
       baseline,
       stateCode,
+      stateRuleGuide,
       selectedProcedureCount: 0,
       findings: [blockedFinding(
         synthetic,
@@ -297,6 +301,7 @@ export function scanRecertificationComplianceProcedures(input = {}) {
       registryBuild: COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
       baseline,
       stateCode,
+      stateRuleGuide,
       selectedProcedureCount: procedures.length,
       findings: procedures.map((procedure) =>
         blockedFinding(procedure, gate.reason_code, gate.reason, input.statePack),
@@ -335,6 +340,7 @@ export function scanRecertificationComplianceProcedures(input = {}) {
     registryBuild: COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
     baseline,
     stateCode,
+    stateRuleGuide,
     selectedProcedureCount: procedures.length,
     evaluatedProcedureCount: findings.filter((finding) => finding.ruleEvaluationStatus === "EVALUATED").length,
     findings,
