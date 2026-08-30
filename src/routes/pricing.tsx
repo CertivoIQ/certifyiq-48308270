@@ -2,18 +2,49 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PublicShell } from "@/components/public-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
+import { COMMERCIAL_TERMS } from "@/lib/plan-catalog";
 import { Check, ShieldCheck } from "lucide-react";
 
-const INCLUDED_CAPABILITIES = [
-  "Federal baseline certification review",
-  "Traceable findings connected to source evidence",
-  "Versioned federal rule evaluation",
-  "Unable to Determine safeguards for incomplete or conflicting evidence",
-  "Manual Review and Agent Verification workflow",
-  "Agent Approval and Agent Signature controls",
-  "Portfolio-level compliance visibility",
-  "Evidence-manifest export for completed reviews",
+const MULTIFAMILY_FEATURES = [
+  "Certification and recertification review across licensed properties",
+  "Federal requirements plus validated rule guides for each licensed state",
+  "Income, asset, rent, utility-allowance, household, student, and layered-program validations",
+  "Document and evidence reconciliation with inconsistency detection",
+  "Deterministic Pass, Fail, and Unable to Determine outcomes",
+  "Source citations, versioned rules, and a traceable audit record",
+  "Portfolio dashboards, exception queues, and evidence-manifest exports",
+  "Pending final review controls with responsible-party signature and position",
 ];
+
+const PHA_FEATURES = [
+  "HCV, PBV, public housing, and Mod Rehab operating workspaces",
+  "Family intake, eligibility, annual reexamination, and interim reexamination controls",
+  "HUD-50058 transaction routing and reporting controls",
+  "HCV, PBV, and public-housing waiting-list workflows",
+  "Portability, HCV lease-up, and PBV operations",
+  "Public-housing admissions, occupancy, and operations",
+  "HOTMA implementation and NSPIRE standards and inspection workflows",
+  "Reasonable accommodations, notices, agency policies, users, source library, and agency-wide reporting",
+];
+
+const MERLIN_FEATURES = [
+  "Plain-language research across licensed compliance manuals and rule guides",
+  "Citation-backed explanations connected to controlling source material",
+  "Cross-document and cross-program inconsistency analysis",
+  "Exception prioritization and compliance narrative preparation",
+  "Regulatory-change monitoring and candidate rule-update support",
+  "Audit-response and corrective-action assistance",
+  "Organization-wide access across licensed states and programs",
+  "Up to 50,000 certification and recertification analyses each month",
+];
+
+function usd(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
+}
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -22,13 +53,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "CertivoIQ annual platform licensing: Multifamily Enterprise is $65,000 per selected state and PHA is a flat $150,000, with all currently available features included.",
+          "CertivoIQ pricing for Multifamily Enterprise, Public Housing Authorities, implementation, and the optional Merlin compliance-intelligence add-on.",
       },
       { property: "og:title", content: "CertivoIQ Platform Pricing" },
       {
         property: "og:description",
         content:
-          "Annual organization licensing for affordable-housing enterprises and Public Housing Authorities, with all currently available CertivoIQ platform features included.",
+          "Compare CertivoIQ Multifamily Enterprise and PHA features, then add Merlin for citation-backed compliance intelligence.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,92 +70,194 @@ export const Route = createFileRoute("/pricing")({
   component: PricingPage,
 });
 
+function FeatureList({ features }: { features: string[] }) {
+  return (
+    <ul className="mt-6 grid gap-3">
+      {features.map((feature) => (
+        <li key={feature} className="flex gap-2 text-[13.5px] leading-6">
+          <Check className="mt-1 size-4 shrink-0 text-seal" />
+          <span>{feature}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function PricingPage() {
   return (
     <PublicShell
       title="Platform pricing"
-      subtitle="Annual organization licensing with all currently available CertivoIQ features included"
+      subtitle="Choose the operating platform that matches your organization, then add Merlin when you want deeper compliance intelligence."
     >
-      <div className="mx-auto max-w-5xl">
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <Pill tone="seal">Multifamily Enterprise license</Pill>
-                <h2 className="mt-4 font-display text-[28px]">CertivoIQ Multifamily Enterprise</h2>
-                <p className="mt-1 text-[13.5px] text-muted-foreground">
-                  Multifamily and affordable-housing organizations
+      <div className="mx-auto max-w-6xl">
+        <section aria-labelledby="product-packages">
+          <div className="mb-6 max-w-3xl">
+            <p className="font-mono text-[11px] uppercase tracking-[.18em] text-primary">
+              Product packages
+            </p>
+            <h2 id="product-packages" className="mt-2 font-display text-3xl">
+              Two operating platforms built for different housing organizations
+            </h2>
+            <p className="mt-3 text-[14px] leading-7 text-muted-foreground">
+              Multifamily Enterprise is organized around property and portfolio certification risk.
+              PHA adds agency-wide HUD program administration workflows that multifamily owners and
+              agents generally do not require.
+            </p>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Panel className="glow-ring border-primary/40" bodyClassName="flex h-full flex-col p-7 md:p-9">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <Pill tone="seal">Multifamily Enterprise</Pill>
+                  <h3 className="mt-4 font-display text-[28px]">CertivoIQ Multifamily Enterprise</h3>
+                  <p className="mt-1 text-[13.5px] text-muted-foreground">
+                    Owners, agents, management companies, and affordable-housing portfolios
+                  </p>
+                </div>
+                <div className="text-left md:text-right">
+                  <p className="font-display text-[40px] leading-none">
+                    {usd(COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd)}
+                  </p>
+                  <p className="mt-1 text-[13px] text-muted-foreground">per selected state / year</p>
+                </div>
+              </div>
+              <FeatureList features={MULTIFAMILY_FEATURES} />
+              <p className="mt-6 border-t border-border pt-5 text-[12.5px] leading-6 text-muted-foreground">
+                Add each operating state at the same annual rate. The active rule guide and source
+                set for every licensed state govern state-specific review.
+              </p>
+            </Panel>
+
+            <Panel className="glow-ring border-primary/40" bodyClassName="flex h-full flex-col p-7 md:p-9">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <Pill tone="seal">Public Housing Authority</Pill>
+                  <h3 className="mt-4 font-display text-[28px]">CertivoIQ PHA</h3>
+                  <p className="mt-1 text-[13.5px] text-muted-foreground">
+                    Public Housing Authorities and agency-wide HUD program operations
+                  </p>
+                </div>
+                <div className="text-left md:text-right">
+                  <p className="font-display text-[40px] leading-none">
+                    {usd(COMMERCIAL_TERMS.phaAnnualUsd)}
+                  </p>
+                  <p className="mt-1 text-[13px] text-muted-foreground">per organization / year</p>
+                </div>
+              </div>
+              <FeatureList features={PHA_FEATURES} />
+              <p className="mt-6 border-t border-border pt-5 text-[12.5px] leading-6 text-muted-foreground">
+                The PHA license is a flat organization-level fee and includes one validated
+                operating-state rule guide plus supported PHA program workspaces.
+              </p>
+            </Panel>
+          </div>
+        </section>
+
+        <Panel className="mt-7 border-gold/40" bodyClassName="p-7 md:p-9">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <Pill tone="flag">Optional premium add-on</Pill>
+              <h2 className="mt-4 font-display text-[32px]">Merlin compliance intelligence</h2>
+              <p className="mt-3 text-[14px] leading-7 text-muted-foreground">
+                Merlin works across the manuals, procedures, citations, and rule guides already
+                licensed to the organization. It helps teams investigate inconsistencies and
+                prepare an informed response without changing the deterministic review result.
+              </p>
+              <div className="mt-6 rounded-lg border border-gold/30 bg-accent p-5">
+                <p className="font-display text-[36px] leading-none">
+                  {usd(COMMERCIAL_TERMS.merlinMonthlyUsd)}
+                  <span className="text-base text-muted-foreground"> / month</span>
+                </p>
+                <p className="mt-2 text-[12.5px] leading-6 text-muted-foreground">
+                  Billed under a {COMMERCIAL_TERMS.merlinAnnualCommitmentMonths}-month agreement
+                  ({usd(COMMERCIAL_TERMS.merlinAnnualUsd)} annually). An approved month-to-month
+                  arrangement is {usd(COMMERCIAL_TERMS.merlinMonthToMonthUsd)} per month.
                 </p>
               </div>
-              <div className="text-left md:text-right">
-                <p className="font-display text-[40px] leading-none">$65,000</p>
-                <p className="mt-1 text-[13px] text-muted-foreground">per selected state / year</p>
-              </div>
             </div>
-            <p className="mt-6 text-[14px] leading-relaxed text-muted-foreground">
-              Select every state where the organization operates. Each selected state rule pack is
-              licensed at $65,000 annually, with access to all currently available features.
-            </p>
-          </Panel>
+            <FeatureList features={MERLIN_FEATURES} />
+          </div>
 
-          <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <Pill tone="seal">Public Housing Authority license</Pill>
-                <h2 className="mt-4 font-display text-[28px]">CertivoIQ PHA</h2>
-                <p className="mt-1 text-[13.5px] text-muted-foreground">
-                  Public Housing Authorities and agency-wide PHA operations
-                </p>
-              </div>
-              <div className="text-left md:text-right">
-                <p className="font-display text-[40px] leading-none">$150,000</p>
-                <p className="mt-1 text-[13px] text-muted-foreground">per year</p>
-              </div>
-            </div>
-            <p className="mt-6 text-[14px] leading-relaxed text-muted-foreground">
-              One PHA organization-level annual license with access to all currently available
-              CertivoIQ platform features, including supported PHA review workflows.
-            </p>
-          </Panel>
-        </div>
-
-        <Panel
-          className="mt-5"
-          title="Included with either annual license"
-          bodyClassName="p-7 md:p-9"
-        >
-          <p className="text-[14px] leading-relaxed text-muted-foreground">
-            Pricing is determined by license type and, for Multifamily Enterprise, the number of
-            selected operating states. PHA remains a flat annual fee. There are no public feature
-            tiers, training products, certificate products, document overages, or separately priced
-            API packages.
-          </p>
-
-          <ul className="mt-6 grid gap-3 md:grid-cols-2">
-            {INCLUDED_CAPABILITIES.map((capability) => (
-              <li key={capability} className="flex gap-2 text-[13.5px]">
-                <Check className="mt-0.5 size-4 shrink-0 text-seal" />
-                <span>{capability}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-7 rounded-lg border border-primary/20 bg-accent px-5 py-4">
+          <div className="mt-7 rounded-lg border border-primary/20 bg-muted/30 px-5 py-4">
             <div className="flex gap-3">
               <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
               <div>
-                <p className="font-display text-[15px]">Federal baseline scope</p>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
-                  CertivoIQ evaluates supported federal affordable-housing requirements.
-                  State-agency, allocating-agency, local, and project-specific requirements require
-                  separate Manual Review. When an unevaluated requirement could change the outcome,
-                  CertivoIQ returns Unable to Determine.
+                <p className="font-display text-[15px]">Merlin assists; the rule engine decides</p>
+                <p className="mt-1 text-[12.5px] leading-6 text-muted-foreground">
+                  Merlin does not override a rule, convert Unable to Determine into an approval, or
+                  issue final confirmation. Findings remain pending final review until an authorized
+                  responsible party confirms the result with signature and position.
                 </p>
               </div>
             </div>
           </div>
+        </Panel>
 
-          <div className="mt-7 flex flex-wrap gap-3">
+        <div className="mt-7 grid gap-5 lg:grid-cols-2">
+          <Panel title="Implementation" bodyClassName="p-6">
+            <p className="font-display text-3xl">
+              {usd(COMMERCIAL_TERMS.implementationOneTimeUsd)}
+            </p>
+            <p className="mt-1 text-[13px] text-muted-foreground">one-time organization fee</p>
+            <p className="mt-4 text-[13.5px] leading-6 text-muted-foreground">
+              Covers initial discovery, organization setup, licensed-state and program
+              configuration, rule-guide activation, workflow alignment, administrator enablement,
+              and launch validation. Customer-specific integrations or expanded scope require a
+              written order form or change order.
+            </p>
+          </Panel>
+
+          <Panel title="One-state Multifamily example" bodyClassName="p-6">
+            <div className="space-y-2 text-[13.5px]">
+              <div className="flex justify-between gap-4">
+                <span>Multifamily Enterprise — one state</span>
+                <span>{usd(COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd)}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span>Merlin — annual agreement</span>
+                <span>{usd(COMMERCIAL_TERMS.merlinAnnualUsd)}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span>Implementation — one time</span>
+                <span>{usd(COMMERCIAL_TERMS.implementationOneTimeUsd)}</span>
+              </div>
+              <div className="flex justify-between gap-4 border-t border-border pt-3 font-semibold">
+                <span>First year</span>
+                <span>
+                  {usd(
+                    COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd +
+                      COMMERCIAL_TERMS.merlinAnnualUsd +
+                      COMMERCIAL_TERMS.implementationOneTimeUsd,
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span>Renewal before usage overages</span>
+                <span>
+                  {usd(
+                    COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd +
+                      COMMERCIAL_TERMS.merlinAnnualUsd,
+                  )}
+                </span>
+              </div>
+            </div>
+            <p className="mt-4 text-[12px] leading-5 text-muted-foreground">
+              Merlin includes {COMMERCIAL_TERMS.merlinMonthlyCertificationCapacity.toLocaleString()}
+              {" "}analyses per month. Additional usage is{" "}
+              {usd(COMMERCIAL_TERMS.merlinOveragePerCertificationUsd)} per certification unless the
+              signed order form states otherwise.
+            </p>
+          </Panel>
+        </div>
+
+        <Panel className="mt-5" title="Scope, contracting, and next steps" bodyClassName="p-6">
+          <p className="text-[13.5px] leading-7 text-muted-foreground">
+            Availability depends on the licensed programs, jurisdictions, validated rule guides,
+            and signed scope. The executed order form controls billing, renewal, capacity,
+            integrations, and any negotiated terms. Review the <Link to="/terms" className="text-primary underline underline-offset-4">Terms of Use</Link> for the standard commercial terms.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
             <Button size="lg" asChild>
               <Link to="/trial">Try CertivoIQ for Free</Link>
             </Button>
@@ -133,16 +266,7 @@ function PricingPage() {
             </Button>
           </div>
         </Panel>
-
-        <Panel className="mt-5" title="Implementation and integrations" bodyClassName="p-5">
-          <p className="text-[13.5px] leading-relaxed text-muted-foreground">
-            Implementation requirements are reviewed during contracting. API and
-            property-management-system connections are scoped only when the applicable end-to-end
-            integration has been verified for the customer&apos;s environment.
-          </p>
-        </Panel>
       </div>
     </PublicShell>
   );
 }
-
