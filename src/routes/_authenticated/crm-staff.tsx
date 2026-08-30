@@ -8,9 +8,11 @@ import { CrmShell } from "@/components/crm/crm-shell";
 import { Button } from "@/components/ui/button";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { useCrmStaffAuthority, type CrmStaffAccessLevel } from "@/hooks/use-crm-staff-authority";
+import { type PhaAgencyRole } from "@/hooks/use-workspace-profile";
 import { useIsStaff } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { listCrmStaffAccess, manageCrmStaffAccess } from "@/lib/crm-staff-access.functions";
+import { sendPhaWorkspaceInvitationEmail } from "@/lib/pha-invitation-email.functions";
 
 export const Route = createFileRoute("/_authenticated/crm-staff")({
   head: () => ({
@@ -48,6 +50,18 @@ type StaffAccessData = {
   members: Member[];
   invitations: Invitation[];
 };
+type PhaAssignableRole = Exclude<PhaAgencyRole, "workspace_owner">;
+type AssignableRole = CrmStaffAccessLevel | PhaAssignableRole;
+type PhaWorkspace = { user_id: string; pha_programs: string[] };
+
+const phaRoles: { value: PhaAssignableRole; label: string }[] = [
+  { value: "executive", label: "PHA Executive — read-only oversight" },
+  { value: "agency_admin", label: "PHA Agency Administrator — full agency administration" },
+  { value: "compliance_admin", label: "PHA Compliance Administrator — compliance operations" },
+  { value: "hcv_pbv_specialist", label: "PHA HCV/PBV Specialist — HCV, PBV & Mod Rehab" },
+  { value: "public_housing_specialist", label: "PHA Public Housing Specialist — Public Housing" },
+  { value: "inspection_staff", label: "PHA Inspection Staff — NSPIRE/inspections" },
+];
 
 const inputClass = "mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
 
@@ -64,13 +78,18 @@ function accessLabel(level: CrmStaffAccessLevel) {
   return "Employee";
 }
 
+function isPhaRole(role: AssignableRole): role is PhaAssignableRole {
+  return phaRoles.some((option) => option.value === role);
+}
+
 function CrmStaffAccessPage() {
   const { isStaff, loading, email } = useIsStaff();
   const { canManageStaff, isCrmAdmin, loading: authorityLoading } = useCrmStaffAuthority();
   const queryClient = useQueryClient();
-  const [invite, setInvite] = useState<{ email: string; accessLevel: CrmStaffAccessLevel }>({
+  const [invite, setInvite] = useState<{ email: string; role: AssignableRole; workspaceUserId: string }>({
     email: "",
-    accessLevel: "employee",
+    role: "employee",
+    workspaceUserId: "",
   });
 
   const query = useQuery<StaffAccessData>({
@@ -80,13 +99,59 @@ function CrmStaffAccessPage() {
     refetchInterval: 30_000,
   });
 
+  const phaWorkspaces = useQuery<PhaWorkspace[]>({
+    queryKey: ["crm", "pha-workspaces"],
+    enabled: isStaff && isCrmAdmin,
+    queryFn: async () => {
+      // Generated Supabase types lag the PHA workspace migrations.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = supabase as any;
+      const { data, error } = await client
+        .from("customer_workspace_profiles")
+        .select("user_id,pha_programs")
+        .eq("organization_type", "pha")
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const action = useMutation({
     mutationFn: async (
       input:
-        | { action: "invite"; email: string; accessLevel: CrmStaffAccessLevel }
+        | { action: "invite"; email: string; role: AssignableRole; workspaceUserId: string }
         | { action: "resend" | "revoke"; invitationId: string }
         | { action: "disable" | "reactivate"; targetUserId: string },
-    ) => manageCrmStaffAccess({ data: { ...input, accessToken: await accessToken() } }),
+    ) => {
+      const token = await accessToken();
+      if (input.action !== "invite") {
+        return manageCrmStaffAccess({ data: { ...input, accessToken: token } });
+      }
+      if (!isPhaRole(input.role)) {
+        return manageCrmStaffAccess({
+          data: { action: "invite", email: input.email, accessLevel: input.role, accessToken: token },
+        });
+      }
+      if (!isCrmAdmin) throw new Error("Administrator access is required to assign a PHA role.");
+      if (!input.workspaceUserId) throw new Error("Select the PHA workspace this user will access.");
+
+      // The protected Edge Function validates administrator authority, the PHA role,
+      // and the selected tenant before creating the email-bound invitation.
+      const created = await manageCrmStaffAccess({
+        data: {
+          action: "invitePha",
+          email: input.email,
+          agencyRole: input.role,
+          workspaceUserId: input.workspaceUserId,
+          accessToken: token,
+        },
+      });
+      if (!created.invitationId) throw new Error("PHA invitation record was not created.");
+      await sendPhaWorkspaceInvitationEmail({
+        data: { invitationId: created.invitationId, accessToken: token },
+      });
+      return { status: "sent" as const, invitationId: created.invitationId };
+    },
     onSuccess: async (result) => {
       toast.success(
         result.status === "sent"
@@ -99,9 +164,10 @@ function CrmStaffAccessPage() {
                 ? "CRM access deactivated"
                 : "CRM access activated",
       );
-      setInvite({ email: "", accessLevel: "employee" });
+      setInvite({ email: "", role: "employee", workspaceUserId: "" });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["crm", "staff-access"] }),
+        queryClient.invalidateQueries({ queryKey: ["crm", "pha-workspaces"] }),
         queryClient.invalidateQueries({ queryKey: ["crm-staff-authority"] }),
       ]);
     },
@@ -145,7 +211,7 @@ function CrmStaffAccessPage() {
                   Staff Access
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm text-emerald-100/80">
-                  Invite CertivoIQ employees, assign CRM authority, track acceptance, and deactivate access without removing historical evidence.
+                  Invite users, assign internal CRM or PHA authority, track acceptance, and preserve access evidence.
                 </p>
               </div>
               <Pill tone="seal">{isCrmAdmin ? "Administrator" : "Manager"}</Pill>
@@ -160,7 +226,7 @@ function CrmStaffAccessPage() {
 
           <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(340px,0.7fr)_minmax(0,1.3fr)]">
             <Panel
-              title="Invite a CertivoIQ employee or beta tester"
+              title="Invite a CertivoIQ user or beta tester"
               description="Beta email policy: verified @certivoiq.com, Gmail, Outlook, Hotmail, and Live addresses may be invited. External domains will be removed before launch."
             >
               <form
@@ -170,12 +236,13 @@ function CrmStaffAccessPage() {
                   action.mutate({
                     action: "invite",
                     email: invite.email.trim().toLowerCase(),
-                    accessLevel: invite.accessLevel,
+                    role: invite.role,
+                    workspaceUserId: invite.workspaceUserId,
                   });
                 }}
               >
                 <label className="block text-xs font-medium">
-                  Employee email
+                  Email address
                   <input
                     type="email"
                     required
@@ -186,25 +253,65 @@ function CrmStaffAccessPage() {
                   />
                 </label>
                 <label className="block text-xs font-medium">
-                  CRM role
+                  Account role
                   <select
                     className={inputClass}
-                    value={invite.accessLevel}
-                    onChange={(event) =>
+                    value={invite.role}
+                    onChange={(event) => {
+                      const role = event.target.value as AssignableRole;
                       setInvite((value) => ({
                         ...value,
-                        accessLevel: event.target.value as CrmStaffAccessLevel,
-                      }))
-                    }
+                        role,
+                        workspaceUserId: isPhaRole(role) ? value.workspaceUserId : "",
+                      }));
+                    }}
                   >
-                    <option value="employee">Employee — CRM access only</option>
-                    {isCrmAdmin ? <option value="manager">Manager — may invite employees</option> : null}
-                    {isCrmAdmin ? <option value="admin">Administrator — full staff-access authority</option> : null}
+                    <optgroup label="CertivoIQ internal CRM">
+                      <option value="employee">Employee — CRM access only</option>
+                      {isCrmAdmin ? <option value="manager">Manager — may invite employees</option> : null}
+                      {isCrmAdmin ? <option value="admin">Administrator — full staff-access authority</option> : null}
+                    </optgroup>
+                    {isCrmAdmin ? (
+                      <optgroup label="Public Housing Agency">
+                        {phaRoles.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </optgroup>
+                    ) : null}
                   </select>
                 </label>
-                <Button className="w-full" type="submit" disabled={action.isPending}>
+                {isPhaRole(invite.role) ? (
+                  <label className="block text-xs font-medium">
+                    PHA workspace
+                    <select
+                      required
+                      className={inputClass}
+                      value={invite.workspaceUserId}
+                      onChange={(event) =>
+                        setInvite((value) => ({ ...value, workspaceUserId: event.target.value }))
+                      }
+                    >
+                      <option value="">Select PHA workspace</option>
+                      {(phaWorkspaces.data ?? []).map((workspace) => (
+                        <option key={workspace.user_id} value={workspace.user_id}>
+                          {workspace.user_id.slice(0, 8)}… · {workspace.pha_programs.join(", ") || "no programs configured"}
+                        </option>
+                      ))}
+                    </select>
+                    {!phaWorkspaces.isLoading && !(phaWorkspaces.data ?? []).length ? (
+                      <span className="mt-1 block text-xs text-destructive">
+                        No configured PHA workspace is available. Configure a PHA owner workspace first.
+                      </span>
+                    ) : null}
+                  </label>
+                ) : null}
+                <Button
+                  className="w-full"
+                  type="submit"
+                  disabled={action.isPending || (isPhaRole(invite.role) && !invite.workspaceUserId)}
+                >
                   <MailPlus className="size-4" />
-                  {action.isPending ? "Sending invitation…" : "Send CRM invitation"}
+                  {action.isPending ? "Sending invitation…" : "Send invitation"}
                 </Button>
               </form>
             </Panel>
@@ -267,8 +374,8 @@ function CrmStaffAccessPage() {
 
           <Panel
             className="mt-4"
-            title="Invitation history"
-            description="Delivery, acceptance, expiration, and revocation remain separately visible."
+            title="CRM invitation history"
+            description="Internal CRM delivery, acceptance, expiration, and revocation remain visible here. PHA invitations remain in the selected agency's Users & Permissions audit history."
             bodyClassName="p-0"
             actions={
               <Button size="sm" variant="outline" onClick={() => void query.refetch()}>

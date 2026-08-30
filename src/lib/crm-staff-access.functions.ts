@@ -1,6 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 
 type AccessLevel = "employee" | "manager" | "admin";
+type PhaAgencyRole =
+  | "executive"
+  | "agency_admin"
+  | "compliance_admin"
+  | "hcv_pbv_specialist"
+  | "public_housing_specialist"
+  | "inspection_staff";
 
 type Member = {
   user_id: string;
@@ -29,6 +36,7 @@ type ListInput = { data: { accessToken: string } };
 type ActionInput = {
   data:
     | { action: "invite"; accessToken: string; email: string; accessLevel: AccessLevel }
+    | { action: "invitePha"; accessToken: string; email: string; agencyRole: PhaAgencyRole; workspaceUserId: string }
     | { action: "resend" | "revoke"; accessToken: string; invitationId: string }
     | { action: "disable" | "reactivate"; accessToken: string; targetUserId: string };
 };
@@ -50,5 +58,5 @@ export async function listCrmStaffAccess(_input: ListInput) {
 
 export async function manageCrmStaffAccess(input: ActionInput) {
   const { accessToken: _accessToken, ...body } = input.data;
-  return invoke<{ status: "sent" | "activated" | "revoked" | "disabled" | "active"; invitationId?: string }>(body);
+  return invoke<{ status: "created" | "sent" | "activated" | "revoked" | "disabled" | "active"; invitationId?: string }>(body);
 }
