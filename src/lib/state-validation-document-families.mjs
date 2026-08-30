@@ -8,31 +8,48 @@ export const REQUIRED_STATE_DOCUMENT_FAMILIES = Object.freeze([
   "COMPLIANCE_TRAINING",
 ]);
 
+// Deterministic release requires the source families needed to make and test
+// compliance determinations. Training is captured when published, but the
+// absence of training material does not itself prevent a rule release.
+export const RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES = Object.freeze([
+  "COMPLIANCE_GUIDEBOOK",
+  "INCOME_LIMITS",
+  "RENT_LIMITS",
+  "UTILITY_ALLOWANCE",
+  "COMPLIANCE_FORMS",
+]);
+
 const FAMILY_PATTERNS = Object.freeze({
   COMPLIANCE_RULE_CHANGES: [
     /compliance[-_\s]+(?:rule|procedure)/i,
     /rule[-_\s]+changes?/i,
     /monitoring\s+rule/i,
     /chapter\s+\d+[\w.-]*\s+compliance/i,
+    /certification\s+waiver\s+procedures?/i,
   ],
   COMPLIANCE_GUIDEBOOK: [
     /compliance[-_\s]+(?:manual|guidebook|handbook|guide)/i,
+    /tax\s+credit\s+compliance\s+manual/i,
+    /section\s+42\s+tax\s+credit\s+compliance\s+manual/i,
     /property\s+management\s+manual/i,
     /asset\s+management\s+manual/i,
     /monitoring\s+manual/i,
   ],
   INCOME_LIMITS: [
     /income(?:[-_\s]+and[-_\s]+rent)?[-_\s]+limits?/i,
+    /income\s+limits\s+report/i,
     /maximum\s+income/i,
     /mtsp[^a-z0-9]+income/i,
   ],
   RENT_LIMITS: [
     /(?:income[-_\s]+and[-_\s]+)?rent[-_\s]+limits?/i,
+    /tax\s+credit\s+eligibility\s+and\s+maximum\s+rent/i,
     /maximum\s+rents?/i,
     /gross\s+rent/i,
   ],
   UTILITY_ALLOWANCE: [
     /utility[-_\s]+allowance/i,
+    /lease\s+addendum\s+utility\s+allowance/i,
     /utility\s+schedule/i,
     /energy\s+consumption\s+model/i,
   ],
@@ -44,6 +61,7 @@ const FAMILY_PATTERNS = Object.freeze({
     /student\s+verification/i,
     /asset\s+certification/i,
     /owner(?:'s)?\s+certification/i,
+    /household\s+eligibility\s+questionnaire/i,
   ],
   COMPLIANCE_TRAINING: [
     /compliance[-_\s]+training/i,
@@ -152,14 +170,32 @@ export function selectCurrentDocuments(documents, { currentYear = new Date().get
   ).values()];
 }
 
-export function coverageGaps(stateCode, documents) {
+function gapRows(stateCode, documents, families, status) {
   const found = new Set(documents.flatMap((document) => document.families ?? []));
-  return REQUIRED_STATE_DOCUMENT_FAMILIES
+  return families
     .filter((family) => !found.has(family))
     .map((family) => Object.freeze({
       state_code: stateCode,
       document_family: family,
-      status: "NOT_PUBLISHED_OR_NOT_DISCOVERED_REQUIRES_HUMAN_REVIEW",
+      status,
       compliance_activation_allowed: false,
     }));
+}
+
+export function coverageGaps(stateCode, documents) {
+  return gapRows(
+    stateCode,
+    documents,
+    REQUIRED_STATE_DOCUMENT_FAMILIES,
+    "NOT_PUBLISHED_OR_NOT_DISCOVERED_REQUIRES_REVIEW",
+  );
+}
+
+export function releaseCoverageGaps(stateCode, documents) {
+  return gapRows(
+    stateCode,
+    documents,
+    RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES,
+    "RELEASE_CRITICAL_DOCUMENT_NOT_CAPTURED",
+  );
 }
