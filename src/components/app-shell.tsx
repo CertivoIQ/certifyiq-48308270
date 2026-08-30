@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Building2, FileCheck2, AlertTriangle, Scale, Sparkles, Rocket,
   Menu, X, Briefcase, Shield, CreditCard, HelpCircle, Users, ClipboardList,
   ClipboardCheck, ShieldCheck, SlidersHorizontal, UserPlus, MailCheck, ArrowLeftRight,
-  Library, LogOut, FileSearch,
+  Library, LogOut, FileSearch, Lightbulb,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IQText } from "@/components/iq-text";
@@ -31,6 +31,7 @@ const MULTIFAMILY_NAV = [
   { to: "/launchpad", label: "Portfolio Setup", icon: Rocket },
   { to: "/account/security", label: "Users & Security", icon: Shield },
   { to: "/billing", label: "Billing", icon: CreditCard },
+  { to: "/feature-suggestions", label: "Suggest a Feature", icon: Lightbulb },
   { to: "/contact-support", label: "Support", icon: HelpCircle },
 ] as const;
 
@@ -65,6 +66,7 @@ const PHA_NAV = [
   { to: "/pha-users", label: "Users & Permissions", icon: Shield, key: "admin" },
   { to: "/account/security", label: "Account Security", icon: ShieldCheck, key: "owner_admin" },
   { to: "/billing", label: "Billing", icon: CreditCard, key: "owner_admin" },
+  { to: "/feature-suggestions", label: "Suggest a Feature", icon: Lightbulb, key: "support" },
   { to: "/contact-support", label: "Support", icon: HelpCircle, key: "support" },
 ] as const;
 
