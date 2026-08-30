@@ -62,7 +62,24 @@ test("CRM visibly exposes staff access only to managers and administrators", () 
   assert.match(shell, />Staff Access</i);
   assert.match(route, /Administrator or manager access required/i);
   assert.match(route, /Employee accounts cannot invite, activate, or deactivate CRM users/i);
-  assert.match(route, /Send CRM invitation/i);
+  assert.match(route, /Send invitation/i);
+  assert.match(route, /Account role/i);
+  assert.match(route, /Public Housing Agency/i);
+  assert.match(route, /PHA workspace/i);
+  assert.match(route, /pha_workspace_invitations/i);
+  assert.match(route, /sendPhaWorkspaceInvitationEmail/i);
+  for (const role of [
+    "executive",
+    "agency_admin",
+    "compliance_admin",
+    "hcv_pbv_specialist",
+    "public_housing_specialist",
+    "inspection_staff",
+  ]) {
+    assert.match(route, new RegExp(role, "i"));
+  }
+  assert.match(route, /Administrator access is required to assign a PHA role/i);
+  assert.match(route, /No configured PHA workspace is available/i);
   assert.match(route, /Beta email policy/i);
   assert.match(route, /External domains will be removed before launch/i);
   assert.match(route, /Manager — may invite employees/i);
