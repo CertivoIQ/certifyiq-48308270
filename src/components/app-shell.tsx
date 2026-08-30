@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 const MULTIFAMILY_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/tasks", label: "Tasks", icon: ClipboardCheck },
   { to: "/properties", label: "Properties", icon: Building2 },
   { to: "/files", label: "Certifications", icon: FileCheck2 },
   { to: "/findings", label: "Findings & Corrections", icon: AlertTriangle },
@@ -35,6 +36,7 @@ const MULTIFAMILY_NAV = [
 
 const PHA_NAV = [
   { to: "/dashboard", label: "Command Center", icon: LayoutDashboard, key: "command" },
+  { to: "/tasks", label: "Tasks", icon: ClipboardCheck, key: "tasks" },
   { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus, key: "family_write" },
   { to: "/pha-families", label: "Families & Reexaminations", icon: Users, key: "family_read" },
   { to: "/pha-portability", label: "HCV Portability", icon: ArrowLeftRight, key: "hcv_operations" },
@@ -68,7 +70,7 @@ const PHA_NAV = [
 
 function phaNavAllowed(role: PhaAgencyRole | null, key: (typeof PHA_NAV)[number]["key"]) {
   if (!role || role === "workspace_owner" || role === "agency_admin" || role === "compliance_admin") return true;
-  if (key === "command" || key === "support") return true;
+  if (key === "command" || key === "tasks" || key === "support") return true;
   if (role === "executive") return ["family_read", "pbv_operations", "ph_operations", "mod_rehab_operations", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
   if (role === "inspection_staff") return ["inspections", "accommodations", "reports", "findings"].includes(key);
   if (role === "hcv_pbv_specialist") return ["family_write", "family_read", "hcv_operations", "pbv_operations", "mod_rehab_operations", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
@@ -85,9 +87,9 @@ function NavLinks({onNavigate}:{onNavigate?:()=>void}){
   const items=isStaff
     ? [
         workspaceItems[0],
-        {to:"/tasks",label:"Tasks",icon:ClipboardCheck} as const,
+        workspaceItems[1],
         ...(canManageStaff ? [{to:"/state-rule-validation",label:"State Rule Validation",icon:FileSearch} as const] : []),
-        ...workspaceItems.slice(1),
+        ...workspaceItems.slice(2),
         {to:"/crm",label:"CRM",icon:Briefcase} as const,
       ]
     : workspaceItems;

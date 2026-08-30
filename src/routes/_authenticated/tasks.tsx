@@ -12,6 +12,7 @@ import {
 
 import { AppShell } from "@/components/app-shell";
 import { OperationsApprovalActions } from "@/components/crm/operations-approval-actions";
+import { CertificationTaskActions } from "@/components/certification-task-actions";
 import { Button } from "@/components/ui/button";
 import { Panel, Pill, Stat, type Tone } from "@/components/ui-kit";
 import { useIsStaff } from "@/hooks/use-session";
@@ -27,8 +28,14 @@ export const Route = createFileRoute("/_authenticated/tasks")({
   component: TasksWorkspace,
 });
 
-type TaskCategory = "approval" | "verification" | "rule_pack" | "incident";
-type TaskDestination = "/pha-nspire-standards" | "/rules" | "/state-rule-validation" | "/crm/operations";
+type TaskCategory = "approval" | "verification" | "rule_pack" | "incident" | "finding" | "certification";
+type TaskDestination =
+  | "/pha-nspire-standards"
+  | "/rules"
+  | "/state-rule-validation"
+  | "/crm/operations"
+  | "/findings"
+  | "/files";
 type TaskItem = {
   id: string;
   category: TaskCategory;
@@ -42,7 +49,26 @@ type TaskItem = {
   approvalId?: string;
   approvalType?: string;
   validationStateCode?: string;
+  findingId?: string;
+  caseId?: string;
+  workflowRole?: "employee" | "manager";
   attention?: boolean;
+};
+
+type CertificationWorkflowTask = {
+  id: string;
+  task_type: "finding_remediation" | "certification_approval";
+  title: string;
+  description: string;
+  status: string;
+  active: boolean;
+  occurred_at: string;
+  destination: "/findings" | "/files";
+  action_label: string;
+  finding_id: string | null;
+  case_id: string | null;
+  workflow_role: "employee" | "manager";
+  attention: boolean;
 };
 
 type NspireRelease = {
@@ -119,6 +145,8 @@ function categoryLabel(category: TaskCategory) {
   if (category === "approval") return "Approval";
   if (category === "verification") return "Verification";
   if (category === "rule_pack") return "Rule pack";
+  if (category === "finding") return "Finding";
+  if (category === "certification") return "Certification";
   return "Incident";
 }
 
@@ -126,6 +154,7 @@ function categoryIcon(category: TaskCategory) {
   if (category === "approval") return <ClipboardCheck className="size-4" />;
   if (category === "verification") return <FileSearch className="size-4" />;
   if (category === "rule_pack") return <ShieldCheck className="size-4" />;
+  if (category === "certification") return <CheckCircle2 className="size-4" />;
   return <AlertTriangle className="size-4" />;
 }
 
@@ -150,10 +179,38 @@ function isMissingRelationError(error: TaskSourceError) {
   );
 }
 
-async function loadTasks(): Promise<TaskItem[]> {
+async function loadTasks(includeGovernanceTasks: boolean): Promise<TaskItem[]> {
   // Generated Supabase types lag the controlled governance tables until schema types refresh.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = supabase as any;
+
+  const { data: workflowData, error: workflowError } = await client.rpc("certification_task_queue");
+  if (workflowError) throw workflowError;
+
+  const workflowTasks: TaskItem[] = ((workflowData ?? []) as CertificationWorkflowTask[]).map((task) => ({
+    id: task.id,
+    category: task.task_type === "finding_remediation" ? "finding" : "certification",
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    active: task.active,
+    occurredAt: task.occurred_at,
+    destination: task.destination,
+    actionLabel: task.action_label,
+    findingId: task.finding_id ?? undefined,
+    caseId: task.case_id ?? undefined,
+    workflowRole: task.workflow_role,
+    attention: task.attention,
+  }));
+
+  if (!includeGovernanceTasks) {
+    return workflowTasks.sort(
+      (left, right) =>
+        Number(right.active) - Number(left.active) ||
+        new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime(),
+    );
+  }
+
   const [
     releaseResult,
     attestationResult,
@@ -241,7 +298,7 @@ async function loadTasks(): Promise<TaskItem[]> {
     attestationCounts.set(key, (attestationCounts.get(key) ?? 0) + 1);
   }
 
-  const tasks: TaskItem[] = [];
+  const tasks: TaskItem[] = [...workflowTasks];
 
   if (nspireSourceUnavailable) {
     tasks.push({
@@ -400,7 +457,7 @@ async function loadTasks(): Promise<TaskItem[]> {
   );
 }
 
-function TaskList({ tasks }: { tasks: TaskItem[] }) {
+function TaskList({ tasks, onCompleted }: { tasks: TaskItem[]; onCompleted: () => void }) {
   if (!tasks.length) {
     return (
       <div className="px-5 py-12 text-center">
@@ -437,7 +494,16 @@ function TaskList({ tasks }: { tasks: TaskItem[] }) {
                   actionType={task.approvalType}
                 />
               ) : null}
+              {task.findingId || task.caseId ? (
+                <CertificationTaskActions
+                  findingId={task.findingId}
+                  caseId={task.caseId}
+                  active={task.active}
+                  onCompleted={onCompleted}
+                />
+              ) : null}
             </div>
+            {task.active && (task.findingId || task.caseId) ? null : (
             <Button size="sm" variant="outline" asChild className="shrink-0">
               {task.validationStateCode ? (
                 <Link
@@ -450,6 +516,7 @@ function TaskList({ tasks }: { tasks: TaskItem[] }) {
                 <Link to={task.destination}>{task.actionLabel}</Link>
               )}
             </Button>
+            )}
           </div>
         </li>
       ))}
@@ -461,9 +528,9 @@ function TasksWorkspace() {
   const { isStaff, loading } = useIsStaff();
   const [view, setView] = useState<"active" | "history">("active");
   const query = useQuery({
-    queryKey: ["governance-tasks"],
-    enabled: isStaff,
-    queryFn: loadTasks,
+    queryKey: ["role-aware-tasks", isStaff],
+    enabled: !loading,
+    queryFn: () => loadTasks(isStaff),
     refetchInterval: 30_000,
   });
 
@@ -471,7 +538,9 @@ function TasksWorkspace() {
   const activeTasks = allTasks.filter((task) => task.active);
   const history = allTasks.filter((task) => !task.active);
   const visibleTasks = view === "active" ? activeTasks : history;
-  const awaitingApproval = activeTasks.filter((task) => task.category === "approval").length;
+  const awaitingApproval = activeTasks.filter(
+    (task) => task.category === "approval" || task.category === "certification",
+  ).length;
   const verifications = activeTasks.filter(
     (task) => task.category === "verification" || task.category === "rule_pack",
   ).length;
@@ -480,18 +549,11 @@ function TasksWorkspace() {
   return (
     <AppShell
       title="Tasks"
-      subtitle="One queue for required verifications, approvals, rule-pack controls, and operational exceptions"
+      subtitle="Role-aware work for finding remediation, certification approval, governance controls, and audit filing"
     >
       {loading ? (
         <div className="rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
           Checking task authority…
-        </div>
-      ) : !isStaff ? (
-        <div className="rounded-lg border border-border bg-card p-8">
-          <h2 className="font-display text-lg">Staff authority required</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Governance tasks and approval evidence are restricted to authorized CertivoIQ staff.
-          </p>
         </div>
       ) : (
         <>
@@ -529,7 +591,7 @@ function TasksWorkspace() {
             bodyClassName="p-0"
           >
             {query.isLoading ? (
-              <div className="px-5 py-10 text-sm text-muted-foreground">Loading governance tasks…</div>
+              <div className="px-5 py-10 text-sm text-muted-foreground">Loading role-aware tasks…</div>
             ) : query.error ? (
               <div className="px-5 py-10 text-center">
                 <AlertTriangle className="mx-auto size-8 text-reject" />
@@ -542,7 +604,7 @@ function TasksWorkspace() {
                 </Button>
               </div>
             ) : (
-              <TaskList tasks={visibleTasks} />
+              <TaskList tasks={visibleTasks} onCompleted={() => void query.refetch()} />
             )}
           </Panel>
         </>
