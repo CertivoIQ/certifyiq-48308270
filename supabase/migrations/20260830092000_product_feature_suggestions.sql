@@ -34,18 +34,21 @@ revoke all on table public.product_feature_suggestions from anon, authenticated;
 grant select on table public.product_feature_suggestions to authenticated;
 grant all on table public.product_feature_suggestions to service_role;
 
+drop policy if exists "Users read own feature suggestions" on public.product_feature_suggestions;
 create policy "Users read own feature suggestions"
 on public.product_feature_suggestions
 for select
 to authenticated
 using ((select auth.uid()) = submitted_by);
 
+drop policy if exists "Staff read all feature suggestions" on public.product_feature_suggestions;
 create policy "Staff read all feature suggestions"
 on public.product_feature_suggestions
 for select
 to authenticated
 using (public.has_role((select auth.uid()), 'staff'));
 
+drop trigger if exists product_feature_suggestions_touch_updated_at on public.product_feature_suggestions;
 create trigger product_feature_suggestions_touch_updated_at
 before update on public.product_feature_suggestions
 for each row execute function public.touch_updated_at();
