@@ -1,0 +1,35 @@
+name: Merlin Procedure Worker Dispatch
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: certivoiq-merlin-procedure-worker
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    name: Process one source-verified procedure document
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Run Merlin procedure worker
+        env:
+          SUPABASE_URL: https://emnkzxkcpnyvglwxraxm.supabase.co
+        run: |
+          oidc_response="$(curl --silent --show-error --fail-with-body \
+            --header "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=certivoiq-merlin-procedure-worker")"
+          oidc_token="$(jq -er '.value' <<< "$oidc_response")"
+          curl --silent --show-error --fail-with-body \
+            --request POST \
+            --url "${SUPABASE_URL%/}/functions/v1/merlin-procedure-worker" \
+            --header "Authorization: Bearer $oidc_token" \
+            --header "Content-Type: application/json" \
+            --data '{}'
