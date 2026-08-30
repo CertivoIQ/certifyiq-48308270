@@ -165,14 +165,14 @@ export const PLANS = [
     name: "Multifamily Enterprise",
     price: "$65,000",
     cadence: "/state/year",
-    tagline: "Annual license per selected state rule pack",
+    tagline: "Property and portfolio certification compliance",
     features: [
-      "All currently available platform features",
-      "Federal baseline certification review",
-      "Traceable evidence and versioned federal rules",
-      "Manual Review, Agent Verification, Agent Approval, and Agent Signature",
-      "Portfolio-level compliance visibility",
-      "Evidence-manifest export",
+      "Federal requirements plus each licensed state's validated rule guide",
+      "Income, asset, rent, utility-allowance, household, student, and layered validations",
+      "Document reconciliation and inconsistency detection",
+      "Pass, Fail, and Unable to Determine outcomes with cited evidence",
+      "Portfolio exception visibility and evidence-manifest export",
+      "Pending final review with responsible-party signature and position",
     ],
     cta: "Try CertivoIQ for Free",
     featured: true,
@@ -182,12 +182,15 @@ export const PLANS = [
     id: "pha",
     name: "PHA",
     price: "$150,000",
-    cadence: "/year",
-    tagline: "Flat annual Public Housing Authority license",
+    cadence: "/organization/year",
+    tagline: "Agency-wide HUD program operations",
     features: [
-      "All currently available platform features",
-      "One validated operating-state rule pack",
-      "PHA compliance workflows",
+      "HCV, PBV, public housing, and Mod Rehab workspaces",
+      "Family intake, eligibility, reexamination, and HUD-50058 controls",
+      "Waiting lists, portability, lease-up, admissions, and occupancy workflows",
+      "HOTMA, NSPIRE, accommodations, notices, and agency policy controls",
+      "One validated operating-state rule guide",
+      "Agency users, source library, and organization-wide reporting",
     ],
     cta: "Try CertivoIQ for Free",
     featured: false,
@@ -195,7 +198,9 @@ export const PLANS = [
   },
 ];
 
-export const ADDONS: { name: string; price: string }[] = [];
+export const ADDONS: { name: string; price: string }[] = [
+  { name: "Merlin compliance intelligence", price: "$5,000/month under a 12-month agreement" },
+];
 
 /** Sales email already used for CertivoIQ outreach — no new address invented. */
 export const SALES_EMAIL = "sales@certivoiq.com";
