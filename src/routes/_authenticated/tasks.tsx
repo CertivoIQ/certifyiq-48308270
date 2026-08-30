@@ -186,6 +186,7 @@ async function loadTasks(): Promise<TaskItem[]> {
       client
         .from("state_rule_source_candidates")
         .select("id,state_code,authority_name,program,scope,source_type,candidate_status,agent_verification_status,exact_bytes_captured,retrieved_at,updated_at")
+        .neq("candidate_status", "EXCLUDED_REDUNDANT_SOURCE")
         .order("state_code", { ascending: true })
         .limit(250),
       client
