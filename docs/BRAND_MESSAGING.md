@@ -50,7 +50,13 @@ The first public reference should use **authorized compliance agent**. Shorter i
 Do not claim or imply guaranteed avoidance of penalties, fines, tax-credit loss, HUD findings, regulatory action, audit findings, enforcement, or violations. Do not present CertivoIQ as legal advice, complete jurisdictional approval, or a guarantee that an audit will have no findings.
 
 ## Pricing
-CertivoIQ has two annual enterprise license types: **Multifamily Enterprise is $65,000 per selected state per year**, and **PHA is $150,000 per year, flat**. Do not publish Academy or training products, certificates, per-file overages, or separate API prices. All currently available platform features are included in the applicable license. The primary sales action is **Try CertivoIQ for Free**.
+CertivoIQ has two operating-platform licenses: **Multifamily Enterprise is $65,000 per selected state per year**, and **PHA is $150,000 per organization per year**. **Merlin is an optional organization-wide compliance-intelligence add-on at $5,000 per month under a 12-month agreement ($60,000 annually)** and includes up to 50,000 certification or recertification analyses per month across licensed states and programs. Standard overage is $0.15 per additional certification. An approved month-to-month Merlin arrangement is $6,000 per month. Standard implementation is **$15,000 one time per organization**.
+
+Multifamily messaging should emphasize property and portfolio certifications, licensed-state rule guides, evidence reconciliation, deterministic outcomes, exception visibility, and pending final review controls. PHA messaging should emphasize HCV, PBV, public housing, Mod Rehab, HUD-50058, waiting lists, portability, lease-up, admissions, occupancy, HOTMA, NSPIRE, accommodations, notices, policies, agency users, and agency-wide reporting.
+
+Position Merlin as research, explanation, inconsistency analysis, exception prioritization, regulatory-change monitoring, and audit-response assistance. Never claim Merlin overrides the rule engine or approves a finding. Final confirmation requires an authorized responsible party's signature and position.
+
+Do not publish Academy or training products, certificates, or separate API prices. The primary sales action is **Try CertivoIQ for Free**.
 
 ## Brand identity
 Approved colors:

@@ -11,12 +11,24 @@ export interface PlanEntitlement {
   statePacks: number | null;
 }
 
+export const COMMERCIAL_TERMS = Object.freeze({
+  multifamilyAnnualPerStateUsd: 65_000,
+  phaAnnualUsd: 150_000,
+  merlinMonthlyUsd: 5_000,
+  merlinAnnualUsd: 60_000,
+  merlinAnnualCommitmentMonths: 12,
+  merlinMonthToMonthUsd: 6_000,
+  merlinMonthlyCertificationCapacity: 50_000,
+  merlinOveragePerCertificationUsd: 0.15,
+  implementationOneTimeUsd: 15_000,
+});
+
 export const LICENSES: Record<LicenseKind, PlanEntitlement & { annualAmountUsd: number }> = {
   multifamily_enterprise: {
     planId: "multifamily_enterprise",
     priceId: "multifamily_enterprise_annual",
     name: "CertivoIQ Multifamily Enterprise",
-    annualAmountUsd: 65_000,
+    annualAmountUsd: COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd,
     unitLimit: null,
     propertyLimit: null,
     aiDocAllowance: null,
@@ -26,7 +38,7 @@ export const LICENSES: Record<LicenseKind, PlanEntitlement & { annualAmountUsd: 
     planId: "pha",
     priceId: "pha_annual",
     name: "CertivoIQ PHA",
-    annualAmountUsd: 150_000,
+    annualAmountUsd: COMMERCIAL_TERMS.phaAnnualUsd,
     unitLimit: null,
     propertyLimit: null,
     aiDocAllowance: null,
