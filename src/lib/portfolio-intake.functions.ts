@@ -172,14 +172,20 @@ export const queueCertificationReviews = createServerFn({ method: "POST" })
     if (error) throw error;
     if (items.length !== data.itemIds.length) throw new Error("One or more selected certifications are unavailable.");
     const ordered = [...items].sort((a: any, b: any) =>
-      (a.upload_sequence ?? Number.MAX_SAFE_INTEGER) - (b.upload_sequence ?? Number.MAX_SAFE_INTEGER)
-      || Date.parse(a.created_at) - Date.parse(b.created_at)
+      Date.parse(a.created_at) - Date.parse(b.created_at)
+      || (a.upload_sequence ?? Number.MAX_SAFE_INTEGER) - (b.upload_sequence ?? Number.MAX_SAFE_INTEGER)
+      || String(a.id).localeCompare(String(b.id))
     );
     const queuedAt = new Date().toISOString();
-    const { error: updateError } = await db.from("certification_import_items").update({
-      review_queue_status: "queued", queued_for_review_at: queuedAt,
-      review_started_at: null, review_finished_at: null,
-    }).in("id", ordered.map((item: any) => item.id)).eq("user_id", context.userId);
+    const reviewOrderBase = Date.now() * 1000;
+    const updates = await Promise.all(ordered.map((item: any, index: number) =>
+      db.from("certification_import_items").update({
+        review_queue_status: "queued", queued_for_review_at: queuedAt,
+        review_order: reviewOrderBase + index,
+        review_started_at: null, review_finished_at: null,
+      }).eq("id", item.id).eq("user_id", context.userId)
+    ));
+    const updateError = updates.find((result: any) => result.error)?.error;
     if (updateError) throw updateError;
     return { items: ordered, queuedAt };
   });
