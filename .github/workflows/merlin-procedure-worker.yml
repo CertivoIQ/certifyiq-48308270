@@ -15,9 +15,13 @@ concurrency:
 
 jobs:
   crawl:
-    name: Process one source-verified procedure document
+    name: Process source-verified procedure document ${{ matrix.worker_slot }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        worker_slot: [1, 2, 3, 4]
     steps:
       - name: Run Merlin procedure worker
         env:
