@@ -24,7 +24,7 @@ async function authorizedWorkflow(request: Request): Promise<boolean> {
       payload.ref === "refs/heads/main" &&
       payload.workflow_ref ===
         "Watkin5/certifyiq-48308270/.github/workflows/merlin-procedure-worker.yml@refs/heads/main" &&
-      (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch" || payload.event_name === "push") &&
+      (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch") &&
       payload.runner_environment === "github-hosted";
   } catch {
     return false;
@@ -106,13 +106,31 @@ const filenameFor = (contentType: string, sourceUrl: string) => {
 const responseOutputText = (response: Record<string, unknown>) => {
   if (typeof response.output_text === "string") return response.output_text;
   const output = Array.isArray(response.output) ? response.output : [];
-  return output.flatMap((item: any) => Array.isArray(item?.content) ? item.content : [])
-    .filter((item: any) => item?.type === "output_text" && typeof item?.text === "string")
-    .map((item: any) => item.text).join("");
+  return output.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const content = (item as { content?: unknown }).content;
+    return Array.isArray(content) ? content : [];
+  })
+    .filter((item): item is { type: "output_text"; text: string } =>
+      Boolean(item) && typeof item === "object" &&
+      (item as { type?: unknown }).type === "output_text" &&
+      typeof (item as { text?: unknown }).text === "string"
+    )
+    .map((item) => item.text).join("");
 };
 
-async function crawlProcedureDocument(db: ReturnType<typeof createClient>, job: Record<string, any>) {
-  const documentId = String(job.payload?.procedure_document_id ?? "");
+const recordValue = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? value as Record<string, unknown> : {};
+
+const errorCode = (error: unknown) => {
+  if (!error || typeof error !== "object") return "WORKER_FAILURE";
+  const code = (error as { code?: unknown }).code;
+  return typeof code === "string" && code ? code : "WORKER_FAILURE";
+};
+
+async function crawlProcedureDocument(db: ReturnType<typeof createClient>, job: Record<string, unknown>) {
+  const jobPayload = recordValue(job.payload);
+  const documentId = String(jobPayload.procedure_document_id ?? "");
   if (!documentId) throw new Error("Missing procedure_document_id");
 
   const { data: document, error: documentError } = await db.from("merlin_procedure_documents")
@@ -207,7 +225,7 @@ async function crawlProcedureDocument(db: ReturnType<typeof createClient>, job: 
     .delete().eq("document_id", documentId).eq("status", "pending_independent_validation");
   if (deleteError) throw new Error(`Pending extraction cleanup failed: ${deleteError.message}`);
   if (procedures.length) {
-    const rows = procedures.map((procedure: Record<string, any>) => ({
+    const rows = procedures.map((procedure: Record<string, unknown>) => ({
       document_id: documentId,
       source_candidate_id: document.source_candidate_id,
       state_code: document.state_code,
@@ -282,11 +300,11 @@ Deno.serve(async (request) => {
     return json({ ok: true, claimed: true, jobId, status: completed ? "completed" : "lease_lost", result });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const documentId = String(job.payload?.procedure_document_id ?? "");
+    const documentId = String(recordValue(job.payload).procedure_document_id ?? "");
     if (documentId) {
       await db.from("merlin_procedure_documents").update({
         status: "failed",
-        last_error: { code: (error as any)?.code ?? "WORKER_FAILURE", message: message.slice(0, 2000) },
+        last_error: { code: errorCode(error), message: message.slice(0, 2000) },
         updated_at: new Date().toISOString(),
       }).eq("id", documentId).neq("status", "blocked_source_mismatch");
       const { data: doc } = await db.from("merlin_procedure_documents").select("source_sha256").eq("id", documentId).single();
@@ -298,7 +316,7 @@ Deno.serve(async (request) => {
     }
     await db.rpc("operations_fail_job", {
       _job_id: jobId, _worker: worker,
-      _error: { code: (error as any)?.code ?? "WORKER_FAILURE", message: message.slice(0, 2000) },
+      _error: { code: errorCode(error), message: message.slice(0, 2000) },
     });
     return json({ ok: false, stage: "crawl", claimed: true, jobId, error: message }, 500);
   }
