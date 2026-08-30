@@ -18,6 +18,7 @@
     "test:xlsx": "node --test scripts/test-fy2026-xlsx-workbook-parser.mjs",
     "test:project-authority": "node --test scripts/test-enterprise-project-authority-intake.mjs",
     "test:state-pack": "node --test scripts/test-state-rule-pack-release.mjs",
+    "test:state-pack-dual-control": "node --test scripts/test-dual-control-state-pack-activation.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:slice": "node --test scripts/test-compliance-vertical-slice.mjs",
