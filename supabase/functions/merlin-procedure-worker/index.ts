@@ -24,7 +24,7 @@ async function authorizedWorkflow(request: Request): Promise<boolean> {
       payload.ref === "refs/heads/main" &&
       payload.workflow_ref ===
         "Watkin5/certifyiq-48308270/.github/workflows/merlin-procedure-worker.yml@refs/heads/main" &&
-      (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch") &&
+      (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch" || payload.event_name === "push") &&
       payload.runner_environment === "github-hosted";
   } catch {
     return false;

@@ -1,6 +1,11 @@
 name: Merlin Procedure Worker Dispatch
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/merlin-procedure-worker/**"
+      - ".github/workflows/merlin-procedure-worker.yml"
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
