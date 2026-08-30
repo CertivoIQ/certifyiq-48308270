@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      _nspire_import_chunks: {
+        Row: {
+          payload: string
+          seq: number
+        }
+        Insert: {
+          payload: string
+          seq: number
+        }
+        Update: {
+          payload?: string
+          seq?: number
+        }
+        Relationships: []
+      }
       account_access: {
         Row: {
           academy_seats: number
@@ -77,66 +92,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           welcome_sent_at?: string | null
-        }
-        Relationships: []
-      }
-      authority_submissions: {
-        Row: {
-          approval_required: boolean
-          approved_at: string | null
-          approved_by: string | null
-          authority_name: string
-          authority_type: string
-          certification_id: string | null
-          created_at: string
-          delivery_method: string | null
-          external_reference: string | null
-          id: string
-          property_id: string | null
-          receipt_path: string | null
-          response_notes: string | null
-          status: string
-          submission_package: Json
-          submitted_at: string | null
-          user_id: string
-        }
-        Insert: {
-          approval_required?: boolean
-          approved_at?: string | null
-          approved_by?: string | null
-          authority_name: string
-          authority_type?: string
-          certification_id?: string | null
-          created_at?: string
-          delivery_method?: string | null
-          external_reference?: string | null
-          id?: string
-          property_id?: string | null
-          receipt_path?: string | null
-          response_notes?: string | null
-          status?: string
-          submission_package?: Json
-          submitted_at?: string | null
-          user_id: string
-        }
-        Update: {
-          approval_required?: boolean
-          approved_at?: string | null
-          approved_by?: string | null
-          authority_name?: string
-          authority_type?: string
-          certification_id?: string | null
-          created_at?: string
-          delivery_method?: string | null
-          external_reference?: string | null
-          id?: string
-          property_id?: string | null
-          receipt_path?: string | null
-          response_notes?: string | null
-          status?: string
-          submission_package?: Json
-          submitted_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -205,11 +160,9 @@ export type Database = {
           created_at: string
           error_message: string | null
           extracted_data: Json
-          findings: Json
-          historical_changes: Json
+          extraction_provider: string | null
           id: string
           job_id: string
-          matched_certification_id: string | null
           mime_type: string
           original_file_name: string
           processed_at: string | null
@@ -217,6 +170,7 @@ export type Database = {
           size_bytes: number
           status: string
           storage_path: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -224,11 +178,9 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           extracted_data?: Json
-          findings?: Json
-          historical_changes?: Json
+          extraction_provider?: string | null
           id?: string
           job_id: string
-          matched_certification_id?: string | null
           mime_type: string
           original_file_name: string
           processed_at?: string | null
@@ -236,6 +188,7 @@ export type Database = {
           size_bytes: number
           status?: string
           storage_path: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -243,11 +196,9 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           extracted_data?: Json
-          findings?: Json
-          historical_changes?: Json
+          extraction_provider?: string | null
           id?: string
           job_id?: string
-          matched_certification_id?: string | null
           mime_type?: string
           original_file_name?: string
           processed_at?: string | null
@@ -255,6 +206,7 @@ export type Database = {
           size_bytes?: number
           status?: string
           storage_path?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -280,6 +232,7 @@ export type Database = {
           source_name: string
           status: string
           total_files: number
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -294,6 +247,7 @@ export type Database = {
           source_name: string
           status?: string
           total_files?: number
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -308,267 +262,10 @@ export type Database = {
           source_name?: string
           status?: string
           total_files?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
-      compliance_assurance_cases: {
-        Row: {
-          applicable_program_codes: string[]
-          assurance_status: string
-          audit_status: string
-          created_at: string
-          decided_at: string | null
-          decided_by: string | null
-          engine_build: string
-          escalation_accuracy_status: string
-          event_date: string
-          household_key: string | null
-          human_decision: string | null
-          human_decision_reason: string | null
-          id: string
-          layered_result: Json
-          manifest_sha256: string
-          organization_id: string
-          production_security_status: string
-          property_key: string
-          regulatory_status: string
-          sustained_performance_status: string
-          unit_key: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          applicable_program_codes: string[]
-          assurance_status?: string
-          audit_status?: string
-          created_at?: string
-          decided_at?: string | null
-          decided_by?: string | null
-          engine_build: string
-          escalation_accuracy_status?: string
-          event_date: string
-          household_key?: string | null
-          human_decision?: string | null
-          human_decision_reason?: string | null
-          id?: string
-          layered_result?: Json
-          manifest_sha256: string
-          organization_id: string
-          production_security_status?: string
-          property_key: string
-          regulatory_status?: string
-          sustained_performance_status?: string
-          unit_key?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          applicable_program_codes?: string[]
-          assurance_status?: string
-          audit_status?: string
-          created_at?: string
-          decided_at?: string | null
-          decided_by?: string | null
-          engine_build?: string
-          escalation_accuracy_status?: string
-          event_date?: string
-          household_key?: string | null
-          human_decision?: string | null
-          human_decision_reason?: string | null
-          id?: string
-          layered_result?: Json
-          manifest_sha256?: string
-          organization_id?: string
-          production_security_status?: string
-          property_key?: string
-          regulatory_status?: string
-          sustained_performance_status?: string
-          unit_key?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
-      }
-      compliance_assurance_events: {
-        Row: {
-          actor_id: string | null
-          assurance_case_id: string
-          correlation_id: string
-          created_at: string
-          event_type: string
-          evidence_refs: Json
-          id: string
-          next_status: string
-          previous_status: string | null
-          reason_code: string
-        }
-        Insert: {
-          actor_id?: string | null
-          assurance_case_id: string
-          correlation_id: string
-          created_at?: string
-          event_type: string
-          evidence_refs?: Json
-          id?: string
-          next_status: string
-          previous_status?: string | null
-          reason_code: string
-        }
-        Update: {
-          actor_id?: string | null
-          assurance_case_id?: string
-          correlation_id?: string
-          created_at?: string
-          event_type?: string
-          evidence_refs?: Json
-          id?: string
-          next_status?: string
-          previous_status?: string | null
-          reason_code?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compliance_assurance_events_assurance_case_id_fkey"
-            columns: ["assurance_case_id"]
-            isOneToOne: false
-            referencedRelation: "compliance_assurance_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      compliance_customer_file_observations: {
-        Row: {
-          actual_customer_file: boolean
-          assurance_case_id: string
-          audit_trail_complete: boolean
-          created_at: string
-          cross_tenant_access_denied: boolean
-          customer_key: string
-          engine_build: string
-          environment: string
-          file_key: string
-          human_result: string
-          human_review_complete: boolean
-          id: string
-          latency_ms: number | null
-          manifest_sha256: string
-          observed_on: string
-          reviewer_id: string
-          severity: string
-          system_result: string
-          unresolved_evidence_blocked: boolean
-          workflow_success: boolean
-        }
-        Insert: {
-          actual_customer_file: boolean
-          assurance_case_id: string
-          audit_trail_complete: boolean
-          created_at?: string
-          cross_tenant_access_denied: boolean
-          customer_key: string
-          engine_build: string
-          environment: string
-          file_key: string
-          human_result: string
-          human_review_complete: boolean
-          id?: string
-          latency_ms?: number | null
-          manifest_sha256: string
-          observed_on: string
-          reviewer_id: string
-          severity: string
-          system_result: string
-          unresolved_evidence_blocked: boolean
-          workflow_success: boolean
-        }
-        Update: {
-          actual_customer_file?: boolean
-          assurance_case_id?: string
-          audit_trail_complete?: boolean
-          created_at?: string
-          cross_tenant_access_denied?: boolean
-          customer_key?: string
-          engine_build?: string
-          environment?: string
-          file_key?: string
-          human_result?: string
-          human_review_complete?: boolean
-          id?: string
-          latency_ms?: number | null
-          manifest_sha256?: string
-          observed_on?: string
-          reviewer_id?: string
-          severity?: string
-          system_result?: string
-          unresolved_evidence_blocked?: boolean
-          workflow_success?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compliance_customer_file_observations_assurance_case_id_fkey"
-            columns: ["assurance_case_id"]
-            isOneToOne: false
-            referencedRelation: "compliance_assurance_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      compliance_escalation_outcomes: {
-        Row: {
-          assurance_case_id: string
-          created_at: string
-          event_key: string
-          human_decision: string
-          human_destination: string | null
-          human_reason: string
-          id: string
-          reviewed_at: string
-          reviewer_id: string
-          severity: string
-          system_decision: string
-          system_destination: string
-          system_reason_code: string
-        }
-        Insert: {
-          assurance_case_id: string
-          created_at?: string
-          event_key: string
-          human_decision: string
-          human_destination?: string | null
-          human_reason: string
-          id?: string
-          reviewed_at: string
-          reviewer_id: string
-          severity: string
-          system_decision: string
-          system_destination: string
-          system_reason_code: string
-        }
-        Update: {
-          assurance_case_id?: string
-          created_at?: string
-          event_key?: string
-          human_decision?: string
-          human_destination?: string | null
-          human_reason?: string
-          id?: string
-          reviewed_at?: string
-          reviewer_id?: string
-          severity?: string
-          system_decision?: string
-          system_destination?: string
-          system_reason_code?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compliance_escalation_outcomes_assurance_case_id_fkey"
-            columns: ["assurance_case_id"]
-            isOneToOne: false
-            referencedRelation: "compliance_assurance_cases"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       compliance_findings: {
         Row: {
@@ -637,143 +334,6 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "certification_import_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      compliance_regulatory_reviews: {
-        Row: {
-          assurance_case_id: string
-          authority_records: Json
-          created_at: string
-          decision_reason: string | null
-          escalation_destination: string
-          human_decision: string | null
-          id: string
-          issue_type: string
-          reviewed_at: string | null
-          reviewer_id: string | null
-          rule_key: string
-          source_hashes: string[]
-          system_status: string
-        }
-        Insert: {
-          assurance_case_id: string
-          authority_records: Json
-          created_at?: string
-          decision_reason?: string | null
-          escalation_destination: string
-          human_decision?: string | null
-          id?: string
-          issue_type: string
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          rule_key: string
-          source_hashes: string[]
-          system_status: string
-        }
-        Update: {
-          assurance_case_id?: string
-          authority_records?: Json
-          created_at?: string
-          decision_reason?: string | null
-          escalation_destination?: string
-          human_decision?: string | null
-          id?: string
-          issue_type?: string
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          rule_key?: string
-          source_hashes?: string[]
-          system_status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compliance_regulatory_reviews_assurance_case_id_fkey"
-            columns: ["assurance_case_id"]
-            isOneToOne: false
-            referencedRelation: "compliance_assurance_cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      compliance_remediation_actions: {
-        Row: {
-          assigned_to: string | null
-          assurance_case_id: string
-          citation: string
-          closed_at: string | null
-          closed_by: string | null
-          created_at: string
-          due_at: string | null
-          evidence_refs: Json
-          finding_id: string | null
-          finding_ref: string
-          id: string
-          remediation_plan: string
-          remediation_summary: string | null
-          rule_id: string
-          severity: string
-          status: string
-          updated_at: string
-          verified_at: string | null
-          verified_by: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          assurance_case_id: string
-          citation: string
-          closed_at?: string | null
-          closed_by?: string | null
-          created_at?: string
-          due_at?: string | null
-          evidence_refs?: Json
-          finding_id?: string | null
-          finding_ref: string
-          id?: string
-          remediation_plan: string
-          remediation_summary?: string | null
-          rule_id: string
-          severity: string
-          status?: string
-          updated_at?: string
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          assurance_case_id?: string
-          citation?: string
-          closed_at?: string | null
-          closed_by?: string | null
-          created_at?: string
-          due_at?: string | null
-          evidence_refs?: Json
-          finding_id?: string | null
-          finding_ref?: string
-          id?: string
-          remediation_plan?: string
-          remediation_summary?: string | null
-          rule_id?: string
-          severity?: string
-          status?: string
-          updated_at?: string
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "compliance_remediation_actions_assurance_case_id_fkey"
-            columns: ["assurance_case_id"]
-            isOneToOne: false
-            referencedRelation: "compliance_assurance_cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "compliance_remediation_actions_finding_id_fkey"
-            columns: ["finding_id"]
-            isOneToOne: false
-            referencedRelation: "compliance_findings"
             referencedColumns: ["id"]
           },
         ]
@@ -906,14 +466,18 @@ export type Database = {
         Row: {
           account_type: Database["public"]["Enums"]["crm_account_type"]
           arr: number
+          closed_won_at: string | null
+          contract_verified_at: string | null
           corporate_email: string | null
           created_at: string
           created_by: string | null
           hq: string | null
           id: string
+          is_demo: boolean
           last_contact_on: string | null
           last_touch: string | null
           lead_score: number
+          license_pricing_class: string
           linkedin_url: string | null
           management_company_name: string | null
           name: string
@@ -925,6 +489,7 @@ export type Database = {
           ownership_sources: string[]
           ownership_verification_status: string
           ownership_verified_at: string | null
+          payment_verified_at: string | null
           phone: string | null
           plan: string | null
           programs: string[]
@@ -945,14 +510,18 @@ export type Database = {
         Insert: {
           account_type?: Database["public"]["Enums"]["crm_account_type"]
           arr?: number
+          closed_won_at?: string | null
+          contract_verified_at?: string | null
           corporate_email?: string | null
           created_at?: string
           created_by?: string | null
           hq?: string | null
           id?: string
+          is_demo?: boolean
           last_contact_on?: string | null
           last_touch?: string | null
           lead_score?: number
+          license_pricing_class?: string
           linkedin_url?: string | null
           management_company_name?: string | null
           name: string
@@ -964,6 +533,7 @@ export type Database = {
           ownership_sources?: string[]
           ownership_verification_status?: string
           ownership_verified_at?: string | null
+          payment_verified_at?: string | null
           phone?: string | null
           plan?: string | null
           programs?: string[]
@@ -984,14 +554,18 @@ export type Database = {
         Update: {
           account_type?: Database["public"]["Enums"]["crm_account_type"]
           arr?: number
+          closed_won_at?: string | null
+          contract_verified_at?: string | null
           corporate_email?: string | null
           created_at?: string
           created_by?: string | null
           hq?: string | null
           id?: string
+          is_demo?: boolean
           last_contact_on?: string | null
           last_touch?: string | null
           lead_score?: number
+          license_pricing_class?: string
           linkedin_url?: string | null
           management_company_name?: string | null
           name?: string
@@ -1003,6 +577,7 @@ export type Database = {
           ownership_sources?: string[]
           ownership_verification_status?: string
           ownership_verified_at?: string | null
+          payment_verified_at?: string | null
           phone?: string | null
           plan?: string | null
           programs?: string[]
@@ -1279,6 +854,56 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_post_sale_checklists: {
+        Row: {
+          account_id: string
+          acknowledged_at: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          detected_at: string
+          id: string
+          status: string
+          surfaced_at: string | null
+          trigger_reason: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          acknowledged_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          status?: string
+          surfaced_at?: string | null
+          trigger_reason: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          acknowledged_at?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          status?: string
+          surfaced_at?: string | null
+          trigger_reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_post_sale_checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "crm_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_staff_access: {
         Row: {
           access_level: string
@@ -1446,6 +1071,33 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: number[]
+          created_at: string
+          current_step: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: number[]
+          created_at?: string
+          current_step?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_workspace_profiles: {
         Row: {
           created_at: string
@@ -1479,6 +1131,152 @@ export type Database = {
           selected_programs?: string[]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      enterprise_invoice_events: {
+        Row: {
+          action: string
+          amount_due_cents: number | null
+          amount_paid_cents: number | null
+          created_at: string
+          currency: string | null
+          detail: string | null
+          event_type: string
+          id: string
+          invoice_status: string | null
+          organization_id: string | null
+          stripe_event_id: string
+          stripe_invoice_id: string | null
+        }
+        Insert: {
+          action: string
+          amount_due_cents?: number | null
+          amount_paid_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          detail?: string | null
+          event_type: string
+          id?: string
+          invoice_status?: string | null
+          organization_id?: string | null
+          stripe_event_id: string
+          stripe_invoice_id?: string | null
+        }
+        Update: {
+          action?: string
+          amount_due_cents?: number | null
+          amount_paid_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          detail?: string | null
+          event_type?: string
+          id?: string
+          invoice_status?: string | null
+          organization_id?: string | null
+          stripe_event_id?: string
+          stripe_invoice_id?: string | null
+        }
+        Relationships: []
+      }
+      enterprise_license_members: {
+        Row: {
+          created_at: string
+          license_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          license_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          license_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enterprise_license_members_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "enterprise_licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enterprise_licenses: {
+        Row: {
+          activated_at: string | null
+          activated_by: string
+          all_features: boolean
+          annual_price_cents: number
+          created_at: string
+          crm_account_id: string | null
+          currency: string
+          exception_reason: string | null
+          expires_at: string | null
+          id: string
+          organization_id: string
+          payment_method: string | null
+          payment_terms: string | null
+          product_code: string
+          purchase_order_number: string | null
+          renewal_at: string | null
+          starts_at: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_invoice_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string
+          all_features?: boolean
+          annual_price_cents?: number
+          created_at?: string
+          crm_account_id?: string | null
+          currency?: string
+          exception_reason?: string | null
+          expires_at?: string | null
+          id?: string
+          organization_id: string
+          payment_method?: string | null
+          payment_terms?: string | null
+          product_code?: string
+          purchase_order_number?: string | null
+          renewal_at?: string | null
+          starts_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_invoice_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string
+          all_features?: boolean
+          annual_price_cents?: number
+          created_at?: string
+          crm_account_id?: string | null
+          currency?: string
+          exception_reason?: string | null
+          expires_at?: string | null
+          id?: string
+          organization_id?: string
+          payment_method?: string | null
+          payment_terms?: string | null
+          product_code?: string
+          purchase_order_number?: string | null
+          renewal_at?: string | null
+          starts_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_invoice_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2007,66 +1805,6 @@ export type Database = {
           },
         ]
       }
-      mock_audit_runs: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          created_by: string
-          critical_count: number
-          evidence_manifest: Json
-          findings: Json
-          framework: string
-          id: string
-          jurisdiction: string
-          major_count: number
-          minor_count: number
-          property_id: string | null
-          readiness_score: number | null
-          scope: string
-          started_at: string | null
-          status: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string
-          critical_count?: number
-          evidence_manifest?: Json
-          findings?: Json
-          framework: string
-          id?: string
-          jurisdiction: string
-          major_count?: number
-          minor_count?: number
-          property_id?: string | null
-          readiness_score?: number | null
-          scope: string
-          started_at?: string | null
-          status?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string
-          critical_count?: number
-          evidence_manifest?: Json
-          findings?: Json
-          framework?: string
-          id?: string
-          jurisdiction?: string
-          major_count?: number
-          minor_count?: number
-          property_id?: string | null
-          readiness_score?: number | null
-          scope?: string
-          started_at?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       operations_approvals: {
         Row: {
           action_snapshot: Json
@@ -2483,6 +2221,24 @@ export type Database = {
           unsubscribed_at?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      operations_runtime_secrets: {
+        Row: {
+          name: string
+          rotated_at: string
+          secret_sha256: string
+        }
+        Insert: {
+          name: string
+          rotated_at?: string
+          secret_sha256: string
+        }
+        Update: {
+          name?: string
+          rotated_at?: string
+          secret_sha256?: string
         }
         Relationships: []
       }
@@ -3265,7 +3021,6 @@ export type Database = {
           notice_type: string
           response_deadline_at: string | null
           source_validated: boolean
-          specific_reasons: string | null
           status: string
           template_key: string | null
           updated_at: string
@@ -3287,7 +3042,6 @@ export type Database = {
           notice_type: string
           response_deadline_at?: string | null
           source_validated?: boolean
-          specific_reasons?: string | null
           status?: string
           template_key?: string | null
           updated_at?: string
@@ -3309,7 +3063,6 @@ export type Database = {
           notice_type?: string
           response_deadline_at?: string | null
           source_validated?: boolean
-          specific_reasons?: string | null
           status?: string
           template_key?: string | null
           updated_at?: string
@@ -3563,48 +3316,66 @@ export type Database = {
         Row: {
           corrected_at: string | null
           correction_due_at: string | null
+          correction_timeframe_hours: number | null
           correction_verified: boolean
           created_at: string
           deficiency_reference: string | null
           evidence_reference: string | null
           failed: boolean
+          hcv_pass_fail: string | null
           id: string
           inspectable_area: string
           inspection_id: string
+          mitigation_recorded_at: string | null
           notes: string | null
+          nspire_standard_id: string | null
+          permanent_repair_due_at: string | null
           severity: string | null
+          source_snapshot: Json
           standard_name: string
           updated_at: string
         }
         Insert: {
           corrected_at?: string | null
           correction_due_at?: string | null
+          correction_timeframe_hours?: number | null
           correction_verified?: boolean
           created_at?: string
           deficiency_reference?: string | null
           evidence_reference?: string | null
           failed?: boolean
+          hcv_pass_fail?: string | null
           id?: string
           inspectable_area: string
           inspection_id: string
+          mitigation_recorded_at?: string | null
           notes?: string | null
+          nspire_standard_id?: string | null
+          permanent_repair_due_at?: string | null
           severity?: string | null
+          source_snapshot?: Json
           standard_name: string
           updated_at?: string
         }
         Update: {
           corrected_at?: string | null
           correction_due_at?: string | null
+          correction_timeframe_hours?: number | null
           correction_verified?: boolean
           created_at?: string
           deficiency_reference?: string | null
           evidence_reference?: string | null
           failed?: boolean
+          hcv_pass_fail?: string | null
           id?: string
           inspectable_area?: string
           inspection_id?: string
+          mitigation_recorded_at?: string | null
           notes?: string | null
+          nspire_standard_id?: string | null
+          permanent_repair_due_at?: string | null
           severity?: string | null
+          source_snapshot?: Json
           standard_name?: string
           updated_at?: string
         }
@@ -3614,6 +3385,13 @@ export type Database = {
             columns: ["inspection_id"]
             isOneToOne: false
             referencedRelation: "pha_inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pha_inspection_deficiencies_nspire_standard_id_fkey"
+            columns: ["nspire_standard_id"]
+            isOneToOne: false
+            referencedRelation: "pha_nspire_deficiency_standards"
             referencedColumns: ["id"]
           },
         ]
@@ -4104,7 +3882,15 @@ export type Database = {
           standard_name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pha_nspire_deficiency_standards_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "pha_nspire_standard_releases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pha_nspire_release_attestations: {
         Row: {
@@ -4952,18 +4738,13 @@ export type Database = {
           created_at: string
           family_action_id: string
           grievance_procedure_included: boolean
-          grievance_procedure_version: string | null
           id: string
-          lease_document_reference: string | null
           lease_end: string | null
-          lease_provisions_snapshot: Json
           lease_start: string
-          pha_signed_at: string | null
           required_lease_provisions_confirmed: boolean
           signature_complete: boolean
           source_snapshot: Json
           status: string
-          tenant_signed_at: string | null
           unit_offer_id: string | null
           unit_reference: string
           updated_at: string
@@ -4974,18 +4755,13 @@ export type Database = {
           created_at?: string
           family_action_id: string
           grievance_procedure_included?: boolean
-          grievance_procedure_version?: string | null
           id?: string
-          lease_document_reference?: string | null
           lease_end?: string | null
-          lease_provisions_snapshot?: Json
           lease_start: string
-          pha_signed_at?: string | null
           required_lease_provisions_confirmed?: boolean
           signature_complete?: boolean
           source_snapshot?: Json
           status?: string
-          tenant_signed_at?: string | null
           unit_offer_id?: string | null
           unit_reference: string
           updated_at?: string
@@ -4996,18 +4772,13 @@ export type Database = {
           created_at?: string
           family_action_id?: string
           grievance_procedure_included?: boolean
-          grievance_procedure_version?: string | null
           id?: string
-          lease_document_reference?: string | null
           lease_end?: string | null
-          lease_provisions_snapshot?: Json
           lease_start?: string
-          pha_signed_at?: string | null
           required_lease_provisions_confirmed?: boolean
           signature_complete?: boolean
           source_snapshot?: Json
           status?: string
-          tenant_signed_at?: string | null
           unit_offer_id?: string | null
           unit_reference?: string
           updated_at?: string
@@ -5307,8 +5078,6 @@ export type Database = {
         Row: {
           accommodation_request_id: string | null
           acop_overlay_id: string
-          adverse_action_ground: string | null
-          adverse_action_notice_id: string | null
           adverse_action_notice_issued_at: string | null
           appropriate_size_confirmed: boolean
           block_reason: string | null
@@ -5320,7 +5089,6 @@ export type Database = {
           grievance_right_included: boolean
           grievance_status: string
           id: string
-          is_adverse_action: boolean
           lease_id: string
           offered_unit_reference: string | null
           requested_at: string
@@ -5334,8 +5102,6 @@ export type Database = {
         Insert: {
           accommodation_request_id?: string | null
           acop_overlay_id: string
-          adverse_action_ground?: string | null
-          adverse_action_notice_id?: string | null
           adverse_action_notice_issued_at?: string | null
           appropriate_size_confirmed?: boolean
           block_reason?: string | null
@@ -5347,7 +5113,6 @@ export type Database = {
           grievance_right_included?: boolean
           grievance_status?: string
           id?: string
-          is_adverse_action?: boolean
           lease_id: string
           offered_unit_reference?: string | null
           requested_at?: string
@@ -5361,8 +5126,6 @@ export type Database = {
         Update: {
           accommodation_request_id?: string | null
           acop_overlay_id?: string
-          adverse_action_ground?: string | null
-          adverse_action_notice_id?: string | null
           adverse_action_notice_issued_at?: string | null
           appropriate_size_confirmed?: boolean
           block_reason?: string | null
@@ -5374,7 +5137,6 @@ export type Database = {
           grievance_right_included?: boolean
           grievance_status?: string
           id?: string
-          is_adverse_action?: boolean
           lease_id?: string
           offered_unit_reference?: string | null
           requested_at?: string
@@ -5398,13 +5160,6 @@ export type Database = {
             columns: ["acop_overlay_id"]
             isOneToOne: false
             referencedRelation: "pha_notice_policy_overlays"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pha_public_housing_transfers_adverse_action_notice_id_fkey"
-            columns: ["adverse_action_notice_id"]
-            isOneToOne: false
-            referencedRelation: "pha_family_notices"
             referencedColumns: ["id"]
           },
           {
@@ -6100,96 +5855,6 @@ export type Database = {
         }
         Relationships: []
       }
-      pms_sync_connections: {
-        Row: {
-          created_at: string
-          credentials_secret_name: string | null
-          cursor: string | null
-          id: string
-          last_error: string | null
-          last_successful_sync_at: string | null
-          provider: string
-          records_failed: number
-          records_imported: number
-          records_reconciled: number
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          credentials_secret_name?: string | null
-          cursor?: string | null
-          id?: string
-          last_error?: string | null
-          last_successful_sync_at?: string | null
-          provider: string
-          records_failed?: number
-          records_imported?: number
-          records_reconciled?: number
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          credentials_secret_name?: string | null
-          cursor?: string | null
-          id?: string
-          last_error?: string | null
-          last_successful_sync_at?: string | null
-          provider?: string
-          records_failed?: number
-          records_imported?: number
-          records_reconciled?: number
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      portfolio_readiness_snapshots: {
-        Row: {
-          at_risk_count: number
-          audit_ready_count: number
-          calculated_at: string
-          critical_findings: number
-          id: string
-          metrics: Json
-          open_corrective_actions: number
-          portfolio_name: string | null
-          property_count: number
-          readiness_score: number
-          user_id: string
-        }
-        Insert: {
-          at_risk_count?: number
-          audit_ready_count?: number
-          calculated_at?: string
-          critical_findings?: number
-          id?: string
-          metrics?: Json
-          open_corrective_actions?: number
-          portfolio_name?: string | null
-          property_count?: number
-          readiness_score?: number
-          user_id: string
-        }
-        Update: {
-          at_risk_count?: number
-          audit_ready_count?: number
-          calculated_at?: string
-          critical_findings?: number
-          id?: string
-          metrics?: Json
-          open_corrective_actions?: number
-          portfolio_name?: string | null
-          property_count?: number
-          readiness_score?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
@@ -6259,61 +5924,23 @@ export type Database = {
         }
         Relationships: []
       }
-      state_rule_pack_candidates: {
-        Row: {
-          agent_verification_required: boolean
-          blocked_source_count: number
-          candidate_manifest: Json
-          compliance_activation_allowed: boolean
-          created_at: string
-          id: string
-          inventory_generated_at: string
-          source_candidate_count: number
-          state_code: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          agent_verification_required?: boolean
-          blocked_source_count?: number
-          candidate_manifest: Json
-          compliance_activation_allowed?: boolean
-          created_at?: string
-          id?: string
-          inventory_generated_at: string
-          source_candidate_count: number
-          state_code: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          agent_verification_required?: boolean
-          blocked_source_count?: number
-          candidate_manifest?: Json
-          compliance_activation_allowed?: boolean
-          created_at?: string
-          id?: string
-          inventory_generated_at?: string
-          source_candidate_count?: number
-          state_code?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       state_rule_pack_releases: {
         Row: {
           approved_at: string | null
           approved_by: string | null
           created_at: string
           effective_from: string
+          external_approval_attested: boolean
+          external_approval_basis: string | null
           id: string
           limitations: string | null
           state_code: string
           status: Database["public"]["Enums"]["coverage_status"]
           updated_at: string
+          validated_commit_sha: string | null
           validated_rule_count: number
           validation_report_id: string | null
+          validation_workflow_run_id: number | null
           version: string
         }
         Insert: {
@@ -6321,13 +5948,17 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           effective_from: string
+          external_approval_attested?: boolean
+          external_approval_basis?: string | null
           id?: string
           limitations?: string | null
           state_code: string
           status?: Database["public"]["Enums"]["coverage_status"]
           updated_at?: string
+          validated_commit_sha?: string | null
           validated_rule_count?: number
           validation_report_id?: string | null
+          validation_workflow_run_id?: number | null
           version: string
         }
         Update: {
@@ -6335,178 +5966,20 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           effective_from?: string
+          external_approval_attested?: boolean
+          external_approval_basis?: string | null
           id?: string
           limitations?: string | null
           state_code?: string
           status?: Database["public"]["Enums"]["coverage_status"]
           updated_at?: string
+          validated_commit_sha?: string | null
           validated_rule_count?: number
           validation_report_id?: string | null
+          validation_workflow_run_id?: number | null
           version?: string
         }
         Relationships: []
-      }
-      state_rule_source_candidates: {
-        Row: {
-          agent_verification_status: string
-          authority_name: string
-          candidate_status: string
-          compliance_activation_allowed: boolean
-          created_at: string
-          exact_bytes_captured: boolean
-          id: string
-          inventory_generated_at: string
-          official_domain: string
-          origin_file: string
-          program: string
-          retrieved_at: string | null
-          scope: string
-          source_sha256: string | null
-          source_type: string
-          source_url: string
-          state_code: string
-          updated_at: string
-          verification_evidence: Json
-        }
-        Insert: {
-          agent_verification_status?: string
-          authority_name: string
-          candidate_status: string
-          compliance_activation_allowed?: boolean
-          created_at?: string
-          exact_bytes_captured?: boolean
-          id?: string
-          inventory_generated_at: string
-          official_domain: string
-          origin_file: string
-          program: string
-          retrieved_at?: string | null
-          scope: string
-          source_sha256?: string | null
-          source_type: string
-          source_url: string
-          state_code: string
-          updated_at?: string
-          verification_evidence?: Json
-        }
-        Update: {
-          agent_verification_status?: string
-          authority_name?: string
-          candidate_status?: string
-          compliance_activation_allowed?: boolean
-          created_at?: string
-          exact_bytes_captured?: boolean
-          id?: string
-          inventory_generated_at?: string
-          official_domain?: string
-          origin_file?: string
-          program?: string
-          retrieved_at?: string | null
-          scope?: string
-          source_sha256?: string | null
-          source_type?: string
-          source_url?: string
-          state_code?: string
-          updated_at?: string
-          verification_evidence?: Json
-        }
-        Relationships: [
-          {
-            foreignKeyName: "state_rule_source_candidates_state_code_inventory_generate_fkey"
-            columns: ["state_code", "inventory_generated_at"]
-            isOneToOne: false
-            referencedRelation: "state_rule_pack_candidates"
-            referencedColumns: ["state_code", "inventory_generated_at"]
-          },
-        ]
-      }
-      state_rule_source_creation_events: {
-        Row: {
-          created_at: string
-          creator_id: string
-          evidence: Json
-          id: string
-          source_candidate_id: string
-          source_type: string
-          source_url: string
-          state_code: string
-        }
-        Insert: {
-          created_at?: string
-          creator_id: string
-          evidence?: Json
-          id?: string
-          source_candidate_id: string
-          source_type: string
-          source_url: string
-          state_code: string
-        }
-        Update: {
-          created_at?: string
-          creator_id?: string
-          evidence?: Json
-          id?: string
-          source_candidate_id?: string
-          source_type?: string
-          source_url?: string
-          state_code?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "state_rule_source_creation_events_source_candidate_id_fkey"
-            columns: ["source_candidate_id"]
-            isOneToOne: false
-            referencedRelation: "state_rule_source_candidates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      state_rule_source_verification_events: {
-        Row: {
-          created_at: string
-          decision: string
-          evidence: Json
-          id: string
-          notes: string
-          prior_status: string
-          retrieved_at: string | null
-          reviewer_id: string
-          source_candidate_id: string
-          source_sha256: string | null
-        }
-        Insert: {
-          created_at?: string
-          decision: string
-          evidence?: Json
-          id?: string
-          notes: string
-          prior_status: string
-          retrieved_at?: string | null
-          reviewer_id: string
-          source_candidate_id: string
-          source_sha256?: string | null
-        }
-        Update: {
-          created_at?: string
-          decision?: string
-          evidence?: Json
-          id?: string
-          notes?: string
-          prior_status?: string
-          retrieved_at?: string | null
-          reviewer_id?: string
-          source_candidate_id?: string
-          source_sha256?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "state_rule_source_verification_events_source_candidate_id_fkey"
-            columns: ["source_candidate_id"]
-            isOneToOne: false
-            referencedRelation: "state_rule_source_candidates"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       state_rule_sources: {
         Row: {
@@ -6880,23 +6353,13 @@ export type Database = {
         Args: { target_family_action_id: string }
         Returns: Json
       }
-      claim_certivoiq_founder_admin: { Args: never; Returns: Json }
       claim_crm_staff_invitation: { Args: never; Returns: Json }
-      create_state_rule_source_candidate: {
-        Args: {
-          p_authority_name: string
-          p_candidate_status?: string
-          p_official_domain: string
-          p_program: string
-          p_scope: string
-          p_source_type: string
-          p_source_url: string
-          p_state_code: string
-        }
-        Returns: Json
-      }
       crm_staff_can_manage: { Args: { _user_id: string }; Returns: boolean }
       crm_staff_is_admin: { Args: { _user_id: string }; Returns: boolean }
+      crm_verified_sale_trigger_reason: {
+        Args: { p_contract_verified_at: string; p_payment_verified_at: string }
+        Returns: string
+      }
       current_pha_workspace_user_id: { Args: never; Returns: string }
       derive_workspace_overlays: {
         Args: { pha_programs?: string[]; programs: string[] }
@@ -7012,6 +6475,11 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      operations_github_tick: { Args: { _secret: string }; Returns: Json }
+      operations_github_tick_v2: {
+        Args: { worker_secret: string }
+        Returns: Json
+      }
       operations_heartbeat: {
         Args: { _job_id: string; _lease_seconds?: number; _worker: string }
         Returns: boolean
@@ -7040,6 +6508,20 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      operations_stage_source_version_v1: {
+        Args: {
+          authority_name: string
+          jurisdiction_code?: string
+          program_code?: string
+          source_effective_date?: string
+          source_evidence_manifest?: Json
+          source_retrieved_at?: string
+          source_sha256?: string
+          source_url: string
+          worker_secret: string
+        }
+        Returns: string
       }
       pha_family_access: {
         Args: { target_family_action_id: string; write_access?: boolean }
@@ -7085,18 +6567,6 @@ export type Database = {
       refresh_pha_nspire_release_counts: {
         Args: { target_release_id: string }
         Returns: undefined
-      }
-      review_state_rule_source_candidate: {
-        Args: {
-          p_candidate_id: string
-          p_decision: string
-          p_effective_date?: string
-          p_notes?: string
-          p_retrieved_at?: string
-          p_source_sha256?: string
-          p_supersession_notes?: string
-        }
-        Returns: Json
       }
       select_next_pha_waiting_list_applicant: {
         Args: { target_waiting_list_id: string }

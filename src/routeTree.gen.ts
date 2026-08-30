@@ -16,6 +16,7 @@ import { Route as ContactSupportRouteImport } from './routes/contact-support'
 import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as DemoDashboardRouteImport } from './routes/demo-dashboard'
 import { Route as FindingsRouteImport } from './routes/findings'
+import { Route as FounderSetupRouteImport } from './routes/founder-setup'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -26,6 +27,7 @@ import { Route as SecurityRouteImport } from './routes/security'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as AuthenticatedAuditReadinessRouteImport } from './routes/_authenticated/audit-readiness'
 import { Route as AuthenticatedAuditSimulatorRouteImport } from './routes/_authenticated/audit-simulator'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedComplianceIntelligenceRouteImport } from './routes/_authenticated/compliance-intelligence'
@@ -61,6 +63,7 @@ import { Route as AuthenticatedPhaUsersRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPhaWaitingListsRouteImport } from './routes/_authenticated/pha-waiting-lists'
 import { Route as AuthenticatedPmsHubRouteImport } from './routes/_authenticated/pms-hub'
 import { Route as AuthenticatedPortfolioComplianceRouteImport } from './routes/_authenticated/portfolio-compliance'
+import { Route as AuthenticatedStateRuleValidationRouteImport } from './routes/_authenticated/state-rule-validation'
 import { Route as AuthenticatedSubmissionCenterRouteImport } from './routes/_authenticated/submission-center'
 import { Route as AuthenticatedSupportiqRouteImport } from './routes/_authenticated/supportiq'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
@@ -118,6 +121,11 @@ const FindingsRoute = FindingsRouteImport.update({
   path: '/findings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FounderSetupRoute = FounderSetupRouteImport.update({
+  id: '/founder-setup',
+  path: '/founder-setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LaunchpadRoute = LaunchpadRouteImport.update({
   id: '/launchpad',
   path: '/launchpad',
@@ -168,6 +176,12 @@ const WelcomeRoute = WelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAuditReadinessRoute =
+  AuthenticatedAuditReadinessRouteImport.update({
+    id: '/audit-readiness',
+    path: '/audit-readiness',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAuditSimulatorRoute =
   AuthenticatedAuditSimulatorRouteImport.update({
     id: '/audit-simulator',
@@ -366,6 +380,12 @@ const AuthenticatedPortfolioComplianceRoute =
     path: '/portfolio-compliance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStateRuleValidationRoute =
+  AuthenticatedStateRuleValidationRouteImport.update({
+    id: '/state-rule-validation',
+    path: '/state-rule-validation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSubmissionCenterRoute =
   AuthenticatedSubmissionCenterRouteImport.update({
     id: '/submission-center',
@@ -494,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/copilot': typeof CopilotRoute
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
+  '/founder-setup': typeof FounderSetupRoute
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
@@ -504,6 +525,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/audit-readiness': typeof AuthenticatedAuditReadinessRoute
   '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
@@ -539,6 +561,7 @@ export interface FileRoutesByFullPath {
   '/pha-waiting-lists': typeof AuthenticatedPhaWaitingListsRoute
   '/pms-hub': typeof AuthenticatedPmsHubRoute
   '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
+  '/state-rule-validation': typeof AuthenticatedStateRuleValidationRoute
   '/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/supportiq': typeof AuthenticatedSupportiqRoute
   '/tasks': typeof AuthenticatedTasksRoute
@@ -569,6 +592,7 @@ export interface FileRoutesByTo {
   '/copilot': typeof CopilotRoute
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
+  '/founder-setup': typeof FounderSetupRoute
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
@@ -579,6 +603,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/audit-readiness': typeof AuthenticatedAuditReadinessRoute
   '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
@@ -614,6 +639,7 @@ export interface FileRoutesByTo {
   '/pha-waiting-lists': typeof AuthenticatedPhaWaitingListsRoute
   '/pms-hub': typeof AuthenticatedPmsHubRoute
   '/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
+  '/state-rule-validation': typeof AuthenticatedStateRuleValidationRoute
   '/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/supportiq': typeof AuthenticatedSupportiqRoute
   '/tasks': typeof AuthenticatedTasksRoute
@@ -646,6 +672,7 @@ export interface FileRoutesById {
   '/copilot': typeof CopilotRoute
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
+  '/founder-setup': typeof FounderSetupRoute
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
@@ -656,6 +683,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
   '/welcome': typeof WelcomeRoute
+  '/_authenticated/audit-readiness': typeof AuthenticatedAuditReadinessRoute
   '/_authenticated/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/compliance-intelligence': typeof AuthenticatedComplianceIntelligenceRoute
@@ -691,6 +719,7 @@ export interface FileRoutesById {
   '/_authenticated/pha-waiting-lists': typeof AuthenticatedPhaWaitingListsRoute
   '/_authenticated/pms-hub': typeof AuthenticatedPmsHubRoute
   '/_authenticated/portfolio-compliance': typeof AuthenticatedPortfolioComplianceRoute
+  '/_authenticated/state-rule-validation': typeof AuthenticatedStateRuleValidationRoute
   '/_authenticated/submission-center': typeof AuthenticatedSubmissionCenterRoute
   '/_authenticated/supportiq': typeof AuthenticatedSupportiqRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
@@ -723,6 +752,7 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/demo-dashboard'
     | '/findings'
+    | '/founder-setup'
     | '/launchpad'
     | '/methodology'
     | '/pricing'
@@ -733,6 +763,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trial'
     | '/welcome'
+    | '/audit-readiness'
     | '/audit-simulator'
     | '/billing'
     | '/compliance-intelligence'
@@ -768,6 +799,7 @@ export interface FileRouteTypes {
     | '/pha-waiting-lists'
     | '/pms-hub'
     | '/portfolio-compliance'
+    | '/state-rule-validation'
     | '/submission-center'
     | '/supportiq'
     | '/tasks'
@@ -798,6 +830,7 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/demo-dashboard'
     | '/findings'
+    | '/founder-setup'
     | '/launchpad'
     | '/methodology'
     | '/pricing'
@@ -808,6 +841,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trial'
     | '/welcome'
+    | '/audit-readiness'
     | '/audit-simulator'
     | '/billing'
     | '/compliance-intelligence'
@@ -843,6 +877,7 @@ export interface FileRouteTypes {
     | '/pha-waiting-lists'
     | '/pms-hub'
     | '/portfolio-compliance'
+    | '/state-rule-validation'
     | '/submission-center'
     | '/supportiq'
     | '/tasks'
@@ -874,6 +909,7 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/demo-dashboard'
     | '/findings'
+    | '/founder-setup'
     | '/launchpad'
     | '/methodology'
     | '/pricing'
@@ -884,6 +920,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trial'
     | '/welcome'
+    | '/_authenticated/audit-readiness'
     | '/_authenticated/audit-simulator'
     | '/_authenticated/billing'
     | '/_authenticated/compliance-intelligence'
@@ -919,6 +956,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pha-waiting-lists'
     | '/_authenticated/pms-hub'
     | '/_authenticated/portfolio-compliance'
+    | '/_authenticated/state-rule-validation'
     | '/_authenticated/submission-center'
     | '/_authenticated/supportiq'
     | '/_authenticated/tasks'
@@ -951,6 +989,7 @@ export interface RootRouteChildren {
   CopilotRoute: typeof CopilotRoute
   DemoDashboardRoute: typeof DemoDashboardRoute
   FindingsRoute: typeof FindingsRoute
+  FounderSetupRoute: typeof FounderSetupRoute
   LaunchpadRoute: typeof LaunchpadRoute
   MethodologyRoute: typeof MethodologyRoute
   PricingRoute: typeof PricingRoute
@@ -1029,6 +1068,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FindingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/founder-setup': {
+      id: '/founder-setup'
+      path: '/founder-setup'
+      fullPath: '/founder-setup'
+      preLoaderRoute: typeof FounderSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/launchpad': {
       id: '/launchpad'
       path: '/launchpad'
@@ -1098,6 +1144,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/audit-readiness': {
+      id: '/_authenticated/audit-readiness'
+      path: '/audit-readiness'
+      fullPath: '/audit-readiness'
+      preLoaderRoute: typeof AuthenticatedAuditReadinessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/audit-simulator': {
       id: '/_authenticated/audit-simulator'
@@ -1344,6 +1397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortfolioComplianceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/state-rule-validation': {
+      id: '/_authenticated/state-rule-validation'
+      path: '/state-rule-validation'
+      fullPath: '/state-rule-validation'
+      preLoaderRoute: typeof AuthenticatedStateRuleValidationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/submission-center': {
       id: '/_authenticated/submission-center'
       path: '/submission-center'
@@ -1516,6 +1576,7 @@ const AuthenticatedCrmRouteWithChildren =
   AuthenticatedCrmRoute._addFileChildren(AuthenticatedCrmRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAuditReadinessRoute: typeof AuthenticatedAuditReadinessRoute
   AuthenticatedAuditSimulatorRoute: typeof AuthenticatedAuditSimulatorRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedComplianceIntelligenceRoute: typeof AuthenticatedComplianceIntelligenceRoute
@@ -1551,6 +1612,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPhaWaitingListsRoute: typeof AuthenticatedPhaWaitingListsRoute
   AuthenticatedPmsHubRoute: typeof AuthenticatedPmsHubRoute
   AuthenticatedPortfolioComplianceRoute: typeof AuthenticatedPortfolioComplianceRoute
+  AuthenticatedStateRuleValidationRoute: typeof AuthenticatedStateRuleValidationRoute
   AuthenticatedSubmissionCenterRoute: typeof AuthenticatedSubmissionCenterRoute
   AuthenticatedSupportiqRoute: typeof AuthenticatedSupportiqRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
@@ -1559,6 +1621,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAuditReadinessRoute: AuthenticatedAuditReadinessRoute,
   AuthenticatedAuditSimulatorRoute: AuthenticatedAuditSimulatorRoute,
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedComplianceIntelligenceRoute:
@@ -1599,6 +1662,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPhaWaitingListsRoute: AuthenticatedPhaWaitingListsRoute,
   AuthenticatedPmsHubRoute: AuthenticatedPmsHubRoute,
   AuthenticatedPortfolioComplianceRoute: AuthenticatedPortfolioComplianceRoute,
+  AuthenticatedStateRuleValidationRoute: AuthenticatedStateRuleValidationRoute,
   AuthenticatedSubmissionCenterRoute: AuthenticatedSubmissionCenterRoute,
   AuthenticatedSupportiqRoute: AuthenticatedSupportiqRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
@@ -1617,6 +1681,7 @@ const rootRouteChildren: RootRouteChildren = {
   CopilotRoute: CopilotRoute,
   DemoDashboardRoute: DemoDashboardRoute,
   FindingsRoute: FindingsRoute,
+  FounderSetupRoute: FounderSetupRoute,
   LaunchpadRoute: LaunchpadRoute,
   MethodologyRoute: MethodologyRoute,
   PricingRoute: PricingRoute,
