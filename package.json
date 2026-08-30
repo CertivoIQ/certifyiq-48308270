@@ -64,7 +64,8 @@
     "test:billing": "bun test ./scripts/test-license-selection.ts",
     "test:state-source-first-wave": "node --test scripts/test-first-wave-state-pack-source-intake.mjs",
     "test:assurance": "node --test scripts/test-compliance-assurance-control-plane.mjs",
-    "test:assurance-schema": "node --test scripts/test-compliance-assurance-schema.mjs"
+    "test:assurance-schema": "node --test scripts/test-compliance-assurance-schema.mjs",
+    "test:state-guides": "node --test scripts/test-state-compliance-rule-guide-registry.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.23",
