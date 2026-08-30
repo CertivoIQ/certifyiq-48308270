@@ -135,22 +135,22 @@ function CrmStaffAccessPage() {
       if (!isCrmAdmin) throw new Error("Administrator access is required to assign a PHA role.");
       if (!input.workspaceUserId) throw new Error("Select the PHA workspace this user will access.");
 
-      // The existing PHA invitation lifecycle supplies the authoritative membership,
-      // email binding, expiration, audit trail, and acceptance controls.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const client = supabase as any;
-      const { data, error } = await client
-        .from("pha_workspace_invitations")
-        .insert({
-          workspace_user_id: input.workspaceUserId,
-          invite_email: input.email,
-          agency_role: input.role,
-        })
-        .select("id")
-        .single();
-      if (error || !data?.id) throw error ?? new Error("PHA invitation record was not created.");
-      await sendPhaWorkspaceInvitationEmail({ data: { invitationId: data.id, accessToken: token } });
-      return { status: "sent" as const, invitationId: data.id as string };
+      // The protected Edge Function validates administrator authority, the PHA role,
+      // and the selected tenant before creating the email-bound invitation.
+      const created = await manageCrmStaffAccess({
+        data: {
+          action: "invitePha",
+          email: input.email,
+          agencyRole: input.role,
+          workspaceUserId: input.workspaceUserId,
+          accessToken: token,
+        },
+      });
+      if (!created.invitationId) throw new Error("PHA invitation record was not created.");
+      await sendPhaWorkspaceInvitationEmail({
+        data: { invitationId: created.invitationId, accessToken: token },
+      });
+      return { status: "sent" as const, invitationId: created.invitationId };
     },
     onSuccess: async (result) => {
       toast.success(
@@ -211,7 +211,7 @@ function CrmStaffAccessPage() {
                   Staff Access
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm text-emerald-100/80">
-                  Invite CertivoIQ employees, assign CRM authority, track acceptance, and deactivate access without removing historical evidence.
+                  Invite users, assign internal CRM or PHA authority, track acceptance, and preserve access evidence.
                 </p>
               </div>
               <Pill tone="seal">{isCrmAdmin ? "Administrator" : "Manager"}</Pill>
@@ -226,7 +226,7 @@ function CrmStaffAccessPage() {
 
           <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(340px,0.7fr)_minmax(0,1.3fr)]">
             <Panel
-              title="Invite a CertivoIQ employee or beta tester"
+              title="Invite a CertivoIQ user or beta tester"
               description="Beta email policy: verified @certivoiq.com, Gmail, Outlook, Hotmail, and Live addresses may be invited. External domains will be removed before launch."
             >
               <form
@@ -242,7 +242,7 @@ function CrmStaffAccessPage() {
                 }}
               >
                 <label className="block text-xs font-medium">
-                  Employee email
+                  Email address
                   <input
                     type="email"
                     required
