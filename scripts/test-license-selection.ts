@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { normalizeLicenseSelection } from "../src/lib/license-selection";
-import { LICENSES } from "../src/lib/plan-catalog";
+import { COMMERCIAL_TERMS, LICENSES } from "../src/lib/plan-catalog";
 import { enterpriseInvoiceActivationException } from "../src/lib/enterprise-licensing.server";
 import type { StripeInvoiceLike } from "../src/lib/stripe-webhook-types";
 
@@ -22,6 +22,20 @@ function paidInvoice(metadata: Record<string, string>, amountCents: number): Str
 describe("authoritative license pricing and jurisdiction selection", () => {
   test("the catalog exposes only the two approved annual licenses", () => {
     expect(Object.keys(LICENSES).sort()).toEqual(["multifamily_enterprise", "pha"]);
+  });
+
+  test("the canonical commercial terms match the approved offer", () => {
+    expect(COMMERCIAL_TERMS).toMatchObject({
+      multifamilyAnnualPerStateUsd: 65_000,
+      phaAnnualUsd: 150_000,
+      merlinMonthlyUsd: 5_000,
+      merlinAnnualUsd: 60_000,
+      merlinAnnualCommitmentMonths: 12,
+      merlinMonthToMonthUsd: 6_000,
+      merlinMonthlyCertificationCapacity: 50_000,
+      merlinOveragePerCertificationUsd: 0.15,
+      implementationOneTimeUsd: 15_000,
+    });
   });
 
   test("multifamily charges $65,000 for every unique selected state", () => {
