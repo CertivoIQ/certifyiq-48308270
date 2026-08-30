@@ -31,7 +31,7 @@ as $$
 begin
   if tg_table_name = 'state_rule_deterministic_rules'
      and tg_op = 'UPDATE'
-     and current_setting('certivo.allow_rule_supersession', true) = 'on'
+     and current_user = 'postgres'
      and old.validation_status = 'VALIDATED'
      and new.validation_status = 'REJECTED'
      and (to_jsonb(old) - 'validation_status') = (to_jsonb(new) - 'validation_status') then
@@ -91,9 +91,7 @@ begin
     'reason',btrim(p_reason),'validator_build',btrim(p_validator_build)
   )::text,'UTF8'),'sha256'),'hex');
 
-  perform set_config('certivo.allow_rule_supersession','on',true);
   update public.state_rule_deterministic_rules set validation_status = 'REJECTED' where id = v_prior.id;
-  perform set_config('certivo.allow_rule_supersession','off',true);
 
   insert into public.state_rule_supersession_events(
     pack_candidate_id,rule_key,prior_rule_id,replacement_rule_id,reason,validator_build,event_sha256
