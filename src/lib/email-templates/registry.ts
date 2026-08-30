@@ -6,6 +6,7 @@ import { template as introColdTemplate } from './intro-cold'
 import { template as supportRequestReceivedTemplate } from './support-request-received'
 import { template as mailMergeTemplate } from './mail-merge'
 import { template as phaWorkspaceInvitationTemplate } from './pha-workspace-invitation'
+import { template as productFeatureSuggestionTemplate } from './product-feature-suggestion'
 
 /** Values a rendered email template may receive (scalars only). */
 export type EmailTemplateData = Record<string, string | number | boolean | null | undefined>
@@ -28,4 +29,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'support-request-received': supportRequestReceivedTemplate,
   'mail-merge': mailMergeTemplate,
   'pha-workspace-invitation': phaWorkspaceInvitationTemplate,
+  'product-feature-suggestion': productFeatureSuggestionTemplate,
 }

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Lightbulb, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { IQText } from "@/components/iq-text";
@@ -104,6 +104,9 @@ export function CrmShell({
             </Button>
             <Button size="sm" variant="ghost" asChild>
               <Link to="/crm-documents">Documents</Link>
+            </Button>
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/feature-suggestions"><Lightbulb className="size-4" /> Suggest Feature</Link>
             </Button>
             <Button size="sm" variant="ghost" asChild>
               <Link to="/crm-support">Support</Link>
