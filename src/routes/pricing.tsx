@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PublicShell } from "@/components/public-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { Check, ShieldCheck } from "lucide-react";
+import { Check, Gift, ShieldCheck } from "lucide-react";
+import { FOUNDERS_PROMOTION, foundersPromotionAvailable } from "@/lib/founders-promotion";
 
 const INCLUDED_CAPABILITIES = [
   "Federal baseline certification review",
@@ -40,12 +41,42 @@ export const Route = createFileRoute("/pricing")({
 });
 
 function PricingPage() {
+  const foundersSpecialAvailable = foundersPromotionAvailable();
+
   return (
     <PublicShell
       title="Platform pricing"
       subtitle="Annual organization licensing with all currently available CertivoIQ features included"
     >
       <div className="mx-auto max-w-5xl">
+        {foundersSpecialAvailable ? (
+          <Panel className="mb-5 border-seal/35 bg-seal-soft" bodyClassName="p-6 md:p-7">
+            <div className="flex flex-wrap items-center justify-between gap-5">
+              <div className="flex max-w-3xl gap-3">
+                <Gift className="mt-0.5 size-6 shrink-0 text-seal" />
+                <div>
+                  <Pill tone="seal">Founder's Special</Pill>
+                  <h2 className="mt-3 font-display text-[24px]">
+                    50% off your first 12 months
+                  </h2>
+                  <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
+                    New customers may apply code{" "}
+                    <strong className="font-mono text-foreground">{FOUNDERS_PROMOTION.code}</strong>{" "}
+                    during checkout through November 30, 2026. The discount applies to the first
+                    annual license term; renewals return to the standard annual price.
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-md border border-seal/30 bg-background px-5 py-3 text-center">
+                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  Coupon code
+                </p>
+                <p className="mt-1 font-mono text-xl font-semibold">{FOUNDERS_PROMOTION.code}</p>
+              </div>
+            </div>
+          </Panel>
+        ) : null}
+
         <div className="grid gap-5 lg:grid-cols-2">
           <Panel className="glow-ring border-primary/40" bodyClassName="p-7 md:p-9">
             <div className="flex flex-wrap items-start justify-between gap-4">
