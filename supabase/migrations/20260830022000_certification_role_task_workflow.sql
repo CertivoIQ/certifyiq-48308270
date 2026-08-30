@@ -440,7 +440,7 @@ begin
   from public.certification_import_items i
   where i.id = _case.certification_item_id;
 
-  _rerun_sha := encode(digest(convert_to(_rerun_snapshot::text,'UTF8'),'sha256'),'hex');
+  _rerun_sha := encode(extensions.digest(convert_to(_rerun_snapshot::text,'UTF8'),'sha256'),'hex');
 
   update public.certification_workflow_cases
   set status = 'awaiting_manager_approval',
@@ -545,7 +545,7 @@ begin
     ),'[]'::jsonb)
   ) into _snapshot;
 
-  _manifest_sha := encode(digest(convert_to(_snapshot::text,'UTF8'),'sha256'),'hex');
+  _manifest_sha := encode(extensions.digest(convert_to(_snapshot::text,'UTF8'),'sha256'),'hex');
 
   insert into public.evidence_manifests(
     review_id,user_id,organization_id,certification_id,outcome,
