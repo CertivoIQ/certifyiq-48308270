@@ -4,6 +4,7 @@ import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 const migration = read("supabase/migrations/20260830103000_controlled_mass_portfolio_tenant_intake.sql");
+const transitionFix = read("supabase/migrations/20260830104500_fix_certification_import_updated_at_columns.sql");
 const parser = read("src/lib/portfolio-intake.ts");
 const intake = read("src/lib/portfolio-intake.functions.ts");
 const intakeUi = read("src/components/portfolio-intake-panel.tsx");
@@ -22,6 +23,8 @@ test("portfolio, unit, tenant, and document records are tenant isolated", () => 
   assert.match(migration, /revoke all[\s\S]*from anon/);
   assert.match(migration, /review_queue_status text not null default 'not_queued'/);
   assert.match(migration, /upload never queues review automatically/);
+  assert.match(transitionFix, /alter table public\.certification_import_jobs[\s\S]*updated_at/);
+  assert.match(transitionFix, /alter table public\.certification_import_items[\s\S]*updated_at/);
 });
 
 test("CSV intake parses the required portfolio hierarchy and document mapping", () => {
