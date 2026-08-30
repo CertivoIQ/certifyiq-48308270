@@ -274,12 +274,20 @@ grant execute on function public.evaluate_state_deterministic_rule(uuid,jsonb) t
 
 do $$
 declare
-  v_pack constant uuid := 'cac5d285-98ec-4ba9-a195-86c263a78cfd';
-  v_manual constant uuid := 'c7d49b27-0007-4917-bb69-18f45848cc8f';
-  v_utility constant uuid := '148ecc03-0c01-4edc-bb6a-72b1330d956b';
+  v_pack uuid;
+  v_manual uuid;
+  v_utility uuid;
   v_build constant text := 'codex-il-rule-extraction-2026-08-30.2';
   v_result jsonb; v_rule_id uuid; v_prior_id uuid;
 begin
+  select id into strict v_pack from public.state_rule_pack_candidates
+    where state_code='IL' order by inventory_generated_at desc limit 1;
+  select source_candidate_id into strict v_manual from public.state_rule_release_current_sources(v_pack)
+    where source_url='https://www.ihda.org/wp-content/uploads/2026/06/LIHTC-HOME-Manual-4-2026-FINAL-2.pdf'
+      and source_sha256='b362d2cde02da437aced5af45646fa687f415446d3f6c19cfa0d2193ee086851';
+  select source_candidate_id into strict v_utility from public.state_rule_release_current_sources(v_pack)
+    where source_url='https://www.ihda.org/wp-content/uploads/2025/11/Instructions-for-Rent-Schedule-Utility-Allowance-Request-10-2025.pdf'
+      and source_sha256='258990520bc93e300a8e4ecbb811ccc4c3eab6defdc4b97f7f81f550c2788099';
   select id into v_prior_id from public.state_rule_deterministic_rules
     where pack_candidate_id=v_pack and rule_key='IL-HOME-UA-METHOD' and validation_status='VALIDATED'
     order by created_at desc,id desc limit 1;
@@ -340,25 +348,34 @@ begin
 end;
 $$;
 
-select public.refresh_state_rule_release_work_item('cac5d285-98ec-4ba9-a195-86c263a78cfd'::uuid);
+do $$
+declare v_pack uuid;
+begin
+  select id into strict v_pack from public.state_rule_pack_candidates
+    where state_code='IL' order by inventory_generated_at desc limit 1;
+  perform public.refresh_state_rule_release_work_item(v_pack);
+end;
+$$;
 
 do $$
-declare v_failed integer; v_missing integer; v_active_bad integer;
+declare v_pack uuid; v_failed integer; v_missing integer; v_active_bad integer;
 begin
+  select id into strict v_pack from public.state_rule_pack_candidates
+    where state_code='IL' order by inventory_generated_at desc limit 1;
   with latest_fixture as (
     select distinct on (fixture_key) * from public.state_rule_test_fixtures
-    where pack_candidate_id='cac5d285-98ec-4ba9-a195-86c263a78cfd'
+    where pack_candidate_id=v_pack
     order by fixture_key,created_at desc,id desc
   ) select count(*) filter(where not passed)::integer into v_failed from latest_fixture;
   select count(*)::integer into v_missing from public.state_rule_deterministic_rules r
-  where r.pack_candidate_id='cac5d285-98ec-4ba9-a195-86c263a78cfd' and r.validation_status='VALIDATED'
+  where r.pack_candidate_id=v_pack and r.validation_status='VALIDATED'
     and r.rule_key in ('IL-HOME-UA-METHOD','IL-UA-SAMPLE-SIZE-COMPLIANT','IL-UA-OTHER-SAMPLE-SIZE-10PCT-MIN8','IL-SECTION-811-PRA-UA-SUBMIT-120')
     and exists(select 1 from unnest(array['POSITIVE','NEGATIVE','BOUNDARY']) k(kind) where not exists(
       select 1 from public.state_rule_test_fixtures f where f.rule_id=r.id and f.fixture_kind=k.kind and f.passed));
   select count(*)::integer into v_active_bad from public.state_rule_deterministic_rules
   where id in (
     select prior_rule_id from public.state_rule_supersession_events
-    where pack_candidate_id='cac5d285-98ec-4ba9-a195-86c263a78cfd'
+    where pack_candidate_id=v_pack
   ) and validation_status<>'REJECTED';
   if v_failed<>0 or v_missing<>0 or v_active_bad<>0 then
     raise exception 'Illinois extraction migration failed: failed fixtures %, missing core fixtures %, active superseded rules %',v_failed,v_missing,v_active_bad;
