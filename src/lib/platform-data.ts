@@ -198,9 +198,7 @@ export const PLANS = [
   },
 ];
 
-export const ADDONS: { name: string; price: string }[] = [
-  { name: "Merlin compliance intelligence", price: "$5,000/month under a 12-month agreement" },
-];
+export const ADDONS: { name: string; price: string }[] = [];
 
 /** Sales email already used for CertivoIQ outreach — no new address invented. */
 export const SALES_EMAIL = "sales@certivoiq.com";
