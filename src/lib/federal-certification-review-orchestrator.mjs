@@ -13,17 +13,17 @@ import {
   RULE_EVALUATION_STATUS,
   evaluateCertification,
   evaluateLayeredProgramRestrictions,
-  evaluateRecertificationOccupancyControls,
   evaluateTenantFileEligibility,
   normalizeCertificationPrograms,
 } from "./compliance-rule-engine.mjs";
 import { classifyAllMfhHotmaOwnerSystemControls } from "./mfh-hotma-owner-system-engine.mjs";
 import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
 import { classifyAllPhaHotmaImplementationModules } from "./pha-hotma-implementation-engine.mjs";
+import { scanRecertificationComplianceProcedures } from "./compliance-procedure-registry.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
-  "federal-review-orchestrator-2026.08.5";
-export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.5";
+  "federal-review-orchestrator-2026.08.6";
+export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.6";
 
 const CONTROL = Object.freeze({
   tenantEligibility: Object.freeze({
@@ -173,12 +173,26 @@ export function evaluateFederalCertificationReview(input = {}) {
     .trim()
     .toUpperCase();
   let recertification = null;
+  let complianceProcedures = null;
   if (["ANNUAL", "INTERIM"].includes(certificationType)) {
-    recertification = evaluateRecertificationOccupancyControls({
-      ...(input.recertificationInput ?? {}),
-      program_inventory:
-        input.recertificationInput?.program_inventory ?? programs,
+    const certificationEventDate = input.facts?.find(
+      (fact) => fact?.field === "certification_effective_date",
+    )?.value;
+    complianceProcedures = scanRecertificationComplianceProcedures({
+      stateCode: input.jurisdiction,
+      statePack: input.statePack,
+      eventDate:
+        input.recertificationInput?.event_date ?? certificationEventDate,
+      procedureInputs: input.complianceProcedureInputs,
+      recertificationInput: {
+        ...(input.recertificationInput ?? {}),
+        event_date:
+          input.recertificationInput?.event_date ?? certificationEventDate,
+        program_inventory:
+          input.recertificationInput?.program_inventory ?? programs,
+      },
     });
+    recertification = complianceProcedures.baseline;
   } else if (certificationType !== "INITIAL") {
     recertification = blockedControl(
       "CERTIFICATION_TYPE_NOT_DECLARED",
@@ -244,6 +258,7 @@ export function evaluateFederalCertificationReview(input = {}) {
       ? [controlFinding(CONTROL.layeredPrograms, layeredPrograms)]
       : []),
     ...mfhOperationalBlockingFindings,
+    ...(complianceProcedures?.findings ?? []),
   ];
   const findings = [...core.findings, ...controlFindings];
 
@@ -258,6 +273,7 @@ export function evaluateFederalCertificationReview(input = {}) {
     controlResults: {
       tenantEligibility,
       recertification,
+      complianceProcedures,
       layeredPrograms,
       mfhHotma,
       mfhHotmaOperations,

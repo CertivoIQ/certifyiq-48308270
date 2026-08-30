@@ -233,3 +233,50 @@ test("MFH reviews promote blocked owner-policy controls into the sign-off decisi
   assert.ok(result.counts.unableToDetermine >= 7);
   assert.equal(signOffAllowed(result), false);
 });
+
+test("annual state reviews execute the separated compliance procedures", () => {
+  const result = evaluateFederalCertificationReview({
+    facts: COMPLETE_NARROW_FACTS,
+    programs: ["LIHTC"],
+    certificationType: "ANNUAL",
+    jurisdiction: "PA",
+    statePack: {
+      id: "pa-lihtc-controlled",
+      code: "PA",
+      status: "validated",
+      approvedBy: "reviewer-2",
+      effectiveFrom: "2026-01-01",
+      version: "2026.1",
+      validatedRuleCount: 4,
+    },
+    recertificationInput: { event_date: "2026-08-01" },
+    complianceProcedureInputs: {
+      "STATE-PA-ANNUAL-RECERTIFICATION-FILE": {
+        tenant_income_certification_present: true,
+        income_verification_present: true,
+        asset_verification_present: true,
+        student_status_reviewed: true,
+      },
+    },
+  });
+
+  assert.equal(result.controlResults.complianceProcedures.stateCode, "PA");
+  assert.equal(
+    result.controlResults.complianceProcedures.selectedProcedureCount,
+    4,
+  );
+  assert.equal(
+    result.findings.find(
+      (finding) =>
+        finding.procedureId === "STATE-PA-ANNUAL-RECERTIFICATION-FILE",
+    ).status,
+    "PASS",
+  );
+  assert.equal(
+    result.findings.find(
+      (finding) => finding.procedureId === "STATE-PA-GROSS-RENT",
+    ).status,
+    "UNABLE_TO_DETERMINE",
+  );
+  assert.equal(signOffAllowed(result), false);
+});

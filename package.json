@@ -13,6 +13,7 @@
     "test:layered": "node --test scripts/test-layered-program-restrictions.mjs",
     "test:tenant": "node --test scripts/test-tenant-file-eligibility.mjs",
     "test:recert": "node --test scripts/test-recertification-occupancy-controls.mjs",
+    "test:procedures": "node --test scripts/test-compliance-procedure-registry.mjs",
     "test:limits": "node --test scripts/test-fy2026-income-limit-ingestion.mjs",
     "test:limits-storage": "node --test scripts/test-fy2026-controlled-source-storage.mjs",
     "test:xlsx": "node --test scripts/test-fy2026-xlsx-workbook-parser.mjs",
