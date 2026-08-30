@@ -9,6 +9,7 @@ import {
   recordFindingDecision,
   runCertificationReview,
 } from '@/utils/certification-review.functions';
+import { markCertificationReviewFailed, queueCertificationReviews } from '@/lib/portfolio-intake.functions';
 import { useAccount } from '@/hooks/use-account';
 
 /**
@@ -28,7 +29,8 @@ type EvidenceRef = { field?: string; documentRef?: string | null; page?: number 
 export function CertificationReviewPanel() {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [jurisdiction, setJurisdiction] = useState('US');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [jurisdiction, setJurisdiction] = useState('');
   const [certificationType, setCertificationType] = useState<
     '' | 'INITIAL' | 'ANNUAL' | 'INTERIM'
   >('');
@@ -38,6 +40,8 @@ export function CertificationReviewPanel() {
   const listItems = useServerFn(listCertificationItems);
   const getReview = useServerFn(getCertificationReview);
   const runReview = useServerFn(runCertificationReview);
+  const queueReviews = useServerFn(queueCertificationReviews);
+  const markReviewFailed = useServerFn(markCertificationReviewFailed);
   const recordDecision = useServerFn(recordFindingDecision);
 
   const items = useQuery({ queryKey: ['certification-items'], queryFn: () => listItems() });
@@ -49,25 +53,37 @@ export function CertificationReviewPanel() {
     queryFn: () => getReview({ data: { itemId: activeId! } }),
   });
 
-  const run = useMutation({
-    mutationFn: async (itemId: string) =>
-      runReview({
-        data: {
-          itemId,
-          programs: ['LIHTC'],
-          certificationType: certificationType as 'INITIAL' | 'ANNUAL' | 'INTERIM',
-          ...(jurisdiction === 'US' ? {} : { jurisdiction }),
-          useAi: true,
-        },
-      }),
-    onSuccess: async (result) => {
-      if ('error' in result && result.error) setNotice(result.error);
-      else if ('rulePack' in result && result.rulePack && result.counts) {
-        setNotice(
-          `Reviewed with ${result.rulePack.id}@${result.rulePack.version} · ${result.counts.pass} pass · ${result.counts.fail} fail · ${result.counts.unableToDetermine} undetermined`,
-        );
+  const runQueue = useMutation({
+    mutationFn: async () => {
+      const queued = await queueReviews({ data: { itemIds: [...selectedIds] } });
+      let completed = 0;
+      let failed = 0;
+      for (const item of queued.items) {
+        setSelectedId(item.id);
+        setNotice(`Reviewing ${completed + failed + 1} of ${queued.items.length} in original upload order…`);
+        try {
+          const result = await runReview({
+            data: {
+              itemId: item.id,
+              ...(certificationType ? { certificationType } : {}),
+              ...(jurisdiction ? { jurisdiction } : {}),
+              useAi: true,
+            },
+          });
+          if ('error' in result && result.error) {
+            failed += 1;
+            await markReviewFailed({ data: { itemId: item.id } });
+          } else completed += 1;
+        } catch {
+          failed += 1;
+          await markReviewFailed({ data: { itemId: item.id } });
+        }
       }
-
+      return { completed, failed, total: queued.items.length };
+    },
+    onSuccess: async (result) => {
+      setSelectedIds(new Set());
+      setNotice(`Review queue finished in upload order: ${result.completed} completed${result.failed ? `, ${result.failed} failed` : ''}.`);
       await queryClient.invalidateQueries({ queryKey: ['certification-review'] });
       await queryClient.invalidateQueries({ queryKey: ['certification-items'] });
     },
@@ -130,34 +146,50 @@ export function CertificationReviewPanel() {
             className="w-20 rounded-md border bg-background px-2 py-1 text-sm uppercase"
             value={jurisdiction}
             maxLength={2}
-            onChange={(event) => setJurisdiction(event.target.value.toUpperCase() || 'US')}
+            placeholder="Auto"
+            onChange={(event) => setJurisdiction(event.target.value.toUpperCase())}
           />
           <button
             className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            disabled={!activeId || !certificationType || run.isPending}
-            onClick={() => activeId && run.mutate(activeId)}
+            disabled={selectedIds.size === 0 || runQueue.isPending}
+            onClick={() => runQueue.mutate()}
           >
             <PlayCircle className="h-4 w-4" />
-            {run.isPending ? 'Reviewing…' : 'Run review'}
+            {runQueue.isPending ? 'Reviewing queue…' : `Review selected (${selectedIds.size})`}
           </button>
         </div>
       </div>
 
       {items.data && items.data.length > 0 ? (
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-5 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span>Select tenants or certifications to review. Uploading alone never selects them.</span>
+            <button type="button" className="font-medium text-primary" onClick={() => setSelectedIds(new Set(items.data.map((item) => item.id)))}>Select all visible</button>
+          </div>
           {items.data.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setSelectedId(item.id)}
-              className={`rounded-full border px-3 py-1 text-xs ${item.id === activeId ? 'border-primary bg-primary/10 font-medium' : 'text-muted-foreground'}`}
-            >
-              {item.original_file_name} · {item.status}
-            </button>
+            <div key={item.id} className={`flex flex-wrap items-center gap-3 rounded-lg border p-3 ${item.id === activeId ? 'border-primary bg-primary/5' : ''}`}>
+              <input
+                type="checkbox"
+                aria-label={`Select ${item.original_file_name} for review`}
+                checked={selectedIds.has(item.id)}
+                onChange={(event) => setSelectedIds((current) => {
+                  const next = new Set(current);
+                  if (event.target.checked) next.add(item.id); else next.delete(item.id);
+                  return next;
+                })}
+                className="size-4"
+              />
+              <button type="button" onClick={() => setSelectedId(item.id)} className="min-w-0 flex-1 text-left">
+                <span className="block truncate text-sm font-medium">{item.household_name || item.original_file_name}</span>
+                <span className="block truncate text-xs text-muted-foreground">{item.property_name ? `${item.property_name} · Unit ${item.unit_number}` : item.original_file_name} · {item.certification_type || 'type required'} · {item.jurisdiction || 'jurisdiction required'}</span>
+              </button>
+              <span className="rounded-full border px-2 py-1 text-xs">{item.review_queue_status.replaceAll('_', ' ')}</span>
+            </div>
           ))}
         </div>
       ) : (
         <p className="mt-5 text-sm text-muted-foreground">
-          Upload a certification text or CSV export above to run a live review.
+          Import property, unit, tenant, and certification documents above. You can then choose which records enter review.
         </p>
       )}
 
