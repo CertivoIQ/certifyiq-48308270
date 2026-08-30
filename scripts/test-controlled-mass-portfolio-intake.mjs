@@ -48,13 +48,15 @@ test("mass intake persists profiles and links documents without starting review"
   assert.match(intakeUi, /filenames must match the CSV/);
 });
 
-test("clients explicitly select multiple certifications and server orders them by upload sequence", () => {
+test("clients explicitly select multiple certifications and server preserves global upload chronology", () => {
   assert.match(queueUi, /type="checkbox"/);
   assert.match(queueUi, /Review selected/);
   assert.match(queueUi, /queueReviews/);
   assert.match(queueUi, /for \(const item of queued\.items\)/);
-  assert.match(intake, /upload_sequence \?\? Number\.MAX_SAFE_INTEGER/);
-  assert.match(intake, /Date\.parse\(a\.created_at\) - Date\.parse\(b\.created_at\)/);
+  const createdAtSort = intake.indexOf("Date.parse(a.created_at) - Date.parse(b.created_at)");
+  const sequenceTieBreak = intake.indexOf("a.upload_sequence ?? Number.MAX_SAFE_INTEGER");
+  assert.ok(createdAtSort >= 0 && sequenceTieBreak > createdAtSort, "global upload time must sort before per-batch sequence");
+  assert.match(intake, /review_order: reviewOrderBase \+ index/);
   assert.match(intake, /review_queue_status: "queued"/);
   assert.match(review, /review_queue_status: "processing"/);
   assert.match(review, /review_queue_status: "completed"/);
