@@ -165,3 +165,40 @@ jobs:
         run: bun run lint
       - name: Production build
         run: bun run build
+
+  paid-license-database-rehearsal:
+    name: Paid license database rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_rehearsal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_rehearsal"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_rehearsal
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap Supabase-compatible roles and base tables
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/paid_license_database_integrity.bootstrap.sql
+      - name: Apply paid-license integrity migration
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260831201500_paid_license_database_integrity.sql
+      - name: Run rolled-back paid-license database rehearsal
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/paid_license_database_integrity.test.sql
+
