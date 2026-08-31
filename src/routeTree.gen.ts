@@ -38,6 +38,7 @@ import { Route as AuthenticatedCrmPhaControlsRouteImport } from './routes/_authe
 import { Route as AuthenticatedCrmStaffRouteImport } from './routes/_authenticated/crm-staff'
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedFeatureSuggestionsRouteImport } from './routes/_authenticated/feature-suggestions'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
 import { Route as AuthenticatedPha50058RouteImport } from './routes/_authenticated/pha-50058'
 import { Route as AuthenticatedPhaAccommodationsRouteImport } from './routes/_authenticated/pha-accommodations'
@@ -79,6 +80,7 @@ import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$p
 import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
 import { Route as AuthenticatedCrmOperationsRouteImport } from './routes/_authenticated/crm/operations'
 import { Route as ApiPublicFederalHousingNewsRouteImport } from './routes/api/public/federal-housing-news'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedCrmAccountsAccountIdRouteImport } from './routes/_authenticated/crm.accounts.$accountId'
 import { Route as ApiInternalOperationsTickRouteImport } from './routes/api/internal/operations/tick'
 import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
@@ -236,6 +238,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFeatureSuggestionsRoute =
+  AuthenticatedFeatureSuggestionsRouteImport.update({
+    id: '/feature-suggestions',
+    path: '/feature-suggestions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingKitRoute =
   AuthenticatedMarketingKitRouteImport.update({
     id: '/marketing-kit',
@@ -466,6 +474,11 @@ const ApiPublicFederalHousingNewsRoute =
     path: '/api/public/federal-housing-news',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCrmAccountsAccountIdRoute =
   AuthenticatedCrmAccountsAccountIdRouteImport.update({
     id: '/accounts/$accountId',
@@ -536,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/pha-50058': typeof AuthenticatedPha50058Route
   '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -577,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
@@ -614,6 +629,7 @@ export interface FileRoutesByTo {
   '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/pha-50058': typeof AuthenticatedPha50058Route
   '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -655,6 +671,7 @@ export interface FileRoutesByTo {
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
@@ -694,6 +711,7 @@ export interface FileRoutesById {
   '/_authenticated/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/_authenticated/pha-50058': typeof AuthenticatedPha50058Route
   '/_authenticated/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -735,6 +753,7 @@ export interface FileRoutesById {
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
   '/_authenticated/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
@@ -774,6 +793,7 @@ export interface FileRouteTypes {
     | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
+    | '/feature-suggestions'
     | '/marketing-kit'
     | '/pha-50058'
     | '/pha-accommodations'
@@ -815,6 +835,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/crm/operations'
     | '/api/public/federal-housing-news'
+    | '/api/public/health'
     | '/crm/accounts/$accountId'
     | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
@@ -852,6 +873,7 @@ export interface FileRouteTypes {
     | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
+    | '/feature-suggestions'
     | '/marketing-kit'
     | '/pha-50058'
     | '/pha-accommodations'
@@ -893,6 +915,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/crm/operations'
     | '/api/public/federal-housing-news'
+    | '/api/public/health'
     | '/crm/accounts/$accountId'
     | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
@@ -931,6 +954,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm-staff'
     | '/_authenticated/crm-support'
     | '/_authenticated/dashboard'
+    | '/_authenticated/feature-suggestions'
     | '/_authenticated/marketing-kit'
     | '/_authenticated/pha-50058'
     | '/_authenticated/pha-accommodations'
@@ -972,6 +996,7 @@ export interface FileRouteTypes {
     | '/_authenticated/account/security'
     | '/_authenticated/crm/operations'
     | '/api/public/federal-housing-news'
+    | '/api/public/health'
     | '/_authenticated/crm/accounts/$accountId'
     | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
@@ -1009,6 +1034,7 @@ export interface RootRouteChildren {
   PhaIndexRoute: typeof PhaIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
   ApiPublicFederalHousingNewsRoute: typeof ApiPublicFederalHousingNewsRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiInternalOperationsTickRoute: typeof ApiInternalOperationsTickRoute
   ApiPublicCrmSupportEmailRoute: typeof ApiPublicCrmSupportEmailRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1220,6 +1246,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/feature-suggestions': {
+      id: '/_authenticated/feature-suggestions'
+      path: '/feature-suggestions'
+      fullPath: '/feature-suggestions'
+      preLoaderRoute: typeof AuthenticatedFeatureSuggestionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing-kit': {
@@ -1509,6 +1542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFederalHousingNewsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/crm/accounts/$accountId': {
       id: '/_authenticated/crm/accounts/$accountId'
       path: '/accounts/$accountId'
@@ -1587,6 +1627,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCrmStaffRoute: typeof AuthenticatedCrmStaffRoute
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFeatureSuggestionsRoute: typeof AuthenticatedFeatureSuggestionsRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
   AuthenticatedPha50058Route: typeof AuthenticatedPha50058Route
   AuthenticatedPhaAccommodationsRoute: typeof AuthenticatedPhaAccommodationsRoute
@@ -1633,6 +1674,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCrmStaffRoute: AuthenticatedCrmStaffRoute,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFeatureSuggestionsRoute: AuthenticatedFeatureSuggestionsRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
   AuthenticatedPha50058Route: AuthenticatedPha50058Route,
   AuthenticatedPhaAccommodationsRoute: AuthenticatedPhaAccommodationsRoute,
@@ -1701,6 +1743,7 @@ const rootRouteChildren: RootRouteChildren = {
   PhaIndexRoute: PhaIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
   ApiPublicFederalHousingNewsRoute: ApiPublicFederalHousingNewsRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiInternalOperationsTickRoute: ApiInternalOperationsTickRoute,
   ApiPublicCrmSupportEmailRoute: ApiPublicCrmSupportEmailRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
