@@ -6,6 +6,10 @@ const migration = readFileSync(
   "supabase/migrations/20260831201500_paid_license_database_integrity.sql",
   "utf8",
 );
+const rehearsal = readFileSync(
+  "supabase/tests/paid_license_database_integrity.test.sql",
+  "utf8",
+);
 
 test("paid-license migration defines an authoritative organization source of truth", () => {
   assert.match(migration, /create table if not exists public\.enterprise_licenses/i);
@@ -42,5 +46,17 @@ test("migration has bounded locking and validation controls", () => {
   assert.match(migration, /set statement_timeout = '60s'/i);
   assert.match(migration, /not valid/i);
   assert.match(migration, /validate constraint/i);
+});
+
+test("isolated-branch rehearsal covers rollback, constraints, RLS, and reconciliation", () => {
+  assert.match(rehearsal, /^begin;/im);
+  assert.match(rehearsal, /^rollback;/im);
+  assert.match(rehearsal, /invalid state code was accepted/i);
+  assert.match(rehearsal, /duplicate state code was accepted/i);
+  assert.match(rehearsal, /incorrect multifamily price was accepted/i);
+  assert.match(rehearsal, /active null license kind was accepted/i);
+  assert.match(rehearsal, /tenant 1 must not see tenant 2 license/i);
+  assert.match(rehearsal, /service-only reconciliation view/i);
+  assert.match(rehearsal, /bool_and\(entitlement_matches\)/i);
 });
 
