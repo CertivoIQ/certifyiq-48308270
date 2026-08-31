@@ -308,7 +308,7 @@ test("PHA navigation exposes the verified NSPIRE dashboard menu", () => {
   const workspace = read("src/components/pha-inspections-workspace.tsx");
   const standardsRoute = read("src/routes/_authenticated/pha-nspire-standards.tsx");
 
-  assert.match(shell, /to:\s*"\/pha-inspections",\s*label:\s*"NSPIRE Dashboard"/);
+  assert.match(shell, /to:\s*"\/pha-inspections",\s*label:\s*"NSPIRE"/);
   assert.match(workspace, /aria-label="NSPIRE dashboard menu"/);
   assert.match(workspace, />Overview<\/a>/);
   assert.match(workspace, />Transition &amp; Scheduling<\/a>/);
