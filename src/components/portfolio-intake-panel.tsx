@@ -6,7 +6,7 @@ import { Building2, Download, FileSpreadsheet, UploadCloud } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/use-subscription";
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
-import { isPdfFile, prepareCertificationForReview } from "@/lib/pdf-ocr";
+import { isOcrSupportedFile, prepareCertificationForReview } from "@/lib/pdf-ocr";
 import { PORTFOLIO_IMPORT_TEMPLATE, parsePortfolioIntakeCsv } from "@/lib/portfolio-intake";
 import {
   createPortfolioIntake,
@@ -83,7 +83,7 @@ export function PortfolioIntakePanel() {
         const path = `${user.id}/${intake.jobId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
         const { error: uploadError } = await supabase.storage.from("certification-imports").upload(path, file, { upsert: false });
         if (uploadError) throw uploadError;
-        if (isPdfFile(file)) {
+        if (isOcrSupportedFile(file)) {
           const prepared = await prepareCertificationForReview(file, (status) => setMessage(`${file.name}: ${status}`));
           if (prepared.sidecar) {
             const { error: sidecarError } = await supabase.storage.from("certification-imports")

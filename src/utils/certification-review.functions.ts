@@ -53,7 +53,6 @@ export const runCertificationReview = createServerFn({ method: "POST" })
   .inputValidator((data: {
     itemId: string;
     jurisdiction?: string;
-    useAi?: boolean;
     programs?: CertificationProgram[];
     certificationType?: "INITIAL" | "ANNUAL" | "INTERIM";
   }) => {
@@ -165,28 +164,15 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       }
     }
 
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    let result = extraction.extractFactsFromText(
+    // Certification extraction is intentionally local and deterministic. Scanned
+    // documents arrive with a source-bound Tesseract OCR sidecar created in the
+    // customer's browser. Missing evidence remains "unable to determine" and is
+    // routed to human review; no external AI extraction service is called.
+    const result = extraction.extractFactsFromText(
       documentText,
       item.original_file_name,
       ...(ocrDocument ? ([ocrDocument.pageProvenance] as const) : ([] as const)),
     );
-
-    // Fast path: the deterministic extractor is the preferred provider and the
-    // compliance engine is deterministic. Only pay the latency cost of the AI
-    // extraction fallback when required evidence is actually missing. This keeps
-    // complete machine-readable certifications on the fast path while preserving
-    // AI-assisted recovery for documents whose labels/layouts need it.
-    if (data.useAi && apiKey && !ocrDocument && result.missingFields.length > 0) {
-      try {
-        const aiResult = await extraction.extractFactsWithAi(documentText, item.original_file_name, apiKey);
-        // Keep whichever provider produced more evidence-backed facts.
-        if (aiResult.facts.length > result.facts.length) result = aiResult;
-      } catch {
-        // Extraction stays deterministic when the gateway is unavailable.
-      }
-    }
-
 
     await supabaseAdmin.from("certification_facts").delete().eq("item_id", item.id);
     if (result.facts.length) {

@@ -67,7 +67,6 @@ export function CertificationReviewPanel() {
               itemId: item.id,
               ...(certificationType ? { certificationType } : {}),
               ...(jurisdiction ? { jurisdiction } : {}),
-              useAi: true,
             },
           });
           if ('error' in result && result.error) {
