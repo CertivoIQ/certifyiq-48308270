@@ -52,7 +52,7 @@ const PHA_NAV = [
   { to: "/pha-accommodations", label: "Reasonable Accommodations", icon: ShieldCheck, key: "accommodations" },
   { to: "/pha-notices", label: "Family Notices", icon: MailCheck, key: "family_write" },
   { to: "/pha-50058", label: "HUD-50058 Queue", icon: ClipboardList, key: "family_read" },
-  { to: "/pha-inspections", label: "NSPIRE Dashboard", icon: ClipboardCheck, key: "inspections" },
+  { to: "/pha-inspections", label: "NSPIRE", icon: ClipboardCheck, key: "inspections" },
   { to: "/pha-hotma", label: "HOTMA Readiness", icon: ShieldCheck, key: "compliance" },
   { to: "/pha-policies", label: "Policies & Notice Controls", icon: Scale, key: "compliance" },
   { to: "/pha-source-library", label: "Source Library & Forms", icon: Library, key: "compliance" },
