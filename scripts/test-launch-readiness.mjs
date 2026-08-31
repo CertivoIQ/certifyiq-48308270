@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
+import {
+  normalizeOnboardingProgress,
+  previousOnboardingProgress,
+} from "../src/lib/onboarding-progress.mjs";
 
 const read = (path) => readFileSync(path, "utf8");
 
@@ -208,6 +212,11 @@ test("self-directed onboarding persists without obsolete certificate claims", ()
   assert.match(route, /customer_onboarding_progress/);
   assert.match(route, /upsert/);
   assert.match(route, /progress saved automatically/i);
+  assert.match(route, /to=["']\/workspace-setup["']/);
+  assert.match(route, /to=["']\/properties["']/);
+  assert.match(route, /to=["']\/compliance-intelligence["']/);
+  assert.match(route, /to=["']\/account\/security["']/);
+  assert.match(route, /previousOnboardingProgress/);
   assert.match(migration, /user_id = auth\.uid\(\)/);
   assert.match(migration, /completed_at timestamptz/);
   assert.doesNotMatch(route + catalog, /Launch Certified|Merlin|Graduation/);
@@ -226,4 +235,50 @@ test("chat and email support persist deterministic ticket triage", () => {
   assert.match(combined, /supportiq_metadata/);
   assert.match(email, /classifySupportRequest/);
   assert.match(email, /timingSafeEqual/);
+});
+
+
+test("LaunchPad Back invalidates the returned step and persists zero percent at step one", () => {
+  assert.deepEqual(
+    previousOnboardingProgress({
+      currentStep: 2,
+      completedSteps: [1],
+      totalSteps: 6,
+    }),
+    {
+      currentStep: 1,
+      completedSteps: [],
+      completedAt: null,
+    },
+  );
+});
+
+test("LaunchPad normalizes inconsistent persisted progress fail-closed", () => {
+  assert.deepEqual(
+    normalizeOnboardingProgress({
+      currentStep: 1,
+      completedSteps: [1, 2, 2, 99],
+      completedAt: null,
+      totalSteps: 6,
+    }),
+    {
+      currentStep: 1,
+      completedSteps: [],
+      completedAt: null,
+    },
+  );
+
+  assert.deepEqual(
+    normalizeOnboardingProgress({
+      currentStep: 6,
+      completedSteps: [1, 2, 3, 4, 5, 6],
+      completedAt: null,
+      totalSteps: 6,
+    }),
+    {
+      currentStep: 6,
+      completedSteps: [1, 2, 3, 4, 5],
+      completedAt: null,
+    },
+  );
 });
