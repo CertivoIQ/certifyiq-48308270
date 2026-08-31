@@ -282,3 +282,22 @@ test("LaunchPad normalizes inconsistent persisted progress fail-closed", () => {
     },
   );
 });
+
+
+test("Merlin runtime is fail-closed without Lovable or an add-on entitlement", () => {
+  const route = read("src/routes/api/chat.ts");
+  const helper = read("src/components/merlin.tsx");
+  const catalog = read("src/lib/plan-catalog.ts");
+  const combined = route + helper;
+
+  assert.doesNotMatch(
+    combined,
+    /LOVABLE_API_KEY|createLovableAiGatewayProvider|ai\.gateway\.lovable\.dev|useChat|DefaultChatTransport|\/api\/chat|MerlinChat/,
+  );
+  assert.match(route, /MERLIN_DISABLED_PENDING_ENTITLEMENT/);
+  assert.match(route, /status:\s*503/);
+  assert.match(route, /Cache-Control["']?:\s*["']no-store/);
+  assert.match(helper, /Merlin(?:&apos;|')s tip/);
+  assert.match(catalog, /merlin_annual_agreement_monthly/);
+  assert.match(catalog, /merlin_month_to_month/);
+});
