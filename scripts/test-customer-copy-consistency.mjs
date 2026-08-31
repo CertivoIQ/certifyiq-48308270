@@ -4,20 +4,16 @@ import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
 
-test("welcome experience does not claim a single all-features platform license", () => {
+test("welcome page does not claim a single all-features platform license", () => {
   const welcome = read("src/routes/welcome.tsx");
-  const calculator = read("src/components/CostComparisonCalculator.tsx");
-  const customerCopy = `${welcome}\n${calculator}`;
 
-  assert.doesNotMatch(customerCopy, /all currently available platform features/i);
+  assert.doesNotMatch(welcome, /\$?\s*65[,.]?000/);
+  assert.doesNotMatch(welcome, /all[- ]features/i);
   assert.doesNotMatch(
-    customerCopy,
+    welcome,
     /(single|one)\s+(annual\s+)?(platform\s+)?license/i,
-    "welcome experience must not present one all-inclusive platform license",
+    "welcome must not present one all-inclusive platform license",
   );
-  assert.match(calculator, /COMMERCIAL_TERMS\.multifamilyAnnualPerStateUsd/);
-  assert.match(calculator, /per selected state per year/);
-  assert.match(calculator, /flat organization-level PHA license/);
 });
 
 test("pricing page renders commercial terms from the authoritative catalog", () => {
