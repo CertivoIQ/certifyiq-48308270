@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
@@ -118,14 +119,22 @@ export function PhaInspectionsWorkspace() {
   });
 
   return (
-    <AppShell title="Inspections / NSPIRE" subtitle="Operate Public Housing inspections and control the HCV, PBV, and Mod Rehab transition from previous HQS to NSPIRE">
-      <div className="grid gap-3 md:grid-cols-3">
+    <AppShell title="NSPIRE Dashboard" subtitle="Operate Public Housing inspections and control the HCV, PBV, and Mod Rehab transition from previous HQS to NSPIRE">
+      <nav aria-label="NSPIRE dashboard menu" className="mb-4 flex flex-wrap gap-2 rounded-lg border border-border bg-card p-2">
+        <a href="#overview" className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent">Overview</a>
+        <a href="#transition-controls" className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent">Transition &amp; Scheduling</a>
+        <Link to="/pha-nspire-standards" className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent">Standards Control</Link>
+        <Link to="/pha-reports" className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent">Reports &amp; Evidence</Link>
+        <Link to="/findings" className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent">Deficiencies &amp; Corrections</Link>
+      </nav>
+
+      <div id="overview" className="grid scroll-mt-28 gap-3 md:grid-cols-3">
         <Stat label="Scheduled inspections" value={scheduled} hint="Upcoming agency inspection work" />
         <Stat label="Open failed inspections" value={failed} hint="Failed records awaiting correction or reinspection" />
         <Stat label="Programs on NSPIRE" value={nspireReady} hint="Current transition profiles using NSPIRE" />
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+      <div id="transition-controls" className="mt-4 grid scroll-mt-28 gap-4 xl:grid-cols-2">
         <Panel title="NSPIRE transition controls" description="Voucher programs may remain on previous HQS through January 31, 2027. Public Housing is routed to NSPIRE. The database selects the standard by inspection date and preserves it for reinspections.">
           {!isAdmin ? <p className="text-sm text-muted-foreground">Agency administrators control transition dates and HUD notification readiness. Inspection staff can operate scheduled inspections.</p> : (
             <div className="grid gap-3 md:grid-cols-2">
