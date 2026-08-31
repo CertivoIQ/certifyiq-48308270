@@ -1,5 +1,9 @@
 /** Authoritative billing catalog. Browser input never selects a Stripe price. */
 export type LicenseKind = "multifamily_enterprise" | "pha";
+export type AddonKind = "merlin";
+export type AddonBillingOption =
+  | "merlin_annual_agreement_monthly"
+  | "merlin_month_to_month";
 
 export interface PlanEntitlement {
   planId: LicenseKind;
@@ -9,6 +13,15 @@ export interface PlanEntitlement {
   propertyLimit: null;
   aiDocAllowance: null;
   statePacks: number | null;
+}
+
+export interface AddonPrice {
+  addonId: AddonKind;
+  priceId: AddonBillingOption;
+  name: string;
+  amountUsd: number;
+  billingInterval: "month";
+  commitmentMonths: 12 | null;
 }
 
 export const COMMERCIAL_TERMS = Object.freeze({
@@ -43,13 +56,37 @@ export const LICENSES: Record<LicenseKind, PlanEntitlement & { annualAmountUsd: 
   },
 };
 
+export const ADDONS: Record<AddonBillingOption, AddonPrice> = {
+  merlin_annual_agreement_monthly: {
+    addonId: "merlin",
+    priceId: "merlin_annual_agreement_monthly",
+    name: "Merlin — 12-month agreement",
+    amountUsd: COMMERCIAL_TERMS.merlinMonthlyUsd,
+    billingInterval: "month",
+    commitmentMonths: COMMERCIAL_TERMS.merlinAnnualCommitmentMonths,
+  },
+  merlin_month_to_month: {
+    addonId: "merlin",
+    priceId: "merlin_month_to_month",
+    name: "Merlin — month-to-month",
+    amountUsd: COMMERCIAL_TERMS.merlinMonthToMonthUsd,
+    billingInterval: "month",
+    commitmentMonths: null,
+  },
+};
+
 export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = Object.fromEntries(
   Object.values(LICENSES).map((license) => [license.priceId, license]),
 );
 export const PLAN_PRICE_ID_LIST = Object.keys(PLAN_ENTITLEMENTS);
-export const ADDON_PRICE_ID_LIST: string[] = [];
-/** Inert compatibility keys retained while legacy webhook rows drain. */
-export const ADDON_PRICE_IDS = { academySeat: "", academyProperty: "" } as const;
+export const ADDON_PRICE_ID_LIST = Object.keys(ADDONS);
+export const ADDON_PRICE_IDS = {
+  merlinAnnualAgreementMonthly: ADDONS.merlin_annual_agreement_monthly.priceId,
+  merlinMonthToMonth: ADDONS.merlin_month_to_month.priceId,
+  /** Inert compatibility keys retained while legacy webhook rows drain. */
+  academySeat: "",
+  academyProperty: "",
+} as const;
 
 /** Files are held for 14 days after paid access ends, then permanently deleted. */
 export const FILE_RETENTION_DAYS = 14;
@@ -68,8 +105,16 @@ export function isPlanPrice(priceId: string | null | undefined): boolean {
   return !!priceId && PLAN_PRICE_ID_LIST.includes(priceId);
 }
 
-export function isAddonPrice(_priceId: string | null | undefined): boolean {
-  return false;
+export function addonForPrice(
+  priceId: string | null | undefined,
+): AddonPrice | null {
+  return priceId && isAddonPrice(priceId)
+    ? ADDONS[priceId as AddonBillingOption]
+    : null;
+}
+
+export function isAddonPrice(priceId: string | null | undefined): boolean {
+  return !!priceId && ADDON_PRICE_ID_LIST.includes(priceId);
 }
 
 export function formatLimit(value: number | null): string {
