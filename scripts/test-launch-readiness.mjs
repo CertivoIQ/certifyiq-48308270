@@ -288,11 +288,12 @@ test("Merlin runtime is fail-closed without Lovable or an add-on entitlement", (
   const route = read("src/routes/api/chat.ts");
   const helper = read("src/components/merlin.tsx");
   const catalog = read("src/lib/plan-catalog.ts");
+
   assert.doesNotMatch(
     route,
-    /LOVABLE_API_KEY|createLovableAiGatewayProvider|ai\\.gateway\\.lovable\\.dev|streamText|convertToModelMessages/,
+    /LOVABLE_API_KEY|createLovableAiGatewayProvider|ai\.gateway\.lovable\.dev|streamText|convertToModelMessages/,
   );
-  assert.doesNotMatch(helper, /useChat|DefaultChatTransport|\\/api\\/chat|MerlinChat/);
+  assert.doesNotMatch(helper, /useChat|DefaultChatTransport|\/api\/chat|MerlinChat/);
   assert.match(route, /MERLIN_DISABLED_PENDING_ENTITLEMENT/);
   assert.match(route, /status:\s*503/);
   assert.match(route, /Cache-Control["']?:\s*["']no-store/);
