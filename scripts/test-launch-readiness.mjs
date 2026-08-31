@@ -301,3 +301,19 @@ test("Merlin runtime is fail-closed without Lovable or an add-on entitlement", (
   assert.match(catalog, /merlin_annual_agreement_monthly/);
   assert.match(catalog, /merlin_month_to_month/);
 });
+
+
+test("PHA navigation exposes the verified NSPIRE dashboard menu", () => {
+  const shell = read("src/components/app-shell.tsx");
+  const workspace = read("src/components/pha-inspections-workspace.tsx");
+  const standardsRoute = read("src/routes/_authenticated/pha-nspire-standards.tsx");
+
+  assert.match(shell, /to:\s*"\/pha-inspections",\s*label:\s*"NSPIRE Dashboard"/);
+  assert.match(workspace, /aria-label="NSPIRE dashboard menu"/);
+  assert.match(workspace, />Overview<\/a>/);
+  assert.match(workspace, />Transition &amp; Scheduling<\/a>/);
+  assert.match(workspace, /to="\/pha-nspire-standards"[^>]*>Standards Control<\/Link>/);
+  assert.match(workspace, /to="\/pha-reports"[^>]*>Reports &amp; Evidence<\/Link>/);
+  assert.match(workspace, /to="\/findings"[^>]*>Deficiencies &amp; Corrections<\/Link>/);
+  assert.match(standardsRoute, /PhaNspireStandardsWorkspace/);
+});
