@@ -31,6 +31,10 @@ test("browser roles cannot mutate paid-license control tables", () => {
   assert.match(migration, /revoke all on public\.enterprise_licenses from public, anon, authenticated/i);
   assert.match(migration, /revoke all on public\.enterprise_invoice_events from public, anon, authenticated/i);
   assert.match(migration, /grant select on public\.enterprise_licenses to authenticated/i);
+  assert.match(
+    migration,
+    /grant usage, select, update on sequence public\.enterprise_license_number_seq to service_role/i,
+  );
 });
 
 test("migration has bounded locking and validation controls", () => {
