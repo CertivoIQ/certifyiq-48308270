@@ -3,6 +3,7 @@ import { normalizeLicenseSelection } from "../src/lib/license-selection";
 import { COMMERCIAL_TERMS, LICENSES } from "../src/lib/plan-catalog";
 import { enterpriseInvoiceActivationException } from "../src/lib/enterprise-licensing.server";
 import type { StripeInvoiceLike } from "../src/lib/stripe-webhook-types";
+import { paidOnboardingBlockReason } from "../src/lib/paid-onboarding.server";
 
 function paidInvoice(metadata: Record<string, string>, amountCents: number): StripeInvoiceLike {
   return {
@@ -107,3 +108,68 @@ describe("authoritative license pricing and jurisdiction selection", () => {
   });
 });
 
+
+describe("new paid-onboarding launch control", () => {
+  const verifierUserId = "11111111-1111-4111-8111-111111111111";
+
+  test("live creation fails closed when operational GO is absent", () => {
+    expect(
+      paidOnboardingBlockReason("live", {}, {
+        PAID_ONBOARDING_ENABLED: "false",
+        PAYMENTS_LIVE_VERIFIED: "true",
+      }),
+    ).toContain("temporarily disabled");
+  });
+
+  test("live creation fails closed when lifecycle verification is absent", () => {
+    expect(
+      paidOnboardingBlockReason("live", {}, {
+        PAID_ONBOARDING_ENABLED: "true",
+        PAYMENTS_LIVE_VERIFIED: "false",
+      }),
+    ).toContain("verification is complete");
+  });
+
+  test("general live creation is eligible only when both controls are true", () => {
+    expect(
+      paidOnboardingBlockReason("live", {}, {
+        PAID_ONBOARDING_ENABLED: "true",
+        PAYMENTS_LIVE_VERIFIED: "true",
+      }),
+    ).toBeNull();
+  });
+
+  test("verification mode is restricted to the designated authenticated user", () => {
+    const config = {
+      PAID_ONBOARDING_ENABLED: "false",
+      PAYMENTS_LIVE_VERIFIED: "false",
+      LIVE_BILLING_VERIFICATION_ENABLED: "true",
+      LIVE_BILLING_VERIFIER_USER_ID: verifierUserId,
+    };
+    expect(
+      paidOnboardingBlockReason("live", { actorUserId: verifierUserId }, config),
+    ).toBeNull();
+    expect(
+      paidOnboardingBlockReason(
+        "live",
+        { actorUserId: "22222222-2222-4222-8222-222222222222" },
+        config,
+      ),
+    ).toContain("designated verifier");
+  });
+
+  test("verification mode fails closed without a valid verifier id", () => {
+    expect(
+      paidOnboardingBlockReason("live", { actorUserId: verifierUserId }, {
+        PAID_ONBOARDING_ENABLED: "false",
+        PAYMENTS_LIVE_VERIFIED: "false",
+        LIVE_BILLING_VERIFICATION_ENABLED: "true",
+        LIVE_BILLING_VERIFIER_USER_ID: "",
+      }),
+    ).toContain("designated verifier");
+  });
+
+  test("sandbox remains available for controlled verification", () => {
+    expect(paidOnboardingBlockReason("sandbox", {}, {})).toBeNull();
+  });
+});
