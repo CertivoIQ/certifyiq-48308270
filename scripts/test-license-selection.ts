@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { normalizeLicenseSelection } from "../src/lib/license-selection";
-import { COMMERCIAL_TERMS, LICENSES } from "../src/lib/plan-catalog";
+import {
+  ADDONS,
+  ADDON_PRICE_ID_LIST,
+  ADDON_PRICE_IDS,
+  COMMERCIAL_TERMS,
+  LICENSES,
+  addonForPrice,
+  isAddonPrice,
+} from "../src/lib/plan-catalog";
 import { enterpriseInvoiceActivationException } from "../src/lib/enterprise-licensing.server";
 import type { StripeInvoiceLike } from "../src/lib/stripe-webhook-types";
 import { paidOnboardingBlockReason } from "../src/lib/paid-onboarding.server";
@@ -23,6 +31,40 @@ function paidInvoice(metadata: Record<string, string>, amountCents: number): Str
 describe("authoritative license pricing and jurisdiction selection", () => {
   test("the catalog exposes only the two approved annual licenses", () => {
     expect(Object.keys(LICENSES).sort()).toEqual(["multifamily_enterprise", "pha"]);
+  });
+
+  test("the catalog exposes both approved Merlin billing options", () => {
+    expect(Object.keys(ADDONS).sort()).toEqual([
+      "merlin_annual_agreement_monthly",
+      "merlin_month_to_month",
+    ]);
+    expect(ADDONS.merlin_annual_agreement_monthly).toMatchObject({
+      addonId: "merlin",
+      amountUsd: 5_000,
+      billingInterval: "month",
+      commitmentMonths: 12,
+    });
+    expect(ADDONS.merlin_month_to_month).toMatchObject({
+      addonId: "merlin",
+      amountUsd: 6_000,
+      billingInterval: "month",
+      commitmentMonths: null,
+    });
+    expect(ADDON_PRICE_ID_LIST.sort()).toEqual([
+      "merlin_annual_agreement_monthly",
+      "merlin_month_to_month",
+    ]);
+    expect(ADDON_PRICE_IDS).toMatchObject({
+      merlinAnnualAgreementMonthly: "merlin_annual_agreement_monthly",
+      merlinMonthToMonth: "merlin_month_to_month",
+    });
+    expect(isAddonPrice("merlin_annual_agreement_monthly")).toBe(true);
+    expect(isAddonPrice("merlin_month_to_month")).toBe(true);
+    expect(isAddonPrice("multifamily_enterprise_annual")).toBe(false);
+    expect(addonForPrice("merlin_month_to_month")).toEqual(
+      ADDONS.merlin_month_to_month,
+    );
+    expect(addonForPrice("unknown")).toBeNull();
   });
 
   test("the canonical commercial terms match the approved offer", () => {
