@@ -38,6 +38,7 @@ import { Route as AuthenticatedCrmPhaControlsRouteImport } from './routes/_authe
 import { Route as AuthenticatedCrmStaffRouteImport } from './routes/_authenticated/crm-staff'
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedFeatureSuggestionsRouteImport } from './routes/_authenticated/feature-suggestions'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
 import { Route as AuthenticatedPha50058RouteImport } from './routes/_authenticated/pha-50058'
 import { Route as AuthenticatedPhaAccommodationsRouteImport } from './routes/_authenticated/pha-accommodations'
@@ -236,6 +237,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFeatureSuggestionsRoute =
+  AuthenticatedFeatureSuggestionsRouteImport.update({
+    id: '/feature-suggestions',
+    path: '/feature-suggestions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingKitRoute =
   AuthenticatedMarketingKitRouteImport.update({
     id: '/marketing-kit',
@@ -536,6 +543,7 @@ export interface FileRoutesByFullPath {
   '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/pha-50058': typeof AuthenticatedPha50058Route
   '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -614,6 +622,7 @@ export interface FileRoutesByTo {
   '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/pha-50058': typeof AuthenticatedPha50058Route
   '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -694,6 +703,7 @@ export interface FileRoutesById {
   '/_authenticated/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/_authenticated/pha-50058': typeof AuthenticatedPha50058Route
   '/_authenticated/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -774,6 +784,7 @@ export interface FileRouteTypes {
     | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
+    | '/feature-suggestions'
     | '/marketing-kit'
     | '/pha-50058'
     | '/pha-accommodations'
@@ -852,6 +863,7 @@ export interface FileRouteTypes {
     | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
+    | '/feature-suggestions'
     | '/marketing-kit'
     | '/pha-50058'
     | '/pha-accommodations'
@@ -931,6 +943,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm-staff'
     | '/_authenticated/crm-support'
     | '/_authenticated/dashboard'
+    | '/_authenticated/feature-suggestions'
     | '/_authenticated/marketing-kit'
     | '/_authenticated/pha-50058'
     | '/_authenticated/pha-accommodations'
@@ -1220,6 +1233,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/feature-suggestions': {
+      id: '/_authenticated/feature-suggestions'
+      path: '/feature-suggestions'
+      fullPath: '/feature-suggestions'
+      preLoaderRoute: typeof AuthenticatedFeatureSuggestionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing-kit': {
@@ -1587,6 +1607,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCrmStaffRoute: typeof AuthenticatedCrmStaffRoute
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFeatureSuggestionsRoute: typeof AuthenticatedFeatureSuggestionsRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
   AuthenticatedPha50058Route: typeof AuthenticatedPha50058Route
   AuthenticatedPhaAccommodationsRoute: typeof AuthenticatedPhaAccommodationsRoute
@@ -1633,6 +1654,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCrmStaffRoute: AuthenticatedCrmStaffRoute,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFeatureSuggestionsRoute: AuthenticatedFeatureSuggestionsRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
   AuthenticatedPha50058Route: AuthenticatedPha50058Route,
   AuthenticatedPhaAccommodationsRoute: AuthenticatedPhaAccommodationsRoute,
