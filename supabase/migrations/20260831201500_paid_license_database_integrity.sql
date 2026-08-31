@@ -208,6 +208,9 @@ grant select on public.account_access to authenticated;
 create sequence if not exists public.enterprise_license_number_seq
   as bigint start with 1 increment by 1 minvalue 1 no maxvalue cache 1;
 
+revoke all on sequence public.enterprise_license_number_seq from public, anon, authenticated;
+grant usage, select, update on sequence public.enterprise_license_number_seq to service_role;
+
 create or replace function public.assign_enterprise_license_number()
 returns trigger
 language plpgsql
