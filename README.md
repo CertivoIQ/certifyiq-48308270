@@ -47,10 +47,11 @@ CertivoIQ has two enterprise operating-platform licenses and one optional premiu
 
 - **Multifamily Enterprise: $65,000 per selected state per year.** Each selected state is a separately licensed state rule guide.
 - **PHA: $150,000 per organization per year.** The license includes one validated operating-state rule guide and supported PHA program workspaces.
-- **Merlin: $5,000 per month under a 12-month agreement ($60,000 annually).** Organization-wide across licensed states and programs, with up to 50,000 certification or recertification analyses per month. Standard overage is $0.15 per additional certification.
-- **Implementation: $15,000 one time per organization.**
+- **Merlin: $5,000 per month under a 12-month agreement ($60,000 annually), or $6,000 month-to-month when approved.** Organization-wide across licensed states and programs.
+- **Onboarding: included through the self-directed onboarding wizard; no separate implementation fee.**
+- **FOUNDERS50: 50% off the first annual base platform-license term through November 30, 2026.** Merlin and all other add-ons or services are excluded.
 
-An approved month-to-month Merlin arrangement is $6,000 per month. There are no public training or Academy products, certificates, or separately priced API products. The application, sales materials, agreements, invoice and payment catalog, email templates, and public website must use this same pricing and entitlement language.
+There are no public training or Academy products, certificates, or separately priced API products. The application, sales materials, agreements, invoice and payment catalog, email templates, and public website must use this same pricing and entitlement language.
 
 ## API Direction
 

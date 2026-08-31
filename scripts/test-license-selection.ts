@@ -33,10 +33,10 @@ describe("authoritative license pricing and jurisdiction selection", () => {
       merlinAnnualUsd: 60_000,
       merlinAnnualCommitmentMonths: 12,
       merlinMonthToMonthUsd: 6_000,
-      merlinMonthlyCertificationCapacity: 50_000,
-      merlinOveragePerCertificationUsd: 0.15,
-      implementationOneTimeUsd: 15_000,
     });
+    expect(COMMERCIAL_TERMS).not.toHaveProperty("implementationOneTimeUsd");
+    expect(COMMERCIAL_TERMS).not.toHaveProperty("merlinMonthlyCertificationCapacity");
+    expect(COMMERCIAL_TERMS).not.toHaveProperty("merlinOveragePerCertificationUsd");
   });
 
   test("multifamily charges $65,000 for every unique selected state", () => {

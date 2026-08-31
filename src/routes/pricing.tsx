@@ -36,7 +36,6 @@ const MERLIN_FEATURES = [
   "Regulatory-change monitoring and candidate rule-update support",
   "Audit-response and corrective-action assistance",
   "Organization-wide access across licensed states and programs",
-  "Up to 50,000 certification and recertification analyses each month",
 ];
 
 function usd(value: number) {
@@ -54,7 +53,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "CertivoIQ pricing for Multifamily Enterprise, Public Housing Authorities, implementation, and the optional Merlin compliance-intelligence add-on.",
+          "CertivoIQ pricing for Multifamily Enterprise, Public Housing Authorities, and the optional Merlin compliance-intelligence add-on.",
       },
       { property: "og:title", content: "CertivoIQ Platform Pricing" },
       {
@@ -225,68 +224,26 @@ function PricingPage() {
           </div>
         </Panel>
 
-        <div className="mt-7 grid gap-5 lg:grid-cols-2">
-          <Panel title="Implementation" bodyClassName="p-6">
-            <p className="font-display text-3xl">
-              {usd(COMMERCIAL_TERMS.implementationOneTimeUsd)}
-            </p>
-            <p className="mt-1 text-[13px] text-muted-foreground">one-time organization fee</p>
-            <p className="mt-4 text-[13.5px] leading-6 text-muted-foreground">
-              Covers initial discovery, organization setup, licensed-state and program
-              configuration, rule-guide activation, workflow alignment, administrator enablement,
-              and launch validation. Customer-specific integrations or expanded scope require a
-              written order form or change order.
-            </p>
-          </Panel>
-
-          <Panel title="One-state Multifamily example" bodyClassName="p-6">
-            <div className="space-y-2 text-[13.5px]">
-              <div className="flex justify-between gap-4">
-                <span>Multifamily Enterprise — one state</span>
-                <span>{usd(COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd)}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span>Merlin — annual agreement</span>
-                <span>{usd(COMMERCIAL_TERMS.merlinAnnualUsd)}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span>Implementation — one time</span>
-                <span>{usd(COMMERCIAL_TERMS.implementationOneTimeUsd)}</span>
-              </div>
-              <div className="flex justify-between gap-4 border-t border-border pt-3 font-semibold">
-                <span>First year</span>
-                <span>
-                  {usd(
-                    COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd +
-                      COMMERCIAL_TERMS.merlinAnnualUsd +
-                      COMMERCIAL_TERMS.implementationOneTimeUsd,
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span>Renewal before usage overages</span>
-                <span>
-                  {usd(
-                    COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd +
-                      COMMERCIAL_TERMS.merlinAnnualUsd,
-                  )}
-                </span>
-              </div>
+        <Panel className="mt-7" title="One-state Multifamily example" bodyClassName="p-6">
+          <div className="space-y-2 text-[13.5px]">
+            <div className="flex justify-between gap-4"><span>Multifamily Enterprise — one state</span><span>{usd(COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd)}</span></div>
+            <div className="flex justify-between gap-4"><span>Merlin — annual agreement</span><span>{usd(COMMERCIAL_TERMS.merlinAnnualUsd)}</span></div>
+            <div className="flex justify-between gap-4 border-t border-border pt-3 font-semibold">
+              <span>Standard annual total</span>
+              <span>{usd(COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd + COMMERCIAL_TERMS.merlinAnnualUsd)}</span>
             </div>
-            <p className="mt-4 text-[12px] leading-5 text-muted-foreground">
-              Merlin includes {COMMERCIAL_TERMS.merlinMonthlyCertificationCapacity.toLocaleString()}
-              {" "}analyses per month. Additional usage is{" "}
-              {usd(COMMERCIAL_TERMS.merlinOveragePerCertificationUsd)} per certification unless the
-              signed order form states otherwise.
-            </p>
-          </Panel>
-        </div>
+          </div>
+          <p className="mt-4 text-[12px] leading-5 text-muted-foreground">
+            FOUNDERS50 applies only to the base annual platform-license line item during the first
+            annual term. Merlin and all other add-ons or services are excluded from the discount.
+          </p>
+        </Panel>
 
         <Panel className="mt-5" title="Scope, contracting, and next steps" bodyClassName="p-6">
           <p className="text-[13.5px] leading-7 text-muted-foreground">
             Availability depends on the licensed programs, jurisdictions, validated rule guides,
-            and signed scope. The executed order form controls billing, renewal, capacity,
-            integrations, and any negotiated terms. Review the <Link to="/terms" className="text-primary underline underline-offset-4">Terms of Use</Link> for the standard commercial terms.
+            and signed scope. The executed order form controls billing, renewal, integrations,
+            and any negotiated terms. Review the <Link to="/terms" className="text-primary underline underline-offset-4">Terms of Use</Link> for the standard commercial terms.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button size="lg" asChild>

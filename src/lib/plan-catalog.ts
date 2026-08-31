@@ -18,9 +18,6 @@ export const COMMERCIAL_TERMS = Object.freeze({
   merlinAnnualUsd: 60_000,
   merlinAnnualCommitmentMonths: 12,
   merlinMonthToMonthUsd: 6_000,
-  merlinMonthlyCertificationCapacity: 50_000,
-  merlinOveragePerCertificationUsd: 0.15,
-  implementationOneTimeUsd: 15_000,
 });
 
 export const LICENSES: Record<LicenseKind, PlanEntitlement & { annualAmountUsd: number }> = {

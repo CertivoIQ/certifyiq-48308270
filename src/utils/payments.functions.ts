@@ -115,6 +115,22 @@ async function ensureFoundersPromotion(
 ): Promise<void> {
   if (!foundersPromotionAvailable()) return;
 
+  const licensePrices = await stripe.prices.list({
+    lookup_keys: Object.values(LICENSES).map((license) => license.priceId),
+    active: true,
+    limit: 10,
+  });
+  const productIds = [
+    ...new Set(
+      licensePrices.data.map((price) =>
+        typeof price.product === "string" ? price.product : price.product.id,
+      ),
+    ),
+  ];
+  if (productIds.length !== Object.keys(LICENSES).length) {
+    throw new Error("Founder's Special requires both live annual license products");
+  }
+
   let coupon: Awaited<ReturnType<typeof stripe.coupons.retrieve>> | null = null;
   try {
     coupon = await stripe.coupons.retrieve(FOUNDERS_PROMOTION.couponId);
@@ -123,21 +139,6 @@ async function ensureFoundersPromotion(
   }
 
   if (!coupon) {
-    const licensePrices = await stripe.prices.list({
-      lookup_keys: Object.values(LICENSES).map((license) => license.priceId),
-      active: true,
-      limit: 10,
-    });
-    const productIds = [
-      ...new Set(
-        licensePrices.data.map((price) =>
-          typeof price.product === "string" ? price.product : price.product.id,
-        ),
-      ),
-    ];
-    if (productIds.length !== Object.keys(LICENSES).length) {
-      throw new Error("Founder's Special requires both live annual license products");
-    }
     coupon = await stripe.coupons.create({
       id: FOUNDERS_PROMOTION.couponId,
       name: FOUNDERS_PROMOTION.name,
@@ -159,13 +160,18 @@ async function ensureFoundersPromotion(
     percent_off?: number | null;
     duration?: string;
     redeem_by?: number | null;
+    applies_to?: { products?: string[] } | null;
   };
+  const appliedProductIds = [...(couponRecord.applies_to?.products ?? [])].sort();
+  const expectedProductIds = [...productIds].sort();
   if (
     couponRecord.deleted ||
     couponRecord.valid === false ||
     couponRecord.percent_off !== FOUNDERS_PROMOTION.percentOff ||
     couponRecord.duration !== FOUNDERS_PROMOTION.duration ||
-    couponRecord.redeem_by !== FOUNDERS_PROMOTION_EXPIRES_AT
+    couponRecord.redeem_by !== FOUNDERS_PROMOTION_EXPIRES_AT ||
+    appliedProductIds.length !== expectedProductIds.length ||
+    appliedProductIds.some((productId, index) => productId !== expectedProductIds[index])
   ) {
     throw new Error("Existing Founder's Special coupon does not match approved billing terms");
   }

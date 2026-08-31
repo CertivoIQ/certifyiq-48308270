@@ -69,14 +69,6 @@ function TermsOfUse() {
             {usd(COMMERCIAL_TERMS.merlinMonthToMonthUsd)} per month.
           </p>
           <p className="mt-2">
-            Merlin includes up to{" "}
-            {COMMERCIAL_TERMS.merlinMonthlyCertificationCapacity.toLocaleString()} certification or
-            recertification analyses per calendar month across the organization&apos;s licensed
-            states and programs. Unless the signed order form states otherwise, additional usage is
-            billed at {usd(COMMERCIAL_TERMS.merlinOveragePerCertificationUsd)} per certification.
-            Unused monthly capacity does not roll over.
-          </p>
-          <p className="mt-2">
             Merlin may research licensed manuals and rule guides, explain cited requirements,
             identify inconsistencies, prioritize exceptions, and assist with compliance narratives,
             audit responses, and corrective actions. Merlin does not change a deterministic rule
@@ -87,15 +79,12 @@ function TermsOfUse() {
         </section>
 
         <section>
-          <h2 className="font-display text-xl text-foreground">Implementation and additional scope</h2>
+          <h2 className="font-display text-xl text-foreground">Onboarding and additional scope</h2>
           <p className="mt-2">
-            The standard one-time implementation fee is{" "}
-            {usd(COMMERCIAL_TERMS.implementationOneTimeUsd)} per organization. Standard
-            implementation covers initial discovery, organization setup, licensed-state and program
-            configuration, rule-guide activation, workflow alignment, administrator enablement, and
-            launch validation. Customer-specific integrations, data conversion, expanded training,
-            additional implementation phases, or materially changed requirements may require a
-            separate statement of work or change order.
+            Standard self-directed onboarding is included with a base platform license at no
+            separate implementation fee. Customer-specific integrations, data conversion, expanded
+            enablement, or materially changed requirements may require a separately approved
+            statement of work or change order.
           </p>
         </section>
 
@@ -107,8 +96,10 @@ function TermsOfUse() {
               pricing page
             </Link>
             . Fees, payment timing, taxes, renewal, cancellation, credits, refunds, procurement
-            requirements, and any negotiated capacity are governed by the signed agreement and
-            applicable law. The three free certification reviews are a product-evaluation offer for
+            requirements, and any negotiated terms are governed by the signed agreement and
+            applicable law. Through November 30, 2026, FOUNDERS50 applies only to the first annual
+            base platform-license term; it does not discount Merlin or any other add-on or service.
+            The three free certification reviews are a product-evaluation offer for
             qualified leads using an organization website email and do not require a credit card
             where the website expressly states that. CertivoIQ does not authorize automatic material
             refunds through SupportIQ.
