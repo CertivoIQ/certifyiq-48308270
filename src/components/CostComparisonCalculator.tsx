@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Panel } from "@/components/ui-kit";
-import { COMMERCIAL_TERMS } from "@/lib/plan-catalog";
 
 /**
  * Customer-input cost comparison. Nothing is preloaded and no savings figure is
  * claimed: the customer enters their own costs and sees their own arithmetic
- * next to the approved one-state Multifamily Enterprise annual price.
+ * next to the annual license price.
  */
 
-const DEFAULT_ANNUAL_PRICE = COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd;
+const ANNUAL_LICENSE = 65000;
 
 const currency = (value: number) =>
   value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -22,7 +21,7 @@ const FIELDS: { key: FieldKey; label: string; help: string }[] = [
   { key: "auditPrep", label: "Audit preparation", help: "Annual cost cost of preparing for agency review" },
 ];
 
-export function CostComparisonCalculator({ annualPrice = DEFAULT_ANNUAL_PRICE }: { annualPrice?: number }) {
+export function CostComparisonCalculator({ annualPrice = ANNUAL_LICENSE }: { annualPrice?: number }) {
   const [values, setValues] = useState<Record<FieldKey, string>>({
     externalReviews: "",
     vacancyDelays: "",
@@ -70,7 +69,7 @@ export function CostComparisonCalculator({ annualPrice = DEFAULT_ANNUAL_PRICE }:
           </dd>
         </div>
         <div className="rounded-md border border-border bg-muted/30 p-4">
-          <dt className="cite">Multifamily Enterprise · one selected state</dt>
+          <dt className="cite">CertivoIQ annual platform license</dt>
           <dd className="mt-1 font-mono text-[20px] tabular-nums">{currency(annualPrice)}</dd>
         </div>
         <div className="rounded-md border border-border bg-muted/30 p-4">
@@ -82,13 +81,11 @@ export function CostComparisonCalculator({ annualPrice = DEFAULT_ANNUAL_PRICE }:
       </dl>
 
       <p className="mt-5 text-[12.5px] leading-relaxed text-muted-foreground">
-        {currency(annualPrice)} per selected state per year for the Multifamily Enterprise package.
-        Public Housing Authorities use the separate flat organization-level PHA license. Licensed
-        features, state rule guides, implementation, and optional Merlin service are described on
-        the pricing page. Compare the applicable license with your organization's actual cost of
-        external file reviews, vacancy delays, correction cycles, audit preparation and potential
-        noncompliance. Regulatory and financial consequences vary; CertivoIQ does not guarantee
-        avoidance of findings, penalties or credit recapture.
+        {currency(annualPrice)} per year for access to all currently available platform features. Compare the
+        annual license with your organization's actual cost of external file reviews, vacancy delays,
+        correction cycles, audit preparation and potential noncompliance. Regulatory and financial
+        consequences vary; CertivoIQ does not guarantee avoidance of findings, penalties or credit
+        recapture.
       </p>
     </Panel>
   );
