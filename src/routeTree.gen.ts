@@ -80,6 +80,7 @@ import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$p
 import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
 import { Route as AuthenticatedCrmOperationsRouteImport } from './routes/_authenticated/crm/operations'
 import { Route as ApiPublicFederalHousingNewsRouteImport } from './routes/api/public/federal-housing-news'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedCrmAccountsAccountIdRouteImport } from './routes/_authenticated/crm.accounts.$accountId'
 import { Route as ApiInternalOperationsTickRouteImport } from './routes/api/internal/operations/tick'
 import { Route as ApiPublicCrmSupportEmailRouteImport } from './routes/api/public/crm/support-email'
@@ -473,6 +474,11 @@ const ApiPublicFederalHousingNewsRoute =
     path: '/api/public/federal-housing-news',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCrmAccountsAccountIdRoute =
   AuthenticatedCrmAccountsAccountIdRouteImport.update({
     id: '/accounts/$accountId',
@@ -585,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
@@ -664,6 +671,7 @@ export interface FileRoutesByTo {
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
@@ -745,6 +753,7 @@ export interface FileRoutesById {
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
   '/_authenticated/crm/operations': typeof AuthenticatedCrmOperationsRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
   '/api/internal/operations/tick': typeof ApiInternalOperationsTickRoute
   '/api/public/crm/support-email': typeof ApiPublicCrmSupportEmailRoute
@@ -826,6 +835,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/crm/operations'
     | '/api/public/federal-housing-news'
+    | '/api/public/health'
     | '/crm/accounts/$accountId'
     | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
@@ -905,6 +915,7 @@ export interface FileRouteTypes {
     | '/account/security'
     | '/crm/operations'
     | '/api/public/federal-housing-news'
+    | '/api/public/health'
     | '/crm/accounts/$accountId'
     | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
@@ -985,6 +996,7 @@ export interface FileRouteTypes {
     | '/_authenticated/account/security'
     | '/_authenticated/crm/operations'
     | '/api/public/federal-housing-news'
+    | '/api/public/health'
     | '/_authenticated/crm/accounts/$accountId'
     | '/api/internal/operations/tick'
     | '/api/public/crm/support-email'
@@ -1022,6 +1034,7 @@ export interface RootRouteChildren {
   PhaIndexRoute: typeof PhaIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
   ApiPublicFederalHousingNewsRoute: typeof ApiPublicFederalHousingNewsRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiInternalOperationsTickRoute: typeof ApiInternalOperationsTickRoute
   ApiPublicCrmSupportEmailRoute: typeof ApiPublicCrmSupportEmailRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1529,6 +1542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFederalHousingNewsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/crm/accounts/$accountId': {
       id: '/_authenticated/crm/accounts/$accountId'
       path: '/accounts/$accountId'
@@ -1723,6 +1743,7 @@ const rootRouteChildren: RootRouteChildren = {
   PhaIndexRoute: PhaIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
   ApiPublicFederalHousingNewsRoute: ApiPublicFederalHousingNewsRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiInternalOperationsTickRoute: ApiInternalOperationsTickRoute,
   ApiPublicCrmSupportEmailRoute: ApiPublicCrmSupportEmailRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
