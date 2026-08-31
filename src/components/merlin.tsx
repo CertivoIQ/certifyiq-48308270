@@ -1,22 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, X, Wand2, GripVertical, MessageCircle } from "lucide-react";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from "@/components/ai-elements/conversation";
-import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import {
-  PromptInput,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from "@/components/ai-elements/prompt-input";
-import { Shimmer } from "@/components/ai-elements/shimmer";
-
+import { Sparkles, X, Wand2, GripVertical } from "lucide-react";
 import greeting from "@/assets/merlin-greeting.png";
 import pointing from "@/assets/merlin-pointing.png";
 import celebrating from "@/assets/merlin-celebrating.png";
@@ -102,12 +85,6 @@ const TRICKS = [
   { label: "Levitation", anim: "animate-merlin-float", pose: "celebrating" as MerlinPose },
 ];
 
-const STARTERS = [
-  "How do I annualize seasonal income on a TIC?",
-  "Does the HOTMA $100,000 asset limit apply to LIHTC?",
-  "Full-time student household — is it a §42 violation?",
-  "Blended LIHTC + HOME unit: which rent limit governs?",
-];
 
 const IDLE_MS = 12000;
 
@@ -131,110 +108,9 @@ function Sparks() {
   );
 }
 
-function messageText(parts: { type: string; text?: string }[]) {
-  return parts.map((p) => (p.type === "text" ? (p.text ?? "") : "")).join("");
-}
-
-/** Merlin's AI compliance chat — grounded in every program rule pack. */
-function MerlinChat({ onActivity }: { onActivity: () => void }) {
-  const [transport] = useState(() => new DefaultChatTransport({ api: "/api/chat" }));
-  const { messages, sendMessage, status, stop, error } = useChat({ transport });
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
-  const busy = status === "submitted" || status === "streaming";
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (status === "ready") inputRef.current?.focus();
-  }, [status]);
-
-  const ask = useCallback(
-    (text: string) => {
-      const value = text.trim();
-      if (!value || busy) return;
-      onActivity();
-      void sendMessage({ text: value });
-    },
-    [busy, onActivity, sendMessage],
-  );
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <Conversation className="min-h-0 flex-1">
-        <ConversationContent className="gap-3 p-3">
-          {messages.length === 0 && (
-            <div className="space-y-2.5">
-              <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                Stuck on a file? Ask me anything about LIHTC, Section 8, HOME, HOTMA, bonds, RD or fair housing —
-                I&apos;ll cite the rule and give you the correction step.
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {STARTERS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => ask(s)}
-                    className="rounded-full border border-primary/25 bg-accent px-2.5 py-1 text-left text-[11.5px] text-accent-foreground transition-colors hover:border-gold/60"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {messages.map((m) => (
-            <Message from={m.role} key={m.id}>
-              <MessageContent className="text-[13px] leading-relaxed">
-
-                <MessageResponse>{messageText(m.parts as { type: string; text?: string }[])}</MessageResponse>
-              </MessageContent>
-            </Message>
-          ))}
-
-          {status === "submitted" && <Shimmer className="text-[12.5px]">Consulting the handbook…</Shimmer>}
-
-          {error && (
-            <p className="rounded-md border border-reject/40 bg-reject/10 px-2.5 py-2 text-[12px] text-reject">
-              Merlin&apos;s crystal ball clouded over. Please try again in a moment.
-            </p>
-          )}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
-
-      <div className="border-t border-border p-2">
-        <PromptInput
-          onSubmit={(message, event) => {
-            event.preventDefault();
-            const text = message.text ?? "";
-            ask(text);
-            event.currentTarget.reset();
-          }}
-        >
-          <PromptInputTextarea
-            ref={inputRef}
-            placeholder="Ask Merlin a compliance question…"
-            className="min-h-[44px] text-[13px]"
-            onChange={onActivity}
-          />
-          <PromptInputFooter className="justify-end">
-            <PromptInputSubmit status={status} onStop={stop} />
-          </PromptInputFooter>
-        </PromptInput>
-        <p className="cite mt-1.5 px-1 text-[10px] uppercase tracking-[0.14em]">
-          Decision support — a human reviewer still signs final approval
-        </p>
-      </div>
-    </div>
-  );
-}
-
 /** Floating helper — Merlin follows the user across the app, draggable anywhere. */
 export function WizardHelper() {
   const [open, setOpen] = useState(false);
-  const [chat, setChat] = useState(false);
   const [tip, setTip] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [trick, setTrick] = useState(0);
@@ -269,10 +145,10 @@ export function WizardHelper() {
 
   // Rotate the magic tricks while open and engaged.
   useEffect(() => {
-    if (!open || idle || chat) return;
+    if (!open || idle) return;
     const id = setInterval(() => setTrick((t) => t + 1), 2000);
     return () => clearInterval(id);
-  }, [open, idle, chat]);
+  }, [open, idle]);
 
   // Click-and-hold dragging.
   const onPointerDown = (e: React.PointerEvent) => {
@@ -338,62 +214,37 @@ export function WizardHelper() {
     >
       {open && (
         <div
-          className={`pointer-events-auto flex w-[330px] flex-col rounded-xl border border-primary/25 bg-card shadow-raised ${
-            chat ? "h-[420px] max-h-[70vh]" : ""
-          }`}
+          className="pointer-events-auto flex w-[330px] flex-col rounded-xl border border-primary/25 bg-card shadow-raised"
           onClick={wake}
         >
           <div className="flex items-start justify-between gap-2 p-3 pb-2">
             <p className="cite flex items-center gap-1 text-[10px] uppercase tracking-[0.16em]">
-              <Sparkles className="size-3" /> {chat ? "Ask Merlin" : "Merlin's tip"}
+              <Sparkles className="size-3" /> Merlin&apos;s tip
             </p>
-            <div className="flex items-center gap-2">
-              <button
-                className="flex items-center gap-1 text-[11px] font-medium text-primary underline-offset-2 hover:underline"
-                onClick={() => {
-                  wake();
-                  setChat((c) => !c);
-                }}
-              >
-                {chat ? (
-                  <>
-                    <Wand2 className="size-3" /> Tips
-                  </>
-                ) : (
-                  <>
-                    <MessageCircle className="size-3" /> Chat
-                  </>
-                )}
-              </button>
-              <button aria-label="Close Merlin" onClick={() => setOpen(false)}>
-                <X className="size-3.5 text-muted-foreground" />
-              </button>
-            </div>
+            <button aria-label="Close Merlin" onClick={() => setOpen(false)}>
+              <X className="size-3.5 text-muted-foreground" />
+            </button>
           </div>
 
-          {chat ? (
-            <MerlinChat onActivity={wake} />
-          ) : (
-            <div className="px-3 pb-3">
-              <p className="text-[13px] leading-relaxed">{TIPS[tip % TIPS.length]}</p>
-              {idle ? (
-                <p className="mt-3 flex items-center gap-1.5 text-[12px] font-medium text-gold">
-                  <Wand2 className="size-3.5" /> Still here! Tap the X when you&apos;re done with me.
-                </p>
-              ) : (
-                <p className="cite mt-3 text-[10.5px] uppercase tracking-[0.16em]">{act.label}</p>
-              )}
-              <button
-                className="mt-2 text-[12px] font-medium text-primary underline-offset-2 hover:underline"
-                onClick={() => {
-                  wake();
-                  setTip((t) => t + 1);
-                }}
-              >
-                Another spell, please
-              </button>
-            </div>
-          )}
+          <div className="px-3 pb-3">
+            <p className="text-[13px] leading-relaxed">{TIPS[tip % TIPS.length]}</p>
+            {idle ? (
+              <p className="mt-3 flex items-center gap-1.5 text-[12px] font-medium text-gold">
+                <Wand2 className="size-3.5" /> Still here! Tap the X when you&apos;re done with me.
+              </p>
+            ) : (
+              <p className="cite mt-3 text-[10.5px] uppercase tracking-[0.16em]">{act.label}</p>
+            )}
+            <button
+              className="mt-2 text-[12px] font-medium text-primary underline-offset-2 hover:underline"
+              onClick={() => {
+                wake();
+                setTip((t) => t + 1);
+              }}
+            >
+              Another spell, please
+            </button>
+          </div>
         </div>
       )}
 
@@ -408,8 +259,8 @@ export function WizardHelper() {
           </span>
         )}
         <button
-          aria-label="Ask Merlin the compliance wizard — click and hold to move him"
-          title="Click to open · click and hold to move Merlin"
+          aria-label="Open Merlin compliance tips — click and hold to move him"
+          title="Click to open tips · click and hold to move Merlin"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -420,10 +271,10 @@ export function WizardHelper() {
         >
           {open && <Sparks />}
           <Merlin
-            pose={open ? (idle ? "celebrating" : chat ? "thinking" : act.pose) : "greeting"}
+            pose={open ? (idle ? "celebrating" : act.pose) : "greeting"}
             size="sm"
             float={!open || idle}
-            className={`pointer-events-none translate-y-0.5 ${open && !idle && !chat ? act.anim : ""}`}
+            className={`pointer-events-none translate-y-0.5 ${open && !idle ? act.anim : ""}`}
           />
           {open && !idle && (
             <span className="pointer-events-none absolute inset-0 grid place-items-center">
