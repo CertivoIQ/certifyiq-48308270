@@ -1,28 +1,19 @@
 declare module '@/lib/build-identity.mjs' {
   export const HEALTH_SERVICE_NAME: 'certivoiq-web';
+  export const HEALTH_CONTRACT_VERSION: 1;
 
-  export interface HealthEnvironment {
-    CERTIVOIQ_SOURCE_REVISION?: string | undefined;
-    CERTIVOIQ_DEPLOYMENT_ID?: string | undefined;
+  export interface HealthPayload {
+    ok: true;
+    status: 'ok';
+    service: 'certivoiq-web';
+    contractVersion: 1;
   }
 
-  export type HealthPayload =
-    | { ok: false; status: 'misconfigured'; service: 'certivoiq-web' }
-    | {
-        ok: true;
-        status: 'ok';
-        service: 'certivoiq-web';
-        sourceRevision: string;
-        deploymentId: string;
-      };
-
   export interface HealthResult {
-    status: 200 | 503;
+    status: 200;
     body: HealthPayload;
   }
 
-  export function normalizeSourceRevision(value: unknown): string | null;
-  export function normalizeDeploymentId(value: unknown): string | null;
-  export function buildHealthPayload(env: HealthEnvironment | undefined): HealthResult;
+  export function buildHealthPayload(): HealthResult;
   export function healthResponseHeaders(): Record<string, string>;
 }
