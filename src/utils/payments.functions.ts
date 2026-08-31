@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 import { normalizeLicenseSelection } from "@/lib/license-selection";
-import { isLiveBillingVerified } from "@/lib/billing-config.server";
+import { assertNewPaidOnboardingAllowed } from "@/lib/paid-onboarding.server";
 import { LICENSES } from "@/lib/plan-catalog";
 import {
   FOUNDERS_PROMOTION,
@@ -271,9 +271,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
-      if (data.environment === "live" && !isLiveBillingVerified()) {
-        return { error: "Live billing is not verified for release." };
-      }
+      assertNewPaidOnboardingAllowed(data.environment, { actorUserId: context.userId });
       const stripe = createStripeClient(data.environment);
       const foundersPromotionEnabled = foundersPromotionAvailable();
       if (foundersPromotionEnabled) await ensureFoundersPromotion(stripe);
