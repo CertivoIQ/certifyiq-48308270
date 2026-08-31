@@ -1,6 +1,4 @@
 import { inflateSync } from "node:zlib";
-import { generateText } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 import {
   composeSidecarText,
@@ -22,11 +20,9 @@ export type { PageProvenance };
  * Providers:
  *  - `deterministic-text`: parses labelled values out of text/CSV exports and
  *    machine-readable PDFs. Fully reproducible, used for tests and fixtures.
- *  - `lovable-ai`: Lovable AI Gateway extraction for extracted document text,
- *    verified against the source text so a hallucinated value cannot become a fact.
  */
 
-export type ExtractionProviderName = "deterministic-text" | "lovable-ai" | "ocr-tesseract";
+export type ExtractionProviderName = "deterministic-text" | "ocr-tesseract";
 
 export const EXTRACTION_FIELDS = [
   "tenant_signature_date",
@@ -309,7 +305,7 @@ function extractPdfStreams(bytes: ArrayBuffer): Uint8Array[] {
 /**
  * Dependency-free PDF text extraction. It handles the common machine-readable
  * PDF case (including Flate-compressed content streams) without changing the
- * production lockfile or consuming Lovable build credits.
+ * production lockfile or calling an external extraction service.
  */
 export async function extractTextFromPdf(bytes: ArrayBuffer): Promise<string> {
   const streams = extractPdfStreams(bytes);
@@ -347,72 +343,6 @@ export async function extractDocumentText(
     text: new TextDecoder().decode(bytes),
     provider: "deterministic-text",
     documentKind: "text",
-  };
-}
-
-/**
- * AI extraction for extracted document text. Every returned value must appear
- * in the source text, otherwise it is discarded rather than trusted.
- */
-export async function extractFactsWithAi(
-  text: string,
-  documentRef: string,
-  apiKey: string,
-): Promise<ExtractionResult> {
-  const provider = createLovableAiGatewayProvider(apiKey);
-  const prompt = [
-    "Extract the following fields from this affordable-housing certification document.",
-    "Return ONLY compact JSON: an array of objects {field, value, page, snippet}.",
-    "snippet must be copied verbatim from the document. Omit fields you cannot find.",
-    `fields: ${EXTRACTION_FIELDS.join(", ")}`,
-    "---",
-    text.slice(0, 12000),
-  ].join("\n");
-
-  const { text: raw } = await generateText({
-    model: provider.chatModel("google/gemini-3.6-flash"),
-    prompt,
-    maxOutputTokens: 1200,
-  });
-
-  const jsonStart = raw.indexOf("[");
-  const jsonEnd = raw.lastIndexOf("]");
-  let parsed: Array<{ field?: string; value?: unknown; page?: number; snippet?: string }> = [];
-  if (jsonStart !== -1 && jsonEnd > jsonStart) {
-    try {
-      parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1)) as typeof parsed;
-    } catch {
-      parsed = [];
-    }
-  }
-
-  const haystack = text.toLowerCase();
-  const facts: ExtractedFact[] = [];
-  for (const candidate of parsed) {
-    const field = candidate.field as ExtractionField | undefined;
-    if (!field || !EXTRACTION_FIELDS.includes(field)) continue;
-    const value = normalizeValue(field, String(candidate.value ?? ""));
-    if (value === null) continue;
-    const snippet = typeof candidate.snippet === "string" ? candidate.snippet.trim() : "";
-    if (!snippet || !haystack.includes(snippet.toLowerCase().slice(0, 40))) continue;
-    facts.push({
-      field,
-      value,
-      sourceDocumentRef: documentRef,
-      page: Number.isFinite(candidate.page) ? Number(candidate.page) : 1,
-      snippet: snippet.slice(0, 300),
-      confidence: 0.9,
-      humanVerified: false,
-      requiredForDecision: true,
-      provider: "lovable-ai",
-    });
-  }
-
-  const seen = new Set(facts.map((fact) => fact.field));
-  return {
-    provider: "lovable-ai",
-    facts,
-    missingFields: EXTRACTION_FIELDS.filter((field) => !seen.has(field)),
   };
 }
 
