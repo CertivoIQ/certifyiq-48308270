@@ -96,6 +96,7 @@ jobs:
           bun run test:mfh-hotma-operations
           bun run test:pha-hotma
           bun run test:billing
+          node --test scripts/test-paid-license-database-integrity.mjs
           node --test scripts/test-founders-promotion.mjs
           bun test ./scripts/test-stripe-webhook-security.ts
           node --test scripts/test-stripe-webhook-fail-closed.mjs
