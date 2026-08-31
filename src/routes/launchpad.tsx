@@ -1,12 +1,16 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, LifeBuoy, Loader2, Rocket, UploadCloud } from "lucide-react";
+import { Check, ExternalLink, LifeBuoy, Loader2, Rocket, UploadCloud } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Meter, Panel, Pill } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { LAUNCHPAD_STEPS } from "@/lib/platform-data";
+import {
+  normalizeOnboardingProgress,
+  previousOnboardingProgress,
+} from "@/lib/onboarding-progress.mjs";
 
 export const Route = createFileRoute("/launchpad")({
   ssr: false,
@@ -33,6 +37,28 @@ export const Route = createFileRoute("/launchpad")({
   }),
   component: LaunchPadPage,
 });
+
+function StepDestinationButton({ stepId }: { stepId: number }) {
+  const content = (
+    <>
+      <ExternalLink className="size-4" />
+      Open setup workspace
+    </>
+  );
+
+  switch (stepId) {
+    case 2:
+      return <Button variant="outline" asChild><Link to="/workspace-setup">{content}</Link></Button>;
+    case 3:
+      return <Button variant="outline" asChild><Link to="/properties">{content}</Link></Button>;
+    case 4:
+      return <Button variant="outline" asChild><Link to="/compliance-intelligence">{content}</Link></Button>;
+    case 5:
+      return <Button variant="outline" asChild><Link to="/account/security">{content}</Link></Button>;
+    default:
+      return null;
+  }
+}
 
 function LaunchPadPage() {
   const { user } = Route.useRouteContext();
@@ -65,9 +91,43 @@ function LaunchPadPage() {
       }
 
       if (data) {
-        setStep(Math.max(1, Math.min(LAUNCHPAD_STEPS.length, data.current_step)));
-        setCompletedSteps(data.completed_steps ?? []);
-        setCompletedAt(data.completed_at);
+        const normalized = normalizeOnboardingProgress({
+          currentStep: data.current_step,
+          completedSteps: data.completed_steps,
+          completedAt: data.completed_at,
+          totalSteps: LAUNCHPAD_STEPS.length,
+        });
+        const storedSteps = data.completed_steps ?? [];
+        const needsRepair =
+          normalized.currentStep !== data.current_step ||
+          normalized.completedAt !== data.completed_at ||
+          normalized.completedSteps.length !== storedSteps.length ||
+          normalized.completedSteps.some((id, index) => id !== storedSteps[index]);
+
+        if (needsRepair) {
+          const { error: repairError } = await supabase
+            .from("customer_onboarding_progress")
+            .upsert(
+              {
+                user_id: user.id,
+                current_step: normalized.currentStep,
+                completed_steps: normalized.completedSteps,
+                completed_at: normalized.completedAt,
+              },
+              { onConflict: "user_id" },
+            );
+
+          if (cancelled) return;
+          if (repairError) {
+            setError("Your saved onboarding progress is inconsistent and could not be repaired.");
+            setLoading(false);
+            return;
+          }
+        }
+
+        setStep(normalized.currentStep);
+        setCompletedSteps(normalized.completedSteps);
+        setCompletedAt(normalized.completedAt);
         setLoading(false);
         return;
       }
@@ -142,7 +202,16 @@ function LaunchPadPage() {
   }
 
   async function goBack() {
-    await saveProgress(Math.max(1, step - 1), completedSteps, completedAt);
+    const previous = previousOnboardingProgress({
+      currentStep: step,
+      completedSteps,
+      totalSteps: LAUNCHPAD_STEPS.length,
+    });
+    await saveProgress(
+      previous.currentStep,
+      previous.completedSteps,
+      previous.completedAt,
+    );
   }
 
   async function restartSetup() {
@@ -231,6 +300,7 @@ function LaunchPadPage() {
             ) : null}
 
             <div className="mt-6 flex flex-wrap gap-2">
+              {!done ? <StepDestinationButton stepId={current.id} /> : null}
               {!done && step > 1 ? (
                 <Button variant="outline" onClick={() => void goBack()} disabled={saving}>
                   Back
