@@ -12,10 +12,11 @@ import {
 } from '@/lib/ocr-sidecar.mjs';
 
 /**
- * Browser-side certification preparation.
+ * Browser-side certification document extraction.
  *
- * Runs entirely in the customer's session: pages are read with the PDF text
- * layer first and only pages without usable text are rasterised and OCR'd with
+ * Runs entirely in the customer's session. PDF pages use the text layer first
+ * and only pages without usable text are rasterised and OCR'd. PNG, JPEG, and
+ * WEBP certifications are OCR'd directly with
  * the bundled open-source engine. No document bytes are sent to any external
  * OCR service. The output is an OCR sidecar (see ocr-sidecar.mjs) that the
  * normal server-side review pipeline consumes, so OCR text flows through the
@@ -36,6 +37,14 @@ export function isPdfFile(file: File): boolean {
   return /application\/pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
 }
 
+export function isImageFile(file: File): boolean {
+  return /^image\/(png|jpeg|webp)$/i.test(file.type) || /\.(png|jpe?g|webp)$/i.test(file.name);
+}
+
+export function isOcrSupportedFile(file: File): boolean {
+  return isPdfFile(file) || isImageFile(file);
+}
+
 type RenderTarget = { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D };
 
 function createCanvas(width: number, height: number): RenderTarget {
@@ -52,20 +61,65 @@ export type PrepareResult =
   | { kind: 'ocr'; sidecar: OcrSidecar; ocrPageCount: number };
 
 /**
- * Returns a sidecar only when at least one page needed OCR. A fully
- * machine-readable PDF is left untouched so the existing server-side text path
- * stays exactly as-is.
+ * Returns a source-bound sidecar for image certifications and PDFs with one or
+ * more scanned pages. A fully machine-readable PDF is left untouched so the
+ * existing server-side deterministic text path stays exactly as-is.
  */
 export async function prepareCertificationForReview(
   file: File,
   onProgress?: (message: string) => void,
 ): Promise<PrepareResult> {
+  if (!isOcrSupportedFile(file)) {
+    throw new Error('Only PDF, PNG, JPEG, and WEBP certification documents can be extracted.');
+  }
+
+  const sourceBuffer = await file.arrayBuffer();
+  const sourceSha256 = await sha256Hex(sourceBuffer);
+
+  if (isImageFile(file)) {
+    onProgress?.('Preparing certification image for review…');
+    const { createWorker } = await import('tesseract.js');
+    const ocrWorker = await createWorker('eng');
+    try {
+      const { data } = await ocrWorker.recognize(file);
+      const text = normalizePageText(data.text);
+      const confidence = Number(data.confidence) / 100;
+      if (!text || !Number.isFinite(confidence) || confidence <= 0) {
+        throw new Error(
+          'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
+        );
+      }
+      return {
+        kind: 'ocr',
+        ocrPageCount: 1,
+        sidecar: {
+          schemaVersion: OCR_SIDECAR_VERSION,
+          sourceFileName: file.name,
+          sourceSha256,
+          sourceByteSize: file.size,
+          createdAt: new Date().toISOString(),
+          pageCount: 1,
+          truncated: false,
+          pages: [
+            {
+              page: 1,
+              source: 'ocr',
+              engine: OCR_ENGINE,
+              ocrConfidence: Math.min(1, confidence),
+              text,
+            },
+          ],
+        },
+      };
+    } finally {
+      await ocrWorker.terminate().catch(() => undefined);
+    }
+  }
+
   const pdfjs = await import('pdfjs-dist');
   const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
-  const sourceBuffer = await file.arrayBuffer();
-  const sourceSha256 = await sha256Hex(sourceBuffer);
   const bytes = new Uint8Array(sourceBuffer);
   const pdf = await pdfjs.getDocument({ data: bytes }).promise;
 
