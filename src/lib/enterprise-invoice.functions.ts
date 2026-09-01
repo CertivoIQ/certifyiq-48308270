@@ -26,6 +26,8 @@ type EnterpriseInvoiceInput = {
 export type EnterpriseInvoiceResult =
   | {
       ok: true;
+      scheduleId: string;
+      subscriptionId: string;
       invoiceId: string;
       invoiceNumber: string | null;
       hostedInvoiceUrl: string | null;
@@ -33,6 +35,9 @@ export type EnterpriseInvoiceResult =
       workflowMode?: string;
       pricingClass: LicensePricingClass;
       annualPriceCents: number;
+      firstInstallmentCents: number;
+      monthlyInstallmentCents: number;
+      commitmentMonths: 12;
       stateCodes: string[];
     }
   | { error: string };
@@ -49,8 +54,26 @@ function licenseSelection(
 
 function productLabel(pricingClass: LicensePricingClass): string {
   return pricingClass === "pha"
-    ? "CertivoIQ PHA Annual License"
-    : "CertivoIQ Multifamily Enterprise Annual License";
+    ? "CertivoIQ PHA Annual License — Monthly Invoicing"
+    : "CertivoIQ Multifamily Enterprise Annual License — Monthly Invoicing";
+}
+
+async function requireMonthlyPrice(
+  stripe: ReturnType<typeof createStripeClient>,
+  lookupKey: string,
+  expectedUnitAmount: number,
+) {
+  const prices = await stripe.prices.list({ lookup_keys: [lookupKey], active: true, limit: 1 });
+  const price = prices.data[0];
+  if (
+    !price ||
+    price.type !== "recurring" ||
+    price.recurring?.interval !== "month" ||
+    price.unit_amount !== expectedUnitAmount
+  ) {
+    throw new Error(`Configured monthly Stripe price is invalid: ${lookupKey}`);
+  }
+  return price;
 }
 
 async function requireStaff(context: {
@@ -136,60 +159,155 @@ async function issueEnterpriseInvoice(
       });
     }
 
-    await stripe.invoiceItems.create({
-      customer: customer.id,
-      amount: amountCents,
-      currency: "usd",
-      description: `${label} — all currently available platform features`,
-      metadata: {
-        billing_model: "enterprise_invoice",
-        license_product: PRODUCT_CODE,
-        organization_id: data.organizationId,
-        license_pricing_class: data.pricingClass,
-        license_kind: selection.licenseKind,
-        licensed_state_codes: stateCodes,
-        state_pack_count: String(selection.stateCodes.length),
-        price_lookup_key: selection.priceLookupKey,
-        quantity: String(selection.quantity),
-        annual_price_cents: String(amountCents),
-        workflow_mode: data.workflowMode ?? "manual",
-      },
-    });
-
     const metadata = {
-      billing_model: "enterprise_invoice",
+      billing_model: "enterprise_invoice_monthly",
       license_product: PRODUCT_CODE,
       annual_price_cents: String(amountCents),
+      first_installment_cents: String(selection.firstInstallmentAmountCents),
+      monthly_installment_cents: String(selection.monthlyAmountCents),
+      commitment_months: String(selection.commitmentMonths),
       license_pricing_class: data.pricingClass,
       license_kind: selection.licenseKind,
       licensed_state_codes: stateCodes,
       state_pack_count: String(selection.stateCodes.length),
-      price_lookup_key: selection.priceLookupKey,
+      contract_price_lookup_key: selection.priceLookupKey,
       quantity: String(selection.quantity),
       organization_id: data.organizationId,
       ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
       organization_name: data.organizationName,
       billing_email: data.billingEmail,
-      payment_method: data.allowCard ? "ach_or_card" : "ach",
+      payment_method: "invoice_ach_or_bank_transfer",
       payment_terms: `net_${netDays}`,
       workflow_mode: data.workflowMode ?? "manual",
       ...(data.purchaseOrderNumber ? { purchase_order_number: data.purchaseOrderNumber } : {}),
     };
 
-    const invoice = await stripe.invoices.create({
-      customer: customer.id,
-      collection_method: "send_invoice",
-      days_until_due: netDays,
-      auto_advance: true,
-      description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
-      metadata,
-      payment_settings: {
-        payment_method_types: data.allowCard ? ["us_bank_account", "card"] : ["us_bank_account"],
-      },
-    } as Parameters<typeof stripe.invoices.create>[0]);
+    if (data.allowCard) throw new Error("Base licenses are invoice-only; card payment is disabled");
 
-    const finalized = await stripe.invoices.finalizeInvoice(invoice.id);
-    const sent = await stripe.invoices.sendInvoice(finalized.id);
+    const existingSubscriptions = await stripe.subscriptions.list({
+      customer: customer.id,
+      status: "all",
+      limit: 100,
+    });
+    if (
+      existingSubscriptions.data.some(
+        (subscription) =>
+          subscription.metadata?.["organization_id"] === data.organizationId &&
+          subscription.metadata?.["license_product"] === PRODUCT_CODE &&
+          !["canceled", "incomplete_expired"].includes(subscription.status),
+      )
+    ) {
+      throw new Error("An active or scheduled annual license already exists for this organization");
+    }
+
+    const regularPrice = await requireMonthlyPrice(
+      stripe,
+      selection.priceLookupKey,
+      selection.monthlyAmountCents / selection.quantity,
+    );
+    const firstPrice =
+      selection.firstInstallmentPriceLookupKey === selection.priceLookupKey
+        ? regularPrice
+        : await requireMonthlyPrice(
+            stripe,
+            selection.firstInstallmentPriceLookupKey,
+            selection.firstInstallmentAmountCents / selection.quantity,
+          );
+    const regularProduct =
+      typeof regularPrice.product === "string" ? regularPrice.product : regularPrice.product.id;
+    const firstProduct =
+      typeof firstPrice.product === "string" ? firstPrice.product : firstPrice.product.id;
+    if (regularProduct !== firstProduct) {
+      throw new Error("Monthly installment prices must belong to the same base-license product");
+    }
+
+    const firstPhaseMetadata = {
+      ...metadata,
+      invoice_price_lookup_key: selection.firstInstallmentPriceLookupKey,
+      installment_phase: "first",
+    };
+    const regularPhaseMetadata = {
+      ...metadata,
+      invoice_price_lookup_key: selection.priceLookupKey,
+      installment_phase: "regular",
+    };
+    const phases =
+      selection.firstInstallmentPriceLookupKey === selection.priceLookupKey
+        ? [
+            {
+              items: [{ price: regularPrice.id, quantity: selection.quantity }],
+              duration: { interval: "month" as const, interval_count: 12 },
+              metadata: regularPhaseMetadata,
+              description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
+            },
+          ]
+        : [
+            {
+              items: [{ price: firstPrice.id, quantity: selection.quantity }],
+              duration: { interval: "month" as const, interval_count: 1 },
+              metadata: firstPhaseMetadata,
+              description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
+            },
+            {
+              items: [{ price: regularPrice.id, quantity: selection.quantity }],
+              duration: { interval: "month" as const, interval_count: 11 },
+              metadata: regularPhaseMetadata,
+              description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
+              proration_behavior: "none" as const,
+            },
+          ];
+
+    const schedule = await stripe.subscriptionSchedules.create({
+      customer: customer.id,
+      start_date: "now",
+      end_behavior: "cancel",
+      metadata,
+      default_settings: {
+        collection_method: "send_invoice",
+        invoice_settings: { days_until_due: netDays },
+        description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
+      },
+      phases,
+      expand: ["subscription"],
+    });
+    const subscriptionId =
+      typeof schedule.subscription === "string"
+        ? schedule.subscription
+        : schedule.subscription?.id;
+    if (!subscriptionId) throw new Error("Stripe did not create the monthly subscription");
+
+    const runtimeMetadata = {
+      ...firstPhaseMetadata,
+      stripe_schedule_id: schedule.id,
+      stripe_subscription_id: subscriptionId,
+    };
+
+    await stripe.subscriptions.update(subscriptionId, {
+      metadata: runtimeMetadata,
+      payment_settings: {
+        payment_method_types: ["us_bank_account", "customer_balance"],
+        payment_method_options: {
+          customer_balance: {
+            funding_type: "bank_transfer",
+            bank_transfer: { type: "us_bank_transfer" },
+          },
+        },
+      },
+    } as Parameters<typeof stripe.subscriptions.update>[1]);
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ["latest_invoice"],
+    });
+    const latestInvoice = subscription.latest_invoice;
+    const invoice =
+      typeof latestInvoice === "string"
+        ? await stripe.invoices.retrieve(latestInvoice)
+        : latestInvoice;
+    if (!invoice) throw new Error("Stripe did not create the first monthly invoice");
+    await stripe.invoices.update(invoice.id, { metadata: runtimeMetadata });
+    const finalized =
+      invoice.status === "draft" ? await stripe.invoices.finalizeInvoice(invoice.id) : invoice;
+    const sent =
+      finalized.status === "open" ? await stripe.invoices.sendInvoice(finalized.id) : finalized;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("crm_news").insert({
@@ -198,9 +316,9 @@ async function issueEnterpriseInvoice(
         data.workflowMode === "sandbox_test"
           ? `Sandbox test invoice issued — ${data.organizationName}`
           : `Enterprise invoice issued — ${data.organizationName}`,
-      detail: `${sent.number ?? sent.id} · ${formattedAmount} · ${
+      detail: `${sent.number ?? sent.id} · ${formattedAmount} annual commitment · ${
         data.pricingClass === "pha" ? "PHA" : "Standard"
-      } · Net ${netDays} · ${data.allowCard ? "ACH/card" : "ACH"} · ${
+      } · monthly invoice · Net ${netDays} · ACH/bank transfer · ${
         data.workflowMode ?? "manual"
       }`,
       source: "CertivoIQ Enterprise Billing",
@@ -208,6 +326,8 @@ async function issueEnterpriseInvoice(
 
     return {
       ok: true,
+      scheduleId: schedule.id,
+      subscriptionId,
       invoiceId: sent.id,
       invoiceNumber: sent.number ?? null,
       hostedInvoiceUrl: sent.hosted_invoice_url ?? null,
@@ -215,6 +335,9 @@ async function issueEnterpriseInvoice(
       workflowMode: data.workflowMode ?? "manual",
       pricingClass: data.pricingClass,
       annualPriceCents: amountCents,
+      firstInstallmentCents: selection.firstInstallmentAmountCents,
+      monthlyInstallmentCents: selection.monthlyAmountCents,
+      commitmentMonths: selection.commitmentMonths,
       stateCodes: selection.stateCodes,
     };
   } catch (error) {
@@ -353,4 +476,5 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
       stateCodes: data.stateCodes,
     }, context.userId);
   });
+
 
