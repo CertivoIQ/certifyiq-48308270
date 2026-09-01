@@ -33,18 +33,16 @@ export type EnterpriseLicenseDb = {
 };
 
 const PRODUCT_CODE = "certivoiq_enterprise";
-const ACTIVE_DAYS = 365;
 
 function isoFromUnix(seconds: number | null | undefined): string | null {
   return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
 
-function addDays(value: string, days: number): string {
-  return new Date(new Date(value).getTime() + days * 24 * 60 * 60 * 1000).toISOString();
-}
-
 function invoiceMetadata(invoice: StripeInvoiceLike): Record<string, string> {
-  return invoice.metadata ?? {};
+  return {
+    ...(invoice.parent?.subscription_details?.metadata ?? {}),
+    ...(invoice.metadata ?? {}),
+  };
 }
 
 function invoiceOrganizationId(invoice: StripeInvoiceLike): string | null {
@@ -53,6 +51,10 @@ function invoiceOrganizationId(invoice: StripeInvoiceLike): string | null {
 
 function invoiceCrmAccountId(invoice: StripeInvoiceLike): string | null {
   return invoiceMetadata(invoice)["crm_account_id"] || null;
+}
+
+function invoiceSubscriptionId(invoice: StripeInvoiceLike): string | null {
+  return invoice.subscription ?? invoice.parent?.subscription_details?.subscription ?? null;
 }
 
 function invoiceAdminEmail(invoice: StripeInvoiceLike): string | null {
@@ -79,12 +81,24 @@ export function enterpriseInvoiceActivationException(invoice: StripeInvoiceLike)
   } catch {
     return "invalid_license_state_selection";
   }
-  const expectedCents = selection.annualAmountUsd * 100;
-  if (metadata["annual_price_cents"] !== String(expectedCents)) {
+  const expectedAnnualCents = selection.annualAmountUsd * 100;
+  if (metadata["billing_model"] !== "enterprise_invoice_monthly") {
+    return "wrong_billing_model";
+  }
+  if (metadata["annual_price_cents"] !== String(expectedAnnualCents)) {
     return "license_price_metadata_mismatch";
   }
-  if (metadata["price_lookup_key"] !== selection.priceLookupKey) {
+  if (metadata["contract_price_lookup_key"] !== selection.priceLookupKey) {
     return "license_price_key_mismatch";
+  }
+  if (metadata["commitment_months"] !== String(selection.commitmentMonths)) {
+    return "license_commitment_mismatch";
+  }
+  if (metadata["first_installment_cents"] !== String(selection.firstInstallmentAmountCents)) {
+    return "first_installment_metadata_mismatch";
+  }
+  if (metadata["monthly_installment_cents"] !== String(selection.monthlyAmountCents)) {
+    return "monthly_installment_metadata_mismatch";
   }
   if (metadata["quantity"] !== String(selection.quantity)) {
     return "license_quantity_mismatch";
@@ -92,16 +106,40 @@ export function enterpriseInvoiceActivationException(invoice: StripeInvoiceLike)
   if (metadata["state_pack_count"] !== String(selection.stateCodes.length)) {
     return "license_state_count_mismatch";
   }
-  if (invoice.amount_due !== expectedCents) return "invoice_amount_mismatch";
+  const invoicePriceKey = metadata["invoice_price_lookup_key"];
+  const expectedInvoiceCents =
+    invoicePriceKey === selection.firstInstallmentPriceLookupKey
+      ? selection.firstInstallmentAmountCents
+      : invoicePriceKey === selection.priceLookupKey
+        ? selection.monthlyAmountCents
+        : null;
+  if (expectedInvoiceCents === null) return "invoice_price_key_mismatch";
+  if (invoice.collection_method !== "send_invoice") return "invoice_collection_method_mismatch";
+  if (!invoice.period_end) return "missing_billing_period";
+  if (invoice.amount_due !== expectedInvoiceCents) return "invoice_amount_mismatch";
   if ((invoice.amount_paid ?? 0) <= 0) return "invoice_not_paid";
   if ((invoice.amount_due ?? 0) > 0 && (invoice.amount_paid ?? 0) < (invoice.amount_due ?? 0)) {
     return "partial_payment";
   }
-  if (invoice.amount_paid !== expectedCents) return "payment_amount_mismatch";
+  if (invoice.amount_paid !== expectedInvoiceCents) return "payment_amount_mismatch";
   if (metadata["manual_review_required"] === "true") {
     return metadata["manual_review_reason"] || "manual_review_required";
   }
   return null;
+}
+
+async function eventAlreadyRecorded(
+  db: EnterpriseLicenseDb,
+  event: { id?: string },
+): Promise<boolean> {
+  if (!event.id) return false;
+  const { data, error } = await db
+    .from("enterprise_invoice_events")
+    .select("id")
+    .eq("stripe_event_id", event.id)
+    .maybeSingle();
+  if (error) throw new Error(`Enterprise event ledger read failed: ${error.message ?? "database error"}`);
+  return Boolean(data?.["id"]);
 }
 
 async function recordEvent(
@@ -327,9 +365,12 @@ export async function applyEnterpriseInvoicePaid(
   event: { id?: string; type?: string },
 ): Promise<{ action: "activated" | "renewed" | "exception" | "ignored"; reason?: string }> {
   const metadata = invoiceMetadata(invoice);
-  if (metadata["billing_model"] !== "enterprise_invoice") {
+  if (metadata["billing_model"] !== "enterprise_invoice_monthly") {
     await recordEvent(db, event, invoice, "ignored", "not_enterprise_invoice");
     return { action: "ignored", reason: "not_enterprise_invoice" };
+  }
+  if (await eventAlreadyRecorded(db, event)) {
+    return { action: "ignored", reason: "duplicate_event" };
   }
 
   const exception = enterpriseInvoiceActivationException(invoice);
@@ -346,6 +387,10 @@ export async function applyEnterpriseInvoicePaid(
           currency: invoice.currency ?? "usd",
           stripe_customer_id: invoice.customer ?? null,
           stripe_invoice_id: invoice.id ?? null,
+          stripe_subscription_id: invoiceSubscriptionId(invoice),
+          stripe_schedule_id: metadata["stripe_schedule_id"] || null,
+          billing_interval: "month",
+          commitment_months: 12,
           payment_method: metadata["payment_method"] || null,
           payment_terms: metadata["payment_terms"] || null,
           purchase_order_number: metadata["purchase_order_number"] || null,
@@ -365,18 +410,19 @@ export async function applyEnterpriseInvoicePaid(
   const now = isoFromUnix(invoice.status_transitions?.paid_at) ?? new Date().toISOString();
   const { data: existing } = await db
     .from("enterprise_licenses")
-    .select("id,status,starts_at,expires_at")
+    .select("id,status,starts_at,expires_at,installments_paid")
     .eq("organization_id", organizationId)
     .eq("product_code", PRODUCT_CODE)
     .maybeSingle();
 
-  const priorExpiry = existing?.["expires_at"] as string | null | undefined;
-  const stillCurrent = Boolean(
-    priorExpiry && new Date(priorExpiry).getTime() > new Date(now).getTime(),
-  );
-  const startsAt = stillCurrent && priorExpiry ? priorExpiry : now;
-  const expiresAt = addDays(startsAt, ACTIVE_DAYS);
-  const action: "activated" | "renewed" = existing ? "renewed" : "activated";
+  const startsAt =
+    (existing?.["starts_at"] as string | null | undefined) ??
+    isoFromUnix(invoice.period_start) ??
+    now;
+  const paidThrough = isoFromUnix(invoice.period_end)!;
+  const installmentsPaid = Number(existing?.["installments_paid"] ?? 0) + 1;
+  const action: "activated" | "renewed" =
+    existing?.["status"] === "active" ? "renewed" : "activated";
 
   const { error: licenseWriteError } = await db.from("enterprise_licenses").upsert(
     {
@@ -388,11 +434,17 @@ export async function applyEnterpriseInvoicePaid(
       status: "active",
       annual_price_cents: selection.annualAmountUsd * 100,
       currency: invoice.currency ?? "usd",
-      starts_at: existing ? (existing["starts_at"] ?? now) : now,
-      expires_at: expiresAt,
-      renewal_at: expiresAt,
+      starts_at: startsAt,
+      expires_at: paidThrough,
+      paid_through: paidThrough,
+      renewal_at: paidThrough,
+      billing_interval: "month",
+      commitment_months: selection.commitmentMonths,
+      installments_paid: installmentsPaid,
       stripe_customer_id: invoice.customer ?? null,
       stripe_invoice_id: invoice.id ?? null,
+      stripe_subscription_id: invoiceSubscriptionId(invoice),
+      stripe_schedule_id: metadata["stripe_schedule_id"] || null,
       payment_method: metadata["payment_method"] || "invoice",
       payment_terms: metadata["payment_terms"] || null,
       purchase_order_number: metadata["purchase_order_number"] || null,
@@ -410,13 +462,13 @@ export async function applyEnterpriseInvoicePaid(
     );
   }
 
-  await updateCrm(db, invoice, "active", startsAt, expiresAt);
+  await updateCrm(db, invoice, "active", startsAt, paidThrough);
   const provisioning = await provisionEnterpriseAdmin(
     db,
     invoice,
     env,
     organizationId,
-    expiresAt,
+    paidThrough,
     selection,
   );
   await recordEvent(
@@ -435,7 +487,8 @@ export async function applyEnterpriseInvoicePastDue(
   event: { id?: string; type?: string },
 ) {
   const metadata = invoiceMetadata(invoice);
-  if (metadata["billing_model"] !== "enterprise_invoice") return;
+  if (metadata["billing_model"] !== "enterprise_invoice_monthly") return;
+  if (await eventAlreadyRecorded(db, event)) return;
   const organizationId = invoiceOrganizationId(invoice);
   if (!organizationId) {
     await recordEvent(db, event, invoice, "exception", "missing_organization_id");
@@ -449,4 +502,5 @@ export async function applyEnterpriseInvoicePastDue(
   await updateCrm(db, invoice, "past_due");
   await recordEvent(db, event, invoice, "past_due");
 }
+
 

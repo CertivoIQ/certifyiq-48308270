@@ -62,7 +62,12 @@ export interface StripeInvoiceLike {
   last_finalization_error?: { message?: string | null } | null
   last_payment_error?: { message?: string | null } | null
   subscription?: string | null
-  parent?: { subscription_details?: { subscription?: string | null } | null } | null
+  parent?: {
+    subscription_details?: {
+      subscription?: string | null
+      metadata?: Record<string, string> | null
+    } | null
+  } | null
   lines?: { data?: StripeInvoiceLineLike[] } | null
 }
 
@@ -78,3 +83,4 @@ export type StripeWebhookObject = StripeSubscriptionLike &
 
 /** Alias kept for webhook code that refers to subscription items as line items. */
 export type StripeLineItemLike = StripeSubscriptionItemLike;
+

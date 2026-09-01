@@ -278,51 +278,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
       assertNewPaidOnboardingAllowed(data.environment, { actorUserId: context.userId });
-      const stripe = createStripeClient(data.environment);
-      const foundersPromotionEnabled = foundersPromotionAvailable();
-      if (foundersPromotionEnabled) await ensureFoundersPromotion(stripe);
-
-      const selection = normalizeLicenseSelection(data);
-      const prices = await stripe.prices.list({
-        lookup_keys: [selection.priceLookupKey],
-        active: true,
-        limit: 1,
-      });
-      const stripePrice = prices.data[0];
-      if (
-        !stripePrice ||
-        stripePrice.type !== "recurring" ||
-        stripePrice.recurring?.interval !== "year"
-      )
-        throw new Error("Configured license price must be an active annual recurring Stripe price");
-      if (stripePrice.unit_amount !== (selection.annualAmountUsd * 100) / selection.quantity)
-        throw new Error("Configured Stripe price does not match the authoritative license catalog");
-      const customerId = await resolveOrCreateCustomer(stripe, { userId: context.userId });
-      const stateCodes = selection.stateCodes.join(",");
-
-      const session = await stripe.checkout.sessions.create({
-        line_items: [{ price: stripePrice.id, quantity: selection.quantity }],
-        mode: "subscription",
-        ui_mode: "embedded_page",
-        return_url: data.returnUrl,
-        customer: customerId,
-        integration_identifier: `certivoiq_license_${crypto.randomUUID().replaceAll("-", "").slice(0, 8)}`,
-        allow_promotion_codes: foundersPromotionEnabled,
-        metadata: {
-          userId: context.userId,
-          license_kind: selection.licenseKind,
-          licensed_state_codes: stateCodes,
-        },
-        subscription_data: {
-          metadata: {
-            userId: context.userId,
-            license_kind: selection.licenseKind,
-            licensed_state_codes: stateCodes,
-          },
-        },
-      } as Parameters<typeof stripe.checkout.sessions.create>[0]);
-
-      return { clientSecret: session.client_secret ?? "" };
+      normalizeLicenseSelection(data);
+      return {
+        error:
+          "CertivoIQ base licenses are invoice-only and cannot be purchased through Checkout.",
+      };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
@@ -436,4 +396,5 @@ export const setCancellation = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
+
 

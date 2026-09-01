@@ -18,9 +18,12 @@ function paidInvoice(metadata: Record<string, string>, amountCents: number): Str
     id: "in_test",
     amount_due: amountCents,
     amount_paid: amountCents,
+    collection_method: "send_invoice",
+    period_start: 1_788_134_400,
+    period_end: 1_790_812_800,
     currency: "usd",
     metadata: {
-      billing_model: "enterprise_invoice",
+      billing_model: "enterprise_invoice_monthly",
       license_product: "certivoiq_enterprise",
       organization_id: "00000000-0000-4000-8000-000000000001",
       ...metadata,
@@ -90,9 +93,13 @@ describe("authoritative license pricing and jurisdiction selection", () => {
     ).toEqual({
       licenseKind: "multifamily_enterprise",
       stateCodes: ["AR", "MS", "TN"],
-      priceLookupKey: "multifamily_enterprise_annual",
+      priceLookupKey: "certivoiq_multifamily_state_monthly",
+      firstInstallmentPriceLookupKey: "certivoiq_multifamily_state_monthly_first",
       quantity: 3,
       annualAmountUsd: 195000,
+      monthlyAmountCents: 1_625_001,
+      firstInstallmentAmountCents: 1_624_989,
+      commitmentMonths: 12,
     });
   });
 
@@ -100,7 +107,11 @@ describe("authoritative license pricing and jurisdiction selection", () => {
     expect(normalizeLicenseSelection({ licenseKind: "pha", stateCodes: ["CA"] })).toMatchObject({
       quantity: 1,
       annualAmountUsd: 150000,
-      priceLookupKey: "pha_annual",
+      priceLookupKey: "certivoiq_pha_monthly",
+      firstInstallmentPriceLookupKey: "certivoiq_pha_monthly",
+      monthlyAmountCents: 1_250_000,
+      firstInstallmentAmountCents: 1_250_000,
+      commitmentMonths: 12,
     });
   });
 
@@ -114,22 +125,34 @@ describe("authoritative license pricing and jurisdiction selection", () => {
     expect(() => normalizeLicenseSelection(selection)).toThrow();
   });
 
-  test("paid multifamily invoices activate only when amount, quantity, price, and states agree", () => {
+  test("paid multifamily monthly invoices activate only when amount, cadence, quantity, price, and states agree", () => {
     const metadata = {
       license_kind: "multifamily_enterprise",
       licensed_state_codes: "AR,MS,TN",
       state_pack_count: "3",
-      price_lookup_key: "multifamily_enterprise_annual",
+      contract_price_lookup_key: "certivoiq_multifamily_state_monthly",
+      invoice_price_lookup_key: "certivoiq_multifamily_state_monthly_first",
       quantity: "3",
       annual_price_cents: "19500000",
+      first_installment_cents: "1624989",
+      monthly_installment_cents: "1625001",
+      commitment_months: "12",
     };
-    expect(enterpriseInvoiceActivationException(paidInvoice(metadata, 19_500_000))).toBeNull();
+    expect(enterpriseInvoiceActivationException(paidInvoice(metadata, 1_624_989))).toBeNull();
     expect(
-      enterpriseInvoiceActivationException(paidInvoice({ ...metadata, quantity: "2" }, 19_500_000)),
+      enterpriseInvoiceActivationException(paidInvoice({ ...metadata, quantity: "2" }, 1_624_989)),
     ).toBe("license_quantity_mismatch");
-    expect(enterpriseInvoiceActivationException(paidInvoice(metadata, 13_000_000))).toBe(
+    expect(enterpriseInvoiceActivationException(paidInvoice(metadata, 1_625_001))).toBe(
       "invoice_amount_mismatch",
     );
+    expect(
+      enterpriseInvoiceActivationException(
+        paidInvoice(
+          { ...metadata, invoice_price_lookup_key: "certivoiq_multifamily_state_monthly" },
+          1_625_001,
+        ),
+      ),
+    ).toBeNull();
   });
 
   test("PHA invoices remain flat and require exactly one operating state", () => {
@@ -137,14 +160,18 @@ describe("authoritative license pricing and jurisdiction selection", () => {
       license_kind: "pha",
       licensed_state_codes: "CA",
       state_pack_count: "1",
-      price_lookup_key: "pha_annual",
+      contract_price_lookup_key: "certivoiq_pha_monthly",
+      invoice_price_lookup_key: "certivoiq_pha_monthly",
       quantity: "1",
       annual_price_cents: "15000000",
+      first_installment_cents: "1250000",
+      monthly_installment_cents: "1250000",
+      commitment_months: "12",
     };
-    expect(enterpriseInvoiceActivationException(paidInvoice(metadata, 15_000_000))).toBeNull();
+    expect(enterpriseInvoiceActivationException(paidInvoice(metadata, 1_250_000))).toBeNull();
     expect(
       enterpriseInvoiceActivationException(
-        paidInvoice({ ...metadata, licensed_state_codes: "CA,NV" }, 15_000_000),
+        paidInvoice({ ...metadata, licensed_state_codes: "CA,NV" }, 1_250_000),
       ),
     ).toBe("invalid_license_state_selection");
   });
@@ -215,3 +242,4 @@ describe("new paid-onboarding launch control", () => {
     expect(paidOnboardingBlockReason("sandbox", {}, {})).toBeNull();
   });
 });
+

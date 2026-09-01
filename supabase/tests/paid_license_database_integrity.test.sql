@@ -140,13 +140,13 @@ insert into public.account_access (
 )
 values
   (
-    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1','live','active','pha','pha_annual',
-    'pha',array['CA'],now()+interval '365 days'
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1','live','active','pha','certivoiq_pha_monthly',
+    'pha',array['CA'],now()+interval '1 month'
   ),
   (
     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2','live','active',
-    'multifamily_enterprise','multifamily_enterprise_annual',
-    'multifamily_enterprise',array['AR','MS'],now()+interval '365 days'
+    'multifamily_enterprise','certivoiq_multifamily_state_monthly',
+    'multifamily_enterprise',array['AR','MS'],now()+interval '1 month'
   );
 
 set local role authenticated;
@@ -192,4 +192,5 @@ select pg_temp.assert_true(
 );
 
 rollback;
+
 

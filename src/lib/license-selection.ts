@@ -59,8 +59,12 @@ export interface LicenseSelection {
   licenseKind: LicenseKind;
   stateCodes: string[];
   priceLookupKey: string;
+  firstInstallmentPriceLookupKey: string;
   quantity: number;
   annualAmountUsd: number;
+  monthlyAmountCents: number;
+  firstInstallmentAmountCents: number;
+  commitmentMonths: 12;
 }
 
 export function normalizeLicenseSelection(input: {
@@ -80,12 +84,21 @@ export function normalizeLicenseSelection(input: {
     throw new Error("PHA licensing requires exactly one operating-state rule pack");
   const license = LICENSES[input.licenseKind];
   const quantity = input.licenseKind === "multifamily_enterprise" ? stateCodes.length : 1;
+  const monthlyAmountCents =
+    input.licenseKind === "multifamily_enterprise" ? 541_667 * quantity : 1_250_000;
+  const firstInstallmentAmountCents =
+    input.licenseKind === "multifamily_enterprise" ? 541_663 * quantity : monthlyAmountCents;
   return {
     licenseKind: input.licenseKind,
     stateCodes,
     priceLookupKey: license.priceId,
+    firstInstallmentPriceLookupKey: license.firstInstallmentPriceId,
     quantity,
     annualAmountUsd: license.annualAmountUsd * quantity,
+    monthlyAmountCents,
+    firstInstallmentAmountCents,
+    commitmentMonths: 12,
   };
 }
+
 
