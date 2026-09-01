@@ -52,16 +52,21 @@ test('transactional email and legacy email routes fail closed', () => {
 })
 
 test('deployment responses receive the required security headers', () => {
-  const source = read('src/start.ts')
-  assert.match(source, /Strict-Transport-Security/)
-  assert.match(source, /max-age=31536000; includeSubDomains/)
-  assert.match(source, /X-Content-Type-Options/)
-  assert.match(source, /nosniff/)
-  assert.match(source, /Referrer-Policy/)
-  assert.match(source, /strict-origin-when-cross-origin/)
+  const startSource = read('src/start.ts')
+  const workerBoundary = read('src/server.ts')
+  for (const source of [startSource, workerBoundary]) {
+    assert.match(source, /Strict-Transport-Security/)
+    assert.match(source, /max-age=31536000; includeSubDomains/)
+    assert.match(source, /X-Content-Type-Options/)
+    assert.match(source, /nosniff/)
+    assert.match(source, /Referrer-Policy/)
+    assert.match(source, /strict-origin-when-cross-origin/)
+  }
+  assert.match(workerBoundary, /withSecurityHeaders\(await normalizeCatastrophicSsrResponse\(response\)\)/)
 })
 
 test('browser auth uses normal Supabase storage and no editor telemetry hook', () => {
   assert.doesNotMatch(read('src/integrations/supabase/client.ts'), /previewAuthStorage|brokeredPreviewStorage/)
   assert.doesNotMatch(read('src/routes/__root.tsx'), /reportLovableError|__lovable/)
 })
+
