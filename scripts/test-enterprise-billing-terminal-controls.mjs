@@ -60,5 +60,6 @@ test("reconciliation understands active, grace, and terminal entitlement states"
   assert.match(migration, /when license\.status = 'past_due'/i);
   assert.match(migration, /license\.status in \('suspended', 'expired', 'cancelled'\)/i);
   assert.match(migration, /access\.status = 'canceled'/i);
+  assert.match(migration, /end as entitlement_matches,\s*license\.last_billing_event_id/i);
 });
 

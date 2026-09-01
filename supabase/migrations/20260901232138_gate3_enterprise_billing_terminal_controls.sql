@@ -149,7 +149,6 @@ select
   license.license_kind,
   license.licensed_state_codes,
   license.annual_price_cents,
-  license.last_billing_event_id,
   member.user_id,
   access.status as access_status,
   access.license_kind as access_license_kind,
@@ -183,7 +182,8 @@ select
       )
     )
     else false
-  end as entitlement_matches
+  end as entitlement_matches,
+  license.last_billing_event_id
 from public.enterprise_licenses license
 left join public.enterprise_license_members member on member.license_id = license.id
 left join public.account_access access on access.user_id = member.user_id;
