@@ -1,0 +1,32 @@
+name: Temporary voice audio bridge
+
+on:
+  push:
+    branches:
+      - temp/voice-audio-bridge-20260901
+    paths:
+      - .github/workflows/temp-voice-audio-bridge.yml
+      - .voice-bridge-trigger
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download approved voice reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p voice-audio
+          curl --fail --location --retry 3 --output voice-audio/approved-pronunciation.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/3de2f188-39db-4610-8a49-ec5f0f64dcc1.mp3'
+          file voice-audio/approved-pronunciation.mp3
+          test -s voice-audio/approved-pronunciation.mp3
+      - name: Upload audio artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-voice-reference
+          path: voice-audio/approved-pronunciation.mp3
+          if-no-files-found: error
+          retention-days: 1
