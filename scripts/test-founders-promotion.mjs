@@ -26,7 +26,7 @@ test("defines the approved Founder's Special terms", () => {
   assert.match(promotion, /at\.getTime\(\) < new Date/);
 });
 
-test("creates and validates the server-side Stripe coupon and promotion code", () => {
+test("retains the controlled Stripe promotion definition while Checkout stays invoice-only", () => {
   assert.match(checkout, /ensureFoundersPromotion/);
   assert.match(checkout, /stripe\.coupons\.create/);
   assert.match(checkout, /stripe\.promotionCodes\.create/);
@@ -34,7 +34,8 @@ test("creates and validates the server-side Stripe coupon and promotion code", (
   assert.match(checkout, /couponRecord\.applies_to\?\.products/);
   assert.match(checkout, /appliedProductIds\.some/);
   assert.match(checkout, /first_time_transaction:/);
-  assert.match(checkout, /allow_promotion_codes:\s*foundersPromotionEnabled/);
+  assert.doesNotMatch(checkout, /allow_promotion_codes:\s*foundersPromotionEnabled/);
+  assert.match(checkout, /base licenses are invoice-only and cannot be purchased through Checkout/i);
   assert.match(checkout, /Existing Founder's Special coupon does not match approved billing terms/);
   assert.match(checkout, /Existing FOUNDERS50 code does not match approved billing terms/);
 });
@@ -53,3 +54,4 @@ test("removes superseded commercial charges from controlled customer surfaces", 
   assert.doesNotMatch(controlledCopy, /\$15,000|50,000 analyses|\$0\.15 per certification/i);
   assert.doesNotMatch(controlledCopy, /non-cancellable/i);
 });
+
