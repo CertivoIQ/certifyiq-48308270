@@ -3,20 +3,37 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
-const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
-  // Lovable internal routes authenticate themselves — never wrap/redirect them.
-  if (new URL(request.url).pathname.startsWith("/lovable/")) return next();
+const SECURITY_HEADERS = {
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+} as const;
+
+function withSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    headers.set(name, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
-    return await next();
+    const response = await next();
+    return response instanceof Response ? withSecurityHeaders(response) : response;
   } catch (error) {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
     console.error(error);
-    return new Response(renderErrorPage(), {
+    return withSecurityHeaders(new Response(renderErrorPage(), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },
-    });
+    }));
   }
 });
 
@@ -24,8 +41,7 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
 // file opts out, so re-add it explicitly to keep server functions protected
 // from cross-site requests.
 const csrfMiddleware = createCsrfMiddleware({
-  filter: (ctx) =>
-    ctx.handlerType === "serverFn" && !new URL(ctx.request.url).pathname.startsWith("/lovable/"),
+  filter: (ctx) => ctx.handlerType === "serverFn",
 });
 
 export const startInstance = createStart(() => ({

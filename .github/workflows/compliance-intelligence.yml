@@ -152,6 +152,7 @@ jobs:
           node --test scripts/test-certification-task-workflow.mjs
           bun run test:ocr
           node --test scripts/test-no-lovable-certification-extraction.mjs
+          node --test scripts/test-zero-lovable-runtime-boundary.mjs
           node --test scripts/test-certification-authority.mjs
           node --test scripts/test-transmission-authority.mjs
           node --test scripts/test-hfa-submit-transition.mjs
@@ -203,4 +204,3 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260831201500_paid_license_database_integrity.sql
       - name: Run rolled-back paid-license database rehearsal
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/paid_license_database_integrity.test.sql
-

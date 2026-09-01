@@ -74,7 +74,7 @@ export const publishedSecurityFacts: SecurityFact[] = [
   {
     id: "subprocessors-1",
     statement:
-      "The application is hosted through Lovable; the primary production database, authentication, and storage services use Supabase in Canada Central. Billing workflows use Stripe where configured.",
+      "The application is delivered through controlled managed hosting; the primary production database, authentication, and storage services use Supabase in Canada Central. Billing workflows use Stripe where configured.",
     evidenceUrl: "/security-controls.json",
     verifiedAt: "2026-08-29",
     owner: "CertivoIQ Engineering",
