@@ -1,0 +1,31 @@
+name: Temporary Multifamily property-manager full audio
+
+on:
+  push:
+    branches:
+      - temp/voice-audio-bridge-20260901
+    paths:
+      - .github/workflows/temp-mf-property-manager-full-audio.yml
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download approved full property-management narration
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p clean-audio
+          curl --fail --location --retry 3 --output clean-audio/mf-04-property-management-full.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/fd7643f1-4d50-4991-b141-54c3adb1a80a.mp3'
+          test -s clean-audio/mf-04-property-management-full.mp3
+          file clean-audio/mf-04-property-management-full.mp3
+      - name: Upload clean audio
+        uses: actions/upload-artifact@v4
+        with:
+          name: mf-property-manager-full-audio
+          path: clean-audio/mf-04-property-management-full.mp3
+          if-no-files-found: error
+          retention-days: 1
