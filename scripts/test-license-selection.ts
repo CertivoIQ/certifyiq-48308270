@@ -9,7 +9,11 @@ import {
   addonForPrice,
   isAddonPrice,
 } from "../src/lib/plan-catalog";
-import { enterpriseInvoiceActivationException } from "../src/lib/enterprise-licensing.server";
+import {
+  applyEnterpriseTerminalEvent,
+  enterpriseInvoiceActivationException,
+  type EnterpriseLicenseDb,
+} from "../src/lib/enterprise-licensing.server";
 import type { StripeInvoiceLike } from "../src/lib/stripe-webhook-types";
 import { paidOnboardingBlockReason } from "../src/lib/paid-onboarding.server";
 
@@ -29,6 +33,137 @@ function paidInvoice(metadata: Record<string, string>, amountCents: number): Str
       ...metadata,
     },
   } as StripeInvoiceLike;
+}
+
+type FakeRow = Record<string, unknown>;
+
+class FakeEnterpriseQuery implements PromiseLike<{
+  data: FakeRow | FakeRow[] | null;
+  error: null;
+}> {
+  private filters: Array<[string, unknown]> = [];
+  private operation: "select" | "update" | "insert" = "select";
+  private values: FakeRow | FakeRow[] | null = null;
+
+  constructor(
+    private readonly rows: FakeRow[],
+    private readonly maybeSingleResult = false,
+  ) {}
+
+  select() {
+    this.operation = "select";
+    return this;
+  }
+
+  eq(column: string, value: unknown) {
+    this.filters.push([column, value]);
+    return this;
+  }
+
+  update(values: FakeRow) {
+    this.operation = "update";
+    this.values = values;
+    return this;
+  }
+
+  insert(values: FakeRow | FakeRow[]) {
+    this.operation = "insert";
+    this.values = values;
+    return this;
+  }
+
+  upsert(values: FakeRow | FakeRow[]) {
+    this.operation = "insert";
+    this.values = values;
+    return this;
+  }
+
+  maybeSingle() {
+    return Promise.resolve(this.execute(true)) as PromiseLike<{
+      data: FakeRow | null;
+      error: null;
+    }>;
+  }
+
+  then<TResult1 = { data: FakeRow | FakeRow[] | null; error: null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: {
+          data: FakeRow | FakeRow[] | null;
+          error: null;
+        }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2> {
+    return Promise.resolve(this.execute(this.maybeSingleResult)).then(onfulfilled, onrejected);
+  }
+
+  private matches(row: FakeRow) {
+    return this.filters.every(([column, value]) => row[column] === value);
+  }
+
+  private execute(single: boolean) {
+    const matches = this.rows.filter((row) => this.matches(row));
+    if (this.operation === "update") {
+      for (const row of matches) Object.assign(row, this.values);
+      return { data: single ? (matches[0] ?? null) : matches, error: null };
+    }
+    if (this.operation === "insert") {
+      const values = Array.isArray(this.values) ? this.values : [this.values ?? {}];
+      this.rows.push(...values.map((row) => ({ ...row })));
+      return { data: single ? (values[0] ?? null) : values, error: null };
+    }
+    return { data: single ? (matches[0] ?? null) : matches, error: null };
+  }
+}
+
+function terminalDb() {
+  const tables: Record<string, FakeRow[]> = {
+    enterprise_licenses: [
+      {
+        id: "license-1",
+        organization_id: "00000000-0000-4000-8000-000000000001",
+        product_code: "certivoiq_enterprise",
+        status: "active",
+        stripe_invoice_id: "in_terminal",
+        stripe_subscription_id: "sub_terminal",
+      },
+    ],
+    enterprise_license_members: [
+      { license_id: "license-1", user_id: "user-1" },
+      { license_id: "license-1", user_id: "user-2" },
+    ],
+    account_access: [
+      { user_id: "user-1", status: "active" },
+      { user_id: "user-2", status: "active" },
+    ],
+    enterprise_invoice_events: [],
+    crm_news: [],
+  };
+  const db = {
+    from(table: string) {
+      tables[table] ??= [];
+      return new FakeEnterpriseQuery(tables[table]);
+    },
+    async rpc(_name: string, args: Record<string, unknown>) {
+      const eventId = String(args.p_stripe_event_id);
+      const existing = tables.enterprise_invoice_events.find(
+        (row) => row.stripe_event_id === eventId,
+      );
+      if (existing?.processing_state === "completed") return { data: "duplicate", error: null };
+      if (existing?.processing_state === "processing") return { data: "in_progress", error: null };
+      if (existing) {
+        existing.processing_state = "processing";
+        return { data: "claimed", error: null };
+      }
+      tables.enterprise_invoice_events.push({
+        stripe_event_id: eventId,
+        processing_state: "processing",
+        action: "recorded",
+      });
+      return { data: "claimed", error: null };
+    },
+  } as unknown as EnterpriseLicenseDb;
+  return { db, tables };
 }
 
 describe("authoritative license pricing and jurisdiction selection", () => {
@@ -64,9 +199,7 @@ describe("authoritative license pricing and jurisdiction selection", () => {
     expect(isAddonPrice("merlin_annual_agreement_monthly")).toBe(true);
     expect(isAddonPrice("merlin_month_to_month")).toBe(true);
     expect(isAddonPrice("multifamily_enterprise_annual")).toBe(false);
-    expect(addonForPrice("merlin_month_to_month")).toEqual(
-      ADDONS.merlin_month_to_month,
-    );
+    expect(addonForPrice("merlin_month_to_month")).toEqual(ADDONS.merlin_month_to_month);
     expect(addonForPrice("unknown")).toBeNull();
   });
 
@@ -177,34 +310,45 @@ describe("authoritative license pricing and jurisdiction selection", () => {
   });
 });
 
-
 describe("new paid-onboarding launch control", () => {
   const verifierUserId = "11111111-1111-4111-8111-111111111111";
 
   test("live creation fails closed when operational GO is absent", () => {
     expect(
-      paidOnboardingBlockReason("live", {}, {
-        PAID_ONBOARDING_ENABLED: "false",
-        PAYMENTS_LIVE_VERIFIED: "true",
-      }),
+      paidOnboardingBlockReason(
+        "live",
+        {},
+        {
+          PAID_ONBOARDING_ENABLED: "false",
+          PAYMENTS_LIVE_VERIFIED: "true",
+        },
+      ),
     ).toContain("temporarily disabled");
   });
 
   test("live creation fails closed when lifecycle verification is absent", () => {
     expect(
-      paidOnboardingBlockReason("live", {}, {
-        PAID_ONBOARDING_ENABLED: "true",
-        PAYMENTS_LIVE_VERIFIED: "false",
-      }),
+      paidOnboardingBlockReason(
+        "live",
+        {},
+        {
+          PAID_ONBOARDING_ENABLED: "true",
+          PAYMENTS_LIVE_VERIFIED: "false",
+        },
+      ),
     ).toContain("verification is complete");
   });
 
   test("general live creation is eligible only when both controls are true", () => {
     expect(
-      paidOnboardingBlockReason("live", {}, {
-        PAID_ONBOARDING_ENABLED: "true",
-        PAYMENTS_LIVE_VERIFIED: "true",
-      }),
+      paidOnboardingBlockReason(
+        "live",
+        {},
+        {
+          PAID_ONBOARDING_ENABLED: "true",
+          PAYMENTS_LIVE_VERIFIED: "true",
+        },
+      ),
     ).toBeNull();
   });
 
@@ -215,9 +359,7 @@ describe("new paid-onboarding launch control", () => {
       LIVE_BILLING_VERIFICATION_ENABLED: "true",
       LIVE_BILLING_VERIFIER_USER_ID: verifierUserId,
     };
-    expect(
-      paidOnboardingBlockReason("live", { actorUserId: verifierUserId }, config),
-    ).toBeNull();
+    expect(paidOnboardingBlockReason("live", { actorUserId: verifierUserId }, config)).toBeNull();
     expect(
       paidOnboardingBlockReason(
         "live",
@@ -229,17 +371,66 @@ describe("new paid-onboarding launch control", () => {
 
   test("verification mode fails closed without a valid verifier id", () => {
     expect(
-      paidOnboardingBlockReason("live", { actorUserId: verifierUserId }, {
-        PAID_ONBOARDING_ENABLED: "false",
-        PAYMENTS_LIVE_VERIFIED: "false",
-        LIVE_BILLING_VERIFICATION_ENABLED: "true",
-        LIVE_BILLING_VERIFIER_USER_ID: "",
-      }),
+      paidOnboardingBlockReason(
+        "live",
+        { actorUserId: verifierUserId },
+        {
+          PAID_ONBOARDING_ENABLED: "false",
+          PAYMENTS_LIVE_VERIFIED: "false",
+          LIVE_BILLING_VERIFICATION_ENABLED: "true",
+          LIVE_BILLING_VERIFIER_USER_ID: "",
+        },
+      ),
     ).toContain("designated verifier");
   });
 
   test("sandbox remains available for controlled verification", () => {
     expect(paidOnboardingBlockReason("sandbox", {}, {})).toBeNull();
+  });
+});
+
+describe("enterprise terminal billing controls", () => {
+  test("a credit-note replay is claimed once and revokes every member entitlement", async () => {
+    const { db, tables } = terminalDb();
+    const object = {
+      id: "cn_test",
+      invoice: "in_terminal",
+      amount: 1_250_000,
+      currency: "usd",
+    };
+    const event = { id: "evt_credit_once", type: "credit_note.created" };
+
+    const first = await applyEnterpriseTerminalEvent(db, object, event);
+    const replay = await applyEnterpriseTerminalEvent(db, object, event);
+
+    expect(first.action).toBe("credited");
+    expect(replay).toEqual({ action: "ignored", reason: "duplicate_event" });
+    expect(tables.enterprise_licenses[0]).toMatchObject({
+      status: "suspended",
+      last_billing_event_id: "evt_credit_once",
+    });
+    expect(tables.account_access.every((row) => row.status === "canceled")).toBe(true);
+    expect(tables.account_access.every((row) => Boolean(row.access_until))).toBe(true);
+    expect(tables.enterprise_invoice_events[0]).toMatchObject({
+      action: "credited",
+      processing_state: "completed",
+    });
+    expect(tables.crm_news).toHaveLength(1);
+  });
+
+  test("subscription deletion cancels the license and its access without deleting audit rows", async () => {
+    const { db, tables } = terminalDb();
+    const result = await applyEnterpriseTerminalEvent(
+      db,
+      { id: "sub_terminal", status: "canceled" },
+      { id: "evt_subscription_deleted", type: "customer.subscription.deleted" },
+    );
+
+    expect(result.action).toBe("cancelled");
+    expect(tables.enterprise_licenses).toHaveLength(1);
+    expect(tables.enterprise_licenses[0]?.status).toBe("cancelled");
+    expect(tables.enterprise_license_members).toHaveLength(2);
+    expect(tables.account_access.every((row) => row.status === "canceled")).toBe(true);
   });
 });
 
