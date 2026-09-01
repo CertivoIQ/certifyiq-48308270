@@ -1,0 +1,31 @@
+name: Temporary property-management voice bridge
+
+on:
+  push:
+    branches:
+      - temp/voice-audio-bridge-20260901
+    paths:
+      - .github/workflows/temp-property-manager-voice-bridge.yml
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download corrected property-management narration
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p corrected-audio
+          curl --fail --location --retry 3 --output corrected-audio/mf-04-property-management-fixed.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/ed272c1a-ff6f-4787-af65-74aa9e8557dc.mp3'
+          test -s corrected-audio/mf-04-property-management-fixed.mp3
+          file corrected-audio/mf-04-property-management-fixed.mp3
+      - name: Upload corrected narration
+        uses: actions/upload-artifact@v4
+        with:
+          name: mf-property-management-corrected-voice
+          path: corrected-audio/mf-04-property-management-fixed.mp3
+          if-no-files-found: error
+          retention-days: 1
