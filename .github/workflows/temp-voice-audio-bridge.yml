@@ -6,7 +6,6 @@ on:
       - temp/voice-audio-bridge-20260901
     paths:
       - .github/workflows/temp-voice-audio-bridge.yml
-      - .voice-bridge-trigger
 
 permissions:
   contents: read
@@ -15,20 +14,95 @@ jobs:
   fetch-audio:
     runs-on: ubuntu-latest
     steps:
-      - name: Download voice files
-        shell: bash
+      - name: Install browser helper
         run: |
-          set -euo pipefail
-          mkdir -p voice-audio
-          curl --fail --location --retry 3 --output voice-audio/approved-pronunciation.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/3de2f188-39db-4610-8a49-ec5f0f64dcc1.mp3'
-          curl --fail --location --retry 3 --output voice-audio/pha-full-test.mp3 'https://www.aidocmaker.com/g0/audio?name=9d4a92c159e649619348ba520c6b3cfa'
+          python -m pip install --quiet playwright
+          python -m playwright install chromium
+      - name: Retrieve complete approved voiceovers
+        env:
+          PHA_URL: https://www.aidocmaker.com/g0/audio?name=ee9be205537944fd8e535a9cbdf27ff0
+          MF_URL: https://www.aidocmaker.com/g0/audio?name=9fc4b2102bc44fb3b11f28ee7c635297
+        run: |
+          cat > /tmp/fetch_voice.py <<'PY'
+          import os, re, pathlib
+          from playwright.sync_api import sync_playwright
+
+          output = pathlib.Path('voice-audio')
+          output.mkdir(exist_ok=True)
+
+          def capture(label, url, browser):
+              page = browser.new_page()
+              audio_responses = []
+              def on_response(response):
+                  ctype = response.headers.get('content-type', '').lower()
+                  if ctype.startswith('audio/') or re.search(r'\.(mp3|wav|m4a)(\?|$)', response.url, re.I):
+                      audio_responses.append(response)
+              page.on('response', on_response)
+              print(f'Opening {label}: {url}')
+              page.goto(url, wait_until='domcontentloaded', timeout=120000)
+              page.wait_for_timeout(12000)
+              print('Title:', page.title())
+              print('URL:', page.url)
+              print('Audio elements:', page.locator('audio').count())
+              sources = page.eval_on_selector_all('audio', "els => els.map(e => ({src:e.src,currentSrc:e.currentSrc,html:e.outerHTML}))")
+              print('Audio sources:', sources)
+              page.screenshot(path=str(output / f'{label}-page.png'), full_page=True)
+              (output / f'{label}-page.html').write_text(page.content(), encoding='utf-8')
+              candidates = []
+              for item in sources:
+                  for key in ('currentSrc','src'):
+                      value=item.get(key)
+                      if value and value not in candidates:
+                          candidates.append(value)
+              for response in audio_responses:
+                  if response.url not in candidates:
+                      candidates.append(response.url)
+              print('Candidates:', candidates)
+              for idx, src in enumerate(candidates):
+                  try:
+                      r = page.request.get(src, timeout=120000)
+                      body = r.body()
+                      ctype = r.headers.get('content-type','')
+                      print('GET', src, r.status, ctype, len(body))
+                      if r.ok and (ctype.lower().startswith('audio/') or body[:3] == b'ID3' or body[:4] in (b'RIFF', b'\xff\xfb\x90d')):
+                          ext = '.wav' if body[:4] == b'RIFF' else '.mp3'
+                          (output / f'{label}{ext}').write_bytes(body)
+                          print('Saved', output / f'{label}{ext}')
+                          page.close()
+                          return
+                  except Exception as exc:
+                      print('Candidate failed:', exc)
+              # Inspect page text and scripts for a direct media URL.
+              html = page.content()
+              urls = re.findall(r'https?://[^\"\'<>\\s]+', html)
+              for src in urls:
+                  if re.search(r'(audio|mp3|wav|m4a|storage|cloudfront)', src, re.I):
+                      try:
+                          r = page.request.get(src, timeout=120000)
+                          body = r.body(); ctype = r.headers.get('content-type','')
+                          if r.ok and (ctype.lower().startswith('audio/') or body[:3] == b'ID3' or body[:4] == b'RIFF'):
+                              ext = '.wav' if body[:4] == b'RIFF' else '.mp3'
+                              (output / f'{label}{ext}').write_bytes(body)
+                              print('Saved from HTML', src)
+                              page.close(); return
+                      except Exception:
+                          pass
+              page.close()
+              raise RuntimeError(f'No full audio source found for {label}')
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              capture('pha-clear-master', os.environ['PHA_URL'], browser)
+              capture('multifamily-clear-master', os.environ['MF_URL'], browser)
+              browser.close()
+          PY
+          python /tmp/fetch_voice.py
+          ls -lah voice-audio
           file voice-audio/*
-          test -s voice-audio/approved-pronunciation.mp3
-          test -s voice-audio/pha-full-test.mp3
-      - name: Upload audio artifact
+      - name: Upload full voiceovers
         uses: actions/upload-artifact@v4
         with:
-          name: full-audio-test
+          name: certivoiq-clear-voice-masters
           path: voice-audio/
           if-no-files-found: error
           retention-days: 1
