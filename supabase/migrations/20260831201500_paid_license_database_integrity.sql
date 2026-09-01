@@ -54,8 +54,14 @@ create table if not exists public.enterprise_licenses (
   starts_at timestamptz,
   expires_at timestamptz,
   renewal_at timestamptz,
+  paid_through timestamptz,
+  billing_interval text not null default 'month',
+  commitment_months smallint not null default 12,
+  installments_paid smallint not null default 0,
   stripe_customer_id text,
   stripe_invoice_id text,
+  stripe_subscription_id text,
+  stripe_schedule_id text,
   payment_method text,
   payment_terms text,
   purchase_order_number text,
@@ -74,13 +80,20 @@ create table if not exists public.enterprise_licenses (
 alter table public.enterprise_licenses
   add column if not exists license_number text,
   add column if not exists license_kind text,
-  add column if not exists licensed_state_codes text[] not null default '{}';
+  add column if not exists licensed_state_codes text[] not null default '{}',
+  add column if not exists paid_through timestamptz,
+  add column if not exists billing_interval text not null default 'month',
+  add column if not exists commitment_months smallint not null default 12,
+  add column if not exists installments_paid smallint not null default 0,
+  add column if not exists stripe_subscription_id text,
+  add column if not exists stripe_schedule_id text;
 
 alter table public.enterprise_licenses
   drop constraint if exists enterprise_licenses_status_check,
   drop constraint if exists enterprise_licenses_license_kind_check,
   drop constraint if exists enterprise_licenses_license_state_scope_check,
-  drop constraint if exists enterprise_licenses_authoritative_price_check;
+  drop constraint if exists enterprise_licenses_authoritative_price_check,
+  drop constraint if exists enterprise_licenses_billing_cadence_check;
 
 alter table public.enterprise_licenses
   add constraint enterprise_licenses_status_check
@@ -101,12 +114,18 @@ alter table public.enterprise_licenses
     or (license_kind = 'pha' and annual_price_cents = 15000000)
     or (license_kind = 'multifamily_enterprise'
       and annual_price_cents = 6500000 * cardinality(licensed_state_codes))
+  ) not valid,
+  add constraint enterprise_licenses_billing_cadence_check check (
+    billing_interval = 'month'
+    and commitment_months = 12
+    and installments_paid between 0 and 12
   ) not valid;
 
 alter table public.enterprise_licenses validate constraint enterprise_licenses_status_check;
 alter table public.enterprise_licenses validate constraint enterprise_licenses_license_kind_check;
 alter table public.enterprise_licenses validate constraint enterprise_licenses_license_state_scope_check;
 alter table public.enterprise_licenses validate constraint enterprise_licenses_authoritative_price_check;
+alter table public.enterprise_licenses validate constraint enterprise_licenses_billing_cadence_check;
 
 create unique index if not exists enterprise_licenses_stripe_invoice_uq
   on public.enterprise_licenses (stripe_invoice_id)
@@ -114,6 +133,9 @@ create unique index if not exists enterprise_licenses_stripe_invoice_uq
 create unique index if not exists enterprise_licenses_license_number_uq
   on public.enterprise_licenses (license_number)
   where license_number is not null;
+create unique index if not exists enterprise_licenses_stripe_subscription_uq
+  on public.enterprise_licenses (stripe_subscription_id)
+  where stripe_subscription_id is not null;
 
 create table if not exists public.enterprise_license_members (
   license_id uuid not null references public.enterprise_licenses(id) on delete cascade,
@@ -163,8 +185,13 @@ alter table public.account_access
   ) not valid,
   add constraint account_access_paid_price_scope_check check (
     (price_id is null and license_kind is null)
-    or (price_id = 'pha_annual' and license_kind = 'pha')
-    or (price_id = 'multifamily_enterprise_annual'
+    or (price_id in ('certivoiq_pha_monthly','certivoiq_pha_annual')
+      and license_kind = 'pha')
+    or (price_id in (
+        'certivoiq_multifamily_state_monthly',
+        'certivoiq_multifamily_state_monthly_first',
+        'certivoiq_multifamily_state_annual'
+      )
       and license_kind = 'multifamily_enterprise')
   ) not valid;
 
@@ -265,8 +292,8 @@ select
     and access.license_kind is not distinct from license.license_kind
     and access.licensed_state_codes is not distinct from license.licensed_state_codes
     and access.price_id = case license.license_kind
-      when 'pha' then 'pha_annual'
-      when 'multifamily_enterprise' then 'multifamily_enterprise_annual'
+      when 'pha' then 'certivoiq_pha_monthly'
+      when 'multifamily_enterprise' then 'certivoiq_multifamily_state_monthly'
     end
     and access.status = 'active'
   ) as entitlement_matches
@@ -281,4 +308,5 @@ comment on table public.enterprise_licenses is
   'Authoritative organization-level paid-license record. CRM is prospective; account_access is a derived per-user entitlement.';
 comment on view public.paid_license_entitlement_reconciliation is
   'Service-role-only operational check for drift between organization licenses and derived member entitlements.';
+
 
