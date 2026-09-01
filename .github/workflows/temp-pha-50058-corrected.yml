@@ -1,0 +1,31 @@
+name: Temporary PHA 50058 pronunciation correction
+
+on:
+  push:
+    branches:
+      - temp/voice-audio-bridge-20260901
+    paths:
+      - .github/workflows/temp-pha-50058-corrected.yml
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download corrected 50058 narration
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p corrected-audio
+          curl --fail --location --retry 3 --output corrected-audio/03.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/50003cac-8292-4f67-a5dd-a361c82e31fb.mp3'
+          test -s corrected-audio/03.mp3
+          file corrected-audio/03.mp3
+      - name: Upload corrected narration
+        uses: actions/upload-artifact@v4
+        with:
+          name: pha-50058-corrected-audio
+          path: corrected-audio/03.mp3
+          if-no-files-found: error
+          retention-days: 1
