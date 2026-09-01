@@ -43,7 +43,6 @@ export function EnterpriseInvoicePanel({
   const [billingEmail, setBillingEmail] = useState(verifiedEmails[0]?.email ?? "");
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState("");
   const [netDays, setNetDays] = useState(30);
-  const [allowCard, setAllowCard] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pricingClass, setPricingClass] = useState<LicensePricingClass>(initialPricingClass);
   const [stateCodes, setStateCodes] = useState<string[]>([]);
@@ -115,7 +114,7 @@ export function EnterpriseInvoicePanel({
           billingEmail,
           purchaseOrderNumber: purchaseOrderNumber || undefined,
           netDays,
-          allowCard,
+          allowCard: false,
           environment,
           stateCodes,
         },
@@ -154,7 +153,7 @@ export function EnterpriseInvoicePanel({
           accountId,
           purchaseOrderNumber: purchaseOrderNumber || undefined,
           netDays,
-          allowCard,
+          allowCard: false,
           environment,
           sandboxTest,
           stateCodes,
@@ -241,7 +240,8 @@ export function EnterpriseInvoicePanel({
         <p className="font-semibold text-emerald-950 dark:text-emerald-50">Automated workflow</p>
         <p className="mt-1 text-emerald-800 dark:text-emerald-200">
           CRM organization → pricing class → preferred verified finance/billing contact → PO/terms →
-          ACH/card rules → {displayedPrice} invoice → CRM log → paid-invoice license activation.
+          ACH/bank-transfer rules → monthly invoice under a 12-month commitment → CRM log →
+          paid-invoice license activation.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button
@@ -305,15 +305,13 @@ export function EnterpriseInvoicePanel({
           </select>
         </label>
 
-        <label className="flex items-center gap-3 rounded-md border border-input px-3 py-2 text-sm">
-          <input
-            type="checkbox"
-            checked={allowCard}
-            onChange={(event) => setAllowCard(event.target.checked)}
-            className="size-4"
-          />
-          Allow credit card in addition to ACH
-        </label>
+        <div className="rounded-md border border-input px-3 py-2 text-sm">
+          <p className="font-medium">Payment methods</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Invoice only: ACH Direct Debit or bank transfer. Card payment is disabled for base
+            licenses.
+          </p>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -342,4 +340,5 @@ export function EnterpriseInvoicePanel({
     </Panel>
   );
 }
+
 
