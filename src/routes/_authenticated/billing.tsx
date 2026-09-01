@@ -34,6 +34,7 @@ function BillingPage() {
   const { subscription, isActive, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
   const env = getStripeEnvironment();
+  const isEnterprise = account?.planId === "multifamily_enterprise" || account?.planId === "pha";
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -117,7 +118,13 @@ function BillingPage() {
                       <CreditCard className="size-4" /> Payment details & invoices
                       <ExternalLink className="size-3.5" />
                     </Button>
-                    {cancelAtPeriodEnd ? (
+                    {isEnterprise ? (
+                      <Button size="sm" variant="ghost" asChild>
+                        <Link to="/contact-support">
+                          <FileText className="size-4" /> Request billing change
+                        </Link>
+                      </Button>
+                    ) : cancelAtPeriodEnd ? (
                       <Button
                         size="sm"
                         onClick={() => toggleCancel(false)}
