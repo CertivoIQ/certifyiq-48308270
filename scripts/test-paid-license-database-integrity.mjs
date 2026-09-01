@@ -31,6 +31,14 @@ test("annual prices are enforced at the database boundary", () => {
   assert.match(migration, /enterprise_licenses_authoritative_price_check/i);
 });
 
+test("monthly invoice cadence preserves the twelve-month annual commitment", () => {
+  assert.match(migration, /billing_interval\s*=\s*'month'/i);
+  assert.match(migration, /commitment_months\s*=\s*12/i);
+  assert.match(migration, /installments_paid\s+between\s+0\s+and\s+12/i);
+  assert.match(migration, /certivoiq_pha_monthly/i);
+  assert.match(migration, /certivoiq_multifamily_state_monthly/i);
+});
+
 test("browser roles cannot mutate paid-license control tables", () => {
   assert.match(migration, /revoke all on public\.enterprise_licenses from public, anon, authenticated/i);
   assert.match(migration, /revoke all on public\.enterprise_invoice_events from public, anon, authenticated/i);
@@ -59,4 +67,5 @@ test("isolated-branch rehearsal covers rollback, constraints, RLS, and reconcili
   assert.match(rehearsal, /service-only reconciliation view/i);
   assert.match(rehearsal, /bool_and\(entitlement_matches\)/i);
 });
+
 
