@@ -15,18 +15,20 @@ jobs:
   fetch-audio:
     runs-on: ubuntu-latest
     steps:
-      - name: Download approved voice reference
+      - name: Download voice files
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p voice-audio
           curl --fail --location --retry 3 --output voice-audio/approved-pronunciation.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/3de2f188-39db-4610-8a49-ec5f0f64dcc1.mp3'
-          file voice-audio/approved-pronunciation.mp3
+          curl --fail --location --retry 3 --output voice-audio/pha-full-test.mp3 'https://www.aidocmaker.com/g0/audio?name=9d4a92c159e649619348ba520c6b3cfa'
+          file voice-audio/*
           test -s voice-audio/approved-pronunciation.mp3
+          test -s voice-audio/pha-full-test.mp3
       - name: Upload audio artifact
         uses: actions/upload-artifact@v4
         with:
-          name: approved-voice-reference
-          path: voice-audio/approved-pronunciation.mp3
+          name: full-audio-test
+          path: voice-audio/
           if-no-files-found: error
           retention-days: 1
