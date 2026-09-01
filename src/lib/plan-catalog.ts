@@ -8,6 +8,8 @@ export type AddonBillingOption =
 export interface PlanEntitlement {
   planId: LicenseKind;
   priceId: string;
+  annualPriceId: string;
+  firstInstallmentPriceId: string;
   name: string;
   unitLimit: null;
   propertyLimit: null;
@@ -36,7 +38,9 @@ export const COMMERCIAL_TERMS = Object.freeze({
 export const LICENSES: Record<LicenseKind, PlanEntitlement & { annualAmountUsd: number }> = {
   multifamily_enterprise: {
     planId: "multifamily_enterprise",
-    priceId: "multifamily_enterprise_annual",
+    priceId: "certivoiq_multifamily_state_monthly",
+    annualPriceId: "certivoiq_multifamily_state_annual",
+    firstInstallmentPriceId: "certivoiq_multifamily_state_monthly_first",
     name: "CertivoIQ Multifamily Enterprise",
     annualAmountUsd: COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd,
     unitLimit: null,
@@ -46,7 +50,9 @@ export const LICENSES: Record<LicenseKind, PlanEntitlement & { annualAmountUsd: 
   },
   pha: {
     planId: "pha",
-    priceId: "pha_annual",
+    priceId: "certivoiq_pha_monthly",
+    annualPriceId: "certivoiq_pha_annual",
+    firstInstallmentPriceId: "certivoiq_pha_monthly",
     name: "CertivoIQ PHA",
     annualAmountUsd: COMMERCIAL_TERMS.phaAnnualUsd,
     unitLimit: null,
@@ -76,7 +82,11 @@ export const ADDONS: Record<AddonBillingOption, AddonPrice> = {
 };
 
 export const PLAN_ENTITLEMENTS: Record<string, PlanEntitlement> = Object.fromEntries(
-  Object.values(LICENSES).map((license) => [license.priceId, license]),
+  Object.values(LICENSES).flatMap((license) => [
+    [license.priceId, license],
+    [license.firstInstallmentPriceId, license],
+    [license.annualPriceId, license],
+  ]),
 );
 export const PLAN_PRICE_ID_LIST = Object.keys(PLAN_ENTITLEMENTS);
 export const ADDON_PRICE_ID_LIST = Object.keys(ADDONS);
@@ -120,4 +130,5 @@ export function isAddonPrice(priceId: string | null | undefined): boolean {
 export function formatLimit(value: number | null): string {
   return value === null ? "Unlimited" : value.toLocaleString();
 }
+
 
