@@ -192,7 +192,7 @@ async function ensureFoundersPromotion(
     const couponId =
       typeof promotionCoupon === "string"
         ? promotionCoupon
-        : promotionCoupon?.id ?? record.coupon?.id;
+        : (promotionCoupon?.id ?? record.coupon?.id);
     if (
       couponId !== FOUNDERS_PROMOTION.couponId ||
       record.expires_at !== FOUNDERS_PROMOTION_EXPIRES_AT
@@ -280,15 +280,14 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       assertNewPaidOnboardingAllowed(data.environment, { actorUserId: context.userId });
       normalizeLicenseSelection(data);
       return {
-        error:
-          "CertivoIQ base licenses are invoice-only and cannot be purchased through Checkout.",
+        error: "CertivoIQ base licenses are invoice-only and cannot be purchased through Checkout.",
       };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
   });
 
-/** Hosted billing portal: cancel, update card, download invoices. */
+/** Hosted billing portal: view invoices and manage eligible payment methods. */
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => data)
@@ -303,12 +302,34 @@ export const createPortalSession = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (subError || !sub?.stripe_customer_id) return { error: "No subscription found" };
+    if (subError) return { error: "Could not resolve billing access" };
+
+    let stripeCustomerId = sub?.stripe_customer_id ?? null;
+    if (!stripeCustomerId) {
+      const { data: membership, error: membershipError } = await supabase
+        .from("enterprise_license_members")
+        .select("license_id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (membershipError) return { error: "Could not resolve enterprise billing access" };
+      if (membership?.license_id) {
+        const { data: license, error: licenseError } = await supabase
+          .from("enterprise_licenses")
+          .select("stripe_customer_id")
+          .eq("id", membership.license_id)
+          .maybeSingle();
+        if (licenseError) return { error: "Could not resolve enterprise billing account" };
+        stripeCustomerId = license?.stripe_customer_id ?? null;
+      }
+    }
+    if (!stripeCustomerId) return { error: "No Stripe billing account found" };
 
     try {
       const stripe = createStripeClient(data.environment);
       const portal = await stripe.billingPortal.sessions.create({
-        customer: sub.stripe_customer_id,
+        customer: stripeCustomerId,
         ...(data.returnUrl && { return_url: data.returnUrl }),
       });
       return { url: portal.url };
@@ -380,7 +401,21 @@ export const setCancellation = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!sub?.stripe_subscription_id) return { error: "No active subscription found" };
+    if (!sub?.stripe_subscription_id) {
+      const { data: membership } = await supabase
+        .from("enterprise_license_members")
+        .select("license_id")
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle();
+      if (membership?.license_id) {
+        return {
+          error:
+            "Enterprise invoice licenses use a controlled cancellation workflow. Contact billing support to cancel, credit, or refund the agreement.",
+        };
+      }
+      return { error: "No active subscription found" };
+    }
 
     try {
       const stripe = createStripeClient(data.environment);
@@ -396,5 +431,4 @@ export const setCancellation = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
-
 
