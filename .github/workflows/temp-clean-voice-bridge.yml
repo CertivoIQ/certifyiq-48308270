@@ -1,0 +1,34 @@
+name: Temporary clean voice bridge
+
+on:
+  push:
+    branches:
+      - temp/voice-audio-bridge-20260901
+    paths:
+      - .github/workflows/temp-clean-voice-bridge.yml
+      - .clean-voice-trigger
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download corrected voice segments
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p clean-voice
+          curl --fail --location --retry 3 --output clean-voice/pha-07-clean.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/8ff5ff3b-0fc0-4eef-96a6-28f28755d5b8.mp3'
+          curl --fail --location --retry 3 --output clean-voice/mf-07-clean.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/f7c038ba-d84a-4727-8948-9f8ff20bc161.mp3'
+          test -s clean-voice/pha-07-clean.mp3
+          test -s clean-voice/mf-07-clean.mp3
+          file clean-voice/*.mp3
+      - name: Upload corrected voice segments
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrected-clean-voice-segments
+          path: clean-voice/*.mp3
+          if-no-files-found: error
+          retention-days: 1
