@@ -1,0 +1,41 @@
+name: Temporary Multifamily fluid-pronunciation bridge
+
+on:
+  push:
+    branches:
+      - temp/voice-audio-bridge-20260901
+    paths:
+      - .github/workflows/temp-mf-fluid-pronunciation-bridge.yml
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download corrected voice pieces
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p mf-fluid
+          curl --fail --location --retry 3 --output mf-fluid/01-pre.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/4e32ee44-11c5-48e7-b122-8edf70dda8f2.mp3'
+          curl --fail --location --retry 3 --output mf-fluid/01-post.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/fd62fa07-d293-4caf-b6fa-92259a448974.mp3'
+          curl --fail --location --retry 3 --output mf-fluid/04-pre.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/ce94bf49-bf88-4be4-92f9-3632b8fcb0d0.mp3'
+          curl --fail --location --retry 3 --output mf-fluid/04-post.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/8866edc2-2d94-48c5-8470-1adfdb00189f.mp3'
+          curl --fail --location --retry 3 --output mf-fluid/10-pre.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/7cf5ff7f-820c-452c-bd31-901e7ea5b897.mp3'
+          curl --fail --location --retry 3 --output mf-fluid/10-post.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/450a4420-8732-48fc-97bb-e79af574a4b0.mp3'
+          test -s mf-fluid/01-pre.mp3
+          test -s mf-fluid/01-post.mp3
+          test -s mf-fluid/04-pre.mp3
+          test -s mf-fluid/04-post.mp3
+          test -s mf-fluid/10-pre.mp3
+          test -s mf-fluid/10-post.mp3
+          file mf-fluid/*.mp3
+      - name: Upload corrected voice pieces
+        uses: actions/upload-artifact@v4
+        with:
+          name: mf-fluid-pronunciation-pieces
+          path: mf-fluid/*.mp3
+          if-no-files-found: error
+          retention-days: 1
