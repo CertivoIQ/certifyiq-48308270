@@ -11,98 +11,48 @@ permissions:
   contents: read
 
 jobs:
-  fetch-audio:
+  fetch-media:
     runs-on: ubuntu-latest
     steps:
-      - name: Install browser helper
+      - name: Download approved media
+        shell: bash
         run: |
-          python -m pip install --quiet playwright
-          python -m playwright install chromium
-      - name: Retrieve complete approved voiceovers
-        env:
-          PHA_URL: https://www.aidocmaker.com/g0/audio?name=ee9be205537944fd8e535a9cbdf27ff0
-          MF_URL: https://www.aidocmaker.com/g0/audio?name=9fc4b2102bc44fb3b11f28ee7c635297
-        run: |
-          cat > /tmp/fetch_voice.py <<'PY'
-          import os, re, pathlib
-          from playwright.sync_api import sync_playwright
+          set -euo pipefail
+          mkdir -p media/pha media/multifamily media/actors
 
-          output = pathlib.Path('voice-audio')
-          output.mkdir(exist_ok=True)
+          curl -fL --retry 3 -o media/pha/01.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/5af2ea25-927e-4422-bb07-d7956b7366ee.mp3'
+          curl -fL --retry 3 -o media/pha/02.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/a4a86589-20bc-446e-a350-4ce30de1b700.mp3'
+          curl -fL --retry 3 -o media/pha/03.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/4552b6dc-279c-499d-8e0e-7b35a15a8c90.mp3'
+          curl -fL --retry 3 -o media/pha/04.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/e1dc569d-7d16-4bd0-9a5e-dcf7a5a53e5d.mp3'
+          curl -fL --retry 3 -o media/pha/05.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/d44ed463-613d-407e-a3da-9a3d8a50af37.mp3'
+          curl -fL --retry 3 -o media/pha/06.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/1e58ede9-8711-4efd-b211-5b68d6c95967.mp3'
+          curl -fL --retry 3 -o media/pha/07.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/abb9b8bf-275d-4d1f-90c4-94631be6d20b.mp3'
+          curl -fL --retry 3 -o media/pha/08.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/725fd0ca-41bd-48c1-878a-db1fd72099f6.mp3'
+          curl -fL --retry 3 -o media/pha/09.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/8a582836-ee8a-4357-932f-c507403f6719.mp3'
+          curl -fL --retry 3 -o media/pha/10.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/8d92e043-e350-4dab-96f8-8a0165b35d05.mp3'
 
-          def capture(label, url, browser):
-              page = browser.new_page()
-              audio_responses = []
-              def on_response(response):
-                  ctype = response.headers.get('content-type', '').lower()
-                  if ctype.startswith('audio/') or re.search(r'\.(mp3|wav|m4a)(\?|$)', response.url, re.I):
-                      audio_responses.append(response)
-              page.on('response', on_response)
-              print(f'Opening {label}: {url}')
-              page.goto(url, wait_until='domcontentloaded', timeout=120000)
-              page.wait_for_timeout(12000)
-              print('Title:', page.title())
-              print('URL:', page.url)
-              print('Audio elements:', page.locator('audio').count())
-              sources = page.eval_on_selector_all('audio', "els => els.map(e => ({src:e.src,currentSrc:e.currentSrc,html:e.outerHTML}))")
-              print('Audio sources:', sources)
-              page.screenshot(path=str(output / f'{label}-page.png'), full_page=True)
-              (output / f'{label}-page.html').write_text(page.content(), encoding='utf-8')
-              candidates = []
-              for item in sources:
-                  for key in ('currentSrc','src'):
-                      value=item.get(key)
-                      if value and value not in candidates:
-                          candidates.append(value)
-              for response in audio_responses:
-                  if response.url not in candidates:
-                      candidates.append(response.url)
-              print('Candidates:', candidates)
-              for idx, src in enumerate(candidates):
-                  try:
-                      r = page.request.get(src, timeout=120000)
-                      body = r.body()
-                      ctype = r.headers.get('content-type','')
-                      print('GET', src, r.status, ctype, len(body))
-                      if r.ok and (ctype.lower().startswith('audio/') or body[:3] == b'ID3' or body[:4] in (b'RIFF', b'\xff\xfb\x90d')):
-                          ext = '.wav' if body[:4] == b'RIFF' else '.mp3'
-                          (output / f'{label}{ext}').write_bytes(body)
-                          print('Saved', output / f'{label}{ext}')
-                          page.close()
-                          return
-                  except Exception as exc:
-                      print('Candidate failed:', exc)
-              # Inspect page text and scripts for a direct media URL.
-              html = page.content()
-              urls = re.findall(r'https?://[^\"\'<>\\s]+', html)
-              for src in urls:
-                  if re.search(r'(audio|mp3|wav|m4a|storage|cloudfront)', src, re.I):
-                      try:
-                          r = page.request.get(src, timeout=120000)
-                          body = r.body(); ctype = r.headers.get('content-type','')
-                          if r.ok and (ctype.lower().startswith('audio/') or body[:3] == b'ID3' or body[:4] == b'RIFF'):
-                              ext = '.wav' if body[:4] == b'RIFF' else '.mp3'
-                              (output / f'{label}{ext}').write_bytes(body)
-                              print('Saved from HTML', src)
-                              page.close(); return
-                      except Exception:
-                          pass
-              page.close()
-              raise RuntimeError(f'No full audio source found for {label}')
+          curl -fL --retry 3 -o media/multifamily/01.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/10c313f8-616c-499c-b6db-23ac69c5f8d6.mp3'
+          curl -fL --retry 3 -o media/multifamily/02.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/f6744a84-84b4-40e3-b1b2-ff0cd20fb965.mp3'
+          curl -fL --retry 3 -o media/multifamily/03.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/c76180f9-10d2-46c2-bb20-74091fc9c8a7.mp3'
+          curl -fL --retry 3 -o media/multifamily/04.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/a8db012c-b08e-4d58-92e8-160dbcfc221b.mp3'
+          curl -fL --retry 3 -o media/multifamily/05.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/de33daf1-7c02-49e3-acf7-7333fc6babea.mp3'
+          curl -fL --retry 3 -o media/multifamily/06.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/29cfcc72-8881-401a-8eb1-c37f167a9e01.mp3'
+          curl -fL --retry 3 -o media/multifamily/07.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/cc8f77af-ea37-43cd-9aba-12634ef0ffd9.mp3'
+          curl -fL --retry 3 -o media/multifamily/08.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/022ae6e1-f0e3-4420-a46f-350a3ac3b0b4.mp3'
+          curl -fL --retry 3 -o media/multifamily/09.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/cd037815-8efd-486f-a5f1-0f0f9b18b50c.mp3'
+          curl -fL --retry 3 -o media/multifamily/10.mp3 'https://storage.googleapis.com/adm--audio-playback--7d--public/mcp-preview/a3604178-a24c-4aec-a136-53590d580a89.mp3'
 
-          with sync_playwright() as p:
-              browser = p.chromium.launch(headless=True)
-              capture('pha-clear-master', os.environ['PHA_URL'], browser)
-              capture('multifamily-clear-master', os.environ['MF_URL'], browser)
-              browser.close()
-          PY
-          python /tmp/fetch_voice.py
-          ls -lah voice-audio
-          file voice-audio/*
-      - name: Upload full voiceovers
+          curl -fL --retry 3 -o media/actors/pha_exec_ops.png 'https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/bdb5b320-28cb-4f11-aef9-794c9add677a/Photorealistic_cinematic_documentary_still__16_9__A_diverse_.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDIwYzg1NDQ5OWMzNWMyNiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4ODM0NjMwOH0.E40XxJ5o9Khv7ccYWwsvq2IV3Ggxo6GwYesAq1ULIG4'
+          curl -fL --retry 3 -o media/actors/pha_occupancy_qc.png 'https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/0ece1aea-b851-48b1-8a73-0d3b097fb6e3/Photorealistic_cinematic_documentary_still__16_9__A_public_h.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMmNlYjI0NjM0MjU0ZjgwMiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4ODQyMDU3OX0.XaQ2nuCxUGVy4NbiTHGderTevOqCtwrPpZe4VQYm50o'
+          curl -fL --retry 3 -o media/actors/mf_owner_regional.png 'https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/585a0279-2565-4753-8d19-515d2dfcb9dd/Photorealistic_cinematic_documentary_still__16_9__An_afforda.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYmRkZGU2NjNmODVjZDUyYSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4ODM0ODI1OX0.uH41ZUPM7_vdu6b2hx_eSUzGd7HuyvWAMVg0jppdclM'
+          curl -fL --retry 3 -o media/actors/mf_pm_analyst.png 'https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/b242aa8c-867b-47a6-85e9-072df8934ad3/Photorealistic_cinematic_documentary_still__16_9__A_multifam.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMDNjZGJmOTQ4MzcyYmExYiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4ODM1OTU3Mn0.tEFGw3iNPl5AknF2uVEjhR2Rsy7lClS72TOQhY8m5og'
+
+          find media -type f -exec test -s {} \;
+          file media/pha/*.mp3 media/multifamily/*.mp3 media/actors/*.png
+      - name: Upload media package
         uses: actions/upload-artifact@v4
         with:
-          name: certivoiq-clear-voice-masters
-          path: voice-audio/
+          name: certivoiq-final-media
+          path: media/
           if-no-files-found: error
           retention-days: 1
