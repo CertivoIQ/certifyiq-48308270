@@ -467,10 +467,21 @@ function StateRuleValidationWorkspace() {
   const selectedPack = statePacks.find((pack) => pack.state_code === stateCode);
   const activatedPacks = statePacks.filter((pack) => pack.compliance_activation_allowed).length;
   const activations = query.data?.activations ?? [];
+  const completedSourceActivations = activations.filter((pack) => pack.activation_recorded).length;
+  const allSourceActivationsRecorded =
+    statePacks.length > 0 &&
+    activations.length === statePacks.length &&
+    completedSourceActivations === statePacks.length;
   const pendingActivations = activations.filter(
     (pack) => pack.sources_ready && !pack.activation_recorded,
   );
   const sources = query.data?.sources ?? [];
+  const federalSources = sources.filter(
+    (source) => source.state_code === "US" || source.scope === "FEDERAL_SHARED",
+  );
+  const federalSourcesVerified =
+    federalSources.length > 0 &&
+    federalSources.every((source) => source.agent_verification_status === "verified");
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => ["blocked", "rejected"].includes(source.agent_verification_status)).length;
   const active = sources.length - verified;
@@ -523,8 +534,8 @@ function StateRuleValidationWorkspace() {
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <Stat label="State packs" value={query.error ? "—" : statePacks.length} hint="Exactly 50 state candidates" />
-            <Stat label="Active packs" value={query.error ? "—" : activatedPacks} hint="Fully validated" tone={activatedPacks ? "seal" : "flag"} />
-            <Stat label="Source candidates" value={query.error ? "—" : sources.length} hint="Official-source queue" />
+            <Stat label="Second validation" value={query.error ? "—" : `${completedSourceActivations}/${statePacks.length}`} hint="State-pack source stage" tone={allSourceActivationsRecorded ? "seal" : "flag"} />
+            <Stat label="Compliance active" value={query.error ? "—" : activatedPacks} hint="Validated release required" tone={activatedPacks ? "seal" : "flag"} />
             <Stat label="Remaining" value={query.error ? "—" : active} hint="Includes blocked items" tone={active ? "flag" : "seal"} />
             <Stat label="Verified sources" value={query.error ? "—" : verified} hint="Source review only" tone={verified ? "seal" : "flag"} />
             <Stat label="Blocked / rejected" value={query.error ? "—" : blocked} hint="Must be resolved" tone={blocked ? "reject" : "seal"} />
@@ -541,6 +552,17 @@ function StateRuleValidationWorkspace() {
             </p>
             {selectedPack?.validated_on ? (
               <p className="mt-2 font-medium">Validation date: {selectedPack.validated_on}</p>
+            ) : null}
+            {stateCode === "US" ? (
+              <div className="mt-3 rounded-md border border-seal/30 bg-background/70 p-3">
+                <p className="font-medium text-seal">
+                  Federal source verification {federalSourcesVerified ? "complete" : "still open"}
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  The shared federal baseline is inherited by all 50 state packs and is not activated as a standalone pack.
+                  Use each state pack's second-validation record, then complete the separate deterministic release gate.
+                </p>
+              </div>
             ) : null}
           </div>
 
@@ -582,7 +604,18 @@ function StateRuleValidationWorkspace() {
               </ul>
             ) : (
               <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                No state packs are awaiting independent activation.
+                {allSourceActivationsRecorded ? (
+                  <>
+                    <p className="font-medium text-foreground">Independent state-pack activation is already complete.</p>
+                    <p className="mt-1">
+                      All {completedSourceActivations} current state-pack source snapshots have second-verification records.
+                      The shared federal baseline has no separate activation button. Compliance remains fail-closed until
+                      the deterministic release gate is completed.
+                    </p>
+                  </>
+                ) : (
+                  "No state packs are awaiting independent activation."
+                )}
               </div>
             )}
           </Panel>
