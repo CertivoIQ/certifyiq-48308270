@@ -317,3 +317,17 @@ test("PHA navigation exposes the verified NSPIRE dashboard menu", () => {
   assert.match(workspace, /to="\/findings"[^>]*>Deficiencies &amp; Corrections<\/Link>/);
   assert.match(standardsRoute, /PhaNspireStandardsWorkspace/);
 });
+
+test("state-rule validation distinguishes completed source activation from compliance release", () => {
+  const route = read("src/routes/_authenticated/state-rule-validation.tsx");
+
+  assert.match(route, /Second validation/);
+  assert.match(route, /Compliance active/);
+  assert.match(route, /Independent state-pack activation is already complete/);
+  assert.match(route, /shared federal baseline has no separate activation button/i);
+  assert.match(route, /not activated as a standalone pack/i);
+  assert.match(route, /deterministic release gate/i);
+  assert.match(route, /activations\.length === statePacks\.length/);
+  assert.doesNotMatch(route, /activate_state_rule_pack[\s\S]{0,300}state_code\s*===\s*["']US["']/);
+});
+
