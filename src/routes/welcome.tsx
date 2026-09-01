@@ -3,10 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Panel, Pill } from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
-import CertivoIQVoiceoverVideo from "@/components/CertivoIQVoiceoverVideo";
 import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
 import { useSubscription } from "@/hooks/use-subscription";
-import { useViewerState } from "@/hooks/use-viewer-state";
 import {
   ArrowRight,
   Check,
@@ -86,7 +84,6 @@ const PROGRAMS = ["LIHTC (IRC §42)", "Project-Based Section 8", "HOME", "HOTMA 
 
 function WelcomePage() {
   const { isActive: isSubscriber } = useSubscription();
-  const { state: viewerState } = useViewerState();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -209,18 +206,17 @@ function WelcomePage() {
         </section>
 
         <section id="evidence" className="bg-foreground text-background">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-2 lg:px-8">
+          <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
             <div>
               <Pill tone="neutral">Built for defensibility</Pill>
               <h2 className="mt-5 font-display text-[38px] leading-tight sm:text-[50px]">Don't just get an answer.<br /><span className="text-gold">Know why.</span></h2>
-              <p className="mt-5 max-w-xl text-[15px] leading-7 text-background/65">Compliance intelligence should make the path from document to finding visible. CertivoIQ is designed around evidence lineage, versioned federal rules, and a complete record of every action.</p>
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <p className="mt-5 max-w-3xl text-[15px] leading-7 text-background/65">Compliance intelligence should make the path from document to finding visible. CertivoIQ is designed around evidence lineage, versioned federal rules, and a complete record of every action.</p>
+              <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:max-w-4xl">
                 {["Source evidence stays attached to the finding","Rule evaluation is deterministic and explainable","Exceptions are surfaced instead of silently resolved","Every action is recorded in the audit trail"].map((item) => (
                   <div key={item} className="flex items-start gap-2.5 rounded-lg border border-background/10 bg-background/5 p-3 text-[12.5px] text-background/80"><Check className="mt-0.5 size-4 shrink-0 text-gold" />{item}</div>
                 ))}
               </div>
             </div>
-            <div className="rounded-2xl border border-background/10 bg-background/5 p-4"><CertivoIQVoiceoverVideo accountState={viewerState} /></div>
           </div>
         </section>
 
