@@ -66,6 +66,70 @@
       "revision_label": "2026 update",
       "authority": "HUD Office of Public and Indian Housing",
       "purpose": "Current Form HUD-50058 Instruction Booklet published from HUD HOTMA resources"
+    },
+    {
+      "source_id": "HUD-90105-A-2007",
+      "form_codes": ["HUD-90105-A"],
+      "url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/90105a.pdf",
+      "revision_label": "12/2007",
+      "authority": "HUD Office of Housing",
+      "purpose": "Model Lease for Subsidized Programs"
+    },
+    {
+      "source_id": "HUD-90105-B-2007",
+      "form_codes": ["HUD-90105-B"],
+      "url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/90105b.pdf",
+      "revision_label": "12/2007",
+      "authority": "HUD Office of Housing",
+      "purpose": "Model Lease for Section 202/8 or Section 202 PAC"
+    },
+    {
+      "source_id": "HUD-90105-C-2007",
+      "form_codes": ["HUD-90105-C"],
+      "url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/90105c.pdf",
+      "revision_label": "12/2007",
+      "authority": "HUD Office of Housing",
+      "purpose": "Model Lease for Section 202 PRAC"
+    },
+    {
+      "source_id": "HUD-90105-D-2007",
+      "form_codes": ["HUD-90105-D"],
+      "url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/90105d.pdf",
+      "revision_label": "12/2007",
+      "authority": "HUD Office of Housing",
+      "purpose": "Model Lease for Section 811 PRAC"
+    },
+    {
+      "source_id": "HUD-90100-2007",
+      "form_codes": ["HUD-90100"],
+      "url": "https://www.hud.gov/sites/documents/90100.PDF",
+      "revision_label": "12/2007",
+      "authority": "HUD Office of Housing",
+      "purpose": "Annual Recertification Initial Notice"
+    },
+    {
+      "source_id": "HUD-5380-2028",
+      "form_codes": ["HUD-5380"],
+      "url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/5380.pdf",
+      "revision_label": "OMB expires 01/31/2028",
+      "authority": "HUD",
+      "purpose": "Notice of Occupancy Rights Under the Violence Against Women Act"
+    },
+    {
+      "source_id": "HUD-5382-2028",
+      "form_codes": ["HUD-5382"],
+      "url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/5382.pdf",
+      "revision_label": "OMB expires 01/31/2028",
+      "authority": "HUD",
+      "purpose": "Certification of Domestic Violence, Dating Violence, Sexual Assault, or Stalking, and Alternate Documentation"
+    },
+    {
+      "source_id": "HUD-5383-2028",
+      "form_codes": ["HUD-5383"],
+      "url": "https://www.hud.gov/sites/dfiles/OCHCO/documents/5383.pdf",
+      "revision_label": "OMB expires 01/31/2028",
+      "authority": "HUD",
+      "purpose": "Emergency Transfer Request for Victims of Domestic Violence, Dating Violence, Sexual Assault, or Stalking"
     }
   ]
 }
