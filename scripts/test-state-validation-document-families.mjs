@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -10,6 +11,12 @@ import {
   releaseCoverageGaps,
   selectCurrentDocuments,
 } from "../src/lib/state-validation-document-families.mjs";
+
+const targetedCrawler = readFileSync(new URL("./crawl-tn-tx-release-critical-documents.mjs", import.meta.url), "utf8");
+const tnTxMigration = readFileSync(
+  new URL("../supabase/migrations/20260902033500_gate4_tn_tx_release_critical_sources.sql", import.meta.url),
+  "utf8",
+);
 
 test("classifies the required Florida validation document families", () => {
   assert.deepEqual(
@@ -127,4 +134,38 @@ test("release coverage requires compliance evidence but not training publication
     ["INCOME_LIMITS", "RENT_LIMITS", "UTILITY_ALLOWANCE"],
   );
   assert.ok(incomplete.every((gap) => gap.compliance_activation_allowed === false));
+});
+
+test("TN/TX targeted capture is allowlisted, exact-byte hashed, and cannot self-activate", () => {
+  for (const phrase of [
+    "Tennessee Housing Development Agency",
+    "Texas Department of Housing and Community Affairs",
+    "thda.org",
+    "tdhca.texas.gov",
+    "createHash(\"sha256\")",
+    "captured_unvalidated",
+    "independent_validation_required: true",
+    "compliance_activation_allowed: false",
+  ]) {
+    assert.match(targetedCrawler, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+  assert.match(targetedCrawler, /redirected_to_unapproved_host/);
+  assert.match(targetedCrawler, /curl_fallback/);
+  assert.doesNotMatch(targetedCrawler, /compliance_activation_allowed:\s*true/);
+});
+
+test("TN/TX capture migration preserves independent validation and zero release-critical gaps", () => {
+  assert.match(tnTxMigration, /CAPTURED_EXACT_BYTES_PENDING_INDEPENDENT_VALIDATION/);
+  assert.match(tnTxMigration, /'captured_unvalidated'/);
+  assert.match(tnTxMigration, /'independent_validation_required',true/);
+  assert.match(tnTxMigration, /'independent_validation_completed',false/);
+  assert.match(tnTxMigration, /'compliance_activation_allowed',false/);
+  assert.match(tnTxMigration, /release_critical_document_families_captured',true/);
+  assert.match(tnTxMigration, /COMPLIANCE_GUIDEBOOK/);
+  assert.match(tnTxMigration, /INCOME_LIMITS/);
+  assert.match(tnTxMigration, /RENT_LIMITS/);
+  assert.match(tnTxMigration, /UTILITY_ALLOWANCE/);
+  assert.match(tnTxMigration, /COMPLIANCE_FORMS/);
+  assert.doesNotMatch(tnTxMigration, /agent_verification_status\s*=\s*'verified'/i);
+  assert.doesNotMatch(tnTxMigration, /compliance_activation_allowed\s*=\s*true/i);
 });
