@@ -20,7 +20,6 @@ test("every launch gate has explicit ownership and blocking semantics", () => {
 
 test("remaining human approvals are never labeled technically complete", () => {
   const humanIds = [
-    "leaked_password_protection",
     "stripe_sandbox_checkout",
     "nspire_independent_attestations",
     "tn_tx_independent_source_validation",
@@ -29,6 +28,13 @@ test("remaining human approvals are never labeled technically complete", () => {
   for (const id of humanIds) {
     assert.equal(config.gates.find((gate) => gate.id === id)?.status, "human_required");
   }
+});
+
+test("Supabase leaked-password protection is recorded as plan-blocked, not complete", () => {
+  const gate = config.gates.find((item) => item.id === "leaked_password_protection");
+  assert.equal(gate?.status, "plan_blocked");
+  assert.equal(gate?.blocking, true);
+  assert.match(gate?.evidence ?? "", /PLAN-BLOCKED-SECURITY-CONTROLS\.md/);
 });
 
 test("founder MFA enrollment is recorded from production verification evidence", () => {
