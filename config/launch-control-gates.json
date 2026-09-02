@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-29",
+  "updatedAt": "2026-09-02",
   "gates": [
     {
       "id": "production_auth_rls_uat",
@@ -29,10 +29,10 @@
     {
       "id": "founder_mfa_enrollment",
       "category": "security",
-      "status": "human_required",
+      "status": "technical_complete",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Enroll the founder account in MFA, store recovery codes offline, and confirm a recovery sign-in."
+      "evidence": "Production auth.mfa_factors verification on 2026-09-02 confirmed one verified TOTP factor for the founder account."
     },
     {
       "id": "stripe_sandbox_checkout",

@@ -18,10 +18,9 @@ test("every launch gate has explicit ownership and blocking semantics", () => {
   }
 });
 
-test("human approvals are never labeled technically complete", () => {
+test("remaining human approvals are never labeled technically complete", () => {
   const humanIds = [
     "leaked_password_protection",
-    "founder_mfa_enrollment",
     "stripe_sandbox_checkout",
     "nspire_independent_attestations",
     "tn_tx_independent_source_validation",
@@ -30,6 +29,13 @@ test("human approvals are never labeled technically complete", () => {
   for (const id of humanIds) {
     assert.equal(config.gates.find((gate) => gate.id === id)?.status, "human_required");
   }
+});
+
+test("founder MFA enrollment is recorded from production verification evidence", () => {
+  const gate = config.gates.find((item) => item.id === "founder_mfa_enrollment");
+  assert.equal(gate?.status, "technical_complete");
+  assert.match(gate?.evidence ?? "", /verified TOTP factor/i);
+  assert.match(gate?.evidence ?? "", /2026-09-02/);
 });
 
 test("runbook defines security, billing, regulatory, and recovery escalation", () => {
