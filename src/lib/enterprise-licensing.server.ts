@@ -1,5 +1,6 @@
 import type { StripeInvoiceLike } from "@/lib/stripe-webhook-types";
 import type { StripeEnv } from "@/lib/stripe.server";
+import { FOUNDERS_PROMOTION } from "@/lib/founders-promotion";
 import { FILE_RETENTION_DAYS } from "@/lib/plan-catalog";
 import { normalizeLicenseSelection, type LicenseSelection } from "./license-selection.ts";
 
@@ -71,6 +72,13 @@ function invoiceLicenseSelection(invoice: StripeInvoiceLike): LicenseSelection {
   });
 }
 
+function invoiceDiscountAmount(invoice: StripeInvoiceLike): number {
+  return (invoice.total_discount_amounts ?? []).reduce(
+    (total, discount) => total + Number(discount.amount ?? 0),
+    0,
+  );
+}
+
 export function enterpriseInvoiceActivationException(invoice: StripeInvoiceLike): string | null {
   const metadata = invoiceMetadata(invoice);
   if (metadata["license_product"] && metadata["license_product"] !== PRODUCT_CODE) {
@@ -118,12 +126,43 @@ export function enterpriseInvoiceActivationException(invoice: StripeInvoiceLike)
   if (expectedInvoiceCents === null) return "invoice_price_key_mismatch";
   if (invoice.collection_method !== "send_invoice") return "invoice_collection_method_mismatch";
   if (!invoice.period_end) return "missing_billing_period";
-  if (invoice.amount_due !== expectedInvoiceCents) return "invoice_amount_mismatch";
+  if (invoice.subtotal != null && invoice.subtotal !== expectedInvoiceCents) {
+    return "invoice_subtotal_mismatch";
+  }
+
+  const discountCents = invoiceDiscountAmount(invoice);
+  let expectedPaymentCents = expectedInvoiceCents;
+  const promotionCode = metadata["promotion_code"];
+  if (promotionCode) {
+    if (promotionCode !== FOUNDERS_PROMOTION.code) return "unknown_promotion_code";
+    if (!metadata["promotion_code_id"]) return "promotion_identifier_missing";
+    if (
+      metadata["promotion_discount_months"] !==
+      String(FOUNDERS_PROMOTION.discountedInstallments)
+    ) {
+      return "promotion_duration_mismatch";
+    }
+    if (discountCents <= 0) return "promotion_discount_missing";
+    const exactExpectedDiscount =
+      (expectedInvoiceCents * FOUNDERS_PROMOTION.percentOff) / 100;
+    const roundingToleranceCents = Math.max(1, selection.quantity);
+    if (Math.abs(discountCents - exactExpectedDiscount) > roundingToleranceCents) {
+      return "promotion_discount_mismatch";
+    }
+    expectedPaymentCents = expectedInvoiceCents - discountCents;
+  } else if (discountCents > 0) {
+    return "unexpected_invoice_discount";
+  }
+
+  if (invoice.total != null && invoice.total !== expectedPaymentCents) {
+    return "invoice_total_mismatch";
+  }
+  if (invoice.amount_due !== expectedPaymentCents) return "invoice_amount_mismatch";
   if ((invoice.amount_paid ?? 0) <= 0) return "invoice_not_paid";
   if ((invoice.amount_due ?? 0) > 0 && (invoice.amount_paid ?? 0) < (invoice.amount_due ?? 0)) {
     return "partial_payment";
   }
-  if (invoice.amount_paid !== expectedInvoiceCents) return "payment_amount_mismatch";
+  if (invoice.amount_paid !== expectedPaymentCents) return "payment_amount_mismatch";
   if (metadata["manual_review_required"] === "true") {
     return metadata["manual_review_reason"] || "manual_review_required";
   }
@@ -614,23 +653,50 @@ function objectId(value: string | { id?: string | null } | null | undefined): st
   return value?.id ?? null;
 }
 
+async function licenseByOrganizationId(
+  db: EnterpriseLicenseDb,
+  organizationId: string,
+): Promise<EnterpriseDbRow | null> {
+  const { data, error } = await db
+    .from("enterprise_licenses")
+    .select(
+      "id,organization_id,status,expires_at,stripe_invoice_id,stripe_subscription_id,last_billing_event_id",
+    )
+    .eq("organization_id", organizationId)
+    .eq("product_code", PRODUCT_CODE)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`Enterprise terminal lookup failed: ${error.message ?? "database error"}`);
+  }
+  return data;
+}
+
+async function organizationIdForPaidInvoice(
+  db: EnterpriseLicenseDb,
+  invoiceId: string,
+): Promise<string | null> {
+  const { data, error } = await db
+    .from("enterprise_invoice_events")
+    .select("organization_id")
+    .eq("stripe_invoice_id", invoiceId)
+    .eq("event_type", "invoice.paid")
+    .maybeSingle();
+  if (error) {
+    throw new Error(
+      `Enterprise paid-invoice lookup failed: ${error.message ?? "database error"}`,
+    );
+  }
+  return data?.["organization_id"] ? String(data["organization_id"]) : null;
+}
+
 async function resolveTerminalLicense(
   db: EnterpriseLicenseDb,
   object: EnterpriseTerminalBillingObject,
 ): Promise<EnterpriseDbRow | null> {
   const organizationId = object.metadata?.["organization_id"];
   if (organizationId) {
-    const { data, error } = await db
-      .from("enterprise_licenses")
-      .select(
-        "id,organization_id,status,expires_at,stripe_invoice_id,stripe_subscription_id,last_billing_event_id",
-      )
-      .eq("organization_id", organizationId)
-      .eq("product_code", PRODUCT_CODE)
-      .maybeSingle();
-    if (error)
-      throw new Error(`Enterprise terminal lookup failed: ${error.message ?? "database error"}`);
-    if (data) return data;
+    const license = await licenseByOrganizationId(db, organizationId);
+    if (license) return license;
   }
 
   const invoiceId = objectId(object.invoice);
@@ -647,6 +713,12 @@ async function resolveTerminalLicense(
         `Enterprise invoice reversal lookup failed: ${error.message ?? "database error"}`,
       );
     if (data) return data;
+
+    const historicalOrganizationId = await organizationIdForPaidInvoice(db, invoiceId);
+    if (historicalOrganizationId) {
+      const historicalLicense = await licenseByOrganizationId(db, historicalOrganizationId);
+      if (historicalLicense) return historicalLicense;
+    }
   }
 
   const subscriptionId = objectId(object.subscription) ?? object.id ?? null;
@@ -665,6 +737,53 @@ async function resolveTerminalLicense(
     if (data) return data;
   }
   return null;
+}
+
+async function settledInvoiceAmount(
+  db: EnterpriseLicenseDb,
+  invoiceId: string | null,
+): Promise<number | null> {
+  if (!invoiceId) return null;
+  const { data, error } = await db
+    .from("enterprise_invoice_events")
+    .select("amount_paid_cents")
+    .eq("stripe_invoice_id", invoiceId)
+    .eq("event_type", "invoice.paid")
+    .maybeSingle();
+  if (error) {
+    throw new Error(
+      `Enterprise paid amount lookup failed: ${error.message ?? "database error"}`,
+    );
+  }
+  const amount = Number(data?.["amount_paid_cents"] ?? 0);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+function reversalAmount(
+  object: EnterpriseTerminalBillingObject,
+  eventType: string,
+): number | null {
+  const candidate = eventType === "charge.refunded" ? object.amount_refunded : object.amount;
+  const amount = Number(candidate ?? 0);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+async function noteFinancialAdjustmentReview(
+  db: EnterpriseLicenseDb,
+  organizationId: string,
+  invoiceId: string | null,
+  eventType: string,
+  reversedAmount: number | null,
+  settledAmount: number | null,
+) {
+  await db.from("crm_news").insert({
+    kind: "billing",
+    headline: "Enterprise financial adjustment requires review",
+    detail: `Organization ${organizationId}; invoice ${invoiceId ?? "unknown"}; ${eventType}; reversed ${
+      reversedAmount ?? "unknown"
+    } cents of ${settledAmount ?? "unknown"} settled cents. Access was not revoked.`,
+    source: "CertivoIQ Enterprise Billing",
+  });
 }
 
 export async function applyEnterpriseTerminalEvent(
@@ -700,6 +819,33 @@ export async function applyEnterpriseTerminalEvent(
   }
 
   try {
+    if (action === "credited" || action === "refunded") {
+      const settledAmount = await settledInvoiceAmount(db, invoiceId);
+      const reversedAmount = reversalAmount(object, eventType);
+      if (!settledAmount || !reversedAmount || reversedAmount < settledAmount) {
+        await noteFinancialAdjustmentReview(
+          db,
+          organizationId,
+          invoiceId,
+          eventType,
+          reversedAmount,
+          settledAmount,
+        );
+        await completeEvent(
+          db,
+          event,
+          "exception",
+          `partial_or_unverified_financial_adjustment:${reversedAmount ?? "unknown"}/${
+            settledAmount ?? "unknown"
+          }`,
+        );
+        return {
+          action: "ignored",
+          reason: "partial_or_unverified_financial_adjustment",
+        };
+      }
+    }
+
     const now = new Date().toISOString();
     const purgeAt = new Date(Date.now() + FILE_RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString();
     const licenseStatus = action === "cancelled" ? "cancelled" : "suspended";
@@ -774,4 +920,3 @@ export async function applyEnterpriseTerminalEvent(
     throw error;
   }
 }
-

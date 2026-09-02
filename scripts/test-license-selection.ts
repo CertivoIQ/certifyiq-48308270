@@ -17,9 +17,23 @@ import {
 import type { StripeInvoiceLike } from "../src/lib/stripe-webhook-types";
 import { paidOnboardingBlockReason } from "../src/lib/paid-onboarding.server";
 
-function paidInvoice(metadata: Record<string, string>, amountCents: number): StripeInvoiceLike {
+type PaidInvoiceOptions = {
+  subtotalCents?: number;
+  discountCents?: number;
+};
+
+function paidInvoice(
+  metadata: Record<string, string>,
+  amountCents: number,
+  options: PaidInvoiceOptions = {},
+): StripeInvoiceLike {
+  const subtotalCents = options.subtotalCents ?? amountCents;
+  const discountCents = options.discountCents ?? 0;
   return {
     id: "in_test",
+    subtotal: subtotalCents,
+    total: amountCents,
+    total_discount_amounts: discountCents ? [{ amount: discountCents }] : [],
     amount_due: amountCents,
     amount_paid: amountCents,
     collection_method: "send_invoice",
@@ -45,10 +59,7 @@ class FakeEnterpriseQuery implements PromiseLike<{
   private operation: "select" | "update" | "insert" = "select";
   private values: FakeRow | FakeRow[] | null = null;
 
-  constructor(
-    private readonly rows: FakeRow[],
-    private readonly maybeSingleResult = false,
-  ) {}
+  constructor(private readonly rows: FakeRow[]) {}
 
   select() {
     this.operation = "select";
@@ -94,7 +105,7 @@ class FakeEnterpriseQuery implements PromiseLike<{
       | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
-    return Promise.resolve(this.execute(this.maybeSingleResult)).then(onfulfilled, onrejected);
+    return Promise.resolve(this.execute(false)).then(onfulfilled, onrejected);
   }
 
   private matches(row: FakeRow) {
@@ -116,12 +127,14 @@ class FakeEnterpriseQuery implements PromiseLike<{
   }
 }
 
+const TERMINAL_ORGANIZATION_ID = "00000000-0000-4000-8000-000000000001";
+
 function terminalDb() {
   const tables: Record<string, FakeRow[]> = {
     enterprise_licenses: [
       {
         id: "license-1",
-        organization_id: "00000000-0000-4000-8000-000000000001",
+        organization_id: TERMINAL_ORGANIZATION_ID,
         product_code: "certivoiq_enterprise",
         status: "active",
         stripe_invoice_id: "in_terminal",
@@ -136,7 +149,17 @@ function terminalDb() {
       { user_id: "user-1", status: "active" },
       { user_id: "user-2", status: "active" },
     ],
-    enterprise_invoice_events: [],
+    enterprise_invoice_events: [
+      {
+        stripe_event_id: "evt_original_paid",
+        stripe_invoice_id: "in_terminal",
+        organization_id: TERMINAL_ORGANIZATION_ID,
+        event_type: "invoice.paid",
+        amount_paid_cents: 1_250_000,
+        processing_state: "completed",
+        action: "activated",
+      },
+    ],
     crm_news: [],
   };
   const db = {
@@ -157,6 +180,10 @@ function terminalDb() {
       }
       tables.enterprise_invoice_events.push({
         stripe_event_id: eventId,
+        stripe_invoice_id: args.p_stripe_invoice_id,
+        organization_id: args.p_organization_id,
+        event_type: args.p_event_type,
+        amount_paid_cents: args.p_amount_paid_cents,
         processing_state: "processing",
         action: "recorded",
       });
@@ -276,7 +303,7 @@ describe("authoritative license pricing and jurisdiction selection", () => {
       enterpriseInvoiceActivationException(paidInvoice({ ...metadata, quantity: "2" }, 1_624_989)),
     ).toBe("license_quantity_mismatch");
     expect(enterpriseInvoiceActivationException(paidInvoice(metadata, 1_625_001))).toBe(
-      "invoice_amount_mismatch",
+      "invoice_subtotal_mismatch",
     );
     expect(
       enterpriseInvoiceActivationException(
@@ -286,6 +313,69 @@ describe("authoritative license pricing and jurisdiction selection", () => {
         ),
       ),
     ).toBeNull();
+  });
+
+  test("a signed FOUNDERS50 invoice activates at exactly half of the base installment", () => {
+    const metadata = {
+      license_kind: "multifamily_enterprise",
+      licensed_state_codes: "AR,MS,TN",
+      state_pack_count: "3",
+      contract_price_lookup_key: "certivoiq_multifamily_state_monthly",
+      invoice_price_lookup_key: "certivoiq_multifamily_state_monthly_first",
+      quantity: "3",
+      annual_price_cents: "19500000",
+      first_installment_cents: "1624989",
+      monthly_installment_cents: "1625001",
+      commitment_months: "12",
+      promotion_code: "FOUNDERS50",
+      promotion_code_id: "promo_founders50",
+      promotion_discount_months: "12",
+    };
+    expect(
+      enterpriseInvoiceActivationException(
+        paidInvoice(metadata, 812_494, {
+          subtotalCents: 1_624_989,
+          discountCents: 812_495,
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      enterpriseInvoiceActivationException(
+        paidInvoice(metadata, 1_624_989, { subtotalCents: 1_624_989 }),
+      ),
+    ).toBe("promotion_discount_missing");
+    expect(
+      enterpriseInvoiceActivationException(
+        paidInvoice(
+          { ...metadata, promotion_code: "NOT_APPROVED" },
+          812_494,
+          { subtotalCents: 1_624_989, discountCents: 812_495 },
+        ),
+      ),
+    ).toBe("unknown_promotion_code");
+  });
+
+  test("unidentified invoice discounts fail closed", () => {
+    const metadata = {
+      license_kind: "pha",
+      licensed_state_codes: "CA",
+      state_pack_count: "1",
+      contract_price_lookup_key: "certivoiq_pha_monthly",
+      invoice_price_lookup_key: "certivoiq_pha_monthly",
+      quantity: "1",
+      annual_price_cents: "15000000",
+      first_installment_cents: "1250000",
+      monthly_installment_cents: "1250000",
+      commitment_months: "12",
+    };
+    expect(
+      enterpriseInvoiceActivationException(
+        paidInvoice(metadata, 625_000, {
+          subtotalCents: 1_250_000,
+          discountCents: 625_000,
+        }),
+      ),
+    ).toBe("unexpected_invoice_discount");
   });
 
   test("PHA invoices remain flat and require exactly one operating state", () => {
@@ -390,7 +480,7 @@ describe("new paid-onboarding launch control", () => {
 });
 
 describe("enterprise terminal billing controls", () => {
-  test("a credit-note replay is claimed once and revokes every member entitlement", async () => {
+  test("a full credit-note replay is claimed once and revokes every member entitlement", async () => {
     const { db, tables } = terminalDb();
     const object = {
       id: "cn_test",
@@ -411,11 +501,53 @@ describe("enterprise terminal billing controls", () => {
     });
     expect(tables.account_access.every((row) => row.status === "canceled")).toBe(true);
     expect(tables.account_access.every((row) => Boolean(row.access_until))).toBe(true);
-    expect(tables.enterprise_invoice_events[0]).toMatchObject({
+    expect(
+      tables.enterprise_invoice_events.find((row) => row.stripe_event_id === "evt_credit_once"),
+    ).toMatchObject({
       action: "credited",
       processing_state: "completed",
     });
     expect(tables.crm_news).toHaveLength(1);
+  });
+
+  test("a partial credit is logged for review without revoking access", async () => {
+    const { db, tables } = terminalDb();
+    const result = await applyEnterpriseTerminalEvent(
+      db,
+      { id: "cn_partial", invoice: "in_terminal", amount: 100_000, currency: "usd" },
+      { id: "evt_credit_partial", type: "credit_note.created" },
+    );
+
+    expect(result).toEqual({
+      action: "ignored",
+      reason: "partial_or_unverified_financial_adjustment",
+    });
+    expect(tables.enterprise_licenses[0]?.status).toBe("active");
+    expect(tables.account_access.every((row) => row.status === "active")).toBe(true);
+    expect(
+      tables.enterprise_invoice_events.find((row) => row.stripe_event_id === "evt_credit_partial"),
+    ).toMatchObject({
+      action: "exception",
+      processing_state: "completed",
+    });
+    expect(tables.crm_news[0]?.headline).toBe(
+      "Enterprise financial adjustment requires review",
+    );
+  });
+
+  test("a full reversal of a historical invoice still resolves the current organization license", async () => {
+    const { db, tables } = terminalDb();
+    tables.enterprise_licenses[0]!.stripe_invoice_id = "in_current";
+
+    const result = await applyEnterpriseTerminalEvent(
+      db,
+      { id: "cn_historical", invoice: "in_terminal", amount: 1_250_000, currency: "usd" },
+      { id: "evt_historical_credit", type: "credit_note.created" },
+    );
+
+    expect(result.action).toBe("credited");
+    expect(tables.enterprise_licenses[0]?.status).toBe("suspended");
+    expect(tables.account_access.every((row) => row.status === "canceled")).toBe(true);
   });
 
   test("subscription deletion cancels the license and its access without deleting audit rows", async () => {
@@ -433,4 +565,3 @@ describe("enterprise terminal billing controls", () => {
     expect(tables.account_access.every((row) => row.status === "canceled")).toBe(true);
   });
 });
-

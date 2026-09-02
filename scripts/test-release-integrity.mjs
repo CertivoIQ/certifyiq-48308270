@@ -8,18 +8,30 @@ test("live billing remains fail-closed until configuration and verification are 
   const config = read("src/lib/billing-config.server.ts");
   const stripe = read("src/lib/stripe.server.ts");
   const guard = read("src/lib/paid-onboarding.server.ts");
-  const checkout = read("src/utils/payments.functions.ts");
+  const payments = read("src/utils/payments.functions.ts");
   const invoices = read("src/lib/enterprise-invoice.functions.ts");
 
   assert.match(config, /PAYMENTS_LIVE_VERIFIED/);
   assert.match(config, /STRIPE_LIVE_API_KEY/);
+  assert.match(config, /VITE_PAYMENTS_CLIENT_TOKEN/);
+  assert.match(config, /PAYMENTS_LIVE_WEBHOOK_SECRET/);
   assert.match(config, /STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE/);
   assert.match(config, /STRIPE_PHA_PRICE_ID_LIVE/);
+  assert.match(config, /STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE/);
+  assert.match(config, /LIVE_SECRET_KEY_PATTERN/);
+  assert.match(config, /LIVE_PUBLISHABLE_KEY_PATTERN/);
+  assert.match(config, /WEBHOOK_SECRET_PATTERN/);
+  assert.match(config, /PRICE_ID_PATTERN/);
+  assert.match(config, /PORTAL_CONFIGURATION_PATTERN/);
+
   assert.match(stripe, /env === "live"\) assertLiveBillingConfiguration/);
   assert.match(guard, /PAID_ONBOARDING_ENABLED/);
   assert.match(guard, /PAYMENTS_LIVE_VERIFIED/);
   assert.match(guard, /assertNewPaidOnboardingAllowed/);
-  assert.match(checkout, /assertNewPaidOnboardingAllowed/);
+  assert.match(payments, /assertNewPaidOnboardingAllowed/);
+  assert.match(payments, /requireControlledPortalConfiguration/);
+  assert.match(payments, /billingPortal\.configurations\.retrieve/);
+  assert.match(payments, /configuration,/);
   assert.match(invoices, /assertNewPaidOnboardingAllowed/);
 });
 

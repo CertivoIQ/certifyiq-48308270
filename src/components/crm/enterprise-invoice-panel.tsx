@@ -42,6 +42,7 @@ export function EnterpriseInvoicePanel({
   );
   const [billingEmail, setBillingEmail] = useState(verifiedEmails[0]?.email ?? "");
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState("");
+  const [promotionCode, setPromotionCode] = useState("");
   const [netDays, setNetDays] = useState(30);
   const [busy, setBusy] = useState(false);
   const [pricingClass, setPricingClass] = useState<LicensePricingClass>(initialPricingClass);
@@ -113,6 +114,7 @@ export function EnterpriseInvoicePanel({
           organizationName: accountName,
           billingEmail,
           purchaseOrderNumber: purchaseOrderNumber || undefined,
+          promotionCode: promotionCode || undefined,
           netDays,
           allowCard: false,
           environment,
@@ -124,7 +126,9 @@ export function EnterpriseInvoicePanel({
       setPricingClass(result.pricingClass);
       setHostedInvoiceUrl(result.hostedInvoiceUrl);
       toast.success(
-        `${result.invoiceNumber ?? "Enterprise invoice"} issued for ${moneyFromCents(result.annualPriceCents)}.`,
+        `${result.invoiceNumber ?? "Enterprise invoice"} issued. First invoice: ${moneyFromCents(
+          result.firstInvoiceAmountCents,
+        )}${result.promotionCode ? ` with ${result.promotionCode}` : ""}.`,
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invoice issuance failed");
@@ -152,6 +156,7 @@ export function EnterpriseInvoicePanel({
         data: {
           accountId,
           purchaseOrderNumber: purchaseOrderNumber || undefined,
+          promotionCode: promotionCode || undefined,
           netDays,
           allowCard: false,
           environment,
@@ -162,11 +167,12 @@ export function EnterpriseInvoicePanel({
       if ("error" in result) throw new Error(result.error);
       setPricingClass(result.pricingClass);
       setHostedInvoiceUrl(result.hostedInvoiceUrl);
-      const amount = moneyFromCents(result.annualPriceCents);
+      const firstInvoice = moneyFromCents(result.firstInvoiceAmountCents);
+      const offer = result.promotionCode ? ` with ${result.promotionCode}` : "";
       toast.success(
         sandboxTest
-          ? `${result.invoiceNumber ?? "Sandbox invoice"} created for ${amount} through the automated workflow.`
-          : `${result.invoiceNumber ?? "Enterprise invoice"} for ${amount} created and sent automatically to ${result.billingEmail}.`,
+          ? `${result.invoiceNumber ?? "Sandbox invoice"} created. First invoice: ${firstInvoice}${offer}.`
+          : `${result.invoiceNumber ?? "Enterprise invoice"} created and sent to ${result.billingEmail}. First invoice: ${firstInvoice}${offer}.`,
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Automated invoice workflow failed");
@@ -291,6 +297,24 @@ export function EnterpriseInvoicePanel({
         </label>
 
         <label className="text-sm font-medium">
+          Founding Customer offer code
+          <input
+            value={promotionCode}
+            onChange={(event) => {
+              setPromotionCode(event.target.value.toUpperCase());
+              setHostedInvoiceUrl(null);
+            }}
+            placeholder="Optional — FOUNDERS50"
+            autoComplete="off"
+            className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm uppercase"
+          />
+          <span className="mt-1 block text-xs font-normal text-muted-foreground">
+            FOUNDERS50 applies 50% off the first 12 monthly base-license invoices when redeemed by
+            November 30, 2026. Merlin is excluded.
+          </span>
+        </label>
+
+        <label className="text-sm font-medium">
           Payment terms
           <select
             value={netDays}
@@ -340,5 +364,3 @@ export function EnterpriseInvoicePanel({
     </Panel>
   );
 }
-
-

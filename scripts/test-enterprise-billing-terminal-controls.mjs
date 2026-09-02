@@ -47,9 +47,24 @@ test("paid, cancellation, credit, and refund events have bounded dispositions", 
   assert.match(webhook, /case "charge\.refunded"/);
 });
 
-test("enterprise members can view invoices without direct schedule cancellation", () => {
+test("partial and historical financial reversals are resolved without unsafe revocation", () => {
+  assert.match(licensing, /organizationIdForPaidInvoice/);
+  assert.match(licensing, /settledInvoiceAmount/);
+  assert.match(licensing, /partial_or_unverified_financial_adjustment/);
+  assert.match(licensing, /Access was not revoked/);
+  assert.match(licensing, /reversedAmount < settledAmount/);
+  assert.match(licensing, /completeEvent\([\s\S]*"exception"/);
+});
+
+test("enterprise members use a controlled invoice portal without direct schedule cancellation", () => {
   assert.match(payments, /from\("enterprise_license_members"\)/);
   assert.match(payments, /from\("enterprise_licenses"\)/);
+  assert.match(payments, /billingPortal\.configurations\.retrieve/);
+  assert.match(payments, /invoice_history\?\.enabled/);
+  assert.match(payments, /payment_method_update\?\.enabled/);
+  assert.match(payments, /subscription_cancel\?\.enabled/);
+  assert.match(payments, /subscription_update\?\.enabled/);
+  assert.match(payments, /configuration,/);
   assert.match(payments, /controlled cancellation workflow/i);
   assert.match(billing, /Request billing change/);
   assert.match(billing, /to="\/contact-support"/);
@@ -62,4 +77,3 @@ test("reconciliation understands active, grace, and terminal entitlement states"
   assert.match(migration, /access\.status = 'canceled'/i);
   assert.match(migration, /end as entitlement_matches,\s*license\.last_billing_event_id/i);
 });
-
