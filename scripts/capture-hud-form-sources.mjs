@@ -1,12 +1,11 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const inventory = JSON.parse(
   await readFile(new URL("../src/lib/hud-form-source-inventory.json", import.meta.url)),
 );
-const outputDirectory = resolve(process.env.HUD_FORM_EVIDENCE_OUTPUT_DIR ?? "artifacts/hud-form-source-evidence");
-const retrievedAt = new Date().toISOString();
 const USER_AGENT = "Mozilla/5.0 (compatible; CertivoIQ-HUDFormEvidence/1.0; +https://certivoiq.com)";
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
 
@@ -80,7 +79,7 @@ async function fetchHudSource(source) {
   throw new Error("REDIRECT_LIMIT_EXCEEDED");
 }
 
-async function capture(source) {
+async function capture(source, retrievedAt) {
   try {
     const evidence = await fetchHudSource(source);
     return {
@@ -103,21 +102,29 @@ async function capture(source) {
   }
 }
 
-const sources = [];
-for (const source of inventory.sources) sources.push(await capture(source));
-const counts = sources.reduce((acc, source) => {
-  acc[source.source_evidence_status] = (acc[source.source_evidence_status] ?? 0) + 1;
-  return acc;
-}, {});
-const manifest = {
-  title: "CertivoIQ HUD form exact-byte capture manifest",
-  captured_at: retrievedAt,
-  activation_policy: inventory.activation_policy,
-  counts,
-  sources,
-};
-await mkdir(outputDirectory, { recursive: true });
-const fileName = `hud-form-source-capture-${retrievedAt.replace(/[:.]/g, "-")}.json`;
-await writeFile(resolve(outputDirectory, fileName), `${JSON.stringify(manifest, null, 2)}\n`);
-console.log(JSON.stringify({ artifact: basename(fileName), counts }, null, 2));
-if (sources.some((source) => source.source_evidence_status !== "captured_exact_bytes")) process.exitCode = 1;
+export async function runCapture() {
+  const outputDirectory = resolve(process.env.HUD_FORM_EVIDENCE_OUTPUT_DIR ?? "artifacts/hud-form-source-evidence");
+  const retrievedAt = new Date().toISOString();
+  const sources = [];
+  for (const source of inventory.sources) sources.push(await capture(source, retrievedAt));
+  const counts = sources.reduce((acc, source) => {
+    acc[source.source_evidence_status] = (acc[source.source_evidence_status] ?? 0) + 1;
+    return acc;
+  }, {});
+  const manifest = {
+    title: "CertivoIQ HUD form exact-byte capture manifest",
+    captured_at: retrievedAt,
+    activation_policy: inventory.activation_policy,
+    counts,
+    sources,
+  };
+  await mkdir(outputDirectory, { recursive: true });
+  const fileName = `hud-form-source-capture-${retrievedAt.replace(/[:.]/g, "-")}.json`;
+  await writeFile(resolve(outputDirectory, fileName), `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(JSON.stringify({ artifact: basename(fileName), counts }, null, 2));
+  if (sources.some((source) => source.source_evidence_status !== "captured_exact_bytes")) process.exitCode = 1;
+  return manifest;
+}
+
+const invokedPath = process.argv[1] ? pathToFileURL(resolve(process.argv[1])).href : null;
+if (invokedPath === import.meta.url) await runCapture();
