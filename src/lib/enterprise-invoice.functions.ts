@@ -72,7 +72,9 @@ function normalizePromotionCode(value?: string): string | undefined {
   return normalized;
 }
 
-function invoiceDiscountAmount(invoice: { total_discount_amounts?: Array<{ amount?: number | null }> | null }) {
+function invoiceDiscountAmount(invoice: {
+  total_discount_amounts?: Array<{ amount?: number | null }> | null;
+}) {
   return (invoice.total_discount_amounts ?? []).reduce(
     (total, discount) => total + Number(discount.amount ?? 0),
     0,
@@ -262,9 +264,13 @@ async function issueEnterpriseInvoice(
     const initialDiscounts = foundersPromotion
       ? [{ promotion_code: foundersPromotion.promotionCodeId }]
       : undefined;
+    const continuationDiscounts = foundersPromotion
+      ? [{ coupon: foundersPromotion.couponId }]
+      : undefined;
 
-    // The promotion is redeemed once on phase 1. Its 12-month duration remains
-    // attached to the subscription when the multifamily price changes in phase 2.
+    // Redeem the customer-facing code in phase 1. Multifamily changes prices
+    // after month 1, so phase 2 explicitly continues the same approved coupon
+    // for the remaining 11 invoices instead of relying on phase inheritance.
     const phases =
       selection.firstInstallmentPriceLookupKey === selection.priceLookupKey
         ? [
@@ -288,6 +294,7 @@ async function issueEnterpriseInvoice(
               items: [{ price: regularPrice.id, quantity: selection.quantity }],
               duration: { interval: "month" as const, interval_count: 11 },
               metadata: regularPhaseMetadata,
+              ...(continuationDiscounts ? { discounts: continuationDiscounts } : {}),
               description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
               proration_behavior: "none" as const,
             },
