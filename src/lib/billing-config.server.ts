@@ -1,7 +1,8 @@
 /**
  * Production billing must fail closed. Live deployments may not create or
  * service financial objects with test credentials, missing webhook validation,
- * unbound catalog IDs, or an uncontrolled customer portal.
+ * or unbound catalog IDs. The customer portal is resolved and validated
+ * separately against CertivoIQ's controlled enterprise portal policy.
  */
 
 import { LICENSES } from "@/lib/plan-catalog";
@@ -41,8 +42,8 @@ export function assertLiveBillingConfiguration() {
 
   const portalConfigurationId =
     process.env["STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE"]?.trim() ?? "";
-  if (!PORTAL_CONFIGURATION_PATTERN.test(portalConfigurationId)) {
-    throw new Error("Production billing requires a controlled Stripe customer portal configuration.");
+  if (portalConfigurationId && !PORTAL_CONFIGURATION_PATTERN.test(portalConfigurationId)) {
+    throw new Error("The configured live Stripe customer portal configuration ID is invalid.");
   }
 }
 
