@@ -9,6 +9,7 @@ import {
 
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260902033000_compliance_document_registry.sql");
+const sourceBinding = read("supabase/migrations/20260902045000_bind_core_hud_form_sources.sql");
 const route = read("src/routes/_authenticated/document-intelligence.tsx");
 const server = read("src/lib/compliance-document-recognition.functions.ts");
 const shell = read("src/components/app-shell.tsx");
@@ -53,6 +54,37 @@ test("future-state form families are seeded fail-closed", () => {
   assert.match(migration, /HUD-MODEL-LEASE/);
   assert.match(migration, /OWNER-POLICY/);
   assert.match(migration, /decision_use.*false/is);
+});
+
+test("captured HUD sources bind exact hashes without promoting decision authority", () => {
+  const expected = {
+    "HUD-50059": "faa2892a48ce00ac75b9c447e5f0ef3fc63c730127967ca37baedd77db1fe873",
+    "HUD-50059-A": "efe20bd39e192fa1bd2991ede64fbc4a9cfd0f8066a119d30320d980e766f6d3",
+    "HUD-9887": "2d0c8a68a3ecb25c2ea4ef2442fbd96b651bfcbc9d2c46ba45af6762b9d644a9",
+    "HUD-9887-A": "2d0c8a68a3ecb25c2ea4ef2442fbd96b651bfcbc9d2c46ba45af6762b9d644a9",
+    "HUD-9834": "0676e13ab491ab6dc90a27288348d3499fcaa94e8b825b0e2a6258dfe10e039c",
+    "HUD-50058": "695c404ecd94c77f19fb3b91d02395c629f496481e5384aaae3d4c52aabc033e",
+    "HUD-50058-MTW": "53a64d02b5e6c07e1814c4f84b0109d796b6484ea17c5049693dcc9b0de40fbf",
+    "HUD-50058-MTW-EXPANSION": "549f1d187a2431e99dd34d4af16eed5714f7cc1f95f724c5d2f00e6209d2e24e",
+  };
+  for (const [code, sha] of Object.entries(expected)) {
+    assert.match(sourceBinding, new RegExp(code.replaceAll("-", "[-]")));
+    assert.match(sourceBinding, new RegExp(sha));
+  }
+  assert.match(sourceBinding, /source_captured/);
+  assert.match(sourceBinding, /decision_use['"\s,:]+false/i);
+  assert.doesNotMatch(sourceBinding, /support_status\s*=\s*'validated_supported'/i);
+  assert.doesNotMatch(sourceBinding, /'validated_supported'\s*,/i);
+});
+
+test("HUD source bindings include signature controls but leave effective dates uninferred", () => {
+  assert.match(sourceBinding, /owner_agent/);
+  assert.match(sourceBinding, /head_of_household/);
+  assert.match(sourceBinding, /household_members_age_18_or_older/);
+  assert.match(sourceBinding, /project_owner_or_representative/);
+  assert.match(sourceBinding, /effective_date_status/);
+  assert.match(sourceBinding, /not_independently_established|revision_date_recorded_effective_date_not_inferred/);
+  assert.doesNotMatch(sourceBinding, /effective_from\s*=\s*'20\d\d-/i);
 });
 
 test("registry is readable but customer sessions cannot mutate controlled definitions", () => {
@@ -105,8 +137,6 @@ test("document intelligence workspace exposes registry and recent file recogniti
   assert.match(route, /Validated supported/);
   assert.match(route, /Check form identity/);
   assert.match(route, /pending analyst verification/i);
-  // Guard customer-visible positioning language without treating incidental source-code
-  // tokens as product copy.
   assert.doesNotMatch(route, /AI[-\s]+(?:powered|assisted|review|verification)/i);
   assert.doesNotMatch(route, /artificial intelligence|human[-\s]+(?:review|approval|verification|sign[- ]?off)/i);
   assert.match(shell, /to: "\/document-intelligence", label: "Document Intelligence"/);
