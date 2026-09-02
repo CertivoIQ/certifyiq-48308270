@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireControlledPortalConfiguration } from "@/lib/billing-portal.server";
 import { normalizeLicenseSelection } from "@/lib/license-selection";
 import { assertNewPaidOnboardingAllowed } from "@/lib/paid-onboarding.server";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
@@ -9,7 +10,6 @@ type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
 
 const STRIPE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
-const PORTAL_CONFIGURATION_PATTERN = /^bpc_[a-zA-Z0-9]+$/;
 const LIVE_RETURN_HOSTS = new Set(["certivoiq.com", "www.certivoiq.com"]);
 
 function validateReturnUrl(value: string | undefined, environment: StripeEnv): string | undefined {
@@ -23,57 +23,6 @@ function validateReturnUrl(value: string | undefined, environment: StripeEnv): s
     throw new Error("Live billing may return only to certivoiq.com");
   }
   return url.toString();
-}
-
-function portalConfigurationEnvironmentKey(environment: StripeEnv) {
-  return environment === "live"
-    ? "STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE"
-    : "STRIPE_BILLING_PORTAL_CONFIGURATION_ID_SANDBOX";
-}
-
-type ControlledPortalConfiguration = {
-  id?: string;
-  active?: boolean;
-  features?: {
-    invoice_history?: { enabled?: boolean };
-    payment_method_update?: { enabled?: boolean };
-    subscription_cancel?: { enabled?: boolean };
-    subscription_update?: { enabled?: boolean };
-  };
-};
-
-async function requireControlledPortalConfiguration(
-  stripe: ReturnType<typeof createStripeClient>,
-  environment: StripeEnv,
-): Promise<string> {
-  const key = portalConfigurationEnvironmentKey(environment);
-  const configurationId = process.env[key]?.trim() ?? "";
-  if (!PORTAL_CONFIGURATION_PATTERN.test(configurationId)) {
-    throw new Error(`${key} is not configured`);
-  }
-
-  const configuration = (await stripe.billingPortal.configurations.retrieve(
-    configurationId,
-  )) as unknown as ControlledPortalConfiguration;
-  if (!configuration.active) {
-    throw new Error("The configured Stripe customer portal is inactive");
-  }
-  const features = configuration.features;
-  if (!features?.invoice_history?.enabled) {
-    throw new Error("The Stripe customer portal must expose invoice history");
-  }
-  if (!features.payment_method_update?.enabled) {
-    throw new Error("The Stripe customer portal must allow eligible payment-method updates");
-  }
-  if (
-    features.subscription_cancel?.enabled ||
-    features.subscription_update?.enabled
-  ) {
-    throw new Error(
-      "Enterprise portal configuration must disable self-service subscription changes and cancellation",
-    );
-  }
-  return configurationId;
 }
 
 /**
