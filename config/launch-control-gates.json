@@ -21,10 +21,11 @@
     {
       "id": "leaked_password_protection",
       "category": "security",
-      "status": "human_required",
+      "status": "plan_blocked",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Enable leaked-password protection in Supabase Auth settings and retain a screenshot/export."
+      "action": "Enable leaked-password protection immediately after the Supabase organization is upgraded to Pro or higher.",
+      "evidence": "docs/PLAN-BLOCKED-SECURITY-CONTROLS.md"
     },
     {
       "id": "founder_mfa_enrollment",
