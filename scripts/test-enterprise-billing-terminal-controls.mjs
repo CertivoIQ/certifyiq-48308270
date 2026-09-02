@@ -9,6 +9,7 @@ const migration = readFileSync(
 const licensing = readFileSync("src/lib/enterprise-licensing.server.ts", "utf8");
 const webhook = readFileSync("src/routes/api/public/payments/webhook.ts", "utf8");
 const payments = readFileSync("src/utils/payments.functions.ts", "utf8");
+const portal = readFileSync("src/lib/billing-portal.server.ts", "utf8");
 const billing = readFileSync("src/routes/_authenticated/billing.tsx", "utf8");
 
 test("database event claims are atomic, replay-safe, and recoverable", () => {
@@ -59,11 +60,15 @@ test("partial and historical financial reversals are resolved without unsafe rev
 test("enterprise members use a controlled invoice portal without direct schedule cancellation", () => {
   assert.match(payments, /from\("enterprise_license_members"\)/);
   assert.match(payments, /from\("enterprise_licenses"\)/);
-  assert.match(payments, /billingPortal\.configurations\.retrieve/);
-  assert.match(payments, /invoice_history\?\.enabled/);
-  assert.match(payments, /payment_method_update\?\.enabled/);
-  assert.match(payments, /subscription_cancel\?\.enabled/);
-  assert.match(payments, /subscription_update\?\.enabled/);
+  assert.match(payments, /requireControlledPortalConfiguration/);
+  assert.match(portal, /billingPortal\.configurations\.retrieve/);
+  assert.match(portal, /billingPortal\.configurations\.list/);
+  assert.match(portal, /invoice_history\?\.enabled/);
+  assert.match(portal, /payment_method_update\?\.enabled/);
+  assert.match(portal, /subscription_cancel\?\.enabled/);
+  assert.match(portal, /subscription_update\?\.enabled/);
+  assert.match(portal, /matches\.length === 0/);
+  assert.match(portal, /matches\.length > 1/);
   assert.match(payments, /configuration,/);
   assert.match(payments, /controlled cancellation workflow/i);
   assert.match(billing, /Request billing change/);
