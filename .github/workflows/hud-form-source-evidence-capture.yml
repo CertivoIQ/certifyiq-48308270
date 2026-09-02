@@ -1,0 +1,49 @@
+name: HUD Form Source Evidence Capture
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/lib/hud-form-source-inventory.json"
+      - "scripts/capture-hud-form-sources.mjs"
+      - "scripts/test-hud-form-source-capture.mjs"
+      - ".github/workflows/hud-form-source-evidence-capture.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/lib/hud-form-source-inventory.json"
+      - "scripts/capture-hud-form-sources.mjs"
+      - "scripts/test-hud-form-source-capture.mjs"
+      - ".github/workflows/hud-form-source-evidence-capture.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: certivoiq-hud-form-source-evidence-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    name: Download and hash official HUD form sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify fail-closed HUD capture controls
+        run: node --test scripts/test-hud-form-source-capture.mjs
+      - name: Download and hash exact HUD bytes
+        run: node scripts/capture-hud-form-sources.mjs
+      - name: Upload HUD evidence manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hud-form-source-evidence
+          path: artifacts/hud-form-source-evidence/*.json
+          if-no-files-found: error
+          retention-days: 90
