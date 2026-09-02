@@ -6,6 +6,7 @@ const read = (path) => readFileSync(path, "utf8");
 
 test("live billing remains fail-closed until configuration and verification are explicit", () => {
   const config = read("src/lib/billing-config.server.ts");
+  const portal = read("src/lib/billing-portal.server.ts");
   const stripe = read("src/lib/stripe.server.ts");
   const guard = read("src/lib/paid-onboarding.server.ts");
   const payments = read("src/utils/payments.functions.ts");
@@ -24,13 +25,20 @@ test("live billing remains fail-closed until configuration and verification are 
   assert.match(config, /PRICE_ID_PATTERN/);
   assert.match(config, /PORTAL_CONFIGURATION_PATTERN/);
 
+  assert.match(portal, /requireControlledPortalConfiguration/);
+  assert.match(portal, /billingPortal\.configurations\.retrieve/);
+  assert.match(portal, /billingPortal\.configurations\.list/);
+  assert.match(portal, /matches\.length === 0/);
+  assert.match(portal, /matches\.length > 1/);
+  assert.match(portal, /subscription_cancel\?\.enabled/);
+  assert.match(portal, /subscription_update\?\.enabled/);
+
   assert.match(stripe, /env === "live"\) assertLiveBillingConfiguration/);
   assert.match(guard, /PAID_ONBOARDING_ENABLED/);
   assert.match(guard, /PAYMENTS_LIVE_VERIFIED/);
   assert.match(guard, /assertNewPaidOnboardingAllowed/);
   assert.match(payments, /assertNewPaidOnboardingAllowed/);
   assert.match(payments, /requireControlledPortalConfiguration/);
-  assert.match(payments, /billingPortal\.configurations\.retrieve/);
   assert.match(payments, /configuration,/);
   assert.match(invoices, /assertNewPaidOnboardingAllowed/);
 });
