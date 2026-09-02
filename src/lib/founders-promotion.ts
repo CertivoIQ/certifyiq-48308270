@@ -1,9 +1,11 @@
 export const FOUNDERS_PROMOTION = {
   code: "FOUNDERS50",
   couponId: "certivoiq_founders_50_first_year_2026",
-  name: "CertivoIQ Founder's Special",
+  name: "CertivoIQ Founding Customer Offer",
   percentOff: 50,
-  duration: "once",
+  duration: "repeating",
+  durationInMonths: 12,
+  discountedInstallments: 12,
   expiresAtIso: "2026-12-01T06:00:00.000Z",
   firstTimeTransactionOnly: true,
 } as const;
