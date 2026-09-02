@@ -3,6 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "@/lib/stripe.server";
 import { normalizeLicenseSelection, type LicenseSelection } from "@/lib/license-selection";
 import { assertNewPaidOnboardingAllowed } from "@/lib/paid-onboarding.server";
+import { FOUNDERS_PROMOTION } from "@/lib/founders-promotion";
+import { resolveFoundersInvoicePromotion } from "@/lib/founders-promotion.server";
 
 const PRODUCT_CODE = "certivoiq_enterprise";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -15,6 +17,7 @@ type EnterpriseInvoiceInput = {
   organizationName: string;
   billingEmail: string;
   purchaseOrderNumber?: string;
+  promotionCode?: string;
   netDays?: number;
   allowCard?: boolean;
   environment: StripeEnv;
@@ -36,8 +39,10 @@ export type EnterpriseInvoiceResult =
       pricingClass: LicensePricingClass;
       annualPriceCents: number;
       firstInstallmentCents: number;
+      firstInvoiceAmountCents: number;
       monthlyInstallmentCents: number;
       commitmentMonths: 12;
+      promotionCode: string | null;
       stateCodes: string[];
     }
   | { error: string };
@@ -56,6 +61,22 @@ function productLabel(pricingClass: LicensePricingClass): string {
   return pricingClass === "pha"
     ? "CertivoIQ PHA Annual License — Monthly Invoicing"
     : "CertivoIQ Multifamily Enterprise Annual License — Monthly Invoicing";
+}
+
+function normalizePromotionCode(value?: string): string | undefined {
+  const normalized = value?.trim().toUpperCase() ?? "";
+  if (!normalized) return undefined;
+  if (!/^[A-Z0-9_-]{1,64}$/.test(normalized)) {
+    throw new Error("Promotion code contains unsupported characters");
+  }
+  return normalized;
+}
+
+function invoiceDiscountAmount(invoice: { total_discount_amounts?: Array<{ amount?: number | null }> | null }) {
+  return (invoice.total_discount_amounts ?? []).reduce(
+    (total, discount) => total + Number(discount.amount ?? 0),
+    0,
+  );
 }
 
 async function requireMonthlyPrice(
@@ -131,31 +152,31 @@ async function issueEnterpriseInvoice(
     const formattedAmount = `$${(amountCents / 100).toLocaleString()}`;
     const stateCodes = selection.stateCodes.join(",");
     const stripe = createStripeClient(data.environment);
+    const foundersPromotion = await resolveFoundersInvoicePromotion(
+      stripe,
+      data.promotionCode,
+    );
+
     const existing = await stripe.customers.list({ email: data.billingEmail, limit: 1 });
     let customer = existing.data[0];
+    const customerMetadata = {
+      ...(customer?.metadata ?? {}),
+      organization_id: data.organizationId,
+      license_pricing_class: data.pricingClass,
+      license_kind: selection.licenseKind,
+      licensed_state_codes: stateCodes,
+      ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
+    };
     if (!customer) {
       customer = await stripe.customers.create({
         name: data.organizationName,
         email: data.billingEmail,
-        metadata: {
-          organization_id: data.organizationId,
-          license_pricing_class: data.pricingClass,
-          license_kind: selection.licenseKind,
-          licensed_state_codes: stateCodes,
-          ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
-        },
+        metadata: customerMetadata,
       });
     } else {
-      await stripe.customers.update(customer.id, {
+      customer = await stripe.customers.update(customer.id, {
         name: data.organizationName,
-        metadata: {
-          ...customer.metadata,
-          organization_id: data.organizationId,
-          license_pricing_class: data.pricingClass,
-          license_kind: selection.licenseKind,
-          licensed_state_codes: stateCodes,
-          ...(data.crmAccountId ? { crm_account_id: data.crmAccountId } : {}),
-        },
+        metadata: customerMetadata,
       });
     }
 
@@ -180,6 +201,13 @@ async function issueEnterpriseInvoice(
       payment_terms: `net_${netDays}`,
       workflow_mode: data.workflowMode ?? "manual",
       ...(data.purchaseOrderNumber ? { purchase_order_number: data.purchaseOrderNumber } : {}),
+      ...(foundersPromotion
+        ? {
+            promotion_code: foundersPromotion.code,
+            promotion_code_id: foundersPromotion.promotionCodeId,
+            promotion_discount_months: String(FOUNDERS_PROMOTION.discountedInstallments),
+          }
+        : {}),
     };
 
     if (data.allowCard) throw new Error("Base licenses are invoice-only; card payment is disabled");
@@ -231,6 +259,12 @@ async function issueEnterpriseInvoice(
       invoice_price_lookup_key: selection.priceLookupKey,
       installment_phase: "regular",
     };
+    const initialDiscounts = foundersPromotion
+      ? [{ promotion_code: foundersPromotion.promotionCodeId }]
+      : undefined;
+
+    // The promotion is redeemed once on phase 1. Its 12-month duration remains
+    // attached to the subscription when the multifamily price changes in phase 2.
     const phases =
       selection.firstInstallmentPriceLookupKey === selection.priceLookupKey
         ? [
@@ -238,6 +272,7 @@ async function issueEnterpriseInvoice(
               items: [{ price: regularPrice.id, quantity: selection.quantity }],
               duration: { interval: "month" as const, interval_count: 12 },
               metadata: regularPhaseMetadata,
+              ...(initialDiscounts ? { discounts: initialDiscounts } : {}),
               description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
             },
           ]
@@ -246,6 +281,7 @@ async function issueEnterpriseInvoice(
               items: [{ price: firstPrice.id, quantity: selection.quantity }],
               duration: { interval: "month" as const, interval_count: 1 },
               metadata: firstPhaseMetadata,
+              ...(initialDiscounts ? { discounts: initialDiscounts } : {}),
               description: data.workflowMode === "sandbox_test" ? `TEST — ${label}` : label,
             },
             {
@@ -269,7 +305,7 @@ async function issueEnterpriseInvoice(
       },
       phases,
       expand: ["subscription"],
-    });
+    } as Parameters<typeof stripe.subscriptionSchedules.create>[0]);
     const subscriptionId =
       typeof schedule.subscription === "string"
         ? schedule.subscription
@@ -306,6 +342,12 @@ async function issueEnterpriseInvoice(
     await stripe.invoices.update(invoice.id, { metadata: runtimeMetadata });
     const finalized =
       invoice.status === "draft" ? await stripe.invoices.finalizeInvoice(invoice.id) : invoice;
+
+    if (foundersPromotion && invoiceDiscountAmount(finalized) <= 0) {
+      await stripe.subscriptionSchedules.cancel(schedule.id).catch(() => undefined);
+      throw new Error("FOUNDERS50 was not applied to the first monthly invoice");
+    }
+
     const sent =
       finalized.status === "open" ? await stripe.invoices.sendInvoice(finalized.id) : finalized;
 
@@ -320,7 +362,7 @@ async function issueEnterpriseInvoice(
         data.pricingClass === "pha" ? "PHA" : "Standard"
       } · monthly invoice · Net ${netDays} · ACH/bank transfer · ${
         data.workflowMode ?? "manual"
-      }`,
+      }${foundersPromotion ? ` · ${foundersPromotion.code} applied for 12 months` : ""}`,
       source: "CertivoIQ Enterprise Billing",
     });
 
@@ -336,8 +378,10 @@ async function issueEnterpriseInvoice(
       pricingClass: data.pricingClass,
       annualPriceCents: amountCents,
       firstInstallmentCents: selection.firstInstallmentAmountCents,
+      firstInvoiceAmountCents: sent.amount_due ?? selection.firstInstallmentAmountCents,
       monthlyInstallmentCents: selection.monthlyAmountCents,
       commitmentMonths: selection.commitmentMonths,
+      promotionCode: foundersPromotion?.code ?? null,
       stateCodes: selection.stateCodes,
     };
   } catch (error) {
@@ -361,7 +405,12 @@ export const createEnterpriseLicenseInvoice = createServerFn({ method: "POST" })
     const netDays = data.netDays ?? 30;
     if (netDays < 0 || netDays > 120)
       throw new Error("Payment terms must be between Net 0 and Net 120");
-    return { ...data, netDays, workflowMode: data.workflowMode ?? "manual" };
+    return {
+      ...data,
+      netDays,
+      promotionCode: normalizePromotionCode(data.promotionCode),
+      workflowMode: data.workflowMode ?? "manual",
+    };
   })
   .handler(async ({ data, context }): Promise<EnterpriseInvoiceResult> => {
     await requireStaff(context);
@@ -380,6 +429,7 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
     (data: {
       accountId: string;
       purchaseOrderNumber?: string;
+      promotionCode?: string;
       netDays?: number;
       allowCard?: boolean;
       environment: StripeEnv;
@@ -396,7 +446,11 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
       const netDays = data.netDays ?? 30;
       if (netDays < 0 || netDays > 120)
         throw new Error("Payment terms must be between Net 0 and Net 120");
-      return { ...data, netDays };
+      return {
+        ...data,
+        netDays,
+        promotionCode: normalizePromotionCode(data.promotionCode),
+      };
     },
   )
   .handler(async ({ data, context }): Promise<EnterpriseInvoiceResult> => {
@@ -462,19 +516,21 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
       return { error: "No verified billing email is available for this CRM organization" };
     }
 
-    return issueEnterpriseInvoice({
-      organizationId: account.id,
-      crmAccountId: account.id,
-      organizationName: account.name,
-      billingEmail: billingContact.email,
-      purchaseOrderNumber: data.purchaseOrderNumber,
-      netDays: data.netDays,
-      allowCard: data.allowCard ?? false,
-      environment: data.environment,
-      workflowMode: data.sandboxTest ? "sandbox_test" : "automated",
-      pricingClass,
-      stateCodes: data.stateCodes,
-    }, context.userId);
+    return issueEnterpriseInvoice(
+      {
+        organizationId: account.id,
+        crmAccountId: account.id,
+        organizationName: account.name,
+        billingEmail: billingContact.email,
+        purchaseOrderNumber: data.purchaseOrderNumber,
+        promotionCode: data.promotionCode,
+        netDays: data.netDays,
+        allowCard: data.allowCard ?? false,
+        environment: data.environment,
+        workflowMode: data.sandboxTest ? "sandbox_test" : "automated",
+        pricingClass,
+        stateCodes: data.stateCodes,
+      },
+      context.userId,
+    );
   });
-
-
