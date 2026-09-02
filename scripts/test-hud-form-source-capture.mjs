@@ -21,6 +21,21 @@ test("HUD source inventory includes the controlled core form set", () => {
   ]) assert.ok(ids.has(required), `missing ${required}`);
 });
 
+test("HUD source inventory includes distinct lease and resident-notice families", () => {
+  const ids = new Set(inventory.sources.map((source) => source.source_id));
+  for (const required of [
+    "HUD-90105-A-2007",
+    "HUD-90105-B-2007",
+    "HUD-90105-C-2007",
+    "HUD-90105-D-2007",
+    "HUD-90100-2007",
+    "HUD-5380-2028",
+    "HUD-5382-2028",
+    "HUD-5383-2028",
+  ]) assert.ok(ids.has(required), `missing ${required}`);
+  assert.equal(inventory.sources.length, 16);
+});
+
 test("capture accepts only HTTPS HUD-owned hosts", () => {
   assert.equal(isOfficialHudUrl("https://www.hud.gov/sites/documents/50059.pdf"), true);
   assert.equal(isOfficialHudUrl("https://hud.gov/example.pdf"), true);
