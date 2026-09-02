@@ -4,6 +4,7 @@ import test from "node:test";
 
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260828320000_crm_staff_access_invitations.sql");
+const launchPolicy = read("supabase/migrations/20260902021500_gate4_internal_staff_domain_policy.sql");
 const edge = read("supabase/functions/crm-staff-access/index.ts");
 const client = read("src/lib/crm-staff-access.functions.ts");
 const route = read("src/routes/_authenticated/crm-staff.tsx");
@@ -33,6 +34,18 @@ test("new staff access is controlled by an exact pending invitation, not the ema
   assert.doesNotMatch(migration, /create trigger accept_crm_staff_invitation_after_confirmation/i);
   assert.doesNotMatch(handler, /if v_email_domain = 'certivoiq\.com' then[\s\S]*insert into public\.user_roles/i);
   assert.match(session, /administrator- or manager-issued invitation/i);
+});
+
+test("Gate 4 restricts new internal CRM staff invitations to the CertivoIQ domain", () => {
+  assert.match(launchPolicy, /enforce_crm_staff_invitation_launch_domain/i);
+  assert.match(launchPolicy, /new\.status = 'pending'/i);
+  assert.match(launchPolicy, /split_part\(new\.invite_email, '@', 2\).*certivoiq\.com/is);
+  assert.match(launchPolicy, /Internal CRM staff invitations require an @certivoiq\.com email address/i);
+  assert.match(launchPolicy, /crm_staff_pending_invite_certivoiq_domain/i);
+  assert.match(launchPolicy, /status <> 'pending'[\s\S]*certivoiq\.com/i);
+  assert.match(launchPolicy, /PHA workspace invitations use a[\s\S]*separate table/i);
+  assert.doesNotMatch(launchPolicy, /pha_workspace_invitations[\s\S]*(alter table|create trigger)/i);
+  assert.match(launchPolicy, /revoke all on function public\.enforce_crm_staff_invitation_launch_domain\(\) from public, anon, authenticated/i);
 });
 
 test("Edge Function enforces manager and administrator authority", () => {
