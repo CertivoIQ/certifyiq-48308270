@@ -36,12 +36,13 @@
       "evidence": "Production auth.mfa_factors verification on 2026-09-02 confirmed one verified TOTP factor for the founder account."
     },
     {
-      "id": "stripe_sandbox_checkout",
+      "id": "stripe_live_billing_e2e",
       "category": "billing",
       "status": "human_required",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Complete one Stripe-hosted sandbox checkout, renewal/update event, cancellation, and customer-portal return."
+      "action": "Complete one controlled live CertivoIQ annual invoice lifecycle: create the live schedule and first invoice through the application, verify approved pricing and any FOUNDERS50 discount, complete an authorized payment, observe invoice.paid and entitlement activation, verify the controlled customer-portal return, and confirm cancellation/reversal controls. Keep PAID_ONBOARDING_ENABLED=false until the lifecycle passes and PAYMENTS_LIVE_VERIFIED is explicitly enabled.",
+      "evidence": "Production billing baseline on 2026-09-02 confirmed zero enterprise licenses, zero enterprise invoice events, zero reconciliation rows, zero processing events, and zero billing errors before live E2E execution."
     },
     {
       "id": "nspire_independent_attestations",
