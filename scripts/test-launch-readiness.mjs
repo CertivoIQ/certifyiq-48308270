@@ -1,3 +1,4 @@
+import "./test-compliance-document-registry.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -330,4 +331,3 @@ test("state-rule validation distinguishes completed source activation from compl
   assert.match(route, /activations\.length === statePacks\.length/);
   assert.doesNotMatch(route, /activate_state_rule_pack[\s\S]{0,300}state_code\s*===\s*["']US["']/);
 });
-
