@@ -1,9 +1,14 @@
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { promisify } from "node:util";
 
 const outputPath = resolve(process.argv[2] ?? "artifacts/tn-tx-release-critical-documents.json");
 const MAX_BYTES = 25 * 1024 * 1024;
+const execFileAsync = promisify(execFile);
+const delay = (ms) => new Promise((resolveDelay) => setTimeout(resolveDelay, ms));
 
 const authorities = {
   TN: {
@@ -14,11 +19,6 @@ const authorities = {
         url: "https://thda.org/rental-housing-partn/thomas-documents/",
         families: ["COMPLIANCE_GUIDEBOOK", "UTILITY_ALLOWANCE"],
         follow: [/THOMAS Compliance Guide/i, /Utility Allowance Guidance/i, /Utility Allowance Instructions/i],
-      },
-      {
-        url: "https://thda.org/pdf/THOMAS-Compliance-Guide.pdf",
-        families: ["COMPLIANCE_GUIDEBOOK"],
-        follow: [],
       },
       {
         url: "https://thda.org/rental-housing-partn/housing-credit-compliance/",
@@ -70,31 +70,88 @@ function allowed(host, allowedHosts) {
   return allowedHosts.some((item) => value === item || value.endsWith("." + item));
 }
 
-async function fetchExact(url, allowedHosts) {
-  const response = await fetch(url, {
-    redirect: "follow",
-    headers: {
-      "user-agent": "Mozilla/5.0 CertivoIQ-TN-TX-Controlled-Capture/1.0",
-      accept: "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/html,application/xhtml+xml,*/*;q=0.5",
-      "accept-language": "en-US,en;q=0.9",
-      "cache-control": "no-cache",
-    },
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (!response.ok) throw new Error(`http_status:${response.status}`);
-  const final = new URL(response.url);
+function validateFinalUrl(url, allowedHosts) {
+  const final = new URL(url);
   if (final.protocol !== "https:" || !allowed(final.hostname, allowedHosts)) {
     throw new Error(`redirected_to_unapproved_host:${final.hostname}`);
   }
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (!bytes.byteLength || bytes.byteLength > MAX_BYTES) throw new Error("invalid_document_size");
-  return {
-    bytes,
-    finalUrl: response.url,
-    contentType: String(response.headers.get("content-type") ?? "").split(";", 1)[0].toLowerCase(),
-    etag: response.headers.get("etag"),
-    lastModified: response.headers.get("last-modified"),
-  };
+}
+
+async function curlExact(url, allowedHosts) {
+  const tempDirectory = await mkdtemp(join(tmpdir(), "certivoiq-tn-tx-"));
+  const output = join(tempDirectory, "response.bin");
+  try {
+    const { stdout } = await execFileAsync("curl", [
+      "--location",
+      "--fail",
+      "--silent",
+      "--show-error",
+      "--compressed",
+      "--max-time", "30",
+      "--proto", "=https",
+      "--user-agent", "Mozilla/5.0 CertivoIQ-TN-TX-Controlled-Capture/1.0",
+      "--header", "Accept: application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/html,application/xhtml+xml,*/*;q=0.5",
+      "--header", "Accept-Language: en-US,en;q=0.9",
+      "--output", output,
+      "--write-out", "%{url_effective}\n%{http_code}\n%{content_type}",
+      url,
+    ], { maxBuffer: 1024 * 1024 });
+    const [finalUrl, statusText, contentType = ""] = stdout.trim().split("\n");
+    validateFinalUrl(finalUrl, allowedHosts);
+    const status = Number(statusText);
+    if (!Number.isInteger(status) || status < 200 || status > 299) throw new Error(`http_status:${statusText}`);
+    const file = await readFile(output);
+    const bytes = new Uint8Array(file.buffer, file.byteOffset, file.byteLength);
+    if (!bytes.byteLength || bytes.byteLength > MAX_BYTES) throw new Error("invalid_document_size");
+    return {
+      bytes,
+      finalUrl,
+      contentType: contentType.split(";", 1)[0].toLowerCase(),
+      etag: null,
+      lastModified: null,
+      transport: "curl_fallback",
+    };
+  } finally {
+    await rm(tempDirectory, { recursive: true, force: true });
+  }
+}
+
+async function fetchExact(url, allowedHosts) {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        redirect: "follow",
+        headers: {
+          "user-agent": "Mozilla/5.0 CertivoIQ-TN-TX-Controlled-Capture/1.0",
+          accept: "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/html,application/xhtml+xml,*/*;q=0.5",
+          "accept-language": "en-US,en;q=0.9",
+          "cache-control": "no-cache",
+        },
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok) throw new Error(`http_status:${response.status}`);
+      validateFinalUrl(response.url, allowedHosts);
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (!bytes.byteLength || bytes.byteLength > MAX_BYTES) throw new Error("invalid_document_size");
+      return {
+        bytes,
+        finalUrl: response.url,
+        contentType: String(response.headers.get("content-type") ?? "").split(";", 1)[0].toLowerCase(),
+        etag: response.headers.get("etag"),
+        lastModified: response.headers.get("last-modified"),
+        transport: `fetch_attempt_${attempt}`,
+      };
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await delay(900 * attempt);
+    }
+  }
+  try {
+    return await curlExact(url, allowedHosts);
+  } catch (curlError) {
+    throw new Error(`${lastError instanceof Error ? lastError.message : String(lastError)}; curl:${curlError instanceof Error ? curlError.message : String(curlError)}`);
+  }
 }
 
 function linksFromHtml(html, baseUrl, allowedHosts, patterns) {
@@ -131,6 +188,7 @@ function record(stateCode, agency, title, families, sourceUrl, parentUrl, respon
     retrieved_at: new Date().toISOString(),
     etag: response.etag,
     last_modified: response.lastModified,
+    capture_transport: response.transport,
     capture_status: "captured_unvalidated",
     exact_bytes_captured: true,
     independent_validation_required: true,
