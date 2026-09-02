@@ -37,6 +37,11 @@ export interface StripeInvoiceLineLike {
   period?: { start?: number | null; end?: number | null } | null
 }
 
+export interface StripeInvoiceDiscountAmountLike {
+  amount?: number | null
+  discount?: string | { id?: string | null } | null
+}
+
 export interface StripeInvoiceLike {
   id?: string
   number?: string | null
@@ -45,6 +50,9 @@ export interface StripeInvoiceLike {
   metadata?: Record<string, string> | null
   collection_method?: string | null
   currency?: string | null
+  subtotal?: number | null
+  total?: number | null
+  total_discount_amounts?: StripeInvoiceDiscountAmountLike[] | null
   amount_due?: number | null
   amount_paid?: number | null
   amount_remaining?: number | null
@@ -83,4 +91,3 @@ export type StripeWebhookObject = StripeSubscriptionLike &
 
 /** Alias kept for webhook code that refers to subscription items as line items. */
 export type StripeLineItemLike = StripeSubscriptionItemLike;
-
