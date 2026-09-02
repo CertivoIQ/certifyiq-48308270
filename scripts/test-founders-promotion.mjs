@@ -41,11 +41,14 @@ test("creates and validates a base-license-only Stripe campaign", () => {
   assert.match(promotionServer, /Existing FOUNDERS50 code does not match approved terms/);
 });
 
-test("applies FOUNDERS50 to the invoice schedule rather than Checkout", () => {
+test("applies FOUNDERS50 to every invoice-schedule phase rather than Checkout", () => {
   assert.match(enterpriseInvoices, /promotionCode\?: string/);
   assert.match(enterpriseInvoices, /resolveFoundersInvoicePromotion/);
   assert.match(enterpriseInvoices, /discounts:\s*initialDiscounts/);
   assert.match(enterpriseInvoices, /promotion_code:\s*foundersPromotion\.promotionCodeId/);
+  assert.match(enterpriseInvoices, /continuationDiscounts/);
+  assert.match(enterpriseInvoices, /coupon:\s*foundersPromotion\.couponId/);
+  assert.match(enterpriseInvoices, /discounts:\s*continuationDiscounts/);
   assert.match(enterpriseInvoices, /promotion_discount_months/);
   assert.match(enterpriseInvoices, /FOUNDERS50 was not applied to the first monthly invoice/);
   assert.match(enterpriseInvoices, /subscriptionSchedules\.cancel\(schedule\.id\)/);
