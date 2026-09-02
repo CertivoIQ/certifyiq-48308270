@@ -43,6 +43,15 @@ test("live billing remains fail-closed until configuration and verification are 
   assert.match(invoices, /assertNewPaidOnboardingAllowed/);
 });
 
+test("server auth can use the public Supabase production fallback when deployment omits the publishable env", () => {
+  const auth = read("src/integrations/supabase/auth-middleware.ts");
+  assert.match(auth, /PRODUCTION_SUPABASE_URL/);
+  assert.match(auth, /PRODUCTION_SUPABASE_PUBLISHABLE_KEY/);
+  assert.match(auth, /process\.env\['SUPABASE_URL'\][\s\S]*process\.env\['VITE_SUPABASE_URL'\][\s\S]*PRODUCTION_SUPABASE_URL/);
+  assert.match(auth, /process\.env\['SUPABASE_PUBLISHABLE_KEY'\][\s\S]*process\.env\['VITE_SUPABASE_PUBLISHABLE_KEY'\][\s\S]*PRODUCTION_SUPABASE_PUBLISHABLE_KEY/);
+  assert.doesNotMatch(auth, /PRODUCTION_SUPABASE_SERVICE_ROLE_KEY/);
+});
+
 test("tracked environment files cannot reintroduce deployment credentials", () => {
   for (const path of [".env", ".env.development", ".env.production"]) {
     assert.equal(existsSync(path), false, `${path} must not be tracked`);
