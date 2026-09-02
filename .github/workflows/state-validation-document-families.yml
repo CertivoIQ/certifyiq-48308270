@@ -31,23 +31,23 @@ jobs:
         run: npm install --prefix /tmp/state-capture --no-save --package-lock=false --ignore-scripts pdfjs-dist@6.2.108
       - name: Validate document-family controls
         run: node --test scripts/test-state-validation-document-families.mjs scripts/test-nationwide-state-source-evidence-pipeline.mjs
-      - name: Crawl and hash current official documents
-        run: node scripts/crawl-state-validation-document-families.mjs
       - name: Crawl and hash TN/TX release-critical documents
         run: node scripts/crawl-tn-tx-release-critical-documents.mjs
-      - name: Upload nationwide validation evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: state-validation-document-families
-          path: artifacts/state-validation-document-families.json
-          if-no-files-found: error
-          retention-days: 30
       - name: Upload TN/TX release-critical evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tn-tx-release-critical-documents
           path: artifacts/tn-tx-release-critical-documents.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Crawl and hash current official documents
+        run: node scripts/crawl-state-validation-document-families.mjs
+      - name: Upload nationwide validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-validation-document-families
+          path: artifacts/state-validation-document-families.json
           if-no-files-found: error
           retention-days: 30
