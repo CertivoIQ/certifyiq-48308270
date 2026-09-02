@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import {
+  isRestrictedSensitiveFormCode,
   recognizeComplianceForm,
   registryRecognitionDisposition,
 } from "../src/lib/compliance-form-recognition.mjs";
@@ -10,6 +11,7 @@ import {
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260902033000_compliance_document_registry.sql");
 const sourceBinding = read("supabase/migrations/20260902045000_bind_core_hud_form_sources.sql");
+const leaseNoticeBinding = read("supabase/migrations/20260902050000_bind_hud_lease_notice_sources.sql");
 const route = read("src/routes/_authenticated/document-intelligence.tsx");
 const server = read("src/lib/compliance-document-recognition.functions.ts");
 const shell = read("src/components/app-shell.tsx");
@@ -85,6 +87,53 @@ test("HUD source bindings include signature controls but leave effective dates u
   assert.match(sourceBinding, /effective_date_status/);
   assert.match(sourceBinding, /not_independently_established|revision_date_recorded_effective_date_not_inferred/);
   assert.doesNotMatch(sourceBinding, /effective_from\s*=\s*'20\d\d-/i);
+});
+
+test("lease and notice sources are separately versioned and exact-byte bound", () => {
+  const expected = {
+    "HUD-90105-A": "ae735de3c9619a2bb7f2431db1d06e2476468d627e82232fe463815b08b78754",
+    "HUD-90105-B": "4199df227db0987b4444215671d787259ff7c83ed6f7dcc00cb20c26b932a028",
+    "HUD-90105-C": "7f735fb8e5601b98378231ace21fa8553cec0a06865c8ec0006af8ae4140dc69",
+    "HUD-90105-D": "63b6490e68595cf800edc9178b326c33f37e1ead1a5cbad574f3b20db225bd3d",
+    "HUD-90100": "4bd7f0c562aa4acbe7da08d5ae86d261fde365138f862cfbdddd09188a1f78eb",
+    "HUD-5380": "2d4c0ff21a92c35b05285edc589ffe36eb0f173665642e5fdec8ebc6ffd4dc80",
+    "HUD-5382": "7cf850e5c58ace85ce24197d86fff6a9d596374d12f95afe9a9013f6f8f12580",
+    "HUD-5383": "c139b9b58bd4808c810fc7fce3dc01b6918b71c1162812b0ffea6f6b59218404",
+  };
+  for (const [code, sha] of Object.entries(expected)) {
+    assert.match(leaseNoticeBinding, new RegExp(code.replaceAll("-", "[-]")));
+    assert.match(leaseNoticeBinding, new RegExp(sha));
+  }
+  assert.match(leaseNoticeBinding, /source_validation_required/g);
+  assert.doesNotMatch(leaseNoticeBinding, /validated_supported/);
+  assert.match(leaseNoticeBinding, /source_captured/);
+});
+
+test("VAWA definitions require a safeguarded document path", () => {
+  for (const code of ["HUD-5380", "HUD-5382", "HUD-5383"]) {
+    assert.equal(isRestrictedSensitiveFormCode(code), true);
+    const recognition = recognizeComplianceForm({ fileName: `${code}.pdf`, text: `${code} form` });
+    assert.equal(recognition.formCode, code);
+    assert.equal(recognition.snippet, null);
+  }
+  assert.equal(isRestrictedSensitiveFormCode("HUD-90100"), false);
+  for (const control of [
+    "sensitive_document",
+    "restricted_content_ingestion",
+    "separate_secure_storage_required",
+    "standard_document_intelligence_processing",
+  ]) assert.match(leaseNoticeBinding, new RegExp(control));
+  assert.match(server, /Restricted VAWA documents are not processed through standard Document Intelligence/);
+  assert.match(server, /isRestrictedSensitiveFormCode\(filenamePreflight\.formCode\)/);
+  assert.match(server, /isRestrictedSensitiveFormCode\(recognition\.formCode\)/);
+});
+
+test("new lease and notice identifiers are deterministically recognized", () => {
+  for (const code of ["HUD-90105-A", "HUD-90105-B", "HUD-90105-C", "HUD-90105-D", "HUD-90100"]) {
+    assert.equal(recognizeComplianceForm({ text: `Form ${code}` }).formCode, code);
+  }
+  assert.equal(recognizeComplianceForm({ text: "HUD-50058-MTW Expansion Family Report" }).formCode, "HUD-50058-MTW-EXPANSION");
+  assert.equal(recognizeComplianceForm({ text: "HUD-50058-MTW Family Report" }).formCode, "HUD-50058-MTW");
 });
 
 test("registry is readable but customer sessions cannot mutate controlled definitions", () => {
