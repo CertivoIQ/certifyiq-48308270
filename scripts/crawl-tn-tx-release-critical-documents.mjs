@@ -16,6 +16,11 @@ const authorities = {
         follow: [/THOMAS Compliance Guide/i, /Utility Allowance Guidance/i, /Utility Allowance Instructions/i],
       },
       {
+        url: "https://thda.org/pdf/THOMAS-Compliance-Guide.pdf",
+        families: ["COMPLIANCE_GUIDEBOOK"],
+        follow: [],
+      },
+      {
         url: "https://thda.org/rental-housing-partn/housing-credit-compliance/",
         families: ["COMPLIANCE_FORMS", "INCOME_LIMITS", "UTILITY_ALLOWANCE"],
         follow: [/HUD Income Limits/i, /Utility Allowances? by County/i, /Employment Verification/i, /Asset Self-Certification/i],
