@@ -42,11 +42,17 @@ test("registry stores version, effective period, source identity, fields, signat
 test("future-state form families are seeded fail-closed", () => {
   for (const code of ["HUD-50059", "HUD-50059-A", "HUD-9887", "HUD-9887-A", "HUD-9834", "HUD-50058"]) {
     assert.match(migration, new RegExp(code.replaceAll("-", "[-]")));
+    assert.match(
+      migration,
+      new RegExp(
+        `\\('${code.replaceAll("-", "[-]")}'[\\s\\S]{0,400}'source validation required'\\s*,\\s*'source_validation_required'`,
+        "i",
+      ),
+    );
   }
   assert.match(migration, /HUD-MODEL-LEASE/);
   assert.match(migration, /OWNER-POLICY/);
   assert.match(migration, /decision_use.*false/is);
-  assert.doesNotMatch(migration, /'validated_supported'.*HUD-50059/is);
 });
 
 test("registry is readable but customer sessions cannot mutate controlled definitions", () => {
