@@ -65,6 +65,21 @@ type DocumentInstance = {
   created_at: string;
 };
 
+type DynamicQueryResult = {
+  data: unknown[] | null;
+  error: unknown;
+};
+
+type DynamicQuery = PromiseLike<DynamicQueryResult> & {
+  select: (columns: string) => DynamicQuery;
+  order: (column: string, options?: { ascending?: boolean }) => DynamicQuery;
+  limit: (count: number) => DynamicQuery;
+};
+
+type DynamicSupabaseClient = {
+  from: (relation: string) => DynamicQuery;
+};
+
 const STATUS_LABELS: Record<string, string> = {
   source_validation_required: "Source validation required",
   validated_supported: "Validated supported",
@@ -79,7 +94,7 @@ function formatDate(value: string | null) {
 }
 
 function DocumentIntelligencePage() {
-  const client = supabase as any;
+  const client = supabase as unknown as DynamicSupabaseClient;
   const queryClient = useQueryClient();
   const recognizeDocument = useServerFn(recognizeCertificationDocument);
   const [search, setSearch] = useState("");
@@ -93,7 +108,7 @@ function DocumentIntelligencePage() {
         .select("id,form_code,form_name,form_family,issuing_authority,program_codes,revision_label,effective_from,effective_to,source_url,source_sha256,required_fields,required_signatures,support_status,validation_support,notes")
         .order("form_code");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as RegistryForm[];
     },
   });
 
@@ -106,7 +121,7 @@ function DocumentIntelligencePage() {
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as ImportItem[];
     },
   });
 
@@ -119,7 +134,7 @@ function DocumentIntelligencePage() {
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as DocumentInstance[];
     },
   });
 
