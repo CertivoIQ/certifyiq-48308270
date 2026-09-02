@@ -50,9 +50,12 @@ test("future-state form families are seeded fail-closed", () => {
 });
 
 test("registry is readable but customer sessions cannot mutate controlled definitions", () => {
-  assert.match(migration, /grant select on table public\.compliance_form_registry to authenticated/i);
-  assert.doesNotMatch(migration, /grant (?:insert|update|delete|all).*compliance_form_registry to authenticated/i);
-  assert.match(migration, /grant all on table public\.compliance_form_registry to service_role/i);
+  assert.match(migration, /grant\s+select\s+on\s+table\s+public\.compliance_form_registry\s+to\s+authenticated/i);
+  assert.doesNotMatch(
+    migration,
+    /grant\s+(?:insert|update|delete|all)\s+on\s+table\s+public\.compliance_form_registry\s+to\s+authenticated/i,
+  );
+  assert.match(migration, /grant\s+all\s+on\s+table\s+public\.compliance_form_registry\s+to\s+service_role/i);
   assert.match(migration, /Users read own recognized certification documents/i);
   assert.match(migration, /using \(user_id = auth\.uid\(\)\)/i);
 });
