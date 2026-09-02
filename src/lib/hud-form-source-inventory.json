@@ -1,0 +1,71 @@
+{
+  "title": "CertivoIQ controlled HUD form source inventory",
+  "generated_at": "2026-09-02T00:00:00Z",
+  "activation_policy": "SOURCE CAPTURE ONLY. Exact-byte capture and hashing do not authorize compliance decision use or change compliance_form_registry.support_status.",
+  "sources": [
+    {
+      "source_id": "HUD-50059-2014",
+      "form_codes": ["HUD-50059"],
+      "url": "https://www.hud.gov/sites/documents/50059.pdf",
+      "revision_label": "06/2014",
+      "authority": "HUD Office of Housing",
+      "purpose": "Owner's Certification of Compliance with HUD's Tenant Eligibility and Rent Procedures"
+    },
+    {
+      "source_id": "HUD-50059-A-2014",
+      "form_codes": ["HUD-50059-A"],
+      "url": "https://www.hud.gov/sites/documents/50059-a.pdf",
+      "revision_label": "06/2014",
+      "authority": "HUD Office of Housing",
+      "purpose": "Owner's Certification of Compliance with HUD's Tenant Eligibility and Rent Procedures - Partial Certification"
+    },
+    {
+      "source_id": "HUD-9887-PACKAGE-2007",
+      "form_codes": ["HUD-9887", "HUD-9887-A"],
+      "url": "https://www.hud.gov/sites/documents/9887.pdf",
+      "revision_label": "02/2007 package",
+      "authority": "HUD Office of Housing",
+      "purpose": "Applicant/Tenant consent package containing HUD-9887 and HUD-9887-A"
+    },
+    {
+      "source_id": "HUD-9834-2016",
+      "form_codes": ["HUD-9834"],
+      "url": "https://www.hud.gov/sites/documents/9834.pdf",
+      "revision_label": "06/2016 package; Addendum A includes 04/2018 page",
+      "authority": "HUD Office of Housing",
+      "purpose": "Management Reviews of Multifamily Projects including Addendums"
+    },
+    {
+      "source_id": "HUD-50058-2024-NON-MTW",
+      "form_codes": ["HUD-50058"],
+      "url": "https://www.hud.gov/sites/dfiles/PIH/documents/50058-Family-Report.pdf",
+      "revision_label": "01/2024",
+      "authority": "HUD Office of Public and Indian Housing",
+      "purpose": "Family Report for Public Housing, Housing Choice Voucher, and Section 8 Moderate Rehabilitation"
+    },
+    {
+      "source_id": "HUD-50058-2024-MTW",
+      "form_codes": ["HUD-50058-MTW"],
+      "url": "https://www.hud.gov/sites/dfiles/PIH/documents/50058-MTW-Family-Report.pdf",
+      "revision_label": "01/2024",
+      "authority": "HUD Office of Public and Indian Housing",
+      "purpose": "MTW Family Report"
+    },
+    {
+      "source_id": "HUD-50058-2024-MTW-EXPANSION",
+      "form_codes": ["HUD-50058-MTW-EXPANSION"],
+      "url": "https://www.hud.gov/sites/dfiles/PIH/documents/50058-MTW-Expansion-Family-Report.pdf",
+      "revision_label": "01/2024",
+      "authority": "HUD Office of Public and Indian Housing",
+      "purpose": "MTW Expansion Family Report"
+    },
+    {
+      "source_id": "HUD-50058-INSTRUCTION-BOOKLET-2026",
+      "form_codes": ["HUD-50058"],
+      "url": "https://www.hud.gov/sites/default/files/PIH/documents/50058-Instruction-Booklet.pdf",
+      "revision_label": "2026 update",
+      "authority": "HUD Office of Public and Indian Housing",
+      "purpose": "Current Form HUD-50058 Instruction Booklet published from HUD HOTMA resources"
+    }
+  ]
+}
