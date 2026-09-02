@@ -7,6 +7,12 @@ function organizationIdFor(userId: string) {
   return `org-${userId}`;
 }
 
+function restrictedDocumentError() {
+  return new Error(
+    "Restricted VAWA documents are not processed through standard Document Intelligence. A safeguarded VAWA document workflow is required.",
+  );
+}
+
 export const recognizeCertificationDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { itemId: string }) => {
@@ -23,14 +29,25 @@ export const recognizeCertificationDocument = createServerFn({ method: "POST" })
     if (itemError) throw itemError;
     if (!item) throw new Error("That certification document is not available.");
 
+    const recognitionModule = await import("@/lib/compliance-form-recognition.mjs");
+    const filenamePreflight = recognitionModule.recognizeComplianceForm({
+      fileName: item.original_file_name,
+      text: "",
+    });
+    if (
+      filenamePreflight.status === "recognized" &&
+      recognitionModule.isRestrictedSensitiveFormCode(filenamePreflight.formCode)
+    ) {
+      throw restrictedDocumentError();
+    }
+
     const download = await supabase.storage.from("certification-imports").download(item.storage_path);
     if (download.error || !download.data) throw new Error("The stored certification document could not be read.");
 
     const bytes = await download.data.arrayBuffer();
-    const [{ sha256Hex }, extraction, recognitionModule, serverClient] = await Promise.all([
+    const [{ sha256Hex }, extraction, serverClient] = await Promise.all([
       import("@/lib/complianceDecisionAndManifest"),
       import("@/lib/certification-extraction.server"),
-      import("@/lib/compliance-form-recognition.mjs"),
       import("@/integrations/supabase/client.server"),
     ]);
     const documentSha256 = await sha256Hex(bytes);
@@ -61,6 +78,13 @@ export const recognizeCertificationDocument = createServerFn({ method: "POST" })
       fileName: item.original_file_name,
       text,
     });
+    if (
+      recognition.status === "recognized" &&
+      recognitionModule.isRestrictedSensitiveFormCode(recognition.formCode)
+    ) {
+      throw restrictedDocumentError();
+    }
+
     const admin = serverClient.supabaseAdmin as any;
 
     let registryForm: any = null;
