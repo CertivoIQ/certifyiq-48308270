@@ -21,10 +21,11 @@
     {
       "id": "leaked_password_protection",
       "category": "security",
-      "status": "human_required",
+      "status": "plan_blocked",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Enable leaked-password protection in Supabase Auth settings and retain a screenshot/export."
+      "action": "Enable leaked-password protection immediately after the Supabase organization is upgraded to Pro or higher.",
+      "evidence": "docs/PLAN-BLOCKED-SECURITY-CONTROLS.md"
     },
     {
       "id": "founder_mfa_enrollment",
@@ -45,10 +46,10 @@
     {
       "id": "nspire_independent_attestations",
       "category": "regulatory",
-      "status": "human_required",
+      "status": "technical_complete",
       "blocking": true,
       "ownerRole": "compliance_reviewers",
-      "action": "Two distinct staff reviewers must attest to the controlled NSPIRE checksum before activation."
+      "evidence": "Production verification on 2026-09-02 confirmed two distinct staff attestations to SHA-256 9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254; the HUD-NSPIRE-FINAL-STANDARDS release activated as current and the controlled bundle artifact moved to verified."
     },
     {
       "id": "tn_tx_independent_source_validation",

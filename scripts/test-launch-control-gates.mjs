@@ -20,9 +20,7 @@ test("every launch gate has explicit ownership and blocking semantics", () => {
 
 test("remaining human approvals are never labeled technically complete", () => {
   const humanIds = [
-    "leaked_password_protection",
     "stripe_sandbox_checkout",
-    "nspire_independent_attestations",
     "tn_tx_independent_source_validation",
     "terms_privacy_counsel_review",
   ];
@@ -31,11 +29,26 @@ test("remaining human approvals are never labeled technically complete", () => {
   }
 });
 
+test("Supabase leaked-password protection is recorded as plan-blocked, not complete", () => {
+  const gate = config.gates.find((item) => item.id === "leaked_password_protection");
+  assert.equal(gate?.status, "plan_blocked");
+  assert.equal(gate?.blocking, true);
+  assert.match(gate?.evidence ?? "", /PLAN-BLOCKED-SECURITY-CONTROLS\.md/);
+});
+
 test("founder MFA enrollment is recorded from production verification evidence", () => {
   const gate = config.gates.find((item) => item.id === "founder_mfa_enrollment");
   assert.equal(gate?.status, "technical_complete");
   assert.match(gate?.evidence ?? "", /verified TOTP factor/i);
   assert.match(gate?.evidence ?? "", /2026-09-02/);
+});
+
+test("NSPIRE dual attestation is recorded from activated production evidence", () => {
+  const gate = config.gates.find((item) => item.id === "nspire_independent_attestations");
+  assert.equal(gate?.status, "technical_complete");
+  assert.match(gate?.evidence ?? "", /two distinct staff attestations/i);
+  assert.match(gate?.evidence ?? "", /9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254/i);
+  assert.match(gate?.evidence ?? "", /activated as current/i);
 });
 
 test("runbook defines security, billing, regulatory, and recovery escalation", () => {
