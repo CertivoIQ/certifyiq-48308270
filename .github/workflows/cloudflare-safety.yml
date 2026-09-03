@@ -1,0 +1,40 @@
+name: Cloudflare deployment safety
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/prepare-cloudflare-candidate-config.mjs"
+      - "scripts/test-cloudflare-candidate-config.mjs"
+      - "scripts/verify-cloudflare-live-response.mjs"
+      - "public/_headers"
+      - ".github/workflows/cloudflare-candidate-deploy.yml"
+      - ".github/workflows/cloudflare-safety.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/prepare-cloudflare-candidate-config.mjs"
+      - "scripts/test-cloudflare-candidate-config.mjs"
+      - "scripts/verify-cloudflare-live-response.mjs"
+      - "public/_headers"
+      - ".github/workflows/cloudflare-candidate-deploy.yml"
+      - ".github/workflows/cloudflare-safety.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-config-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify isolated candidate config behavior
+        run: node --test scripts/test-cloudflare-candidate-config.mjs
