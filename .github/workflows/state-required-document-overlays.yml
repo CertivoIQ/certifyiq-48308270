@@ -1,0 +1,33 @@
+name: State Required Document Overlays
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/crawl-state-required-document-overlays.mjs
+      - src/lib/nationwide-state-source-discovery.json
+      - .github/workflows/state-required-document-overlays.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: state-required-document-overlays-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Crawl required state program overlays and official attachment links
+        run: node scripts/crawl-state-required-document-overlays.mjs
+      - name: Upload required state overlay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-required-document-overlays
+          path: artifacts/state-required-document-overlays.json
+          if-no-files-found: error
+          retention-days: 30
