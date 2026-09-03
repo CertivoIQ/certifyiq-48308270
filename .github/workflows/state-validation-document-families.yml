@@ -36,6 +36,14 @@ jobs:
         run: node --test scripts/test-state-validation-document-families.mjs scripts/test-tn-tx-document-level-validation.mjs scripts/test-nationwide-state-source-evidence-pipeline.mjs
       - name: Resolve current THDA document hrefs
         run: node scripts/diagnose-thda-document-links.mjs
+      - name: Upload THDA current href diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thda-current-document-links
+          path: artifacts/thda-current-document-links.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Crawl and hash TN/TX release-critical documents
         run: node scripts/crawl-tn-tx-release-critical-documents.mjs
       - name: Upload TN/TX release-critical evidence
