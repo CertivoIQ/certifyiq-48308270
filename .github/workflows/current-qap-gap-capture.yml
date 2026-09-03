@@ -1,0 +1,28 @@
+name: Current QAP Gap Capture
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/capture-current-qap-gaps.mjs
+      - .github/workflows/current-qap-gap-capture.yml
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Capture confirmed current QAP documents
+        run: node scripts/capture-current-qap-gaps.mjs
+      - name: Upload exact current QAP evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-qap-gap-documents
+          path: artifacts/current-qap-gap-documents.json
+          if-no-files-found: error
+          retention-days: 30
