@@ -1,0 +1,26 @@
+name: Cloudflare live response probe
+
+on:
+  pull_request:
+    paths:
+      - "scripts/verify-cloudflare-live-response.mjs"
+      - ".github/workflows/cloudflare-live-response-pr.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-production-edge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify current CertivoIQ production edge
+        run: node scripts/verify-cloudflare-live-response.mjs https://certivoiq.com
