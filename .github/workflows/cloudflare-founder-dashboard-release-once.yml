@@ -1,0 +1,282 @@
+name: Cloudflare founder dashboard release once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cloudflare-founder-dashboard-release-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  stage-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+
+    steps:
+      - name: Require deployment/runtime sources
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+          STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
+          STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+          required=(
+            CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
+            SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY
+            STRIPE_LIVE_API_KEY VITE_PAYMENTS_CLIENT_TOKEN PAYMENTS_LIVE_WEBHOOK_SECRET
+            STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE STRIPE_PHA_PRICE_ID_LIVE OPERATIONS_WORKER_SECRET
+          )
+          for name in "${required[@]}"; do
+            test -n "${!name:-}" || { echo "$name is missing"; exit 1; }
+          done
+          test "$SUPABASE_URL" = "$VITE_SUPABASE_URL" || { echo "Supabase URLs do not match"; exit 1; }
+          echo "PASS: release sources present; values not displayed."
+
+      - name: Checkout current main
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test founder dashboard and Cloudflare contracts
+        run: |
+          node --test scripts/test-founder-dashboard-switcher.mjs
+          node --test scripts/test-cloudflare-candidate-config.mjs
+          node --test scripts/test-zero-lovable-runtime-boundary.mjs
+
+      - name: Build new founder dashboard candidate
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+        run: bun run build
+
+      - name: Verify dashboard artifact and public secret boundary
+        shell: bash
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const chunks = [];
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(full);
+              else { try { chunks.push(fs.readFileSync(full, 'utf8')); } catch {} }
+            }
+          }
+          walk('.output/public');
+          const corpus = chunks.join('\n');
+          for (const marker of ['Platform dashboard','Multifamily workspace','PHA workspace']) {
+            if (!corpus.includes(marker)) throw new Error(`Missing new dashboard marker: ${marker}`);
+          }
+          for (const name of ['SUPABASE_SERVICE_ROLE_KEY','STRIPE_LIVE_API_KEY','PAYMENTS_LIVE_WEBHOOK_SECRET']) {
+            const value = process.env[name];
+            if (value && corpus.includes(value)) throw new Error(`${name} leaked into public assets`);
+          }
+          console.log('PASS: new dashboard artifact markers present; server secrets absent.');
+          NODE
+
+      - name: Prepare isolated Wrangler config
+        run: |
+          node scripts/prepare-cloudflare-candidate-config.mjs \
+            .output/server/wrangler.json \
+            .output/server/wrangler.founder-dashboard.json \
+            "$TARGET_WORKER"
+
+      - name: Deploy isolated new dashboard Worker
+        id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          log_file="$(mktemp)"
+          npx --yes wrangler@4 deploy --config .output/server/wrangler.founder-dashboard.json 2>&1 | tee "$log_file"
+          candidate_url="$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$log_file" | tail -n 1 || true)"
+          rm -f "$log_file"
+          test -n "$candidate_url" || { echo "workers.dev URL not found"; exit 1; }
+          echo "candidate_url=$candidate_url" >> "$GITHUB_OUTPUT"
+          echo "Candidate URL: $candidate_url"
+
+      - name: Bind existing runtime secrets to staged Worker
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+          STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
+          STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
+          STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE: ${{ secrets.STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE }}
+          PAYMENTS_LIVE_VERIFIED: ${{ secrets.PAYMENTS_LIVE_VERIFIED }}
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+          SUPPORT_EMAIL_WEBHOOK_SECRET: ${{ secrets.SUPPORT_EMAIL_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          secret_file="$(mktemp)"
+          SECRET_FILE="$secret_file" node <<'NODE'
+          const fs = require('fs');
+          const required = [
+            'SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY',
+            'STRIPE_LIVE_API_KEY','VITE_PAYMENTS_CLIENT_TOKEN','PAYMENTS_LIVE_WEBHOOK_SECRET',
+            'STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE','STRIPE_PHA_PRICE_ID_LIVE','OPERATIONS_WORKER_SECRET'
+          ];
+          const optional = ['STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE','PAYMENTS_LIVE_VERIFIED','SUPPORT_EMAIL_WEBHOOK_SECRET'];
+          const payload = {};
+          for (const name of required) {
+            if (!process.env[name]) throw new Error(`${name} is missing`);
+            payload[name] = process.env[name];
+          }
+          for (const name of optional) if (process.env[name]) payload[name] = process.env[name];
+          fs.writeFileSync(process.env.SECRET_FILE, JSON.stringify(payload), { mode: 0o600 });
+          NODE
+          npx --yes wrangler@4 secret bulk "$secret_file" --name "$TARGET_WORKER"
+          rm -f "$secret_file"
+
+      - name: Verify staged runtime dependencies
+        shell: bash
+        env:
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" \
+            "${{ steps.deploy.outputs.candidate_url }}/api/internal/runtime-health")"
+          test "$status" = "204" || { echo "Staged runtime health returned HTTP $status"; exit 1; }
+          echo "PASS: staged Worker runtime dependencies healthy."
+
+      - name: Verify staged Cloudflare response boundary
+        run: node scripts/verify-cloudflare-live-response.mjs "${{ steps.deploy.outputs.candidate_url }}"
+
+      - name: Capture current production route state
+        id: state
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" \
+            -o /tmp/zones.json
+          zone_id="$(node -e 'const d=require("/tmp/zones.json"); if(!d.success||d.result.length!==1) process.exit(1); process.stdout.write(d.result[0].id)')"
+          rm -f /tmp/zones.json
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes" \
+            -o /tmp/routes-before.json
+          ZONE_ID="$zone_id" TARGET_WORKER="$TARGET_WORKER" node <<'NODE'
+          const fs = require('fs');
+          const d = require('/tmp/routes-before.json');
+          if (!d.success) throw new Error('Cloudflare route inventory failed');
+          const patterns = ['certivoiq.com/*','www.certivoiq.com/*'];
+          const routes = patterns.map((pattern) => {
+            const matches = d.result.filter((r) => r.pattern === pattern);
+            if (matches.length !== 1) throw new Error(`Expected exactly one route for ${pattern}`);
+            const route = matches[0];
+            if (!route.id || !route.script) throw new Error(`No rollback script for ${pattern}`);
+            if (route.script === process.env.TARGET_WORKER) throw new Error(`${pattern} already points to target Worker`);
+            return { id: route.id, pattern, oldScript: route.script };
+          });
+          if (routes[0].oldScript !== routes[1].oldScript) throw new Error('Apex and www rollback Workers differ');
+          fs.writeFileSync('/tmp/founder-dashboard-route-state.json', JSON.stringify({zoneId:process.env.ZONE_ID,targetWorker:process.env.TARGET_WORKER,routes}), {mode:0o600});
+          console.log(`PASS: rollback Worker captured: ${routes[0].oldScript}`);
+          NODE
+          rm -f /tmp/routes-before.json
+          echo "zone_id=$zone_id" >> "$GITHUB_OUTPUT"
+
+      - name: Switch existing production routes to new dashboard Worker
+        id: cutover
+        shell: bash
+        run: |
+          set -euo pipefail
+          rollback_partial() {
+            echo "Route switch failed; restoring captured production routes."
+            node -e 'const s=require("/tmp/founder-dashboard-route-state.json"); for(const r of s.routes) console.log([r.id,r.pattern,r.oldScript].join("\t"))' |
+            while IFS=$'\t' read -r route_id pattern old_script; do
+              body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$old_script")"
+              curl --silent --show-error -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+                --data "$body" "https://api.cloudflare.com/client/v4/zones/${{ steps.state.outputs.zone_id }}/workers/routes/$route_id" -o /tmp/rollback-partial.json || true
+            done
+          }
+          trap rollback_partial ERR
+          node -e 'const s=require("/tmp/founder-dashboard-route-state.json"); for(const r of s.routes) console.log([r.id,r.pattern].join("\t"))' |
+          while IFS=$'\t' read -r route_id pattern; do
+            body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$TARGET_WORKER")"
+            curl --fail --silent --show-error -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              --data "$body" "https://api.cloudflare.com/client/v4/zones/${{ steps.state.outputs.zone_id }}/workers/routes/$route_id" -o /tmp/route-update.json
+            node -e 'const d=require("/tmp/route-update.json"); if(!d.success||d.result.script!==process.env.TARGET_WORKER) process.exit(1)'
+          done
+          rm -f /tmp/route-update.json
+          trap - ERR
+          echo "PASS: apex and www routes switched to $TARGET_WORKER."
+
+      - name: Verify production runtime and security
+        shell: bash
+        env:
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+          for origin in https://certivoiq.com https://www.certivoiq.com; do
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" \
+              "$origin/api/internal/runtime-health")"
+            test "$status" = "204" || { echo "$origin runtime health returned HTTP $status"; exit 1; }
+            node scripts/verify-cloudflare-live-response.mjs "$origin"
+          done
+          curl --fail --silent --show-error --location --max-redirs 5 https://certivoiq.com/ -o /tmp/live.html
+          grep -q "CertivoIQ" /tmp/live.html
+          rm -f /tmp/live.html
+          echo "PASS: new founder dashboard Worker is healthy in production."
+
+      - name: Roll back production routes on post-cutover failure
+        if: ${{ failure() && steps.cutover.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Post-cutover verification failed; restoring captured production Worker."
+          node -e 'const s=require("/tmp/founder-dashboard-route-state.json"); for(const r of s.routes) console.log([r.id,r.pattern,r.oldScript].join("\t"))' |
+          while IFS=$'\t' read -r route_id pattern old_script; do
+            body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$old_script")"
+            curl --fail --silent --show-error -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              --data "$body" "https://api.cloudflare.com/client/v4/zones/${{ steps.state.outputs.zone_id }}/workers/routes/$route_id" -o /tmp/rollback.json
+            node -e 'const d=require("/tmp/rollback.json"); if(!d.success) process.exit(1)'
+          done
+          rm -f /tmp/rollback.json
+          echo "ROLLBACK_COMPLETED=TRUE"
+
+      - name: Confirm founder dashboard release
+        if: ${{ success() }}
+        run: |
+          echo "FOUNDER_DASHBOARD_RELEASE=PASS"
+          echo "The new founder dashboard switcher build is serving certivoiq.com and www.certivoiq.com."
+          echo "No DNS, Supabase data, Stripe object, billing-state, or Lovable mutation occurred in this release."
