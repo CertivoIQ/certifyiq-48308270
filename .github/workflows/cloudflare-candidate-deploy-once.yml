@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy-candidate:
-    if: github.event.head_commit.message == 'ci(cloudflare): trigger one-time candidate deploy'
+    if: ${{ github.event.head_commit.message == 'ci(cloudflare)-trigger-one-time-candidate-deploy' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
