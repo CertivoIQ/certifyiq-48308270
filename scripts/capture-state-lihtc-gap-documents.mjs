@@ -28,6 +28,13 @@ function decode(value) {
     .replace(/&#39;/gi, "'")
     .replace(/&nbsp;/gi, " ");
 }
+function safeDecodeUri(value) {
+  try {
+    return decodeURIComponent(String(value ?? ""));
+  } catch {
+    return String(value ?? "");
+  }
+}
 function label(value) {
   return decode(String(value ?? "").replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 }
@@ -69,7 +76,7 @@ function magic(bytes) {
   return null;
 }
 function score(candidate) {
-  const haystack = `${candidate.label} ${decodeURIComponent(candidate.url)}`.toLowerCase();
+  const haystack = `${candidate.label} ${safeDecodeUri(candidate.url)}`.toLowerCase();
   let value = 0;
   if (haystack.includes(String(CURRENT_YEAR))) value += 80;
   if (haystack.includes("2025")) value += 25;
@@ -128,7 +135,7 @@ async function discoverState(jurisdiction) {
       }
       const html = Buffer.from(bytes).toString("utf8");
       for (const anchor of anchors(html, response.url)) {
-        const text = `${anchor.label} ${decodeURIComponent(anchor.url)} ${page.hint}`;
+        const text = `${anchor.label} ${safeDecodeUri(anchor.url)} ${page.hint}`;
         const roles = rolesFor(text, jurisdiction.state_code);
         if (roles.length) candidates.push({ ...anchor, roles, discovery_url: page.url, authorization: "link_on_official_authority_page" });
         if (wave === 0 && PAGE_HINT.test(text) && isOfficialPage(anchor.url, domains) && !pageSeen.has(anchor.url)) {
