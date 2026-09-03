@@ -1,0 +1,28 @@
+name: Final Remaining QAPs
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/capture-final-remaining-qaps.mjs
+      - .github/workflows/final-remaining-qaps.yml
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Capture final remaining QAPs
+        run: node scripts/capture-final-remaining-qaps.mjs
+      - name: Upload final QAP evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-remaining-qaps
+          path: artifacts/final-remaining-qaps.json
+          if-no-files-found: error
+          retention-days: 30
