@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
 
+# One-time candidate redeploy after SSR/404 security-header hardening.
 jobs:
   deploy-candidate:
     runs-on: ubuntu-latest
@@ -45,6 +46,9 @@ jobs:
 
       - name: Test candidate config safety gate
         run: node --test scripts/test-cloudflare-candidate-config.mjs
+
+      - name: Test deployment response-header contract
+        run: node --test scripts/test-zero-lovable-runtime-boundary.mjs
 
       - name: Build exact candidate
         run: bun run build
