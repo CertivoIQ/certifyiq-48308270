@@ -12,15 +12,11 @@ async function run(config, name = "certivoiq-cutover-candidate-20260903") {
   const source = join(dir, "wrangler.json");
   const destination = join(dir, "candidate.json");
   await writeFile(source, JSON.stringify(config), "utf8");
-  const result = spawnSync(
-    process.execPath,
-    [script.pathname, source, destination, name],
-    { encoding: "utf8" },
-  );
+  const result = spawnSync(process.execPath, [script.pathname, source, destination, name], {
+    encoding: "utf8",
+  });
   let candidate = null;
-  if (result.status === 0) {
-    candidate = JSON.parse(await readFile(destination, "utf8"));
-  }
+  if (result.status === 0) candidate = JSON.parse(await readFile(destination, "utf8"));
   return { ...result, candidate };
 }
 
@@ -34,16 +30,23 @@ const baseConfig = {
   rules: [{ type: "ESModule", globs: ["**/*.mjs", "**/*.js"] }],
 };
 
-test("prepares an isolated workers.dev candidate and removes redundant Node compat enable flags", async () => {
+test("prepares an isolated workers.dev candidate with Worker-first assets and removes redundant Node compat enable flags", async () => {
   const result = await run(baseConfig);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.candidate.name, "certivoiq-cutover-candidate-20260903");
   assert.equal(result.candidate.workers_dev, true);
   assert.equal(result.candidate.preview_urls, true);
+  assert.equal(result.candidate.assets.run_worker_first, true);
   assert.deepEqual(result.candidate.compatibility_flags, ["no_nodejs_compat_v2"]);
   assert.equal("route" in result.candidate, false);
   assert.equal("routes" in result.candidate, false);
   assert.equal("custom_domains" in result.candidate, false);
+});
+
+test("overrides generated asset-first routing for the isolated candidate", async () => {
+  const result = await run({ ...baseConfig, assets: { ...baseConfig.assets, run_worker_first: false } });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.candidate.assets.run_worker_first, true);
 });
 
 test("preserves explicit nodejs_compat before the Cloudflare default-on date", async () => {
@@ -68,4 +71,11 @@ test("fails closed for an invalid compatibility date", async () => {
   const result = await run({ ...baseConfig, compatibility_date: "today" });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /valid YYYY-MM-DD compatibility_date/i);
+});
+
+test("fails closed if Nitro generated config has no assets binding", async () => {
+  const { assets: _assets, ...withoutAssets } = baseConfig;
+  const result = await run(withoutAssets);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /must contain an assets object/i);
 });
