@@ -30,7 +30,7 @@ test("PHA owners and admins can reach account security", () => {
   const shell = read("src/components/app-shell.tsx");
   assert.match(
     shell,
-    /\{ to: "\/account\/security", label: "Account Security", icon: ShieldCheck, key: "owner_admin" \}/,
+    /\{ to: "\/account\/security", label: "Account Security", icon: ShieldCheck, key: "owner_admin", section: "administration" \}/,
   );
 });
 
