@@ -1,0 +1,64 @@
+name: Cloudflare candidate subdomain fix once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cloudflare-candidate-subdomain-fix-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  enable-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CANDIDATE_WORKER: certivoiq-cutover-candidate-20260903
+      CANDIDATE_URL: https://certivoiq-cutover-candidate-20260903.rodsheka-watkins.workers.dev
+
+    steps:
+      - name: Require Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "CLOUDFLARE_API_TOKEN is missing."; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "CLOUDFLARE_ACCOUNT_ID is missing."; exit 1; }
+
+      - name: Checkout current main
+        uses: actions/checkout@v4
+
+      - name: Read current candidate workers.dev state
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --fail-with-body --silent --show-error \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/${CANDIDATE_WORKER}/subdomain" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json")"
+          node -e 'const r=JSON.parse(process.argv[1]); if(!r.success) process.exit(1); console.log(`Before: workers.dev=${r.result.enabled}, previews=${r.result.previews_enabled}`)' "$response"
+
+      - name: Enable workers.dev and preview URLs for candidate only
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --fail-with-body --silent --show-error \
+            -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/${CANDIDATE_WORKER}/subdomain" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"enabled":true,"previews_enabled":true}')"
+          node -e 'const r=JSON.parse(process.argv[1]); if(!r.success || !r.result.enabled || !r.result.previews_enabled) process.exit(1); console.log(`After: workers.dev=${r.result.enabled}, previews=${r.result.previews_enabled}`)' "$response"
+
+      - name: Wait briefly for workers.dev routing
+        run: sleep 5
+
+      - name: Verify live candidate response boundary
+        run: node scripts/verify-cloudflare-live-response.mjs "$CANDIDATE_URL"
+
+      - name: Confirm production isolation
+        run: |
+          echo "Candidate-only workers.dev routing verified."
+          echo "No certivoiq.com route, custom domain, DNS record, Supabase data, billing state, or Lovable resource was changed."
