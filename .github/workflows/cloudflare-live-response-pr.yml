@@ -10,6 +10,30 @@ permissions:
   contents: read
 
 jobs:
+  credential-presence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+    steps:
+      - name: Report credential presence without exposing values
+        shell: bash
+        run: |
+          check_secret() {
+            if [ -n "$2" ]; then
+              echo "$1=PRESENT"
+            else
+              echo "$1=MISSING"
+            fi
+          }
+          check_secret CLOUDFLARE_API_TOKEN "$CLOUDFLARE_API_TOKEN"
+          check_secret CLOUDFLARE_ACCOUNT_ID "$CLOUDFLARE_ACCOUNT_ID"
+          check_secret CF_API_TOKEN "$CF_API_TOKEN"
+          check_secret CF_ACCOUNT_ID "$CF_ACCOUNT_ID"
+
   verify-production-edge:
     runs-on: ubuntu-latest
     timeout-minutes: 5
