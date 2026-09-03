@@ -37,6 +37,19 @@ test("CSV intake parses the required portfolio hierarchy and document mapping", 
   assert.match(parser, /Download CSV template|PORTFOLIO_IMPORT_TEMPLATE/);
 });
 
+test("single-document intake never sends a PDF through the CSV parser", () => {
+  assert.match(intakeUi, /async function uploadSingleDocument\(\)/);
+  assert.match(intakeUi, /if \(documents\.length === 1\)[\s\S]*uploadSingleDocument\(\)/);
+  assert.match(intakeUi, /if \(manifest\)[\s\S]*importPortfolio\(\)/);
+  assert.match(intakeUi, /The portfolio mapping file must be a CSV/);
+  assert.match(intakeUi, /one file needs no CSV/);
+  assert.match(intakeUi, /intake_type: "certification_documents"/);
+  assert.match(intakeUi, /review_queue_status: "not_queued"/);
+  assert.match(intakeUi, /status: "completed"/);
+  assert.match(intakeUi, /supabase\.storage\.from\("certification-imports"\)\.upload\(storagePath, file, \{ upsert: false \}\)/);
+  assert.doesNotMatch(intakeUi.slice(intakeUi.indexOf("async function uploadSingleDocument"), intakeUi.indexOf("async function importPortfolio")), /parsePortfolioIntakeCsv/);
+});
+
 test("mass intake persists profiles and links documents without starting review", () => {
   assert.match(intake, /from\("portfolio_properties"\)[\s\S]*?\.upsert/);
   assert.match(intake, /from\("portfolio_units"\)[\s\S]*?\.upsert/);
@@ -45,7 +58,7 @@ test("mass intake persists profiles and links documents without starting review"
   assert.match(intakeUi, /review_queue_status: "not_queued"/);
   assert.doesNotMatch(intakeUi, /runCertificationReview/);
   assert.match(intakeUi, /Nothing was queued for compliance review/);
-  assert.match(intakeUi, /filenames must match the CSV/);
+  assert.match(intakeUi, /filenames must match the CSV|mapped to property, unit, and tenant profiles/);
 });
 
 test("clients explicitly select multiple certifications and server preserves global upload chronology", () => {
