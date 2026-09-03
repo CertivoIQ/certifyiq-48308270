@@ -8,14 +8,10 @@
  * - uses a distinct Worker name;
  * - cannot contain production routes/custom domains;
  * - forces workers.dev + preview URLs on;
+ * - runs Worker code before Static Assets so security middleware covers
+ *   navigation redirects and unmatched/error responses as well as SSR;
  * - removes Node compatibility enable-flags that Cloudflare makes implicit for
  *   compatibility dates >= 2026-08-04 (where explicitly setting them is invalid).
- *
- * Usage:
- *   node scripts/prepare-cloudflare-candidate-config.mjs \
- *     .output/server/wrangler.json \
- *     .output/server/wrangler.candidate.json \
- *     certivoiq-cutover-candidate-20260903
  */
 
 import { readFile, writeFile } from "node:fs/promises";
@@ -43,14 +39,10 @@ function isDate(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-if (!candidateName) {
-  fail("A dedicated candidate Worker name is required.");
-}
-
+if (!candidateName) fail("A dedicated candidate Worker name is required.");
 if (!/^[a-z0-9-]+$/.test(candidateName)) {
   fail("Candidate Worker name must contain only lowercase letters, digits, and hyphens.");
 }
-
 if (candidateName === PRODUCTION_AUTO_NAME) {
   fail(`Candidate Worker name must not equal the production/generated Worker name (${PRODUCTION_AUTO_NAME}).`);
 }
@@ -65,23 +57,29 @@ try {
 if (!config || typeof config !== "object" || Array.isArray(config)) {
   fail("Generated Wrangler config must be a JSON object.");
 }
-
 if (!isDate(config.compatibility_date)) {
   fail("Generated Wrangler config has no valid YYYY-MM-DD compatibility_date.");
 }
 
-// Candidate deployment must never inherit a production route or custom domain.
 const forbiddenRouteKeys = ["route", "routes", "custom_domains"];
 for (const key of forbiddenRouteKeys) {
-  if (key in config) {
-    fail(`Generated Wrangler config contains forbidden candidate routing key: ${key}.`);
-  }
+  if (key in config) fail(`Generated Wrangler config contains forbidden candidate routing key: ${key}.`);
 }
 
 const candidate = structuredClone(config);
 candidate.name = candidateName;
 candidate.workers_dev = true;
 candidate.preview_urls = true;
+
+if (!candidate.assets || typeof candidate.assets !== "object" || Array.isArray(candidate.assets)) {
+  fail("Generated Wrangler config must contain an assets object for the Nitro deployment.");
+}
+if (!candidate.assets.binding || !candidate.assets.directory) {
+  fail("Generated Wrangler assets config must contain both binding and directory.");
+}
+// Cloudflare Static Assets are asset-first by default. Force Worker-first so
+// response hardening applies to navigation redirects and unmatched/error paths.
+candidate.assets.run_worker_first = true;
 
 const flags = Array.isArray(candidate.compatibility_flags)
   ? candidate.compatibility_flags.filter((flag) => typeof flag === "string")
@@ -95,7 +93,6 @@ if (candidate.compatibility_date >= NODE_COMPAT_DEFAULT_DATE) {
   candidate.compatibility_flags = flags;
 }
 
-// Ensure no route-like keys can be introduced by future generated config changes.
 for (const key of forbiddenRouteKeys) {
   if (key in candidate) {
     fail(`Candidate config unexpectedly contains forbidden routing key after preparation: ${key}.`);
@@ -109,6 +106,7 @@ console.log(`Candidate Worker: ${candidate.name}`);
 console.log(`Compatibility date: ${candidate.compatibility_date}`);
 console.log(`Workers.dev enabled: ${candidate.workers_dev === true}`);
 console.log(`Preview URLs enabled: ${candidate.preview_urls === true}`);
+console.log(`Worker-first asset routing: ${candidate.assets.run_worker_first === true}`);
 console.log(
   `Compatibility flags: ${candidate.compatibility_flags.length ? candidate.compatibility_flags.join(", ") : "(none)"}`,
 );
