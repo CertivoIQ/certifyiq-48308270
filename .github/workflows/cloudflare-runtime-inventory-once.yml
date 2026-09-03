@@ -1,0 +1,59 @@
+name: Cloudflare runtime inventory once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cloudflare-runtime-inventory-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Require Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+
+      - name: List candidate secret names only
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== candidate secrets ==="
+          npx --yes wrangler@4 secret list --name certivoiq-cutover-candidate-20260903 --format json
+
+      - name: List generated production Worker secret names only
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          echo "=== generated production worker secrets ==="
+          npx --yes wrangler@4 secret list --name watkin5-certifyiq-48308270 --format json
+
+      - name: List candidate deployments
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== candidate deployments ==="
+          npx --yes wrangler@4 deployments list --name certivoiq-cutover-candidate-20260903
+
+      - name: List generated production Worker deployments
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          echo "=== generated production worker deployments ==="
+          npx --yes wrangler@4 deployments list --name watkin5-certifyiq-48308270
+
+      - name: Confirm read-only inventory
+        run: echo "Read-only Cloudflare runtime inventory completed; no route, DNS, Worker code, or secret value was changed."
