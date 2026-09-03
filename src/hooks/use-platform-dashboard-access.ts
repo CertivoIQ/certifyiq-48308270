@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useSession } from "@/hooks/use-session";
+import { useIsStaff, useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 
 export type PlatformDashboardMode = "multifamily" | "pha" | "executive_demo";
@@ -27,6 +27,7 @@ export function resolvePlatformDashboardMode(
 
 export function usePlatformDashboardAccess() {
   const { user } = useSession();
+  const { isStaff, loading: staffLoading } = useIsStaff();
   const query = useQuery({
     queryKey: ["platform-dashboard-access", user?.id],
     enabled: !!user,
@@ -44,9 +45,12 @@ export function usePlatformDashboardAccess() {
     },
   });
 
-  const allowedModes = DASHBOARD_ORDER.filter((mode) =>
+  const entitledModes = DASHBOARD_ORDER.filter((mode) =>
     (query.data ?? []).some((row) => row.dashboard_key === mode),
   );
+  // CertivoIQ staff can inspect every product workspace without changing a
+  // customer organization profile. Customer access remains entitlement-based.
+  const allowedModes = isStaff ? DASHBOARD_ORDER : entitledModes;
 
   const storageKey = user ? `${STORAGE_PREFIX}:${user.id}` : null;
   const storedMode =
@@ -65,6 +69,6 @@ export function usePlatformDashboardAccess() {
     selectedMode,
     selectDashboard,
     hasSwitcher: allowedModes.length > 1,
-    loading: !!user && query.isLoading,
+    loading: !!user && (query.isLoading || staffLoading),
   };
 }
