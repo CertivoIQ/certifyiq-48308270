@@ -1,0 +1,59 @@
+name: Cloudflare production route inventory once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cloudflare-route-inventory-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Resolve CertivoIQ zone read-only
+        id: zone
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" \
+            -o /tmp/zones.json
+          zone_id="$(node -e 'const d=require("/tmp/zones.json"); if(!d.success||d.result.length!==1) process.exit(1); process.stdout.write(d.result[0].id)')"
+          rm -f /tmp/zones.json
+          test -n "$zone_id"
+          echo "zone_id=$zone_id" >> "$GITHUB_OUTPUT"
+          echo "PASS: certivoiq.com zone resolved."
+
+      - name: Inventory existing Worker routes read-only
+        shell: bash
+        env:
+          ZONE_ID: ${{ steps.zone.outputs.zone_id }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" \
+            -o /tmp/routes.json
+          node <<'NODE'
+          const d = require('/tmp/routes.json');
+          if (!d.success) process.exit(1);
+          const exact = d.result.filter((r) => r.pattern === 'certivoiq.com/*');
+          console.log(`EXACT_APEX_ROUTE_COUNT=${exact.length}`);
+          for (const route of exact) console.log(`EXACT_APEX_ROUTE_SCRIPT=${route.script || '(none)'}`);
+          const www = d.result.filter((r) => r.pattern === 'www.certivoiq.com/*');
+          console.log(`EXACT_WWW_ROUTE_COUNT=${www.length}`);
+          for (const route of www) console.log(`EXACT_WWW_ROUTE_SCRIPT=${route.script || '(none)'}`);
+          if (exact.length > 1 || www.length > 1) process.exit(1);
+          NODE
+          rm -f /tmp/routes.json
+          echo "PASS: route inventory completed; no route or DNS change made."
