@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 
 const outputPath=resolve(process.argv[2]??"artifacts/sc-sd-exact-documents.json");
 const specs=[
- {state_code:"SC",agency:"South Carolina State Housing Finance and Development Authority",official_domain:"schousing.com",title:"2025 Qualified Allocation Plan",source_type:"SC_2025_LIHTC_QAP",roles:["LIHTC_QAP"],programs:["LIHTC"],source_url:"https://www.schousing.com/library/2025%20-%20QAP.pdf",discovery_url:"https://www.schousing.com/",allowed_hosts:["www.schousing.com","schousing.com"]},
+ {state_code:"SC",agency:"South Carolina State Housing Finance and Development Authority",official_domain:"schousing.com",title:"2024 QAP Update — April 3, 2024",source_type:"SC_2024_LIHTC_QAP_UPDATE",roles:["LIHTC_QAP","LIHTC_RULE_UPDATE"],programs:["LIHTC"],source_url:"https://www.schousing.com/library/Tax%20Credit/2024/2024%20%20QAP%20Update%20-%2020240403.pdf",discovery_url:"https://www.schousing.com/",allowed_hosts:["www.schousing.com","schousing.com"]},
  {state_code:"SD",agency:"South Dakota Housing",official_domain:"sdhousing.org",title:"Housing Tax Credit Compliance Manual",source_type:"SD_LIHTC_COMPLIANCE_MANUAL",roles:["LIHTC_COMPLIANCE_MANUAL","HOTMA_GUIDANCE","SECTION8_HCV_FORM"],programs:["LIHTC","HOTMA","SECTION_8","HCV"],source_url:"https://www.sdhousing.org/s/2025HTC.pdf",discovery_url:"https://www.sdhousing.org/forms/housing-tax-credit-compliance-manual",allowed_hosts:["www.sdhousing.org","sdhousing.org","static1.squarespace.com"]}
 ];
 function allowed(url,hosts){const u=new URL(url);return u.protocol==="https:"&&hosts.includes(u.hostname.toLowerCase())}
