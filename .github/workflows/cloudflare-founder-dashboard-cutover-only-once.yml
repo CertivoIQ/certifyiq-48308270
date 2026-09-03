@@ -1,0 +1,179 @@
+name: Cloudflare founder dashboard cutover only once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cloudflare-founder-dashboard-cutover-only-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cutover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Reconfirm staged runtime health
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID OPERATIONS_WORKER_SECRET; do
+            test -n "${!name:-}" || { echo "$name is missing"; exit 1; }
+          done
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" \
+            "$TARGET_URL/api/internal/runtime-health")"
+          test "$status" = "204" || { echo "Staged runtime health returned HTTP $status"; exit 1; }
+          echo "PASS: staged founder dashboard runtime health is green."
+
+      - name: Reconfirm staged Cloudflare security boundary
+        run: node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+
+      - name: Capture current production route rollback state
+        id: state
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" \
+            -o /tmp/zones.json
+          zone_id="$(node -e 'const d=require("/tmp/zones.json"); if(!d.success||d.result.length!==1) process.exit(1); process.stdout.write(d.result[0].id)')"
+          rm -f /tmp/zones.json
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes" \
+            -o /tmp/routes-before.json
+          ZONE_ID="$zone_id" TARGET_WORKER="$TARGET_WORKER" node <<'NODE'
+          const fs = require('fs');
+          const d = require('/tmp/routes-before.json');
+          if (!d.success) throw new Error('Cloudflare route inventory failed');
+          const patterns = ['certivoiq.com/*','www.certivoiq.com/*'];
+          const routes = patterns.map((pattern) => {
+            const matches = d.result.filter((r) => r.pattern === pattern);
+            if (matches.length !== 1) throw new Error(`Expected exactly one route for ${pattern}`);
+            const route = matches[0];
+            if (!route.id || !route.script) throw new Error(`No rollback script for ${pattern}`);
+            if (route.script === process.env.TARGET_WORKER) throw new Error(`${pattern} already points to target Worker`);
+            return { id: route.id, pattern, oldScript: route.script };
+          });
+          if (routes[0].oldScript !== routes[1].oldScript) throw new Error('Apex and www rollback Workers differ');
+          fs.writeFileSync('/tmp/founder-dashboard-cutover-state.json', JSON.stringify({zoneId:process.env.ZONE_ID,targetWorker:process.env.TARGET_WORKER,routes}), {mode:0o600});
+          console.log(`PASS: rollback Worker captured: ${routes[0].oldScript}`);
+          NODE
+          rm -f /tmp/routes-before.json
+          echo "zone_id=$zone_id" >> "$GITHUB_OUTPUT"
+
+      - name: Switch existing production routes to new founder dashboard Worker
+        id: route_cutover
+        shell: bash
+        run: |
+          set -euo pipefail
+          rollback_partial() {
+            echo "Route switch failed; restoring captured production routes."
+            node -e 'const s=require("/tmp/founder-dashboard-cutover-state.json"); for(const r of s.routes) console.log([r.id,r.pattern,r.oldScript].join("\t"))' |
+            while IFS=$'\t' read -r route_id pattern old_script; do
+              body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$old_script")"
+              curl --silent --show-error -X PUT \
+                -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                -H "Content-Type: application/json" \
+                --data "$body" \
+                "https://api.cloudflare.com/client/v4/zones/${{ steps.state.outputs.zone_id }}/workers/routes/$route_id" \
+                -o /tmp/partial-rollback.json || true
+            done
+          }
+          trap rollback_partial ERR
+          node -e 'const s=require("/tmp/founder-dashboard-cutover-state.json"); for(const r of s.routes) console.log([r.id,r.pattern].join("\t"))' |
+          while IFS=$'\t' read -r route_id pattern; do
+            body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$TARGET_WORKER")"
+            curl --fail --silent --show-error -X PUT \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "$body" \
+              "https://api.cloudflare.com/client/v4/zones/${{ steps.state.outputs.zone_id }}/workers/routes/$route_id" \
+              -o /tmp/route-update.json
+            node -e 'const d=require("/tmp/route-update.json"); if(!d.success||d.result.script!==process.env.TARGET_WORKER) process.exit(1)'
+          done
+          rm -f /tmp/route-update.json
+          trap - ERR
+          echo "PASS: both production routes now point to $TARGET_WORKER."
+
+      - name: Verify production route ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/${{ steps.state.outputs.zone_id }}/workers/routes" \
+            -o /tmp/routes-after.json
+          TARGET_WORKER="$TARGET_WORKER" node <<'NODE'
+          const d = require('/tmp/routes-after.json');
+          if (!d.success) process.exit(1);
+          for (const pattern of ['certivoiq.com/*','www.certivoiq.com/*']) {
+            const matches = d.result.filter((r) => r.pattern === pattern);
+            if (matches.length !== 1 || matches[0].script !== process.env.TARGET_WORKER) {
+              throw new Error(`${pattern} is not owned by the new founder dashboard Worker`);
+            }
+          }
+          console.log('PASS: production routes confirmed on new founder dashboard Worker.');
+          NODE
+          rm -f /tmp/routes-after.json
+
+      - name: Verify production runtime, security, and application response
+        shell: bash
+        run: |
+          set -euo pipefail
+          for origin in https://certivoiq.com https://www.certivoiq.com; do
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" \
+              "$origin/api/internal/runtime-health")"
+            test "$status" = "204" || { echo "$origin runtime health returned HTTP $status"; exit 1; }
+            node scripts/verify-cloudflare-live-response.mjs "$origin"
+          done
+          curl --fail --silent --show-error --location --max-redirs 5 https://certivoiq.com/ -o /tmp/live.html
+          grep -q "CertivoIQ" /tmp/live.html
+          rm -f /tmp/live.html
+          echo "PASS: new founder dashboard Worker is healthy in production."
+
+      - name: Roll back production routes on any post-cutover failure
+        if: ${{ failure() && steps.route_cutover.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Post-cutover verification failed; restoring captured production Worker."
+          node -e 'const s=require("/tmp/founder-dashboard-cutover-state.json"); for(const r of s.routes) console.log([r.id,r.pattern,r.oldScript].join("\t"))' |
+          while IFS=$'\t' read -r route_id pattern old_script; do
+            body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$old_script")"
+            curl --fail --silent --show-error -X PUT \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "$body" \
+              "https://api.cloudflare.com/client/v4/zones/${{ steps.state.outputs.zone_id }}/workers/routes/$route_id" \
+              -o /tmp/rollback.json
+            node -e 'const d=require("/tmp/rollback.json"); if(!d.success) process.exit(1)'
+          done
+          rm -f /tmp/rollback.json
+          echo "ROLLBACK_COMPLETED=TRUE"
+
+      - name: Confirm new founder dashboard production release
+        if: ${{ success() }}
+        run: |
+          echo "NEW_FOUNDER_DASHBOARD_PRODUCTION=PASS"
+          echo "certivoiq.com and www.certivoiq.com are serving the staged founder dashboard Worker."
+          echo "No DNS record, Supabase data, Stripe object, billing state, or Lovable resource was changed."
