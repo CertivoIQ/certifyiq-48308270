@@ -12,9 +12,16 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { useIsStaff, useSession } from "@/hooks/use-session";
 import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
 import { useWorkspaceProfile, type PhaAgencyRole } from "@/hooks/use-workspace-profile";
+import {
+  PLATFORM_DASHBOARD_LABELS,
+  resolvePlatformDashboardMode,
+  usePlatformDashboardAccess,
+  type PlatformDashboardMode,
+} from "@/hooks/use-platform-dashboard-access";
 import { PublicShell } from "@/components/public-shell";
 import { useT } from "@/lib/i18n/provider";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -81,39 +88,82 @@ function phaNavAllowed(role: PhaAgencyRole | null, key: (typeof PHA_NAV)[number]
   if (role === "public_housing_specialist") return ["family_write", "family_read", "ph_operations", "waiting_lists", "accommodations", "compliance", "reports", "findings"].includes(key);
   return false;
 }
-function Wordmark(){return <Link to="/dashboard" className="flex items-center gap-2.5"><img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" /></Link>;}
-function NavLinks({onNavigate}:{onNavigate?:()=>void}){
-  const{isStaff}=useIsStaff();
-  const{canManageStaff}=useCrmStaffAuthority();
-  const{profile,phaRole}=useWorkspaceProfile();
-  const isPha=profile.organization_type==="pha";
-  const workspaceItems=isPha?PHA_NAV.filter(item=>phaNavAllowed(phaRole,item.key)):MULTIFAMILY_NAV;
-  const items=isStaff
+
+function Wordmark() {
+  return <Link to="/dashboard" className="flex items-center gap-2.5"><img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" /></Link>;
+}
+
+function NavLinks({ onNavigate, dashboardMode }: { onNavigate?: () => void; dashboardMode: PlatformDashboardMode }) {
+  const { isStaff } = useIsStaff();
+  const { canManageStaff } = useCrmStaffAuthority();
+  const { phaRole } = useWorkspaceProfile();
+  const isPha = dashboardMode === "pha";
+  const workspaceItems = isPha ? PHA_NAV.filter((item) => phaNavAllowed(phaRole, item.key)) : MULTIFAMILY_NAV;
+  const items = isStaff
     ? [
         workspaceItems[0],
         workspaceItems[1],
-        ...(canManageStaff ? [{to:"/state-rule-validation",label:"State Rule Validation",icon:FileSearch} as const] : []),
+        ...(canManageStaff ? [{ to: "/state-rule-validation", label: "State Rule Validation", icon: FileSearch } as const] : []),
         ...workspaceItems.slice(2),
-        {to:"/crm",label:"CRM",icon:Briefcase} as const,
+        { to: "/crm", label: "CRM", icon: Briefcase } as const,
       ]
     : workspaceItems;
-  return <nav className="flex flex-col gap-0.5"><p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">{isPha?"PHA workspace":"Multifamily workspace"}</p>{isPha&&phaRole?<p className="mb-2 px-3 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40">{phaRole.replaceAll("_"," ")}</p>:null}{items.map(({to,label,icon:Icon})=><Link key={to} to={to} onClick={onNavigate} activeOptions={{exact:to==="/dashboard"}} activeProps={{className:"bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]"}} inactiveProps={{className:"text-sidebar-foreground/70 hover:bg-sidebar-accent/55"}} className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors"><Icon className="size-4 shrink-0" strokeWidth={1.9}/>{label}</Link>)}</nav>;
+  return <nav className="flex flex-col gap-0.5"><p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">{isPha ? "PHA workspace" : "Multifamily workspace"}</p>{isPha && phaRole ? <p className="mb-2 px-3 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40">{phaRole.replaceAll("_", " ")}</p> : null}{items.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={onNavigate} activeOptions={{ exact: to === "/dashboard" }} activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_0_var(--sidebar-primary)]" }} inactiveProps={{ className: "text-sidebar-foreground/70 hover:bg-sidebar-accent/55" }} className="flex items-center gap-2.5 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors"><Icon className="size-4 shrink-0" strokeWidth={1.9} />{label}</Link>)}</nav>;
 }
-function SessionActions({email}:{email:string}){
-  const navigate=useNavigate();
-  const[signingOut,setSigningOut]=useState(false);
-  const signOut=async()=>{
+
+function SessionActions({
+  email,
+  dashboardMode,
+  allowedModes,
+  hasSwitcher,
+  selectDashboard,
+}: {
+  email: string;
+  dashboardMode: PlatformDashboardMode;
+  allowedModes: PlatformDashboardMode[];
+  hasSwitcher: boolean;
+  selectDashboard: (mode: PlatformDashboardMode) => boolean;
+}) {
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const signOut = async () => {
     setSigningOut(true);
-    try{
-      const{error}=await supabase.auth.signOut({scope:"local"});
-      if(error)throw error;
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error) throw error;
       sessionStorage.removeItem("certivoiq:after-auth");
-      await navigate({to:"/auth",search:{mode:"signin"},replace:true});
-    }catch(error){
-      toast.error(error instanceof Error?error.message:"Could not sign out");
+      await navigate({ to: "/auth", search: { mode: "signin" }, replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not sign out");
       setSigningOut(false);
     }
   };
-  return <div className="flex items-center gap-2"><span className="hidden max-w-48 truncate text-xs text-muted-foreground xl:inline">{email}</span><Button type="button" size="sm" variant="outline" disabled={signingOut} onClick={signOut}><LogOut className="size-4"/>{signingOut?"Signing out…":"Sign out"}</Button></div>;
+
+  const switchDashboard = (value: string) => {
+    if (selectDashboard(value as PlatformDashboardMode)) {
+      window.location.assign("/dashboard");
+    }
+  };
+
+  return <div className="flex items-center gap-2"><span className="hidden max-w-48 truncate text-xs text-muted-foreground xl:inline">{email}</span>{hasSwitcher ? <Select value={dashboardMode} onValueChange={switchDashboard}><SelectTrigger className="h-9 w-[166px]" aria-label="Platform dashboard"><ArrowLeftRight className="size-4" /><SelectValue /></SelectTrigger><SelectContent>{allowedModes.map((mode) => <SelectItem key={mode} value={mode}>{PLATFORM_DASHBOARD_LABELS[mode]}</SelectItem>)}</SelectContent></Select> : null}<Button type="button" size="sm" variant="outline" disabled={signingOut} onClick={signOut}><LogOut className="size-4" />{signingOut ? "Signing out…" : "Sign out"}</Button></div>;
 }
-export function AppShell({children,title,subtitle,actions}:{children:ReactNode;title:string;subtitle?:string;actions?:ReactNode}){const{session}=useSession();const{profile}=useWorkspaceProfile();const[open,setOpen]=useState(false);const t=useT();if(!session)return <PublicShell title={title} subtitle={subtitle} actions={actions}>{children}</PublicShell>;const isPha=profile.organization_type==="pha";const programSummary=isPha?(profile.pha_programs.length?profile.pha_programs.map(p=>p.toUpperCase()).join(" · "):"PHA programs not configured"):(profile.selected_programs.length?profile.selected_programs.map(p=>p.replaceAll("_"," ").toUpperCase()).join(" · "):"Programs not configured");return <div className="min-h-screen lg:grid lg:grid-cols-[248px_1fr]"><aside className="hidden flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 lg:sticky lg:top-0 lg:flex lg:h-screen"><Wordmark/><p className="mt-2 pl-1 text-[11px] tracking-wide text-sidebar-foreground/55">{t("shell.tagline")}</p><div className="mt-7 overflow-y-auto"><NavLinks/></div><div className="mt-auto rounded-lg border border-sidebar-border/70 bg-sidebar-accent/40 p-3"><p className="cite text-[10.5px] uppercase tracking-[0.16em] text-sidebar-foreground/60">Active program profile</p><p className="mt-1.5 text-[11px] leading-5 text-sidebar-foreground/90">{programSummary}</p>{profile.derived_overlays.some(item=>item.startsWith("hotma_"))?<p className="mt-1 font-mono text-[11px] text-sidebar-foreground/55">HOTMA applicability derived</p>:null}</div><div className="mt-3"><SessionActions email={session.user.email ?? "Signed in"}/></div></aside><div className="flex min-w-0 flex-col"><header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur"><div className="flex items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 py-2.5 lg:hidden"><button onClick={()=>setOpen(v=>!v)} aria-label={t("nav.toggle")} className="grid size-8 place-items-center rounded-md text-sidebar-foreground">{open?<X className="size-5"/>:<Menu className="size-5"/>}</button><Wordmark/></div>{open&&<div className="border-b border-sidebar-border bg-sidebar px-4 py-3 lg:hidden"><NavLinks onNavigate={()=>setOpen(false)}/></div>}<div className="flex flex-wrap items-end justify-between gap-3 px-4 py-4 sm:px-7"><div className="min-w-0"><h1 className="truncate font-display text-[23px] leading-tight sm:text-[27px]"><IQText>{title}</IQText></h1>{subtitle&&<p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>}</div><div className="flex flex-wrap items-center gap-2">{actions}<SessionActions email={session.user.email ?? "Signed in"}/><LanguageToggle/><ThemeToggle/></div></div></header><main className="min-w-0 flex-1 px-4 py-6 sm:px-7 sm:py-8">{children}</main></div></div>;}
+
+export function AppShell({ children, title, subtitle, actions }: { children: ReactNode; title: string; subtitle?: string; actions?: ReactNode }) {
+  const { session } = useSession();
+  const { profile } = useWorkspaceProfile();
+  const { selectedMode, allowedModes, hasSwitcher, selectDashboard } = usePlatformDashboardAccess();
+  const [open, setOpen] = useState(false);
+  const t = useT();
+  if (!session) return <PublicShell title={title} subtitle={subtitle} actions={actions}>{children}</PublicShell>;
+  const dashboardMode = resolvePlatformDashboardMode(selectedMode, profile.organization_type);
+  const isPha = dashboardMode === "pha";
+  const programSummary = dashboardMode === "executive_demo"
+    ? "Executive demo portfolio"
+    : isPha
+      ? (profile.pha_programs.length ? profile.pha_programs.map((p) => p.toUpperCase()).join(" · ") : "PHA programs not configured")
+      : (profile.selected_programs.length ? profile.selected_programs.map((p) => p.replaceAll("_", " ").toUpperCase()).join(" · ") : "Programs not configured");
+  const sessionActions = <SessionActions email={session.user.email ?? "Signed in"} dashboardMode={dashboardMode} allowedModes={allowedModes} hasSwitcher={hasSwitcher} selectDashboard={selectDashboard} />;
+
+  return <div className="min-h-screen lg:grid lg:grid-cols-[248px_1fr]"><aside className="hidden flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 lg:sticky lg:top-0 lg:flex lg:h-screen"><Wordmark /><p className="mt-2 pl-1 text-[11px] tracking-wide text-sidebar-foreground/55">{t("shell.tagline")}</p><div className="mt-7 overflow-y-auto"><NavLinks dashboardMode={dashboardMode} /></div><div className="mt-auto rounded-lg border border-sidebar-border/70 bg-sidebar-accent/40 p-3"><p className="cite text-[10.5px] uppercase tracking-[0.16em] text-sidebar-foreground/60">Active program profile</p><p className="mt-1.5 text-[11px] leading-5 text-sidebar-foreground/90">{programSummary}</p>{profile.derived_overlays.some((item) => item.startsWith("hotma_")) ? <p className="mt-1 font-mono text-[11px] text-sidebar-foreground/55">HOTMA applicability derived</p> : null}</div><div className="mt-3">{sessionActions}</div></aside><div className="flex min-w-0 flex-col"><header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur"><div className="flex items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 py-2.5 lg:hidden"><button onClick={() => setOpen((v) => !v)} aria-label={t("nav.toggle")} className="grid size-8 place-items-center rounded-md text-sidebar-foreground">{open ? <X className="size-5" /> : <Menu className="size-5" />}</button><Wordmark /></div>{open && <div className="border-b border-sidebar-border bg-sidebar px-4 py-3 lg:hidden"><NavLinks onNavigate={() => setOpen(false)} dashboardMode={dashboardMode} /></div>}<div className="flex flex-wrap items-end justify-between gap-3 px-4 py-4 sm:px-7"><div className="min-w-0"><h1 className="truncate font-display text-[23px] leading-tight sm:text-[27px]"><IQText>{title}</IQText></h1>{subtitle && <p className="mt-1 text-[13px] text-muted-foreground">{subtitle}</p>}</div><div className="flex flex-wrap items-center gap-2">{actions}{sessionActions}<LanguageToggle /><ThemeToggle /></div></div></header><main className="min-w-0 flex-1 px-4 py-6 sm:px-7 sm:py-8">{children}</main></div></div>;
+}
