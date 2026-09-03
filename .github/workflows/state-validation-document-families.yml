@@ -9,6 +9,8 @@ on:
       - scripts/crawl-state-validation-document-families.mjs
       - scripts/crawl-tn-tx-release-critical-documents.mjs
       - scripts/test-state-validation-document-families.mjs
+      - scripts/test-tn-tx-document-level-validation.mjs
+      - supabase/migrations/20260903190000_invalidate_tn_tx_html_page_evidence.sql
       - .github/workflows/state-validation-document-families.yml
   workflow_dispatch:
 permissions:
@@ -30,7 +32,7 @@ jobs:
       - name: Install pinned PDF parser without changing the lockfile
         run: npm install --prefix /tmp/state-capture --no-save --package-lock=false --ignore-scripts pdfjs-dist@6.2.108
       - name: Validate document-family controls
-        run: node --test scripts/test-state-validation-document-families.mjs scripts/test-nationwide-state-source-evidence-pipeline.mjs
+        run: node --test scripts/test-state-validation-document-families.mjs scripts/test-tn-tx-document-level-validation.mjs scripts/test-nationwide-state-source-evidence-pipeline.mjs
       - name: Crawl and hash TN/TX release-critical documents
         run: node scripts/crawl-tn-tx-release-critical-documents.mjs
       - name: Upload TN/TX release-critical evidence
