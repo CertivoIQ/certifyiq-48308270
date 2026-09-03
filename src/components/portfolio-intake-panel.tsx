@@ -16,6 +16,8 @@ import {
 
 type Db = any;
 
+const singleDocumentTypes = ".pdf,.png,.jpg,.jpeg,.webp";
+
 export function PortfolioIntakePanel() {
   const queryClient = useQueryClient();
   const createIntake = useServerFn(createPortfolioIntake);
@@ -38,6 +40,107 @@ export function PortfolioIntakePanel() {
     anchor.download = "certivoiq-portfolio-tenant-intake-template.csv";
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  function chooseManifest(file: File | null) {
+    if (!file) {
+      setManifest(null);
+      return;
+    }
+    const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv";
+    if (!isCsv) {
+      setManifest(null);
+      setMessage("The portfolio mapping file must be a CSV. For one PDF or image, use the certification document selector instead; no CSV is required.");
+      return;
+    }
+    setManifest(file);
+    setMessage("");
+  }
+
+  async function uploadSingleDocument() {
+    if (documents.length !== 1 || busy) return;
+    const file = documents[0]!;
+    setBusy(true);
+    setMessage(`Preparing ${file.name} for secure single-document intake…`);
+    setProgress({ current: 1, total: 1 });
+
+    let jobId: string | null = null;
+    let storagePath: string | null = null;
+    try {
+      if (file.size > MAX_UPLOAD_BYTES) throw new Error(`${file.name} exceeds the 50 MB per-file limit.`);
+      if (!isOcrSupportedFile(file)) throw new Error("Single-document intake accepts PDF, PNG, JPEG, or WEBP files only.");
+
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
+      if (!user) throw new Error("Please sign in before uploading a certification document.");
+      const db = supabase as unknown as Db;
+
+      const { data: job, error: jobError } = await db.from("certification_import_jobs").insert({
+        user_id: user.id,
+        created_by: user.id,
+        status: "processing",
+        source_name: file.name,
+        total_files: 1,
+        intake_type: "certification_documents",
+      }).select("id").single();
+      if (jobError) throw jobError;
+      jobId = job.id;
+
+      storagePath = `${user.id}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const { error: uploadError } = await supabase.storage.from("certification-imports").upload(storagePath, file, { upsert: false });
+      if (uploadError) throw uploadError;
+
+      const prepared = await prepareCertificationForReview(file, (status) => setMessage(`${file.name}: ${status}`));
+      if (prepared.sidecar) {
+        const { error: sidecarError } = await supabase.storage.from("certification-imports")
+          .upload(sidecarPathFor(storagePath), new Blob([JSON.stringify(prepared.sidecar)], { type: "application/json" }), { upsert: true });
+        if (sidecarError) throw sidecarError;
+      }
+
+      const { error: itemError } = await db.from("certification_import_items").insert({
+        job_id: job.id,
+        user_id: user.id,
+        storage_path: storagePath,
+        original_file_name: file.name,
+        mime_type: file.type || "application/octet-stream",
+        size_bytes: file.size,
+        status: "completed",
+        upload_sequence: 0,
+        review_queue_status: "not_queued",
+      });
+      if (itemError) throw itemError;
+
+      const { error: completeError } = await db.from("certification_import_jobs").update({
+        status: "completed",
+        processed_files: 1,
+        error_count: 0,
+        completed_at: new Date().toISOString(),
+      }).eq("id", job.id).eq("user_id", user.id);
+      if (completeError) throw completeError;
+
+      setDocuments([]);
+      setMessage(`Single-document intake complete: ${file.name} is stored securely and was not queued for compliance review. Add a CSV only when you want documents mapped to property, unit, and tenant profiles.`);
+      await queryClient.invalidateQueries({ queryKey: ["certification-items"] });
+    } catch (error) {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+      if (storagePath) {
+        await supabase.storage.from("certification-imports").remove([storagePath, sidecarPathFor(storagePath)]).catch(() => undefined);
+      }
+      if (jobId && userId) {
+        const db = supabase as unknown as Db;
+        await db.from("certification_import_jobs").update({
+          status: "failed",
+          processed_files: 0,
+          error_count: 1,
+          completed_at: new Date().toISOString(),
+        }).eq("id", jobId).eq("user_id", userId);
+      }
+      setMessage(error instanceof Error ? error.message : "The certification document could not be uploaded.");
+    } finally {
+      setBusy(false);
+      setProgress({ current: 0, total: 0 });
+    }
   }
 
   async function importPortfolio() {
@@ -127,6 +230,20 @@ export function PortfolioIntakePanel() {
     }
   }
 
+  async function submitIntake() {
+    if (manifest) {
+      await importPortfolio();
+      return;
+    }
+    if (documents.length === 1) {
+      await uploadSingleDocument();
+      return;
+    }
+    setMessage("Choose one certification document, or choose a CSV when importing mapped property/unit/tenant data.");
+  }
+
+  const canSubmit = !busy && (!!manifest || documents.length === 1);
+
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -135,7 +252,7 @@ export function PortfolioIntakePanel() {
           <div>
             <h2 className="font-semibold">Property, unit & tenant intake</h2>
             <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-              Import structured tenant certification data into property and unit profiles, then attach each document to the correct tenant. Uploading never starts a compliance review.
+              Upload one certification document directly, or add a CSV to map documents into property, unit, and tenant profiles. Uploading never starts a compliance review.
             </p>
           </div>
         </div>
@@ -147,22 +264,25 @@ export function PortfolioIntakePanel() {
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center hover:bg-muted/30">
           <FileSpreadsheet className="size-7 text-muted-foreground" />
-          <span className="mt-2 font-medium">Choose property/unit/tenant CSV</span>
-          <span className="mt-1 text-xs text-muted-foreground">{manifest?.name ?? "One row per tenant certification document"}</span>
-          <input className="sr-only" type="file" accept=".csv,text/csv" onChange={(event) => setManifest(event.target.files?.[0] ?? null)} />
+          <span className="mt-2 font-medium">Choose CSV for portfolio mapping</span>
+          <span className="mt-1 text-xs text-muted-foreground">{manifest?.name ?? "Optional for one document · required for property/unit/tenant mapping"}</span>
+          <input className="sr-only" type="file" accept=".csv,text/csv" onChange={(event) => chooseManifest(event.target.files?.[0] ?? null)} />
         </label>
         <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center hover:bg-muted/30">
           <UploadCloud className="size-7 text-muted-foreground" />
-          <span className="mt-2 font-medium">{hasPaidSubscription ? "Choose tenant certification documents" : "Choose one certification document"}</span>
-          <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · 50 MB each · filenames must match the CSV</span>
-          <input className="sr-only" type="file" multiple={hasPaidSubscription} accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={(event) => setDocuments(Array.from(event.target.files ?? []))} />
+          <span className="mt-2 font-medium">{hasPaidSubscription ? "Choose certification documents" : "Choose one certification document"}</span>
+          <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · 50 MB each · one file needs no CSV</span>
+          <input className="sr-only" type="file" multiple={hasPaidSubscription} accept={singleDocumentTypes} onChange={(event) => {
+            setDocuments(Array.from(event.target.files ?? []));
+            setMessage("");
+          }} />
         </label>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-sm">
         <span>{documents.length} document{documents.length === 1 ? "" : "s"} · {(totalBytes / 1024 / 1024).toFixed(1)} MB</span>
-        <button type="button" disabled={!manifest || busy} onClick={importPortfolio} className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50">
-          {busy ? "Importing…" : "Import profiles & documents"}
+        <button type="button" disabled={!canSubmit} onClick={submitIntake} className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50">
+          {busy ? "Importing…" : manifest ? "Import profiles & documents" : documents.length === 1 ? "Upload single document" : "Import profiles & documents"}
         </button>
       </div>
       {busy && progress.total > 0 ? <p className="mt-2 text-xs text-muted-foreground">Document {progress.current} of {progress.total}</p> : null}
