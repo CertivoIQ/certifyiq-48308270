@@ -83,7 +83,7 @@ type PhaNavItem = {
 const PHA_NAV = [
   { to: "/dashboard", label: "Command Center", icon: LayoutDashboard, key: "command", section: "command" },
   { to: "/tasks", label: "Tasks", icon: ClipboardCheck, key: "tasks", section: "command" },
-  { to: "/pha-family-intake", label: "Family Intake", icon: UserPlus, key: "family_write", section: "families_programs" },
+  { to: "/pha-family-intake", label: "Family Intake & Evidence", icon: UserPlus, key: "family_write", section: "families_programs" },
   { to: "/pha-families", label: "Families & Reexaminations", icon: Users, key: "family_read", section: "families_programs" },
   { to: "/pha-portability", label: "HCV Portability", icon: ArrowLeftRight, key: "hcv_operations", section: "families_programs" },
   { to: "/pha-hcv-lease-up", label: "HCV Lease-Up", icon: ClipboardCheck, key: "hcv_operations", section: "families_programs" },
