@@ -1,3 +1,5 @@
+import { mkdir, writeFile } from "node:fs/promises";
+
 const pages = [
   "https://thda.org/rental-housing-partn/housing-credit-compliance/",
   "https://thda.org/rental-housing-partn/thomas-documents/",
@@ -20,21 +22,30 @@ function clean(value) {
     .trim();
 }
 
+const result = [];
 for (const page of pages) {
   const response = await fetch(page, {
     headers: { "user-agent": "Mozilla/5.0 CertivoIQ-THDA-Link-Diagnostic/1.0", accept: "text/html,*/*;q=0.8" },
     signal: AbortSignal.timeout(30000),
   });
+  const pageResult = { page, status: response.status, final_url: response.url, links: [] };
   console.log(`\nPAGE ${page} HTTP ${response.status} ${response.url}`);
-  if (!response.ok) continue;
-  const html = await response.text();
-  const re = /<a\b[^>]*?href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
-  for (const match of html.matchAll(re)) {
-    const label = clean(match[4]);
-    if (!terms.test(label)) continue;
-    const raw = String(match[1] ?? match[2] ?? match[3] ?? "").replace(/&amp;/gi, "&").trim();
-    let url = raw;
-    try { url = new URL(raw, response.url).toString(); } catch {}
-    console.log(JSON.stringify({ label, url }));
+  if (response.ok) {
+    const html = await response.text();
+    const re = /<a\b[^>]*?href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
+    for (const match of html.matchAll(re)) {
+      const label = clean(match[4]);
+      if (!terms.test(label)) continue;
+      const raw = String(match[1] ?? match[2] ?? match[3] ?? "").replace(/&amp;/gi, "&").trim();
+      let url = raw;
+      try { url = new URL(raw, response.url).toString(); } catch {}
+      const item = { label, url };
+      pageResult.links.push(item);
+      console.log(JSON.stringify(item));
+    }
   }
+  result.push(pageResult);
 }
+
+await mkdir("artifacts", { recursive: true });
+await writeFile("artifacts/thda-current-document-links.json", JSON.stringify({ generated_at: new Date().toISOString(), pages: result }, null, 2));
