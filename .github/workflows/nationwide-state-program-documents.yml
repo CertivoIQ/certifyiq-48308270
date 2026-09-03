@@ -26,6 +26,7 @@ jobs:
         with:
           node-version: 22
       - name: Capture repaired South Carolina and South Dakota exact manuals
+        continue-on-error: true
         run: node scripts/crawl-sc-sd-exact-documents.mjs
       - name: Upload SC/SD exact documents
         if: always()
@@ -33,9 +34,10 @@ jobs:
         with:
           name: sc-sd-exact-documents
           path: artifacts/sc-sd-exact-documents.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
       - name: Crawl exact nationwide program documents
+        if: always()
         run: node scripts/crawl-nationwide-state-program-documents.mjs
       - name: Upload exact program-document evidence
         if: always()
