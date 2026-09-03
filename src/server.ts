@@ -8,9 +8,11 @@ type ServerEntry = {
 };
 
 const SECURITY_HEADERS = {
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  "X-Frame-Options": "DENY",
+  "Content-Security-Policy": "frame-ancestors 'none'",
 } as const;
 
 function withSecurityHeaders(response: Response): Response {
@@ -75,4 +77,3 @@ export default {
     }
   },
 };
-
