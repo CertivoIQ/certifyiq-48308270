@@ -1,0 +1,69 @@
+name: Cloudflare founder dashboard fast probe once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cloudflare-founder-dashboard-fast-probe-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+    steps:
+      - name: Probe staged runtime directly
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID OPERATIONS_WORKER_SECRET; do
+            test -n "${!name:-}" || { echo "$name is missing"; exit 1; }
+          done
+          for attempt in 1 2 3 4 5 6; do
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" \
+              "$TARGET_URL/api/internal/runtime-health")"
+            echo "Staged runtime attempt $attempt: HTTP $status"
+            if [ "$status" = "204" ]; then
+              echo "STAGED_RUNTIME_GATE=PASS"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "STAGED_RUNTIME_GATE=FAIL"
+          exit 1
+
+      - name: Confirm production routes unchanged
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" \
+            -o /tmp/zones.json
+          zone_id="$(node -e 'const d=require("/tmp/zones.json"); if(!d.success||d.result.length!==1) process.exit(1); process.stdout.write(d.result[0].id)')"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes" \
+            -o /tmp/routes.json
+          TARGET_WORKER="$TARGET_WORKER" node <<'NODE'
+          const d = require('/tmp/routes.json');
+          if (!d.success) process.exit(1);
+          for (const pattern of ['certivoiq.com/*','www.certivoiq.com/*']) {
+            const matches = d.result.filter((r) => r.pattern === pattern);
+            if (matches.length !== 1) throw new Error(`Expected exactly one route for ${pattern}`);
+            console.log(`${pattern} -> ${matches[0].script}`);
+            if (matches[0].script === process.env.TARGET_WORKER) throw new Error(`${pattern} unexpectedly points to staged Worker`);
+          }
+          console.log('PASS: production routes remain on the prior verified Worker.');
+          NODE
+          rm -f /tmp/zones.json /tmp/routes.json
