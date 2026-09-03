@@ -142,6 +142,7 @@ test("TN/TX targeted capture is allowlisted, exact-byte hashed, and cannot self-
     "Texas Department of Housing and Community Affairs",
     "thda.org",
     "tdhca.texas.gov",
+    "dogvxws799i6n.cloudfront.net",
     "createHash(\"sha256\")",
     "captured_unvalidated",
     "independent_validation_required: true",
@@ -149,8 +150,8 @@ test("TN/TX targeted capture is allowlisted, exact-byte hashed, and cannot self-
   ]) {
     assert.match(targetedCrawler, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+  assert.match(targetedCrawler, /unapproved_source_host/);
   assert.match(targetedCrawler, /redirected_to_unapproved_host/);
-  assert.match(targetedCrawler, /curl_fallback/);
   assert.doesNotMatch(targetedCrawler, /compliance_activation_allowed:\s*true/);
 });
 
