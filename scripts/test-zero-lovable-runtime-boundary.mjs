@@ -56,11 +56,15 @@ test('deployment responses receive the required security headers', () => {
   const workerBoundary = read('src/server.ts')
   for (const source of [startSource, workerBoundary]) {
     assert.match(source, /Strict-Transport-Security/)
-    assert.match(source, /max-age=31536000; includeSubDomains/)
+    assert.match(source, /max-age=63072000; includeSubDomains; preload/)
     assert.match(source, /X-Content-Type-Options/)
     assert.match(source, /nosniff/)
     assert.match(source, /Referrer-Policy/)
     assert.match(source, /strict-origin-when-cross-origin/)
+    assert.match(source, /X-Frame-Options/)
+    assert.match(source, /DENY/)
+    assert.match(source, /Content-Security-Policy/)
+    assert.match(source, /frame-ancestors 'none'/)
   }
   assert.match(workerBoundary, /withSecurityHeaders\(await normalizeCatastrophicSsrResponse\(response\)\)/)
 })
@@ -69,4 +73,3 @@ test('browser auth uses normal Supabase storage and no editor telemetry hook', (
   assert.doesNotMatch(read('src/integrations/supabase/client.ts'), /previewAuthStorage|brokeredPreviewStorage/)
   assert.doesNotMatch(read('src/routes/__root.tsx'), /reportLovableError|__lovable/)
 })
-
