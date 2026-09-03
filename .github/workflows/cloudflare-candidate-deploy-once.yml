@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 
-# One-time candidate redeploy after SSR/404 security-header hardening.
+# One-time candidate redeploy after Worker-first routing hardening.
 jobs:
   deploy-candidate:
     runs-on: ubuntu-latest
