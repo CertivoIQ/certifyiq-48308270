@@ -1,24 +1,15 @@
-import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { promisify } from "node:util";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 
 const outputPath = resolve(process.argv[2] ?? "artifacts/tn-tx-release-critical-documents.json");
 const MAX_BYTES = 25 * 1024 * 1024;
-const MAX_DISCOVERY_DEPTH = 1;
-const execFileAsync = promisify(execFile);
-const delay = (ms) => new Promise((resolveDelay) => setTimeout(resolveDelay, ms));
+const THDA_ATTACHMENT_HOST = "dogvxws799i6n.cloudfront.net";
 
-const DOCUMENT_CONTENT_TYPES = new Set([
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/octet-stream",
-]);
+const STATE_HOSTS = {
+  TN: new Set(["thda.org", "www.thda.org", THDA_ATTACHMENT_HOST]),
+  TX: new Set(["tdhca.texas.gov", "www.tdhca.texas.gov"]),
+};
 
 const DIRECT_DOCUMENTS = [
   {
@@ -27,70 +18,7 @@ const DIRECT_DOCUMENTS = [
     title: "2026 Qualified Allocation Plan",
     source_url: "https://thda.org/wp-content/uploads/2026/01/2026-QAP-01.06.2026-003.pdf",
     source_type: "TN_2026_LIHTC_QAP",
-    document_role: "LIHTC_QAP",
-    programs: ["LIHTC"],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    title: "THOMAS Compliance Guide",
-    source_url: "https://thda.org/pdf/THOMAS-Compliance-Guide_2021-10-27-140216_jeey.pdf",
-    source_type: "TN_THOMAS_COMPLIANCE_GUIDE",
-    document_role: "LIHTC_COMPLIANCE_GUIDE",
-    programs: ["LIHTC"],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    title: "HOTMA Compliance Training",
-    source_url: "https://thda.org/pdf/HOTMA-Training-2025.pdf",
-    source_type: "TN_HOTMA_COMPLIANCE_GUIDANCE",
-    document_role: "HOTMA_GUIDANCE",
-    programs: ["LIHTC", "HOTMA"],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    title: "Employment Verification HO-0422",
-    source_url: "https://thda.org/pdf/HO-0422-Employment-Verification_200626_154435.pdf",
-    source_type: "TN_EMPLOYMENT_VERIFICATION_FORM",
-    document_role: "EMPLOYMENT_VERIFICATION_FORM",
-    programs: ["LIHTC", "HOTMA"],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    title: "Asset Self-Certification HO-0485",
-    source_url: "https://thda.org/documents/TN-Asset-Self-Certification-2025.pdf",
-    source_type: "TN_ASSET_SELF_CERTIFICATION_FORM",
-    document_role: "ASSET_CERTIFICATION_FORM",
-    programs: ["LIHTC", "HOTMA"],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    title: "Housing Choice Voucher Administrative Plan",
-    source_url: "https://thda.org/pdf/2024-Administrative-Plan.pdf",
-    source_type: "TN_HCV_ADMIN_PLAN",
-    document_role: "HCV_ADMIN_PLAN",
-    programs: ["SECTION_8", "HCV"],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    title: "THDA Administrative Plan – PBV Chapter",
-    source_url: "https://thda.org/images/PBV-Chapter-Admin-Plan.pdf",
-    source_type: "TN_PBV_ADMIN_PLAN_CHAPTER",
-    document_role: "PBV_ADMIN_CHAPTER",
-    programs: ["SECTION_8", "HCV", "PBV", "HOTMA"],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    title: "Utility Allowance Guidance",
-    source_url: "https://thda.org/pdf/Utility-Allowance-Guidance.pdf",
-    source_type: "TN_LIHTC_UTILITY_ALLOWANCE_GUIDANCE",
-    document_role: "UTILITY_ALLOWANCE_GUIDANCE",
+    document_roles: ["LIHTC_QAP"],
     programs: ["LIHTC"],
   },
   {
@@ -99,7 +27,7 @@ const DIRECT_DOCUMENTS = [
     title: "2026 Qualified Allocation Plan",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/multifamily/docs/26-QAP.pdf",
     source_type: "TX_2026_LIHTC_QAP",
-    document_role: "LIHTC_QAP",
+    document_roles: ["LIHTC_QAP"],
     programs: ["LIHTC"],
   },
   {
@@ -108,7 +36,7 @@ const DIRECT_DOCUMENTS = [
     title: "Compliance Monitoring Rule – Subchapter F",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/CM-SubCh-F-Searchable.pdf",
     source_type: "TX_LIHTC_COMPLIANCE_RULE_SUBCHAPTER_F",
-    document_role: "LIHTC_COMPLIANCE_RULE",
+    document_roles: ["LIHTC_COMPLIANCE_RULE"],
     programs: ["LIHTC"],
   },
   {
@@ -117,7 +45,7 @@ const DIRECT_DOCUMENTS = [
     title: "Income Certification",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/HOTMA-IncomeCert_1.pdf",
     source_type: "TX_HOTMA_INCOME_CERTIFICATION_FORM",
-    document_role: "INCOME_CERTIFICATION_FORM",
+    document_roles: ["INCOME_CERTIFICATION_FORM"],
     programs: ["LIHTC", "HOTMA"],
   },
   {
@@ -126,7 +54,7 @@ const DIRECT_DOCUMENTS = [
     title: "Income Certification Instructions",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/HOTMA-IncomeCertInst_2.pdf",
     source_type: "TX_HOTMA_INCOME_CERTIFICATION_INSTRUCTIONS",
-    document_role: "HOTMA_INCOME_CERTIFICATION_INSTRUCTIONS",
+    document_roles: ["HOTMA_INCOME_CERTIFICATION_INSTRUCTIONS"],
     programs: ["LIHTC", "HOTMA"],
   },
   {
@@ -135,7 +63,7 @@ const DIRECT_DOCUMENTS = [
     title: "Asset Certification of Net Family Assets",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/24-AssetCert-NetFamily-en_0.pdf",
     source_type: "TX_ASSET_CERTIFICATION_FORM",
-    document_role: "ASSET_CERTIFICATION_FORM",
+    document_roles: ["ASSET_CERTIFICATION_FORM"],
     programs: ["LIHTC", "HOTMA"],
   },
   {
@@ -144,7 +72,7 @@ const DIRECT_DOCUMENTS = [
     title: "Employment Verification",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/HOTMA-EmployVer.pdf",
     source_type: "TX_HOTMA_EMPLOYMENT_VERIFICATION_FORM",
-    document_role: "EMPLOYMENT_VERIFICATION_FORM",
+    document_roles: ["EMPLOYMENT_VERIFICATION_FORM"],
     programs: ["LIHTC", "HOTMA"],
   },
   {
@@ -153,7 +81,7 @@ const DIRECT_DOCUMENTS = [
     title: "Income Verification for Households with Section 8 Certificates",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/Sec8Ver_0.pdf",
     source_type: "TX_SECTION8_INCOME_VERIFICATION_FORM",
-    document_role: "SECTION8_INCOME_VERIFICATION_FORM",
+    document_roles: ["SECTION8_INCOME_VERIFICATION_FORM"],
     programs: ["LIHTC", "SECTION_8", "HCV", "PBV"],
   },
   {
@@ -162,7 +90,7 @@ const DIRECT_DOCUMENTS = [
     title: "Housing Choice Voucher Administrative Plan",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/section-8/docs/22-HCVP-AdminPlan.pdf",
     source_type: "TX_HCV_PBV_ADMIN_PLAN",
-    document_role: "HCV_PBV_ADMIN_PLAN",
+    document_roles: ["HCV_ADMIN_PLAN", "PBV_ADMIN_CHAPTER"],
     programs: ["SECTION_8", "HCV", "PBV"],
   },
   {
@@ -171,7 +99,7 @@ const DIRECT_DOCUMENTS = [
     title: "2026 HCV Utility Allowance Schedules",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/section-8/docs/26-UtilityAllowances.pdf",
     source_type: "TX_2026_HCV_UTILITY_ALLOWANCE",
-    document_role: "HCV_UTILITY_ALLOWANCE_SCHEDULE",
+    document_roles: ["HCV_UTILITY_ALLOWANCE_SCHEDULE"],
     programs: ["SECTION_8", "HCV", "PBV"],
   },
   {
@@ -180,7 +108,7 @@ const DIRECT_DOCUMENTS = [
     title: "2027 HCV PHA Plan",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/section-8/docs/27-S8-PHA-Plan.pdf",
     source_type: "TX_2027_HCV_PHA_PLAN",
-    document_role: "PHA_PLAN_CURRENT",
+    document_roles: ["PHA_PLAN_CURRENT"],
     programs: ["SECTION_8", "HCV", "PBV", "HOTMA"],
   },
   {
@@ -189,175 +117,99 @@ const DIRECT_DOCUMENTS = [
     title: "Assets and HOTMA Changes",
     source_url: "https://www.tdhca.texas.gov/sites/default/files/pmcdocs/24-Assets-HOTMA-Changes.pdf",
     source_type: "TX_HOTMA_ASSET_GUIDANCE",
-    document_role: "HOTMA_GUIDANCE",
+    document_roles: ["HOTMA_GUIDANCE"],
     programs: ["LIHTC", "HOTMA"],
   },
 ];
 
-const DISCOVERY_SOURCES = [
+const TN_DISCOVERY = [
   {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    allowed_hosts: ["thda.org", "www.thda.org"],
-    url: "https://thda.org/help-for-renters/hcv-administrative-plans-policy-and-rules/",
-    targets: [
-      { pattern: /2026 Emergency Rule Changes HOTMA.*NSPIRE/i, source_type: "TN_HCV_2026_HOTMA_NSPIRE_RULE_UPDATE", document_role: "HCV_HOTMA_NSPIRE_RULE_UPDATE", programs: ["SECTION_8", "HCV", "PBV", "HOTMA"], required: true },
-      { pattern: /2025 PBV.*Single Chapter Amendment/i, source_type: "TN_PBV_2025_ADMIN_PLAN_AMENDMENT", document_role: "PBV_ADMIN_PLAN_AMENDMENT", programs: ["SECTION_8", "HCV", "PBV", "HOTMA"], required: true },
-      { pattern: /HCV 2025 5-Year PHA Plan/i, source_type: "TN_2025_HCV_PHA_PLAN", document_role: "PHA_PLAN_CURRENT", programs: ["SECTION_8", "HCV", "PBV"], required: false },
-      { pattern: /Administrative Plan Effective June 2024/i, source_type: "TN_HCV_ADMIN_PLAN", document_role: "HCV_ADMIN_PLAN", programs: ["SECTION_8", "HCV"], required: false },
-    ],
-  },
-  {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    allowed_hosts: ["thda.org", "www.thda.org"],
     url: "https://thda.org/rental-housing-partn/housing-credit-compliance/",
     targets: [
-      { pattern: /HO-0423/i, source_type: "TN_SECTION8_INCOME_VERIFICATION_FORM", document_role: "SECTION8_INCOME_VERIFICATION_FORM", programs: ["LIHTC", "SECTION_8", "HCV"], required: false },
-      { pattern: /Employment Verification/i, source_type: "TN_EMPLOYMENT_VERIFICATION_FORM", document_role: "EMPLOYMENT_VERIFICATION_FORM", programs: ["LIHTC", "HOTMA"], required: false },
-      { pattern: /Asset Self-Certification/i, source_type: "TN_ASSET_SELF_CERTIFICATION_FORM", document_role: "ASSET_CERTIFICATION_FORM", programs: ["LIHTC", "HOTMA"], required: false },
-      { pattern: /HOTMA Compliance Training/i, source_type: "TN_HOTMA_COMPLIANCE_GUIDANCE", document_role: "HOTMA_GUIDANCE", programs: ["LIHTC", "HOTMA"], required: false },
+      { pattern: /HOTMA Compliance Training/i, source_type: "TN_HOTMA_COMPLIANCE_GUIDANCE", document_roles: ["HOTMA_GUIDANCE"], programs: ["LIHTC", "HOTMA"], required: true },
+      { pattern: /HO-0423/i, source_type: "TN_SECTION8_INCOME_VERIFICATION_FORM", document_roles: ["SECTION8_INCOME_VERIFICATION_FORM"], programs: ["LIHTC", "SECTION_8", "HCV"], required: true },
+      { pattern: /^Employment Verification$/i, source_type: "TN_EMPLOYMENT_VERIFICATION_FORM", document_roles: ["EMPLOYMENT_VERIFICATION_FORM"], programs: ["LIHTC", "HOTMA"], required: true },
+      { pattern: /Asset Self-Certification Worksheet/i, source_type: "TN_ASSET_SELF_CERTIFICATION_FORM", document_roles: ["ASSET_CERTIFICATION_FORM"], programs: ["LIHTC", "HOTMA"], required: true },
     ],
   },
   {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    allowed_hosts: ["thda.org", "www.thda.org"],
     url: "https://thda.org/rental-housing-partn/thomas-documents/",
     targets: [
-      { pattern: /THOMAS Compliance Guide/i, source_type: "TN_THOMAS_COMPLIANCE_GUIDE", document_role: "LIHTC_COMPLIANCE_GUIDE", programs: ["LIHTC"], required: false },
-      { pattern: /Utility Allowance Guidance/i, source_type: "TN_LIHTC_UTILITY_ALLOWANCE_GUIDANCE", document_role: "UTILITY_ALLOWANCE_GUIDANCE", programs: ["LIHTC"], required: false },
-      { pattern: /Utility Allowance Instructions/i, source_type: "TN_LIHTC_UTILITY_ALLOWANCE_INSTRUCTIONS", document_role: "UTILITY_ALLOWANCE_INSTRUCTIONS", programs: ["LIHTC"], required: false },
-      { pattern: /2026 LIHTC Eligibility Certification/i, source_type: "TN_2026_LIHTC_ELIGIBILITY_CERTIFICATION", document_role: "LIHTC_ELIGIBILITY_CERTIFICATION_FORM", programs: ["LIHTC"], required: false },
-      { pattern: /Utility Allowance Certification and Utility Worksheet/i, source_type: "TN_UTILITY_ALLOWANCE_CERTIFICATION_FORM", document_role: "UTILITY_ALLOWANCE_FORM", programs: ["LIHTC"], required: false },
+      { pattern: /^THOMAS Compliance Guide$/i, source_type: "TN_THOMAS_COMPLIANCE_GUIDE", document_roles: ["LIHTC_COMPLIANCE_GUIDE"], programs: ["LIHTC"], required: true },
+      { pattern: /^Utility Allowance Guidance$/i, source_type: "TN_LIHTC_UTILITY_ALLOWANCE_GUIDANCE", document_roles: ["UTILITY_ALLOWANCE_GUIDANCE"], programs: ["LIHTC"], required: true },
+      { pattern: /2026 LIHTC Eligibility Certification/i, source_type: "TN_2026_LIHTC_ELIGIBILITY_CERTIFICATION", document_roles: ["LIHTC_ELIGIBILITY_CERTIFICATION_FORM"], programs: ["LIHTC"], required: false },
+      { pattern: /Utility Allowance Certification and Utility Worksheet/i, source_type: "TN_UTILITY_ALLOWANCE_CERTIFICATION_FORM", document_roles: ["UTILITY_ALLOWANCE_FORM"], programs: ["LIHTC"], required: true },
     ],
   },
   {
-    state_code: "TN",
-    agency: "Tennessee Housing Development Agency",
-    allowed_hosts: ["thda.org", "www.thda.org"],
+    url: "https://thda.org/help-for-renters/hcv-administrative-plans-policy-and-rules/",
+    targets: [
+      { pattern: /2026 Emergency Rule Changes HOTMA.*NSPIRE/i, source_type: "TN_HCV_2026_HOTMA_NSPIRE_RULE_UPDATE", document_roles: ["HCV_HOTMA_NSPIRE_RULE_UPDATE"], programs: ["SECTION_8", "HCV", "PBV", "HOTMA"], required: true },
+      { pattern: /2025 PBV.*Single Chapter Amendment/i, source_type: "TN_PBV_2025_ADMIN_PLAN_AMENDMENT", document_roles: ["PBV_ADMIN_CHAPTER", "PBV_ADMIN_PLAN_AMENDMENT"], programs: ["SECTION_8", "HCV", "PBV", "HOTMA"], required: true },
+      { pattern: /HCV 2025 5-Year PHA Plan/i, source_type: "TN_2025_HCV_PHA_PLAN", document_roles: ["PHA_PLAN_CURRENT"], programs: ["SECTION_8", "HCV", "PBV"], required: true },
+      { pattern: /Administrative Plan Effective June 2024/i, source_type: "TN_HCV_ADMIN_PLAN", document_roles: ["HCV_ADMIN_PLAN"], programs: ["SECTION_8", "HCV", "PBV"], required: true },
+    ],
+  },
+  {
     url: "https://thda.org/rental-housing-partn/utility-allowances/",
     targets: [
-      { pattern: /2026 Utility Allowance Methodology/i, source_type: "TN_2026_HCV_UTILITY_ALLOWANCE_METHODOLOGY", document_role: "HCV_UTILITY_ALLOWANCE_METHODOLOGY", programs: ["SECTION_8", "HCV", "PBV"], required: false },
-      { pattern: /Instructions for 2026 Utility Allowances/i, source_type: "TN_2026_HCV_UTILITY_ALLOWANCE_INSTRUCTIONS", document_role: "HCV_UTILITY_ALLOWANCE_INSTRUCTIONS", programs: ["SECTION_8", "HCV", "PBV"], required: false },
-    ],
-  },
-  {
-    state_code: "TX",
-    agency: "Texas Department of Housing and Community Affairs",
-    allowed_hosts: ["tdhca.texas.gov", "www.tdhca.texas.gov"],
-    url: "https://www.tdhca.texas.gov/compliance-manuals-and-rules",
-    targets: [
-      { pattern: /Subchapter F.*Searchable PDF/i, source_type: "TX_LIHTC_COMPLIANCE_RULE_SUBCHAPTER_F", document_role: "LIHTC_COMPLIANCE_RULE", programs: ["LIHTC"], required: false },
-      { pattern: /LIHTC Newsletter #\s*45/i, source_type: "TX_LIHTC_NEWSLETTER_45", document_role: "LIHTC_UTILITY_GROSS_RENT_GUIDANCE", programs: ["LIHTC"], required: false },
-    ],
-  },
-  {
-    state_code: "TX",
-    agency: "Texas Department of Housing and Community Affairs",
-    allowed_hosts: ["tdhca.texas.gov", "www.tdhca.texas.gov"],
-    url: "https://www.tdhca.texas.gov/compliance-forms",
-    targets: [
-      { pattern: /^Income Verification for Households with Section 8 Certificates/i, source_type: "TX_SECTION8_INCOME_VERIFICATION_FORM", document_role: "SECTION8_INCOME_VERIFICATION_FORM", programs: ["LIHTC", "SECTION_8", "HCV", "PBV"], required: false },
-      { pattern: /^Asset Certification of Net Family Assets/i, source_type: "TX_ASSET_CERTIFICATION_FORM", document_role: "ASSET_CERTIFICATION_FORM", programs: ["LIHTC", "HOTMA"], required: false },
-      { pattern: /^Employment Verification/i, source_type: "TX_HOTMA_EMPLOYMENT_VERIFICATION_FORM", document_role: "EMPLOYMENT_VERIFICATION_FORM", programs: ["LIHTC", "HOTMA"], required: false },
-      { pattern: /^Income Certification$/i, source_type: "TX_HOTMA_INCOME_CERTIFICATION_FORM", document_role: "INCOME_CERTIFICATION_FORM", programs: ["LIHTC", "HOTMA"], required: false },
-      { pattern: /^Income Certification Instructions/i, source_type: "TX_HOTMA_INCOME_CERTIFICATION_INSTRUCTIONS", document_role: "HOTMA_INCOME_CERTIFICATION_INSTRUCTIONS", programs: ["LIHTC", "HOTMA"], required: false },
-    ],
-  },
-  {
-    state_code: "TX",
-    agency: "Texas Department of Housing and Community Affairs",
-    allowed_hosts: ["tdhca.texas.gov", "www.tdhca.texas.gov"],
-    url: "https://www.tdhca.texas.gov/section-8-resources",
-    targets: [
-      { pattern: /^2022 Administrative Plan$/i, source_type: "TX_HCV_PBV_ADMIN_PLAN", document_role: "HCV_PBV_ADMIN_PLAN", programs: ["SECTION_8", "HCV", "PBV"], required: false },
-      { pattern: /Schedules effective 1-1-2026/i, source_type: "TX_2026_HCV_UTILITY_ALLOWANCE", document_role: "HCV_UTILITY_ALLOWANCE_SCHEDULE", programs: ["SECTION_8", "HCV", "PBV"], required: false },
-      { pattern: /2025 Annual PHA Plan Draft/i, source_type: "TX_2025_HCV_PHA_PLAN", document_role: "PHA_PLAN_CURRENT", programs: ["SECTION_8", "HCV", "PBV"], required: false },
+      { pattern: /2026 Utility Allowance Methodology/i, source_type: "TN_2026_HCV_UTILITY_ALLOWANCE_METHODOLOGY", document_roles: ["HCV_UTILITY_ALLOWANCE_METHODOLOGY"], programs: ["SECTION_8", "HCV", "PBV"], required: true },
+      { pattern: /Instructions for 2026 Utility Allowances/i, source_type: "TN_2026_HCV_UTILITY_ALLOWANCE_INSTRUCTIONS", document_roles: ["HCV_UTILITY_ALLOWANCE_INSTRUCTIONS"], programs: ["SECTION_8", "HCV", "PBV"], required: true },
     ],
   },
 ];
 
-const PROGRAM_REQUIREMENTS = {
+const REQUIREMENTS = {
   TN: {
-    LIHTC: [
-      { name: "QAP", one_of: ["LIHTC_QAP"] },
-      { name: "compliance guide", one_of: ["LIHTC_COMPLIANCE_GUIDE"] },
-      { name: "income/employment form", one_of: ["EMPLOYMENT_VERIFICATION_FORM", "LIHTC_ELIGIBILITY_CERTIFICATION_FORM"] },
-      { name: "asset certification form", one_of: ["ASSET_CERTIFICATION_FORM"] },
-    ],
-    HOTMA: [
-      { name: "HOTMA guidance", one_of: ["HOTMA_GUIDANCE", "HCV_HOTMA_NSPIRE_RULE_UPDATE"] },
-      { name: "HOTMA-era asset form", one_of: ["ASSET_CERTIFICATION_FORM"] },
-    ],
-    SECTION_8: [
-      { name: "HCV administrative plan", one_of: ["HCV_ADMIN_PLAN"] },
-      { name: "current HOTMA/NSPIRE amendment", one_of: ["HCV_HOTMA_NSPIRE_RULE_UPDATE"] },
-    ],
-    HCV: [
-      { name: "HCV administrative plan", one_of: ["HCV_ADMIN_PLAN"] },
-      { name: "current HOTMA/NSPIRE amendment", one_of: ["HCV_HOTMA_NSPIRE_RULE_UPDATE"] },
-    ],
-    PBV: [
-      { name: "PBV administrative chapter", one_of: ["PBV_ADMIN_CHAPTER"] },
-      { name: "current PBV amendment", one_of: ["PBV_ADMIN_PLAN_AMENDMENT"] },
-    ],
+    LIHTC: ["LIHTC_QAP", "LIHTC_COMPLIANCE_GUIDE", "EMPLOYMENT_VERIFICATION_FORM", "ASSET_CERTIFICATION_FORM", "UTILITY_ALLOWANCE_GUIDANCE", "UTILITY_ALLOWANCE_FORM"],
+    HOTMA: ["HOTMA_GUIDANCE", "ASSET_CERTIFICATION_FORM", "HCV_HOTMA_NSPIRE_RULE_UPDATE"],
+    SECTION_8: ["HCV_ADMIN_PLAN", "HCV_HOTMA_NSPIRE_RULE_UPDATE", "HCV_UTILITY_ALLOWANCE_METHODOLOGY"],
+    HCV: ["HCV_ADMIN_PLAN", "HCV_HOTMA_NSPIRE_RULE_UPDATE", "HCV_UTILITY_ALLOWANCE_INSTRUCTIONS"],
+    PBV: ["PBV_ADMIN_CHAPTER", "PBV_ADMIN_PLAN_AMENDMENT", "HCV_HOTMA_NSPIRE_RULE_UPDATE"],
   },
   TX: {
-    LIHTC: [
-      { name: "QAP", one_of: ["LIHTC_QAP"] },
-      { name: "compliance rule", one_of: ["LIHTC_COMPLIANCE_RULE"] },
-      { name: "income certification form", one_of: ["INCOME_CERTIFICATION_FORM"] },
-      { name: "asset certification form", one_of: ["ASSET_CERTIFICATION_FORM"] },
-    ],
-    HOTMA: [
-      { name: "HOTMA income instructions", one_of: ["HOTMA_INCOME_CERTIFICATION_INSTRUCTIONS"] },
-      { name: "HOTMA income form", one_of: ["INCOME_CERTIFICATION_FORM"] },
-      { name: "HOTMA employment form", one_of: ["EMPLOYMENT_VERIFICATION_FORM"] },
-    ],
-    SECTION_8: [
-      { name: "HCV administrative plan", one_of: ["HCV_PBV_ADMIN_PLAN"] },
-      { name: "Section 8 income verification form", one_of: ["SECTION8_INCOME_VERIFICATION_FORM"] },
-      { name: "2026 utility allowance schedule", one_of: ["HCV_UTILITY_ALLOWANCE_SCHEDULE"] },
-    ],
-    HCV: [
-      { name: "HCV administrative plan", one_of: ["HCV_PBV_ADMIN_PLAN"] },
-      { name: "2026 utility allowance schedule", one_of: ["HCV_UTILITY_ALLOWANCE_SCHEDULE"] },
-    ],
-    PBV: [
-      { name: "PBV policies within HCV administrative plan", one_of: ["HCV_PBV_ADMIN_PLAN"] },
-      { name: "current PHA plan confirming PBV activity", one_of: ["PHA_PLAN_CURRENT"] },
-    ],
+    LIHTC: ["LIHTC_QAP", "LIHTC_COMPLIANCE_RULE", "INCOME_CERTIFICATION_FORM", "ASSET_CERTIFICATION_FORM"],
+    HOTMA: ["HOTMA_INCOME_CERTIFICATION_INSTRUCTIONS", "INCOME_CERTIFICATION_FORM", "EMPLOYMENT_VERIFICATION_FORM"],
+    SECTION_8: ["HCV_ADMIN_PLAN", "SECTION8_INCOME_VERIFICATION_FORM", "HCV_UTILITY_ALLOWANCE_SCHEDULE"],
+    HCV: ["HCV_ADMIN_PLAN", "HCV_UTILITY_ALLOWANCE_SCHEDULE"],
+    PBV: ["PBV_ADMIN_CHAPTER", "PHA_PLAN_CURRENT"],
   },
 };
 
-function allowed(host, allowedHosts) {
-  const value = host.toLowerCase();
-  return allowedHosts.some((item) => value === item || value.endsWith(`.${item}`));
+function cleanLabel(value) {
+  return String(value ?? "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&#(?:8211|x2013);|&ndash;/gi, "–")
+    .replace(/&#(?:8212|x2014);|&mdash;/gi, "—")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-function allowedHostsForState(stateCode) {
-  return stateCode === "TN"
-    ? ["thda.org", "www.thda.org"]
-    : ["tdhca.texas.gov", "www.tdhca.texas.gov"];
+function allowed(stateCode, url) {
+  const parsed = new URL(url);
+  return parsed.protocol === "https:" && STATE_HOSTS[stateCode].has(parsed.hostname.toLowerCase());
 }
 
-function validateFinalUrl(url, allowedHosts) {
-  const final = new URL(url);
-  if (final.protocol !== "https:" || !allowed(final.hostname, allowedHosts)) {
-    throw new Error(`redirected_to_unapproved_host:${final.hostname}`);
+function linksFromHtml(html, baseUrl, stateCode) {
+  const links = [];
+  const seen = new Set();
+  const re = /<a\b[^>]*?href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
+  for (const match of html.matchAll(re)) {
+    const label = cleanLabel(match[4]);
+    const raw = String(match[1] ?? match[2] ?? match[3] ?? "").replace(/&amp;/gi, "&").trim();
+    try {
+      const url = new URL(raw, baseUrl).toString();
+      if (!allowed(stateCode, url) || seen.has(url)) continue;
+      seen.add(url);
+      links.push({ label, url });
+    } catch {}
   }
+  return links;
 }
 
-function normalizeContentType(value) {
-  return String(value ?? "").split(";", 1)[0].trim().toLowerCase();
-}
-
-function isHtmlContentType(contentType) {
-  return contentType === "text/html" || contentType === "application/xhtml+xml";
-}
-
-function documentMagic(bytes) {
+function magic(bytes) {
   const head = Buffer.from(bytes.subarray(0, 8));
   if (head.subarray(0, 5).toString("ascii") === "%PDF-") return "pdf";
   if (head.subarray(0, 2).toString("ascii") === "PK") return "zip_ooxml";
@@ -365,136 +217,60 @@ function documentMagic(bytes) {
   return null;
 }
 
-function isDocumentResponse(response) {
-  if (isHtmlContentType(response.contentType)) return false;
-  if (DOCUMENT_CONTENT_TYPES.has(response.contentType)) return true;
-  return documentMagic(response.bytes) !== null;
-}
-
-async function curlExact(url, allowedHosts) {
-  const tempDirectory = await mkdtemp(join(tmpdir(), "certivoiq-tn-tx-"));
-  const output = join(tempDirectory, "response.bin");
-  try {
-    const { stdout } = await execFileAsync("curl", [
-      "--location", "--fail", "--silent", "--show-error", "--compressed",
-      "--max-time", "40", "--proto", "=https",
-      "--user-agent", "Mozilla/5.0 CertivoIQ-TN-TX-Document-Evidence/2.0",
-      "--header", "Accept: application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/html,application/xhtml+xml,*/*;q=0.5",
-      "--header", "Accept-Language: en-US,en;q=0.9",
-      "--output", output,
-      "--write-out", "%{url_effective}\n%{http_code}\n%{content_type}",
-      url,
-    ], { maxBuffer: 1024 * 1024 });
-    const [finalUrl, statusText, rawContentType = ""] = stdout.trim().split("\n");
-    validateFinalUrl(finalUrl, allowedHosts);
-    const status = Number(statusText);
-    if (!Number.isInteger(status) || status < 200 || status > 299) throw new Error(`http_status:${statusText}`);
-    const file = await readFile(output);
-    const bytes = new Uint8Array(file.buffer, file.byteOffset, file.byteLength);
-    if (!bytes.byteLength || bytes.byteLength > MAX_BYTES) throw new Error("invalid_document_size");
-    return {
-      bytes,
-      finalUrl,
-      contentType: normalizeContentType(rawContentType),
-      etag: null,
-      lastModified: null,
-      transport: "curl_fallback",
-    };
-  } finally {
-    await rm(tempDirectory, { recursive: true, force: true });
-  }
-}
-
-async function fetchExact(url, allowedHosts) {
+async function fetchBytes(stateCode, url, accept = "application/pdf,application/octet-stream,*/*;q=0.8") {
+  if (!allowed(stateCode, url)) throw new Error(`unapproved_source_host:${new URL(url).hostname}`);
   let lastError;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
       const response = await fetch(url, {
         redirect: "follow",
+        signal: AbortSignal.timeout(30000),
         headers: {
-          "user-agent": "Mozilla/5.0 CertivoIQ-TN-TX-Document-Evidence/2.0",
-          accept: "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/html,application/xhtml+xml,*/*;q=0.5",
-          "accept-language": "en-US,en;q=0.9",
+          "user-agent": "Mozilla/5.0 CertivoIQ-TN-TX-Document-Evidence/3.0",
+          accept,
           "cache-control": "no-cache",
         },
-        signal: AbortSignal.timeout(30_000),
       });
       if (!response.ok) throw new Error(`http_status:${response.status}`);
-      validateFinalUrl(response.url, allowedHosts);
+      if (!allowed(stateCode, response.url)) throw new Error(`redirected_to_unapproved_host:${new URL(response.url).hostname}`);
       const bytes = new Uint8Array(await response.arrayBuffer());
       if (!bytes.byteLength || bytes.byteLength > MAX_BYTES) throw new Error("invalid_document_size");
       return {
         bytes,
-        finalUrl: response.url,
-        contentType: normalizeContentType(response.headers.get("content-type")),
+        final_url: response.url,
+        content_type: String(response.headers.get("content-type") ?? "").split(";", 1)[0].toLowerCase(),
         etag: response.headers.get("etag"),
-        lastModified: response.headers.get("last-modified"),
-        transport: `fetch_attempt_${attempt}`,
+        last_modified: response.headers.get("last-modified"),
+        capture_transport: `fetch_attempt_${attempt}`,
       };
     } catch (error) {
       lastError = error;
-      if (attempt < 2) await delay(800 * attempt);
     }
   }
-  try {
-    return await curlExact(url, allowedHosts);
-  } catch (curlError) {
-    throw new Error(`${lastError instanceof Error ? lastError.message : String(lastError)}; curl:${curlError instanceof Error ? curlError.message : String(curlError)}`);
-  }
-}
-
-function cleanLabel(value) {
-  return String(value ?? "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&#8211;|&ndash;/gi, "–")
-    .replace(/&#8212;|&mdash;/gi, "—")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function linksFromHtml(html, baseUrl, allowedHosts) {
-  const out = [];
-  const seen = new Set();
-  const re = /<a\b[^>]*?href\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))[^>]*>([\s\S]*?)<\/a>/gi;
-  for (const match of html.matchAll(re)) {
-    const label = cleanLabel(match[4]);
-    const raw = String(match[1] ?? match[2] ?? match[3] ?? "").replace(/&amp;/gi, "&").trim();
-    try {
-      const target = new URL(raw, baseUrl);
-      target.hash = "";
-      if (target.protocol !== "https:" || !allowed(target.hostname, allowedHosts) || seen.has(target.href)) continue;
-      seen.add(target.href);
-      out.push({ label, url: target.href });
-    } catch {}
-  }
-  return out;
-}
-
-function sha256(bytes) {
-  return createHash("sha256").update(bytes).digest("hex");
+  throw lastError;
 }
 
 function documentRecord(spec, response, discoveryUrl = null) {
+  const documentMagic = magic(response.bytes);
+  if (!documentMagic) throw new Error("response_is_not_a_supported_document");
   return {
     state_code: spec.state_code,
     agency: spec.agency,
     document_title: spec.title,
     source_type: spec.source_type,
-    document_role: spec.document_role,
+    document_roles: spec.document_roles,
     programs: spec.programs,
     source_url: spec.source_url,
-    final_url: response.finalUrl,
+    final_url: response.final_url,
     discovery_url: discoveryUrl,
-    content_type: response.contentType || null,
+    content_type: response.content_type || null,
     byte_size: response.bytes.byteLength,
-    source_sha256: sha256(response.bytes),
-    document_magic: documentMagic(response.bytes),
+    source_sha256: createHash("sha256").update(response.bytes).digest("hex"),
+    document_magic: documentMagic,
     retrieved_at: new Date().toISOString(),
     etag: response.etag,
-    last_modified: response.lastModified,
-    capture_transport: response.transport,
+    last_modified: response.last_modified,
+    capture_transport: response.capture_transport,
     capture_status: "captured_unvalidated",
     evidence_kind: "exact_document_bytes",
     validation_evidence_eligible: true,
@@ -504,152 +280,99 @@ function documentRecord(spec, response, discoveryUrl = null) {
   };
 }
 
-function discoveryRecord(source, response) {
-  return {
-    state_code: source.state_code,
-    agency: source.agency,
-    discovery_url: source.url,
-    final_url: response.finalUrl,
-    content_type: response.contentType || null,
-    byte_size: response.bytes.byteLength,
-    source_sha256: sha256(response.bytes),
-    retrieved_at: new Date().toISOString(),
-    capture_transport: response.transport,
-    evidence_kind: "discovery_page_only",
-    validation_evidence_eligible: false,
-    compliance_activation_allowed: false,
-  };
-}
-
-async function captureDocument(spec, discoveryUrl, failures) {
-  const allowedHosts = allowedHostsForState(spec.state_code);
-  try {
-    const response = await fetchExact(spec.source_url, allowedHosts);
-    if (!isDocumentResponse(response)) {
-      failures.push({ state_code: spec.state_code, source_url: spec.source_url, discovery_url: discoveryUrl, source_type: spec.source_type, error: "matched_resource_is_not_a_downloadable_document" });
-      return null;
-    }
-    return documentRecord(spec, response, discoveryUrl);
-  } catch (error) {
-    failures.push({ state_code: spec.state_code, source_url: spec.source_url, discovery_url: discoveryUrl, source_type: spec.source_type, error: error instanceof Error ? error.message : String(error) });
-    return null;
-  }
-}
-
-async function discoverTargetDocument(source, target, link, failures, depth = 0) {
-  try {
-    const response = await fetchExact(link.url, source.allowed_hosts);
-    if (isDocumentResponse(response)) {
-      return documentRecord({
-        state_code: source.state_code,
-        agency: source.agency,
-        title: link.label || target.source_type,
-        source_url: link.url,
-        source_type: target.source_type,
-        document_role: target.document_role,
-        programs: target.programs,
-      }, response, source.url);
-    }
-    if (!isHtmlContentType(response.contentType) || depth >= MAX_DISCOVERY_DEPTH) {
-      failures.push({ state_code: source.state_code, source_url: link.url, discovery_url: source.url, source_type: target.source_type, error: "matched_resource_did_not_resolve_to_document" });
-      return null;
-    }
-    const nestedLinks = linksFromHtml(Buffer.from(response.bytes).toString("utf8"), response.finalUrl, source.allowed_hosts);
-    for (const nested of nestedLinks) {
-      if (!target.pattern.test(nested.label)) continue;
-      const found = await discoverTargetDocument(source, target, nested, failures, depth + 1);
-      if (found) return found;
-    }
-    failures.push({ state_code: source.state_code, source_url: link.url, discovery_url: source.url, source_type: target.source_type, error: "nested_document_not_found" });
-    return null;
-  } catch (error) {
-    failures.push({ state_code: source.state_code, source_url: link.url, discovery_url: source.url, source_type: target.source_type, error: error instanceof Error ? error.message : String(error) });
-    return null;
-  }
-}
-
-function dedupeDocuments(documents) {
-  const byIdentity = new Map();
-  for (const document of documents) {
-    const key = `${document.state_code}|${document.source_type}|${document.source_sha256}`;
-    if (!byIdentity.has(key)) byIdentity.set(key, document);
-  }
-  return [...byIdentity.values()];
-}
-
-function buildCoverage(documents) {
-  const coverage = [];
-  for (const [stateCode, programRequirements] of Object.entries(PROGRAM_REQUIREMENTS)) {
-    for (const [program, requirements] of Object.entries(programRequirements)) {
-      const stateProgramDocs = documents.filter((doc) => doc.state_code === stateCode && doc.programs.includes(program));
-      const roles = new Set(stateProgramDocs.map((doc) => doc.document_role));
-      const missing = requirements
-        .filter((requirement) => !requirement.one_of.some((role) => roles.has(role)))
-        .map((requirement) => ({ requirement: requirement.name, accepted_roles: requirement.one_of }));
-      coverage.push({
-        state_code: stateCode,
-        program,
-        documents: stateProgramDocs.length,
-        document_roles: [...roles].sort(),
-        gaps: missing,
-        document_level_validation_ready: missing.length === 0,
-        compliance_activation_allowed: false,
-      });
-    }
-  }
-  return coverage;
-}
-
 const documents = [];
 const discoveryPages = [];
 const failures = [];
 
 for (const spec of DIRECT_DOCUMENTS) {
-  const captured = await captureDocument(spec, null, failures);
-  if (captured) documents.push(captured);
+  try {
+    documents.push(documentRecord(spec, await fetchBytes(spec.state_code, spec.source_url)));
+  } catch (error) {
+    failures.push({ state_code: spec.state_code, source_type: spec.source_type, source_url: spec.source_url, error: error instanceof Error ? error.message : String(error) });
+  }
 }
 
-for (const source of DISCOVERY_SOURCES) {
+for (const source of TN_DISCOVERY) {
   let response;
   try {
-    response = await fetchExact(source.url, source.allowed_hosts);
+    response = await fetchBytes("TN", source.url, "text/html,application/xhtml+xml,*/*;q=0.8");
   } catch (error) {
-    failures.push({ state_code: source.state_code, source_url: source.url, error: error instanceof Error ? error.message : String(error) });
+    failures.push({ state_code: "TN", source_url: source.url, error: error instanceof Error ? error.message : String(error) });
     continue;
   }
-  if (!isHtmlContentType(response.contentType)) {
-    failures.push({ state_code: source.state_code, source_url: source.url, error: "discovery_source_is_not_html" });
-    continue;
-  }
-  discoveryPages.push(discoveryRecord(source, response));
-  const links = linksFromHtml(Buffer.from(response.bytes).toString("utf8"), response.finalUrl, source.allowed_hosts);
+  const html = Buffer.from(response.bytes).toString("utf8");
+  discoveryPages.push({
+    state_code: "TN",
+    agency: "Tennessee Housing Development Agency",
+    discovery_url: source.url,
+    final_url: response.final_url,
+    byte_size: response.bytes.byteLength,
+    source_sha256: createHash("sha256").update(response.bytes).digest("hex"),
+    retrieved_at: new Date().toISOString(),
+    evidence_kind: "discovery_page_only",
+    validation_evidence_eligible: false,
+    compliance_activation_allowed: false,
+  });
+  const links = linksFromHtml(html, response.final_url, "TN");
   for (const target of source.targets) {
-    const matches = links.filter((link) => target.pattern.test(link.label));
-    if (!matches.length) {
-      if (target.required) failures.push({ state_code: source.state_code, source_url: source.url, source_type: target.source_type, error: "required_document_link_not_found" });
+    const link = links.find((candidate) => target.pattern.test(candidate.label));
+    if (!link) {
+      if (target.required) failures.push({ state_code: "TN", source_type: target.source_type, source_url: source.url, error: "required_document_link_not_found" });
       continue;
     }
-    let captured = null;
-    for (const link of matches) {
-      captured = await discoverTargetDocument(source, target, link, failures);
-      if (captured) break;
+    try {
+      const spec = {
+        state_code: "TN",
+        agency: "Tennessee Housing Development Agency",
+        title: link.label,
+        source_url: link.url,
+        source_type: target.source_type,
+        document_roles: target.document_roles,
+        programs: target.programs,
+      };
+      documents.push(documentRecord(spec, await fetchBytes("TN", link.url), source.url));
+    } catch (error) {
+      failures.push({ state_code: "TN", source_type: target.source_type, source_url: link.url, discovery_url: source.url, error: error instanceof Error ? error.message : String(error) });
     }
-    if (captured) documents.push(captured);
   }
 }
 
-const finalDocuments = dedupeDocuments(documents);
-const coverage = buildCoverage(finalDocuments);
-const coverageGaps = coverage.filter((item) => !item.document_level_validation_ready);
-const requiredDiscoveryFailures = failures.filter((failure) =>
+const unique = new Map();
+for (const doc of documents) {
+  const key = `${doc.state_code}|${doc.source_type}|${doc.source_sha256}`;
+  if (!unique.has(key)) unique.set(key, doc);
+}
+const finalDocuments = [...unique.values()];
+
+const coverage = [];
+for (const [stateCode, programs] of Object.entries(REQUIREMENTS)) {
+  for (const [program, requiredRoles] of Object.entries(programs)) {
+    const relevant = finalDocuments.filter((doc) => doc.state_code === stateCode && doc.programs.includes(program));
+    const roles = new Set(relevant.flatMap((doc) => doc.document_roles));
+    const missing = requiredRoles.filter((role) => !roles.has(role));
+    coverage.push({
+      state_code: stateCode,
+      program,
+      documents: relevant.length,
+      document_roles: [...roles].sort(),
+      gaps: missing,
+      document_level_validation_ready: missing.length === 0,
+      compliance_activation_allowed: false,
+    });
+  }
+}
+
+const requiredFailures = failures.filter((failure) =>
   failure.error === "required_document_link_not_found" ||
-  ["TN_HCV_2026_HOTMA_NSPIRE_RULE_UPDATE", "TN_PBV_2025_ADMIN_PLAN_AMENDMENT"].includes(failure.source_type),
+  String(failure.source_type ?? "").startsWith("TN_")
 );
+const coverageGaps = coverage.filter((item) => !item.document_level_validation_ready);
 
 await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(outputPath, JSON.stringify({
   generated_at: new Date().toISOString(),
-  evidence_policy: "Only downloadable document bytes are validation evidence. HTML landing pages are discovery evidence only and cannot satisfy a compliance document requirement.",
+  evidence_policy: "Only exact downloadable document bytes satisfy TN/TX state validation. THDA CloudFront attachments are accepted only from the exact distribution host currently linked by official THDA pages. HTML pages remain discovery-only.",
+  thda_attachment_host: THDA_ATTACHMENT_HOST,
   documents: finalDocuments,
   discovery_pages: discoveryPages,
   failures,
@@ -659,10 +382,9 @@ await writeFile(outputPath, JSON.stringify({
 console.log(JSON.stringify({
   outputPath,
   documents: finalDocuments.length,
-  discovery_pages: discoveryPages.length,
   failures: failures.length,
   coverage_gaps: coverageGaps.map((item) => `${item.state_code}:${item.program}`),
-  required_discovery_failures: requiredDiscoveryFailures.length,
+  required_failures: requiredFailures.length,
 }, null, 2));
 
-if (coverageGaps.length || requiredDiscoveryFailures.length) process.exitCode = 2;
+if (coverageGaps.length || requiredFailures.length) process.exitCode = 2;
