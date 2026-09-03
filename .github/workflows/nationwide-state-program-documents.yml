@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - scripts/crawl-nationwide-state-program-documents.mjs
+      - scripts/crawl-state-required-document-overlays.mjs
       - scripts/crawl-zero-evidence-state-documents.mjs
       - scripts/crawl-sc-sd-exact-documents.mjs
       - src/lib/nationwide-state-source-discovery.json
@@ -19,7 +20,7 @@ concurrency:
 jobs:
   capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,5 +46,16 @@ jobs:
         with:
           name: nationwide-state-program-documents
           path: artifacts/nationwide-state-program-documents.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Crawl required state program overlays and official attachment links
+        if: always()
+        run: node scripts/crawl-state-required-document-overlays.mjs
+      - name: Upload required state overlay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-required-document-overlays
+          path: artifacts/state-required-document-overlays.json
           if-no-files-found: error
           retention-days: 30
