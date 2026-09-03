@@ -190,7 +190,7 @@ function NavLinks({ onNavigate, dashboardMode }: { onNavigate?: () => void; dash
       ]
     : workspaceItems;
 
-  return <nav><p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">PHA workspace</p><p className="mb-3 px-3 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40">{phaRole ? phaRole.replaceAll("_", " ") : "Role assignment required"}</p><div className="space-y-1">{PHA_SECTION_META.map((section) => {
+  return <nav aria-label="PHA workspace navigation" data-navigation-version="grouped-v1"><p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">PHA workspace</p><p className="mb-3 px-3 text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/40">{phaRole ? phaRole.replaceAll("_", " ") : "Role assignment required"}</p><div className="space-y-1">{PHA_SECTION_META.map((section) => {
     const sectionItems = items.filter((item) => item.section === section.id);
     if (sectionItems.length === 0) return null;
     return <PhaNavSectionGroup key={section.id} label={section.label} icon={section.icon} items={sectionItems} pathname={pathname} onNavigate={onNavigate} initiallyOpen={section.id === "command"} />;
