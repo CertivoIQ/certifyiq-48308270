@@ -5,6 +5,7 @@ on:
     paths:
       - scripts/crawl-nationwide-state-program-documents.mjs
       - scripts/crawl-zero-evidence-state-documents.mjs
+      - scripts/crawl-sc-sd-exact-documents.mjs
       - src/lib/nationwide-state-source-discovery.json
       - .github/workflows/nationwide-state-program-documents.yml
       - supabase/migrations/20260903202000_nationwide_exact_document_evidence_correction.sql
@@ -24,14 +25,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Crawl pinned exact documents for zero-evidence states
-        run: node scripts/crawl-zero-evidence-state-documents.mjs
-      - name: Upload zero-evidence-state exact documents
+      - name: Capture repaired South Carolina and South Dakota exact manuals
+        run: node scripts/crawl-sc-sd-exact-documents.mjs
+      - name: Upload SC/SD exact documents
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zero-evidence-state-documents
-          path: artifacts/zero-evidence-state-documents.json
+          name: sc-sd-exact-documents
+          path: artifacts/sc-sd-exact-documents.json
           if-no-files-found: error
           retention-days: 30
       - name: Crawl exact nationwide program documents
