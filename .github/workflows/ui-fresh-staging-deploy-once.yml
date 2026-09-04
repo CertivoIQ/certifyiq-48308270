@@ -108,21 +108,17 @@ jobs:
           set -euo pipefail
           timeout 180s bunx --bun wrangler@4.128.0 deploy --config wrangler.fresh-staging.json
 
-      - name: Ensure fresh Worker workers.dev is enabled
+      - name: Confirm fresh Worker through exact settings endpoint
         shell: bash
         run: |
           set -euo pipefail
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/workers.json
-          jq -e --arg w "$TARGET_WORKER" 'any(.result[]; .id==$w)' /tmp/workers.json >/dev/null
-          status="$(curl -sS -o /tmp/subdomain.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain")"
-          if [ "$status" = 200 ]; then
-            enabled="$(jq -r '.result.enabled // false' /tmp/subdomain.json)"
-            if [ "$enabled" != true ]; then
-              curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data '{"enabled":true,"previews_enabled":true}' "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain" >/dev/null
-            fi
-          fi
-          echo 'PASS: fresh staging Worker exists and workers.dev check completed.'
+          code="$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
+          echo "Exact Worker settings HTTP $code"
+          [ "$code" = 200 ]
+          jq -e '.success == true' /tmp/settings.json >/dev/null
+          jq -e 'any(.result.bindings[]?; .name == "ASSETS")' /tmp/settings.json >/dev/null
+          echo 'PASS: exact fresh staging Worker and ASSETS binding confirmed.'
 
       - name: Bind runtime secrets to fresh staging Worker
         shell: bash
