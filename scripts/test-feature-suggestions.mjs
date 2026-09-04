@@ -46,9 +46,10 @@ test("private product email route is fixed server-side and registered", () => {
 });
 
 test("all workspace and CRM roles receive suggestion access", () => {
-  assert.equal((appShell.match(/to: "\/feature-suggestions"/g) ?? []).length, 2);
-  assert.match(appShell, /label: "Suggest a Feature", icon: Lightbulb, key: "support"/);
-  assert.match(appShell, /key === "command" \|\| key === "tasks" \|\| key === "support"/);
+  assert.equal((appShell.match(/to: "\/feature-suggestions"/g) ?? []).length, 1);
+  assert.match(appShell, /const HELP_NAV/);
+  assert.match(appShell, /label: "Suggest a Feature", icon: Lightbulb/);
+  assert.match(appShell, /<NavGroup label="Help"[^>]*items=\{HELP_NAV\}/);
   assert.match(crmShell, /<Link to="\/feature-suggestions">/);
   assert.match(route, /title="Suggest a Feature"/);
   assert.match(route, /Your account, workspace, and role are attached automatically/);
