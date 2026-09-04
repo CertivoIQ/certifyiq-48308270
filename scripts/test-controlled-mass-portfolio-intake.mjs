@@ -46,7 +46,7 @@ test("single-document intake never sends a PDF through the CSV parser", () => {
   assert.match(intakeUi, /intake_type: "certification_documents"/);
   assert.match(intakeUi, /review_queue_status: "not_queued"/);
   assert.match(intakeUi, /status: "completed"/);
-  assert.match(intakeUi, /supabase\.storage\.from\("certification-imports"\)\.upload\(storagePath, file, \{ upsert: false \}\)/);
+  assert.match(intakeUi, /uploadCertificationFile\("certification-imports", storagePath, file/);
   assert.doesNotMatch(intakeUi.slice(intakeUi.indexOf("async function uploadSingleDocument"), intakeUi.indexOf("async function importPortfolio")), /parsePortfolioIntakeCsv/);
 });
 
@@ -83,3 +83,5 @@ test("property intake and certification queue share the production workflow", ()
   assert.match(review, /certification_type, jurisdiction, program_codes/);
   assert.match(review, /portfolio_tenant_profiles\(household_name\)/);
 });
+
+
