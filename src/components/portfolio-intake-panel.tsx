@@ -18,6 +18,10 @@ type Db = any;
 
 const singleDocumentTypes = ".pdf,.png,.jpg,.jpeg,.webp";
 
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
 export function PortfolioIntakePanel() {
   const queryClient = useQueryClient();
   const createIntake = useServerFn(createPortfolioIntake);
@@ -29,9 +33,22 @@ export function PortfolioIntakePanel() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
 
   const summary = useQuery({ queryKey: ["portfolio-intake-summary"], queryFn: () => listSummary() });
   const totalBytes = useMemo(() => documents.reduce((sum, file) => sum + file.size, 0), [documents]);
+
+  function setStage(percent: number, label: string) {
+    setProgressPercent(clampPercent(percent));
+    setProgressLabel(label);
+  }
+
+  function resetProgress() {
+    setProgress({ current: 0, total: 0 });
+    setProgressPercent(0);
+    setProgressLabel("");
+  }
 
   function downloadTemplate() {
     const url = URL.createObjectURL(new Blob([PORTFOLIO_IMPORT_TEMPLATE], { type: "text/csv;charset=utf-8" }));
@@ -55,6 +72,7 @@ export function PortfolioIntakePanel() {
     }
     setManifest(file);
     setMessage("");
+    resetProgress();
   }
 
   async function uploadSingleDocument() {
@@ -63,18 +81,22 @@ export function PortfolioIntakePanel() {
     setBusy(true);
     setMessage(`Preparing ${file.name} for secure single-document intake…`);
     setProgress({ current: 1, total: 1 });
+    setStage(1, "Starting secure intake…");
 
     let jobId: string | null = null;
     let storagePath: string | null = null;
+    let completed = false;
     try {
       if (file.size > MAX_UPLOAD_BYTES) throw new Error(`${file.name} exceeds the 50 MB per-file limit.`);
       if (!isOcrSupportedFile(file)) throw new Error("Single-document intake accepts PDF, PNG, JPEG, or WEBP files only.");
 
+      setStage(3, "Checking your secure session…");
       const { data: authData } = await supabase.auth.getUser();
       const user = authData.user;
       if (!user) throw new Error("Please sign in before uploading a certification document.");
       const db = supabase as unknown as Db;
 
+      setStage(5, "Creating the intake record…");
       const { data: job, error: jobError } = await db.from("certification_import_jobs").insert({
         user_id: user.id,
         created_by: user.id,
@@ -87,16 +109,24 @@ export function PortfolioIntakePanel() {
       jobId = job.id;
 
       storagePath = `${user.id}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      setStage(8, "Uploading the certification securely…");
       const { error: uploadError } = await supabase.storage.from("certification-imports").upload(storagePath, file, { upsert: false });
       if (uploadError) throw uploadError;
+      setStage(15, "Secure upload complete. Reading the certification…");
 
-      const prepared = await prepareCertificationForReview(file, (status) => setMessage(`${file.name}: ${status}`));
+      const prepared = await prepareCertificationForReview(file, (status, preparationPercent) => {
+        const overall = 15 + (clampPercent(preparationPercent) / 100) * 75;
+        setStage(overall, status);
+        setMessage(`${file.name}: ${status}`);
+      });
       if (prepared.sidecar) {
+        setStage(92, "Saving extracted text and page provenance…");
         const { error: sidecarError } = await supabase.storage.from("certification-imports")
           .upload(sidecarPathFor(storagePath), new Blob([JSON.stringify(prepared.sidecar)], { type: "application/json" }), { upsert: true });
         if (sidecarError) throw sidecarError;
       }
 
+      setStage(96, "Recording the certification in CertivoIQ…");
       const { error: itemError } = await db.from("certification_import_items").insert({
         job_id: job.id,
         user_id: user.id,
@@ -110,6 +140,7 @@ export function PortfolioIntakePanel() {
       });
       if (itemError) throw itemError;
 
+      setStage(98, "Finalizing intake…");
       const { error: completeError } = await db.from("certification_import_jobs").update({
         status: "completed",
         processed_files: 1,
@@ -118,7 +149,9 @@ export function PortfolioIntakePanel() {
       }).eq("id", job.id).eq("user_id", user.id);
       if (completeError) throw completeError;
 
+      completed = true;
       setDocuments([]);
+      setStage(100, "Complete");
       setMessage(`Single-document intake complete: ${file.name} is stored securely and was not queued for compliance review. Add a CSV only when you want documents mapped to property, unit, and tenant profiles.`);
       await queryClient.invalidateQueries({ queryKey: ["certification-items"] });
     } catch (error) {
@@ -140,6 +173,10 @@ export function PortfolioIntakePanel() {
     } finally {
       setBusy(false);
       setProgress({ current: 0, total: 0 });
+      if (!completed) {
+        setProgressPercent(0);
+        setProgressLabel("");
+      }
     }
   }
 
@@ -148,8 +185,10 @@ export function PortfolioIntakePanel() {
     setBusy(true);
     setMessage("Validating property, unit, tenant, and document mappings…");
     setProgress({ current: 0, total: documents.length });
+    setStage(1, "Validating portfolio mappings…");
     let jobId: string | null = null;
     let uploaded = 0;
+    let completed = false;
     try {
       const rows = parsePortfolioIntakeCsv(await manifest.text());
       if ((rows.length > 1 || documents.length > 1) && !hasPaidSubscription) {
@@ -165,6 +204,7 @@ export function PortfolioIntakePanel() {
       const unmatched = documents.filter((file) => !referencedNames.has(file.name.toLowerCase()));
       if (unmatched.length) throw new Error(`Selected documents must be assigned in document_file_name: ${unmatched.map((file) => file.name).join(", ")}`);
 
+      setStage(5, "Creating property, unit, and tenant mappings…");
       const intake = await createIntake({ data: {
         rows,
         documentCount: documents.length,
@@ -182,12 +222,19 @@ export function PortfolioIntakePanel() {
         const mapping = mappingByName.get(file.name.toLowerCase());
         if (!mapping) throw new Error(`No tenant mapping was created for ${file.name}.`);
         setProgress({ current: sequence + 1, total: documents.length });
+        const fileBase = 8 + (sequence / Math.max(1, documents.length)) * 82;
+        const fileSpan = 82 / Math.max(1, documents.length);
+        setStage(fileBase, `Uploading ${sequence + 1} of ${documents.length}: ${file.name}`);
         setMessage(`Uploading ${sequence + 1} of ${documents.length}: ${file.name}`);
         const path = `${user.id}/${intake.jobId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
         const { error: uploadError } = await supabase.storage.from("certification-imports").upload(path, file, { upsert: false });
         if (uploadError) throw uploadError;
         if (isOcrSupportedFile(file)) {
-          const prepared = await prepareCertificationForReview(file, (status) => setMessage(`${file.name}: ${status}`));
+          const prepared = await prepareCertificationForReview(file, (status, preparationPercent) => {
+            const overall = fileBase + fileSpan * 0.1 + fileSpan * 0.75 * (clampPercent(preparationPercent) / 100);
+            setStage(overall, `${file.name}: ${status}`);
+            setMessage(`${file.name}: ${status}`);
+          });
           if (prepared.sidecar) {
             const { error: sidecarError } = await supabase.storage.from("certification-imports")
               .upload(sidecarPathFor(path), new Blob([JSON.stringify(prepared.sidecar)], { type: "application/json" }), { upsert: true });
@@ -210,11 +257,15 @@ export function PortfolioIntakePanel() {
         });
         if (documentError) throw documentError;
         uploaded += 1;
+        setStage(fileBase + fileSpan, `Completed document ${sequence + 1} of ${documents.length}.`);
       }
 
+      setStage(95, "Finalizing portfolio intake…");
       await finalizeIntake({ data: { jobId: intake.jobId, itemCount: uploaded, errorCount: 0 } });
       setManifest(null);
       setDocuments([]);
+      completed = true;
+      setStage(100, "Complete");
       setMessage(`Intake complete: ${intake.propertyCount} properties, ${intake.unitCount} units, ${intake.tenantCount} tenant profiles, and ${uploaded} documents. Nothing was queued for compliance review.`);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["portfolio-intake-summary"] }),
@@ -227,6 +278,10 @@ export function PortfolioIntakePanel() {
       setMessage(error instanceof Error ? error.message : "The portfolio intake could not be completed.");
     } finally {
       setBusy(false);
+      if (!completed) {
+        setProgressPercent(0);
+        setProgressLabel("");
+      }
     }
   }
 
@@ -271,10 +326,11 @@ export function PortfolioIntakePanel() {
         <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center hover:bg-muted/30">
           <UploadCloud className="size-7 text-muted-foreground" />
           <span className="mt-2 font-medium">{hasPaidSubscription ? "Choose certification documents" : "Choose one certification document"}</span>
-          <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · 50 MB each · one file needs no CSV</span>
+          <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · up to 50 scanned pages · 50 MB each · one file needs no CSV</span>
           <input className="sr-only" type="file" multiple={hasPaidSubscription} accept={singleDocumentTypes} onChange={(event) => {
             setDocuments(Array.from(event.target.files ?? []));
             setMessage("");
+            resetProgress();
           }} />
         </label>
       </div>
@@ -282,10 +338,35 @@ export function PortfolioIntakePanel() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-sm">
         <span>{documents.length} document{documents.length === 1 ? "" : "s"} · {(totalBytes / 1024 / 1024).toFixed(1)} MB</span>
         <button type="button" disabled={!canSubmit} onClick={submitIntake} className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50">
-          {busy ? "Importing…" : manifest ? "Import profiles & documents" : documents.length === 1 ? "Upload single document" : "Import profiles & documents"}
+          {busy ? "Processing…" : manifest ? "Import profiles & documents" : documents.length === 1 ? "Upload single document" : "Import profiles & documents"}
         </button>
       </div>
-      {busy && progress.total > 0 ? <p className="mt-2 text-xs text-muted-foreground">Document {progress.current} of {progress.total}</p> : null}
+
+      {(busy || progressPercent === 100) && progressPercent > 0 ? (
+        <div className="mt-3 rounded-lg border bg-background p-3" aria-live="polite">
+          <div className="flex items-center justify-between gap-3 text-xs">
+            <span className="truncate text-muted-foreground">{progressLabel || "Processing certification…"}</span>
+            <span className="font-semibold tabular-nums text-foreground">{progressPercent}%</span>
+          </div>
+          <div
+            className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-label="Certification intake progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progressPercent}
+          >
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          {busy && progress.total > 1 ? (
+            <p className="mt-2 text-xs text-muted-foreground">Document {progress.current} of {progress.total}</p>
+          ) : null}
+        </div>
+      ) : null}
+
       {message ? <p className="mt-3 rounded-lg border bg-background p-3 text-sm" role="status">{message}</p> : null}
 
       {summary.data?.length ? (
