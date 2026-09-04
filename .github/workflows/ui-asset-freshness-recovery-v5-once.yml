@@ -1,5 +1,4 @@
 name: Certification upload performance production release
-# Deployment trigger: release faster certification upload and OCR progress
 on:
   workflow_dispatch:
   push:
@@ -10,6 +9,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -26,28 +26,19 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.3.3 }
 
-      - name: Test and build exact main
+      - name: Build and validate PR361 main
         shell: bash
         run: |
           set -euo pipefail
           bun install --frozen-lockfile
           node --test scripts/test-cloudflare-candidate-config.mjs
           bun run test:ocr
-          grep -F -q 'const showProgress = true' src/components/portfolio-intake-panel.tsx
           grep -F -q 'const MAX_PARALLEL_DOCUMENTS = 3' src/components/portfolio-intake-panel.tsx
           grep -F -q 'Promise.allSettled' src/components/portfolio-intake-panel.tsx
-          grep -F -q 'Choose a certification to begin.' src/components/portfolio-intake-panel.tsx
-          grep -F -q 'Upload single document' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'const showProgress = true' src/components/portfolio-intake-panel.tsx
           grep -F -q 'MAX_PARALLEL_OCR_WORKERS = 3' src/lib/pdf-ocr.ts
-          grep -F -q 'aria-label="Platform dashboard"' src/components/app-shell.tsx
-          grep -F -q 'Multifamily workspace' src/components/app-shell.tsx
           grep -F -q 'assets.fetch(request)' src/server.ts
           bun run build
-
-      - name: Capture exact current browser files
-        shell: bash
-        run: |
-          set -euo pipefail
           intake="$(find .output/public/assets -maxdepth 1 -name 'portfolio-intake-panel-*.js' -type f | head -1)"
           shell="$(find .output/public/assets -maxdepth 1 -name 'app-shell-*.js' -type f | head -1)"
           test -n "$intake" && test -n "$shell"
@@ -60,56 +51,53 @@ jobs:
           echo "APP_SHELL_ASSET=$(basename "$shell")" >> "$GITHUB_ENV"
           echo "PUBLIC_FILE_COUNT=$(find .output/public -type f | wc -l)" >> "$GITHUB_ENV"
 
-      - name: Confirm target exists, is isolated, and capture zone
+      - name: Verify public bundle secret boundary
+        shell: bash
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),path=require('path'); let corpus='';
+          (function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else{try{corpus+=fs.readFileSync(f,'utf8')+'\n'}catch{}}}})('.output/public');
+          for(const n of ['SUPABASE_SERVICE_ROLE_KEY','STRIPE_LIVE_API_KEY','PAYMENTS_LIVE_WEBHOOK_SECRET']){const v=process.env[n];if(v&&corpus.includes(v))throw new Error(`${n} leaked into public build`)}
+          console.log('PUBLIC_SECRET_BOUNDARY=PASS');
+          NODE
+
+      - name: Confirm established staging Worker exists and production is unchanged
         shell: bash
         run: |
           set -euo pipefail
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          settings_code="$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
-          echo "Established target settings HTTP $settings_code"
-          [ "$settings_code" = 200 ]
+          [ "$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")" = 200 ]
           curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
           zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
           test -n "$zid"
-          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/routes.json
-          ! jq -e --arg w "$TARGET_WORKER" '.result[]|select((.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*") and .script==$w)' /tmp/routes.json >/dev/null
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/routes-before.json
+          ! jq -e --arg w "$TARGET_WORKER" '.result[]|select((.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*") and .script==$w)' /tmp/routes-before.json >/dev/null
           echo "ZONE_ID=$zid" >> "$GITHUB_ENV"
-          echo 'ISOLATION_GATE=PASS'
+          echo 'PRE_CUTOVER_ISOLATION_GATE=PASS'
 
-      - name: Prepare isolated config and prove relative asset path
+      - name: Prepare root-level version config
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.asset-v5.json "$TARGET_WORKER"
-          jq -e --arg w "$TARGET_WORKER" '.name==$w and .assets.binding == "ASSETS" and .assets.directory == "../public" and .assets.run_worker_first == true and (.routes|not) and (.route|not)' .output/server/wrangler.asset-v5.json >/dev/null
-          (
-            cd .output/server
-            test -d ../public
-            test "$(find ../public -type f | wc -l)" -eq "$PUBLIC_FILE_COUNT"
-            test -f "../public/assets/$INTAKE_ASSET"
-            test -f "../public/assets/$APP_SHELL_ASSET"
-          )
-          echo "PASS: config-relative assets directory contains $PUBLIC_FILE_COUNT files."
+          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.version-source.json "$TARGET_WORKER"
+          jq '.main = ".output/server/" + .main | .assets.directory = ".output/public" | .workers_dev = true | .preview_urls = true' .output/server/wrangler.version-source.json > wrangler.pr361-version.json
+          jq -e --arg w "$TARGET_WORKER" '.name==$w and .main==".output/server/index.mjs" and .assets.binding=="ASSETS" and .assets.directory==".output/public" and .assets.run_worker_first==true and .workers_dev==true and .preview_urls==true and (.route|not) and (.routes|not)' wrangler.pr361-version.json >/dev/null
+          test "$(find .output/public -type f | wc -l)" -eq "$PUBLIC_FILE_COUNT"
+          test -f ".output/public/assets/$INTAKE_ASSET"
+          test -f ".output/public/assets/$APP_SHELL_ASSET"
+          echo 'ROOT_VERSION_CONFIG_GATE=PASS'
 
-      - name: Deploy isolated Worker and browser assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          timeout 180s bunx --bun wrangler@4.129.0 deploy --config .output/server/wrangler.asset-v5.json
-          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          code="$(curl -sS -o /tmp/settings-after.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
-          echo "Post-deploy target settings HTTP $code"
-          [ "$code" = 200 ]
-
-      - name: Bind required runtime secrets to isolated Worker
+      - name: Upload version with runtime secrets and capture preview
         shell: bash
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
-          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
           PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
           STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
           STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
@@ -119,77 +107,77 @@ jobs:
           set -euo pipefail
           secret_file="$(mktemp)"
           SECRET_FILE="$secret_file" node <<'NODE'
-          const fs = require('fs');
-          const required = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','STRIPE_LIVE_API_KEY','VITE_PAYMENTS_CLIENT_TOKEN','PAYMENTS_LIVE_WEBHOOK_SECRET','STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE','STRIPE_PHA_PRICE_ID_LIVE','OPERATIONS_WORKER_SECRET'];
-          const optional = ['STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE','SUPPORT_EMAIL_WEBHOOK_SECRET'];
-          const payload = {};
-          for (const name of required) {
-            const value = process.env[name];
-            if (!value) throw new Error(`${name} is missing`);
-            payload[name] = value;
-          }
-          for (const name of optional) {
-            const value = process.env[name];
-            if (value) payload[name] = value;
-          }
-          fs.writeFileSync(process.env.SECRET_FILE, JSON.stringify(payload), { mode: 0o600 });
+          const fs=require('fs');
+          const required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','STRIPE_LIVE_API_KEY','VITE_PAYMENTS_CLIENT_TOKEN','PAYMENTS_LIVE_WEBHOOK_SECRET','STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE','STRIPE_PHA_PRICE_ID_LIVE','OPERATIONS_WORKER_SECRET'];
+          const optional=['STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE','SUPPORT_EMAIL_WEBHOOK_SECRET'];
+          const p={}; for(const n of required){if(!process.env[n])throw new Error(`${n} missing`);p[n]=process.env[n]}
+          for(const n of optional){if(process.env[n])p[n]=process.env[n]}
+          fs.writeFileSync(process.env.SECRET_FILE,JSON.stringify(p),{mode:0o600});
           NODE
-          bunx --bun wrangler@4.129.0 secret bulk "$secret_file" --name "$TARGET_WORKER"
+          rm -f /tmp/wrangler-output.ndjson
+          WRANGLER_OUTPUT_FILE_PATH=/tmp/wrangler-output.ndjson timeout 180s bunx --bun wrangler@4.129.0 versions upload --config wrangler.pr361-version.json --secrets-file "$secret_file"
           rm -f "$secret_file"
-          echo 'RUNTIME_SECRET_BIND_GATE=PASS'
+          cat /tmp/wrangler-output.ndjson
+          version_id="$(jq -r 'select(.type=="version-upload")|.version_id // empty' /tmp/wrangler-output.ndjson | tail -1)"
+          preview_url="$(jq -r 'select(.type=="version-upload")|.preview_url // empty' /tmp/wrangler-output.ndjson | tail -1)"
+          test -n "$version_id" && test -n "$preview_url"
+          echo "VERSION_ID=$version_id" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=${preview_url%/}" >> "$GITHUB_ENV"
+          echo 'VERSION_UPLOAD_GATE=PASS'
           echo 'PAYMENTS_LIVE_VERIFIED remains unset.'
 
-      - name: Ensure isolated workers.dev endpoint is enabled
-        shell: bash
-        run: |
-          set -euo pipefail
-          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          code="$(curl -sS -o /tmp/subdomain.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain")"
-          echo "Worker subdomain lookup HTTP $code"
-          [ "$code" = 200 ]
-          enabled="$(jq -r '.result.enabled // false' /tmp/subdomain.json)"
-          if [ "$enabled" != true ]; then
-            curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data '{"enabled":true,"previews_enabled":true}' "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain" >/dev/null
-          fi
-          echo 'WORKERS_DEV_ENDPOINT_GATE=PASS'
-
-      - name: Prove exact staged runtime and browser assets before cutover
+      - name: Verify version preview runtime security and exact assets
         shell: bash
         run: |
           set -euo pipefail
           ok=0
-          for i in $(seq 1 18); do
-            code="$(curl -sS -o /tmp/runtime-body -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
-            echo "runtime-health attempt $i HTTP $code"
+          for i in $(seq 1 12); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$PREVIEW_URL/api/internal/runtime-health")"
+            echo "preview health attempt $i HTTP $code"
             [ "$code" = 204 ] && { ok=1; break; }
-            sleep 5
+            sleep 4
           done
-          [ "$ok" = 1 ] || { echo 'STAGED_RUNTIME_HEALTH_GATE=FAIL'; exit 1; }
-          echo 'STAGED_RUNTIME_HEALTH_GATE=PASS'
-          node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
-          intake_code="$(curl -sS -o /tmp/i.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$INTAKE_ASSET")"
-          echo "Staged intake asset HTTP $intake_code"
-          [ "$intake_code" = 200 ]
-          grep -F -q 'Choose a certification to begin.' /tmp/i.js
-          grep -F -q 'Upload single document' /tmp/i.js
-          ! grep -F -q 'filenames must match the CSV' /tmp/i.js
-          shell_code="$(curl -sS -o /tmp/s.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$APP_SHELL_ASSET")"
-          echo "Staged app-shell asset HTTP $shell_code"
-          [ "$shell_code" = 200 ]
-          grep -F -q 'Platform dashboard' /tmp/s.js
-          grep -F -q 'Multifamily workspace' /tmp/s.js
-          echo 'STAGED_BROWSER_ASSET_GATE=PASS'
+          [ "$ok" = 1 ]
+          node scripts/verify-cloudflare-live-response.mjs "$PREVIEW_URL"
+          [ "$(curl -sS -o /tmp/preview-intake.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$PREVIEW_URL/assets/$INTAKE_ASSET")" = 200 ]
+          grep -F -q 'Choose a certification to begin.' /tmp/preview-intake.js
+          grep -F -q 'Upload single document' /tmp/preview-intake.js
+          ! grep -F -q 'filenames must match the CSV' /tmp/preview-intake.js
+          [ "$(curl -sS -o /tmp/preview-shell.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$PREVIEW_URL/assets/$APP_SHELL_ASSET")" = 200 ]
+          grep -F -q 'Platform dashboard' /tmp/preview-shell.js
+          grep -F -q 'Multifamily workspace' /tmp/preview-shell.js
+          echo 'VERSION_PREVIEW_EXACT_ASSET_GATE=PASS'
 
-      - name: Cut over with exact production browser proof and rollback
+      - name: Deploy verified version to isolated Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          bunx --bun wrangler@4.129.0 versions deploy "$VERSION_ID@100%" --name "$TARGET_WORKER" -y
+          ok=0
+          for i in $(seq 1 12); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+            echo "staging health attempt $i HTTP $code"
+            [ "$code" = 204 ] && { ok=1; break; }
+            sleep 4
+          done
+          [ "$ok" = 1 ]
+          node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+          [ "$(curl -sS -o /tmp/stage-intake.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$INTAKE_ASSET")" = 200 ]
+          grep -F -q 'Choose a certification to begin.' /tmp/stage-intake.js
+          [ "$(curl -sS -o /tmp/stage-shell.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$APP_SHELL_ASSET")" = 200 ]
+          grep -F -q 'Platform dashboard' /tmp/stage-shell.js
+          echo 'ISOLATED_WORKER_GATE=PASS'
+
+      - name: Cut over production with rollback and live proof
         shell: bash
         run: |
           set -euo pipefail
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" -o /tmp/r.json
-          aid="$(jq -r '.result[]|select(.pattern=="certivoiq.com/*")|.id' /tmp/r.json)"
-          wid="$(jq -r '.result[]|select(.pattern=="www.certivoiq.com/*")|.id' /tmp/r.json)"
-          olda="$(jq -r '.result[]|select(.pattern=="certivoiq.com/*")|.script' /tmp/r.json)"
-          oldw="$(jq -r '.result[]|select(.pattern=="www.certivoiq.com/*")|.script' /tmp/r.json)"
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" -o /tmp/routes-now.json
+          aid="$(jq -r '.result[]|select(.pattern=="certivoiq.com/*")|.id' /tmp/routes-now.json)"
+          wid="$(jq -r '.result[]|select(.pattern=="www.certivoiq.com/*")|.id' /tmp/routes-now.json)"
+          olda="$(jq -r '.result[]|select(.pattern=="certivoiq.com/*")|.script' /tmp/routes-now.json)"
+          oldw="$(jq -r '.result[]|select(.pattern=="www.certivoiq.com/*")|.script' /tmp/routes-now.json)"
           test -n "$aid" && test -n "$wid" && test -n "$olda" && test -n "$oldw"
           put(){ curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$(jq -nc --arg p "$2" --arg s "$3" '{pattern:$p,script:$s}')" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes/$1" >/dev/null; }
           put "$aid" 'certivoiq.com/*' "$TARGET_WORKER"
@@ -199,23 +187,22 @@ jobs:
             [ "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" https://www.certivoiq.com/api/internal/runtime-health)" = 204 ] &&
             node scripts/verify-cloudflare-live-response.mjs https://certivoiq.com >/dev/null &&
             node scripts/verify-cloudflare-live-response.mjs https://www.certivoiq.com >/dev/null &&
-            [ "$(curl -sS -o /tmp/pi.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://certivoiq.com/assets/$INTAKE_ASSET")" = 200 ] &&
-            grep -F -q 'Choose a certification to begin.' /tmp/pi.js &&
-            grep -F -q 'Upload single document' /tmp/pi.js &&
-            ! grep -F -q 'filenames must match the CSV' /tmp/pi.js &&
-            [ "$(curl -sS -o /tmp/psi.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://www.certivoiq.com/assets/$INTAKE_ASSET")" = 200 ] &&
-            grep -F -q 'Choose a certification to begin.' /tmp/psi.js &&
-            [ "$(curl -sS -o /tmp/ps.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://certivoiq.com/assets/$APP_SHELL_ASSET")" = 200 ] &&
-            grep -F -q 'Platform dashboard' /tmp/ps.js &&
-            grep -F -q 'Multifamily workspace' /tmp/ps.js
+            [ "$(curl -sS -o /tmp/live-intake.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://certivoiq.com/assets/$INTAKE_ASSET")" = 200 ] &&
+            grep -F -q 'Choose a certification to begin.' /tmp/live-intake.js &&
+            grep -F -q 'Upload single document' /tmp/live-intake.js &&
+            ! grep -F -q 'filenames must match the CSV' /tmp/live-intake.js &&
+            [ "$(curl -sS -o /tmp/www-intake.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://www.certivoiq.com/assets/$INTAKE_ASSET")" = 200 ] &&
+            [ "$(curl -sS -o /tmp/live-shell.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://certivoiq.com/assets/$APP_SHELL_ASSET")" = 200 ] &&
+            grep -F -q 'Platform dashboard' /tmp/live-shell.js &&
+            grep -F -q 'Multifamily workspace' /tmp/live-shell.js
           }
           if ! verify; then
             put "$aid" 'certivoiq.com/*' "$olda"
             put "$wid" 'www.certivoiq.com/*' "$oldw"
-            echo "ROLLBACK COMPLETE: apex=$olda www=$oldw"
+            echo "ROLLBACK_COMPLETE apex=$olda www=$oldw"
             exit 1
           fi
-          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" -o /tmp/routes-after.json
-          jq -e --arg w "$TARGET_WORKER" '[.result[]|select(.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*")|select(.script==$w)]|length==2' /tmp/routes-after.json >/dev/null
-          echo "PRODUCTION_BROWSER_ASSET_GATE=PASS worker=$TARGET_WORKER rollback_apex=$olda rollback_www=$oldw"
-          echo 'No DNS, Supabase data, Stripe objects, billing state, or paid-onboarding flag was changed.'
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" -o /tmp/routes-final.json
+          jq -e --arg w "$TARGET_WORKER" '[.result[]|select(.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*")|select(.script==$w)]|length==2' /tmp/routes-final.json >/dev/null
+          echo "PR361_LIVE_GATE=PASS worker=$TARGET_WORKER rollback_apex=$olda rollback_www=$oldw"
+          echo 'No DNS, Supabase data, Stripe object, billing, or paid-onboarding mutation occurred.'
