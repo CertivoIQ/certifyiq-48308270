@@ -88,6 +88,32 @@ Required follow-up:
 - complete the pilot before claiming customer validation or allowing consequential results to bypass qualified human review;
 - record discrepancies, reviewer qualifications, customer permission, and disposition.
 
+## Exception 4: Authorized Stripe live-payment lifecycle
+
+**Gate:** `stripe_controlled_live_e2e`  
+**Decision:** Founder-approved exception  
+**Underlying live paid lifecycle:** Not completed
+
+Residual risk accepted:
+
+- no successful live payment has verified production `invoice.paid` handling;
+- exactly-once entitlement activation, portal behavior, replay handling, and reversal deactivation remain unverified with a real paid transaction;
+- simulations and rolled-back database rehearsals cannot prove end-to-end behavior across live Stripe and production systems.
+
+Compensating controls:
+
+- do not claim that the live paid lifecycle passed;
+- keep unrestricted paid onboarding disabled;
+- retain signed-webhook validation, exact amount and billing-metadata checks, replay/idempotency controls, and fail-closed entitlement behavior;
+- manually review any initial paid transaction and immediately disable or reverse an incorrect entitlement;
+- retain the existing evidence that the prior zero-dollar event was ignored and invoice `BXFHHQOW-0001` was voided without payment or entitlement.
+
+Required follow-up:
+
+- complete one explicitly authorized live paid lifecycle after launch and before unrestricted paid onboarding;
+- verify payment, exactly-one entitlement, event replay, portal access, and cancellation/refund/reversal;
+- record only Stripe object IDs and outcomes—never keys or webhook secrets.
+
 ## Revocation and review triggers
 
 The founder may revoke any exception at any time. Re-review is required before broadening the controlled rollout, making a claim that an underlying review was completed, materially changing authentication/authorization or compliance logic, or permitting consequential results without qualified human review.
