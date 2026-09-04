@@ -20,7 +20,7 @@ test("every launch gate has explicit ownership and blocking semantics", () => {
 
 test("remaining human and external approvals are never labeled technically complete", () => {
   const expectedStatuses = {
-    stripe_controlled_live_e2e: "human_required",
+    stripe_controlled_live_e2e: "exception_approved",
     tn_tx_independent_source_validation: "human_required",
     terms_privacy_counsel_review: "exception_approved",
     independent_penetration_test: "exception_approved",
@@ -34,6 +34,7 @@ test("remaining human and external approvals are never labeled technically compl
 
 test("founder-approved exceptions preserve residual risk and underlying-review truth", () => {
   for (const id of [
+    "stripe_controlled_live_e2e",
     "terms_privacy_counsel_review",
     "independent_penetration_test",
     "controlled_customer_pilot",
