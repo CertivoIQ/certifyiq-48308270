@@ -1,0 +1,40 @@
+name: Certification pipeline performance controls
+
+on:
+  pull_request:
+    paths:
+      - "src/components/portfolio-intake-panel.tsx"
+      - "src/lib/certification-upload.ts"
+      - "src/lib/pdf-ocr.ts"
+      - "src/lib/certification-extraction.server.ts"
+      - "src/utils/certification-review.functions.ts"
+      - "scripts/test-certification-pipeline-performance.mjs"
+      - "supabase/migrations/*certification_pipeline_performance_metrics.sql"
+      - ".github/workflows/certification-pipeline-performance.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/components/portfolio-intake-panel.tsx"
+      - "src/lib/certification-upload.ts"
+      - "src/lib/pdf-ocr.ts"
+      - "src/lib/certification-extraction.server.ts"
+      - "src/utils/certification-review.functions.ts"
+      - "scripts/test-certification-pipeline-performance.mjs"
+      - "supabase/migrations/*certification_pipeline_performance_metrics.sql"
+      - ".github/workflows/certification-pipeline-performance.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Resumable upload and extraction reuse
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test scripts/test-certification-pipeline-performance.mjs
+
