@@ -1,0 +1,229 @@
+name: Intake progress v2 release once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/intake-progress-v2-release-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+      PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+      STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
+      STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
+      STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE: ${{ secrets.STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE }}
+      PAYMENTS_LIVE_VERIFIED: ${{ secrets.PAYMENTS_LIVE_VERIFIED }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      SUPPORT_EMAIL_WEBHOOK_SECRET: ${{ secrets.SUPPORT_EMAIL_WEBHOOK_SECRET }}
+      TARGET_WORKER: certivoiq-intake-progress-v2-20260903
+      TARGET_URL: https://certivoiq-intake-progress-v2-20260903.rodsheka-watkins.workers.dev
+
+    steps:
+      - name: Require deployment and runtime sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY STRIPE_LIVE_API_KEY VITE_PAYMENTS_CLIENT_TOKEN PAYMENTS_LIVE_WEBHOOK_SECRET STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE STRIPE_PHA_PRICE_ID_LIVE OPERATIONS_WORKER_SECRET; do
+            test -n "${!name:-}" || { echo "$name is missing"; exit 1; }
+          done
+
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Force progress panel always visible in source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/components/portfolio-intake-panel.tsx')
+          s = p.read_text()
+          old = 'const showProgress = busy || progressPercent === 100 || (!manifest && documents.length === 1);'
+          if old not in s:
+              raise SystemExit('Expected progress visibility condition not found')
+          s = s.replace(old, 'const showProgress = true; // Always render so users can verify progress UI before selecting a file.', 1)
+          s = s.replace('progressLabel || "Ready to process selected certification."', 'progressLabel || "Choose a certification to begin."', 1)
+          p.write_text(s)
+          PY
+          grep -F 'const showProgress = true' src/components/portfolio-intake-panel.tsx
+          grep -F 'Choose a certification to begin.' src/components/portfolio-intake-panel.tsx
+
+      - name: Commit progress visibility fix to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "CertivoIQ Release Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/components/portfolio-intake-panel.tsx
+          git commit -m "fix(intake): make upload progress always visible"
+          git push origin HEAD:main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test OCR and deployment contracts
+        run: |
+          bun run test:ocr
+          node --test scripts/test-cloudflare-candidate-config.mjs
+          node --test scripts/test-zero-lovable-runtime-boundary.mjs
+
+      - name: Build exact progress v2 source
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+        run: bun run build
+
+      - name: Verify progress v2 artifact and secret boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -R -F -q 'Choose a certification to begin.' .output || { echo 'Always-visible progress marker missing from build'; exit 1; }
+          grep -R -F -q 'Ready to process selected certification.' .output || { echo 'Selected-file progress marker missing from build'; exit 1; }
+          if grep -R -F -q "$SUPABASE_SERVICE_ROLE_KEY" .output/public; then echo 'Supabase service-role key leaked'; exit 1; fi
+          if grep -R -F -q "$STRIPE_LIVE_API_KEY" .output/public; then echo 'Stripe secret key leaked'; exit 1; fi
+          if grep -R -F -q "$PAYMENTS_LIVE_WEBHOOK_SECRET" .output/public; then echo 'Webhook secret leaked'; exit 1; fi
+          echo 'PASS: progress v2 is in the client artifact and secrets are absent.'
+
+      - name: Prepare brand-new isolated Worker config
+        run: |
+          node scripts/prepare-cloudflare-candidate-config.mjs \
+            .output/server/wrangler.json \
+            .output/server/wrangler.progress-v2.json \
+            "$TARGET_WORKER"
+
+      - name: Deploy progress v2 to brand-new isolated Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 180s bunx --bun wrangler@4.129.0 deploy --config .output/server/wrangler.progress-v2.json
+
+      - name: Confirm brand-new Worker exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/workers.json
+          jq -e --arg id "$TARGET_WORKER" '.success == true and any(.result[]; .id == $id)' /tmp/workers.json >/dev/null
+          echo "PASS: $TARGET_WORKER exists."
+
+      - name: Bind existing runtime secrets to staged Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          secret_file="$(mktemp)"
+          SECRET_FILE="$secret_file" node -e 'const fs=require("fs"); const required=["SUPABASE_URL","SUPABASE_SERVICE_ROLE_KEY","VITE_SUPABASE_URL","VITE_SUPABASE_PUBLISHABLE_KEY","STRIPE_LIVE_API_KEY","VITE_PAYMENTS_CLIENT_TOKEN","PAYMENTS_LIVE_WEBHOOK_SECRET","STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE","STRIPE_PHA_PRICE_ID_LIVE","OPERATIONS_WORKER_SECRET"]; const optional=["STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE","PAYMENTS_LIVE_VERIFIED","SUPPORT_EMAIL_WEBHOOK_SECRET"]; const p={}; for(const n of required){if(!process.env[n]) throw new Error(n+" missing"); p[n]=process.env[n]} for(const n of optional){if(process.env[n]) p[n]=process.env[n]} fs.writeFileSync(process.env.SECRET_FILE,JSON.stringify(p),{mode:0o600})'
+          timeout 90s bunx --bun wrangler@4.129.0 secret bulk "$secret_file" --name "$TARGET_WORKER"
+          rm -f "$secret_file"
+
+      - name: Verify staged runtime health
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+            echo "Staged runtime attempt $attempt: HTTP $status"
+            if [ "$status" = "204" ]; then echo 'PASS: staged runtime healthy.'; exit 0; fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Verify staged security boundary
+        run: node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+
+      - name: Capture current production rollback state
+        id: routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zone_id="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zone_id"
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes" -o /tmp/routes.json
+          apex_id="$(jq -r '.result[] | select(.pattern=="certivoiq.com/*") | .id' /tmp/routes.json)"
+          www_id="$(jq -r '.result[] | select(.pattern=="www.certivoiq.com/*") | .id' /tmp/routes.json)"
+          apex_script="$(jq -r '.result[] | select(.pattern=="certivoiq.com/*") | .script' /tmp/routes.json)"
+          www_script="$(jq -r '.result[] | select(.pattern=="www.certivoiq.com/*") | .script' /tmp/routes.json)"
+          test "$apex_script" = "$www_script"
+          echo "zone_id=$zone_id" >> "$GITHUB_OUTPUT"
+          echo "apex_id=$apex_id" >> "$GITHUB_OUTPUT"
+          echo "www_id=$www_id" >> "$GITHUB_OUTPUT"
+          echo "apex_script=$apex_script" >> "$GITHUB_OUTPUT"
+          echo "www_script=$www_script" >> "$GITHUB_OUTPUT"
+          echo "PASS: rollback target captured: $apex_script"
+
+      - name: Switch existing production routes to progress v2 Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          zone_id="${{ steps.routes.outputs.zone_id }}"
+          for spec in "${{ steps.routes.outputs.apex_id }}|certivoiq.com/*" "${{ steps.routes.outputs.www_id }}|www.certivoiq.com/*"; do
+            route_id="${spec%%|*}"
+            pattern="${spec#*|}"
+            payload="$(jq -nc --arg pattern "$pattern" --arg script "$TARGET_WORKER" '{pattern:$pattern,script:$script}')"
+            curl --fail --silent --show-error -X PUT \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              --data "$payload" \
+              "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes/$route_id" >/dev/null
+          done
+
+      - name: Verify production runtime security and application response
+        shell: bash
+        run: |
+          set -euo pipefail
+          for host in https://certivoiq.com https://www.certivoiq.com; do
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$host/api/internal/runtime-health")"
+            test "$status" = "204"
+            node scripts/verify-cloudflare-live-response.mjs "$host"
+            curl --fail --silent --show-error -L -H 'Cache-Control: no-cache' "$host/" -o /tmp/app.html
+            test -s /tmp/app.html
+          done
+          echo 'PASS: progress v2 production release verified.'
+
+      - name: Roll back production routes on post-cutover failure
+        if: ${{ failure() && steps.routes.outputs.zone_id != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          zone_id="${{ steps.routes.outputs.zone_id }}"
+          rollback_route() {
+            route_id="$1"; pattern="$2"; script="$3"
+            payload="$(jq -nc --arg pattern "$pattern" --arg script "$script" '{pattern:$pattern,script:$script}')"
+            curl --fail --silent --show-error -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' --data "$payload" "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes/$route_id" >/dev/null
+          }
+          rollback_route "${{ steps.routes.outputs.apex_id }}" 'certivoiq.com/*' "${{ steps.routes.outputs.apex_script }}"
+          rollback_route "${{ steps.routes.outputs.www_id }}" 'www.certivoiq.com/*' "${{ steps.routes.outputs.www_script }}"
+          echo 'ROLLBACK COMPLETE'
+
+      - name: Confirm release
+        run: |
+          echo 'PASS: always-visible progress UI is live on a brand-new Worker.'
+          echo 'No DNS, Supabase data, billing state, or Lovable resource was changed.'
