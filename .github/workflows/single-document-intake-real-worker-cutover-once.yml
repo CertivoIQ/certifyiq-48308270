@@ -1,0 +1,202 @@
+name: Single document intake actual Worker cutover once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/single-document-intake-real-worker-cutover-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-cutover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-single-file-intake-20260903
+      TARGET_URL: https://certivoiq-single-file-intake-20260903.rodsheka-watkins.workers.dev
+
+    steps:
+      - name: Require credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID OPERATIONS_WORKER_SECRET; do
+            test -n "${!name:-}" || { echo "$name is missing"; exit 1; }
+          done
+
+      - name: Checkout current main
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Confirm staged Worker exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/workers.json
+          TARGET_WORKER="$TARGET_WORKER" node <<'NODE'
+          const d = require('/tmp/workers.json');
+          if (!d.success) throw new Error('Cloudflare Worker inventory failed');
+          const match = d.result.find((w) => w.id === process.env.TARGET_WORKER);
+          if (!match) throw new Error(`Staged Worker ${process.env.TARGET_WORKER} does not exist`);
+          console.log(`PASS: staged Worker exists: ${match.id}`);
+          NODE
+          rm -f /tmp/workers.json
+
+      - name: Enable isolated candidate workers.dev endpoint if required
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$endpoint" -o /tmp/subdomain-before.json
+          node <<'NODE'
+          const d = require('/tmp/subdomain-before.json');
+          if (!d.success) throw new Error('Unable to read candidate workers.dev state');
+          console.log(`Candidate workers.dev before: enabled=${d.result.enabled}; previews_enabled=${d.result.previews_enabled}`);
+          NODE
+          enabled="$(node -e 'const d=require("/tmp/subdomain-before.json"); process.stdout.write(String(d.result.enabled===true))')"
+          previews="$(node -e 'const d=require("/tmp/subdomain-before.json"); process.stdout.write(String(d.result.previews_enabled===true))')"
+          if [ "$enabled" != "true" ] || [ "$previews" != "true" ]; then
+            curl --fail --silent --show-error -X POST \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data '{"enabled":true,"previews_enabled":true}' \
+              "$endpoint" -o /tmp/subdomain-after.json
+            node <<'NODE'
+            const d = require('/tmp/subdomain-after.json');
+            if (!d.success || d.result.enabled !== true || d.result.previews_enabled !== true) {
+              throw new Error('Candidate workers.dev endpoint could not be enabled');
+            }
+            console.log('PASS: isolated candidate workers.dev endpoint enabled.');
+            NODE
+          else
+            echo "PASS: isolated candidate workers.dev endpoint already enabled."
+          fi
+          rm -f /tmp/subdomain-before.json /tmp/subdomain-after.json
+
+      - name: Verify staged runtime health
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" \
+              "$TARGET_URL/api/internal/runtime-health")"
+            echo "Candidate runtime attempt $attempt: HTTP $status"
+            if [ "$status" = "204" ]; then
+              echo "PASS: candidate runtime health."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "FAIL: candidate runtime health did not pass."
+          exit 1
+
+      - name: Verify staged Cloudflare security boundary
+        run: node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+
+      - name: Capture current production rollback state
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zone_id="$(node -e 'const d=require("/tmp/zones.json"); if(!d.success||d.result.length!==1) process.exit(1); process.stdout.write(d.result[0].id)')"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes" -o /tmp/routes-before.json
+          ZONE_ID="$zone_id" TARGET_WORKER="$TARGET_WORKER" node <<'NODE'
+          const fs = require('fs');
+          const d = require('/tmp/routes-before.json');
+          if (!d.success) throw new Error('Cloudflare route inventory failed');
+          const patterns = ['certivoiq.com/*','www.certivoiq.com/*'];
+          const routes = patterns.map((pattern) => {
+            const matches = d.result.filter((r) => r.pattern === pattern);
+            if (matches.length !== 1) throw new Error(`Expected exactly one route for ${pattern}`);
+            const route = matches[0];
+            if (!route.id || !route.script) throw new Error(`No rollback script for ${pattern}`);
+            if (route.script === process.env.TARGET_WORKER) throw new Error(`${pattern} already points to target Worker`);
+            return { id: route.id, pattern, oldScript: route.script };
+          });
+          if (routes[0].oldScript !== routes[1].oldScript) throw new Error('Apex and www rollback Workers differ');
+          fs.writeFileSync('/tmp/intake-real-cutover-state.json', JSON.stringify({zoneId:process.env.ZONE_ID,targetWorker:process.env.TARGET_WORKER,routes}), {mode:0o600});
+          console.log(`PASS: rollback Worker captured: ${routes[0].oldScript}`);
+          NODE
+          echo "ZONE_ID=$zone_id" >> "$GITHUB_ENV"
+          rm -f /tmp/zones.json /tmp/routes-before.json
+
+      - name: Switch existing production routes to intake Worker
+        id: cutover
+        shell: bash
+        run: |
+          set -euo pipefail
+          rollback_partial() {
+            echo "Route switch failed; restoring captured production routes."
+            node -e 'const s=require("/tmp/intake-real-cutover-state.json"); for(const r of s.routes) console.log([r.id,r.pattern,r.oldScript].join("\t"))' |
+            while IFS=$'\t' read -r route_id pattern old_script; do
+              body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$old_script")"
+              curl --silent --show-error -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+                --data "$body" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes/$route_id" >/dev/null || true
+            done
+          }
+          trap rollback_partial ERR
+          node -e 'const s=require("/tmp/intake-real-cutover-state.json"); for(const r of s.routes) console.log([r.id,r.pattern].join("\t"))' |
+          while IFS=$'\t' read -r route_id pattern; do
+            body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$TARGET_WORKER")"
+            curl --fail --silent --show-error -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              --data "$body" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes/$route_id" -o /tmp/route-update.json
+            node -e 'const d=require("/tmp/route-update.json"); if(!d.success||d.result.script!==process.env.TARGET_WORKER) process.exit(1)'
+          done
+          rm -f /tmp/route-update.json
+          trap - ERR
+          echo "PASS: apex and www routes switched to $TARGET_WORKER."
+
+      - name: Verify production runtime security and application response
+        shell: bash
+        run: |
+          set -euo pipefail
+          for origin in https://certivoiq.com https://www.certivoiq.com; do
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" \
+              "$origin/api/internal/runtime-health")"
+            test "$status" = "204" || { echo "$origin runtime health returned HTTP $status"; exit 1; }
+            node scripts/verify-cloudflare-live-response.mjs "$origin"
+          done
+          curl --fail --silent --show-error --location --max-redirs 5 https://certivoiq.com/ -o /tmp/live.html
+          grep -q "CertivoIQ" /tmp/live.html
+          rm -f /tmp/live.html
+          echo "PASS: single-document intake build healthy in production."
+
+      - name: Roll back production routes on any post-cutover failure
+        if: ${{ failure() && steps.cutover.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Post-cutover verification failed; restoring captured production Worker."
+          node -e 'const s=require("/tmp/intake-real-cutover-state.json"); for(const r of s.routes) console.log([r.id,r.pattern,r.oldScript].join("\t"))' |
+          while IFS=$'\t' read -r route_id pattern old_script; do
+            body="$(node -e 'process.stdout.write(JSON.stringify({pattern:process.argv[1],script:process.argv[2]}))' "$pattern" "$old_script")"
+            curl --fail --silent --show-error -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              --data "$body" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes/$route_id" >/dev/null
+          done
+          echo "ROLLBACK_COMPLETED=TRUE"
+
+      - name: Confirm release
+        if: ${{ success() }}
+        run: |
+          echo "SINGLE_DOCUMENT_INTAKE_RELEASE=PASS"
+          echo "One PDF/image now uses direct authenticated document intake with no CSV parser path."
+          echo "CSV remains required only for mapped property/unit/tenant imports."
