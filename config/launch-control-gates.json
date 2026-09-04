@@ -13,11 +13,10 @@
     {
       "id": "state_rule_document_requirements_rls",
       "category": "security",
-      "status": "pending_technical",
+      "status": "technical_complete",
       "blocking": true,
       "ownerRole": "engineering",
-      "action": "Apply and verify supabase/migrations/20260904073000_harden_state_rule_document_requirements.sql in production.",
-      "evidence": "Supabase security advisor on 2026-09-04 reported RLS disabled and a SECURITY DEFINER readiness view."
+      "evidence": "Production migration harden_state_rule_document_requirements applied 2026-09-04; RLS enabled, anon/authenticated CRUD false, service-role read retained, and Supabase security advisor returned zero findings."
     },
     {
       "id": "privileged_rpc_surface",
@@ -50,8 +49,8 @@
       "status": "human_required",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Reconnect the Certivo Stripe account, then complete one controlled annual billing lifecycle through invoice.paid, entitlement activation, portal access, and cancellation or reversal. Do not authorize unrestricted paid onboarding until this passes.",
-      "evidence": "PR #351 corrected the stale sandbox gate to the controlled live annual billing requirement; no live invoice or charge has been created."
+      "action": "Complete one explicitly authorized paid annual billing lifecycle through invoice.paid, entitlement activation, portal access, and cancellation or reversal. Do not authorize unrestricted paid onboarding until this passes.",
+      "evidence": "Live Stripe preflight on 2026-09-04 confirmed three active products, authoritative prices, API-versioned enabled webhook endpoint, valid FOUNDERS50 coupon, and controlled portal configuration bpc_1UBztYEGeotPzK5ZUN8mKxGX with invoice history and payment-method updates enabled while self-service subscription update/cancellation remain disabled. The prior zero-dollar invoice.paid event was correctly ignored and no entitlement was created."
     },
     {
       "id": "nspire_independent_attestations",
