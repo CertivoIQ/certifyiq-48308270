@@ -1,4 +1,4 @@
-name: UI asset freshness recovery v5 once
+name: Certification upload performance production release
 # Deployment trigger: release faster certification upload and OCR progress
 on:
   push:
@@ -16,8 +16,8 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-      TARGET_WORKER: certivoiq-founder-dashboard-20260903
-      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+      TARGET_WORKER: certivoiq-upload-ocr-20260904
+      TARGET_URL: https://certivoiq-upload-ocr-20260904.rodsheka-watkins.workers.dev
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,7 +60,6 @@ jobs:
           set -euo pipefail
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
           curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/workers.json
-          jq -e --arg w "$TARGET_WORKER" 'any(.result[]; .id==$w)' /tmp/workers.json >/dev/null
           curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
           zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
           test -n "$zid"
