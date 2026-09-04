@@ -150,6 +150,7 @@ export function classifyDocument({ label, url, sourceType = "" }) {
     const positive = FAMILY_PATTERNS[family].reduce((score, pattern) => score + (pattern.test(haystack) ? 2 : 0), 0);
     const negative = FAMILY_NEGATIVE_PATTERNS[family].reduce((score, pattern) => score + (pattern.test(haystack) ? 3 : 0), 0);
     const score = positive - negative;
+    if (family === "LIHTC_CONTROLLING_AUTHORITY" && negative > 0) continue;
     if (score > 0) families.push({ family, score });
   }
   return Object.freeze({
