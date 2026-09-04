@@ -1,0 +1,38 @@
+name: Intake progress v2 inventory once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/intake-progress-v2-inventory-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: List actual Workers and production routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/workers.json
+          echo '=== CERTIVOIQ WORKERS ==='
+          jq -r '.result[].id' /tmp/workers.json | grep -Ei 'certivoiq|certifyiq' | sort || true
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zone_id="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zone_id"
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$zone_id/workers/routes" -o /tmp/routes.json
+          echo '=== PRODUCTION ROUTES ==='
+          jq -r '.result[] | select(.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*") | "\(.pattern) -> \(.script) [\(.id)]"' /tmp/routes.json
+          echo 'PASS: read-only inventory complete.'
