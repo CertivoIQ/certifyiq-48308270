@@ -213,11 +213,17 @@ export function releaseCoverageGaps(
   documents,
   { programs = ["LIHTC"] } = {},
 ) {
-  const required = [...new Set(
-    programs.flatMap((program) =>
-      PROGRAM_RELEASE_DOCUMENT_FAMILIES[String(program).toUpperCase()] ?? []
-    ),
-  )];
+  const normalizedPrograms = programs.map((program) => String(program).toUpperCase());
+  const unsupportedPrograms = normalizedPrograms.filter(
+    (program) => !PROGRAM_RELEASE_DOCUMENT_FAMILIES[program],
+  );
+  const required = unsupportedPrograms.length
+    ? ["UNSUPPORTED_PROGRAM_DOCUMENT_PROFILE"]
+    : [...new Set(
+        normalizedPrograms.flatMap(
+          (program) => PROGRAM_RELEASE_DOCUMENT_FAMILIES[program],
+        ),
+      )];
   return gapRows(
     stateCode,
     documents,
