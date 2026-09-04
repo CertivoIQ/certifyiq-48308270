@@ -86,8 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           timeout 180s bunx --bun wrangler@4.129.0 deploy \
-            --config .output/server/wrangler.asset-v5.json \
-            --assets ../public
+            --config .output/server/wrangler.asset-v5.json
       - name: Prove exact staged browser assets before cutover
         shell: bash
         run: |
