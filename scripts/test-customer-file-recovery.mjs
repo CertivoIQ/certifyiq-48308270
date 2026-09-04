@@ -12,6 +12,11 @@ const OTHER = "22222222-2222-4222-8222-222222222222";
 const REQUEST = "33333333-3333-4333-8333-333333333333";
 const SHA = "a".repeat(64);
 
+const productionDrill = readFileSync(
+  new URL("../scripts/run-production-customer-file-recovery-drill.mjs", import.meta.url),
+  "utf8",
+);
+
 function plan() {
   return buildCustomerFileRecoveryPlan({
     userId: USER,
@@ -96,4 +101,15 @@ test("import-job migration preserves the subscription gate", () => {
   assert.match(migration, /drop policy if exists "users manage own import jobs"/);
   assert.match(migration, /policyname = 'users manage import jobs'/);
   assert.match(migration, /legacy_policies <> 0/);
+});
+
+test("production recovery drill is private, copy-only, and checksum verified", () => {
+  assert.match(productionDrill, /bucket = "certification-imports"/);
+  assert.match(productionDrill, /contentType: "application\/pdf"/);
+  assert.match(productionDrill, /upsert: false/);
+  assert.match(productionDrill, /\.copy\(sourcePath, targetPath\)/);
+  assert.match(productionDrill, /Source SHA-256 changed during recovery/);
+  assert.match(productionDrill, /Recovered SHA-256 does not match source/);
+  assert.match(productionDrill, /sourceDeletionAllowed: false/);
+  assert.doesNotMatch(productionDrill, /\.remove\(/);
 });
