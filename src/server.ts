@@ -18,6 +18,17 @@ const SECURITY_HEADERS = {
 function withSecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers);
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) headers.set(name, value);
+
+  // Application documents must be revalidated on every navigation/reload so a
+  // newly deployed client manifest and route chunks cannot be hidden behind an
+  // older browser/edge HTML shell. Hashed static assets remain independently
+  // cacheable and are not affected by this document-only rule.
+  const contentType = headers.get("content-type") ?? "";
+  if (contentType.includes("text/html")) {
+    headers.set("Cache-Control", "no-store, max-age=0");
+    headers.set("Pragma", "no-cache");
+  }
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
