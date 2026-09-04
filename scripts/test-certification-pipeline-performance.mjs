@@ -11,6 +11,9 @@ const review = read("src/utils/certification-review.functions.ts");
 const migration = read(
   "supabase/migrations/20260904191637_certification_pipeline_performance_metrics.sql",
 );
+const intakeOptimization = read(
+  "supabase/migrations/20260904194503_optimize_certification_import_items.sql",
+);
 
 test("large certification uploads use direct resumable storage with progress and retry", () => {
   assert.match(
@@ -61,5 +64,12 @@ test("per-document upload and extraction timings are persisted", () => {
     migration,
     /check \(upload_transport is null or upload_transport in \('standard', 'tus'\)\)/,
   );
+});
+
+test("the intake table keeps one strict policy and indexed portfolio relationships", () => {
+  assert.match(intakeOptimization, /drop policy if exists "users manage own import items"/);
+  for (const column of ["property_id", "unit_id", "tenant_profile_id"]) {
+    assert.match(intakeOptimization, new RegExp(`on public\\.certification_import_items\\(${column}\\)`));
+  }
 });
 
