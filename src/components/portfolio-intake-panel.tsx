@@ -17,6 +17,7 @@ import {
 type Db = any;
 
 const singleDocumentTypes = ".pdf,.png,.jpg,.jpeg,.webp";
+const MAX_PARALLEL_DOCUMENTS = 3;
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -111,9 +112,7 @@ export function PortfolioIntakePanel() {
       storagePath = `${user.id}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
       setStage(8, "Uploading securely while reading the certification…");
 
-      const uploadPromise = supabase.storage
-        .from("certification-imports")
-        .upload(storagePath, file, { upsert: false });
+      const uploadPromise = supabase.storage.from("certification-imports").upload(storagePath, file, { upsert: false });
       const preparePromise = prepareCertificationForReview(file, (status, preparationPercent) => {
         const overall = 10 + (clampPercent(preparationPercent) / 100) * 78;
         setStage(overall, status);
@@ -225,37 +224,61 @@ export function PortfolioIntakePanel() {
       if (!user) throw new Error("Please sign in before importing portfolio data.");
       const db = supabase as unknown as Db;
 
-      for (let sequence = 0; sequence < documents.length; sequence += 1) {
+      const filePercents = Array.from({ length: documents.length }, () => 0);
+      let nextSequence = 0;
+
+      const updateFileProgress = (sequence: number, percent: number, label: string) => {
+        filePercents[sequence] = clampPercent(percent);
+        const aggregate = filePercents.reduce((sum, value) => sum + value, 0) / Math.max(1, filePercents.length);
+        setStage(8 + aggregate * 0.82, label);
+      };
+
+      async function processDocument(sequence: number) {
         const file = documents[sequence]!;
         const mapping = mappingByName.get(file.name.toLowerCase());
         if (!mapping) throw new Error(`No tenant mapping was created for ${file.name}.`);
-        setProgress({ current: sequence + 1, total: documents.length });
-        const fileBase = 8 + (sequence / Math.max(1, documents.length)) * 82;
-        const fileSpan = 82 / Math.max(1, documents.length);
-        setStage(fileBase, `Uploading ${sequence + 1} of ${documents.length}: ${file.name}`);
-        setMessage(`Uploading ${sequence + 1} of ${documents.length}: ${file.name}`);
+
+        updateFileProgress(sequence, 2, `Starting ${sequence + 1} of ${documents.length}: ${file.name}`);
+        setMessage(`Uploading and reading ${sequence + 1} of ${documents.length}: ${file.name}`);
         const path = `${user.id}/${intake.jobId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-        const { error: uploadError } = await supabase.storage.from("certification-imports").upload(path, file, { upsert: false });
-        if (uploadError) throw uploadError;
-        if (isOcrSupportedFile(file)) {
-          const prepared = await prepareCertificationForReview(file, (status, preparationPercent) => {
-            const overall = fileBase + fileSpan * 0.1 + fileSpan * 0.75 * (clampPercent(preparationPercent) / 100);
-            setStage(overall, `${file.name}: ${status}`);
-            setMessage(`${file.name}: ${status}`);
-          });
-          if (prepared.sidecar) {
-            const { error: sidecarError } = await supabase.storage.from("certification-imports")
-              .upload(sidecarPathFor(path), new Blob([JSON.stringify(prepared.sidecar)], { type: "application/json" }), { upsert: true });
-            if (sidecarError) throw sidecarError;
-          }
+
+        const uploadPromise = supabase.storage
+          .from("certification-imports")
+          .upload(path, file, { upsert: false });
+
+        const preparationPromise = isOcrSupportedFile(file)
+          ? prepareCertificationForReview(file, (status, preparationPercent) => {
+              updateFileProgress(
+                sequence,
+                5 + clampPercent(preparationPercent) * 0.72,
+                `${file.name}: ${status}`,
+              );
+            })
+          : Promise.resolve(null);
+
+        const [uploadOutcome, preparationOutcome] = await Promise.allSettled([
+          uploadPromise,
+          preparationPromise,
+        ]);
+        if (uploadOutcome.status === "rejected") throw uploadOutcome.reason;
+        if (uploadOutcome.value.error) throw uploadOutcome.value.error;
+        if (preparationOutcome.status === "rejected") throw preparationOutcome.reason;
+        const prepared = preparationOutcome.value;
+
+        updateFileProgress(sequence, 82, `Saving extracted text for ${file.name}…`);
+        if (prepared?.sidecar) {
+          const { error: sidecarError } = await supabase.storage.from("certification-imports")
+            .upload(sidecarPathFor(path), new Blob([JSON.stringify(prepared.sidecar)], { type: "application/json" }), { upsert: true });
+          if (sidecarError) throw sidecarError;
         }
+
         const { data: item, error: itemError } = await db.from("certification_import_items").insert({
           job_id: intake.jobId, user_id: user.id, storage_path: path, original_file_name: file.name,
           mime_type: file.type || "application/octet-stream", size_bytes: file.size,
           property_id: mapping.propertyId, unit_id: mapping.unitId, tenant_profile_id: mapping.tenantProfileId,
           upload_sequence: sequence, certification_type: mapping.certificationType,
           jurisdiction: mapping.jurisdiction, program_codes: mapping.programCodes,
-          review_queue_status: "not_queued",
+          status: "completed", review_queue_status: "not_queued",
         }).select("id").single();
         if (itemError) throw itemError;
         const { error: documentError } = await db.from("portfolio_tenant_documents").insert({
@@ -264,9 +287,22 @@ export function PortfolioIntakePanel() {
           document_category: "certification_support",
         });
         if (documentError) throw documentError;
+
         uploaded += 1;
-        setStage(fileBase + fileSpan, `Completed document ${sequence + 1} of ${documents.length}.`);
+        updateFileProgress(sequence, 100, `Completed ${uploaded} of ${documents.length}: ${file.name}`);
+        setProgress({ current: uploaded, total: documents.length });
       }
+
+      async function runDocumentWorker() {
+        while (nextSequence < documents.length) {
+          const sequence = nextSequence;
+          nextSequence += 1;
+          await processDocument(sequence);
+        }
+      }
+
+      const workerCount = Math.min(MAX_PARALLEL_DOCUMENTS, Math.max(1, documents.length));
+      await Promise.all(Array.from({ length: workerCount }, () => runDocumentWorker()));
 
       setStage(95, "Finalizing portfolio intake…");
       await finalizeIntake({ data: { jobId: intake.jobId, itemCount: uploaded, errorCount: 0 } });
