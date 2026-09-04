@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { useAccount } from "@/hooks/use-account";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
+import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
+import { resolvePlatformDashboardMode, usePlatformDashboardAccess } from "@/hooks/use-platform-dashboard-access";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { createPortalSession, setCancellation } from "@/utils/payments.functions";
 import { toast } from "sonner";
-import { AlertTriangle, CreditCard, ExternalLink, FileText, Undo2 } from "lucide-react";
+import { AlertTriangle, CreditCard, ExternalLink, FileText, Shield, Undo2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
@@ -30,11 +33,34 @@ export const Route = createFileRoute("/_authenticated/billing")({
 });
 
 function BillingPage() {
+  const { profile, phaRole } = useWorkspaceProfile();
+  const { selectedMode } = usePlatformDashboardAccess();
+  const { accessLevel, loading: authorityLoading } = useCrmStaffAuthority();
+  const dashboardMode = resolvePlatformDashboardMode(selectedMode, profile.organization_type);
+  const billingAllowed = dashboardMode === "executive_demo" || accessLevel === "manager" || phaRole === "executive";
   const { account, loading, refetch } = useAccount();
   const { subscription, isActive, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
   const env = getStripeEnvironment();
   const isEnterprise = account?.planId === "multifamily_enterprise" || account?.planId === "pha";
+
+  if (!authorityLoading && !billingAllowed) {
+    return (
+      <AppShell title="Billing access" subtitle="Billing is limited to the Executive dashboard and manager-level billing authority">
+        <Panel bodyClassName="p-6">
+          <div className="flex items-start gap-3">
+            <Shield className="mt-0.5 size-5 text-primary" />
+            <div>
+              <h2 className="font-display text-lg">Billing is not available in this workspace role</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Employees and property-level operational users do not receive billing controls. Switch to the Executive dashboard or use an authorized manager account.
+              </p>
+            </div>
+          </div>
+        </Panel>
+      </AppShell>
+    );
+  }
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -74,11 +100,11 @@ function BillingPage() {
         <PaymentTestModeBanner />
       </div>
 
-      {loading && (
+      {(loading || authorityLoading) && (
         <Panel bodyClassName="p-6 text-[13px] text-muted-foreground">Loading your account…</Panel>
       )}
 
-      {!loading && account && (
+      {!loading && !authorityLoading && account && (
         <>
           <Panel bodyClassName="p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -207,4 +233,3 @@ function BillingPage() {
     </AppShell>
   );
 }
-
