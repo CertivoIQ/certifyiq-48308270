@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {
+  MAX_OCR_PAGES,
   OCR_ENGINE,
+  OCR_LIMIT_MESSAGE,
   OCR_SIDECAR_VERSION,
   composeSidecarText,
   pageNeedsOcr,
@@ -88,6 +90,27 @@ test('source page bounds and truncation are enforced', () => {
     { page: 3, source: 'ocr', engine: OCR_ENGINE, ocrConfidence: 0.9, text: 'Gross Rent: 1' },
   ]});
   assert.equal(outOfRange.pages.length, 0);
+});
+
+test('controlled OCR limit accepts 50 scanned pages and rejects 51', () => {
+  assert.equal(MAX_OCR_PAGES, 50);
+  assert.match(OCR_LIMIT_MESSAGE, /up to 50 scanned pages each/);
+  const makePages = (count) => Array.from({ length: count }, (_, index) => ({
+    page: index + 1,
+    source: 'ocr',
+    engine: OCR_ENGINE,
+    ocrConfidence: 0.9,
+    text: `Page ${index + 1} readable text`,
+  }));
+  const fiftyPageSource = { ...SOURCE, pageCount: 50 };
+  const fifty = composeSidecarText({ ...fiftyPageSource, pages: makePages(50) });
+  assert.equal(fifty.ocrPageCount, 50);
+
+  const fiftyOnePageSource = { ...SOURCE, pageCount: 51 };
+  assert.throws(
+    () => composeSidecarText({ ...fiftyOnePageSource, pages: makePages(51) }),
+    /controlled OCR page limit/,
+  );
 });
 
 test('sidecar path remains adjacent to its source object', () => {
