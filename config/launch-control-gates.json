@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-02",
+  "updatedAt": "2026-09-04",
   "gates": [
     {
       "id": "production_auth_rls_uat",
@@ -9,6 +9,15 @@
       "blocking": true,
       "ownerRole": "engineering",
       "evidence": "supabase/tests/production_role_cross_tenant_uat.sql"
+    },
+    {
+      "id": "state_rule_document_requirements_rls",
+      "category": "security",
+      "status": "pending_technical",
+      "blocking": true,
+      "ownerRole": "engineering",
+      "action": "Apply and verify supabase/migrations/20260904073000_harden_state_rule_document_requirements.sql in production.",
+      "evidence": "Supabase security advisor on 2026-09-04 reported RLS disabled and a SECURITY DEFINER readiness view."
     },
     {
       "id": "privileged_rpc_surface",
@@ -24,7 +33,7 @@
       "status": "plan_blocked",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Enable leaked-password protection immediately after the Supabase organization is upgraded to Pro or higher.",
+      "action": "Enable leaked-password protection immediately after the Supabase organization is upgraded to Pro or higher, or record a formally approved launch exception with compensating controls.",
       "evidence": "docs/PLAN-BLOCKED-SECURITY-CONTROLS.md"
     },
     {
@@ -36,12 +45,13 @@
       "evidence": "Production auth.mfa_factors verification on 2026-09-02 confirmed one verified TOTP factor for the founder account."
     },
     {
-      "id": "stripe_sandbox_checkout",
+      "id": "stripe_controlled_live_e2e",
       "category": "billing",
       "status": "human_required",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Complete one Stripe-hosted sandbox checkout, renewal/update event, cancellation, and customer-portal return."
+      "action": "Reconnect the Certivo Stripe account, then complete one controlled annual billing lifecycle through invoice.paid, entitlement activation, portal access, and cancellation or reversal. Do not authorize unrestricted paid onboarding until this passes.",
+      "evidence": "PR #351 corrected the stale sandbox gate to the controlled live annual billing requirement; no live invoice or charge has been created."
     },
     {
       "id": "nspire_independent_attestations",
@@ -57,7 +67,8 @@
       "status": "human_required",
       "blocking": true,
       "ownerRole": "compliance_reviewers",
-      "action": "Independently validate the 4 Tennessee and 6 Texas captures, effective dates, supersession status, and rule mappings."
+      "action": "Independently validate the 15 Tennessee and 11 Texas exact-document captures, effective dates, supersession status, applicability, and rule mappings.",
+      "evidence": "supabase/migrations/20260903195500_tn_tx_document_level_sources.sql"
     },
     {
       "id": "terms_privacy_counsel_review",
@@ -65,7 +76,23 @@
       "status": "human_required",
       "blocking": true,
       "ownerRole": "qualified_counsel",
-      "action": "Approve Terms, Privacy Notice, DPA, limitation of liability, indemnity, warranty, and state privacy disclosures."
+      "action": "Approve Terms, Privacy Notice, DPA, limitation of liability, indemnity, warranty, state privacy disclosures, and public compliance claims."
+    },
+    {
+      "id": "independent_penetration_test",
+      "category": "security",
+      "status": "external_required",
+      "blocking": true,
+      "ownerRole": "independent_security_assessor",
+      "action": "Complete an independent penetration test and resolve all critical and high findings."
+    },
+    {
+      "id": "controlled_customer_pilot",
+      "category": "validation",
+      "status": "external_required",
+      "blocking": true,
+      "ownerRole": "product_and_compliance",
+      "action": "Complete a supervised pilot using representative historical files and compare every consequential result with qualified compliance review."
     },
     {
       "id": "support_incident_routing",
@@ -81,8 +108,24 @@
       "status": "pending_technical",
       "blocking": true,
       "ownerRole": "engineering",
-      "action": "Run a non-destructive copy-and-checksum restore using a representative, consented customer object; synthetic isolation UAT has passed.",
+      "action": "Run a non-destructive copy-and-checksum restore using a representative consented customer object; synthetic isolation UAT has passed.",
       "evidence": "docs/CUSTOMER-FILE-RECOVERY-DRILL.md"
+    },
+    {
+      "id": "cloudflare_candidate_deployment",
+      "category": "deployment",
+      "status": "technical_complete",
+      "blocking": true,
+      "ownerRole": "engineering",
+      "evidence": "GitHub Actions run 33846067022 passed build, isolated workers.dev deployment, live response verification, and production-route isolation for version 7518fe5b-49c1-45c7-b478-6187f28d1c1c."
+    },
+    {
+      "id": "production_cutover_authorization",
+      "category": "deployment",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "founder",
+      "action": "Authorize production cutover only after every blocking gate is complete or covered by a formally accepted exception."
     }
   ]
 }

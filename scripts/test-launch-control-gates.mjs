@@ -18,15 +18,30 @@ test("every launch gate has explicit ownership and blocking semantics", () => {
   }
 });
 
-test("remaining human approvals are never labeled technically complete", () => {
-  const humanIds = [
-    "stripe_sandbox_checkout",
-    "tn_tx_independent_source_validation",
-    "terms_privacy_counsel_review",
-  ];
-  for (const id of humanIds) {
-    assert.equal(config.gates.find((gate) => gate.id === id)?.status, "human_required");
+test("remaining human and external approvals are never labeled technically complete", () => {
+  const expectedStatuses = {
+    stripe_controlled_live_e2e: "human_required",
+    tn_tx_independent_source_validation: "human_required",
+    terms_privacy_counsel_review: "human_required",
+    independent_penetration_test: "external_required",
+    controlled_customer_pilot: "external_required",
+    production_cutover_authorization: "human_required",
+  };
+  for (const [id, status] of Object.entries(expectedStatuses)) {
+    assert.equal(config.gates.find((gate) => gate.id === id)?.status, status);
   }
+});
+
+test("new state-rule requirement exposure remains a blocking technical gate", () => {
+  const gate = config.gates.find(
+    (item) => item.id === "state_rule_document_requirements_rls",
+  );
+  assert.equal(gate?.status, "pending_technical");
+  assert.equal(gate?.blocking, true);
+  assert.match(
+    gate?.action ?? "",
+    /20260904073000_harden_state_rule_document_requirements\.sql/,
+  );
 });
 
 test("Supabase leaked-password protection is recorded as plan-blocked, not complete", () => {
@@ -49,6 +64,18 @@ test("NSPIRE dual attestation is recorded from activated production evidence", (
   assert.match(gate?.evidence ?? "", /two distinct staff attestations/i);
   assert.match(gate?.evidence ?? "", /9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254/i);
   assert.match(gate?.evidence ?? "", /activated as current/i);
+});
+
+test("successful isolated candidate deployment is recorded without cutover", () => {
+  const candidate = config.gates.find(
+    (item) => item.id === "cloudflare_candidate_deployment",
+  );
+  const cutover = config.gates.find(
+    (item) => item.id === "production_cutover_authorization",
+  );
+  assert.equal(candidate?.status, "technical_complete");
+  assert.match(candidate?.evidence ?? "", /33846067022/);
+  assert.equal(cutover?.status, "human_required");
 });
 
 test("runbook defines security, billing, regulatory, and recovery escalation", () => {
