@@ -30,23 +30,27 @@ const baseConfig = {
   rules: [{ type: "ESModule", globs: ["**/*.mjs", "**/*.js"] }],
 };
 
-test("prepares an isolated workers.dev candidate with Worker-first assets and removes redundant Node compat enable flags", async () => {
+const expectedAssetRouting = ["/*", "!/assets/*"];
+
+test("prepares an isolated workers.dev candidate with selective Worker-first routing and removes redundant Node compat enable flags", async () => {
   const result = await run(baseConfig);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.candidate.name, "certivoiq-cutover-candidate-20260903");
   assert.equal(result.candidate.workers_dev, true);
   assert.equal(result.candidate.preview_urls, true);
-  assert.equal(result.candidate.assets.run_worker_first, true);
+  assert.deepEqual(result.candidate.assets.run_worker_first, expectedAssetRouting);
   assert.deepEqual(result.candidate.compatibility_flags, ["no_nodejs_compat_v2"]);
   assert.equal("route" in result.candidate, false);
   assert.equal("routes" in result.candidate, false);
   assert.equal("custom_domains" in result.candidate, false);
 });
 
-test("overrides generated asset-first routing for the isolated candidate", async () => {
+test("overrides generated asset routing so application routes are Worker-first but hashed assets stay asset-first", async () => {
   const result = await run({ ...baseConfig, assets: { ...baseConfig.assets, run_worker_first: false } });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.candidate.assets.run_worker_first, true);
+  assert.deepEqual(result.candidate.assets.run_worker_first, expectedAssetRouting);
+  assert.ok(result.candidate.assets.run_worker_first.includes("/*"));
+  assert.ok(result.candidate.assets.run_worker_first.includes("!/assets/*"));
 });
 
 test("preserves explicit nodejs_compat before the Cloudflare default-on date", async () => {
