@@ -24,7 +24,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "engineering",
-      "evidence": "supabase/migrations/20260829020000_harden_privileged_rpc_surface.sql"
+      "evidence": "supabase/migrations/20260829020000_harden_privileged_rpc_surface.sql; production migration 20260904165332_harden_authenticated_security_definer_functions.sql applied 2026-09-04. Production catalog verification confirmed zero authenticated executable SECURITY DEFINER functions in public, 19 SECURITY INVOKER public wrappers, 19 private implementations with empty search_path, no anonymous private-schema usage, explicit client grants, and confirmed-email enforcement for PHA invitation acceptance. Supabase security advisor returned zero SECURITY DEFINER findings after deployment; full CI run 33898182449 passed before production apply."
     },
     {
       "id": "leaked_password_protection",
