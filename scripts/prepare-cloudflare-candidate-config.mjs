@@ -8,8 +8,8 @@
  * - uses a distinct Worker name;
  * - cannot contain production routes/custom domains;
  * - forces workers.dev + preview URLs on;
- * - runs Worker code before Static Assets so security middleware covers
- *   navigation redirects and unmatched/error responses as well as SSR;
+ * - runs Worker code first for application/navigation requests while allowing
+ *   hashed /assets/* files to be served directly by Cloudflare Static Assets;
  * - removes Node compatibility enable-flags that Cloudflare makes implicit for
  *   compatibility dates >= 2026-08-04 (where explicitly setting them is invalid).
  */
@@ -77,9 +77,10 @@ if (!candidate.assets || typeof candidate.assets !== "object" || Array.isArray(c
 if (!candidate.assets.binding || !candidate.assets.directory) {
   fail("Generated Wrangler assets config must contain both binding and directory.");
 }
-// Cloudflare Static Assets are asset-first by default. Force Worker-first so
-// response hardening applies to navigation redirects and unmatched/error paths.
-candidate.assets.run_worker_first = true;
+// Dynamic routes must pass through the Worker so response hardening and SSR run,
+// but hashed client assets must be served by Cloudflare Static Assets. Sending
+// /assets/* through Nitro first causes valid built chunks to return 404.
+candidate.assets.run_worker_first = ["/*", "!/assets/*"];
 
 const flags = Array.isArray(candidate.compatibility_flags)
   ? candidate.compatibility_flags.filter((flag) => typeof flag === "string")
@@ -106,7 +107,7 @@ console.log(`Candidate Worker: ${candidate.name}`);
 console.log(`Compatibility date: ${candidate.compatibility_date}`);
 console.log(`Workers.dev enabled: ${candidate.workers_dev === true}`);
 console.log(`Preview URLs enabled: ${candidate.preview_urls === true}`);
-console.log(`Worker-first asset routing: ${candidate.assets.run_worker_first === true}`);
+console.log(`Worker-first asset routing: ${JSON.stringify(candidate.assets.run_worker_first)}`);
 console.log(
   `Compatibility flags: ${candidate.compatibility_flags.length ? candidate.compatibility_flags.join(", ") : "(none)"}`,
 );
