@@ -9,7 +9,7 @@ This packet is designed to reduce reviewer discovery time. It does not represent
 ## Release under review
 
 - Repository: `Watkin5/certifyiq-48308270`
-- Current reviewed `main` commit: `6a86b65629661c00aee8fd05ed97ef0ebc4b2958`
+- Current reviewed `main` commit before this exception record: `d617995c5b205a45250d1950e1983e565f167277`
 - Candidate Worker version: `7518fe5b-49c1-45c7-b478-6187f28d1c1c`
 - Candidate deployment evidence: GitHub Actions run `33846067022`
 - Candidate URL: `https://certivoiq-launch-candidate-20260904-v2.rodsheka-watkins.workers.dev`
@@ -48,7 +48,7 @@ Required report fields:
 - Retest result
 - Explicit statement that no critical or high finding remains open
 
-Production security update: PR #370 is merged and migration `20260904165332_harden_authenticated_security_definer_functions.sql` is applied. Catalog verification found zero authenticated executable SECURITY DEFINER functions in `public`, 19 invoker-safe public wrappers, and 19 private implementations with empty search paths. The advisor now reports no SECURITY DEFINER warning; the remaining warning is leaked-password protection, unavailable while the organization remains on the Free plan.
+Production security update: PR #370 is merged and migration `20260904165332_harden_authenticated_security_definer_functions.sql` is applied. Catalog verification found zero authenticated executable SECURITY DEFINER functions in `public`, 19 invoker-safe public wrappers, and 19 private implementations with empty search paths. On 2026-09-04 the organization was verified on Pro, leaked-password protection was enabled, and the production security advisor returned zero WARN findings.
 
 ## Legal review scope
 
@@ -108,22 +108,20 @@ Required controlled verification:
 9. Record Stripe object IDs only; never record keys or webhook secrets.
 10. Consider Stripe Tax obligations before enabling tax calculation; enabling automatic tax without an active registration does not establish tax collection.
 
-## Required reviewer outputs
+## Launch exceptions and remaining approvals
 
-Launch remains blocked until the launch-control manifest contains evidence for:
+On 2026-09-04, the founder approved narrowly scoped launch risk exceptions for the independent penetration test, counsel review, controlled customer pilot, and controlled live Stripe lifecycle. These exceptions are recorded in `docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md`. They do not claim that the underlying reviews or live payment occurred.
 
-- Independent penetration test
-- Counsel approval
-- Controlled customer pilot
-- Controlled Stripe billing lifecycle
-- Backup/restore owner confirmation (technical copy/checksum verification passed in run `33902511219`)
-- TN/TX independent source validation
-- Supabase security remediation and clean follow-up advisor check
-- Explicit production cutover authorization
+Launch remains blocked pending:
+
+- TN/TX independent source validation, unless separately completed or excepted;
+- explicit production cutover authorization.
+
+The four excepted activities remain required post-launch follow-up before broadening the controlled rollout or making claims that the corresponding review, validation, or live-payment test was completed.
 
 ## Sign-off records to return
 
-Do not mark a gate complete from a verbal statement. Attach the underlying report or review record and complete the applicable block.
+Do not mark an underlying review complete from a verbal statement or founder exception. Attach the underlying report or review record and complete the applicable block when the work is actually performed.
 
 ### Independent penetration test
 
