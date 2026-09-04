@@ -63,23 +63,24 @@ jobs:
           test -n "$zid"
           curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/routes.json
           ! jq -e --arg w "$TARGET_WORKER" '.result[]|select((.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*") and .script==$w)' /tmp/routes.json >/dev/null
-      - name: Prepare isolated Wrangler config
+      - name: Prepare root-level isolated Wrangler config
         shell: bash
         run: |
           set -euo pipefail
           node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.staging.json "$TARGET_WORKER"
-          jq -e '.assets.binding == "ASSETS" and .assets.directory == "../public" and .assets.run_worker_first == true' .output/server/wrangler.staging.json >/dev/null
+          jq '
+            .main = ".output/server/" + .main
+            | .assets.directory = ".output/public"
+          ' .output/server/wrangler.staging.json > wrangler.staging.root.json
+          jq -e '.name == "certivoiq-founder-dashboard-20260903" and .main == ".output/server/index.mjs" and .assets.binding == "ASSETS" and .assets.directory == ".output/public" and .assets.run_worker_first == true' wrangler.staging.root.json >/dev/null
           test -f .output/public/assets/$INTAKE_ASSET
           test -f .output/public/assets/$APP_SHELL_ASSET
-      - name: Deploy isolated staging Worker
+          echo 'ROOT_STAGING_CONFIG=PASS'
+      - name: Deploy isolated staging Worker from root config
         shell: bash
         run: |
           set -euo pipefail
-          cd .output/server
-          test -d ../public
-          test -f "../public/assets/$INTAKE_ASSET"
-          test -f "../public/assets/$APP_SHELL_ASSET"
-          timeout 180s bunx --bun wrangler@4.128.0 deploy --config wrangler.staging.json
+          timeout 180s bunx --bun wrangler@4.128.0 deploy --config wrangler.staging.root.json
       - name: Verify staged runtime and exact browser assets
         shell: bash
         run: |
