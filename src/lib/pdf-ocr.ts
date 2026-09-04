@@ -60,6 +60,16 @@ export type PrepareResult =
   | { kind: 'machine-readable'; sidecar: null; ocrPageCount: 0 }
   | { kind: 'ocr'; sidecar: OcrSidecar; ocrPageCount: number };
 
+export type PreparationProgressCallback = (message: string, percent: number) => void;
+
+function reportProgress(
+  callback: PreparationProgressCallback | undefined,
+  message: string,
+  percent: number,
+) {
+  callback?.(message, Math.max(0, Math.min(100, Math.round(percent))));
+}
+
 /**
  * Returns a source-bound sidecar for image certifications and PDFs with one or
  * more scanned pages. A fully machine-readable PDF is left untouched so the
@@ -67,21 +77,25 @@ export type PrepareResult =
  */
 export async function prepareCertificationForReview(
   file: File,
-  onProgress?: (message: string) => void,
+  onProgress?: PreparationProgressCallback,
 ): Promise<PrepareResult> {
   if (!isOcrSupportedFile(file)) {
     throw new Error('Only PDF, PNG, JPEG, and WEBP certification documents can be extracted.');
   }
 
+  reportProgress(onProgress, 'Reading certification bytes…', 2);
   const sourceBuffer = await file.arrayBuffer();
+  reportProgress(onProgress, 'Verifying certification integrity…', 5);
   const sourceSha256 = await sha256Hex(sourceBuffer);
 
   if (isImageFile(file)) {
-    onProgress?.('Preparing certification image for review…');
+    reportProgress(onProgress, 'Preparing certification image for review…', 10);
     const { createWorker } = await import('tesseract.js');
     const ocrWorker = await createWorker('eng');
     try {
+      reportProgress(onProgress, 'Reading certification image text…', 35);
       const { data } = await ocrWorker.recognize(file);
+      reportProgress(onProgress, 'Validating extracted image text…', 92);
       const text = normalizePageText(data.text);
       const confidence = Number(data.confidence) / 100;
       if (!text || !Number.isFinite(confidence) || confidence <= 0) {
@@ -89,6 +103,7 @@ export async function prepareCertificationForReview(
           'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
         );
       }
+      reportProgress(onProgress, 'Certification image preparation complete.', 100);
       return {
         kind: 'ocr',
         ocrPageCount: 1,
@@ -116,6 +131,7 @@ export async function prepareCertificationForReview(
     }
   }
 
+  reportProgress(onProgress, 'Opening PDF…', 8);
   const pdfjs = await import('pdfjs-dist');
   const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
@@ -137,19 +153,39 @@ export async function prepareCertificationForReview(
       );
       if (pageNeedsOcr(text)) needsOcr.push(pageNumber);
       else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
+
+      const percent = 10 + (pageNumber / pdf.numPages) * 30;
+      reportProgress(
+        onProgress,
+        `Reading PDF page ${pageNumber} of ${pdf.numPages}…`,
+        percent,
+      );
     }
 
-    if (!needsOcr.length) return { kind: 'machine-readable', sidecar: null, ocrPageCount: 0 };
+    if (!needsOcr.length) {
+      reportProgress(onProgress, 'PDF text detected; preparation complete.', 100);
+      return { kind: 'machine-readable', sidecar: null, ocrPageCount: 0 };
+    }
     if (needsOcr.length > MAX_OCR_PAGES) throw new Error(OCR_LIMIT_MESSAGE);
 
-    onProgress?.('Preparing certification for review…');
+    reportProgress(
+      onProgress,
+      `Preparing ${needsOcr.length} scanned page${needsOcr.length === 1 ? '' : 's'} for text recognition…`,
+      42,
+    );
 
     const { createWorker } = await import('tesseract.js');
     const ocrWorker = await createWorker('eng');
     const startedAt = Date.now();
     try {
-      for (const pageNumber of needsOcr) {
+      for (let ocrIndex = 0; ocrIndex < needsOcr.length; ocrIndex += 1) {
+        const pageNumber = needsOcr[ocrIndex]!;
         if (Date.now() - startedAt > OCR_TIME_BUDGET_MS) throw new Error(OCR_LIMIT_MESSAGE);
+        reportProgress(
+          onProgress,
+          `Reading scanned page ${ocrIndex + 1} of ${needsOcr.length} (PDF page ${pageNumber})…`,
+          42 + (ocrIndex / needsOcr.length) * 55,
+        );
         try {
           const page = await pdf.getPage(pageNumber);
           const viewport = page.getViewport({ scale: RENDER_SCALE });
@@ -161,18 +197,24 @@ export async function prepareCertificationForReview(
           // A page whose OCR produced no text, or no engine-reported
           // confidence, is dropped: the rule engine then reports
           // "unable to determine" rather than acting on invented evidence.
-          if (!text || !Number.isFinite(confidence) || confidence <= 0) continue;
-          pages.push({
-            page: pageNumber,
-            source: 'ocr',
-            engine: OCR_ENGINE,
-            ocrConfidence: Math.min(1, confidence),
-            text,
-          });
+          if (text && Number.isFinite(confidence) && confidence > 0) {
+            pages.push({
+              page: pageNumber,
+              source: 'ocr',
+              engine: OCR_ENGINE,
+              ocrConfidence: Math.min(1, confidence),
+              text,
+            });
+          }
         } catch (error) {
           if (error instanceof Error && error.message === OCR_LIMIT_MESSAGE) throw error;
           // Page-level OCR failure fails safe: the page contributes no evidence.
         }
+        reportProgress(
+          onProgress,
+          `Completed scanned page ${ocrIndex + 1} of ${needsOcr.length}.`,
+          42 + ((ocrIndex + 1) / needsOcr.length) * 55,
+        );
       }
     } finally {
       await ocrWorker.terminate().catch(() => undefined);
@@ -180,8 +222,9 @@ export async function prepareCertificationForReview(
 
     pages.sort((a, b) => a.page - b.page);
     const ocrPageCount = pages.filter((page) => page.source === 'ocr').length;
+    reportProgress(onProgress, 'Finalizing certification text and provenance…', 99);
 
-    return {
+    const result: PrepareResult = {
       kind: 'ocr',
       ocrPageCount,
       sidecar: {
@@ -195,6 +238,8 @@ export async function prepareCertificationForReview(
         pages,
       },
     };
+    reportProgress(onProgress, 'Certification preparation complete.', 100);
+    return result;
   } finally {
     await pdf.cleanup();
   }
