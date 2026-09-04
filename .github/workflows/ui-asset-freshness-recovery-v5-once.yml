@@ -1,4 +1,4 @@
-name: UI asset freshness recovery v5 once
+name: Certification upload performance production release
 # Deployment trigger: release faster certification upload and OCR progress
 on:
   push:
@@ -16,8 +16,8 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-      TARGET_WORKER: certivoiq-founder-dashboard-20260903
-      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+      TARGET_WORKER: certivoiq-upload-ocr-20260904
+      TARGET_URL: https://certivoiq-upload-ocr-20260904.rodsheka-watkins.workers.dev
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
