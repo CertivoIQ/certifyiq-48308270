@@ -109,16 +109,24 @@ export function PortfolioIntakePanel() {
       jobId = job.id;
 
       storagePath = `${user.id}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-      setStage(8, "Uploading the certification securely…");
-      const { error: uploadError } = await supabase.storage.from("certification-imports").upload(storagePath, file, { upsert: false });
-      if (uploadError) throw uploadError;
-      setStage(15, "Secure upload complete. Reading the certification…");
+      setStage(8, "Uploading securely while reading the certification…");
 
-      const prepared = await prepareCertificationForReview(file, (status, preparationPercent) => {
-        const overall = 15 + (clampPercent(preparationPercent) / 100) * 75;
+      const uploadPromise = supabase.storage
+        .from("certification-imports")
+        .upload(storagePath, file, { upsert: false });
+      const preparePromise = prepareCertificationForReview(file, (status, preparationPercent) => {
+        const overall = 10 + (clampPercent(preparationPercent) / 100) * 78;
         setStage(overall, status);
         setMessage(`${file.name}: ${status}`);
       });
+
+      const [uploadOutcome, prepareOutcome] = await Promise.allSettled([uploadPromise, preparePromise]);
+      if (uploadOutcome.status === "rejected") throw uploadOutcome.reason;
+      if (uploadOutcome.value.error) throw uploadOutcome.value.error;
+      if (prepareOutcome.status === "rejected") throw prepareOutcome.reason;
+      const prepared = prepareOutcome.value;
+
+      setStage(90, "Secure upload and document reading complete…");
       if (prepared.sidecar) {
         setStage(92, "Saving extracted text and page provenance…");
         const { error: sidecarError } = await supabase.storage.from("certification-imports")
@@ -175,7 +183,7 @@ export function PortfolioIntakePanel() {
       setProgress({ current: 0, total: 0 });
       if (!completed) {
         setProgressPercent(0);
-        setProgressLabel("");
+        setProgressLabel(documents.length === 1 ? "Ready to process selected certification." : "");
       }
     }
   }
@@ -298,6 +306,7 @@ export function PortfolioIntakePanel() {
   }
 
   const canSubmit = !busy && (!!manifest || documents.length === 1);
+  const showProgress = busy || progressPercent === 100 || (!manifest && documents.length === 1);
 
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-sm">
@@ -328,9 +337,11 @@ export function PortfolioIntakePanel() {
           <span className="mt-2 font-medium">{hasPaidSubscription ? "Choose certification documents" : "Choose one certification document"}</span>
           <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · up to 50 scanned pages · 50 MB each · one file needs no CSV</span>
           <input className="sr-only" type="file" multiple={hasPaidSubscription} accept={singleDocumentTypes} onChange={(event) => {
-            setDocuments(Array.from(event.target.files ?? []));
+            const selected = Array.from(event.target.files ?? []);
+            setDocuments(selected);
             setMessage("");
             resetProgress();
+            if (selected.length === 1) setProgressLabel("Ready to process selected certification.");
           }} />
         </label>
       </div>
@@ -342,10 +353,10 @@ export function PortfolioIntakePanel() {
         </button>
       </div>
 
-      {(busy || progressPercent === 100) && progressPercent > 0 ? (
+      {showProgress ? (
         <div className="mt-3 rounded-lg border bg-background p-3" aria-live="polite">
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="truncate text-muted-foreground">{progressLabel || "Processing certification…"}</span>
+            <span className="truncate text-muted-foreground">{progressLabel || "Ready to process selected certification."}</span>
             <span className="font-semibold tabular-nums text-foreground">{progressPercent}%</span>
           </div>
           <div
