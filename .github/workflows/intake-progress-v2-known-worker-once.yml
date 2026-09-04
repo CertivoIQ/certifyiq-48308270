@@ -1,0 +1,84 @@
+name: Intake progress v2 known worker once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/intake-progress-v2-known-worker-once.yml']
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-cutover-candidate-20260903
+      TARGET_URL: https://certivoiq-cutover-candidate-20260903.rodsheka-watkins.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.3 }
+      - run: bun install --frozen-lockfile
+      - name: Verify intended UI source
+        run: |
+          grep -F -q 'const showProgress = true' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Choose a certification to begin.' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Promise.allSettled([uploadPromise, preparePromise])' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'MAX_PARALLEL_OCR_WORKERS = 3' src/lib/pdf-ocr.ts
+          bun run test:ocr
+      - name: Build current main
+        run: bun run build
+      - name: Verify built marker
+        run: grep -R -F -q 'Choose a certification to begin.' .output
+      - name: Confirm target exists and is not production
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/w.json
+          jq -e --arg w "$TARGET_WORKER" 'any(.result[]; .id==$w)' /tmp/w.json >/dev/null
+          curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/z.json
+          zid=$(jq -r '.result[0].id' /tmp/z.json)
+          curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/r.json
+          ! jq -e --arg w "$TARGET_WORKER" '.result[]|select((.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*") and .script==$w)' /tmp/r.json >/dev/null
+      - name: Prepare and deploy isolated build
+        run: |
+          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.progress.json "$TARGET_WORKER"
+          timeout 180s bunx --bun wrangler@4.129.0 deploy --config .output/server/wrangler.progress.json
+      - name: Verify staged runtime and security
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 12); do
+            s=$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")
+            if [ "$s" = 204 ]; then ok=1; break; fi
+            sleep 5
+          done
+          test "$ok" = 1
+          node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+      - name: Switch routes with rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/z.json
+          zid=$(jq -r '.result[0].id' /tmp/z.json)
+          curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/r.json
+          aid=$(jq -r '.result[]|select(.pattern=="certivoiq.com/*")|.id' /tmp/r.json)
+          wid=$(jq -r '.result[]|select(.pattern=="www.certivoiq.com/*")|.id' /tmp/r.json)
+          old=$(jq -r '.result[]|select(.pattern=="certivoiq.com/*")|.script' /tmp/r.json)
+          put(){ curl -fsS -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' --data "$(jq -nc --arg p "$2" --arg s "$3" '{pattern:$p,script:$s}')" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes/$1" >/dev/null; }
+          put "$aid" 'certivoiq.com/*' "$TARGET_WORKER"
+          put "$wid" 'www.certivoiq.com/*' "$TARGET_WORKER"
+          if ! (test "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" https://certivoiq.com/api/internal/runtime-health)" = 204 && node scripts/verify-cloudflare-live-response.mjs https://certivoiq.com && test "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" https://www.certivoiq.com/api/internal/runtime-health)" = 204 && node scripts/verify-cloudflare-live-response.mjs https://www.certivoiq.com); then
+            put "$aid" 'certivoiq.com/*' "$old"
+            put "$wid" 'www.certivoiq.com/*' "$old"
+            echo 'ROLLBACK COMPLETE'
+            exit 1
+          fi
+          echo "PASS: production routes now use $TARGET_WORKER; rollback target was $old"
