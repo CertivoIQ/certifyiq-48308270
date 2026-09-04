@@ -28,6 +28,36 @@ import {
 
 const RENDER_SCALE = 2;
 const MAX_PARALLEL_OCR_WORKERS = 3;
+const MAX_PARALLEL_TEXT_READERS = 6;
+
+type SharedOcrWorker = Awaited<ReturnType<(typeof import('tesseract.js'))['createWorker']>>;
+type OcrSource = Parameters<SharedOcrWorker['recognize']>[0];
+
+type OcrWorkerSlot = {
+  worker: Promise<SharedOcrWorker>;
+  tail: Promise<void>;
+};
+
+// Reuse one bounded pool for the page lifetime. Mass intake must not start
+// three new OCR workers (and reload their language data) for every document.
+const sharedOcrSlots: OcrWorkerSlot[] = [];
+let nextOcrSlot = 0;
+
+async function ensureOcrWorkerSlots(count: number) {
+  while (sharedOcrSlots.length < count) {
+    const worker = import('tesseract.js').then(({ createWorker }) => createWorker('eng'));
+    sharedOcrSlots.push({ worker, tail: Promise.resolve() });
+  }
+}
+
+async function recognizeWithSharedWorker(source: OcrSource, workerCount: number) {
+  await ensureOcrWorkerSlots(workerCount);
+  const slot = sharedOcrSlots[nextOcrSlot % workerCount]!;
+  nextOcrSlot += 1;
+  const recognition = slot.tail.then(async () => (await slot.worker).recognize(source));
+  slot.tail = recognition.then(() => undefined, () => undefined);
+  return recognition;
+}
 
 function parallelOcrWorkerCount(pageCount: number): number {
   if (pageCount <= 1) return 1;
@@ -72,8 +102,8 @@ function createCanvas(width: number, height: number): RenderTarget {
 }
 
 export type PrepareResult =
-  | { kind: 'machine-readable'; sidecar: null; ocrPageCount: 0 }
-  | { kind: 'ocr'; sidecar: OcrSidecar; ocrPageCount: number };
+  | { kind: 'machine-readable'; sidecar: OcrSidecar; ocrPageCount: 0; sourceSha256: string }
+  | { kind: 'ocr'; sidecar: OcrSidecar; ocrPageCount: number; sourceSha256: string };
 
 export type PreparationProgressCallback = (message: string, percent: number) => void;
 
@@ -86,9 +116,8 @@ function reportProgress(
 }
 
 /**
- * Returns a source-bound sidecar for image certifications and PDFs with one or
- * more scanned pages. A fully machine-readable PDF is left untouched so the
- * existing server-side deterministic text path stays exactly as-is.
+ * Returns a source-bound sidecar for every supported certification so review
+ * can validate the original bytes once without parsing the PDF a second time.
  */
 export async function prepareCertificationForReview(
   file: File,
@@ -105,45 +134,40 @@ export async function prepareCertificationForReview(
 
   if (isImageFile(file)) {
     reportProgress(onProgress, 'Preparing certification image for review…', 10);
-    const { createWorker } = await import('tesseract.js');
-    const ocrWorker = await createWorker('eng');
-    try {
-      reportProgress(onProgress, 'Reading certification image text…', 35);
-      const { data } = await ocrWorker.recognize(file);
-      reportProgress(onProgress, 'Validating extracted image text…', 92);
-      const text = normalizePageText(data.text);
-      const confidence = Number(data.confidence) / 100;
-      if (!text || !Number.isFinite(confidence) || confidence <= 0) {
-        throw new Error(
-          'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
-        );
-      }
-      reportProgress(onProgress, 'Certification image preparation complete.', 100);
-      return {
-        kind: 'ocr',
-        ocrPageCount: 1,
-        sidecar: {
-          schemaVersion: OCR_SIDECAR_VERSION,
-          sourceFileName: file.name,
-          sourceSha256,
-          sourceByteSize: file.size,
-          createdAt: new Date().toISOString(),
-          pageCount: 1,
-          truncated: false,
-          pages: [
-            {
-              page: 1,
-              source: 'ocr',
-              engine: OCR_ENGINE,
-              ocrConfidence: Math.min(1, confidence),
-              text,
-            },
-          ],
-        },
-      };
-    } finally {
-      await ocrWorker.terminate().catch(() => undefined);
+    reportProgress(onProgress, 'Reading certification image text…', 35);
+    const { data } = await recognizeWithSharedWorker(file, 1);
+    reportProgress(onProgress, 'Validating extracted image text…', 92);
+    const text = normalizePageText(data.text);
+    const confidence = Number(data.confidence) / 100;
+    if (!text || !Number.isFinite(confidence) || confidence <= 0) {
+      throw new Error(
+        'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
+      );
     }
+    reportProgress(onProgress, 'Certification image preparation complete.', 100);
+    return {
+      kind: 'ocr',
+      ocrPageCount: 1,
+      sourceSha256,
+      sidecar: {
+        schemaVersion: OCR_SIDECAR_VERSION,
+        sourceFileName: file.name,
+        sourceSha256,
+        sourceByteSize: file.size,
+        createdAt: new Date().toISOString(),
+        pageCount: 1,
+        truncated: false,
+        pages: [
+          {
+            page: 1,
+            source: 'ocr',
+            engine: OCR_ENGINE,
+            ocrConfidence: Math.min(1, confidence),
+            text,
+          },
+        ],
+      },
+    };
   }
 
   reportProgress(onProgress, 'Opening PDF…', 8);
@@ -160,30 +184,56 @@ export async function prepareCertificationForReview(
     const pages: OcrSidecarPage[] = [];
     const needsOcr: number[] = [];
 
-    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent();
-      const text = normalizePageText(
-        content.items.map((item) => ('str' in item ? item.str : '')).join(' '),
-      );
-      if (pageNeedsOcr(text)) needsOcr.push(pageNumber);
-      else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
-
-      const percent = 10 + (pageNumber / pdf.numPages) * 30;
-      reportProgress(
-        onProgress,
-        `Reading PDF page ${pageNumber} of ${pdf.numPages}…`,
-        percent,
-      );
+    let nextTextPage = 1;
+    let completedTextPages = 0;
+    const textReaderCount = Math.min(
+      pdf.numPages,
+      MAX_PARALLEL_TEXT_READERS,
+      Math.max(1, typeof navigator === 'undefined' ? 4 : Math.floor(navigator.hardwareConcurrency || 4)),
+    );
+    async function readTextPages() {
+      while (nextTextPage <= pdf.numPages) {
+        const pageNumber = nextTextPage;
+        nextTextPage += 1;
+        const page = await pdf.getPage(pageNumber);
+        const content = await page.getTextContent();
+        const text = normalizePageText(
+          content.items.map((item) => ('str' in item ? item.str : '')).join(' '),
+        );
+        if (pageNeedsOcr(text)) needsOcr.push(pageNumber);
+        else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
+        completedTextPages += 1;
+        reportProgress(
+          onProgress,
+          `Reading PDF text: ${completedTextPages} of ${pdf.numPages} pages complete…`,
+          10 + (completedTextPages / pdf.numPages) * 30,
+        );
+      }
     }
+    await Promise.all(Array.from({ length: textReaderCount }, () => readTextPages()));
+    pages.sort((a, b) => a.page - b.page);
+    needsOcr.sort((a, b) => a - b);
 
     if (!needsOcr.length) {
       reportProgress(onProgress, 'PDF text detected; preparation complete.', 100);
-      return { kind: 'machine-readable', sidecar: null, ocrPageCount: 0 };
+      return {
+        kind: 'machine-readable',
+        ocrPageCount: 0,
+        sourceSha256,
+        sidecar: {
+          schemaVersion: OCR_SIDECAR_VERSION,
+          sourceFileName: file.name,
+          sourceSha256,
+          sourceByteSize: file.size,
+          createdAt: new Date().toISOString(),
+          pageCount: pdf.numPages,
+          truncated: false,
+          pages,
+        },
+      };
     }
     if (needsOcr.length > MAX_OCR_PAGES) throw new Error(OCR_LIMIT_MESSAGE);
 
-    const { createWorker } = await import('tesseract.js');
     const workerCount = parallelOcrWorkerCount(needsOcr.length);
     reportProgress(
       onProgress,
@@ -191,15 +241,13 @@ export async function prepareCertificationForReview(
       42,
     );
 
-    const ocrWorkers = await Promise.all(
-      Array.from({ length: workerCount }, () => createWorker('eng')),
-    );
+    await ensureOcrWorkerSlots(workerCount);
     const startedAt = Date.now();
     let nextIndex = 0;
     let completedCount = 0;
     let fatalError: Error | null = null;
 
-    async function runWorker(ocrWorker: Awaited<ReturnType<typeof createWorker>>) {
+    async function runWorker() {
       while (!fatalError) {
         const ocrIndex = nextIndex;
         nextIndex += 1;
@@ -222,7 +270,7 @@ export async function prepareCertificationForReview(
           const viewport = page.getViewport({ scale: RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport }).promise;
-          const { data } = await ocrWorker.recognize(canvas);
+          const { data } = await recognizeWithSharedWorker(canvas, workerCount);
           const text = normalizePageText(data.text);
           const confidence = Number(data.confidence) / 100;
           // A page whose OCR produced no text, or no engine-reported
@@ -254,12 +302,8 @@ export async function prepareCertificationForReview(
       }
     }
 
-    try {
-      await Promise.all(ocrWorkers.map((worker) => runWorker(worker)));
-      if (fatalError) throw fatalError;
-    } finally {
-      await Promise.all(ocrWorkers.map((worker) => worker.terminate().catch(() => undefined)));
-    }
+    await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+    if (fatalError) throw fatalError;
 
     pages.sort((a, b) => a.page - b.page);
     const ocrPageCount = pages.filter((page) => page.source === 'ocr').length;
@@ -268,6 +312,7 @@ export async function prepareCertificationForReview(
     const result: PrepareResult = {
       kind: 'ocr',
       ocrPageCount,
+      sourceSha256,
       sidecar: {
         schemaVersion: OCR_SIDECAR_VERSION,
         sourceFileName: file.name,
@@ -285,3 +330,4 @@ export async function prepareCertificationForReview(
     await pdf.cleanup();
   }
 }
+
