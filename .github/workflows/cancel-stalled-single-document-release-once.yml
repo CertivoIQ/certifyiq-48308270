@@ -1,0 +1,28 @@
+name: Cancel stalled single document release once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cancel-stalled-single-document-release-once.yml"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel stalled run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/33819974490/cancel" >/dev/null
+          echo "Cancellation requested for stalled staging run 33819974490."
