@@ -1,0 +1,37 @@
+name: UI staging assets settings diagnostic once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ui-staging-assets-settings-diagnostic-once.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read staging Worker settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings" -o /tmp/settings.json
+          jq -e '.success == true' /tmp/settings.json >/dev/null
+          echo 'STAGING_BINDINGS:'
+          jq -c '[.result.bindings[]? | {name,type}]' /tmp/settings.json
+          echo 'STAGING_ASSET_CONFIG:'
+          jq -c '{assets:(.result.assets // null), assets_config:(.result.assets_config // null), compatibility_date:(.result.compatibility_date // null)}' /tmp/settings.json
+          jq -e 'any(.result.bindings[]?; .name == "ASSETS")' /tmp/settings.json >/dev/null
+      - name: Probe staging asset classes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in favicon.ico assets/styles-B-Op6m3N.css assets/portfolio-intake-panel-ClKPOR_r.js assets/app-shell-CbymzWT2.js; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/$path")"
+            echo "$path HTTP $code"
+          done
