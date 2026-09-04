@@ -1,0 +1,102 @@
+name: UI staging deploy once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ui-staging-deploy-once.yml']
+permissions:
+  contents: read
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.3 }
+      - name: Build exact main and verify UI markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun install --frozen-lockfile
+          node --test scripts/test-cloudflare-candidate-config.mjs
+          bun run test:ocr
+          grep -F -q 'const showProgress = true' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Choose a certification to begin.' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Upload single document' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'MAX_PARALLEL_OCR_WORKERS = 3' src/lib/pdf-ocr.ts
+          grep -F -q 'aria-label="Platform dashboard"' src/components/app-shell.tsx
+          grep -F -q 'Multifamily workspace' src/components/app-shell.tsx
+          bun run build
+      - name: Capture exact browser assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          intake="$(find .output/public/assets -maxdepth 1 -name 'portfolio-intake-panel-*.js' -type f | head -1)"
+          shell="$(find .output/public/assets -maxdepth 1 -name 'app-shell-*.js' -type f | head -1)"
+          test -n "$intake" && test -n "$shell"
+          grep -F -q 'Choose a certification to begin.' "$intake"
+          grep -F -q 'Upload single document' "$intake"
+          ! grep -F -q 'filenames must match the CSV' "$intake"
+          grep -F -q 'Platform dashboard' "$shell"
+          grep -F -q 'Multifamily workspace' "$shell"
+          echo "INTAKE_ASSET=$(basename "$intake")" >> "$GITHUB_ENV"
+          echo "APP_SHELL_ASSET=$(basename "$shell")" >> "$GITHUB_ENV"
+      - name: Confirm staging Worker is isolated
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/workers.json
+          jq -e --arg w "$TARGET_WORKER" 'any(.result[]; .id==$w)' /tmp/workers.json >/dev/null
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zid"
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/routes.json
+          ! jq -e --arg w "$TARGET_WORKER" '.result[]|select((.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*") and .script==$w)' /tmp/routes.json >/dev/null
+      - name: Prepare isolated Wrangler config
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.staging.json "$TARGET_WORKER"
+          jq -e '.assets.binding == "ASSETS" and .assets.directory == "../public" and .assets.run_worker_first == true' .output/server/wrangler.staging.json >/dev/null
+          test -f .output/public/assets/$INTAKE_ASSET
+          test -f .output/public/assets/$APP_SHELL_ASSET
+      - name: Deploy isolated staging Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 180s bunx --bun wrangler@4.129.0 deploy --config .output/server/wrangler.staging.json
+      - name: Verify staged runtime and exact browser assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 12); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+            [ "$code" = 204 ] && { ok=1; break; }
+            sleep 5
+          done
+          [ "$ok" = 1 ]
+          node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+          intake_code="$(curl -sS -o /tmp/i.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$INTAKE_ASSET")"
+          echo "Staged intake asset HTTP $intake_code"
+          [ "$intake_code" = 200 ]
+          grep -F -q 'Choose a certification to begin.' /tmp/i.js
+          grep -F -q 'Upload single document' /tmp/i.js
+          ! grep -F -q 'filenames must match the CSV' /tmp/i.js
+          shell_code="$(curl -sS -o /tmp/s.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$APP_SHELL_ASSET")"
+          echo "Staged app-shell asset HTTP $shell_code"
+          [ "$shell_code" = 200 ]
+          grep -F -q 'Platform dashboard' /tmp/s.js
+          grep -F -q 'Multifamily workspace' /tmp/s.js
+          echo 'STAGING_BROWSER_ASSET_GATE=PASS'
