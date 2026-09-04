@@ -27,6 +27,21 @@ import {
  */
 
 const RENDER_SCALE = 2;
+const MAX_PARALLEL_OCR_WORKERS = 3;
+
+function parallelOcrWorkerCount(pageCount: number): number {
+  if (pageCount <= 1) return 1;
+  const cores = typeof navigator !== 'undefined' && Number.isFinite(navigator.hardwareConcurrency)
+    ? navigator.hardwareConcurrency
+    : 4;
+  const deviceMemory = typeof navigator !== 'undefined' && 'deviceMemory' in navigator
+    ? Number((navigator as Navigator & { deviceMemory?: number }).deviceMemory)
+    : Number.NaN;
+
+  let workers = cores >= 8 ? 3 : cores >= 4 ? 2 : 1;
+  if (Number.isFinite(deviceMemory) && deviceMemory < 4) workers = 1;
+  return Math.max(1, Math.min(MAX_PARALLEL_OCR_WORKERS, workers, pageCount));
+}
 
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
@@ -168,24 +183,40 @@ export async function prepareCertificationForReview(
     }
     if (needsOcr.length > MAX_OCR_PAGES) throw new Error(OCR_LIMIT_MESSAGE);
 
+    const { createWorker } = await import('tesseract.js');
+    const workerCount = parallelOcrWorkerCount(needsOcr.length);
     reportProgress(
       onProgress,
-      `Preparing ${needsOcr.length} scanned page${needsOcr.length === 1 ? '' : 's'} for text recognition…`,
+      `Starting ${workerCount} parallel text reader${workerCount === 1 ? '' : 's'} for ${needsOcr.length} scanned page${needsOcr.length === 1 ? '' : 's'}…`,
       42,
     );
 
-    const { createWorker } = await import('tesseract.js');
-    const ocrWorker = await createWorker('eng');
+    const ocrWorkers = await Promise.all(
+      Array.from({ length: workerCount }, () => createWorker('eng')),
+    );
     const startedAt = Date.now();
-    try {
-      for (let ocrIndex = 0; ocrIndex < needsOcr.length; ocrIndex += 1) {
+    let nextIndex = 0;
+    let completedCount = 0;
+    let fatalError: Error | null = null;
+
+    async function runWorker(ocrWorker: Awaited<ReturnType<typeof createWorker>>) {
+      while (!fatalError) {
+        const ocrIndex = nextIndex;
+        nextIndex += 1;
+        if (ocrIndex >= needsOcr.length) return;
+
+        if (Date.now() - startedAt > OCR_TIME_BUDGET_MS) {
+          fatalError = new Error(OCR_LIMIT_MESSAGE);
+          return;
+        }
+
         const pageNumber = needsOcr[ocrIndex]!;
-        if (Date.now() - startedAt > OCR_TIME_BUDGET_MS) throw new Error(OCR_LIMIT_MESSAGE);
         reportProgress(
           onProgress,
-          `Reading scanned page ${ocrIndex + 1} of ${needsOcr.length} (PDF page ${pageNumber})…`,
-          42 + (ocrIndex / needsOcr.length) * 55,
+          `Reading scanned pages in parallel: ${completedCount} of ${needsOcr.length} complete (PDF page ${pageNumber} in progress)…`,
+          42 + (completedCount / needsOcr.length) * 55,
         );
+
         try {
           const page = await pdf.getPage(pageNumber);
           const viewport = page.getViewport({ scale: RENDER_SCALE });
@@ -207,17 +238,27 @@ export async function prepareCertificationForReview(
             });
           }
         } catch (error) {
-          if (error instanceof Error && error.message === OCR_LIMIT_MESSAGE) throw error;
+          if (error instanceof Error && error.message === OCR_LIMIT_MESSAGE) {
+            fatalError = error;
+            return;
+          }
           // Page-level OCR failure fails safe: the page contributes no evidence.
         }
+
+        completedCount += 1;
         reportProgress(
           onProgress,
-          `Completed scanned page ${ocrIndex + 1} of ${needsOcr.length}.`,
-          42 + ((ocrIndex + 1) / needsOcr.length) * 55,
+          `Completed ${completedCount} of ${needsOcr.length} scanned pages.`,
+          42 + (completedCount / needsOcr.length) * 55,
         );
       }
+    }
+
+    try {
+      await Promise.all(ocrWorkers.map((worker) => runWorker(worker)));
+      if (fatalError) throw fatalError;
     } finally {
-      await ocrWorker.terminate().catch(() => undefined);
+      await Promise.all(ocrWorkers.map((worker) => worker.terminate().catch(() => undefined)));
     }
 
     pages.sort((a, b) => a.page - b.page);
