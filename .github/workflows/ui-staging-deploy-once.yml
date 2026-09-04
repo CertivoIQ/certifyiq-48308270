@@ -75,7 +75,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          timeout 180s bunx --bun wrangler@4.129.0 deploy --config .output/server/wrangler.staging.json
+          cd .output/server
+          test -d ../public
+          test -f "../public/assets/$INTAKE_ASSET"
+          test -f "../public/assets/$APP_SHELL_ASSET"
+          timeout 180s bunx --bun wrangler@4.129.0 deploy --config wrangler.staging.json
       - name: Verify staged runtime and exact browser assets
         shell: bash
         run: |
