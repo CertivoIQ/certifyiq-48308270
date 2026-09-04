@@ -43,8 +43,10 @@ test("PHA program work is collapsed into operations while HOTMA remains primary"
 
 
 test("billing is absent for ordinary operational roles and guarded at the route", () => {
-  assert.doesNotMatch(shell, /const MF_ADMIN[\s\S]*to: "\/billing"/);
-  assert.doesNotMatch(shell, /const PHA_ADMIN[\s\S]*to: "\/billing"/);
+  const mfAdmin = shell.slice(shell.indexOf("const MF_ADMIN"), shell.indexOf("const HELP_NAV"));
+  const phaAdmin = shell.slice(shell.indexOf("const PHA_ADMIN"), shell.indexOf("function phaNavAllowed"));
+  assert.doesNotMatch(mfAdmin, /to: "\/billing"/);
+  assert.doesNotMatch(phaAdmin, /to: "\/billing"/);
   assert.match(shell, /dashboardMode === "executive_demo" \|\| accessLevel === "manager" \|\| phaRole === "executive"/);
   assert.match(billing, /billingAllowed = dashboardMode === "executive_demo" \|\| accessLevel === "manager" \|\| phaRole === "executive"/);
   assert.match(billing, /Employees and property-level operational users do not receive billing controls/);
