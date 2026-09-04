@@ -85,7 +85,21 @@ jobs:
           echo "Candidate URL: $candidate_url"
 
       - name: Verify live Cloudflare candidate response boundary
-        run: node scripts/verify-cloudflare-live-response.mjs "${{ steps.deploy.outputs.candidate_url }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate_url="${{ steps.deploy.outputs.candidate_url }}"
+          for attempt in 1 2 3 4 5 6; do
+            if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 6 ]; then
+              echo "Candidate response boundary did not become healthy after $attempt attempts."
+              exit 1
+            fi
+            echo "Candidate hostname is not ready yet (attempt $attempt/6); retrying in 10 seconds."
+            sleep 10
+          done
 
       - name: Confirm production route remains outside this workflow
         run: |
