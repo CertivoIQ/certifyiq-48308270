@@ -1,0 +1,182 @@
+name: UI fresh staging deploy once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ui-fresh-staging-deploy-once.yml']
+permissions:
+  contents: read
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_WORKER: certivoiq-ui-staging-20260904
+      TARGET_URL: https://certivoiq-ui-staging-20260904.rodsheka-watkins.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.3 }
+
+      - name: Require deployment/runtime sources
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+          STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
+          STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+          required=(SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY STRIPE_LIVE_API_KEY VITE_PAYMENTS_CLIENT_TOKEN PAYMENTS_LIVE_WEBHOOK_SECRET STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE STRIPE_PHA_PRICE_ID_LIVE OPERATIONS_WORKER_SECRET)
+          for name in "${required[@]}"; do test -n "${!name:-}" || { echo "$name is missing"; exit 1; }; done
+          test "$SUPABASE_URL" = "$VITE_SUPABASE_URL"
+          [[ "$STRIPE_LIVE_API_KEY" =~ ^(sk|rk)_live_[A-Za-z0-9]+$ ]]
+          [[ "$VITE_PAYMENTS_CLIENT_TOKEN" =~ ^pk_live_[A-Za-z0-9]+$ ]]
+          [[ "$PAYMENTS_LIVE_WEBHOOK_SECRET" =~ ^whsec_[A-Za-z0-9]+$ ]]
+          echo 'PASS: required staging sources are present; values not displayed.'
+
+      - name: Install, test, and build exact main
+        shell: bash
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+        run: |
+          set -euo pipefail
+          bun install --frozen-lockfile
+          node --test scripts/test-cloudflare-candidate-config.mjs
+          bun run test:ocr
+          grep -F -q 'const showProgress = true' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Choose a certification to begin.' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Upload single document' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'MAX_PARALLEL_OCR_WORKERS = 3' src/lib/pdf-ocr.ts
+          grep -F -q 'aria-label="Platform dashboard"' src/components/app-shell.tsx
+          grep -F -q 'Multifamily workspace' src/components/app-shell.tsx
+          bun run build
+
+      - name: Verify public build boundary and exact browser assets
+        shell: bash
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          intake="$(find .output/public/assets -maxdepth 1 -name 'portfolio-intake-panel-*.js' -type f | head -1)"
+          shell="$(find .output/public/assets -maxdepth 1 -name 'app-shell-*.js' -type f | head -1)"
+          test -n "$intake" && test -n "$shell"
+          grep -F -q 'Choose a certification to begin.' "$intake"
+          grep -F -q 'Upload single document' "$intake"
+          ! grep -F -q 'filenames must match the CSV' "$intake"
+          grep -F -q 'Platform dashboard' "$shell"
+          grep -F -q 'Multifamily workspace' "$shell"
+          echo "INTAKE_ASSET=$(basename "$intake")" >> "$GITHUB_ENV"
+          echo "APP_SHELL_ASSET=$(basename "$shell")" >> "$GITHUB_ENV"
+          node <<'NODE'
+          const fs=require('fs'),path=require('path');
+          let corpus='';
+          (function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else{try{corpus+=fs.readFileSync(f,'utf8')+'\n'}catch{}}}})('.output/public');
+          for(const n of ['VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','VITE_PAYMENTS_CLIENT_TOKEN']){const v=process.env[n];if(!v||!corpus.includes(v))throw new Error(`${n} missing from public build`)}
+          for(const n of ['SUPABASE_SERVICE_ROLE_KEY','STRIPE_LIVE_API_KEY','PAYMENTS_LIVE_WEBHOOK_SECRET']){const v=process.env[n];if(v&&corpus.includes(v))throw new Error(`${n} leaked into public build`)}
+          console.log('PASS: public build boundary verified.');
+          NODE
+
+      - name: Prepare fresh isolated root Wrangler config
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.fresh.json "$TARGET_WORKER"
+          jq '.main = ".output/server/" + .main | .assets.directory = ".output/public"' .output/server/wrangler.fresh.json > wrangler.fresh-staging.json
+          jq -e --arg w "$TARGET_WORKER" '.name==$w and .main==".output/server/index.mjs" and .assets.binding=="ASSETS" and .assets.directory==".output/public" and .assets.run_worker_first==true and .workers_dev==true and .preview_urls==true and (.routes|not) and (.route|not)' wrangler.fresh-staging.json >/dev/null
+          echo 'FRESH_STAGING_CONFIG=PASS'
+
+      - name: Deploy fresh isolated staging Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 180s bunx --bun wrangler@4.128.0 deploy --config wrangler.fresh-staging.json
+
+      - name: Ensure fresh Worker workers.dev is enabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts" -o /tmp/workers.json
+          jq -e --arg w "$TARGET_WORKER" 'any(.result[]; .id==$w)' /tmp/workers.json >/dev/null
+          status="$(curl -sS -o /tmp/subdomain.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain")"
+          if [ "$status" = 200 ]; then
+            enabled="$(jq -r '.result.enabled // false' /tmp/subdomain.json)"
+            if [ "$enabled" != true ]; then
+              curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data '{"enabled":true,"previews_enabled":true}' "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain" >/dev/null
+            fi
+          fi
+          echo 'PASS: fresh staging Worker exists and workers.dev check completed.'
+
+      - name: Bind runtime secrets to fresh staging Worker
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+          STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
+          STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
+          STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE: ${{ secrets.STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE }}
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+          SUPPORT_EMAIL_WEBHOOK_SECRET: ${{ secrets.SUPPORT_EMAIL_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          secret_file="$(mktemp)"
+          SECRET_FILE="$secret_file" node <<'NODE'
+          const fs=require('fs');
+          const required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','STRIPE_LIVE_API_KEY','VITE_PAYMENTS_CLIENT_TOKEN','PAYMENTS_LIVE_WEBHOOK_SECRET','STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE','STRIPE_PHA_PRICE_ID_LIVE','OPERATIONS_WORKER_SECRET'];
+          const optional=['STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE','SUPPORT_EMAIL_WEBHOOK_SECRET'];
+          const p={}; for(const n of required){if(!process.env[n])throw new Error(`${n} missing`);p[n]=process.env[n]}; for(const n of optional)if(process.env[n])p[n]=process.env[n];
+          fs.writeFileSync(process.env.SECRET_FILE,JSON.stringify(p),{mode:0o600});
+          NODE
+          bunx --bun wrangler@4.128.0 secret bulk "$secret_file" --name "$TARGET_WORKER"
+          rm -f "$secret_file"
+          echo 'PASS: required runtime secrets bound; PAYMENTS_LIVE_VERIFIED intentionally not set.'
+
+      - name: Verify exact fresh staging browser assets and runtime
+        shell: bash
+        env:
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 18); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+            [ "$code" = 204 ] && { ok=1; break; }
+            sleep 5
+          done
+          [ "$ok" = 1 ] || { echo 'Fresh staging runtime health did not reach 204'; exit 1; }
+          node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+          intake_code="$(curl -sS -o /tmp/i.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$INTAKE_ASSET")"
+          echo "Fresh staged intake asset HTTP $intake_code"
+          [ "$intake_code" = 200 ]
+          grep -F -q 'Choose a certification to begin.' /tmp/i.js
+          grep -F -q 'Upload single document' /tmp/i.js
+          ! grep -F -q 'filenames must match the CSV' /tmp/i.js
+          shell_code="$(curl -sS -o /tmp/s.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$APP_SHELL_ASSET")"
+          echo "Fresh staged app-shell asset HTTP $shell_code"
+          [ "$shell_code" = 200 ]
+          grep -F -q 'Platform dashboard' /tmp/s.js
+          grep -F -q 'Multifamily workspace' /tmp/s.js
+          echo "FRESH_STAGING_GATE=PASS url=$TARGET_URL"
+          echo 'Production certivoiq.com routes were not changed.'
