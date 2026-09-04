@@ -1,15 +1,17 @@
-# Plan-blocked security controls
+# Security controls previously blocked by plan
 
 ## Supabase leaked-password protection
 
-As of 2026-09-02, the CertivoIQ Supabase organization is on the Free plan. Supabase's HaveIBeenPwned leaked-password protection is available only on Pro and above, so this control cannot be enabled on the current plan.
+**Status: technical complete as of 2026-09-04.**
 
-Compensating controls currently in force:
+The CertivoIQ Supabase organization `caidmuehudoyhswymjjw` was upgraded to the Pro plan. The founder enabled leaked-password protection for production project `emnkzxkcpnyvglwxraxm`.
 
-- founder TOTP MFA is enrolled and verified in production;
-- email confirmation remains part of the authentication flow;
-- production authentication and tenant isolation tests remain mandatory in CI;
-- privileged RPCs are separately role/tenant gated;
-- the control must be re-evaluated immediately if the Supabase organization is upgraded to Pro or higher.
+Post-change verification confirmed:
 
-This classification is `plan_blocked`, not `complete`. It does not claim equivalent protection to Supabase's leaked-password screening.
+- the organization reports plan `pro`;
+- the production project reports `ACTIVE_HEALTHY`;
+- the Supabase security advisor returns no `auth_leaked_password_protection` finding;
+- the advisor returns zero `WARN` findings;
+- the 13 remaining findings are `INFO`-only RLS-without-policy notices for intentionally service-only tables.
+
+Supabase Auth now checks password choices against known compromised-password data. Founder TOTP MFA, email confirmation, tenant-isolation tests, and privileged-RPC controls remain in force as defense in depth.
