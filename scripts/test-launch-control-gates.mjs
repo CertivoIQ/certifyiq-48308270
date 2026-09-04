@@ -42,11 +42,14 @@ test("state-rule requirement exposure is recorded as remediated from production 
   assert.match(gate?.evidence ?? "", /zero findings/i);
 });
 
-test("Supabase leaked-password protection is recorded as plan-blocked, not complete", () => {
+test("Supabase leaked-password protection is recorded as verified complete", () => {
   const gate = config.gates.find((item) => item.id === "leaked_password_protection");
-  assert.equal(gate?.status, "plan_blocked");
+  assert.equal(gate?.status, "technical_complete");
   assert.equal(gate?.blocking, true);
-  assert.match(gate?.evidence ?? "", /PLAN-BLOCKED-SECURITY-CONTROLS\.md/);
+  assert.match(gate?.evidence ?? "", /Pro plan/i);
+  assert.match(gate?.evidence ?? "", /zero WARN/i);
+  assert.match(gate?.evidence ?? "", /no auth_leaked_password_protection finding/i);
+  assert.ok((gate?.evidence ?? "").includes("PLAN-BLOCKED-SECURITY-CONTROLS.md"));
 });
 
 test("founder MFA enrollment is recorded from production verification evidence", () => {
