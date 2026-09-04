@@ -104,11 +104,11 @@
     {
       "id": "backup_restore_drill",
       "category": "reliability",
-      "status": "pending_technical",
+      "status": "human_required",
       "blocking": true,
-      "ownerRole": "engineering",
-      "action": "Run a non-destructive copy-and-checksum restore using a representative consented customer object; synthetic isolation UAT has passed.",
-      "evidence": "docs/CUSTOMER-FILE-RECOVERY-DRILL.md"
+      "ownerRole": "founder",
+      "action": "Open the recovered synthetic PDF artifact and confirm that it is readable and matches the intended recovery-drill document. After confirmation, engineering can close the gate.",
+      "evidence": "Production GitHub Actions run 33902511219 performed a copy-only restore in the real private certification-imports bucket using a synthetic one-page PDF because production contained zero customer objects. The destination did not exist, the source remained intact, and source/recovered objects matched at 1,108 bytes and SHA-256 1782d8eeb3f2cd88cc85e856f4334ca7f443bdb68bb3bf5dc5c2dfd1a707dd42. Production catalog verification confirmed both private PDF objects. The artifact customer-file-recovery-drill-33902511219 rendered successfully; founder visual confirmation remains."
     },
     {
       "id": "cloudflare_candidate_deployment",
