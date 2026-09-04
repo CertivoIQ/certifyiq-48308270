@@ -1,6 +1,7 @@
 name: Certification upload performance production release
 # Deployment trigger: release faster certification upload and OCR progress
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ['.github/workflows/ui-asset-freshness-recovery-v5-once.yml']
