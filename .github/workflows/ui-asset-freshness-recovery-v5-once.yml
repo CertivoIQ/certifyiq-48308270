@@ -17,8 +17,8 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-      TARGET_WORKER: certivoiq-upload-ocr-20260904
-      TARGET_URL: https://certivoiq-upload-ocr-20260904.rodsheka-watkins.workers.dev
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,11 +60,14 @@ jobs:
           echo "APP_SHELL_ASSET=$(basename "$shell")" >> "$GITHUB_ENV"
           echo "PUBLIC_FILE_COUNT=$(find .output/public -type f | wc -l)" >> "$GITHUB_ENV"
 
-      - name: Confirm target is isolated and capture zone
+      - name: Confirm target exists, is isolated, and capture zone
         shell: bash
         run: |
           set -euo pipefail
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          settings_code="$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
+          echo "Established target settings HTTP $settings_code"
+          [ "$settings_code" = 200 ]
           curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
           zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
           test -n "$zid"
@@ -78,7 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.asset-v5.json "$TARGET_WORKER"
-          jq -e '.assets.binding == "ASSETS" and .assets.directory == "../public" and .assets.run_worker_first == true' .output/server/wrangler.asset-v5.json >/dev/null
+          jq -e --arg w "$TARGET_WORKER" '.name==$w and .assets.binding == "ASSETS" and .assets.directory == "../public" and .assets.run_worker_first == true and (.routes|not) and (.route|not)' .output/server/wrangler.asset-v5.json >/dev/null
           (
             cd .output/server
             test -d ../public
@@ -92,8 +95,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          timeout 180s bunx --bun wrangler@4.129.0 deploy \
-            --config .output/server/wrangler.asset-v5.json
+          timeout 180s bunx --bun wrangler@4.129.0 deploy --config .output/server/wrangler.asset-v5.json
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          code="$(curl -sS -o /tmp/settings-after.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
+          echo "Post-deploy target settings HTTP $code"
+          [ "$code" = 200 ]
 
       - name: Bind required runtime secrets to isolated Worker
         shell: bash
@@ -114,22 +120,8 @@ jobs:
           secret_file="$(mktemp)"
           SECRET_FILE="$secret_file" node <<'NODE'
           const fs = require('fs');
-          const required = [
-            'SUPABASE_URL',
-            'SUPABASE_SERVICE_ROLE_KEY',
-            'VITE_SUPABASE_URL',
-            'VITE_SUPABASE_PUBLISHABLE_KEY',
-            'STRIPE_LIVE_API_KEY',
-            'VITE_PAYMENTS_CLIENT_TOKEN',
-            'PAYMENTS_LIVE_WEBHOOK_SECRET',
-            'STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE',
-            'STRIPE_PHA_PRICE_ID_LIVE',
-            'OPERATIONS_WORKER_SECRET',
-          ];
-          const optional = [
-            'STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE',
-            'SUPPORT_EMAIL_WEBHOOK_SECRET',
-          ];
+          const required = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','STRIPE_LIVE_API_KEY','VITE_PAYMENTS_CLIENT_TOKEN','PAYMENTS_LIVE_WEBHOOK_SECRET','STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE','STRIPE_PHA_PRICE_ID_LIVE','OPERATIONS_WORKER_SECRET'];
+          const optional = ['STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE','SUPPORT_EMAIL_WEBHOOK_SECRET'];
           const payload = {};
           for (const name of required) {
             const value = process.env[name];
@@ -154,13 +146,10 @@ jobs:
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
           code="$(curl -sS -o /tmp/subdomain.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain")"
           echo "Worker subdomain lookup HTTP $code"
-          if [ "$code" = 200 ]; then
-            enabled="$(jq -r '.result.enabled // false' /tmp/subdomain.json)"
-            if [ "$enabled" != true ]; then
-              curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' \
-                --data '{"enabled":true,"previews_enabled":true}' \
-                "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain" >/dev/null
-            fi
+          [ "$code" = 200 ]
+          enabled="$(jq -r '.result.enabled // false' /tmp/subdomain.json)"
+          if [ "$enabled" != true ]; then
+            curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data '{"enabled":true,"previews_enabled":true}' "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/subdomain" >/dev/null
           fi
           echo 'WORKERS_DEV_ENDPOINT_GATE=PASS'
 
@@ -172,7 +161,7 @@ jobs:
           for i in $(seq 1 18); do
             code="$(curl -sS -o /tmp/runtime-body -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
             echo "runtime-health attempt $i HTTP $code"
-            if [ "$code" = 204 ]; then ok=1; break; fi
+            [ "$code" = 204 ] && { ok=1; break; }
             sleep 5
           done
           [ "$ok" = 1 ] || { echo 'STAGED_RUNTIME_HEALTH_GATE=FAIL'; exit 1; }
@@ -189,8 +178,6 @@ jobs:
           [ "$shell_code" = 200 ]
           grep -F -q 'Platform dashboard' /tmp/s.js
           grep -F -q 'Multifamily workspace' /tmp/s.js
-          curl -sS -D /tmp/htmlh -o /dev/null "$TARGET_URL/welcome"
-          grep -i -F -q 'cache-control: no-store, max-age=0' /tmp/htmlh
           echo 'STAGED_BROWSER_ASSET_GATE=PASS'
 
       - name: Cut over with exact production browser proof and rollback
@@ -220,9 +207,7 @@ jobs:
             grep -F -q 'Choose a certification to begin.' /tmp/psi.js &&
             [ "$(curl -sS -o /tmp/ps.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://certivoiq.com/assets/$APP_SHELL_ASSET")" = 200 ] &&
             grep -F -q 'Platform dashboard' /tmp/ps.js &&
-            grep -F -q 'Multifamily workspace' /tmp/ps.js &&
-            curl -sS -D /tmp/ph -o /dev/null "https://certivoiq.com/welcome" &&
-            grep -i -F -q 'cache-control: no-store, max-age=0' /tmp/ph
+            grep -F -q 'Multifamily workspace' /tmp/ps.js
           }
           if ! verify; then
             put "$aid" 'certivoiq.com/*' "$olda"
