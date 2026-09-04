@@ -7,14 +7,14 @@ export const OCR_ENGINE = 'tesseract.js:eng';
 
 export const PAGE_TEXT_MIN_CHARS = 40;
 export const MAX_PDF_PAGES = 200;
-export const MAX_OCR_PAGES = 40;
-export const OCR_TIME_BUDGET_MS = 150_000;
+export const MAX_OCR_PAGES = 50;
+export const OCR_TIME_BUDGET_MS = 200_000;
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 
 export const OCR_LIMIT_MESSAGE =
-  'This certification is too large to prepare automatically. Please split it into smaller documents (up to 40 scanned pages each) and upload them again.';
+  'This certification is too large to prepare automatically. Please split it into smaller documents (up to 50 scanned pages each) and upload them again.';
 
 export function sidecarPathFor(storagePath) {
   return `${storagePath}${OCR_SIDECAR_SUFFIX}`;
