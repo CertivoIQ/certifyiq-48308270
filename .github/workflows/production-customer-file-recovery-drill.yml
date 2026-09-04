@@ -7,13 +7,20 @@ on:
       - scripts/run-production-customer-file-recovery-drill.mjs
       - .github/workflows/production-customer-file-recovery-drill.yml
   workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type RUN_PRODUCTION_RECOVERY_DRILL to authorize a production synthetic copy
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   recovery-drill:
-    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'ops/customer-file-recovery-drill-20260904'
+    if: >-
+      (github.event_name == 'pull_request' && github.head_ref == 'ops/customer-file-recovery-drill-20260904') ||
+      (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'RUN_PRODUCTION_RECOVERY_DRILL')
     runs-on: ubuntu-latest
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
