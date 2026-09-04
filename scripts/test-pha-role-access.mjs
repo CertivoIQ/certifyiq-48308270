@@ -132,5 +132,8 @@ test("PHA navigation is role aware", () => {
   assert.match(appShell, /role === "inspection_staff"/);
   assert.match(appShell, /role === "hcv_pbv_specialist"/);
   assert.match(appShell, /role === "public_housing_specialist"/);
-  assert.match(appShell, /PHA_NAV\.filter/);
+  assert.match(appShell, /PHA_COMMAND\.filter/);
+  assert.match(appShell, /PHA_OPERATIONS\.filter/);
+  assert.match(appShell, /PHA_COMPLIANCE\.filter/);
+  assert.match(appShell, /PHA_ADMIN\.filter/);
 });
