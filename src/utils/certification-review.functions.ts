@@ -75,7 +75,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
 
     const { data: item, error: itemError } = await supabase
       .from("certification_import_items")
-      .select("id, storage_path, original_file_name, mime_type, status, certification_type, jurisdiction, program_codes")
+      .select("id, storage_path, original_file_name, mime_type, size_bytes, sha256, status, certification_type, jurisdiction, program_codes")
       .eq("id", data.itemId)
       .maybeSingle();
     if (itemError) throw itemError;
@@ -121,9 +121,18 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     const bytes = await download.data.arrayBuffer();
     const documentSha256 = await sha256Hex(bytes);
 
-    // OCR sidecar produced during upload for scanned/image-only or mixed PDFs.
-    // It is preferred only when it actually contains OCR'd pages; a fully
-    // machine-readable PDF keeps the untouched server-side text path.
+    if (bytes.byteLength !== item.size_bytes || (item.sha256 && item.sha256 !== documentSha256)) {
+      const message = "The stored certification no longer matches the file recorded at upload. Upload it again before review.";
+      await supabase
+        .from("certification_import_items")
+        .update({ status: "failed", error_message: message })
+        .eq("id", item.id);
+      return { error: message } as const;
+    }
+
+    // The source-bound sidecar contains native PDF text and/or OCR text already
+    // extracted during upload. The original bytes are still hashed above before
+    // the sidecar is trusted, but the PDF never needs to be parsed a second time.
     let ocrDocument: Awaited<ReturnType<typeof extraction.loadOcrDocument>> = null;
     const sidecarDownload = await supabase.storage
       .from("certification-imports")
@@ -703,3 +712,4 @@ export const getSubmissionAuthority = createServerFn({ method: "GET" })
       ...authority,
     } as const;
   });
+

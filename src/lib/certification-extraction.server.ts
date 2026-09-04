@@ -355,7 +355,7 @@ export function isTextExtractable(mimeType: string, fileName: string): boolean {
 export type OcrDocument = {
   text: string;
   provider: ExtractionProviderName;
-  documentKind: "pdf-ocr";
+  documentKind: "pdf" | "pdf-ocr";
   pageProvenance: Map<number, PageProvenance>;
   ocrPageCount: number;
   textPageCount: number;
@@ -367,21 +367,20 @@ export type OcrDocument = {
 };
 
 /**
- * Consume the OCR sidecar produced during upload. Page-level provenance is kept
- * so every fact can cite the source PDF, the page number, and the fact that the
- * page text came from OCR. Returns null when the sidecar carries no usable page
- * text, so the caller fails safe instead of producing findings without evidence.
+ * Consume the source-bound extraction sidecar produced during upload. Page-level
+ * provenance is retained for both native PDF text and OCR text. Returns null
+ * only when the sidecar carries no usable page text.
  */
 export function loadOcrDocument(
   sidecar: unknown,
   expectedSource: { fileName: string; sha256: string; byteSize: number },
 ): OcrDocument | null {
   const composed = composeSidecarText(sidecar as OcrSidecar, expectedSource);
-  if (!composed.text.trim() || composed.ocrPageCount === 0) return null;
+  if (!composed.text.trim()) return null;
   return {
     text: composed.text,
-    provider: "ocr-tesseract",
-    documentKind: "pdf-ocr",
+    provider: composed.provider,
+    documentKind: composed.ocrPageCount > 0 ? "pdf-ocr" : "pdf",
     pageProvenance: provenanceIndex(composed.pages),
     ocrPageCount: composed.ocrPageCount,
     textPageCount: composed.textPageCount,
@@ -392,3 +391,5 @@ export function loadOcrDocument(
     sourceByteSize: composed.sourceIdentity.sourceByteSize,
   };
 }
+
+
