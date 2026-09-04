@@ -1,0 +1,177 @@
+name: UI preview staging resolve once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ui-preview-staging-resolve-once.yml']
+permissions:
+  contents: read
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      PREVIEW_ALIAS: staging
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.3 }
+
+      - name: Build exact main and capture exact browser assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun install --frozen-lockfile
+          node --test scripts/test-cloudflare-candidate-config.mjs
+          bun run test:ocr
+          grep -F -q 'const showProgress = true' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Choose a certification to begin.' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Upload single document' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'MAX_PARALLEL_OCR_WORKERS = 3' src/lib/pdf-ocr.ts
+          grep -F -q 'aria-label="Platform dashboard"' src/components/app-shell.tsx
+          grep -F -q 'Multifamily workspace' src/components/app-shell.tsx
+          bun run build
+          intake="$(find .output/public/assets -maxdepth 1 -name 'portfolio-intake-panel-*.js' -type f | head -1)"
+          shell="$(find .output/public/assets -maxdepth 1 -name 'app-shell-*.js' -type f | head -1)"
+          test -n "$intake" && test -n "$shell"
+          grep -F -q 'Choose a certification to begin.' "$intake"
+          grep -F -q 'Upload single document' "$intake"
+          ! grep -F -q 'filenames must match the CSV' "$intake"
+          grep -F -q 'Platform dashboard' "$shell"
+          grep -F -q 'Multifamily workspace' "$shell"
+          echo "INTAKE_ASSET=$(basename "$intake")" >> "$GITHUB_ENV"
+          echo "APP_SHELL_ASSET=$(basename "$shell")" >> "$GITHUB_ENV"
+
+      - name: Verify public bundle secret boundary
+        shell: bash
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),path=require('path'); let corpus='';
+          (function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else{try{corpus+=fs.readFileSync(f,'utf8')+'\n'}catch{}}}})('.output/public');
+          for(const n of ['SUPABASE_SERVICE_ROLE_KEY','STRIPE_LIVE_API_KEY','PAYMENTS_LIVE_WEBHOOK_SECRET']){const v=process.env[n];if(v&&corpus.includes(v))throw new Error(`${n} leaked into public build`)}
+          console.log('PASS: public bundle secret boundary verified.');
+          NODE
+
+      - name: Confirm production routes do not target staging Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zid"
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/routes-before.json
+          ! jq -e --arg w "$TARGET_WORKER" '.result[]|select((.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*") and .script==$w)' /tmp/routes-before.json >/dev/null
+          echo "ZONE_ID=$zid" >> "$GITHUB_ENV"
+          echo 'PASS: staging Worker is isolated from apex/www routes.'
+
+      - name: Prepare root-level preview config
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.preview-source.json "$TARGET_WORKER"
+          jq '.main = ".output/server/" + .main | .assets.directory = ".output/public" | .preview_urls = true | .workers_dev = true' .output/server/wrangler.preview-source.json > wrangler.preview-staging.json
+          jq -e --arg w "$TARGET_WORKER" '.name==$w and .main==".output/server/index.mjs" and .assets.binding=="ASSETS" and .assets.directory==".output/public" and .assets.run_worker_first==true and .preview_urls==true and .workers_dev==true and (.routes|not) and (.route|not)' wrangler.preview-staging.json >/dev/null
+          echo 'PREVIEW_CONFIG_GATE=PASS'
+
+      - name: Upload fresh preview version with staging runtime secrets and capture exact URL
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+          STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
+          STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
+          STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE: ${{ secrets.STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE }}
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+          SUPPORT_EMAIL_WEBHOOK_SECRET: ${{ secrets.SUPPORT_EMAIL_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          secret_file="$(mktemp)"
+          SECRET_FILE="$secret_file" node <<'NODE'
+          const fs=require('fs');
+          const required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','STRIPE_LIVE_API_KEY','VITE_PAYMENTS_CLIENT_TOKEN','PAYMENTS_LIVE_WEBHOOK_SECRET','STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE','STRIPE_PHA_PRICE_ID_LIVE','OPERATIONS_WORKER_SECRET'];
+          const optional=['STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE','SUPPORT_EMAIL_WEBHOOK_SECRET'];
+          const p={};
+          for(const n of required){if(!process.env[n])throw new Error(`${n} missing`);p[n]=process.env[n]}
+          for(const n of optional)if(process.env[n])p[n]=process.env[n];
+          fs.writeFileSync(process.env.SECRET_FILE,JSON.stringify(p),{mode:0o600});
+          NODE
+          set +e
+          timeout 180s bunx --bun wrangler@4.128.0 versions upload \
+            --config wrangler.preview-staging.json \
+            --preview-alias "$PREVIEW_ALIAS" \
+            --secrets-file "$secret_file" \
+            > /tmp/upload.raw 2>&1
+          rc=$?
+          set -e
+          rm -f "$secret_file"
+          perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g' /tmp/upload.raw > /tmp/upload.clean
+          tail -120 /tmp/upload.clean
+          [ "$rc" = 0 ]
+          preview="$(grep -Eo 'https://[^[:space:]"<>]+\.workers\.dev[^[:space:]"<>]*' /tmp/upload.clean | tail -1 || true)"
+          if [ -z "$preview" ]; then
+            host="$(grep -Eo '[A-Za-z0-9][A-Za-z0-9.-]*\.workers\.dev' /tmp/upload.clean | tail -1 || true)"
+            [ -n "$host" ] && preview="https://$host"
+          fi
+          [ -n "$preview" ] || { echo 'ERROR: Wrangler upload succeeded but no preview URL could be resolved from output.'; exit 1; }
+          preview="${preview%/}"
+          echo "Resolved staging preview: $preview"
+          echo "PREVIEW_URL=$preview" >> "$GITHUB_ENV"
+          echo 'PREVIEW_URL_CAPTURE=PASS'
+
+      - name: Verify exact staging preview runtime, security, and browser bundles
+        shell: bash
+        env:
+          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 18); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$PREVIEW_URL/api/internal/runtime-health")"
+            echo "preview runtime attempt $i HTTP $code"
+            [ "$code" = 204 ] && { ok=1; break; }
+            sleep 5
+          done
+          [ "$ok" = 1 ] || { echo 'Preview runtime health did not reach 204'; exit 1; }
+          node scripts/verify-cloudflare-live-response.mjs "$PREVIEW_URL"
+          intake_code="$(curl -sS -o /tmp/i.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$PREVIEW_URL/assets/$INTAKE_ASSET")"
+          echo "Preview intake asset HTTP $intake_code"
+          [ "$intake_code" = 200 ]
+          grep -F -q 'Choose a certification to begin.' /tmp/i.js
+          grep -F -q 'Upload single document' /tmp/i.js
+          ! grep -F -q 'filenames must match the CSV' /tmp/i.js
+          shell_code="$(curl -sS -o /tmp/s.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$PREVIEW_URL/assets/$APP_SHELL_ASSET")"
+          echo "Preview app-shell asset HTTP $shell_code"
+          [ "$shell_code" = 200 ]
+          grep -F -q 'Platform dashboard' /tmp/s.js
+          grep -F -q 'Multifamily workspace' /tmp/s.js
+          echo "STAGING_PREVIEW_GATE=PASS url=$PREVIEW_URL"
+
+      - name: Reconfirm production routes unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" -o /tmp/routes-after.json
+          before="$(jq -S '[.result[]|select(.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*")|{pattern,script}]' /tmp/routes-before.json)"
+          after="$(jq -S '[.result[]|select(.pattern=="certivoiq.com/*" or .pattern=="www.certivoiq.com/*")|{pattern,script}]' /tmp/routes-after.json)"
+          [ "$before" = "$after" ]
+          echo 'STAGING_ONLY_ROUTE_GATE=PASS'
+          echo 'No production route, DNS, Supabase data, Stripe object, billing, or paid-onboarding change was made.'
