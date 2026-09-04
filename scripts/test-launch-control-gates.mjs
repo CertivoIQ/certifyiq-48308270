@@ -20,15 +20,34 @@ test("every launch gate has explicit ownership and blocking semantics", () => {
 
 test("remaining human and external approvals are never labeled technically complete", () => {
   const expectedStatuses = {
-    stripe_controlled_live_e2e: "human_required",
+    stripe_controlled_live_e2e: "exception_approved",
     tn_tx_independent_source_validation: "human_required",
-    terms_privacy_counsel_review: "human_required",
-    independent_penetration_test: "external_required",
-    controlled_customer_pilot: "external_required",
+    terms_privacy_counsel_review: "exception_approved",
+    independent_penetration_test: "exception_approved",
+    controlled_customer_pilot: "exception_approved",
     production_cutover_authorization: "human_required",
   };
   for (const [id, status] of Object.entries(expectedStatuses)) {
     assert.equal(config.gates.find((gate) => gate.id === id)?.status, status);
+  }
+});
+
+test("founder-approved exceptions preserve residual risk and underlying-review truth", () => {
+  for (const id of [
+    "stripe_controlled_live_e2e",
+    "terms_privacy_counsel_review",
+    "independent_penetration_test",
+    "controlled_customer_pilot",
+  ]) {
+    const gate = config.gates.find((item) => item.id === id);
+    assert.equal(gate?.status, "exception_approved");
+    assert.equal(gate?.blocking, true);
+    assert.equal(gate?.exception?.approvedByRole, "founder");
+    assert.equal(gate?.exception?.approvedAt, "2026-09-04");
+    assert.match(gate?.exception?.scope ?? "", /does not represent/i);
+    assert.ok(gate?.exception?.residualRisk);
+    assert.equal(gate?.exception?.evidence, "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md");
+    assert.ok(gate?.action);
   }
 });
 

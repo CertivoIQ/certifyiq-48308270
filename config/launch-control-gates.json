@@ -45,11 +45,18 @@
     {
       "id": "stripe_controlled_live_e2e",
       "category": "billing",
-      "status": "human_required",
+      "status": "exception_approved",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Complete one explicitly authorized paid annual billing lifecycle through invoice.paid, entitlement activation, portal access, and cancellation or reversal. Do not authorize unrestricted paid onboarding until this passes.",
-      "evidence": "Live Stripe preflight on 2026-09-04 confirmed three active products, authoritative prices, API-versioned enabled webhook endpoint, valid FOUNDERS50 coupon, and controlled portal configuration bpc_1UBztYEGeotPzK5ZUN8mKxGX with invoice history and payment-method updates enabled while self-service subscription update/cancellation remain disabled. The prior zero-dollar invoice.paid event was correctly ignored and no entitlement was created. Non-financial simulation evidence: CI run 33895146469 passed authoritative pricing, sandbox eligibility, signed webhook validation and rejection cases, replay-safe credit/refund controls, and a rolled-back paid-license database integrity rehearsal. Live invoice BXFHHQOW-0001 was emailed and then explicitly voided on 2026-09-04 after the founder selected simulation-only testing; Stripe confirms it was never paid or attempted, and production contains zero licenses tied to that invoice. The live paid lifecycle gate remains human-required."
+      "action": "Complete one explicitly authorized paid billing lifecycle after launch and before unrestricted paid onboarding; verify invoice.paid, exactly-one entitlement activation, portal access, replay idempotency, and cancellation or reversal.",
+      "evidence": "Live Stripe preflight on 2026-09-04 confirmed three active products, authoritative prices, API-versioned enabled webhook endpoint, valid FOUNDERS50 coupon, and controlled portal configuration bpc_1UBztYEGeotPzK5ZUN8mKxGX with invoice history and payment-method updates enabled while self-service subscription update/cancellation remain disabled. The prior zero-dollar invoice.paid event was correctly ignored and no entitlement was created. Non-financial simulation evidence: CI run 33895146469 passed authoritative pricing, sandbox eligibility, signed webhook validation and rejection cases, replay-safe credit/refund controls, and a rolled-back paid-license database integrity rehearsal. Live invoice BXFHHQOW-0001 was emailed and then explicitly voided on 2026-09-04 after the founder selected simulation-only testing; Stripe confirms it was never paid or attempted, and production contains zero licenses tied to that invoice. The live paid lifecycle was not completed. On 2026-09-04, the founder approved a narrowly scoped launch exception; see docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md.",
+      "exception": {
+        "approvedByRole": "founder",
+        "approvedAt": "2026-09-04",
+        "scope": "Initial controlled production launch only; this is risk acceptance and does not represent a successful live payment or validated entitlement lifecycle.",
+        "evidence": "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md",
+        "residualRisk": "No successful live paid lifecycle has verified production payment receipt, exactly-once entitlement activation, portal behavior, event replay handling, or reversal deactivation. Simulation and database rehearsals are not substitutes for a real paid transaction."
+      }
     },
     {
       "id": "nspire_independent_attestations",
@@ -71,26 +78,47 @@
     {
       "id": "terms_privacy_counsel_review",
       "category": "legal",
-      "status": "human_required",
+      "status": "exception_approved",
       "blocking": true,
       "ownerRole": "qualified_counsel",
-      "action": "Approve Terms, Privacy Notice, DPA, limitation of liability, indemnity, warranty, state privacy disclosures, and public compliance claims."
+      "action": "Obtain qualified-counsel review after launch and before making any claim that the Terms, Privacy Notice, or DPA are counsel-approved.",
+      "exception": {
+        "approvedByRole": "founder",
+        "approvedAt": "2026-09-04",
+        "scope": "Initial controlled production launch only; this is risk acceptance and does not represent completion of the underlying independent review.",
+        "evidence": "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md",
+        "residualRisk": "Terms, Privacy Notice, and DPA have not been approved by qualified counsel; enforceability, privacy-law coverage, liability allocation, and public claims may require revision."
+      }
     },
     {
       "id": "independent_penetration_test",
       "category": "security",
-      "status": "external_required",
+      "status": "exception_approved",
       "blocking": true,
       "ownerRole": "independent_security_assessor",
-      "action": "Complete an independent penetration test and resolve all critical and high findings."
+      "action": "Complete an independent penetration test after launch and remediate all critical and high findings before expanding beyond the controlled rollout.",
+      "exception": {
+        "approvedByRole": "founder",
+        "approvedAt": "2026-09-04",
+        "scope": "Initial controlled production launch only; this is risk acceptance and does not represent completion of the underlying independent review.",
+        "evidence": "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md",
+        "residualRisk": "No independent assessor has tested the production attack surface; latent authorization, tenant-isolation, upload, session, webhook, or configuration vulnerabilities may remain."
+      }
     },
     {
       "id": "controlled_customer_pilot",
       "category": "validation",
-      "status": "external_required",
+      "status": "exception_approved",
       "blocking": true,
       "ownerRole": "product_and_compliance",
-      "action": "Complete a supervised pilot using representative historical files and compare every consequential result with qualified compliance review."
+      "action": "Complete a supervised customer pilot after launch and before claiming customer validation or allowing consequential results to bypass qualified human review.",
+      "exception": {
+        "approvedByRole": "founder",
+        "approvedAt": "2026-09-04",
+        "scope": "Initial controlled production launch only; this is risk acceptance and does not represent completion of the underlying independent review.",
+        "evidence": "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md",
+        "residualRisk": "No real-customer pilot has validated workflow fit, data variability, operational usability, or consequential-result accuracy."
+      }
     },
     {
       "id": "support_incident_routing",
