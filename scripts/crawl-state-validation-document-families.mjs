@@ -8,7 +8,6 @@ import { promisify } from "node:util";
 import { extractDeclaredEffectiveDate } from "../src/lib/nationwide-state-source-evidence-pipeline.mjs";
 import {
   classifyDocument,
-  coverageGaps,
   releaseCoverageGaps,
   extractOfficialLinks,
   selectCurrentDocuments,
