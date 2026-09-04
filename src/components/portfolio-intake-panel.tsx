@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/use-subscription";
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
 import { isOcrSupportedFile, prepareCertificationForReview } from "@/lib/pdf-ocr";
+import { uploadCertificationFile } from "@/lib/certification-upload";
 import { PORTFOLIO_IMPORT_TEMPLATE, parsePortfolioIntakeCsv } from "@/lib/portfolio-intake";
 import {
   createPortfolioIntake,
@@ -112,16 +113,29 @@ export function PortfolioIntakePanel() {
       storagePath = `${user.id}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
       setStage(8, "Uploading securely while reading the certification…");
 
-      const uploadPromise = supabase.storage.from("certification-imports").upload(storagePath, file, { upsert: false });
-      const preparePromise = prepareCertificationForReview(file, (status, preparationPercent) => {
-        const overall = 10 + (clampPercent(preparationPercent) / 100) * 78;
-        setStage(overall, status);
+      const pipelineStartedAt = performance.now();
+      const preparationStartedAt = performance.now();
+      let extractionDurationMs = 0;
+      let uploadPercent = 0;
+      let preparationPercent = 0;
+      const updateConcurrentProgress = (label: string) => {
+        setStage(8 + (uploadPercent * 0.35 + preparationPercent * 0.65) * 0.82, label);
+      };
+      const uploadPromise = uploadCertificationFile("certification-imports", storagePath, file, (uploadedBytes, total) => {
+        uploadPercent = total ? (uploadedBytes / total) * 100 : 0;
+        updateConcurrentProgress(`Uploading ${file.name}: ${clampPercent(uploadPercent)}%…`);
+      });
+      const preparePromise = prepareCertificationForReview(file, (status, nextPreparationPercent) => {
+        preparationPercent = clampPercent(nextPreparationPercent);
+        updateConcurrentProgress(status);
         setMessage(`${file.name}: ${status}`);
+      }).then((result) => {
+        extractionDurationMs = performance.now() - preparationStartedAt;
+        return result;
       });
 
       const [uploadOutcome, prepareOutcome] = await Promise.allSettled([uploadPromise, preparePromise]);
       if (uploadOutcome.status === "rejected") throw uploadOutcome.reason;
-      if (uploadOutcome.value.error) throw uploadOutcome.value.error;
       if (prepareOutcome.status === "rejected") throw prepareOutcome.reason;
       const prepared = prepareOutcome.value;
 
@@ -141,6 +155,11 @@ export function PortfolioIntakePanel() {
         original_file_name: file.name,
         mime_type: file.type || "application/octet-stream",
         size_bytes: file.size,
+        sha256: prepared.sourceSha256,
+        upload_duration_ms: Math.round(uploadOutcome.value.durationMs),
+        extraction_duration_ms: Math.round(extractionDurationMs),
+        total_intake_duration_ms: Math.round(performance.now() - pipelineStartedAt),
+        upload_transport: uploadOutcome.value.transport,
         status: "completed",
         upload_sequence: 0,
         review_queue_status: "not_queued",
@@ -242,17 +261,26 @@ export function PortfolioIntakePanel() {
         setMessage(`Uploading and reading ${sequence + 1} of ${documents.length}: ${file.name}`);
         const path = `${user.id}/${intake.jobId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
-        const uploadPromise = supabase.storage
-          .from("certification-imports")
-          .upload(path, file, { upsert: false });
+        const pipelineStartedAt = performance.now();
+        let uploadPercent = 0;
+        let preparationPercent = isOcrSupportedFile(file) ? 0 : 100;
+        const updateConcurrentProgress = (label: string) => {
+          updateFileProgress(sequence, 5 + (uploadPercent * 0.35 + preparationPercent * 0.65) * 0.72, label);
+        };
+        const uploadPromise = uploadCertificationFile("certification-imports", path, file, (uploadedBytes, total) => {
+          uploadPercent = total ? (uploadedBytes / total) * 100 : 0;
+          updateConcurrentProgress(`${file.name}: upload ${clampPercent(uploadPercent)}%…`);
+        });
 
+        const preparationStartedAt = performance.now();
+        let extractionDurationMs = 0;
         const preparationPromise = isOcrSupportedFile(file)
-          ? prepareCertificationForReview(file, (status, preparationPercent) => {
-              updateFileProgress(
-                sequence,
-                5 + clampPercent(preparationPercent) * 0.72,
-                `${file.name}: ${status}`,
-              );
+          ? prepareCertificationForReview(file, (status, nextPreparationPercent) => {
+              preparationPercent = clampPercent(nextPreparationPercent);
+              updateConcurrentProgress(`${file.name}: ${status}`);
+            }).then((result) => {
+              extractionDurationMs = performance.now() - preparationStartedAt;
+              return result;
             })
           : Promise.resolve(null);
 
@@ -261,7 +289,6 @@ export function PortfolioIntakePanel() {
           preparationPromise,
         ]);
         if (uploadOutcome.status === "rejected") throw uploadOutcome.reason;
-        if (uploadOutcome.value.error) throw uploadOutcome.value.error;
         if (preparationOutcome.status === "rejected") throw preparationOutcome.reason;
         const prepared = preparationOutcome.value;
 
@@ -275,6 +302,11 @@ export function PortfolioIntakePanel() {
         const { data: item, error: itemError } = await db.from("certification_import_items").insert({
           job_id: intake.jobId, user_id: user.id, storage_path: path, original_file_name: file.name,
           mime_type: file.type || "application/octet-stream", size_bytes: file.size,
+          sha256: prepared?.sourceSha256 ?? null,
+          upload_duration_ms: Math.round(uploadOutcome.value.durationMs),
+          extraction_duration_ms: Math.round(extractionDurationMs),
+          total_intake_duration_ms: Math.round(performance.now() - pipelineStartedAt),
+          upload_transport: uploadOutcome.value.transport,
           property_id: mapping.propertyId, unit_id: mapping.unitId, tenant_profile_id: mapping.tenantProfileId,
           upload_sequence: sequence, certification_type: mapping.certificationType,
           jurisdiction: mapping.jurisdiction, program_codes: mapping.programCodes,
@@ -427,3 +459,4 @@ export function PortfolioIntakePanel() {
     </section>
   );
 }
+
