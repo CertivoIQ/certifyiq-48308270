@@ -112,9 +112,7 @@ export function PortfolioIntakePanel() {
       storagePath = `${user.id}/${job.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
       setStage(8, "Uploading securely while reading the certification…");
 
-      const uploadPromise = supabase.storage
-        .from("certification-imports")
-        .upload(storagePath, file, { upsert: false });
+      const uploadPromise = supabase.storage.from("certification-imports").upload(storagePath, file, { upsert: false });
       const preparePromise = prepareCertificationForReview(file, (status, preparationPercent) => {
         const overall = 10 + (clampPercent(preparationPercent) / 100) * 78;
         setStage(overall, status);
