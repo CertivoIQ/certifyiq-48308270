@@ -16,7 +16,7 @@ test("installs a dedicated affordable-housing audit readiness workspace", () => 
   assert.match(workspace, /Affordable Housing Audit Readiness/);
   assert.match(workspace, /Audit Readiness/);
   assert.match(shell, /to:\s*["']\/audit-readiness["']/);
-  assert.match(shell, /label:\s*["']Audit Readiness["']/);
+  assert.match(shell, /label:\s*["']Audit Operations["']/);
 });
 
 test("uses the existing controlled audit evidence and remediation records", () => {
