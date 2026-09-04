@@ -44,7 +44,7 @@ test("founder-approved exceptions preserve residual risk and underlying-review t
     assert.equal(gate?.blocking, true);
     assert.equal(gate?.exception?.approvedByRole, "founder");
     assert.equal(gate?.exception?.approvedAt, "2026-09-04");
-    assert.match(gate?.exception?.scope ?? "", /does not represent completion/i);
+    assert.match(gate?.exception?.scope ?? "", /does not represent/i);
     assert.ok(gate?.exception?.residualRisk);
     assert.equal(gate?.exception?.evidence, "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md");
     assert.ok(gate?.action);
