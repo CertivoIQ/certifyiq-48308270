@@ -306,7 +306,7 @@ export function PortfolioIntakePanel() {
   }
 
   const canSubmit = !busy && (!!manifest || documents.length === 1);
-  const showProgress = busy || progressPercent === 100 || (!manifest && documents.length === 1);
+  const showProgress = true; // Always render so users can verify progress UI before selecting a file.
 
   return (
     <section className="rounded-2xl border bg-card p-6 shadow-sm">
@@ -356,7 +356,7 @@ export function PortfolioIntakePanel() {
       {showProgress ? (
         <div className="mt-3 rounded-lg border bg-background p-3" aria-live="polite">
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="truncate text-muted-foreground">{progressLabel || "Ready to process selected certification."}</span>
+            <span className="truncate text-muted-foreground">{progressLabel || "Choose a certification to begin."}</span>
             <span className="font-semibold tabular-nums text-foreground">{progressPercent}%</span>
           </div>
           <div
