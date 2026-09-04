@@ -1,0 +1,111 @@
+name: UI version preview staging once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ui-version-preview-staging-once.yml']
+permissions:
+  contents: read
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      PREVIEW_ALIAS: staging
+      PREVIEW_URL: https://staging-certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.3 }
+
+      - name: Build exact main and capture UI assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun install --frozen-lockfile
+          node --test scripts/test-cloudflare-candidate-config.mjs
+          bun run test:ocr
+          grep -F -q 'const showProgress = true' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Choose a certification to begin.' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'Upload single document' src/components/portfolio-intake-panel.tsx
+          grep -F -q 'MAX_PARALLEL_OCR_WORKERS = 3' src/lib/pdf-ocr.ts
+          grep -F -q 'aria-label="Platform dashboard"' src/components/app-shell.tsx
+          grep -F -q 'Multifamily workspace' src/components/app-shell.tsx
+          bun run build
+          intake="$(find .output/public/assets -maxdepth 1 -name 'portfolio-intake-panel-*.js' -type f | head -1)"
+          shell="$(find .output/public/assets -maxdepth 1 -name 'app-shell-*.js' -type f | head -1)"
+          test -n "$intake" && test -n "$shell"
+          grep -F -q 'Choose a certification to begin.' "$intake"
+          grep -F -q 'Upload single document' "$intake"
+          ! grep -F -q 'filenames must match the CSV' "$intake"
+          grep -F -q 'Platform dashboard' "$shell"
+          grep -F -q 'Multifamily workspace' "$shell"
+          echo "INTAKE_ASSET=$(basename "$intake")" >> "$GITHUB_ENV"
+          echo "APP_SHELL_ASSET=$(basename "$shell")" >> "$GITHUB_ENV"
+
+      - name: Verify public build contains no private runtime secrets
+        shell: bash
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),path=require('path'); let corpus='';
+          (function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else{try{corpus+=fs.readFileSync(f,'utf8')+'\n'}catch{}}}})('.output/public');
+          for(const n of ['SUPABASE_SERVICE_ROLE_KEY','STRIPE_LIVE_API_KEY','PAYMENTS_LIVE_WEBHOOK_SECRET']){const v=process.env[n];if(v&&corpus.includes(v))throw new Error(`${n} leaked into public build`)}
+          console.log('PASS: public client bundle contains no checked private runtime secret values.');
+          NODE
+
+      - name: Prepare root preview config for existing isolated Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.preview-source.json "$TARGET_WORKER"
+          jq '.main = ".output/server/" + .main | .assets.directory = ".output/public" | .preview_urls = true | .workers_dev = true' .output/server/wrangler.preview-source.json > wrangler.preview-staging.json
+          jq -e --arg w "$TARGET_WORKER" '.name==$w and .main==".output/server/index.mjs" and .assets.binding=="ASSETS" and .assets.directory==".output/public" and .assets.run_worker_first==true and .preview_urls==true and .workers_dev==true and (.routes|not) and (.route|not)' wrangler.preview-staging.json >/dev/null
+          echo 'PREVIEW_CONFIG_GATE=PASS'
+
+      - name: Upload fresh staging version without deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 180s bunx --bun wrangler@4.128.0 versions upload --config wrangler.preview-staging.json --preview-alias "$PREVIEW_ALIAS" | tee /tmp/version-upload.log
+          echo 'VERSION_UPLOAD_COMPLETED'
+          grep -Eo 'https://[^ ]+workers\.dev[^ ]*' /tmp/version-upload.log | tail -5 || true
+
+      - name: Verify exact staging preview runtime and browser assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 18); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$PREVIEW_URL/api/internal/runtime-health")"
+            echo "preview runtime attempt $i HTTP $code"
+            [ "$code" = 204 ] && { ok=1; break; }
+            sleep 5
+          done
+          [ "$ok" = 1 ] || { echo 'Preview runtime health did not reach 204'; exit 1; }
+          node scripts/verify-cloudflare-live-response.mjs "$PREVIEW_URL"
+          intake_code="$(curl -sS -o /tmp/i.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$PREVIEW_URL/assets/$INTAKE_ASSET")"
+          echo "Preview intake asset HTTP $intake_code"
+          [ "$intake_code" = 200 ]
+          grep -F -q 'Choose a certification to begin.' /tmp/i.js
+          grep -F -q 'Upload single document' /tmp/i.js
+          ! grep -F -q 'filenames must match the CSV' /tmp/i.js
+          shell_code="$(curl -sS -o /tmp/s.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$PREVIEW_URL/assets/$APP_SHELL_ASSET")"
+          echo "Preview app-shell asset HTTP $shell_code"
+          [ "$shell_code" = 200 ]
+          grep -F -q 'Platform dashboard' /tmp/s.js
+          grep -F -q 'Multifamily workspace' /tmp/s.js
+          echo "STAGING_PREVIEW_GATE=PASS url=$PREVIEW_URL"
+          echo 'No production routes, DNS records, Supabase data, Stripe objects, or billing state were changed.'
