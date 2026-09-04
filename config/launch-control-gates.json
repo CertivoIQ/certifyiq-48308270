@@ -29,11 +29,10 @@
     {
       "id": "leaked_password_protection",
       "category": "security",
-      "status": "plan_blocked",
+      "status": "technical_complete",
       "blocking": true,
       "ownerRole": "founder",
-      "action": "Enable leaked-password protection immediately after the Supabase organization is upgraded to Pro or higher, or record a formally approved launch exception with compensating controls.",
-      "evidence": "docs/PLAN-BLOCKED-SECURITY-CONTROLS.md"
+      "evidence": "On 2026-09-04, Supabase organization caidmuehudoyhswymjjw was independently verified on the Pro plan and production project emnkzxkcpnyvglwxraxm was ACTIVE_HEALTHY. After the founder enabled leaked-password protection, the production Supabase security advisor returned zero WARN findings and no auth_leaked_password_protection finding. The remaining 13 advisor entries were INFO-only RLS-without-policy notices for intentionally service-only tables. See docs/PLAN-BLOCKED-SECURITY-CONTROLS.md."
     },
     {
       "id": "founder_mfa_enrollment",
