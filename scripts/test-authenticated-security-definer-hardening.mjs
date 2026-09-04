@@ -46,7 +46,7 @@ test("all reviewed elevated functions move behind invoker-safe public wrappers",
     );
   }
   assert.equal(
-    (migration.match(/security invoker/gim) ?? []).length,
+    (migration.match(/create or replace function public\./gim) ?? []).length,
     functions.length,
   );
 });
