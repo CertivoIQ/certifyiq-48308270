@@ -49,8 +49,9 @@ test("Supabase leaked-password protection is recorded as verified complete", () 
   assert.match(gate?.evidence ?? "", /Pro plan/i);
   assert.match(gate?.evidence ?? "", /zero WARN/i);
   assert.match(gate?.evidence ?? "", /no auth_leaked_password_protection finding/i);
-  assert.match(gate?.evidence ?? "", /PLAN-BLOCKED-SECURITY-CONTROLS\\.md/);
+  assert.ok((gate?.evidence ?? "").includes("PLAN-BLOCKED-SECURITY-CONTROLS.md"));
 });
+
 test("founder MFA enrollment is recorded from production verification evidence", () => {
   const gate = config.gates.find((item) => item.id === "founder_mfa_enrollment");
   assert.equal(gate?.status, "technical_complete");
