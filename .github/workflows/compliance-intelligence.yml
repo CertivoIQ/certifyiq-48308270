@@ -44,6 +44,7 @@ jobs:
           node --test scripts/test-pha-family-calculation-engine.mjs
           node --test scripts/test-pha-authoritative-control-state.mjs
           node --test scripts/test-pha-role-access.mjs
+          node --test scripts/test-dashboard-navigation-access.mjs
           node --test scripts/test-pha-reasonable-accommodations.mjs
           node --test scripts/test-pha-program-specific-operations.mjs
           node --test scripts/test-pha-mod-rehab-operations.mjs

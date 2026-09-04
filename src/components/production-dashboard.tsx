@@ -41,7 +41,7 @@ export function ProductionDashboard() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild><Link to="/properties"><Building2 className="size-4" /> Add property</Link></Button>
-            <Button variant="outline" size="sm" asChild><Link to="/files"><FileUp className="size-4" /> Upload certification</Link></Button>
+            <Button variant="outline" size="sm" asChild><Link to="/upload-certification"><FileUp className="size-4" /> Upload certification</Link></Button>
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function ProductionDashboard() {
               <ShieldCheck className="size-6 text-primary" />
               <div><p className="font-display text-[15px]">Derived regulatory overlay active</p><p className="mt-1 text-[12.5px] text-muted-foreground">CertivoIQ applies HOTMA requirements because of your program stack; HOTMA is not a user-selected program.</p></div>
             </div>
-            <Button variant="outline" className="mt-4" asChild><Link to="/rules">Review applicable rules</Link></Button>
+            <Button variant="outline" className="mt-4" asChild><Link to="/hotma-readiness">Open HOTMA Readiness</Link></Button>
           </Panel>
         ) : (
           <Panel title="Program Configuration" description="CertivoIQ derives regulatory overlays from the programs and coverage you configure.">

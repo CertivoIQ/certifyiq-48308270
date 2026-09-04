@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useIsStaff, useSession } from "@/hooks/use-session";
+import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 
 export type PlatformDashboardMode = "multifamily" | "pha" | "executive_demo";
@@ -7,11 +7,12 @@ export type PlatformDashboardMode = "multifamily" | "pha" | "executive_demo";
 export const PLATFORM_DASHBOARD_LABELS: Record<PlatformDashboardMode, string> = {
   multifamily: "Multifamily",
   pha: "PHA",
-  executive_demo: "Executive demo",
+  executive_demo: "Executive",
 };
 
 const DASHBOARD_ORDER: PlatformDashboardMode[] = ["multifamily", "pha", "executive_demo"];
 const STORAGE_PREFIX = "certivoiq:platform-dashboard";
+const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
 
 function isPlatformDashboardMode(value: unknown): value is PlatformDashboardMode {
   return value === "multifamily" || value === "pha" || value === "executive_demo";
@@ -27,10 +28,10 @@ export function resolvePlatformDashboardMode(
 
 export function usePlatformDashboardAccess() {
   const { user } = useSession();
-  const { isStaff, loading: staffLoading } = useIsStaff();
+  const isFounder = user?.email?.trim().toLowerCase() === FOUNDER_EMAIL;
   const query = useQuery({
     queryKey: ["platform-dashboard-access", user?.id],
-    enabled: !!user,
+    enabled: !!user && !isFounder,
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       // Generated Supabase types lag the entitlement migration.
@@ -48,9 +49,11 @@ export function usePlatformDashboardAccess() {
   const entitledModes = DASHBOARD_ORDER.filter((mode) =>
     (query.data ?? []).some((row) => row.dashboard_key === mode),
   );
-  // CertivoIQ staff can inspect every product workspace without changing a
-  // customer organization profile. Customer access remains entitlement-based.
-  const allowedModes = isStaff ? DASHBOARD_ORDER : entitledModes;
+
+  // The founder must never lose cross-workspace access because of a staff-role,
+  // workspace-profile, navigation, or RLS-query regression. Other users remain
+  // strictly entitlement-based.
+  const allowedModes = isFounder ? DASHBOARD_ORDER : entitledModes;
 
   const storageKey = user ? `${STORAGE_PREFIX}:${user.id}` : null;
   const storedMode =
@@ -69,6 +72,7 @@ export function usePlatformDashboardAccess() {
     selectedMode,
     selectDashboard,
     hasSwitcher: allowedModes.length > 1,
-    loading: !!user && (query.isLoading || staffLoading),
+    isFounder,
+    loading: !!user && !isFounder && query.isLoading,
   };
 }

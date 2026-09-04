@@ -28,10 +28,12 @@ test("recovery codes have 60 bits of alphabet entropy and a dedicated input", ()
 
 test("PHA owners and admins can reach account security", () => {
   const shell = read("src/components/app-shell.tsx");
+  assert.match(shell, /const PHA_ADMIN/);
   assert.match(
     shell,
-    /\{ to: "\/account\/security", label: "Account Security", icon: ShieldCheck, key: "owner_admin", section: "administration" \}/,
+    /\{ to: "\/account\/security", label: "Account Security", icon: ShieldCheck, key: "owner_admin" \}/,
   );
+  assert.match(shell, /PHA_ADMIN\.filter\(\(item\) => phaNavAllowed\(phaRole, item\.key\)\)/);
 });
 
 test("authenticated maintenance cleanup only deletes unverified factors", () => {
