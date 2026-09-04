@@ -1,0 +1,43 @@
+name: UI assets path diagnostic once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ui-assets-path-diagnostic-once.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.3 }
+      - name: Build
+        run: |
+          set -euo pipefail
+          bun install --frozen-lockfile
+          bun run build
+      - name: Inspect generated asset controls and resolution
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== GENERATED ASSETS CONFIG ==='
+          jq '.assets' .output/server/wrangler.json
+          echo '=== ASSETSIGNORE FILES ==='
+          find .output -name '.assetsignore' -type f -print -exec sh -c 'echo --- $1; cat "$1"' sh {} \; || true
+          echo '=== REQUIRED CLIENT FILES ==='
+          find .output/public/assets -maxdepth 1 -type f \( -name 'portfolio-intake-panel-*.js' -o -name 'app-shell-*.js' \) -printf '%p %s bytes\n'
+          echo '=== PATH RESOLUTION FROM CONFIG DIRECTORY ==='
+          cd .output/server
+          pwd
+          test -d ../public && echo '../public EXISTS' || echo '../public MISSING'
+          test -d .output/public && echo '.output/public EXISTS from config dir' || echo '.output/public MISSING from config dir'
+          find ../public -maxdepth 2 -type f | wc -l
+          test -f ../public/assets/$(basename "$(find ../public/assets -maxdepth 1 -name 'portfolio-intake-panel-*.js' -type f | head -1)")
+          echo 'PASS: diagnostic complete.'
