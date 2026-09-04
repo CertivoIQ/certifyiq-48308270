@@ -32,16 +32,14 @@ test("remaining human and external approvals are never labeled technically compl
   }
 });
 
-test("new state-rule requirement exposure remains a blocking technical gate", () => {
+test("state-rule requirement exposure is recorded as remediated from production evidence", () => {
   const gate = config.gates.find(
     (item) => item.id === "state_rule_document_requirements_rls",
   );
-  assert.equal(gate?.status, "pending_technical");
+  assert.equal(gate?.status, "technical_complete");
   assert.equal(gate?.blocking, true);
-  assert.match(
-    gate?.action ?? "",
-    /20260904073000_harden_state_rule_document_requirements\.sql/,
-  );
+  assert.match(gate?.evidence ?? "", /RLS enabled/i);
+  assert.match(gate?.evidence ?? "", /zero findings/i);
 });
 
 test("Supabase leaked-password protection is recorded as plan-blocked, not complete", () => {
