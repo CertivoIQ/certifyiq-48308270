@@ -9,7 +9,7 @@ This packet is designed to reduce reviewer discovery time. It does not represent
 ## Release under review
 
 - Repository: `Watkin5/certifyiq-48308270`
-- Candidate source commit: `ce5c5a5ab864c32d2ba4f73e6096ad314d61e10c`
+- Current reviewed `main` commit: `6a86b65629661c00aee8fd05ed97ef0ebc4b2958`
 - Candidate Worker version: `7518fe5b-49c1-45c7-b478-6187f28d1c1c`
 - Candidate deployment evidence: GitHub Actions run `33846067022`
 - Candidate URL: `https://certivoiq-launch-candidate-20260904-v2.rodsheka-watkins.workers.dev`
@@ -48,7 +48,7 @@ Required report fields:
 - Retest result
 - Explicit statement that no critical or high finding remains open
 
-Known item awaiting production remediation: the Supabase advisor reported RLS disabled on `public.state_rule_document_requirements` and a SECURITY DEFINER readiness view. The proposed fix is in PR #366 and must be applied and rechecked before testing is considered final.
+Production security update: PR #370 is merged and migration `20260904165332_harden_authenticated_security_definer_functions.sql` is applied. Catalog verification found zero authenticated executable SECURITY DEFINER functions in `public`, 19 invoker-safe public wrappers, and 19 private implementations with empty search paths. The advisor now reports no SECURITY DEFINER warning; the remaining warning is leaked-password protection, unavailable while the organization remains on the Free plan.
 
 ## Legal review scope
 
@@ -116,7 +116,65 @@ Launch remains blocked until the launch-control manifest contains evidence for:
 - Counsel approval
 - Controlled customer pilot
 - Controlled Stripe billing lifecycle
-- Backup/restore drill
+- Backup/restore owner confirmation (technical copy/checksum verification passed in run `33902511219`)
 - TN/TX independent source validation
 - Supabase security remediation and clean follow-up advisor check
 - Explicit production cutover authorization
+
+## Sign-off records to return
+
+Do not mark a gate complete from a verbal statement. Attach the underlying report or review record and complete the applicable block.
+
+### Independent penetration test
+
+- Assessor organization and tester:
+- Independence/conflict statement:
+- Test dates:
+- Candidate URL and commit:
+- Report location:
+- Critical findings open:
+- High findings open:
+- Retest date and result:
+- Assessor signature/date:
+
+### Counsel review
+
+- Counsel name, firm, and jurisdiction:
+- Documents and versions reviewed:
+- Approved without changes or redline location:
+- Unresolved launch-blocking issues:
+- Counsel signature/date:
+
+### TN/TX source validation
+
+- Reviewer name and qualifications:
+- Tennessee documents reviewed: 15 of 15
+- Texas documents reviewed: 11 of 11
+- Effective dates checked:
+- Supersession checked:
+- Applicability and rule mappings checked:
+- Exceptions or corrections:
+- Reviewer signature/date:
+
+### Controlled customer pilot
+
+- Customer organizations:
+- Written permissions:
+- Qualified compliance reviewer:
+- Files/cases and programs:
+- Consequential false Pass count:
+- Other discrepancies and disposition:
+- Upload interruption, export, and deletion checks:
+- Reviewer/customer approval and date:
+
+### Controlled live Stripe lifecycle
+
+- Written founder authorization:
+- Amount/currency:
+- Stripe customer/invoice or Checkout IDs:
+- Paid event ID and webhook receipt:
+- Entitlement ID and replay/idempotency result:
+- Portal verification:
+- Cancellation/refund/reversal ID:
+- Post-reversal entitlement state:
+- Founder confirmation/date:
