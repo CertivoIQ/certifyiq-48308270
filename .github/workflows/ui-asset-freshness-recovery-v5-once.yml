@@ -1,4 +1,5 @@
 name: UI asset freshness recovery v5 once
+# Deployment trigger: faster certification upload and OCR progress
 on:
   push:
     branches: [main]
