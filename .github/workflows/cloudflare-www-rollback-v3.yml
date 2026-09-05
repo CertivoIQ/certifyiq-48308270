@@ -1,0 +1,83 @@
+name: Restore www to v3 before v5 runtime repair
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cloudflare-www-rollback-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore-www:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ZONE_NAME: certivoiq.com
+      V3_WORKER: certivoiq-launch-candidate-20260904-v3
+      V5_WORKER: certivoiq-launch-candidate-20260904-v5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confirm exact partial-cutover state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          api='https://api.cloudflare.com/client/v4'
+
+          curl -fsS "${auth[@]}" "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zid"
+          echo "ZONE_ID=$zid" >> "$GITHUB_ENV"
+
+          curl -fsS "${auth[@]}" "$api/zones/$zid/workers/routes" -o /tmp/routes-before.json
+          jq -e '.success == true and (.result|length)==0' /tmp/routes-before.json >/dev/null
+
+          curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-before.json
+          www="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)"
+          apex="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)"
+          echo "PRE_RESTORE_WWW=$www"
+          echo "PRE_RESTORE_APEX=$apex"
+          test "$www" = "$V5_WORKER"
+          test "$apex" = "$V3_WORKER"
+          echo 'PARTIAL_STATE_GATE=PASS'
+
+      - name: Restore www to v3
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          api='https://api.cloudflare.com/client/v4'
+          body="$(jq -nc --arg h 'www.certivoiq.com' --arg s "$V3_WORKER" --arg z "$ZONE_ID" --arg zn "$ZONE_NAME" '{hostname:$h,service:$s,zone_id:$z,zone_name:$zn}')"
+          curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/restore-www.json
+          jq -e --arg w "$V3_WORKER" '.success == true and .result.hostname=="www.certivoiq.com" and .result.service==$w' /tmp/restore-www.json >/dev/null
+
+          purge="$(jq -nc '{hosts:["www.certivoiq.com"]}')"
+          curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data "$purge" "$api/zones/$ZONE_ID/purge_cache" -o /tmp/purge.json
+          jq -e '.success == true' /tmp/purge.json >/dev/null
+          echo 'WWW_RESTORE_WRITE=PASS'
+
+      - name: Verify all-v3 state and empty Worker Routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          api='https://api.cloudflare.com/client/v4'
+          curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-final.json
+          www="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-final.json)"
+          apex="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-final.json)"
+          echo "FINAL_WWW=$www"
+          echo "FINAL_APEX=$apex"
+          test "$www" = "$V3_WORKER"
+          test "$apex" = "$V3_WORKER"
+
+          curl -fsS "${auth[@]}" "$api/zones/$ZONE_ID/workers/routes" -o /tmp/routes-final.json
+          jq -e '.success == true and (.result|length)==0' /tmp/routes-final.json >/dev/null
+          node scripts/verify-cloudflare-live-response.mjs 'https://www.certivoiq.com'
+          echo 'ALL_V3_ROLLBACK_STATE=PASS routes=EMPTY purge=PASS'
