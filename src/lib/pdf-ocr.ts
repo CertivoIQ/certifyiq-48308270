@@ -5,6 +5,7 @@ import {
   OCR_LIMIT_MESSAGE,
   OCR_SIDECAR_VERSION,
   OCR_TIME_BUDGET_MS,
+  OCR_TIMEOUT_MESSAGE,
   normalizePageText,
   pageNeedsOcr,
   type OcrSidecar,
@@ -32,6 +33,7 @@ import { extractTicSpatialValueLines } from '@/lib/tic-spatial-extraction.mjs';
  */
 
 const RENDER_SCALE = 3;
+const TIC_RENDER_SCALE = 3.5;
 const MAX_PARALLEL_OCR_WORKERS = 3;
 const MAX_PARALLEL_TEXT_READERS = 6;
 const TESSERACT_VERSION = '7.0.0';
@@ -91,6 +93,7 @@ async function recognizeWithSharedWorker(
   source: OcrSource,
   workerCount: number,
   pageSegMode?: OcrPageSegMode,
+  includeBlocks = false,
 ) {
   await ensureOcrWorkerSlots(workerCount);
   const slot = sharedOcrSlots[nextOcrSlot % workerCount]!;
@@ -104,7 +107,11 @@ async function recognizeWithSharedWorker(
         user_defined_dpi: '300',
       });
     }
-    return worker.recognize(source, { rotateAuto: true }, { text: true, blocks: true });
+    return worker.recognize(
+      source,
+      { rotateAuto: true },
+      includeBlocks ? { text: true, blocks: true } : { text: true },
+    );
   });
   slot.tail = recognition.then(() => undefined, () => undefined);
   return recognition;
@@ -265,17 +272,17 @@ function recognitionIsStrong(candidate: { text: string; confidence: number }) {
   return candidate.text.replace(/\s/g, '').length >= 30 && candidate.confidence >= 0.15;
 }
 
-async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: number) {
+async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: number, includeBlocks = false) {
   const { PSM } = await import('tesseract.js');
   const candidates: Array<{ text: string; confidence: number; blocks: unknown }> = [];
 
-  const auto = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.AUTO));
+  const auto = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.AUTO, includeBlocks));
   candidates.push(auto);
   if (recognitionIsStrong(auto)) return auto;
 
   const contrastCanvas = createHighContrastCanvas(canvas);
   const sparse = normalizedRecognition(
-    await recognizeWithSharedWorker(contrastCanvas, workerCount, PSM.SPARSE_TEXT),
+    await recognizeWithSharedWorker(contrastCanvas, workerCount, PSM.SPARSE_TEXT, includeBlocks),
   );
   candidates.push(sparse);
   if (recognitionIsStrong(sparse)) {
@@ -283,7 +290,7 @@ async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: nu
   }
 
   const block = normalizedRecognition(
-    await recognizeWithSharedWorker(contrastCanvas, workerCount, PSM.SINGLE_BLOCK),
+    await recognizeWithSharedWorker(contrastCanvas, workerCount, PSM.SINGLE_BLOCK, includeBlocks),
   );
   candidates.push(block);
 
@@ -328,7 +335,7 @@ export async function prepareCertificationForReview(
     reportProgress(onProgress, 'Reading certification image text…', 35);
     let recognition: OcrRecognition;
     try {
-      recognition = await recognizeWithSharedWorker(file, 1);
+      recognition = await recognizeWithSharedWorker(file, 1, undefined, true);
     } catch (error) {
       throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
     }
@@ -475,7 +482,7 @@ export async function prepareCertificationForReview(
         if (ocrIndex >= needsOcr.length) return;
 
         if (Date.now() - startedAt > OCR_TIME_BUDGET_MS) {
-          fatalError = new Error(OCR_LIMIT_MESSAGE);
+          fatalError = new Error(OCR_TIMEOUT_MESSAGE);
           return;
         }
 
@@ -491,14 +498,18 @@ export async function prepareCertificationForReview(
           const preparedText = preparedTextByPage.get(pageNumber) ?? '';
           const isTicFormPage = pageNumber <= 3 && /tenant income certification/i.test(preparedText);
           const highResolutionFormCandidate = pageNumber <= 3;
-          const viewport = page.getViewport({ scale: highResolutionFormCandidate ? 4.5 : RENDER_SCALE });
+          const viewport = page.getViewport({ scale: highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
 
           if (looksVisuallyBlank(canvas)) {
             blankPages.push(pageNumber);
           } else {
-            const { text, confidence, blocks } = await recognizeScannedCanvas(canvas, workerCount);
+            const { text, confidence, blocks } = await recognizeScannedCanvas(
+              canvas,
+              workerCount,
+              highResolutionFormCandidate,
+            );
             if (text && Number.isFinite(confidence) && confidence > 0) {
               const ticDetected = isTicFormPage || /tenant income certification/i.test(`${preparedText} ${text}`);
               const spatialLines = ticDetected

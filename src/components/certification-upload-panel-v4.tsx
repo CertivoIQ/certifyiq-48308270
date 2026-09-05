@@ -242,8 +242,7 @@ export function CertificationUploadPanel() {
         const db = supabase as unknown as Db;
         await db.from("certification_import_jobs").delete().eq("id", jobId).eq("user_id", userId);
       }
-      setProgressPercent(0);
-      setProgressLabel("Certification intake could not be staged.");
+      setProgressLabel("Certification preparation stopped before staging.");
       setMessage(error instanceof Error ? error.message : "The certification document could not be prepared for review.");
     } finally {
       setBusy(false);
