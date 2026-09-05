@@ -40,6 +40,10 @@ test("command center puts dedicated certification upload and OCR first", () => {
 
 
 test("portfolio and tenant intake is a separate LaunchPad onboarding task", () => {
+  const mfCommand = shell.slice(shell.indexOf("const MF_COMMAND"), shell.indexOf("const MF_OPERATIONS"));
+  const mfAdmin = shell.slice(shell.indexOf("const MF_ADMIN"), shell.indexOf("const HELP_NAV"));
+  assert.doesNotMatch(mfCommand, /to: "\/properties"|Properties & Tenant Intake/);
+  assert.match(mfAdmin, /to: "\/launchpad", label: "Onboarding & Portfolio Setup"/);
   assert.match(propertiesRoute, /PortfolioOnboardingPanel/);
   assert.doesNotMatch(propertiesRoute, /CertificationUploadPanel|PortfolioIntakePanel/);
   assert.match(portfolioOnboarding, /Portfolio & tenant onboarding/);

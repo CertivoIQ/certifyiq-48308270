@@ -80,7 +80,6 @@ const MF_COMMAND: readonly NavItem[] = [
   { to: "/upload-certification", label: "Upload Certification & OCR", icon: FileUp },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/tasks", label: "Tasks", icon: ClipboardCheck },
-  { to: "/properties", label: "Properties & Tenant Intake", icon: Building2 },
 ];
 
 const MF_OPERATIONS: readonly NavItem[] = [
@@ -94,7 +93,7 @@ const MF_OPERATIONS: readonly NavItem[] = [
 
 const MF_ADMIN: readonly NavItem[] = [
   { to: "/workspace-setup", label: "Organization & Programs", icon: SlidersHorizontal },
-  { to: "/launchpad", label: "Portfolio Setup", icon: Rocket },
+  { to: "/launchpad", label: "Onboarding & Portfolio Setup", icon: Rocket },
   { to: "/account/security", label: "Users & Security", icon: Shield },
 ];
 
