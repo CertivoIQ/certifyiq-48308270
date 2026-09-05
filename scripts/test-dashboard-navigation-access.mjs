@@ -4,6 +4,10 @@ import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 const shell = read("src/components/app-shell.tsx");
+const founderAccess = read("src/lib/founder-access.ts");
+const sessionHook = read("src/hooks/use-session.tsx");
+const crmAuthority = read("src/hooks/use-crm-staff-authority.ts");
+const workspaceProfile = read("src/hooks/use-workspace-profile.ts");
 const dashboardAccess = read("src/hooks/use-platform-dashboard-access.ts");
 const billing = read("src/routes/_authenticated/billing.tsx");
 const uploadRoute = read("src/routes/upload-certification.tsx");
@@ -15,13 +19,28 @@ const launchpad = read("src/routes/launchpad.tsx");
 const hotmaRoute = read("src/routes/hotma-readiness.tsx");
 
 
-test("founder keeps all dashboard modes independent of staff-role resolution", () => {
-  assert.match(dashboardAccess, /FOUNDER_EMAIL\s*=\s*"rjwatkins@certivoiq\.com"/);
-  assert.match(dashboardAccess, /FOUNDER_USER_IDS\s*=\s*new Set\(\["e2f47e3c-416b-4bf5-ab5d-8e519b4afe7b"\]\)/);
-  assert.match(dashboardAccess, /normalizedEmail === FOUNDER_EMAIL/);
-  assert.match(dashboardAccess, /FOUNDER_USER_IDS\.has\(user\.id\)/);
+test("founder dashboard is locked to an operational default with session-only switching", () => {
+  assert.match(founderAccess, /FOUNDER_EMAIL\s*=\s*"rjwatkins@certivoiq\.com"/);
+  assert.match(founderAccess, /"e2f47e3c-416b-4bf5-ab5d-8e519b4afe7b"/);
+  assert.match(founderAccess, /FOUNDER_DEFAULT_DASHBOARD\s*=\s*"multifamily"/);
+  assert.match(founderAccess, /export function isFounderUser/);
+
+  assert.match(dashboardAccess, /const isFounder = isFounderUser\(user\)/);
   assert.match(dashboardAccess, /const allowedModes = isFounder \? DASHBOARD_ORDER : entitledModes/);
+  assert.match(dashboardAccess, /isFounder[\s\S]*window\.sessionStorage[\s\S]*window\.localStorage/);
+  assert.match(dashboardAccess, /founderDashboardSessionKey\(user\.id\)/);
+  assert.match(dashboardAccess, /FOUNDER_DEFAULT_DASHBOARD/);
+  assert.doesNotMatch(dashboardAccess, /const FOUNDER_EMAIL|const FOUNDER_USER_IDS/);
   assert.doesNotMatch(dashboardAccess, /isStaff\s*\?\s*DASHBOARD_ORDER/);
+
+  assert.match(sessionHook, /localStorage\.removeItem\(legacyPlatformDashboardStorageKey\(next\.user\.id\)\)/);
+  assert.match(sessionHook, /sessionStorage\.setItem\([\s\S]*founderDashboardSessionKey\(next\.user\.id\)[\s\S]*FOUNDER_DEFAULT_DASHBOARD/);
+
+  for (const source of [sessionHook, crmAuthority, workspaceProfile, dashboardRoute]) {
+    assert.match(source, /isFounderUser/);
+    assert.doesNotMatch(source, /const FOUNDER_EMAIL\s*=/);
+  }
+
   assert.match(shell, /PLATFORM_DASHBOARD_LABELS/);
   assert.match(shell, /aria-label="Platform dashboard"/);
 });
