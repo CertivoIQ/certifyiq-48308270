@@ -11,6 +11,7 @@ import { uploadCertificationFile } from "@/lib/certification-upload";
 type Db = any;
 
 const ACCEPTED_DOCUMENT_TYPES = ".pdf,.png,.jpg,.jpeg,.webp";
+const OCR_SIDECAR_STORAGE_MIME = "application/octet-stream";
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -91,11 +92,16 @@ export function CertificationUploadPanel() {
       setProgressPercent(92);
       setProgressLabel("Saving extracted text and page provenance…");
       if (prepared.sidecar) {
+        // certification-imports intentionally rejects arbitrary JSON MIME uploads.
+        // Store the source-bound OCR sidecar as an internal binary object while
+        // retaining the .certivoiq-ocr.json filename; review code validates and
+        // parses the sidecar contents before it may contribute evidence.
+        const sidecarBytes = new Blob([JSON.stringify(prepared.sidecar)], { type: OCR_SIDECAR_STORAGE_MIME });
         const { error: sidecarError } = await supabase.storage.from("certification-imports")
           .upload(
             sidecarPathFor(storagePath),
-            new Blob([JSON.stringify(prepared.sidecar)], { type: "application/json" }),
-            { upsert: true },
+            sidecarBytes,
+            { upsert: true, contentType: OCR_SIDECAR_STORAGE_MIME },
           );
         if (sidecarError) throw sidecarError;
       }
