@@ -1,4 +1,4 @@
-# Native TIC form-value extraction release — regression aligned.
+# Flattened TIC spatial extraction release.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
@@ -57,8 +57,14 @@ jobs:
           grep -F -q 'TIC_ASSET_ROW_COUNT = 27' src/lib/tic-field-registry.ts
           grep -F -q 'getFieldObjects()' src/lib/pdf-ocr.ts
           grep -F -q 'ticPdfFormValueLinesByPage' src/lib/pdf-ocr.ts
-          grep -F -q 'isTicFormPage ? 4.5 : RENDER_SCALE' src/lib/pdf-ocr.ts
-          grep -F -q 'combinedText' src/lib/pdf-ocr.ts
+          grep -F -q 'extractTicSpatialValueLines' src/lib/pdf-ocr.ts
+          grep -F -q 'blocks: true' src/lib/pdf-ocr.ts
+          grep -F -q 'highResolutionFormCandidate ? 4.5 : RENDER_SCALE' src/lib/pdf-ocr.ts
+          grep -F -q 'spatialLines' src/lib/pdf-ocr.ts
+          grep -F -q 'clusterRows' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'household member ${member} last name' src/lib/tic-field-registry.ts
+          grep -F -q 'income member ${member} employment or wages' src/lib/tic-field-registry.ts
+          grep -F -q 'asset ${row} cash value' src/lib/tic-field-registry.ts
           grep -F -q 'Last Name' src/lib/tic-pdf-form-values.ts
           grep -F -q 'A Employment or Wages' src/lib/tic-pdf-form-values.ts
           grep -F -q 'G Type of Asset' src/lib/tic-pdf-form-values.ts
@@ -87,7 +93,7 @@ jobs:
           ! head -n 1 src/components/certivoiq-tic-review-form.tsx | grep -F -q 'eslint-disable react/'
           grep -F -q '[-/]' src/lib/tic-field-extraction.ts
           echo "SOURCE_SHA=$(git rev-parse HEAD)"
-          echo 'STRUCTURED_TIC_SOURCE_GATE=PASS'
+          echo 'STRUCTURED_TIC_SPATIAL_SOURCE_GATE=PASS'
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -96,6 +102,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          node --test scripts/test-tic-spatial-extraction.mjs
           node --test scripts/test-tic-native-form-extraction.mjs
           node --test scripts/test-command-center-certification-actions.mjs
           node --test scripts/test-standalone-supporting-document-upload.mjs
@@ -103,7 +110,7 @@ jobs:
           node --test scripts/test-onboarding-certification-separation.mjs
           node scripts/test-ocr-sidecar.mjs
           node --test scripts/test-certification-task-workflow.mjs
-          echo 'STRUCTURED_TIC_EVIDENCE_BOUNDARY=PASS'
+          echo 'STRUCTURED_TIC_SPATIAL_EVIDENCE_BOUNDARY=PASS'
 
       - name: Build exact current main
         run: bun run build
@@ -134,7 +141,7 @@ jobs:
           candidate_url="${{ steps.deploy.outputs.candidate_url }}"
           for attempt in 1 2 3 4 5 6; do
             if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
-              echo 'BOUND_V11_STRUCTURED_TIC_LIVE_RESPONSE_GATE=PASS'
+              echo 'BOUND_V11_SPATIAL_TIC_LIVE_RESPONSE_GATE=PASS'
               exit 0
             fi
             test "$attempt" -lt 6
