@@ -5,17 +5,17 @@ import { Link } from '@tanstack/react-router';
 import { AlertTriangle, CheckCircle2, FileSearch, HelpCircle, PlayCircle, XCircle } from 'lucide-react';
 import {
   getCertificationReview,
-  listCertificationItems,
   recordFindingDecision,
   runCertificationReview,
 } from '@/utils/certification-review.functions';
+import { listCertificationDocuments } from '@/utils/certification-extraction-preview.functions';
 import { markCertificationReviewFailed, queueCertificationReviews } from '@/lib/portfolio-intake.functions';
 import { useAccount } from '@/hooks/use-account';
 
 /**
- * Live review panel for the compliance vertical slice: run extraction + the
- * deterministic rule engine on an uploaded certification, then record the
- * human reviewer decision. All data here is persisted, not demo content.
+ * Live review panel for the compliance vertical slice: uploaded documents show
+ * proposed extracted information immediately, while compliance review remains
+ * an explicit separate action.
  */
 
 const STATUS_STYLE: Record<string, { icon: typeof CheckCircle2; className: string; label: string }> = {
@@ -23,6 +23,44 @@ const STATUS_STYLE: Record<string, { icon: typeof CheckCircle2; className: strin
   FAIL: { icon: XCircle, className: 'text-destructive', label: 'Fail' },
   UNABLE_TO_DETERMINE: { icon: HelpCircle, className: 'text-flag', label: 'Unable to determine' },
 };
+
+const EXTRACTED_FIELD_LABELS: Record<string, string> = {
+  tenant_signature_date: 'Tenant signature date',
+  certification_effective_date: 'Certification effective date',
+  household_annual_income: 'Household annual income',
+  applicable_lihtc_income_limit: 'Applicable LIHTC income limit',
+  household_net_assets: 'Household net assets',
+  hotma_asset_cap: 'HOTMA asset cap',
+  gross_rent: 'Gross rent',
+  state_max_gross_rent: 'Maximum gross rent',
+  utility_allowance_source: 'Utility allowance source',
+};
+
+const MONEY_FIELDS = new Set([
+  'household_annual_income',
+  'applicable_lihtc_income_limit',
+  'household_net_assets',
+  'hotma_asset_cap',
+  'gross_rent',
+  'state_max_gross_rent',
+]);
+
+function extractedEntries(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return [] as Array<[string, unknown]>;
+  return Object.entries(value as Record<string, unknown>).filter(([, fieldValue]) =>
+    fieldValue !== null && fieldValue !== undefined && fieldValue !== '' && typeof fieldValue !== 'object',
+  );
+}
+
+function formatExtractedValue(field: string, value: unknown) {
+  if (MONEY_FIELDS.has(field)) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(numeric);
+    }
+  }
+  return String(value);
+}
 
 type EvidenceRef = { field?: string; documentRef?: string | null; page?: number | null; snippet?: string | null };
 
@@ -37,7 +75,7 @@ export function CertificationReviewPanel() {
   const [notice, setNotice] = useState('');
   const { account } = useAccount();
 
-  const listItems = useServerFn(listCertificationItems);
+  const listItems = useServerFn(listCertificationDocuments);
   const getReview = useServerFn(getCertificationReview);
   const runReview = useServerFn(runCertificationReview);
   const queueReviews = useServerFn(queueCertificationReviews);
@@ -111,10 +149,9 @@ export function CertificationReviewPanel() {
         <div className="flex items-center gap-3">
           <FileSearch className="h-5 w-5 text-primary" />
           <div>
-            <h2 className="font-semibold">Live certification review</h2>
+            <h2 className="font-semibold">Certification documents</h2>
             <p className="text-sm text-muted-foreground">
-              Extraction captures each fact with its document citation; versioned rules decide Pass, Fail, or Unable to
-              determine. A human records the final decision.
+              Extracted document information is saved and displayed automatically after upload. Compliance review begins only when selected below.
             </p>
           </div>
         </div>
@@ -160,35 +197,67 @@ export function CertificationReviewPanel() {
       </div>
 
       {items.data && items.data.length > 0 ? (
-        <div className="mt-5 space-y-2">
+        <div className="mt-5 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Select tenants or certifications to review. Uploading alone never selects them.</span>
+            <span>Documents are never selected for compliance review automatically.</span>
             <button type="button" className="font-medium text-primary" onClick={() => setSelectedIds(new Set(items.data.map((item) => item.id)))}>Select all visible</button>
           </div>
-          {items.data.map((item) => (
-            <div key={item.id} className={`flex flex-wrap items-center gap-3 rounded-lg border p-3 ${item.id === activeId ? 'border-primary bg-primary/5' : ''}`}>
-              <input
-                type="checkbox"
-                aria-label={`Select ${item.original_file_name} for review`}
-                checked={selectedIds.has(item.id)}
-                onChange={(event) => setSelectedIds((current) => {
-                  const next = new Set(current);
-                  if (event.target.checked) next.add(item.id); else next.delete(item.id);
-                  return next;
-                })}
-                className="size-4"
-              />
-              <button type="button" onClick={() => setSelectedId(item.id)} className="min-w-0 flex-1 text-left">
-                <span className="block truncate text-sm font-medium">{item.household_name || item.original_file_name}</span>
-                <span className="block truncate text-xs text-muted-foreground">{item.property_name ? `${item.property_name} · Unit ${item.unit_number}` : item.original_file_name} · {item.certification_type || 'type required'} · {item.jurisdiction || 'jurisdiction required'}</span>
-              </button>
-              <span className="rounded-full border px-2 py-1 text-xs">{item.review_queue_status.replaceAll('_', ' ')}</span>
-            </div>
-          ))}
+          {items.data.map((item) => {
+            const extracted = extractedEntries(item.extracted_data);
+            return (
+              <div key={item.id} className={`rounded-lg border p-3 ${item.id === activeId ? 'border-primary bg-primary/5' : ''}`}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${item.original_file_name} for review`}
+                    checked={selectedIds.has(item.id)}
+                    onChange={(event) => setSelectedIds((current) => {
+                      const next = new Set(current);
+                      if (event.target.checked) next.add(item.id); else next.delete(item.id);
+                      return next;
+                    })}
+                    className="size-4"
+                  />
+                  <button type="button" onClick={() => setSelectedId(item.id)} className="min-w-0 flex-1 text-left">
+                    <span className="block truncate text-sm font-medium">{item.household_name || item.original_file_name}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{item.property_name ? `${item.property_name} · Unit ${item.unit_number}` : item.original_file_name} · {item.certification_type || 'type required'} · {item.jurisdiction || 'jurisdiction required'}</span>
+                  </button>
+                  <span className="rounded-full border px-2 py-1 text-xs">{item.review_queue_status.replaceAll('_', ' ')}</span>
+                </div>
+
+                {extracted.length > 0 ? (
+                  <div className="mt-3 rounded-lg border bg-background/70 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Extracted document information</span>
+                      {item.confidence !== null && item.confidence !== undefined ? (
+                        <span className="text-xs text-muted-foreground">Average confidence {Math.round(Number(item.confidence) * 100)}%</span>
+                      ) : null}
+                    </div>
+                    <dl className="mt-2 grid gap-x-5 gap-y-2 sm:grid-cols-2 xl:grid-cols-3">
+                      {extracted.map(([field, value]) => (
+                        <div key={`${item.id}-${field}`} className="min-w-0">
+                          <dt className="text-[11px] text-muted-foreground">{EXTRACTED_FIELD_LABELS[field] ?? field.replaceAll('_', ' ')}</dt>
+                          <dd className="truncate text-sm font-medium">{formatExtractedValue(field, value)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                ) : item.processed_at ? (
+                  <div className="mt-3 rounded-lg border bg-background/70 p-3 text-xs text-muted-foreground">
+                    No supported certification fields were found automatically. The source document and OCR evidence are saved.
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-lg border bg-background/70 p-3 text-xs text-muted-foreground">
+                    Extraction pending.
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p className="mt-5 text-sm text-muted-foreground">
-          Import property, unit, tenant, and certification documents above. You can then choose which records enter review.
+          Upload a certification document to populate Documents automatically.
         </p>
       )}
 
@@ -293,15 +362,15 @@ export function CertificationReviewPanel() {
       {review.data && review.data.facts.length > 0 && (
         <details className="mt-6 rounded-xl border p-4">
           <summary className="cursor-pointer text-sm font-medium">
-            Extracted facts with citations ({review.data.facts.length})
+            Source citations for extracted information ({review.data.facts.length})
           </summary>
           <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
             {review.data.facts.map((fact) => (
               <li key={fact.field_name}>
-                <span className="font-medium text-foreground">{fact.field_name}</span>: {String(fact.field_value)} —{' '}
+                <span className="font-medium text-foreground">{EXTRACTED_FIELD_LABELS[fact.field_name] ?? fact.field_name}</span>: {String(fact.field_value)} —{' '}
                 {fact.source_document_ref} p.{fact.source_page ?? '—'} · {Math.round(Number(fact.confidence) * 100)}%
                 confidence · {fact.extraction_provider}
-                {fact.human_verified ? ' · human verified' : ''}
+                {fact.human_verified ? ' · confirmed' : ''}
               </li>
             ))}
           </ul>
