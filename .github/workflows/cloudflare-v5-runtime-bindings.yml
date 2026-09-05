@@ -1,4 +1,4 @@
-name: Bind production runtime secrets to v10 candidate
+name: Bind production runtime secrets to v11 candidate
 
 on:
   push:
@@ -16,9 +16,9 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      TARGET_WORKER: certivoiq-launch-candidate-20260905-v10
-      TARGET_URL: https://certivoiq-launch-candidate-20260905-v10.rodsheka-watkins.workers.dev
-      CURRENT_PRODUCTION_WORKER: certivoiq-launch-candidate-20260905-v9
+      TARGET_WORKER: certivoiq-launch-candidate-20260905-v11
+      TARGET_URL: https://certivoiq-launch-candidate-20260905-v11.rodsheka-watkins.workers.dev
+      CURRENT_PRODUCTION_WORKER: certivoiq-launch-candidate-20260905-v10
       ZONE_NAME: certivoiq.com
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Confirm v10 candidate exists, production remains v9, and required secrets are present
+      - name: Confirm v11 candidate exists, production remains v10, and required secrets are present
         shell: bash
         run: |
           set -euo pipefail
@@ -64,9 +64,7 @@ jobs:
           echo "ZONE_ID=$zid" >> "$GITHUB_ENV"
 
           curl -fsS "${auth[@]}" "$api/zones/$zid/workers/routes" -o /tmp/routes-before.json
-          routes_count="$(jq -r '.result|length' /tmp/routes-before.json)"
-          echo "WORKER_ROUTES_COUNT=$routes_count"
-          test "$routes_count" = 0
+          test "$(jq -r '.result|length' /tmp/routes-before.json)" = 0
 
           curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-before.json
           www_service="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)"
@@ -75,9 +73,9 @@ jobs:
           echo "APEX_SERVICE=$apex_service"
           test "$www_service" = "$CURRENT_PRODUCTION_WORKER"
           test "$apex_service" = "$CURRENT_PRODUCTION_WORKER"
-          echo 'PRODUCTION_STILL_V9_GATE=PASS'
+          echo 'PRODUCTION_STILL_V10_GATE=PASS'
 
-      - name: Bind existing production runtime secrets to v10
+      - name: Bind existing production runtime secrets to v11
         shell: bash
         run: |
           set -euo pipefail
@@ -102,20 +100,16 @@ jobs:
           }
           fs.writeFileSync(process.env.PAYLOAD, JSON.stringify({ secrets }), { mode: 0o600 });
           NODE
-
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
           api='https://api.cloudflare.com/client/v4'
-          code="$(curl -sS -X PATCH "${auth[@]}" -H 'Content-Type: application/json' \
-            --data-binary "@$payload" \
-            -o /tmp/bulk-result.json -w '%{http_code}' \
-            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/secrets-bulk")"
+          code="$(curl -sS -X PATCH "${auth[@]}" -H 'Content-Type: application/json' --data-binary "@$payload" -o /tmp/bulk-result.json -w '%{http_code}' "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/secrets-bulk")"
           rm -f "$payload"
           echo "BULK_SECRET_HTTP=$code"
           test "$code" = 200
           jq -e '.success == true' /tmp/bulk-result.json >/dev/null
-          echo 'V10_RUNTIME_SECRET_BIND=PASS'
+          echo 'V11_RUNTIME_SECRET_BIND=PASS'
 
-      - name: Verify exact secret names and authenticated v10 runtime health
+      - name: Verify exact secret names and authenticated v11 runtime health
         shell: bash
         run: |
           set -euo pipefail
@@ -123,30 +117,22 @@ jobs:
           api='https://api.cloudflare.com/client/v4'
           curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/secrets" -o /tmp/secrets-after.json
           jq -e '.success == true' /tmp/secrets-after.json >/dev/null
-
-          required=(
-            SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY
-            STRIPE_LIVE_API_KEY VITE_PAYMENTS_CLIENT_TOKEN PAYMENTS_LIVE_WEBHOOK_SECRET
-            STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE STRIPE_PHA_PRICE_ID_LIVE
-            OPERATIONS_WORKER_SECRET
-          )
+          required=(SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY STRIPE_LIVE_API_KEY VITE_PAYMENTS_CLIENT_TOKEN PAYMENTS_LIVE_WEBHOOK_SECRET STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE STRIPE_PHA_PRICE_ID_LIVE OPERATIONS_WORKER_SECRET)
           for name in "${required[@]}"; do
             jq -e --arg n "$name" '.result[] | select(.name==$n and .type=="secret_text")' /tmp/secrets-after.json >/dev/null
           done
-          echo "BOUND_SECRET_NAMES=$(jq -r '[.result[].name] | sort | join(",")' /tmp/secrets-after.json)"
-
           ok=0
           for i in $(seq 1 15); do
             code="$(curl -sS -o /tmp/health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
-            echo "v10 runtime-health attempt $i HTTP $code"
+            echo "v11 runtime-health attempt $i HTTP $code"
             if [ "$code" = 204 ]; then ok=1; break; fi
             sleep 4
           done
           test "$ok" = 1
           node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
-          echo 'V10_RUNTIME_AND_EDGE_GATE=PASS'
+          echo 'V11_RUNTIME_AND_EDGE_GATE=PASS'
 
-      - name: Confirm production domains remain v9 and Worker Routes remain empty
+      - name: Confirm production domains remain v10 and Worker Routes remain empty
         shell: bash
         run: |
           set -euo pipefail
@@ -157,5 +143,5 @@ jobs:
           curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-final.json
           test "$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-final.json)" = "$CURRENT_PRODUCTION_WORKER"
           test "$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-final.json)" = "$CURRENT_PRODUCTION_WORKER"
-          echo 'FINAL_DOMAIN_STATE=V9_V9'
+          echo 'FINAL_DOMAIN_STATE=V10_V10'
           echo 'FINAL_WORKER_ROUTES=EMPTY'
