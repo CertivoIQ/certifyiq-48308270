@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { isFounderUser } from "@/lib/founder-access";
 
 export type CrmStaffAccessLevel = "employee" | "manager" | "admin";
 
-const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
-
 export function useCrmStaffAuthority() {
   const { user } = useSession();
-  const isFounder = user?.email?.trim().toLowerCase() === FOUNDER_EMAIL;
+  const isFounder = isFounderUser(user);
   const query = useQuery({
     queryKey: ["crm-staff-authority", user?.id],
     enabled: !!user && !isFounder,
