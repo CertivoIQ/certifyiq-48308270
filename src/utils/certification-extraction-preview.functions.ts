@@ -154,10 +154,13 @@ export const extractCertificationDocumentPreview = createServerFn({ method: "POS
     }
   });
 
-/** Nothing is written to certification_import_items or certification_facts until this confirmation runs. */
+/**
+ * Nothing is written to certification_import_items or certification_facts until this confirmation runs.
+ * startReview=true saves the confirmed document and queues that exact new item in the same server-controlled operation.
+ */
 export const confirmCertificationDocumentPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { source: StagedCertificationSource; fields: ConfirmedField[] }) => {
+  .inputValidator((data: { source: StagedCertificationSource; fields: ConfirmedField[]; startReview?: boolean }) => {
     const source = validateSource(data.source);
     if (!Array.isArray(data.fields) || data.fields.length > SUPPORTED_FIELDS.length) {
       throw new Error("The extracted field confirmation is invalid.");
@@ -169,7 +172,7 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
       seen.add(entry.field);
       return { field: entry.field as SupportedField, value: entry.value ?? null };
     });
-    return { source, fields };
+    return { source, fields, startReview: data.startReview === true };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -253,9 +256,19 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
         if (factError) throw factError;
       }
 
+      const itemCompletion = data.startReview
+        ? {
+            status: "completed",
+            review_queue_status: "queued",
+            queued_for_review_at: confirmedAt,
+            review_order: Date.now() * 1000,
+            review_started_at: null,
+            review_finished_at: null,
+          }
+        : { status: "completed" };
       const { error: itemCompleteError } = await db
         .from("certification_import_items")
-        .update({ status: "completed" })
+        .update(itemCompletion)
         .eq("id", item.id)
         .eq("user_id", userId);
       if (itemCompleteError) throw itemCompleteError;
@@ -275,7 +288,8 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
       itemId: item.id,
       extractedData: confirmedExtractedData,
       correctionCount: corrections.length,
-      reviewQueueStatus: "not_queued",
+      reviewQueueStatus: data.startReview ? "queued" : "not_queued",
+      queuedForReview: data.startReview,
     } as const;
   });
 
