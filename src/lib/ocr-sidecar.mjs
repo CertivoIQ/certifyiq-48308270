@@ -8,13 +8,15 @@ export const OCR_ENGINE = 'tesseract.js:eng';
 export const PAGE_TEXT_MIN_CHARS = 40;
 export const MAX_PDF_PAGES = 200;
 export const MAX_OCR_PAGES = 50;
-export const OCR_TIME_BUDGET_MS = 200_000;
+export const OCR_TIME_BUDGET_MS = 240_000;
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 
 export const OCR_LIMIT_MESSAGE =
-  'This certification is too large to prepare automatically. Please split it into smaller documents (up to 50 scanned pages each) and upload them again.';
+  'This certification contains more scanned pages than CertivoIQ can OCR in one intake. Up to 50 scanned pages can be prepared automatically.';
+export const OCR_TIMEOUT_MESSAGE =
+  'OCR processing did not finish within the browser processing window. The certification is within the upload-size limit; this is a processing-time limit, not a file-size error. Please retry the upload. If it repeats, route the packet for manual intake rather than reviewing incomplete evidence.';
 
 export function sidecarPathFor(storagePath) {
   return `${storagePath}${OCR_SIDECAR_SUFFIX}`;
@@ -123,9 +125,6 @@ export function composeSidecarText(sidecar, expectedSource) {
     pages,
     ocrPageCount,
     textPageCount: pages.length - ocrPageCount,
-    // Count pages that are absent or invalid against the original source page
-    // count. This preserves the audit signal for intentionally blank pages and
-    // for pages that were omitted because no trustworthy text was recovered.
     skippedPageCount: Math.max(0, sourceIdentity.pageCount - pages.length),
     provider: ocrPageCount > 0 ? OCR_PROVIDER : TEXT_PROVIDER,
     truncated: false,
