@@ -29,14 +29,14 @@ import {
  * SSR graph or the initial page bundle.
  */
 
-const RENDER_SCALE = 2;
+const RENDER_SCALE = 3;
 const MAX_PARALLEL_OCR_WORKERS = 3;
 const MAX_PARALLEL_TEXT_READERS = 6;
 const TESSERACT_VERSION = '7.0.0';
 const TESSERACT_CORE_VERSION = '7.0.0';
 const TESSERACT_WORKER_PATH = `https://cdn.jsdelivr.net/npm/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`;
 const TESSERACT_CORE_PATH = `https://cdn.jsdelivr.net/npm/tesseract.js-core@${TESSERACT_CORE_VERSION}`;
-const TESSERACT_LANG_PATH = 'https://tessdata.projectnaptha.com/4.0.0';
+const TESSERACT_LANG_PATH = 'https://tessdata.projectnaptha.com/4.0.0_best';
 
 const OCR_RUNTIME_FAILURE_MESSAGE =
   'OCR could not start for this scanned certification. Please retry the upload. If the problem continues, route the document for manual intake rather than reviewing incomplete evidence.';
@@ -45,6 +45,7 @@ const OCR_NO_TEXT_MESSAGE =
 
 type SharedOcrWorker = Awaited<ReturnType<(typeof import('tesseract.js'))['createWorker']>>;
 type OcrSource = Parameters<SharedOcrWorker['recognize']>[0];
+type OcrRecognition = Awaited<ReturnType<SharedOcrWorker['recognize']>>;
 
 type OcrWorkerSlot = {
   worker: Promise<SharedOcrWorker>;
@@ -69,9 +70,6 @@ async function createPinnedOcrWorker(): Promise<SharedOcrWorker> {
       workerPath: TESSERACT_WORKER_PATH,
       corePath: TESSERACT_CORE_PATH,
       langPath: TESSERACT_LANG_PATH,
-      // Do not depend on persistent IndexedDB writes. This keeps the intake
-      // path functional in privacy-restricted/private browsing sessions.
-      cacheMethod: 'none',
       workerBlobURL: true,
     });
   } catch (error) {
@@ -90,7 +88,7 @@ async function recognizeWithSharedWorker(source: OcrSource, workerCount: number)
   await ensureOcrWorkerSlots(workerCount);
   const slot = sharedOcrSlots[nextOcrSlot % workerCount]!;
   nextOcrSlot += 1;
-  const recognition = slot.tail.then(async () => (await slot.worker).recognize(source));
+  const recognition = slot.tail.then(async () => (await slot.worker).recognize(source, { rotateAuto: true }));
   slot.tail = recognition.then(() => undefined, () => undefined);
   return recognition;
 }
@@ -132,9 +130,96 @@ function createCanvas(width: number, height: number): RenderTarget {
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.floor(width));
   canvas.height = Math.max(1, Math.floor(height));
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext('2d', { willReadFrequently: true });
   if (!context) throw new Error('This browser could not prepare the scanned certification for review.');
+  context.save();
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.restore();
   return { canvas, context };
+}
+
+function otsuThreshold(histogram: Uint32Array, total: number): number {
+  let weightedTotal = 0;
+  for (let value = 0; value < histogram.length; value += 1) weightedTotal += value * Number(histogram[value] ?? 0);
+  let backgroundWeight = 0;
+  let backgroundSum = 0;
+  let bestVariance = -1;
+  let bestThreshold = 180;
+
+  for (let value = 0; value < histogram.length; value += 1) {
+    const count = Number(histogram[value] ?? 0);
+    backgroundWeight += count;
+    if (!backgroundWeight) continue;
+    const foregroundWeight = total - backgroundWeight;
+    if (!foregroundWeight) break;
+    backgroundSum += value * count;
+    const backgroundMean = backgroundSum / backgroundWeight;
+    const foregroundMean = (weightedTotal - backgroundSum) / foregroundWeight;
+    const variance = backgroundWeight * foregroundWeight * (backgroundMean - foregroundMean) ** 2;
+    if (variance > bestVariance) {
+      bestVariance = variance;
+      bestThreshold = value;
+    }
+  }
+
+  return Math.max(90, Math.min(225, bestThreshold));
+}
+
+function createHighContrastCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+  const { canvas, context } = createCanvas(source.width, source.height);
+  context.drawImage(source, 0, 0);
+  const image = context.getImageData(0, 0, canvas.width, canvas.height);
+  const histogram = new Uint32Array(256);
+  const pixels = image.data;
+
+  for (let index = 0; index < pixels.length; index += 4) {
+    const alpha = Number(pixels[index + 3] ?? 255) / 255;
+    const red = Number(pixels[index] ?? 255);
+    const green = Number(pixels[index + 1] ?? 255);
+    const blue = Number(pixels[index + 2] ?? 255);
+    const luminance = Math.round((0.299 * red + 0.587 * green + 0.114 * blue) * alpha + 255 * (1 - alpha));
+    histogram[Math.max(0, Math.min(255, luminance))] += 1;
+  }
+
+  const threshold = otsuThreshold(histogram, Math.max(1, pixels.length / 4));
+  for (let index = 0; index < pixels.length; index += 4) {
+    const alpha = Number(pixels[index + 3] ?? 255) / 255;
+    const red = Number(pixels[index] ?? 255);
+    const green = Number(pixels[index + 1] ?? 255);
+    const blue = Number(pixels[index + 2] ?? 255);
+    const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) * alpha + 255 * (1 - alpha);
+    const value = luminance <= threshold ? 0 : 255;
+    pixels[index] = value;
+    pixels[index + 1] = value;
+    pixels[index + 2] = value;
+    pixels[index + 3] = 255;
+  }
+  context.putImageData(image, 0, 0);
+  return canvas;
+}
+
+function normalizedRecognition(recognition: OcrRecognition) {
+  const text = normalizePageText(recognition.data.text);
+  const confidence = Number(recognition.data.confidence) / 100;
+  return {
+    text,
+    confidence: Number.isFinite(confidence) ? confidence : 0,
+  };
+}
+
+function recognitionScore(candidate: { text: string; confidence: number }) {
+  return candidate.text.replace(/\s/g, '').length * Math.max(0.01, candidate.confidence);
+}
+
+async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: number) {
+  const primary = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount));
+  const primaryWeak = primary.text.replace(/\s/g, '').length < 30 || primary.confidence < 0.15;
+  if (!primaryWeak) return primary;
+
+  const contrastCanvas = createHighContrastCanvas(canvas);
+  const retry = normalizedRecognition(await recognizeWithSharedWorker(contrastCanvas, workerCount));
+  return recognitionScore(retry) > recognitionScore(primary) ? retry : primary;
 }
 
 export type PrepareResult =
@@ -171,15 +256,14 @@ export async function prepareCertificationForReview(
   if (isImageFile(file)) {
     reportProgress(onProgress, 'Preparing certification image for review…', 10);
     reportProgress(onProgress, 'Reading certification image text…', 35);
-    let data: Awaited<ReturnType<SharedOcrWorker['recognize']>>['data'];
+    let recognition: OcrRecognition;
     try {
-      ({ data } = await recognizeWithSharedWorker(file, 1));
+      recognition = await recognizeWithSharedWorker(file, 1);
     } catch (error) {
       throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
     }
     reportProgress(onProgress, 'Validating extracted image text…', 92);
-    const text = normalizePageText(data.text);
-    const confidence = Number(data.confidence) / 100;
+    const { text, confidence } = normalizedRecognition(recognition);
     if (!text || !Number.isFinite(confidence) || confidence <= 0) {
       throw new Error(
         'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
@@ -316,10 +400,8 @@ export async function prepareCertificationForReview(
           const page = await pdf.getPage(pageNumber);
           const viewport = page.getViewport({ scale: RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
-          await page.render({ canvas, canvasContext: context, viewport }).promise;
-          const { data } = await recognizeWithSharedWorker(canvas, workerCount);
-          const text = normalizePageText(data.text);
-          const confidence = Number(data.confidence) / 100;
+          await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
+          const { text, confidence } = await recognizeScannedCanvas(canvas, workerCount);
           // Blank/illegible pages contribute no evidence. We retain the page
           // failure below so an all-zero OCR result can never be mistaken for a
           // successfully prepared scanned PDF.
@@ -332,7 +414,7 @@ export async function prepareCertificationForReview(
               text,
             });
           } else {
-            pageErrors.push({ page: pageNumber, message: 'OCR returned no usable text or confidence.' });
+            pageErrors.push({ page: pageNumber, message: 'OCR returned no usable text or confidence after standard and high-contrast passes.' });
           }
         } catch (error) {
           if (error instanceof Error && error.message === OCR_LIMIT_MESSAGE) {
