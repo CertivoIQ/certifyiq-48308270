@@ -52,4 +52,4 @@ jobs:
             echo "APEX_SERVICE=$(jq -r '.result[]?|select(.hostname=="certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
           fi
 
-          echo 'READ_ONLY_CERTIFICATION_RELEASE_DIAGNOSTIC_COMPLETE'
+          echo 'READ_ONLY_POST_CUTOVER_CERTIFICATION_RELEASE_DIAGNOSTIC_COMPLETE'
