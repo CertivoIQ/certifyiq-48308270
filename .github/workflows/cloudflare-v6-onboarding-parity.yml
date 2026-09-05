@@ -1,3 +1,4 @@
+# Retrigger after generated-row regression alignment.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
