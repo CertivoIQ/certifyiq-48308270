@@ -16,11 +16,14 @@ import {
  *
  * Runs entirely in the customer's session. PDF pages use the text layer first
  * and only pages without usable text are rasterised and OCR'd. PNG, JPEG, and
- * WEBP certifications are OCR'd directly with
- * the bundled open-source engine. No document bytes are sent to any external
- * OCR service. The output is an OCR sidecar (see ocr-sidecar.mjs) that the
- * normal server-side review pipeline consumes, so OCR text flows through the
- * same evidence -> rule engine -> finding -> human review path.
+ * WEBP certifications are OCR'd directly with the bundled open-source engine.
+ * No certification bytes are sent to an OCR service. Tesseract runtime assets
+ * are pinned below so production bundlers do not have to guess the worker/core
+ * locations.
+ *
+ * The output is an OCR sidecar (see ocr-sidecar.mjs) that the normal server-side
+ * review pipeline consumes, so OCR text flows through the same evidence -> rule
+ * engine -> finding -> reviewer path.
  *
  * Everything is dynamically imported so the PDF and OCR engines never enter the
  * SSR graph or the initial page bundle.
@@ -29,6 +32,16 @@ import {
 const RENDER_SCALE = 2;
 const MAX_PARALLEL_OCR_WORKERS = 3;
 const MAX_PARALLEL_TEXT_READERS = 6;
+const TESSERACT_VERSION = '7.0.0';
+const TESSERACT_CORE_VERSION = '7.0.0';
+const TESSERACT_WORKER_PATH = `https://cdn.jsdelivr.net/npm/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`;
+const TESSERACT_CORE_PATH = `https://cdn.jsdelivr.net/npm/tesseract.js-core@${TESSERACT_CORE_VERSION}`;
+const TESSERACT_LANG_PATH = 'https://tessdata.projectnaptha.com/4.0.0';
+
+const OCR_RUNTIME_FAILURE_MESSAGE =
+  'OCR could not start for this scanned certification. Please retry the upload. If the problem continues, route the document for manual intake rather than reviewing incomplete evidence.';
+const OCR_NO_TEXT_MESSAGE =
+  'OCR completed but could not recover readable text from this scanned certification. Upload a clearer scan or route the document for manual intake.';
 
 type SharedOcrWorker = Awaited<ReturnType<(typeof import('tesseract.js'))['createWorker']>>;
 type OcrSource = Parameters<SharedOcrWorker['recognize']>[0];
@@ -43,9 +56,32 @@ type OcrWorkerSlot = {
 const sharedOcrSlots: OcrWorkerSlot[] = [];
 let nextOcrSlot = 0;
 
+function describeOcrError(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) return error.message.trim().slice(0, 500);
+  if (typeof error === 'string' && error.trim()) return error.trim().slice(0, 500);
+  return 'Unknown OCR runtime failure';
+}
+
+async function createPinnedOcrWorker(): Promise<SharedOcrWorker> {
+  const { createWorker } = await import('tesseract.js');
+  try {
+    return await createWorker('eng', 1, {
+      workerPath: TESSERACT_WORKER_PATH,
+      corePath: TESSERACT_CORE_PATH,
+      langPath: TESSERACT_LANG_PATH,
+      // Do not depend on persistent IndexedDB writes. This keeps the intake
+      // path functional in privacy-restricted/private browsing sessions.
+      cacheMethod: 'none',
+      workerBlobURL: true,
+    });
+  } catch (error) {
+    throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
+  }
+}
+
 async function ensureOcrWorkerSlots(count: number) {
   while (sharedOcrSlots.length < count) {
-    const worker = import('tesseract.js').then(({ createWorker }) => createWorker('eng'));
+    const worker = createPinnedOcrWorker();
     sharedOcrSlots.push({ worker, tail: Promise.resolve() });
   }
 }
@@ -135,7 +171,12 @@ export async function prepareCertificationForReview(
   if (isImageFile(file)) {
     reportProgress(onProgress, 'Preparing certification image for review…', 10);
     reportProgress(onProgress, 'Reading certification image text…', 35);
-    const { data } = await recognizeWithSharedWorker(file, 1);
+    let data: Awaited<ReturnType<SharedOcrWorker['recognize']>>['data'];
+    try {
+      ({ data } = await recognizeWithSharedWorker(file, 1));
+    } catch (error) {
+      throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
+    }
     reportProgress(onProgress, 'Validating extracted image text…', 92);
     const text = normalizePageText(data.text);
     const confidence = Number(data.confidence) / 100;
@@ -237,15 +278,21 @@ export async function prepareCertificationForReview(
     const workerCount = parallelOcrWorkerCount(needsOcr.length);
     reportProgress(
       onProgress,
-      `Starting ${workerCount} parallel text reader${workerCount === 1 ? '' : 's'} for ${needsOcr.length} scanned page${needsOcr.length === 1 ? '' : 's'}…`,
+      `Starting ${workerCount} parallel OCR reader${workerCount === 1 ? '' : 's'} for ${needsOcr.length} scanned page${needsOcr.length === 1 ? '' : 's'}…`,
       42,
     );
 
-    await ensureOcrWorkerSlots(workerCount);
+    try {
+      await ensureOcrWorkerSlots(workerCount);
+    } catch (error) {
+      throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
+    }
+
     const startedAt = Date.now();
     let nextIndex = 0;
     let completedCount = 0;
     let fatalError: Error | null = null;
+    const pageErrors: Array<{ page: number; message: string }> = [];
 
     async function runWorker() {
       while (!fatalError) {
@@ -273,9 +320,9 @@ export async function prepareCertificationForReview(
           const { data } = await recognizeWithSharedWorker(canvas, workerCount);
           const text = normalizePageText(data.text);
           const confidence = Number(data.confidence) / 100;
-          // A page whose OCR produced no text, or no engine-reported
-          // confidence, is dropped: the rule engine then reports
-          // "unable to determine" rather than acting on invented evidence.
+          // Blank/illegible pages contribute no evidence. We retain the page
+          // failure below so an all-zero OCR result can never be mistaken for a
+          // successfully prepared scanned PDF.
           if (text && Number.isFinite(confidence) && confidence > 0) {
             pages.push({
               page: pageNumber,
@@ -284,13 +331,15 @@ export async function prepareCertificationForReview(
               ocrConfidence: Math.min(1, confidence),
               text,
             });
+          } else {
+            pageErrors.push({ page: pageNumber, message: 'OCR returned no usable text or confidence.' });
           }
         } catch (error) {
           if (error instanceof Error && error.message === OCR_LIMIT_MESSAGE) {
             fatalError = error;
             return;
           }
-          // Page-level OCR failure fails safe: the page contributes no evidence.
+          pageErrors.push({ page: pageNumber, message: describeOcrError(error) });
         }
 
         completedCount += 1;
@@ -307,6 +356,14 @@ export async function prepareCertificationForReview(
 
     pages.sort((a, b) => a.page - b.page);
     const ocrPageCount = pages.filter((page) => page.source === 'ocr').length;
+    if (ocrPageCount === 0) {
+      const firstFailure = pageErrors[0];
+      const detail = firstFailure
+        ? ` First failed page: ${firstFailure.page}. ${firstFailure.message}`
+        : '';
+      throw new Error(`${OCR_NO_TEXT_MESSAGE}${detail}`);
+    }
+
     reportProgress(onProgress, 'Finalizing certification text and provenance…', 99);
 
     const result: PrepareResult = {
@@ -330,4 +387,3 @@ export async function prepareCertificationForReview(
     await pdf.cleanup();
   }
 }
-
