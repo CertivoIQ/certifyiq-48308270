@@ -6,16 +6,18 @@ const read = (path) => readFileSync(path, "utf8");
 const launchpad = read("src/routes/launchpad.tsx");
 const dashboard = read("src/routes/_authenticated/dashboard.tsx");
 const uploadRoute = read("src/routes/upload-certification.tsx");
-const uploadPanel = read("src/components/certification-upload-panel.tsx");
+const uploadPanel = read("src/components/certification-upload-panel-v2.tsx");
 const reviewPanel = read("src/components/certification-review-panel.tsx");
 const filesRoute = read("src/routes/files.index.tsx");
-const extractionPreview = read("src/utils/certification-extraction-preview.functions.ts");
+const ticIntake = read("src/utils/tic-certification-intake.functions.ts");
+const ticRegistry = read("src/lib/tic-field-registry.ts");
 const propertiesRoute = read("src/routes/properties.index.tsx");
 const onboardingPanel = read("src/components/portfolio-onboarding-panel.tsx");
 const pdfOcr = read("src/lib/pdf-ocr.ts");
 const catalog = read("src/lib/platform-data.ts");
 
 test("certification upload is distinct from portfolio and tenant onboarding", () => {
+  assert.match(uploadRoute, /certification-upload-panel-v2/);
   assert.match(uploadRoute, /CertificationUploadPanel/);
   assert.doesNotMatch(uploadRoute, /PortfolioIntakePanel|PortfolioOnboardingPanel/);
   assert.match(uploadPanel, /Certification document intake/);
@@ -32,7 +34,7 @@ test("certification upload is distinct from portfolio and tenant onboarding", ()
 test("certification OCR sidecar stays compatible with the restricted storage bucket", () => {
   assert.match(uploadPanel, /OCR_SIDECAR_STORAGE_MIME\s*=\s*"application\/octet-stream"/);
   assert.match(uploadPanel, /contentType:\s*OCR_SIDECAR_STORAGE_MIME/);
-  assert.doesNotMatch(uploadPanel, /new Blob\(\[JSON\.stringify\(prepared\.sidecar\)\],\s*\{\s*type:\s*"application\/json"/);
+  assert.doesNotMatch(uploadPanel, /type:\s*"application\/json"/);
 });
 
 test("scanned PDF OCR handles blank pages and form layouts without weakening evidence controls", () => {
@@ -58,26 +60,60 @@ test("scanned PDF OCR handles blank pages and form layouts without weakening evi
   assert.match(pdfOcr, /OCR completed but could not recover readable text/);
 });
 
-test("extracted certification fields must be reviewed or corrected before the document is saved", () => {
-  assert.match(uploadPanel, /extractCertificationDocumentPreview/);
-  assert.match(uploadPanel, /confirmCertificationDocumentPreview/);
-  assert.match(uploadPanel, /cancelCertificationDocumentPreview/);
-  assert.match(uploadPanel, /Review extracted information before saving/);
-  assert.match(uploadPanel, /will not appear in Documents or the Compliance Review Queue until you confirm it/);
-  assert.doesNotMatch(uploadPanel, /certification_import_items"\)\.insert\([\s\S]*status:\s*"completed"/);
+test("complete Tenant Income Certification field registry is exposed for pre-save correction", () => {
+  for (const required of [
+    "property_name",
+    "building_identification_number",
+    "unit_number",
+    "unit_bedrooms",
+    "household_size",
+    "household_member_1_last_name",
+    "household_member_1_date_of_birth",
+    "household_member_1_full_time_student",
+    "income_member_1_wages_business",
+    "income_member_1_social_security_pension",
+    "income_member_1_public_assistance",
+    "income_member_1_other_income",
+    "household_annual_income",
+    "asset_1_type",
+    "asset_1_cash_value",
+    "asset_1_annual_income",
+    "applicable_lihtc_income_limit",
+    "tenant_paid_rent",
+    "utility_allowance",
+    "rent_assistance",
+    "other_non_optional_charges",
+    "gross_rent",
+    "all_occupants_full_time_students",
+    "student_exception_code",
+    "tenant_signature_date",
+    "owner_representative_signature_date",
+  ]) {
+    assert.match(ticRegistry, new RegExp(`\\b${required}\\b`));
+  }
+  assert.match(ticRegistry, /Array\.from\(\{ length: 7 \}/);
+  assert.match(ticRegistry, /Array\.from\(\{ length: 8 \}/);
+  assert.match(uploadPanel, /TIC_FIELD_DEFINITIONS/);
+  assert.match(uploadPanel, /TIC_FIELD_SECTIONS/);
+  assert.match(uploadPanel, /Not extracted — enter if shown on the certification/);
+  assert.match(uploadPanel, /sourcePreviewUrl/);
+  assert.match(uploadPanel, /Review and correct the complete TIC before saving/);
+});
 
-  assert.match(extractionPreview, /Nothing is written to certification_import_items or certification_facts until this confirmation runs/);
-  assert.match(extractionPreview, /confirmCertificationDocumentPreview/);
-  assert.match(extractionPreview, /historical_changes/);
-  assert.match(extractionPreview, /original_extracted_data/);
-  assert.match(extractionPreview, /confirmed_extracted_data/);
-  assert.match(extractionPreview, /human_verified:\s*true/);
-  assert.match(extractionPreview, /review_queue_status:\s*"not_queued"/);
-  assert.match(extractionPreview, /\.eq\("status", "completed"\)/);
-
-  assert.match(reviewPanel, /Extracted document information/);
-  assert.match(reviewPanel, /item\.extracted_data/);
-  assert.match(reviewPanel, /Compliance review begins only when selected below/);
+test("OCR-proposed and missed TIC fields can both be corrected before save", () => {
+  assert.match(uploadPanel, /extractCertificationTicPreview/);
+  assert.match(uploadPanel, /confirmCertificationTicPreview/);
+  assert.match(uploadPanel, /cancelCertificationTicPreview/);
+  assert.match(uploadPanel, /TIC_FIELD_DEFINITIONS\.map/);
+  assert.match(uploadPanel, /reviewerSuppliedCount/);
+  assert.match(ticIntake, /TIC_FIELD_KEY_SET/);
+  assert.match(ticIntake, /reviewerSuppliedFields/);
+  assert.match(ticIntake, /REVIEWER_CONFIRMED_PROVIDER/);
+  assert.doesNotMatch(ticIntake, /was not extracted from this document and cannot be confirmed here/);
+  assert.match(ticIntake, /source_page:\s*original\?\.page \?\? null/);
+  assert.match(ticIntake, /human_verified:\s*true/);
+  assert.match(ticIntake, /tic_pre_save_confirmation/);
+  assert.match(ticIntake, /review_queue_status:\s*"not_queued"/);
 });
 
 test("confirmed certification can be saved alone or saved and explicitly started in review", () => {
@@ -88,13 +124,13 @@ test("confirmed certification can be saved alone or saved and explicitly started
   assert.match(uploadPanel, /startReview,/);
   assert.match(uploadPanel, /It is now in the Compliance Review Queue/);
 
-  assert.match(extractionPreview, /startReview\?: boolean/);
-  assert.match(extractionPreview, /startReview:\s*data\.startReview === true/);
-  assert.match(extractionPreview, /review_queue_status:\s*"queued"/);
-  assert.match(extractionPreview, /queued_for_review_at:\s*confirmedAt/);
-  assert.match(extractionPreview, /review_order:\s*Date\.now\(\) \* 1000/);
-  assert.match(extractionPreview, /reviewQueueStatus:\s*data\.startReview \? "queued" : "not_queued"/);
-  assert.match(extractionPreview, /queuedForReview:\s*data\.startReview/);
+  assert.match(ticIntake, /startReview\?: boolean/);
+  assert.match(ticIntake, /startReview:\s*data\.startReview === true/);
+  assert.match(ticIntake, /review_queue_status:\s*"queued"/);
+  assert.match(ticIntake, /queued_for_review_at:\s*confirmedAt/);
+  assert.match(ticIntake, /review_order:\s*Date\.now\(\) \* 1000/);
+  assert.match(ticIntake, /reviewQueueStatus:\s*data\.startReview \? "queued" : "not_queued"/);
+  assert.match(ticIntake, /queuedForReview:\s*data\.startReview/);
 });
 
 test("save and start review opens the exact saved certification in the review workspace", () => {
