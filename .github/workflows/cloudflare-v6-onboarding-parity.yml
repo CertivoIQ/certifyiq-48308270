@@ -51,6 +51,9 @@ jobs:
           grep -F -q 'all_occupants_full_time_students' src/lib/tic-field-registry.ts
           grep -F -q 'reviewerSuppliedFields' src/utils/tic-certification-intake.functions.ts
           grep -F -q 'REVIEWER_CONFIRMED_PROVIDER' src/utils/tic-certification-intake.functions.ts
+          grep -F -q "tic-certification-review.functions" src/components/certification-review-panel.tsx
+          grep -F -q 'confirmedFactsAuthoritative' src/utils/tic-certification-review.functions.ts
+          grep -F -q '.eq("human_verified", true)' src/utils/tic-certification-review.functions.ts
           grep -F -q "const RENDER_SCALE = 3" src/lib/pdf-ocr.ts
           grep -F -q "TESSERACT_VERSION = '7.0.0'" src/lib/pdf-ocr.ts
           grep -F -q 'tessdata.projectnaptha.com/4.0.0_best' src/lib/pdf-ocr.ts
