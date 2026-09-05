@@ -6,7 +6,9 @@ const read = (path) => readFileSync(path, "utf8");
 const launchpad = read("src/routes/launchpad.tsx");
 const dashboard = read("src/routes/_authenticated/dashboard.tsx");
 const uploadRoute = read("src/routes/upload-certification.tsx");
-const uploadPanel = read("src/components/certification-upload-panel-v3.tsx");
+const uploadPanel = read("src/components/certification-upload-panel-v4.tsx");
+const ticReviewForm = read("src/components/certivoiq-tic-review-form.tsx");
+const ticExtraction = read("src/lib/tic-field-extraction.ts");
 const supportPanel = read("src/components/certification-supporting-documents-panel.tsx");
 const reviewPanel = read("src/components/certification-review-panel.tsx");
 const filesRoute = read("src/routes/files.index.tsx");
@@ -21,11 +23,12 @@ const pdfOcr = read("src/lib/pdf-ocr.ts");
 const catalog = read("src/lib/platform-data.ts");
 
 test("certification upload is distinct from portfolio and tenant onboarding", () => {
-  assert.match(uploadRoute, /certification-upload-panel-v3/);
+  assert.match(uploadRoute, /certification-upload-panel-v4/);
   assert.match(uploadRoute, /CertificationUploadPanel/);
   assert.doesNotMatch(uploadRoute, /PortfolioIntakePanel|PortfolioOnboardingPanel/);
   assert.match(uploadPanel, /Certification document intake/);
   assert.match(uploadPanel, /Upload the full Tenant Income Certification packet/);
+  assert.match(uploadPanel, /CertivoIQ TIC Review Form/);
   assert.doesNotMatch(uploadPanel, /parsePortfolioIntakeCsv|createPortfolioIntake/);
 
   assert.match(propertiesRoute, /PortfolioOnboardingPanel/);
@@ -63,23 +66,37 @@ test("scanned PDF OCR handles blank pages and form layouts without weakening evi
   assert.doesNotMatch(pdfOcr, /if \(ocrPageCount === 0\)/);
 });
 
-test("complete Tenant Income Certification field registry is exposed for pre-save correction", () => {
+test("complete Tenant Income Certification field registry is exposed in source-form order", () => {
   for (const required of [
-    "property_name", "building_identification_number", "unit_number", "unit_bedrooms", "household_size",
-    "household_annual_income", "applicable_lihtc_income_limit", "tenant_paid_rent", "utility_allowance",
-    "rent_assistance", "other_non_optional_charges", "gross_rent", "all_occupants_full_time_students",
-    "student_exception_code", "tenant_signature_date", "owner_representative_signature_date",
+    "current_date", "property_name", "building_identification_number", "unit_number", "unit_bedrooms",
+    "household_member_1_race", "household_member_1_ethnicity", "household_member_1_disability", "household_member_1_gender",
+    "total_income_e", "asset_actual_income_below_iit", "asset_1_current_disposed", "asset_1_category", "asset_1_income_method",
+    "total_nnpp", "total_income_assets_m", "household_annual_income", "applicable_lihtc_income_limit",
+    "tenant_paid_rent", "utility_allowance", "rent_assistance", "other_non_optional_charges", "gross_rent",
+    "all_occupants_full_time_students", "student_exception_code", "program_type_pennhomes", "program_type_pennhomes_home",
+    "tenant_signature_date", "owner_representative_signature_date",
   ]) assert.match(ticRegistry, new RegExp(`\\b${required}\\b`));
 
   assert.match(ticRegistry, /Array\.from\(\{ length: 7 \}/);
-  assert.match(ticRegistry, /household_member_\$\{member\}_last_name/);
-  assert.match(ticRegistry, /income_member_\$\{member\}_wages_business/);
   assert.match(ticRegistry, /Array\.from\(\{ length: 8 \}/);
-  assert.match(ticRegistry, /asset_\$\{row\}_cash_value/);
   assert.match(uploadPanel, /TIC_FIELD_DEFINITIONS/);
-  assert.match(uploadPanel, /TIC_FIELD_SECTIONS/);
-  assert.match(uploadPanel, /Not extracted — enter if shown on the certification/);
-  assert.match(uploadPanel, /Staged source packet/);
+  assert.match(uploadPanel, /CertivoIqTicReviewForm/);
+  for (const heading of [
+    "PART I — DEVELOPMENT DATA", "PART II — HOUSEHOLD COMPOSITION", "PART III — GROSS ANNUAL INCOME",
+    "PART IV — INCOME FROM ASSETS", "PART V — TOTAL HOUSEHOLD INCOME",
+    "PART VI — DETERMINATION OF INCOME ELIGIBILITY", "PART VII — RENT", "PART VIII — STUDENT STATUS", "PART IX — PROGRAM TYPE",
+  ]) assert.match(ticReviewForm, new RegExp(heading));
+});
+
+test("blank TIC lines do not inherit neighboring labels as extracted values", () => {
+  assert.match(ticExtraction, /FORM_BOUNDARIES/);
+  assert.match(ticExtraction, /stripBlankArtifacts/);
+  assert.match(ticExtraction, /boundedTail/);
+  assert.match(ticExtraction, /normalizeDate/);
+  assert.match(ticExtraction, /looksLikeAnotherFieldLabel/);
+  assert.match(ticExtraction, /Blank form lines stay blank/);
+  assert.match(ticRegistry, /utility allowance source", "ua source"/i);
+  assert.doesNotMatch(ticExtraction, /return raw\.trim\(\) \|\| null/);
 });
 
 test("standard supporting documents are classified and preserved beneath the TIC", () => {
