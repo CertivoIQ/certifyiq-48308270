@@ -38,11 +38,10 @@ test("extracted certification fields must be reviewed or corrected before the do
   assert.match(uploadPanel, /confirmCertificationDocumentPreview/);
   assert.match(uploadPanel, /cancelCertificationDocumentPreview/);
   assert.match(uploadPanel, /Review extracted information before saving/);
-  assert.match(uploadPanel, /Confirm & Save Document/);
   assert.match(uploadPanel, /will not appear in Documents or the Compliance Review Queue until you confirm it/);
   assert.doesNotMatch(uploadPanel, /certification_import_items"\)\.insert\([\s\S]*status:\s*"completed"/);
 
-  assert.match(extractionPreview, /Nothing is written to certification_import_items or certification_facts here/);
+  assert.match(extractionPreview, /Nothing is written to certification_import_items or certification_facts until this confirmation runs/);
   assert.match(extractionPreview, /confirmCertificationDocumentPreview/);
   assert.match(extractionPreview, /historical_changes/);
   assert.match(extractionPreview, /original_extracted_data/);
@@ -54,6 +53,23 @@ test("extracted certification fields must be reviewed or corrected before the do
   assert.match(reviewPanel, /Extracted document information/);
   assert.match(reviewPanel, /item\.extracted_data/);
   assert.match(reviewPanel, /Compliance review begins only when selected below/);
+});
+
+test("confirmed certification can be saved alone or saved and explicitly started in review", () => {
+  assert.match(uploadPanel, /Save Document/);
+  assert.match(uploadPanel, /Save & Start Review/);
+  assert.match(uploadPanel, /confirmAndSave\(false\)/);
+  assert.match(uploadPanel, /confirmAndSave\(true\)/);
+  assert.match(uploadPanel, /startReview,/);
+  assert.match(uploadPanel, /It is now in the Compliance Review Queue/);
+
+  assert.match(extractionPreview, /startReview\?: boolean/);
+  assert.match(extractionPreview, /startReview:\s*data\.startReview === true/);
+  assert.match(extractionPreview, /review_queue_status:\s*"queued"/);
+  assert.match(extractionPreview, /queued_for_review_at:\s*confirmedAt/);
+  assert.match(extractionPreview, /review_order:\s*Date\.now\(\) \* 1000/);
+  assert.match(extractionPreview, /reviewQueueStatus:\s*data\.startReview \? "queued" : "not_queued"/);
+  assert.match(extractionPreview, /queuedForReview:\s*data\.startReview/);
 });
 
 test("LaunchPad requires actual onboarding data before the operational dashboard", () => {
