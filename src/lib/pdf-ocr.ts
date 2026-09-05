@@ -10,6 +10,7 @@ import {
   type OcrSidecar,
   type OcrSidecarPage,
 } from '@/lib/ocr-sidecar.mjs';
+import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
 
 /**
  * Browser-side certification document extraction.
@@ -374,6 +375,14 @@ export async function prepareCertificationForReview(
 
     const pages: OcrSidecarPage[] = [];
     const needsOcr: number[] = [];
+    const preparedTextByPage = new Map<number, string>();
+    let nativeFormValuesByPage = new Map<number, string[]>();
+    try {
+      const fieldObjects = await pdf.getFieldObjects();
+      nativeFormValuesByPage = ticPdfFormValueLinesByPage(fieldObjects as unknown as PdfFieldObjects | null);
+    } catch {
+      // Some flattened PDFs do not expose AcroForm fields. Visual OCR remains the fallback.
+    }
 
     let nextTextPage = 1;
     let completedTextPages = 0;
@@ -388,10 +397,17 @@ export async function prepareCertificationForReview(
         nextTextPage += 1;
         const page = await pdf.getPage(pageNumber);
         const content = await page.getTextContent();
-        const text = normalizePageText(
+        const nativeText = normalizePageText(
           content.items.map((item) => ('str' in item ? item.str : '')).join(' '),
         );
-        if (pageNeedsOcr(text)) needsOcr.push(pageNumber);
+        const formValueLines = nativeFormValuesByPage.get(pageNumber) ?? [];
+        const text = normalizePageText([nativeText, ...formValueLines].filter(Boolean).join('\n'));
+        preparedTextByPage.set(pageNumber, text);
+        const isTicFormPage =
+          pageNumber <= 3 &&
+          /tenant income certification/i.test(nativeText) &&
+          !/instructions for completing/i.test(nativeText);
+        if (pageNeedsOcr(text) || isTicFormPage) needsOcr.push(pageNumber);
         else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
         completedTextPages += 1;
         reportProgress(
@@ -465,7 +481,9 @@ export async function prepareCertificationForReview(
 
         try {
           const page = await pdf.getPage(pageNumber);
-          const viewport = page.getViewport({ scale: RENDER_SCALE });
+          const preparedText = preparedTextByPage.get(pageNumber) ?? '';
+          const isTicFormPage = pageNumber <= 3 && /tenant income certification/i.test(preparedText);
+          const viewport = page.getViewport({ scale: isTicFormPage ? 4.5 : RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
 
@@ -474,12 +492,15 @@ export async function prepareCertificationForReview(
           } else {
             const { text, confidence } = await recognizeScannedCanvas(canvas, workerCount);
             if (text && Number.isFinite(confidence) && confidence > 0) {
+              const combinedText = normalizePageText(
+                [preparedTextByPage.get(pageNumber) ?? '', text].filter(Boolean).join('\n'),
+              );
               pages.push({
                 page: pageNumber,
                 source: 'ocr',
                 engine: OCR_ENGINE,
                 ocrConfidence: Math.min(1, confidence),
-                text,
+                text: combinedText,
               });
             } else {
               pageErrors.push({

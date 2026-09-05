@@ -1,5 +1,5 @@
 import type { TicFieldDefinition } from "@/lib/tic-field-registry";
-import { TIC_FIELD_BY_KEY } from "@/lib/tic-field-registry";
+import { TIC_ASSET_ROW_COUNT, TIC_FIELD_BY_KEY, TIC_HOUSEHOLD_ROW_COUNT, TIC_INCOME_ROW_COUNT } from "@/lib/tic-field-registry";
 
 type FactMeta = {
   page: number | null;
@@ -96,7 +96,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function MemberTable({ values, factsByField, busy, onChange }: Props) {
-  const members = Array.from({ length: 7 }, (_, i) => i + 1);
+  const members = Array.from({ length: TIC_HOUSEHOLD_ROW_COUNT }, (_, i) => i + 1);
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[1120px] border-collapse text-[10px]">
@@ -148,7 +148,7 @@ function MemberTable({ values, factsByField, busy, onChange }: Props) {
 }
 
 function IncomeTable({ values, factsByField, busy, onChange }: Props) {
-  const members = Array.from({ length: 7 }, (_, i) => i + 1);
+  const members = Array.from({ length: TIC_INCOME_ROW_COUNT }, (_, i) => i + 1);
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[760px] border-collapse text-[10px]">
@@ -186,7 +186,7 @@ function IncomeTable({ values, factsByField, busy, onChange }: Props) {
 }
 
 function AssetsTable({ values, factsByField, busy, onChange }: Props) {
-  const rows = Array.from({ length: 8 }, (_, i) => i + 1);
+  const rows = Array.from({ length: TIC_ASSET_ROW_COUNT }, (_, i) => i + 1);
   return (
     <>
       <div className="border-x border-b border-slate-600 p-3">
