@@ -4,12 +4,14 @@ import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 const migration = read("supabase/migrations/20260830103000_controlled_mass_portfolio_tenant_intake.sql");
+const supportingMigration = read("supabase/migrations/20260905195900_tic_supporting_documents.sql");
 const transitionFix = read("supabase/migrations/20260830104500_fix_certification_import_updated_at_columns.sql");
 const parser = read("src/lib/portfolio-intake.ts");
 const intake = read("src/lib/portfolio-intake.functions.ts");
 const intakeUi = read("src/components/portfolio-intake-panel.tsx");
 const onboardingUi = read("src/components/portfolio-onboarding-panel.tsx");
-const certificationUi = read("src/components/certification-upload-panel-v2.tsx");
+const certificationUi = read("src/components/certification-upload-panel-v3.tsx");
+const supportingRegistry = read("src/lib/tic-supporting-document-registry.ts");
 const ticIntake = read("src/utils/tic-certification-intake.functions.ts");
 const queueUi = read("src/components/certification-review-panel.tsx");
 const review = read("src/utils/certification-review.functions.ts");
@@ -79,18 +81,20 @@ test("clients explicitly select multiple certifications and server preserves glo
   assert.match(review, /review_queue_status: "completed"/);
 });
 
-test("onboarding and complete TIC intake are separate production entry points", () => {
+test("onboarding and packet-aware complete TIC intake are separate production entry points", () => {
   assert.match(properties, /<PortfolioOnboardingPanel/);
   assert.match(onboardingUi, /documentCount: 0/);
   assert.match(onboardingUi, /documentFileName: undefined/);
   assert.match(onboardingUi, /properties, units, and tenant profiles/);
   assert.doesNotMatch(onboardingUi, /uploadCertificationFile/);
 
-  assert.match(upload, /certification-upload-panel-v2/);
+  assert.match(upload, /certification-upload-panel-v3/);
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
+  assert.match(certificationUi, /Tenant File Destination|tenant file/i);
   assert.match(certificationUi, /Review and correct the complete TIC before saving/);
   assert.match(certificationUi, /TIC_FIELD_DEFINITIONS/);
+  assert.match(certificationUi, /supporting/i);
   assert.match(certificationUi, /sourcePreviewUrl/);
   assert.match(certificationUi, /Save Document/);
   assert.match(certificationUi, /Save & Start Review/);
@@ -106,4 +110,29 @@ test("onboarding and complete TIC intake are separate production entry points", 
   assert.match(files, /does not automatically enter compliance review/);
   assert.match(review, /certification_type, jurisdiction, program_codes/);
   assert.match(review, /portfolio_tenant_profiles\(household_name\)/);
+});
+
+test("one certification can preserve multiple immutable supporting documents", () => {
+  assert.match(supportingMigration, /drop constraint if exists portfolio_tenant_documents_certification_import_item_id_key/);
+  assert.match(supportingMigration, /source_kind in \('packet_page_range','standalone_upload'\)/);
+  assert.match(supportingMigration, /Multiple preserved supporting documents may link to the same certification/);
+  assert.match(supportingMigration, /immutable boolean not null default true/);
+  assert.match(supportingMigration, /printable boolean not null default true/);
+  for (const type of [
+    "annual_student_certification",
+    "voluntary_race_ethnicity_disability",
+    "zero_income_certification",
+    "disposal_of_assets_certification",
+    "dependent_children_certification",
+    "no_child_support_certification",
+    "self_certification",
+    "affidavit",
+    "check_stub",
+    "other_supporting_document",
+  ]) {
+    assert.match(supportingRegistry, new RegExp(type));
+  }
+  assert.match(ticIntake, /portfolio_tenant_documents/);
+  assert.match(ticIntake, /source_kind:\s*"packet_page_range"/);
+  assert.match(ticIntake, /immutable:\s*true/);
 });
