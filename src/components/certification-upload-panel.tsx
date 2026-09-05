@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
 import { FileUp, UploadCloud } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -72,6 +73,7 @@ function fieldText(value: unknown) {
 
 export function CertificationUploadPanel() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const extractPreview = useServerFn(extractCertificationDocumentPreview);
   const confirmPreview = useServerFn(confirmCertificationDocumentPreview);
   const cancelPreview = useServerFn(cancelCertificationDocumentPreview);
@@ -241,6 +243,9 @@ export function CertificationUploadPanel() {
         queryClient.invalidateQueries({ queryKey: ["certification-items"] }),
         queryClient.invalidateQueries({ queryKey: ["certification-review"] }),
       ]);
+      if (result.queuedForReview) {
+        await navigate({ to: "/files", search: { item: result.itemId } });
+      }
     } catch (error) {
       setProgressPercent(100);
       setProgressLabel("Review is still open — document not saved.");
