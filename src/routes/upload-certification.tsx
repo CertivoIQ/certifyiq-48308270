@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { CertificationUploadPanel } from "@/components/certification-upload-panel-v3";
+import { CertificationUploadPanel } from "@/components/certification-upload-panel-v4";
 import { Button } from "@/components/ui/button";
 import { FileSearch } from "lucide-react";
 
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/upload-certification")({
       { title: "Upload Certification & OCR — CertivoIQ" },
       {
         name: "description",
-        content: "Upload complete Tenant Income Certification packets, correct TIC fields, and preserve supporting documents under the tenant file.",
+        content: "Upload complete Tenant Income Certification packets, review extracted values in a structured TIC form, and preserve supporting documents under the tenant file.",
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
