@@ -11,6 +11,7 @@ import {
   type OcrSidecarPage,
 } from '@/lib/ocr-sidecar.mjs';
 import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
+import { extractTicSpatialValueLines } from '@/lib/tic-spatial-extraction.mjs';
 
 /**
  * Browser-side certification document extraction.
@@ -103,7 +104,7 @@ async function recognizeWithSharedWorker(
         user_defined_dpi: '300',
       });
     }
-    return worker.recognize(source, { rotateAuto: true });
+    return worker.recognize(source, { rotateAuto: true }, { text: true, blocks: true });
   });
   slot.tail = recognition.then(() => undefined, () => undefined);
   return recognition;
@@ -248,9 +249,11 @@ function looksVisuallyBlank(source: HTMLCanvasElement) {
 function normalizedRecognition(recognition: OcrRecognition) {
   const text = normalizePageText(recognition.data.text);
   const confidence = Number(recognition.data.confidence) / 100;
+  const blocks = (recognition.data as typeof recognition.data & { blocks?: unknown }).blocks ?? [];
   return {
     text,
     confidence: Number.isFinite(confidence) ? confidence : 0,
+    blocks,
   };
 }
 
@@ -264,7 +267,7 @@ function recognitionIsStrong(candidate: { text: string; confidence: number }) {
 
 async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: number) {
   const { PSM } = await import('tesseract.js');
-  const candidates: Array<{ text: string; confidence: number }> = [];
+  const candidates: Array<{ text: string; confidence: number; blocks: unknown }> = [];
 
   const auto = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.AUTO));
   candidates.push(auto);
@@ -330,12 +333,16 @@ export async function prepareCertificationForReview(
       throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
     }
     reportProgress(onProgress, 'Validating extracted image text…', 92);
-    const { text, confidence } = normalizedRecognition(recognition);
+    const { text, confidence, blocks } = normalizedRecognition(recognition);
     if (!text || !Number.isFinite(confidence) || confidence <= 0) {
       throw new Error(
         'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
       );
     }
+    const spatialLines = /tenant income certification/i.test(text)
+      ? extractTicSpatialValueLines(blocks)
+      : [];
+    const combinedImageText = normalizePageText([text, ...spatialLines].filter(Boolean).join('\n'));
     reportProgress(onProgress, 'Certification image preparation complete.', 100);
     return {
       kind: 'ocr',
@@ -355,7 +362,7 @@ export async function prepareCertificationForReview(
             source: 'ocr',
             engine: OCR_ENGINE,
             ocrConfidence: Math.min(1, confidence),
-            text,
+            text: combinedImageText,
           },
         ],
       },
@@ -483,17 +490,22 @@ export async function prepareCertificationForReview(
           const page = await pdf.getPage(pageNumber);
           const preparedText = preparedTextByPage.get(pageNumber) ?? '';
           const isTicFormPage = pageNumber <= 3 && /tenant income certification/i.test(preparedText);
-          const viewport = page.getViewport({ scale: isTicFormPage ? 4.5 : RENDER_SCALE });
+          const highResolutionFormCandidate = pageNumber <= 3;
+          const viewport = page.getViewport({ scale: highResolutionFormCandidate ? 4.5 : RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
 
           if (looksVisuallyBlank(canvas)) {
             blankPages.push(pageNumber);
           } else {
-            const { text, confidence } = await recognizeScannedCanvas(canvas, workerCount);
+            const { text, confidence, blocks } = await recognizeScannedCanvas(canvas, workerCount);
             if (text && Number.isFinite(confidence) && confidence > 0) {
+              const ticDetected = isTicFormPage || /tenant income certification/i.test(`${preparedText} ${text}`);
+              const spatialLines = ticDetected
+                ? extractTicSpatialValueLines(blocks, canvas.width, canvas.height)
+                : [];
               const combinedText = normalizePageText(
-                [preparedTextByPage.get(pageNumber) ?? '', text].filter(Boolean).join('\n'),
+                [preparedTextByPage.get(pageNumber) ?? '', text, ...spatialLines].filter(Boolean).join('\n'),
               );
               pages.push({
                 page: pageNumber,
