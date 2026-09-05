@@ -18,64 +18,65 @@ const field = (
   placeholder?: string,
 ): TicFieldDefinition => ({ key, label, section, type, aliases, ...(placeholder ? { placeholder } : {}) });
 
-const householdMemberFields = Array.from({ length: 7 }, (_, index) => {
+export const TIC_HOUSEHOLD_ROW_COUNT = 10;
+export const TIC_INCOME_ROW_COUNT = 10;
+export const TIC_ASSET_ROW_COUNT = 27;
+export const TIC_SIGNATURE_ROW_COUNT = 4;
+
+const householdMemberFields = Array.from({ length: TIC_HOUSEHOLD_ROW_COUNT }, (_, index) => {
   const member = index + 1;
   const prefix = `Household member ${member}`;
   return [
-    field(`household_member_${member}_last_name`, `${prefix} — last name`, "Part II — Household Composition", "text"),
-    field(`household_member_${member}_first_name_middle_initial`, `${prefix} — first name & middle initial`, "Part II — Household Composition", "text"),
-    field(`household_member_${member}_relationship`, `${prefix} — relationship to head`, "Part II — Household Composition", "text"),
-    field(`household_member_${member}_race`, `${prefix} — race`, "Part II — Household Composition", "text"),
-    field(`household_member_${member}_ethnicity`, `${prefix} — ethnicity`, "Part II — Household Composition", "text"),
-    field(`household_member_${member}_disability`, `${prefix} — disability status`, "Part II — Household Composition", "text"),
-    field(`household_member_${member}_gender`, `${prefix} — gender`, "Part II — Household Composition", "text"),
-    field(`household_member_${member}_date_of_birth`, `${prefix} — date of birth`, "Part II — Household Composition", "date"),
-    field(`household_member_${member}_age`, `${prefix} — age`, "Part II — Household Composition", "number"),
-    field(`household_member_${member}_full_time_student`, `${prefix} — full-time student`, "Part II — Household Composition", "yes_no"),
-    field(`household_member_${member}_ssn_or_alien_registration`, `${prefix} — SSN / alien registration number`, "Part II — Household Composition", "text"),
+    field(`household_member_${member}_last_name`, `${prefix} — last name`, "Part II — Household Composition", "text", [`household member ${member} last name`]),
+    field(`household_member_${member}_first_name_middle_initial`, `${prefix} — first name & middle initial`, "Part II — Household Composition", "text", [`household member ${member} first name middle initial`]),
+    field(`household_member_${member}_relationship`, `${prefix} — relationship to head`, "Part II — Household Composition", "text", [`household member ${member} relationship`]),
+    field(`household_member_${member}_race`, `${prefix} — race`, "Part II — Household Composition", "text", [`household member ${member} race`]),
+    field(`household_member_${member}_ethnicity`, `${prefix} — ethnicity`, "Part II — Household Composition", "text", [`household member ${member} ethnicity`]),
+    field(`household_member_${member}_disability`, `${prefix} — disability status`, "Part II — Household Composition", "text", [`household member ${member} disability`]),
+    field(`household_member_${member}_gender`, `${prefix} — gender`, "Part II — Household Composition", "text", [`household member ${member} gender`]),
+    field(`household_member_${member}_date_of_birth`, `${prefix} — date of birth`, "Part II — Household Composition", "date", [`household member ${member} date of birth`]),
+    field(`household_member_${member}_age`, `${prefix} — age`, "Part II — Household Composition", "number", [`household member ${member} age`]),
+    field(`household_member_${member}_full_time_student`, `${prefix} — full-time student`, "Part II — Household Composition", "yes_no", [`household member ${member} full-time student`]),
+    field(`household_member_${member}_ssn_or_alien_registration`, `${prefix} — SSN / alien registration number`, "Part II — Household Composition", "text", [`household member ${member} ssn alien registration`]),
   ];
 }).flat();
 
-const incomeMemberFields = Array.from({ length: 7 }, (_, index) => {
+const incomeMemberFields = Array.from({ length: TIC_INCOME_ROW_COUNT }, (_, index) => {
   const member = index + 1;
   const prefix = `Household member ${member}`;
   return [
-    field(`income_member_${member}_wages_business`, `${prefix} — employment or wages`, "Part III — Gross Annual Income", "currency"),
-    field(`income_member_${member}_social_security_pension`, `${prefix} — Social Security / pensions`, "Part III — Gross Annual Income", "currency"),
-    field(`income_member_${member}_public_assistance`, `${prefix} — public assistance`, "Part III — Gross Annual Income", "currency"),
-    field(`income_member_${member}_other_income`, `${prefix} — other income`, "Part III — Gross Annual Income", "currency"),
-    field(`income_member_${member}_total_income`, `${prefix} — total annual income`, "Part III — Gross Annual Income", "currency"),
+    field(`income_member_${member}_wages_business`, `${prefix} — employment or wages`, "Part III — Gross Annual Income", "currency", [`income member ${member} employment or wages`]),
+    field(`income_member_${member}_social_security_pension`, `${prefix} — Social Security / pensions`, "Part III — Gross Annual Income", "currency", [`income member ${member} social security pensions`]),
+    field(`income_member_${member}_public_assistance`, `${prefix} — public assistance`, "Part III — Gross Annual Income", "currency", [`income member ${member} public assistance`]),
+    field(`income_member_${member}_other_income`, `${prefix} — other income`, "Part III — Gross Annual Income", "currency", [`income member ${member} other income`]),
+    field(`income_member_${member}_total_income`, `${prefix} — total annual income`, "Part III — Gross Annual Income", "currency", [`income member ${member} total annual income`]),
   ];
 }).flat();
 
-const assetRowFields = Array.from({ length: 8 }, (_, index) => {
+const assetRowFields = Array.from({ length: TIC_ASSET_ROW_COUNT }, (_, index) => {
   const row = index + 1;
   return [
-    field(`asset_${row}_household_member_number`, `Asset ${row} — household member #`, "Part IV — Income From Assets", "number"),
-    field(`asset_${row}_type`, `Asset ${row} — type of asset`, "Part IV — Income From Assets", "text"),
-    field(`asset_${row}_current_disposed`, `Asset ${row} — current / disposed`, "Part IV — Income From Assets", "text"),
-    field(`asset_${row}_category`, `Asset ${row} — NNPP / Real / Tax Relief`, "Part IV — Income From Assets", "text"),
-    field(`asset_${row}_cash_value`, `Asset ${row} — cash value`, "Part IV — Income From Assets", "currency"),
-    field(`asset_${row}_income_method`, `Asset ${row} — actual / imputed`, "Part IV — Income From Assets", "text"),
-    field(`asset_${row}_annual_income`, `Asset ${row} — annual income from asset`, "Part IV — Income From Assets", "currency"),
+    field(`asset_${row}_household_member_number`, `Asset ${row} — household member #`, "Part IV — Income From Assets", "number", [`asset ${row} household member number`]),
+    field(`asset_${row}_type`, `Asset ${row} — type of asset`, "Part IV — Income From Assets", "text", [`asset ${row} type`]),
+    field(`asset_${row}_current_disposed`, `Asset ${row} — current / disposed`, "Part IV — Income From Assets", "text", [`asset ${row} current disposed`]),
+    field(`asset_${row}_category`, `Asset ${row} — NNPP / Real / Tax Relief`, "Part IV — Income From Assets", "text", [`asset ${row} category`]),
+    field(`asset_${row}_cash_value`, `Asset ${row} — cash value`, "Part IV — Income From Assets", "currency", [`asset ${row} cash value`]),
+    field(`asset_${row}_income_method`, `Asset ${row} — actual / imputed`, "Part IV — Income From Assets", "text", [`asset ${row} income method`]),
+    field(`asset_${row}_annual_income`, `Asset ${row} — annual income from asset`, "Part IV — Income From Assets", "currency", [`asset ${row} annual income`]),
   ];
 }).flat();
 
-const signatureFields = Array.from({ length: 7 }, (_, index) => {
+const signatureFields = Array.from({ length: TIC_SIGNATURE_ROW_COUNT }, (_, index) => {
   const member = index + 1;
   return [
-    field(`household_member_${member}_signature_present`, `Household member ${member} — signature present`, "Household Certification & Signatures", "yes_no"),
-    field(`household_member_${member}_signature_date`, `Household member ${member} — signature date`, "Household Certification & Signatures", "date"),
+    field(`household_member_${member}_signature_present`, `Household member ${member} — signature present`, "Household Certification & Signatures", "yes_no", [`household member ${member} signature present`]),
+    field(`household_member_${member}_signature_date`, `Household member ${member} — signature date`, "Household Certification & Signatures", "date", [`household member ${member} signature date`]),
   ];
 }).flat();
 
-/**
- * Comprehensive LIHTC Tenant Income Certification intake schema.
- * Includes the data elements present on the PHFA/HOTMA TIC supplied for the
- * CertivoIQ review workspace while retaining generic fields used by other HFAs.
- */
+/** Comprehensive LIHTC Tenant Income Certification intake schema. */
 export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
-  field("certification_type", "Certification type", "Certification", "text", ["initial certification", "recertification", "other certification", "certification type"]),
+  field("certification_type", "Certification type", "Certification", "text", ["certification type", "initial certification", "recertification", "other certification"]),
   field("other_certification_type", "Other certification type / explanation", "Certification", "text", ["other certification type", "other explanation"]),
   field("certification_effective_date", "Effective Date", "Certification", "date", ["certification effective date", "effective date"]),
   field("move_in_date", "Move-in Date", "Certification", "date", ["move-in date", "move in date"]),
@@ -98,6 +99,10 @@ export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   ...householdMemberFields,
 
   ...incomeMemberFields,
+  field("total_employment_income", "Total Employment / Wages", "Part III — Gross Annual Income", "currency", ["total employment"]),
+  field("total_social_security_pensions", "Total Social Security / Pensions", "Part III — Gross Annual Income", "currency", ["total ss/pensions"]),
+  field("total_public_assistance", "Total Public Assistance", "Part III — Gross Annual Income", "currency", ["total public assistance"]),
+  field("total_other_income", "Total Other Income", "Part III — Gross Annual Income", "currency", ["total other income"]),
   field("total_income_e", "TOTAL INCOME (E)", "Part III — Gross Annual Income", "currency", ["total income (e)", "total income e"]),
   field("household_annual_income", "Total Annual Household Income from all Sources", "Part V — Total Household Income", "currency", ["total annual household income from all sources", "household annual income", "total household income"]),
 
@@ -130,7 +135,7 @@ export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   field("other_non_optional_charges", "Other non-optional charges", "Part VII — Rent", "currency", ["other non-optional charges", "other non optional charges"]),
   field("gross_rent", "GROSS RENT FOR UNIT", "Part VII — Rent", "currency", ["gross rent for unit", "gross rent"]),
   field("unit_rent_restriction_percent", "Unit Meets Rent Restriction at (%)", "Part VII — Rent", "number", ["unit meets rent restriction at", "rent restriction at"]),
-  field("state_max_gross_rent", "Maximum Rent Limit for this unit", "Part VII — Rent", "currency", ["maximum rent limit for this unit", "maximum rent limit for this unit:", "state maximum gross rent", "max gross rent"]),
+  field("state_max_gross_rent", "Maximum Rent Limit for this unit", "Part VII — Rent", "currency", ["maximum rent limit for this unit", "state maximum gross rent", "max gross rent"]),
   field("rental_assistance_type", "Rental Assistance Type", "Part VII — Rent", "text", ["rental assistance type", "rent assistance type"]),
 
   field("all_occupants_full_time_students", "Are all occupants full-time students?", "Part VIII — Student Status", "yes_no", ["are all occupants full-time students", "are all occupants full time students", "all occupants full-time students"]),
@@ -141,19 +146,19 @@ export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   field("student_exception_married_joint_return", "Student exception — married and entitled to file joint return", "Part VIII — Student Status", "yes_no", ["married", "joint return"]),
   field("student_exception_former_foster_care", "Student exception — formerly in foster care", "Part VIII — Student Status", "yes_no", ["foster care"]),
 
-  field("program_type_lihtc", "Program type — Tax Credit", "Part IX — Program Type", "yes_no", ["tax credit", "lihtc", "low income housing tax credit"]),
-  field("program_type_home", "Program type — HOME", "Part IX — Program Type", "yes_no", ["home program"]),
-  field("program_type_tax_exempt_bond", "Program type — Tax Exempt", "Part IX — Program Type", "yes_no", ["tax exempt", "tax-exempt bond", "tax exempt bond"]),
-  field("program_type_pennhomes", "Program type — PennHOMES", "Part IX — Program Type", "yes_no", ["pennhomes"]),
-  field("program_type_pennhomes_home", "Program type — PennHOMES/HOME", "Part IX — Program Type", "yes_no", ["pennhomes/home"]),
-  field("program_type_rural_development", "Program type — Rural Development", "Part IX — Program Type", "yes_no", ["rural development", "rd"]),
-  field("program_type_hud", "Program type — HUD / project-based assistance", "Part IX — Program Type", "yes_no", ["hud", "project based"]),
+  field("program_type_lihtc", "Program type — Tax Credit", "Part IX — Program Type", "yes_no", ["program type tax credit", "tax credit", "lihtc", "low income housing tax credit"]),
+  field("program_type_home", "Program type — HOME", "Part IX — Program Type", "yes_no", ["program type home", "home program"]),
+  field("program_type_tax_exempt_bond", "Program type — Tax Exempt", "Part IX — Program Type", "yes_no", ["program type tax exempt", "tax exempt", "tax-exempt bond", "tax exempt bond"]),
+  field("program_type_pennhomes", "Program type — PennHOMES", "Part IX — Program Type", "yes_no", ["program type pennhomes", "pennhomes"]),
+  field("program_type_pennhomes_home", "Program type — PennHOMES/HOME", "Part IX — Program Type", "yes_no", ["program type pennhomes home", "pennhomes/home"]),
+  field("program_type_rural_development", "Program type — Rural Development", "Part IX — Program Type", "yes_no", ["program type rural development", "rural development", "rd"]),
+  field("program_type_hud", "Program type — HUD / project-based assistance", "Part IX — Program Type", "yes_no", ["program type hud", "hud", "project based"]),
   field("program_type_other", "Program type — other", "Part IX — Program Type", "text", ["other program"]),
-  field("program_lihtc_income_status", "Tax Credit income status", "Part IX — Program Type", "text"),
-  field("program_home_income_status", "HOME income status", "Part IX — Program Type", "text"),
-  field("program_tax_exempt_income_status", "Tax Exempt income status", "Part IX — Program Type", "text"),
-  field("program_pennhomes_income_status", "PennHOMES income status", "Part IX — Program Type", "text"),
-  field("program_pennhomes_home_income_status", "PennHOMES/HOME income status", "Part IX — Program Type", "text"),
+  field("program_lihtc_income_status", "Tax Credit income status", "Part IX — Program Type", "text", ["tax credit income status"]),
+  field("program_home_income_status", "HOME income status", "Part IX — Program Type", "text", ["home income status"]),
+  field("program_tax_exempt_income_status", "Tax Exempt income status", "Part IX — Program Type", "text", ["tax exempt income status"]),
+  field("program_pennhomes_income_status", "PennHOMES income status", "Part IX — Program Type", "text", ["pennhomes income status"]),
+  field("program_pennhomes_home_income_status", "PennHOMES/HOME income status", "Part IX — Program Type", "text", ["pennhomes home income status"]),
 
   ...signatureFields,
   field("tenant_signature_date", "Tenant / household certification signature date", "Household Certification & Signatures", "date", ["tenant signature date", "signature date", "signed on"]),
