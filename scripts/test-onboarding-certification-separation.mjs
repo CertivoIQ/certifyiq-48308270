@@ -25,7 +25,7 @@ test("certification upload is distinct from portfolio and tenant onboarding", ()
   assert.match(uploadRoute, /CertificationUploadPanel/);
   assert.doesNotMatch(uploadRoute, /PortfolioIntakePanel|PortfolioOnboardingPanel/);
   assert.match(uploadPanel, /Certification document intake/);
-  assert.match(uploadPanel, /does not create properties, units, or tenant profiles|property, unit, and tenant setup is completed separately/i);
+  assert.match(uploadPanel, /Upload the full Tenant Income Certification packet/);
   assert.doesNotMatch(uploadPanel, /parsePortfolioIntakeCsv|createPortfolioIntake/);
 
   assert.match(propertiesRoute, /PortfolioOnboardingPanel/);
@@ -146,13 +146,14 @@ test("OCR-proposed and missed TIC fields can both be corrected before save", () 
   assert.match(ticIntake, /tic_pre_save_confirmation/);
 });
 
-test("supporting documents are reviewable and printable but not editable", () => {
+test("supporting documents are reviewable and printable while source contents remain non-editable", () => {
   assert.match(reviewPanel, /CertificationSupportingDocumentsPanel/);
   assert.match(supportPanel, /Preserved supporting tenant documents/);
   assert.match(supportPanel, /Open \/ Print/);
   assert.match(supportPanel, /Mark reviewed/);
   assert.match(supportPanel, /read-only/);
-  assert.doesNotMatch(supportPanel, /<input|<textarea/);
+  assert.match(supportPanel, /type="file"/);
+  assert.doesNotMatch(supportPanel, /<textarea|contentEditable|type="text"/);
   assert.match(ticIntake, /markCertificationSupportingDocumentReviewed/);
   assert.match(ticIntake, /review_status: "reviewed"/);
 });
