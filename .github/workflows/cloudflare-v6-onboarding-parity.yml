@@ -1,4 +1,4 @@
-# Retrigger after generated-row regression alignment.
+# Native TIC form-value extraction release.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
@@ -52,6 +52,16 @@ jobs:
           grep -F -q 'PART IX — PROGRAM TYPE' src/components/certivoiq-tic-review-form.tsx
           grep -F -q 'TIC_FIELD_DEFINITIONS' src/components/certification-upload-panel-v4.tsx
           grep -F -q 'Save & Start Review' src/components/certification-upload-panel-v4.tsx
+          grep -F -q 'TIC_HOUSEHOLD_ROW_COUNT = 10' src/lib/tic-field-registry.ts
+          grep -F -q 'TIC_INCOME_ROW_COUNT = 10' src/lib/tic-field-registry.ts
+          grep -F -q 'TIC_ASSET_ROW_COUNT = 27' src/lib/tic-field-registry.ts
+          grep -F -q 'getFieldObjects()' src/lib/pdf-ocr.ts
+          grep -F -q 'ticPdfFormValueLinesByPage' src/lib/pdf-ocr.ts
+          grep -F -q 'isTicFormPage ? 4.5 : RENDER_SCALE' src/lib/pdf-ocr.ts
+          grep -F -q 'combinedText' src/lib/pdf-ocr.ts
+          grep -F -q 'Last Name' src/lib/tic-pdf-form-values.ts
+          grep -F -q 'A Employment or Wages' src/lib/tic-pdf-form-values.ts
+          grep -F -q 'G Type of Asset' src/lib/tic-pdf-form-values.ts
           grep -F -q 'annual_student_certification' src/lib/tic-supporting-document-registry.ts
           grep -F -q 'zero_income_certification' src/lib/tic-supporting-document-registry.ts
           grep -F -q 'check_stub' src/lib/tic-supporting-document-registry.ts
@@ -86,6 +96,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          node --test scripts/test-tic-native-form-extraction.mjs
           node --test scripts/test-command-center-certification-actions.mjs
           node --test scripts/test-standalone-supporting-document-upload.mjs
           node --test scripts/test-controlled-mass-portfolio-intake.mjs
