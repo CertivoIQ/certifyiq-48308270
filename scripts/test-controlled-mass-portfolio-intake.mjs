@@ -10,7 +10,8 @@ const parser = read("src/lib/portfolio-intake.ts");
 const intake = read("src/lib/portfolio-intake.functions.ts");
 const intakeUi = read("src/components/portfolio-intake-panel.tsx");
 const onboardingUi = read("src/components/portfolio-onboarding-panel.tsx");
-const certificationUi = read("src/components/certification-upload-panel-v3.tsx");
+const certificationUi = read("src/components/certification-upload-panel-v4.tsx");
+const ticReviewForm = read("src/components/certivoiq-tic-review-form.tsx");
 const supportingRegistry = read("src/lib/tic-supporting-document-registry.ts");
 const ticIntake = read("src/utils/tic-certification-intake.functions.ts");
 const queueUi = read("src/components/certification-review-panel.tsx");
@@ -81,19 +82,28 @@ test("clients explicitly select multiple certifications and server preserves glo
   assert.match(review, /review_queue_status: "completed"/);
 });
 
-test("onboarding and packet-aware complete TIC intake are separate production entry points", () => {
+test("onboarding and structured complete TIC intake are separate production entry points", () => {
   assert.match(properties, /<PortfolioOnboardingPanel/);
   assert.match(onboardingUi, /documentCount: 0/);
   assert.match(onboardingUi, /documentFileName: undefined/);
   assert.match(onboardingUi, /properties, units, and tenant profiles/);
   assert.doesNotMatch(onboardingUi, /uploadCertificationFile/);
 
-  assert.match(upload, /certification-upload-panel-v3/);
+  assert.match(upload, /certification-upload-panel-v4/);
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
-  assert.match(certificationUi, /Tenant File Destination|tenant file/i);
+  assert.match(certificationUi, /Tenant file destination/i);
   assert.match(certificationUi, /Review the complete certification packet before saving/);
   assert.match(certificationUi, /TIC_FIELD_DEFINITIONS/);
+  assert.match(certificationUi, /CertivoIqTicReviewForm/);
+  assert.match(ticReviewForm, /PART I — DEVELOPMENT DATA/);
+  assert.match(ticReviewForm, /PART II — HOUSEHOLD COMPOSITION/);
+  assert.match(ticReviewForm, /PART III — GROSS ANNUAL INCOME/);
+  assert.match(ticReviewForm, /PART IV — INCOME FROM ASSETS/);
+  assert.match(ticReviewForm, /PART VI — DETERMINATION OF INCOME ELIGIBILITY/);
+  assert.match(ticReviewForm, /PART VII — RENT/);
+  assert.match(ticReviewForm, /PART VIII — STUDENT STATUS/);
+  assert.match(ticReviewForm, /PART IX — PROGRAM TYPE/);
   assert.match(certificationUi, /Supporting documents detected in this packet/);
   assert.match(certificationUi, /sourcePreviewUrl/);
   assert.match(certificationUi, /Save Document/);
@@ -129,9 +139,7 @@ test("one certification can preserve multiple immutable supporting documents", (
     "affidavit",
     "check_stub",
     "other_supporting_document",
-  ]) {
-    assert.match(supportingRegistry, new RegExp(type));
-  }
+  ]) assert.match(supportingRegistry, new RegExp(type));
   assert.match(ticIntake, /portfolio_tenant_documents/);
   assert.match(ticIntake, /source_kind:\s*"packet_page_range"/);
   assert.match(ticIntake, /immutable:\s*true/);
