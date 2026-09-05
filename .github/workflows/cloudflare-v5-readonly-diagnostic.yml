@@ -18,6 +18,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
       V10_URL: https://certivoiq-launch-candidate-20260905-v10.rodsheka-watkins.workers.dev
+      V11_URL: https://certivoiq-launch-candidate-20260905-v11.rodsheka-watkins.workers.dev
       V12_URL: https://certivoiq-launch-candidate-20260905-v12.rodsheka-watkins.workers.dev
       ZONE_NAME: certivoiq.com
     steps:
@@ -31,10 +32,12 @@ jobs:
           api='https://api.cloudflare.com/client/v4'
 
           v10_health="$(curl -sS -o /tmp/v10-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V10_URL/api/internal/runtime-health" || true)"
+          v11_health="$(curl -sS -o /tmp/v11-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V11_URL/api/internal/runtime-health" || true)"
           v12_health="$(curl -sS -o /tmp/v12-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V12_URL/api/internal/runtime-health" || true)"
           www_health="$(curl -sS -o /tmp/www-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://www.certivoiq.com/api/internal/runtime-health' || true)"
           apex_health="$(curl -sS -o /tmp/apex-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://certivoiq.com/api/internal/runtime-health' || true)"
           echo "V10_WORKERS_DEV_HEALTH_AUTH_HTTP=$v10_health"
+          echo "V11_WORKERS_DEV_HEALTH_AUTH_HTTP=$v11_health"
           echo "V12_WORKERS_DEV_HEALTH_AUTH_HTTP=$v12_health"
           echo "WWW_HEALTH_AUTH_HTTP=$www_health"
           echo "APEX_HEALTH_AUTH_HTTP=$apex_health"
