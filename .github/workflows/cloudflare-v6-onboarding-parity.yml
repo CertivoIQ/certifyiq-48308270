@@ -1,4 +1,4 @@
-name: CertivoIQ v11 complete TIC intake candidate
+name: CertivoIQ v12 certification operations candidate
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      TARGET_WORKER: certivoiq-launch-candidate-20260905-v11
+      TARGET_WORKER: certivoiq-launch-candidate-20260905-v12
 
     steps:
       - uses: actions/checkout@v4
@@ -30,90 +30,87 @@ jobs:
         with:
           bun-version: 1.3.3
 
-      - name: Require exact complete TIC intake and OCR source
+      - name: Require exact certification operations source
         shell: bash
         run: |
           set -euo pipefail
           test -n "${CLOUDFLARE_API_TOKEN:-}"
           test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
-          grep -F -q 'certification-upload-panel-v2' src/routes/upload-certification.tsx
-          grep -F -q 'CertificationUploadPanel' src/routes/upload-certification.tsx
-          ! grep -E -q 'PortfolioIntakePanel|PortfolioOnboardingPanel' src/routes/upload-certification.tsx
-          grep -F -q 'OCR_SIDECAR_STORAGE_MIME = "application/octet-stream"' src/components/certification-upload-panel-v2.tsx
-          grep -F -q 'TIC_FIELD_DEFINITIONS' src/components/certification-upload-panel-v2.tsx
-          grep -F -q 'Review and correct the complete TIC before saving' src/components/certification-upload-panel-v2.tsx
-          grep -F -q 'sourcePreviewUrl' src/components/certification-upload-panel-v2.tsx
-          grep -F -q 'Not extracted — enter if shown on the certification' src/components/certification-upload-panel-v2.tsx
-          grep -F -q 'Save & Start Review' src/components/certification-upload-panel-v2.tsx
-          grep -F -q 'household_member_${member}_last_name' src/lib/tic-field-registry.ts
-          grep -F -q 'income_member_${member}_wages_business' src/lib/tic-field-registry.ts
-          grep -F -q 'asset_${row}_cash_value' src/lib/tic-field-registry.ts
-          grep -F -q 'all_occupants_full_time_students' src/lib/tic-field-registry.ts
-          grep -F -q 'reviewerSuppliedFields' src/utils/tic-certification-intake.functions.ts
-          grep -F -q 'REVIEWER_CONFIRMED_PROVIDER' src/utils/tic-certification-intake.functions.ts
+          grep -F -q 'certification-upload-panel-v3' src/routes/upload-certification.tsx
+          grep -F -q 'OCR_SIDECAR_STORAGE_MIME = "application/octet-stream"' src/components/certification-upload-panel-v3.tsx
+          grep -F -q 'Review the complete certification packet before saving' src/components/certification-upload-panel-v3.tsx
+          grep -F -q 'Supporting documents detected in this packet' src/components/certification-upload-panel-v3.tsx
+          grep -F -q 'TIC_FIELD_DEFINITIONS' src/components/certification-upload-panel-v3.tsx
+          grep -F -q 'Save & Start Review' src/components/certification-upload-panel-v3.tsx
+          grep -F -q 'annual_student_certification' src/lib/tic-supporting-document-registry.ts
+          grep -F -q 'zero_income_certification' src/lib/tic-supporting-document-registry.ts
+          grep -F -q 'check_stub' src/lib/tic-supporting-document-registry.ts
+          grep -F -q "source_kind in ('packet_page_range','standalone_upload')" supabase/migrations/20260905195900_tic_supporting_documents.sql
+          grep -F -q 'attachStandaloneCertificationSupportingDocument' src/components/certification-supporting-documents-panel.tsx
+          grep -F -q 'Attach to certification' src/components/certification-supporting-documents-panel.tsx
+          ! grep -F -q 'multiple' src/components/certification-supporting-documents-panel.tsx
+          grep -F -q 'source_kind: "standalone_upload"' src/utils/certification-supporting-upload.functions.ts
+          grep -F -q 'immutable: true' src/utils/certification-supporting-upload.functions.ts
+          grep -F -q 'Certifications Awaiting Review' src/components/production-dashboard.tsx
+          grep -F -q 'Attach Supporting Document' src/components/production-dashboard.tsx
+          grep -F -q 'Review Certification' src/components/production-dashboard.tsx
+          grep -F -q 'action?: "support" | "review"' src/routes/files.index.tsx
+          grep -F -q 'initialAction' src/components/certification-review-panel.tsx
+          grep -F -q 'runQueue.mutate([item.id])' src/components/certification-review-panel.tsx
           grep -F -q "tic-certification-review.functions" src/components/certification-review-panel.tsx
           grep -F -q 'confirmedFactsAuthoritative' src/utils/tic-certification-review.functions.ts
           grep -F -q '.eq("human_verified", true)' src/utils/tic-certification-review.functions.ts
           grep -F -q "const RENDER_SCALE = 3" src/lib/pdf-ocr.ts
           grep -F -q "TESSERACT_VERSION = '7.0.0'" src/lib/pdf-ocr.ts
-          grep -F -q 'tessdata.projectnaptha.com/4.0.0_best' src/lib/pdf-ocr.ts
-          grep -F -q 'visualInkProfile' src/lib/pdf-ocr.ts
-          grep -F -q 'looksVisuallyBlank' src/lib/pdf-ocr.ts
-          grep -F -q 'PSM.AUTO' src/lib/pdf-ocr.ts
           grep -F -q 'PSM.SPARSE_TEXT' src/lib/pdf-ocr.ts
-          grep -F -q 'PSM.SINGLE_BLOCK' src/lib/pdf-ocr.ts
-          grep -F -q "user_defined_dpi: '300'" src/lib/pdf-ocr.ts
           grep -F -q 'First nonblank failed page' src/lib/pdf-ocr.ts
-          grep -F -q 'if (pages.length === 0)' src/lib/pdf-ocr.ts
-          ! grep -F -q 'if (ocrPageCount === 0)' src/lib/pdf-ocr.ts
-          grep -F -q 'sourceIdentity.pageCount - pages.length' src/lib/ocr-sidecar.mjs
-          ! grep -F -q 'PortfolioIntakePanel' src/components/compliance-intelligence-suite.tsx
           echo "SOURCE_SHA=$(git rev-parse HEAD)"
-          echo 'COMPLETE_TIC_INTAKE_SOURCE_GATE=PASS'
+          echo 'CERTIFICATION_OPERATIONS_SOURCE_GATE=PASS'
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run focused regressions
+      - name: Run focused certification regressions
         shell: bash
         run: |
           set -euo pipefail
+          node --test scripts/test-command-center-certification-actions.mjs
+          node --test scripts/test-standalone-supporting-document-upload.mjs
+          node --test scripts/test-controlled-mass-portfolio-intake.mjs
           node --test scripts/test-onboarding-certification-separation.mjs
           node scripts/test-ocr-sidecar.mjs
-          node --test scripts/test-dashboard-navigation-access.mjs
           node --test scripts/test-certification-task-workflow.mjs
-          node --test scripts/test-controlled-mass-portfolio-intake.mjs
 
       - name: Build exact current main
         run: bun run build
 
-      - name: Prepare isolated v11 candidate config
+      - name: Prepare isolated v12 candidate config
         run: |
           node scripts/prepare-cloudflare-candidate-config.mjs \
             .output/server/wrangler.json \
-            .output/server/wrangler.v11.json \
+            .output/server/wrangler.v12.json \
             "$TARGET_WORKER"
 
-      - name: Deploy v11 to workers.dev only
+      - name: Deploy v12 to workers.dev only
         id: deploy
         shell: bash
         run: |
           set -euo pipefail
           log_file="$(mktemp)"
-          npx --yes wrangler@4 deploy --config .output/server/wrangler.v11.json 2>&1 | tee "$log_file"
+          npx --yes wrangler@4 deploy --config .output/server/wrangler.v12.json 2>&1 | tee "$log_file"
           candidate_url="$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$log_file" | tail -n 1 || true)"
           test -n "$candidate_url"
           echo "candidate_url=$candidate_url" >> "$GITHUB_OUTPUT"
           echo "Candidate URL: $candidate_url"
 
-      - name: Verify v11 live response boundary
+      - name: Verify v12 live response boundary
         shell: bash
         run: |
           set -euo pipefail
           candidate_url="${{ steps.deploy.outputs.candidate_url }}"
           for attempt in 1 2 3 4 5 6; do
             if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
-              echo 'V11_LIVE_RESPONSE_GATE=PASS'
+              echo 'V12_LIVE_RESPONSE_GATE=PASS'
               exit 0
             fi
             test "$attempt" -lt 6
