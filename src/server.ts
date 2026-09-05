@@ -13,6 +13,9 @@ type StaticAssetsEnv = {
   };
 };
 
+const CANONICAL_HOST = "certivoiq.com";
+const WWW_HOST = "www.certivoiq.com";
+
 const SECURITY_HEADERS = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   "X-Content-Type-Options": "nosniff",
@@ -40,6 +43,25 @@ function withSecurityHeaders(response: Response): Response {
     statusText: response.statusText,
     headers,
   });
+}
+
+function redirectToCanonicalHost(request: Request): Response | null {
+  const url = new URL(request.url);
+  if (url.hostname.toLowerCase() !== WWW_HOST) return null;
+
+  url.protocol = "https:";
+  url.hostname = CANONICAL_HOST;
+  url.port = "";
+
+  return withSecurityHeaders(
+    new Response(null, {
+      status: 308,
+      headers: {
+        Location: url.toString(),
+        "Cache-Control": "no-store, max-age=0",
+      },
+    }),
+  );
 }
 
 async function serveClientAsset(request: Request, env: unknown): Promise<Response | null> {
@@ -96,6 +118,9 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const canonicalRedirect = redirectToCanonicalHost(request);
+      if (canonicalRedirect) return canonicalRedirect;
+
       const clientAsset = await serveClientAsset(request, env);
       if (clientAsset) return clientAsset;
 

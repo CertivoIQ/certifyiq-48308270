@@ -11,8 +11,8 @@ const tasks = readFileSync("src/routes/_authenticated/tasks.tsx", "utf8");
 const actions = readFileSync("src/components/certification-task-actions.tsx", "utf8");
 
 test("Tasks is available in every customer workspace menu", () => {
-  assert.match(shell, /MULTIFAMILY_NAV[\s\S]*?to: "\/tasks"/);
-  assert.match(shell, /PHA_NAV[\s\S]*?to: "\/tasks"[\s\S]*?key: "tasks"/);
+  assert.match(shell, /const MF_COMMAND[\s\S]*?to: "\/tasks"/);
+  assert.match(shell, /const PHA_COMMAND[\s\S]*?to: "\/tasks"[\s\S]*?key: "tasks"/);
   assert.match(shell, /key === "tasks"/);
   assert.doesNotMatch(tasks, /Staff authority required/);
   assert.match(tasks, /enabled: !loading/);
