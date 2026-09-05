@@ -1,0 +1,72 @@
+name: Cloudflare v5 read-only diagnostic
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cloudflare-v5-readonly-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-launch-candidate-20260904-v5
+      TARGET_URL: https://certivoiq-launch-candidate-20260904-v5.rodsheka-watkins.workers.dev
+      ZONE_NAME: certivoiq.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read-only candidate diagnostics
+        shell: bash
+        run: |
+          set -u
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          api='https://api.cloudflare.com/client/v4'
+
+          settings_code="$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
+          echo "TARGET_SETTINGS_HTTP=$settings_code"
+          if [ "$settings_code" = 200 ]; then
+            echo "TARGET_BINDINGS=$(jq -r '[.result.bindings[]? | (.type // "unknown") + ":" + (.name // "unnamed")] | join(",")' /tmp/settings.json)"
+          fi
+
+          deployments_code="$(curl -sS -o /tmp/deployments.json -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/deployments")"
+          echo "TARGET_DEPLOYMENTS_HTTP=$deployments_code"
+          if [ "$deployments_code" = 200 ]; then
+            echo "TARGET_DEPLOYMENT_IDS=$(jq -r '[.result.deployments[]?.id // .result[]?.id] | map(select(. != null)) | join(",")' /tmp/deployments.json 2>/dev/null || true)"
+          fi
+
+          health_auth_code="$(curl -sS -o /tmp/health-auth.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+          echo "TARGET_HEALTH_AUTH_HTTP=$health_auth_code"
+
+          health_anon_code="$(curl -sS -o /tmp/health-anon.out -w '%{http_code}' "$TARGET_URL/api/internal/runtime-health")"
+          echo "TARGET_HEALTH_ANON_HTTP=$health_anon_code"
+
+          root_code="$(curl -sS -L -o /tmp/root.out -w '%{http_code}' "$TARGET_URL/")"
+          echo "TARGET_ROOT_HTTP=$root_code"
+          echo "TARGET_ROOT_BYTES=$(wc -c < /tmp/root.out | tr -d ' ')"
+
+          if node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"; then
+            echo 'TARGET_LIVE_RESPONSE_GATE=PASS'
+          else
+            echo 'TARGET_LIVE_RESPONSE_GATE=FAIL'
+          fi
+
+          curl -fsS "${auth[@]}" "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json || true
+          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json 2>/dev/null || true)"
+          if [ -n "$zid" ]; then
+            routes_code="$(curl -sS -o /tmp/routes.json -w '%{http_code}' "${auth[@]}" "$api/zones/$zid/workers/routes")"
+            echo "ROUTES_HTTP=$routes_code"
+            echo "ROUTES_COUNT=$(jq -r '.result|length' /tmp/routes.json 2>/dev/null || echo unknown)"
+            curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains.json || true
+            echo "WWW_SERVICE=$(jq -r '.result[]?|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
+            echo "APEX_SERVICE=$(jq -r '.result[]?|select(.hostname=="certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
+          fi
+
+          echo 'READ_ONLY_DIAGNOSTIC_COMPLETE'
