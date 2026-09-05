@@ -4,6 +4,7 @@ type PdfFieldWidget = {
   buttonValue?: unknown;
   exportValues?: unknown;
   type?: unknown;
+  page?: unknown;
 };
 
 export type PdfFieldObjects = Record<string, PdfFieldWidget[]>;
@@ -14,15 +15,17 @@ function cleanValue(value: unknown): string {
   return String(value).replace(/\s+/g, " ").trim();
 }
 
-function widgetValue(widgets: PdfFieldWidget[]): string {
-  for (const widget of widgets ?? []) {
-    const candidates = [widget.value, widget.fieldValue, widget.buttonValue];
-    for (const candidate of candidates) {
-      const cleaned = cleanValue(candidate);
-      if (cleaned) return cleaned;
-    }
+function widgetValue(widget: PdfFieldWidget): string {
+  for (const candidate of [widget.value, widget.fieldValue, widget.buttonValue]) {
+    const cleaned = cleanValue(candidate);
+    if (cleaned) return cleaned;
   }
   return "";
+}
+
+function pageNumber(widget: PdfFieldWidget): number {
+  const raw = Number(widget.page);
+  return Number.isInteger(raw) && raw >= 0 ? raw + 1 : 1;
 }
 
 function isSelectedButton(value: string): boolean {
@@ -52,6 +55,10 @@ function staticFieldAlias(name: string): string | null {
     Address: "address",
     "Unit Number": "unit number",
     "# Bedrooms": "# bedrooms",
+    "Total Employment": "total employment",
+    "Total SS/Pensions": "total ss/pensions",
+    "Total Public Assistance": "total public assistance",
+    "Total Other Income": "total other income",
     "Total Income": "total income (e)",
     "Total Actual Income from Assets": "actual income earned from all assets",
     "Total of NNPP": "total of nnpp",
@@ -157,31 +164,41 @@ function selectedButtonAlias(name: string, value: string): [string, string] | nu
   return null;
 }
 
+function pushLine(byPage: Map<number, string[]>, page: number, line: string) {
+  const existing = byPage.get(page) ?? [];
+  if (!existing.includes(line)) existing.push(line);
+  byPage.set(page, existing);
+}
+
 /**
  * Convert native Acrobat/PDF.js form controls into deterministic label/value
  * lines that the existing TIC field parser can consume before OCR fallback.
  * These values come from the PDF form data itself, not from visual inference.
  */
-export function ticPdfFormValueLines(fieldObjects: PdfFieldObjects | null | undefined): string[] {
-  if (!fieldObjects) return [];
-  const lines: string[] = [];
+export function ticPdfFormValueLinesByPage(fieldObjects: PdfFieldObjects | null | undefined): Map<number, string[]> {
+  const byPage = new Map<number, string[]>();
+  if (!fieldObjects) return byPage;
+
   for (const [name, widgets] of Object.entries(fieldObjects)) {
-    const value = widgetValue(widgets);
-    if (!value) continue;
+    for (const widget of widgets ?? []) {
+      const value = widgetValue(widget);
+      if (!value) continue;
 
-    const button = selectedButtonAlias(name, value);
-    if (button) {
-      lines.push(`${button[0]}: ${button[1]}`);
-      continue;
-    }
-    if (!isSelectedButton(value) && widgets.some((widget) => String(widget.type ?? "").toLowerCase().includes("button"))) {
-      continue;
-    }
+      const button = selectedButtonAlias(name, value);
+      if (button) {
+        pushLine(byPage, pageNumber(widget), `${button[0]}: ${button[1]}`);
+        continue;
+      }
+      const type = String(widget.type ?? "").toLowerCase();
+      if ((type.includes("button") || type.includes("checkbox") || type.includes("radio")) && !isSelectedButton(value)) {
+        continue;
+      }
 
-    const alias = staticFieldAlias(name) ?? householdAlias(name) ?? incomeAlias(name) ?? assetAlias(name) ?? signatureAlias(name);
-    if (!alias) continue;
-    const normalizedValue = alias.endsWith("signature present") ? "Yes" : value;
-    lines.push(`${alias}: ${normalizedValue}`);
+      const alias = staticFieldAlias(name) ?? householdAlias(name) ?? incomeAlias(name) ?? assetAlias(name) ?? signatureAlias(name);
+      if (!alias) continue;
+      const normalizedValue = alias.endsWith("signature present") ? "Yes" : value;
+      pushLine(byPage, pageNumber(widget), `${alias}: ${normalizedValue}`);
+    }
   }
-  return lines;
+  return byPage;
 }
