@@ -1,3 +1,4 @@
+# Native TIC post-deploy verification.
 name: Cloudflare certification release read-only diagnostic
 
 on:
