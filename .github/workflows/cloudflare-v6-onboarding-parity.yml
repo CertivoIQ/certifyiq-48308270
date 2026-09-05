@@ -45,9 +45,9 @@ jobs:
           grep -F -q 'sourcePreviewUrl' src/components/certification-upload-panel-v2.tsx
           grep -F -q 'Not extracted — enter if shown on the certification' src/components/certification-upload-panel-v2.tsx
           grep -F -q 'Save & Start Review' src/components/certification-upload-panel-v2.tsx
-          grep -F -q 'household_member_1_last_name' src/lib/tic-field-registry.ts
-          grep -F -q 'income_member_1_wages_business' src/lib/tic-field-registry.ts
-          grep -F -q 'asset_1_cash_value' src/lib/tic-field-registry.ts
+          grep -F -q 'household_member_${member}_last_name' src/lib/tic-field-registry.ts
+          grep -F -q 'income_member_${member}_wages_business' src/lib/tic-field-registry.ts
+          grep -F -q 'asset_${row}_cash_value' src/lib/tic-field-registry.ts
           grep -F -q 'all_occupants_full_time_students' src/lib/tic-field-registry.ts
           grep -F -q 'reviewerSuppliedFields' src/utils/tic-certification-intake.functions.ts
           grep -F -q 'REVIEWER_CONFIRMED_PROVIDER' src/utils/tic-certification-intake.functions.ts
