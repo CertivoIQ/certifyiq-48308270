@@ -1,4 +1,4 @@
-name: CertivoIQ v10 OCR production cutover
+name: CertivoIQ certification operations production cutover
 
 on:
   workflow_dispatch:
@@ -17,43 +17,38 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-      TARGET_WORKER: certivoiq-launch-candidate-20260905-v10
-      TARGET_URL: https://certivoiq-launch-candidate-20260905-v10.rodsheka-watkins.workers.dev
-      FALLBACK_WORKER: certivoiq-launch-candidate-20260905-v9
+      TARGET_WORKER: certivoiq-launch-candidate-20260905-v11
+      TARGET_URL: https://certivoiq-launch-candidate-20260905-v11.rodsheka-watkins.workers.dev
+      FALLBACK_WORKER: certivoiq-launch-candidate-20260905-v10
       ZONE_NAME: certivoiq.com
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Preflight exact v10 page-aware OCR source and runtime
+      - name: Preflight exact certification operations source and protected runtime
         shell: bash
         run: |
           set -euo pipefail
           test -n "${CLOUDFLARE_API_TOKEN:-}"
           test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
           test -n "${OPERATIONS_WORKER_SECRET:-}"
-          grep -F -q 'OCR_SIDECAR_STORAGE_MIME = "application/octet-stream"' src/components/certification-upload-panel.tsx
-          grep -F -q 'Save & Start Review' src/components/certification-upload-panel.tsx
-          grep -F -q "const RENDER_SCALE = 3" src/lib/pdf-ocr.ts
-          grep -F -q 'tessdata.projectnaptha.com/4.0.0_best' src/lib/pdf-ocr.ts
-          grep -F -q 'visualInkProfile' src/lib/pdf-ocr.ts
-          grep -F -q 'looksVisuallyBlank' src/lib/pdf-ocr.ts
-          grep -F -q 'PSM.AUTO' src/lib/pdf-ocr.ts
-          grep -F -q 'PSM.SPARSE_TEXT' src/lib/pdf-ocr.ts
-          grep -F -q 'PSM.SINGLE_BLOCK' src/lib/pdf-ocr.ts
-          grep -F -q "user_defined_dpi: '300'" src/lib/pdf-ocr.ts
-          grep -F -q 'First nonblank failed page' src/lib/pdf-ocr.ts
-          grep -F -q 'if (pages.length === 0)' src/lib/pdf-ocr.ts
-          ! grep -F -q 'if (ocrPageCount === 0)' src/lib/pdf-ocr.ts
-          grep -F -q 'sourceIdentity.pageCount - pages.length' src/lib/ocr-sidecar.mjs
-          ! grep -F -q 'PortfolioIntakePanel' src/components/compliance-intelligence-suite.tsx
+          grep -F -q 'certification-upload-panel-v3' src/routes/upload-certification.tsx
+          grep -F -q 'Certifications Awaiting Review' src/components/production-dashboard.tsx
+          grep -F -q 'Attach Supporting Document' src/components/production-dashboard.tsx
+          grep -F -q 'Review Certification' src/components/production-dashboard.tsx
+          grep -F -q 'Attach to certification' src/components/certification-supporting-documents-panel.tsx
+          grep -F -q 'source_kind: "standalone_upload"' src/utils/certification-supporting-upload.functions.ts
+          grep -F -q 'immutable: true' src/utils/certification-supporting-upload.functions.ts
+          grep -F -q 'action?: "support" | "review"' src/routes/files.index.tsx
+          grep -F -q 'runQueue.mutate([item.id])' src/components/certification-review-panel.tsx
+          grep -F -q "tic-certification-review.functions" src/components/certification-review-panel.tsx
           health="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
-          echo "V10_WORKERS_DEV_HEALTH=$health"
+          echo "TARGET_WORKERS_DEV_HEALTH=$health"
           test "$health" = 204
           node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
-          echo 'V10_PREFLIGHT=PASS'
+          echo 'CERTIFICATION_OPERATIONS_PREFLIGHT=PASS'
 
-      - name: Transfer both custom domains to v10 with v9 rollback protection
+      - name: Transfer both custom domains to certification release with v10 rollback protection
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -86,17 +81,17 @@ jobs:
             test "$code" = 200
             jq -e --arg h "$host" --arg s "$service" '.success == true and .result.hostname==$h and .result.service==$s' /tmp/attach.json >/dev/null
           }
-          restore_v9(){
+          restore_v10(){
             trap - ERR
             set +e
-            echo 'ROLLBACK_TO_V9=START'
+            echo 'ROLLBACK_TO_V10=START'
             for host in certivoiq.com www.certivoiq.com; do
               detach_current "$host" || true
               attach "$host" "$FALLBACK_WORKER" || true
             done
-            echo 'ROLLBACK_TO_V9=COMPLETE'
+            echo 'ROLLBACK_TO_V10=COMPLETE'
           }
-          trap 'restore_v9' ERR
+          trap 'restore_v10' ERR
 
           curl -fsS "${auth[@]}" "$api/zones/$ZONE_ID/workers/routes" -o /tmp/routes-before.json
           jq -e '.success == true and (.result|length)==0' /tmp/routes-before.json >/dev/null
@@ -120,7 +115,7 @@ jobs:
           done
           test "$www_ready" = 1
           node scripts/verify-cloudflare-live-response.mjs https://www.certivoiq.com
-          echo 'WWW_V10_MAPPING_AND_REDIRECT=PASS'
+          echo 'WWW_CERTIFICATION_RELEASE_MAPPING_AND_REDIRECT=PASS'
 
           if [ "$(current_service certivoiq.com)" != "$TARGET_WORKER" ]; then
             detach_current certivoiq.com
@@ -143,7 +138,6 @@ jobs:
 
           node scripts/verify-cloudflare-live-response.mjs https://certivoiq.com
           node scripts/verify-cloudflare-live-response.mjs https://www.certivoiq.com
-
           test "$(current_service certivoiq.com)" = "$TARGET_WORKER"
           test "$(current_service www.certivoiq.com)" = "$TARGET_WORKER"
           curl -fsS "${auth[@]}" "$api/zones/$ZONE_ID/workers/routes" -o /tmp/routes-final.json
@@ -152,4 +146,4 @@ jobs:
           trap - ERR
           echo "FINAL_APEX_SERVICE=$(current_service certivoiq.com)"
           echo "FINAL_WWW_SERVICE=$(current_service www.certivoiq.com)"
-          echo 'CUSTOM_DOMAIN_CUTOVER=PASS target=v10 rollback=v9 purge=PASS routes=EMPTY'
+          echo 'CUSTOM_DOMAIN_CUTOVER=PASS certification-release rollback=v10 purge=PASS routes=EMPTY'
