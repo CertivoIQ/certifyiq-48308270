@@ -19,10 +19,13 @@ assert.doesNotMatch(reviewPanel, /\buseAi\b/, 'the review UI must not request an
 assert.match(pdfOcr, /import\('tesseract\.js'\)/, 'local Tesseract OCR must remain bundled');
 assert.match(pdfOcr, /export function isOcrSupportedFile/, 'the shared OCR file gate must exist');
 assert.match(pdfOcr, /\^image\\\/\(png\|jpeg\|webp\)/, 'PNG, JPEG, and WEBP must be recognized');
-assert.match(pdfOcr, /recognizeWithSharedWorker\(file, 1\)/, 'image certifications must be extracted locally');
+assert.match(
+  pdfOcr,
+  /recognizeWithSharedWorker\(file, 1, undefined, true\)/,
+  'image certifications must be extracted locally with bounded OCR and block data enabled',
+);
 assert.match(pdfOcr, /const sharedOcrSlots/, 'OCR workers must be bounded and reused across documents');
 assert.match(intake, /isOcrSupportedFile\(file\)/, 'intake must prepare every supported certification document');
 assert.match(review, /Missing evidence remains \"unable to determine\"/, 'missing evidence must fail closed to human review');
 
 console.log('PASS certification extraction is local, source-bound, and independent of Lovable');
-
