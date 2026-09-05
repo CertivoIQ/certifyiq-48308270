@@ -7,6 +7,11 @@ const shell = read("src/components/app-shell.tsx");
 const dashboardAccess = read("src/hooks/use-platform-dashboard-access.ts");
 const billing = read("src/routes/_authenticated/billing.tsx");
 const uploadRoute = read("src/routes/upload-certification.tsx");
+const certificationUpload = read("src/components/certification-upload-panel.tsx");
+const propertiesRoute = read("src/routes/properties.index.tsx");
+const portfolioOnboarding = read("src/components/portfolio-onboarding-panel.tsx");
+const dashboardRoute = read("src/routes/_authenticated/dashboard.tsx");
+const launchpad = read("src/routes/launchpad.tsx");
 const hotmaRoute = read("src/routes/hotma-readiness.tsx");
 
 
@@ -20,14 +25,31 @@ test("founder keeps all dashboard modes independent of staff-role resolution", (
 });
 
 
-test("command center puts certification upload and OCR first", () => {
+test("command center puts dedicated certification upload and OCR first", () => {
   const multifamilyCommand = shell.indexOf("const MF_COMMAND");
   const phaCommand = shell.indexOf("const PHA_COMMAND");
   assert.ok(multifamilyCommand >= 0 && phaCommand >= 0);
   assert.ok(shell.indexOf('to: "/upload-certification"', multifamilyCommand) < shell.indexOf('to: "/dashboard"', multifamilyCommand));
   assert.ok(shell.indexOf('to: "/upload-certification"', phaCommand) < shell.indexOf('to: "/dashboard"', phaCommand));
-  assert.match(uploadRoute, /PortfolioIntakePanel/);
-  assert.match(uploadRoute, /Upload Certification & OCR/);
+  assert.match(uploadRoute, /CertificationUploadPanel/);
+  assert.doesNotMatch(uploadRoute, /PortfolioIntakePanel/);
+  assert.match(certificationUpload, /Certification document intake/);
+  assert.match(certificationUpload, /does not create properties, units, or tenant profiles/);
+  assert.match(certificationUpload, /intake_type: "certification_documents"/);
+});
+
+
+test("portfolio and tenant intake is a separate LaunchPad onboarding task", () => {
+  assert.match(propertiesRoute, /PortfolioOnboardingPanel/);
+  assert.doesNotMatch(propertiesRoute, /CertificationUploadPanel|PortfolioIntakePanel/);
+  assert.match(portfolioOnboarding, /Portfolio & tenant onboarding/);
+  assert.match(portfolioOnboarding, /certification files are not uploaded here/i);
+  assert.match(launchpad, /case 3:[\s\S]*to="\/properties"/);
+  assert.match(launchpad, /case 4:[\s\S]*to="\/upload-certification"/);
+  assert.match(launchpad, /At least one property, unit, and tenant profile must be loaded/);
+  assert.match(dashboardRoute, /customer_onboarding_progress/);
+  assert.match(dashboardRoute, /data && !data\.completed_at/);
+  assert.match(dashboardRoute, /to: "\/launchpad"/);
 });
 
 
