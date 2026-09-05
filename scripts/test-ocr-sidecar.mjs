@@ -104,7 +104,7 @@ test('source page bounds and truncation are enforced', () => {
 
 test('controlled OCR limit accepts 50 scanned pages and rejects 51', () => {
   assert.equal(MAX_OCR_PAGES, 50);
-  assert.match(OCR_LIMIT_MESSAGE, /up to 50 scanned pages each/);
+  assert.match(OCR_LIMIT_MESSAGE, /Up to 50 scanned pages can be prepared automatically/);
   const makePages = (count) => Array.from({ length: count }, (_, index) => ({
     page: index + 1,
     source: 'ocr',
