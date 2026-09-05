@@ -12,7 +12,15 @@ export function useSession() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
+      if (
+        event === "SIGNED_IN" &&
+        next?.user.email?.trim().toLowerCase() === FOUNDER_EMAIL &&
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/auth")
+      ) {
+        window.localStorage.setItem(`certivoiq:platform-dashboard:${next.user.id}`, "multifamily");
+      }
       setSession(next);
       setReady(true);
     });
