@@ -92,9 +92,9 @@ test("onboarding and packet-aware complete TIC intake are separate production en
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
   assert.match(certificationUi, /Tenant File Destination|tenant file/i);
-  assert.match(certificationUi, /Review and correct the complete TIC before saving/);
+  assert.match(certificationUi, /Review the complete certification packet before saving/);
   assert.match(certificationUi, /TIC_FIELD_DEFINITIONS/);
-  assert.match(certificationUi, /supporting/i);
+  assert.match(certificationUi, /Supporting documents detected in this packet/);
   assert.match(certificationUi, /sourcePreviewUrl/);
   assert.match(certificationUi, /Save Document/);
   assert.match(certificationUi, /Save & Start Review/);
