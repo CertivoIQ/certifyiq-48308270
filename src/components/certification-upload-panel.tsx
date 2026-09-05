@@ -194,7 +194,7 @@ export function CertificationUploadPanel() {
         <div>
           <h2 className="font-semibold">Certification document intake</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Upload a certification package for OCR and evidence preparation. Extracted document information is saved automatically to Documents without starting compliance review.
+            Upload a certification package for OCR and evidence preparation. Extracted document information is saved automatically to Documents without starting compliance review. This workspace does not create properties, units, or tenant profiles.
           </p>
         </div>
       </div>
