@@ -30,7 +30,7 @@ export const Route = createFileRoute("/launchpad")({
       {
         name: "description",
         content:
-          "Persistent, self-directed CertivoIQ onboarding for organization setup, portfolio configuration, certification review, team access, and support.",
+          "Persistent, self-directed CertivoIQ onboarding for organization setup, portfolio configuration, certification intake, team access, and support.",
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -52,7 +52,7 @@ function StepDestinationButton({ stepId }: { stepId: number }) {
     case 3:
       return <Button variant="outline" asChild><Link to="/properties">{content}</Link></Button>;
     case 4:
-      return <Button variant="outline" asChild><Link to="/compliance-intelligence">{content}</Link></Button>;
+      return <Button variant="outline" asChild><Link to="/upload-certification">{content}</Link></Button>;
     case 5:
       return <Button variant="outline" asChild><Link to="/account/security">{content}</Link></Button>;
     default:
@@ -187,8 +187,56 @@ function LaunchPadPage() {
     return true;
   }
 
+  async function validateCurrentStep(currentId: number) {
+    if (currentId === 3) {
+      const [properties, units, tenants] = await Promise.all([
+        supabase.from("portfolio_properties").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("portfolio_units").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("portfolio_tenant_profiles").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+
+      if (properties.error || units.error || tenants.error) {
+        setError("CertivoIQ could not verify the portfolio onboarding task. Open the setup workspace and try again.");
+        return false;
+      }
+
+      if (!properties.count || !units.count || !tenants.count) {
+        setError("Complete Portfolio & Tenant Onboarding first. At least one property, unit, and tenant profile must be loaded before this task can be completed.");
+        return false;
+      }
+    }
+
+    if (currentId === 4) {
+      const certification = await supabase
+        .from("certification_import_items")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("status", "completed");
+
+      if (certification.error) {
+        setError("CertivoIQ could not verify the certification upload task. Open Upload Certification & OCR and try again.");
+        return false;
+      }
+
+      if (!certification.count) {
+        setError("Upload at least one certification in Upload Certification & OCR before completing this onboarding task.");
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   async function continueSetup() {
     const currentId = LAUNCHPAD_STEPS[step - 1]!.id;
+    setSaving(true);
+    setError(null);
+    const valid = await validateCurrentStep(currentId);
+    if (!valid) {
+      setSaving(false);
+      return;
+    }
+
     const nextCompletedSteps = Array.from(
       new Set([...completedSteps, currentId]),
     ).sort((a, b) => a - b);

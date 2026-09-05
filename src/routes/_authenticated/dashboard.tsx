@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ExecutiveDashboard } from "@/components/executive-dashboard";
 import { ProductionDashboard } from "@/components/production-dashboard";
 import { PhaDashboard } from "@/components/pha-dashboard";
@@ -6,6 +7,9 @@ import { PhaInvitationGate } from "@/components/pha-invitation-gate";
 import { useViewerState } from "@/hooks/use-viewer-state";
 import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
 import { usePlatformDashboardAccess } from "@/hooks/use-platform-dashboard-access";
+import { supabase } from "@/integrations/supabase/client";
+
+const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -26,11 +30,57 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
  * Dashboard routing remains account-aware for normal users. Accounts with an
  * explicit platform_dashboard_access entitlement may temporarily select one of
  * the existing dashboard experiences without mutating their workspace profile.
+ *
+ * Customers who have started LaunchPad must complete that setup before the
+ * operational dashboard opens. Legacy users without an onboarding record and
+ * the founder account remain accessible so this gate cannot strand existing
+ * production access.
  */
 function DashboardPage() {
+  const { user } = Route.useRouteContext();
+  const navigate = useNavigate();
+  const isFounder = user.email?.trim().toLowerCase() === FOUNDER_EMAIL;
+  const [onboardingChecked, setOnboardingChecked] = useState(isFounder);
   const { showDemoData, loading: viewerLoading } = useViewerState();
   const { profile, loading: profileLoading } = useWorkspaceProfile();
   const { selectedMode, loading: dashboardAccessLoading } = usePlatformDashboardAccess();
+
+  useEffect(() => {
+    if (isFounder) {
+      setOnboardingChecked(true);
+      return;
+    }
+
+    let cancelled = false;
+    async function verifyOnboarding() {
+      const { data, error } = await supabase
+        .from("customer_onboarding_progress")
+        .select("completed_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+      if (error || (data && !data.completed_at)) {
+        await navigate({ to: "/launchpad", replace: true });
+        return;
+      }
+
+      setOnboardingChecked(true);
+    }
+
+    void verifyOnboarding();
+    return () => {
+      cancelled = true;
+    };
+  }, [isFounder, navigate, user.id]);
+
+  if (!onboardingChecked) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-6 text-sm text-muted-foreground">
+        Verifying account setup…
+      </div>
+    );
+  }
 
   let dashboard;
   if (viewerLoading || profileLoading || dashboardAccessLoading) dashboard = <ExecutiveDashboard demo />;

@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { PortfolioIntakePanel } from "@/components/portfolio-intake-panel";
+import { PortfolioOnboardingPanel } from "@/components/portfolio-onboarding-panel";
 import { Button } from "@/components/ui/button";
-import { FileSearch } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/properties/")({
   head: () => ({
     meta: [
-      { title: "Properties, Units & Tenant Intake — CertivoIQ" },
-      { name: "description", content: "Controlled mass intake for client properties, units, tenant profiles, and certification documents." },
+      { title: "Portfolio & Tenant Onboarding — CertivoIQ" },
+      { name: "description", content: "Onboarding intake for client properties, units, and tenant profiles before operational dashboard use." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -18,11 +18,15 @@ export const Route = createFileRoute("/properties/")({
 function PropertiesPage() {
   return (
     <AppShell
-      title="Properties, units & tenants"
-      subtitle="Import portfolio records and documents without automatically starting compliance review"
-      actions={<Button size="sm" asChild><Link to="/files"><FileSearch className="size-4" /> Choose certifications to review</Link></Button>}
+      title="Portfolio & tenant onboarding"
+      subtitle="Create properties, units, and tenant profiles as an account-setup task before operational dashboard use"
+      actions={
+        <Button size="sm" variant="outline" asChild>
+          <Link to="/launchpad"><ArrowLeft className="size-4" /> Return to LaunchPad</Link>
+        </Button>
+      }
     >
-      <PortfolioIntakePanel />
+      <PortfolioOnboardingPanel />
     </AppShell>
   );
 }
