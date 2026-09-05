@@ -10,6 +10,7 @@ declare module '@/lib/ocr-sidecar.mjs' {
   export const OCR_TIME_BUDGET_MS: number;
   export const MAX_UPLOAD_BYTES: number;
   export const OCR_LIMIT_MESSAGE: string;
+  export const OCR_TIMEOUT_MESSAGE: string;
 
   export type OcrPageSource = 'text' | 'ocr';
 
