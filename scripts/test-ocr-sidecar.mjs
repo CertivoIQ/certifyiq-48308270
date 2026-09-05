@@ -32,6 +32,7 @@ test('source-bound sidecar composes OCR text with provenance', () => {
     { page: 1, source: 'ocr', engine: OCR_ENGINE, ocrConfidence: 0.91, text: 'Gross Rent: 900' },
   ]}, { fileName: SOURCE.sourceFileName, sha256: SOURCE.sourceSha256, byteSize: SOURCE.sourceByteSize });
   assert.equal(composed.ocrPageCount, 1);
+  assert.equal(composed.skippedPageCount, 1);
   assert.match(composed.text, /^page 1\n/);
   assert.equal(composed.provider, 'ocr-tesseract');
   assert.equal(composed.sourceIdentity.sourceSha256, SOURCE.sourceSha256);
@@ -45,11 +46,12 @@ test('mixed sidecar keeps both sources in page order', () => {
   ]});
   assert.equal(composed.ocrPageCount, 1);
   assert.equal(composed.textPageCount, 1);
+  assert.equal(composed.skippedPageCount, 0);
   assert.ok(composed.text.indexOf('page 1') < composed.text.indexOf('page 2'));
   assert.equal(provenanceIndex(composed.pages).get(1).provider, 'deterministic-text');
 });
 
-test('failed OCR pages are dropped, never guessed', () => {
+test('failed or omitted pages are counted against the source page count and never guessed', () => {
   const composed = composeSidecarText({ ...SOURCE, pages: [
     { page: 1, source: 'ocr', engine: OCR_ENGINE, ocrConfidence: 0, text: 'garbage' },
     { page: 2, source: 'ocr', engine: null, ocrConfidence: 0.9, text: 'garbage' },
@@ -57,6 +59,12 @@ test('failed OCR pages are dropped, never guessed', () => {
   assert.equal(composed.pages.length, 0);
   assert.equal(composed.skippedPageCount, 2);
   assert.equal(composed.text, '');
+
+  const oneReadable = composeSidecarText({ ...SOURCE, pages: [
+    { page: 1, source: 'text', text: 'Tenant Signature Date: 2026-01-05' },
+  ]});
+  assert.equal(oneReadable.pages.length, 1);
+  assert.equal(oneReadable.skippedPageCount, 1);
 });
 
 test('legacy, mismatched, duplicate, and unknown-engine sidecars are rejected or dropped', () => {
@@ -79,6 +87,7 @@ test('legacy, mismatched, duplicate, and unknown-engine sidecars are rejected or
     { page: 1, source: 'ocr', engine: 'caller-engine', ocrConfidence: 1, text: 'Gross Rent: 1' },
   ]});
   assert.equal(unknown.pages.length, 0);
+  assert.equal(unknown.skippedPageCount, 2);
 });
 
 test('source page bounds and truncation are enforced', () => {
@@ -90,6 +99,7 @@ test('source page bounds and truncation are enforced', () => {
     { page: 3, source: 'ocr', engine: OCR_ENGINE, ocrConfidence: 0.9, text: 'Gross Rent: 1' },
   ]});
   assert.equal(outOfRange.pages.length, 0);
+  assert.equal(outOfRange.skippedPageCount, 2);
 });
 
 test('controlled OCR limit accepts 50 scanned pages and rejects 51', () => {
