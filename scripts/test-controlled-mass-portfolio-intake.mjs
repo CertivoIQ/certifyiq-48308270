@@ -89,11 +89,13 @@ test("onboarding and certification intake are separate production entry points",
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
   assert.match(certificationUi, /Review extracted information before saving/);
-  assert.match(certificationUi, /Confirm & Save Document/);
+  assert.match(certificationUi, /Save Document/);
+  assert.match(certificationUi, /Save & Start Review/);
   assert.doesNotMatch(certificationUi, /parsePortfolioIntakeCsv|createPortfolioIntake/);
   assert.match(extractionPreview, /review_queue_status:\s*"not_queued"/);
   assert.match(extractionPreview, /status:\s*"processing"/);
-  assert.match(extractionPreview, /update\(\{ status: "completed" \}\)/);
+  assert.match(extractionPreview, /const itemCompletion = data\.startReview/);
+  assert.match(extractionPreview, /review_queue_status:\s*"queued"/);
   assert.match(extractionPreview, /historical_changes/);
 
   assert.match(files, /<CertificationReviewPanel/);
