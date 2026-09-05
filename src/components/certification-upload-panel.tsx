@@ -8,28 +8,83 @@ import { supabase } from "@/integrations/supabase/client";
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
 import { isOcrSupportedFile, prepareCertificationForReview } from "@/lib/pdf-ocr";
 import { uploadCertificationFile } from "@/lib/certification-upload";
-import { extractCertificationDocumentPreview } from "@/utils/certification-extraction-preview.functions";
+import {
+  cancelCertificationDocumentPreview,
+  confirmCertificationDocumentPreview,
+  extractCertificationDocumentPreview,
+} from "@/utils/certification-extraction-preview.functions";
 
 type Db = any;
 
+type PreviewFact = {
+  field: string;
+  value: unknown;
+  page: number | null;
+  snippet: string | null;
+  confidence: number;
+  provider: string;
+};
+
+type DraftSource = {
+  jobId: string;
+  storagePath: string;
+  originalFileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  sha256: string;
+  uploadDurationMs: number;
+  extractionDurationMs: number;
+  totalIntakeDurationMs: number;
+  uploadTransport: string;
+};
+
+type ExtractionDraft = {
+  source: DraftSource;
+  facts: PreviewFact[];
+  missingFields: string[];
+  confidence: number;
+  extractionProvider: string;
+};
+
 const ACCEPTED_DOCUMENT_TYPES = ".pdf,.png,.jpg,.jpeg,.webp";
 const OCR_SIDECAR_STORAGE_MIME = "application/octet-stream";
+
+const FIELD_LABELS: Record<string, string> = {
+  tenant_signature_date: "Tenant signature date",
+  certification_effective_date: "Certification effective date",
+  household_annual_income: "Household annual income",
+  applicable_lihtc_income_limit: "Applicable LIHTC income limit",
+  household_net_assets: "Household net assets",
+  hotma_asset_cap: "HOTMA asset cap",
+  gross_rent: "Gross rent",
+  state_max_gross_rent: "Maximum gross rent",
+  utility_allowance_source: "Utility allowance source",
+};
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+function fieldText(value: unknown) {
+  if (value === null || value === undefined) return "";
+  return String(value);
+}
+
 export function CertificationUploadPanel() {
   const queryClient = useQueryClient();
   const extractPreview = useServerFn(extractCertificationDocumentPreview);
+  const confirmPreview = useServerFn(confirmCertificationDocumentPreview);
+  const cancelPreview = useServerFn(cancelCertificationDocumentPreview);
   const [file, setFile] = useState<File | null>(null);
+  const [draft, setDraft] = useState<ExtractionDraft | null>(null);
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [progressPercent, setProgressPercent] = useState(0);
   const [progressLabel, setProgressLabel] = useState("Choose a certification to begin.");
 
   async function uploadCertification() {
-    if (!file || busy) return;
+    if (!file || busy || draft) return;
 
     setBusy(true);
     setMessage("");
@@ -38,7 +93,6 @@ export function CertificationUploadPanel() {
 
     let jobId: string | null = null;
     let storagePath: string | null = null;
-    let completed = false;
 
     try {
       if (file.size > MAX_UPLOAD_BYTES) throw new Error(`${file.name} exceeds the 50 MB per-file limit.`);
@@ -50,7 +104,7 @@ export function CertificationUploadPanel() {
       const db = supabase as unknown as Db;
 
       setProgressPercent(5);
-      setProgressLabel("Creating the certification intake record…");
+      setProgressLabel("Creating a temporary intake workspace…");
       const { data: job, error: jobError } = await db.from("certification_import_jobs").insert({
         user_id: user.id,
         created_by: user.id,
@@ -76,7 +130,7 @@ export function CertificationUploadPanel() {
 
       const uploadPromise = uploadCertificationFile("certification-imports", storagePath, file, (uploadedBytes, total) => {
         uploadPercent = total ? (uploadedBytes / total) * 100 : 0;
-        updateConcurrentProgress(`Uploading ${file.name}: ${clampPercent(uploadPercent)}%…`);
+        updateConcurrentProgress(`Staging ${file.name}: ${clampPercent(uploadPercent)}%…`);
       });
 
       const preparePromise = prepareCertificationForReview(file, (status, nextPreparationPercent) => {
@@ -93,12 +147,8 @@ export function CertificationUploadPanel() {
       const prepared = prepareOutcome.value;
 
       setProgressPercent(92);
-      setProgressLabel("Saving extracted text and page provenance…");
+      setProgressLabel("Saving temporary OCR provenance…");
       if (prepared.sidecar) {
-        // certification-imports intentionally rejects arbitrary JSON MIME uploads.
-        // Store the source-bound OCR sidecar as an internal binary object while
-        // retaining the .certivoiq-ocr.json filename; review code validates and
-        // parses the sidecar contents before it may contribute evidence.
         const sidecarBytes = new Blob([JSON.stringify(prepared.sidecar)], { type: OCR_SIDECAR_STORAGE_MIME });
         const { error: sidecarError } = await supabase.storage.from("certification-imports")
           .upload(
@@ -109,59 +159,37 @@ export function CertificationUploadPanel() {
         if (sidecarError) throw sidecarError;
       }
 
-      setProgressPercent(95);
-      setProgressLabel("Recording the certification in CertivoIQ…");
-      const { data: item, error: itemError } = await db.from("certification_import_items").insert({
-        job_id: job.id,
-        user_id: user.id,
-        storage_path: storagePath,
-        original_file_name: file.name,
-        mime_type: file.type || "application/octet-stream",
-        size_bytes: file.size,
+      const source: DraftSource = {
+        jobId: job.id,
+        storagePath,
+        originalFileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+        sizeBytes: file.size,
         sha256: prepared.sourceSha256,
-        upload_duration_ms: Math.round(uploadOutcome.value.durationMs),
-        extraction_duration_ms: Math.round(extractionDurationMs),
-        total_intake_duration_ms: Math.round(performance.now() - pipelineStartedAt),
-        upload_transport: uploadOutcome.value.transport,
-        status: "completed",
-        upload_sequence: 0,
-        review_queue_status: "not_queued",
-      }).select("id").single();
-      if (itemError) throw itemError;
+        uploadDurationMs: Math.round(uploadOutcome.value.durationMs),
+        extractionDurationMs: Math.round(extractionDurationMs),
+        totalIntakeDurationMs: Math.round(performance.now() - pipelineStartedAt),
+        uploadTransport: uploadOutcome.value.transport,
+      };
 
-      setProgressPercent(97);
-      setProgressLabel("Extracting document information for Documents…");
-      let extractionMessage = "";
-      try {
-        const preview = await extractPreview({ data: { itemId: item.id } });
-        if ("error" in preview && preview.error) {
-          extractionMessage = ` Automatic extraction could not be completed: ${preview.error}`;
-        } else {
-          const fieldCount = preview.facts.length;
-          extractionMessage = fieldCount
-            ? ` ${fieldCount} extracted field${fieldCount === 1 ? "" : "s"} saved automatically to Documents.`
-            : " No supported fields were found automatically; the source document is still saved.";
-        }
-      } catch (error) {
-        extractionMessage = ` The source document is saved, but automatic extraction could not finish: ${error instanceof Error ? error.message : "unknown extraction error"}.`;
-      }
+      setProgressPercent(96);
+      setProgressLabel("Preparing extracted fields for your review…");
+      const preview = await extractPreview({ data: { source } });
+      if ("error" in preview && preview.error) throw new Error(preview.error);
 
-      setProgressPercent(99);
-      setProgressLabel("Finalizing certification intake…");
-      const { error: completeError } = await db.from("certification_import_jobs").update({
-        status: "completed",
-        processed_files: 1,
-        error_count: 0,
-        completed_at: new Date().toISOString(),
-      }).eq("id", job.id).eq("user_id", user.id);
-      if (completeError) throw completeError;
-
-      completed = true;
+      const facts = preview.facts as PreviewFact[];
+      setFieldValues(Object.fromEntries(facts.map((fact) => [fact.field, fieldText(fact.value)])));
+      setDraft({
+        source,
+        facts,
+        missingFields: [...preview.missingFields],
+        confidence: Number(preview.confidence || 0),
+        extractionProvider: preview.extractionProvider,
+      });
       setFile(null);
       setProgressPercent(100);
-      setProgressLabel("Certification upload and extraction complete.");
-      setMessage(`${file.name} is stored with OCR evidence and provenance.${extractionMessage} It has not been queued for compliance review.`);
-      await queryClient.invalidateQueries({ queryKey: ["certification-items"] });
+      setProgressLabel("Extraction ready for review — document not saved yet.");
+      setMessage("Review every extracted field below. Correct anything necessary, then choose Confirm & Save Document.");
     } catch (error) {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id;
@@ -170,20 +198,62 @@ export function CertificationUploadPanel() {
       }
       if (jobId && userId) {
         const db = supabase as unknown as Db;
-        await db.from("certification_import_jobs").update({
-          status: "failed",
-          processed_files: 0,
-          error_count: 1,
-          completed_at: new Date().toISOString(),
-        }).eq("id", jobId).eq("user_id", userId);
+        await db.from("certification_import_jobs").delete().eq("id", jobId).eq("user_id", userId);
       }
-      setMessage(error instanceof Error ? error.message : "The certification document could not be uploaded.");
+      setProgressPercent(0);
+      setProgressLabel("Certification intake could not be staged.");
+      setMessage(error instanceof Error ? error.message : "The certification document could not be prepared for review.");
     } finally {
       setBusy(false);
-      if (!completed) {
-        setProgressPercent(0);
-        setProgressLabel(file ? "Ready to process selected certification." : "Choose a certification to begin.");
-      }
+    }
+  }
+
+  async function confirmAndSave() {
+    if (!draft || busy) return;
+    setBusy(true);
+    setMessage("");
+    setProgressPercent(98);
+    setProgressLabel("Saving your confirmed document information…");
+    try {
+      const result = await confirmPreview({
+        data: {
+          source: draft.source,
+          fields: draft.facts.map((fact) => ({ field: fact.field as any, value: fieldValues[fact.field] ?? "" })),
+        },
+      });
+      const correctionText = result.correctionCount
+        ? ` ${result.correctionCount} correction${result.correctionCount === 1 ? " was" : "s were"} recorded in the audit history.`
+        : " No corrections were needed.";
+      setDraft(null);
+      setFieldValues({});
+      setProgressPercent(100);
+      setProgressLabel("Certification document saved.");
+      setMessage(`Document saved to Documents.${correctionText} It has not been queued for compliance review.`);
+      await queryClient.invalidateQueries({ queryKey: ["certification-items"] });
+    } catch (error) {
+      setProgressPercent(100);
+      setProgressLabel("Review is still open — document not saved.");
+      setMessage(error instanceof Error ? error.message : "The confirmed document could not be saved.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function cancelStagedUpload() {
+    if (!draft || busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      await cancelPreview({ data: { source: draft.source } });
+      setDraft(null);
+      setFieldValues({});
+      setProgressPercent(0);
+      setProgressLabel("Choose a certification to begin.");
+      setMessage("Staged upload cancelled. No certification document was saved.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The staged upload could not be cancelled.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -194,41 +264,111 @@ export function CertificationUploadPanel() {
         <div>
           <h2 className="font-semibold">Certification document intake</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Upload a certification package for OCR and evidence preparation. Extracted document information is saved automatically to Documents without starting compliance review. This workspace does not create properties, units, or tenant profiles.
+            Upload a certification package for OCR and evidence preparation. Extracted fields are shown for correction before anything is saved to Documents. This workspace does not create properties, units, or tenant profiles.
           </p>
         </div>
       </div>
 
-      <label className="mt-5 flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30">
-        <UploadCloud className="size-8 text-muted-foreground" />
-        <span className="mt-3 font-medium">Choose certification document</span>
-        <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · up to 50 scanned pages · 50 MB</span>
-        <span className="mt-2 text-xs font-medium text-foreground">{file?.name ?? "No certification selected"}</span>
-        <input
-          className="sr-only"
-          type="file"
-          accept={ACCEPTED_DOCUMENT_TYPES}
-          onChange={(event) => {
-            const selected = event.target.files?.[0] ?? null;
-            setFile(selected);
-            setMessage("");
-            setProgressPercent(0);
-            setProgressLabel(selected ? "Ready to process selected certification." : "Choose a certification to begin.");
-          }}
-        />
-      </label>
+      {!draft ? (
+        <>
+          <label className="mt-5 flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30">
+            <UploadCloud className="size-8 text-muted-foreground" />
+            <span className="mt-3 font-medium">Choose certification document</span>
+            <span className="mt-1 text-xs text-muted-foreground">PDF, PNG, JPEG, or WEBP · up to 50 scanned pages · 50 MB</span>
+            <span className="mt-2 text-xs font-medium text-foreground">{file?.name ?? "No certification selected"}</span>
+            <input
+              className="sr-only"
+              type="file"
+              accept={ACCEPTED_DOCUMENT_TYPES}
+              disabled={busy}
+              onChange={(event) => {
+                const selected = event.target.files?.[0] ?? null;
+                setFile(selected);
+                setMessage("");
+                setProgressPercent(0);
+                setProgressLabel(selected ? "Ready to extract selected certification." : "Choose a certification to begin.");
+              }}
+            />
+          </label>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-sm">
-        <span>{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB selected` : "One certification package per upload"}</span>
-        <button
-          type="button"
-          disabled={!file || busy}
-          onClick={() => void uploadCertification()}
-          className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
-        >
-          {busy ? "Processing…" : "Upload certification & prepare OCR"}
-        </button>
-      </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-sm">
+            <span>{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB selected` : "One certification package per upload"}</span>
+            <button
+              type="button"
+              disabled={!file || busy}
+              onClick={() => void uploadCertification()}
+              className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
+            >
+              {busy ? "Extracting…" : "Upload & extract for review"}
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="font-semibold">Review extracted information before saving</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {draft.source.originalFileName} is temporarily staged for OCR only. It will not appear in Documents or the Compliance Review Queue until you confirm it.
+              </p>
+            </div>
+            <span className="rounded-full border bg-background px-2 py-1 text-xs">
+              {Math.round(draft.confidence * 100)}% average extraction confidence
+            </span>
+          </div>
+
+          {draft.facts.length ? (
+            <div className="mt-4 space-y-3">
+              {draft.facts.map((fact) => {
+                const original = fieldText(fact.value);
+                const current = fieldValues[fact.field] ?? "";
+                const corrected = current.trim() !== original.trim();
+                return (
+                  <label key={fact.field} className="block rounded-lg border bg-background p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-medium">{FIELD_LABELS[fact.field] ?? fact.field.replaceAll("_", " ")}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Page {fact.page ?? "—"} · {Math.round(Number(fact.confidence) * 100)}% confidence{corrected ? " · corrected" : ""}
+                      </span>
+                    </div>
+                    <input
+                      className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                      value={current}
+                      disabled={busy}
+                      onChange={(event) => setFieldValues((values) => ({ ...values, [fact.field]: event.target.value }))}
+                    />
+                    {fact.snippet ? <p className="mt-2 text-xs text-muted-foreground">Source: “{fact.snippet}”</p> : null}
+                    {corrected ? <p className="mt-1 text-xs text-muted-foreground">Extracted value: {original || "blank"}</p> : null}
+                  </label>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-lg border bg-background p-3 text-sm text-muted-foreground">
+              No supported certification fields were detected. You may save the source document with no extracted fields or cancel this staged upload.
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void cancelStagedUpload()}
+              className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              Cancel Upload
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void confirmAndSave()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            >
+              {busy ? "Saving…" : "Confirm & Save Document"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-3 rounded-lg border bg-background p-3" aria-live="polite">
         <div className="flex items-center justify-between gap-3 text-xs">
