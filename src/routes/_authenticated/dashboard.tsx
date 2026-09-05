@@ -8,8 +8,7 @@ import { useViewerState } from "@/hooks/use-viewer-state";
 import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
 import { usePlatformDashboardAccess } from "@/hooks/use-platform-dashboard-access";
 import { supabase } from "@/integrations/supabase/client";
-
-const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
+import { isFounderUser } from "@/lib/founder-access";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -39,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function DashboardPage() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
-  const isFounder = user.email?.trim().toLowerCase() === FOUNDER_EMAIL;
+  const isFounder = isFounderUser(user);
   const [onboardingChecked, setOnboardingChecked] = useState(isFounder);
   const { showDemoData, loading: viewerLoading } = useViewerState();
   const { profile, loading: profileLoading } = useWorkspaceProfile();
