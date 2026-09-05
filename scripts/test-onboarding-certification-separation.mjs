@@ -76,8 +76,9 @@ test("complete Tenant Income Certification field registry is exposed in source-f
     "tenant_signature_date", "owner_representative_signature_date",
   ]) assert.match(ticRegistry, new RegExp(`\\b${required}\\b`));
 
-  assert.match(ticRegistry, /Array\.from\(\{ length: 7 \}/);
-  assert.match(ticRegistry, /Array\.from\(\{ length: 8 \}/);
+  assert.match(ticRegistry, /TIC_HOUSEHOLD_ROW_COUNT = 10/);
+  assert.match(ticRegistry, /TIC_INCOME_ROW_COUNT = 10/);
+  assert.match(ticRegistry, /TIC_ASSET_ROW_COUNT = 27/);
   for (const generated of [
     "household_member_\\$\\{member\\}_race",
     "household_member_\\$\\{member\\}_ethnicity",
