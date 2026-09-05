@@ -243,19 +243,19 @@ export const LAUNCHPAD_STEPS = [
   },
   {
     id: 3,
-    title: "Add your portfolio",
-    lead: "Create the properties that your organization is authorized to manage.",
+    title: "Complete portfolio & tenant onboarding",
+    lead: "Load the properties, units, and tenant profiles your organization is authorized to manage.",
     detail:
-      "Confirm each property's programs and jurisdiction before using it in a compliance workflow.",
-    cta: "Mark portfolio complete",
+      "This setup task is separate from certification upload and must contain at least one property, unit, and tenant profile before the operational dashboard is considered ready.",
+    cta: "Verify portfolio onboarding",
   },
   {
     id: 4,
-    title: "Submit your first certification review",
-    lead: "Upload a certification package and review the extracted evidence before relying on any finding.",
+    title: "Upload your first certification",
+    lead: "Upload a certification package so CertivoIQ can prepare OCR evidence and source provenance.",
     detail:
-      "A submitted file remains subject to the platform's evidence, Manual Review, Agent Approval, and Agent Signature controls.",
-    cta: "Mark first review complete",
+      "Certification upload is separate from property and tenant onboarding. The file is not queued for compliance review until you explicitly choose it in the review queue.",
+    cta: "Verify certification upload",
   },
   {
     id: 5,
@@ -274,4 +274,3 @@ export const LAUNCHPAD_STEPS = [
     cta: "Complete onboarding",
   },
 ];
-
