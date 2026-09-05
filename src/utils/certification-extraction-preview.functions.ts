@@ -73,11 +73,7 @@ function normalizeConfirmedValue(field: string, value: string | number | null) {
   return text || null;
 }
 
-async function extractStagedSource(
-  supabase: any,
-  userId: string,
-  source: StagedCertificationSource,
-) {
+async function extractStagedSource(supabase: any, userId: string, source: StagedCertificationSource) {
   const db = supabase as any;
   const { data: job, error: jobError } = await db
     .from("certification_import_jobs")
@@ -94,16 +90,12 @@ async function extractStagedSource(
 
   const extraction = await import("@/lib/certification-extraction.server");
   const { sha256Hex } = await import("@/lib/complianceDecisionAndManifest");
-
   const download = await supabase.storage.from("certification-imports").download(source.storagePath);
   if (download.error || !download.data) throw new Error("The staged certification file could not be read for extraction.");
 
   const bytes = await download.data.arrayBuffer();
   const sourceSha256 = await sha256Hex(bytes);
-  if (
-    bytes.byteLength !== Number(source.sizeBytes) ||
-    source.sha256.toLowerCase() !== sourceSha256.toLowerCase()
-  ) {
+  if (bytes.byteLength !== Number(source.sizeBytes) || source.sha256.toLowerCase() !== sourceSha256.toLowerCase()) {
     throw new Error("The staged certification does not match the uploaded source bytes.");
   }
 
@@ -115,11 +107,7 @@ async function extractStagedSource(
     try {
       ocrDocument = extraction.loadOcrDocument(
         JSON.parse(await sidecarDownload.data.text()),
-        {
-          fileName: source.originalFileName,
-          sha256: sourceSha256,
-          byteSize: bytes.byteLength,
-        },
+        { fileName: source.originalFileName, sha256: sourceSha256, byteSize: bytes.byteLength },
       );
     } catch {
       ocrDocument = null;
@@ -127,12 +115,8 @@ async function extractStagedSource(
   }
 
   let documentText: string;
-  if (ocrDocument) {
-    documentText = ocrDocument.text;
-  } else {
-    const extractedDocument = await extraction.extractDocumentText(bytes, source.mimeType, source.originalFileName);
-    documentText = extractedDocument.text;
-  }
+  if (ocrDocument) documentText = ocrDocument.text;
+  else documentText = (await extraction.extractDocumentText(bytes, source.mimeType, source.originalFileName)).text;
 
   const result = extraction.extractFactsFromText(
     documentText,
@@ -142,14 +126,10 @@ async function extractStagedSource(
   const confidence = result.facts.length
     ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length
     : 0;
-
   return { result, confidence, sourceSha256 };
 }
 
-/**
- * Read staged source bytes and return an editable extraction preview.
- * Nothing is written to certification_import_items or certification_facts here.
- */
+/** Read staged source bytes and return an editable extraction preview. */
 export const extractCertificationDocumentPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { source: StagedCertificationSource }) => ({ source: validateSource(data.source) }))
@@ -170,17 +150,11 @@ export const extractCertificationDocumentPreview = createServerFn({ method: "POS
         confidence,
       } as const;
     } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : "The certification document could not be extracted.",
-      } as const;
+      return { error: error instanceof Error ? error.message : "The certification document could not be extracted." } as const;
     }
   });
 
-/**
- * Persist the document only after the user has reviewed and optionally corrected
- * every extracted field. The original proposal and correction delta remain in
- * historical_changes for auditability.
- */
+/** Nothing is written to certification_import_items or certification_facts until this confirmation runs. */
 export const confirmCertificationDocumentPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { source: StagedCertificationSource; fields: ConfirmedField[] }) => {
@@ -203,7 +177,6 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
     const { result, confidence, sourceSha256 } = await extractStagedSource(supabase, userId, data.source);
     const originalByField = new Map(result.facts.map((fact) => [fact.field, fact]));
     const submittedByField = new Map(data.fields.map((entry) => [entry.field, entry.value]));
-
     const originalExtractedData = Object.fromEntries(result.facts.map((fact) => [fact.field, fact.value]));
     const confirmedExtractedData: Record<string, string | number> = {};
     const corrections: Array<{ field: string; extractedValue: unknown; confirmedValue: unknown }> = [];
@@ -216,7 +189,6 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
         corrections.push({ field: fact.field, extractedValue: fact.value, confirmedValue: confirmed });
       }
     }
-
     for (const entry of data.fields) {
       if (!originalByField.has(entry.field)) {
         throw new Error(`${entry.field.replaceAll("_", " ")} was not extracted from this document and cannot be confirmed here.`);
@@ -234,19 +206,17 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
         mime_type: data.source.mimeType,
         size_bytes: data.source.sizeBytes,
         sha256: sourceSha256,
-        status: "completed",
+        status: "processing",
         extraction_provider: result.provider,
         extracted_data: confirmedExtractedData,
-        historical_changes: [
-          {
-            type: "extraction_confirmation",
-            confirmed_at: confirmedAt,
-            reviewer_id: userId,
-            original_extracted_data: originalExtractedData,
-            confirmed_extracted_data: confirmedExtractedData,
-            corrections,
-          },
-        ],
+        historical_changes: [{
+          type: "extraction_confirmation",
+          confirmed_at: confirmedAt,
+          reviewer_id: userId,
+          original_extracted_data: originalExtractedData,
+          confirmed_extracted_data: confirmedExtractedData,
+          corrections,
+        }],
         confidence,
         processed_at: confirmedAt,
         upload_duration_ms: data.source.uploadDurationMs ?? null,
@@ -260,39 +230,46 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
       .single();
     if (itemError) throw itemError;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const confirmedFacts = result.facts
-      .filter((fact) => Object.prototype.hasOwnProperty.call(confirmedExtractedData, fact.field))
-      .map((fact) => ({
-        item_id: item.id,
-        user_id: userId,
-        organization_id: `org-${userId}`,
-        field_name: fact.field,
-        field_value: confirmedExtractedData[fact.field] as never,
-        source_document_ref: fact.sourceDocumentRef,
-        source_page: fact.page,
-        source_snippet: fact.snippet,
-        confidence: fact.confidence,
-        human_verified: true,
-        required_for_decision: fact.requiredForDecision ?? true,
-        extraction_provider: fact.provider ?? result.provider,
-      }));
-    if (confirmedFacts.length) {
-      const { error: factError } = await supabaseAdmin.from("certification_facts").insert(confirmedFacts);
-      if (factError) throw factError;
-    }
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const confirmedFacts = result.facts
+        .filter((fact) => Object.prototype.hasOwnProperty.call(confirmedExtractedData, fact.field))
+        .map((fact) => ({
+          item_id: item.id,
+          user_id: userId,
+          organization_id: `org-${userId}`,
+          field_name: fact.field,
+          field_value: confirmedExtractedData[fact.field] as never,
+          source_document_ref: fact.sourceDocumentRef,
+          source_page: fact.page,
+          source_snippet: fact.snippet,
+          confidence: fact.confidence,
+          human_verified: true,
+          required_for_decision: fact.requiredForDecision ?? true,
+          extraction_provider: fact.provider ?? result.provider,
+        }));
+      if (confirmedFacts.length) {
+        const { error: factError } = await supabaseAdmin.from("certification_facts").insert(confirmedFacts);
+        if (factError) throw factError;
+      }
 
-    const { error: completeError } = await db
-      .from("certification_import_jobs")
-      .update({
-        status: "completed",
-        processed_files: 1,
-        error_count: 0,
-        completed_at: confirmedAt,
-      })
-      .eq("id", data.source.jobId)
-      .eq("user_id", userId);
-    if (completeError) throw completeError;
+      const { error: itemCompleteError } = await db
+        .from("certification_import_items")
+        .update({ status: "completed" })
+        .eq("id", item.id)
+        .eq("user_id", userId);
+      if (itemCompleteError) throw itemCompleteError;
+
+      const { error: completeError } = await db
+        .from("certification_import_jobs")
+        .update({ status: "completed", processed_files: 1, error_count: 0, completed_at: confirmedAt })
+        .eq("id", data.source.jobId)
+        .eq("user_id", userId);
+      if (completeError) throw completeError;
+    } catch (error) {
+      await db.from("certification_import_items").delete().eq("id", item.id).eq("user_id", userId);
+      throw error;
+    }
 
     return {
       itemId: item.id,
@@ -311,7 +288,7 @@ export const cancelCertificationDocumentPreview = createServerFn({ method: "POST
     const db = supabase as any;
     const { data: job, error: jobError } = await db
       .from("certification_import_jobs")
-      .select("id, status")
+      .select("id")
       .eq("id", data.source.jobId)
       .eq("user_id", userId)
       .maybeSingle();
