@@ -74,19 +74,19 @@ function DashboardPage() {
     };
   }, [isFounder, navigate, user.id]);
 
-  if (!onboardingChecked) {
+  if (!onboardingChecked || viewerLoading || profileLoading || dashboardAccessLoading) {
     return (
       <div className="grid min-h-screen place-items-center bg-background px-6 text-sm text-muted-foreground">
-        Verifying account setup…
+        Loading dashboard…
       </div>
     );
   }
 
   let dashboard;
-  if (viewerLoading || profileLoading || dashboardAccessLoading) dashboard = <ExecutiveDashboard demo />;
-  else if (selectedMode === "executive_demo") dashboard = <ExecutiveDashboard demo />;
+  if (selectedMode === "executive_demo") dashboard = <ExecutiveDashboard demo />;
   else if (selectedMode === "pha") dashboard = <PhaDashboard />;
   else if (selectedMode === "multifamily") dashboard = <ProductionDashboard />;
+  else if (isFounder) dashboard = <ProductionDashboard />;
   else if (showDemoData) dashboard = <ExecutiveDashboard demo />;
   else if (profile.organization_type === "pha") dashboard = <PhaDashboard />;
   else dashboard = <ProductionDashboard />;
