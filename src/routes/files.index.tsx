@@ -9,11 +9,13 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 type FilesSearch = {
   item?: string;
+  action?: "support" | "review";
 };
 
 export const Route = createFileRoute("/files/")({
   validateSearch: (search: Record<string, unknown>): FilesSearch => ({
     item: typeof search.item === "string" && UUID_PATTERN.test(search.item) ? search.item : undefined,
+    action: search.action === "support" || search.action === "review" ? search.action : undefined,
   }),
   head: () => ({
     meta: [
@@ -26,7 +28,7 @@ export const Route = createFileRoute("/files/")({
 });
 
 function FilesPage() {
-  const { item } = Route.useSearch();
+  const { item, action } = Route.useSearch();
 
   return (
     <AppShell
@@ -39,7 +41,7 @@ function FilesPage() {
           <p className="font-medium">Review only when you choose</p>
           <p className="mt-1 text-muted-foreground">Property, unit, tenant, and document intake does not automatically enter compliance review. Select the certifications you want reviewed below.</p>
         </div>
-        <CertificationReviewPanel initialItemId={item} />
+        <CertificationReviewPanel initialItemId={item} initialAction={action} />
       </FreeReviewLeadGate>
     </AppShell>
   );
