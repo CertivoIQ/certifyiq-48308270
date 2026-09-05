@@ -79,6 +79,7 @@ export function CertificationUploadPanel() {
   const [draft, setDraft] = useState<ExtractionDraft | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [saveAction, setSaveAction] = useState<"save" | "review" | null>(null);
   const [message, setMessage] = useState("");
   const [progressPercent, setProgressPercent] = useState(0);
   const [progressLabel, setProgressLabel] = useState("Choose a certification to begin.");
@@ -189,7 +190,7 @@ export function CertificationUploadPanel() {
       setFile(null);
       setProgressPercent(100);
       setProgressLabel("Extraction ready for review — document not saved yet.");
-      setMessage("Review every extracted field below. Correct anything necessary, then choose Confirm & Save Document.");
+      setMessage("Review every extracted field below. Correct anything necessary, then choose Save Document or Save & Start Review.");
     } catch (error) {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id;
@@ -208,17 +209,19 @@ export function CertificationUploadPanel() {
     }
   }
 
-  async function confirmAndSave() {
+  async function confirmAndSave(startReview: boolean) {
     if (!draft || busy) return;
     setBusy(true);
+    setSaveAction(startReview ? "review" : "save");
     setMessage("");
     setProgressPercent(98);
-    setProgressLabel("Saving your confirmed document information…");
+    setProgressLabel(startReview ? "Saving confirmed information and starting review…" : "Saving your confirmed document information…");
     try {
       const result = await confirmPreview({
         data: {
           source: draft.source,
           fields: draft.facts.map((fact) => ({ field: fact.field as any, value: fieldValues[fact.field] ?? "" })),
+          startReview,
         },
       });
       const correctionText = result.correctionCount
@@ -227,15 +230,24 @@ export function CertificationUploadPanel() {
       setDraft(null);
       setFieldValues({});
       setProgressPercent(100);
-      setProgressLabel("Certification document saved.");
-      setMessage(`Document saved to Documents.${correctionText} It has not been queued for compliance review.`);
-      await queryClient.invalidateQueries({ queryKey: ["certification-items"] });
+      if (result.queuedForReview) {
+        setProgressLabel("Certification saved and queued for review.");
+        setMessage(`Document saved to Documents.${correctionText} It is now in the Compliance Review Queue.`);
+      } else {
+        setProgressLabel("Certification document saved.");
+        setMessage(`Document saved to Documents.${correctionText} It has not been queued for compliance review.`);
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["certification-items"] }),
+        queryClient.invalidateQueries({ queryKey: ["certification-review"] }),
+      ]);
     } catch (error) {
       setProgressPercent(100);
       setProgressLabel("Review is still open — document not saved.");
       setMessage(error instanceof Error ? error.message : "The confirmed document could not be saved.");
     } finally {
       setBusy(false);
+      setSaveAction(null);
     }
   }
 
@@ -361,10 +373,18 @@ export function CertificationUploadPanel() {
             <button
               type="button"
               disabled={busy}
-              onClick={() => void confirmAndSave()}
+              onClick={() => void confirmAndSave(false)}
+              className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              {saveAction === "save" ? "Saving…" : "Save Document"}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void confirmAndSave(true)}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {busy ? "Saving…" : "Confirm & Save Document"}
+              {saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}
             </button>
           </div>
         </div>
