@@ -35,15 +35,18 @@ test("certification OCR sidecar stays compatible with the restricted storage buc
   assert.doesNotMatch(uploadPanel, /new Blob\(\[JSON\.stringify\(prepared\.sidecar\)\],\s*\{\s*type:\s*"application\/json"/);
 });
 
-test("scanned PDF OCR uses an explicit browser runtime and cannot silently emit an empty OCR sidecar", () => {
+test("scanned PDF OCR uses a pinned high-accuracy runtime and resilient recognition passes", () => {
+  assert.match(pdfOcr, /const RENDER_SCALE = 3/);
   assert.match(pdfOcr, /TESSERACT_WORKER_PATH/);
   assert.match(pdfOcr, /cdn\.jsdelivr\.net\/npm\/tesseract\.js@/);
   assert.match(pdfOcr, /TESSERACT_CORE_PATH/);
   assert.match(pdfOcr, /cdn\.jsdelivr\.net\/npm\/tesseract\.js-core@/);
-  assert.match(pdfOcr, /TESSERACT_LANG_PATH/);
-  assert.match(pdfOcr, /tessdata\.projectnaptha\.com\/4\.0\.0/);
-  assert.match(pdfOcr, /cacheMethod:\s*'none'/);
-  assert.match(pdfOcr, /workerBlobURL:\s*true/);
+  assert.match(pdfOcr, /TESSERACT_LANG_PATH\s*=\s*'https:\/\/tessdata\.projectnaptha\.com\/4\.0\.0_best'/);
+  assert.match(pdfOcr, /rotateAuto:\s*true/);
+  assert.match(pdfOcr, /createHighContrastCanvas/);
+  assert.match(pdfOcr, /otsuThreshold/);
+  assert.match(pdfOcr, /background:\s*'#ffffff'/);
+  assert.match(pdfOcr, /standard and high-contrast passes/);
   assert.match(pdfOcr, /if \(ocrPageCount === 0\)/);
   assert.match(pdfOcr, /OCR completed but could not recover readable text/);
 });
