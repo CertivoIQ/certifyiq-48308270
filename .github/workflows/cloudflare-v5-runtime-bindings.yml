@@ -1,4 +1,4 @@
-name: Repair live v5 runtime bindings
+name: Bind production runtime secrets to v7 candidate
 
 on:
   push:
@@ -16,8 +16,9 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      TARGET_WORKER: certivoiq-launch-candidate-20260904-v5
-      TARGET_URL: https://certivoiq-launch-candidate-20260904-v5.rodsheka-watkins.workers.dev
+      TARGET_WORKER: certivoiq-launch-candidate-20260905-v7
+      TARGET_URL: https://certivoiq-launch-candidate-20260905-v7.rodsheka-watkins.workers.dev
+      CURRENT_PRODUCTION_WORKER: certivoiq-launch-candidate-20260904-v5
       ZONE_NAME: certivoiq.com
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -35,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Confirm stable all-v5 production state and required GitHub secrets
+      - name: Confirm v7 candidate exists, production remains v5, and required secrets are present
         shell: bash
         run: |
           set -euo pipefail
@@ -72,11 +73,11 @@ jobs:
           apex_service="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)"
           echo "WWW_SERVICE=$www_service"
           echo "APEX_SERVICE=$apex_service"
-          test "$www_service" = "$TARGET_WORKER"
-          test "$apex_service" = "$TARGET_WORKER"
-          echo 'ALL_V5_DOMAIN_GATE=PASS'
+          test "$www_service" = "$CURRENT_PRODUCTION_WORKER"
+          test "$apex_service" = "$CURRENT_PRODUCTION_WORKER"
+          echo 'PRODUCTION_STILL_V5_GATE=PASS'
 
-      - name: Bind existing production runtime secrets to v5
+      - name: Bind existing production runtime secrets to v7
         shell: bash
         run: |
           set -euo pipefail
@@ -112,10 +113,9 @@ jobs:
           echo "BULK_SECRET_HTTP=$code"
           test "$code" = 200
           jq -e '.success == true' /tmp/bulk-result.json >/dev/null
-          echo "BULK_SECRET_NAMES=$(jq -r '[.result | to_entries[] | .key] | sort | join(",")' /tmp/bulk-result.json)"
-          echo 'RUNTIME_SECRET_BIND=PASS'
+          echo 'V7_RUNTIME_SECRET_BIND=PASS'
 
-      - name: Verify exact secret names and authenticated runtime health
+      - name: Verify exact secret names and authenticated v7 runtime health
         shell: bash
         run: |
           set -euo pipefail
@@ -135,27 +135,18 @@ jobs:
           done
           echo "BOUND_SECRET_NAMES=$(jq -r '[.result[].name] | sort | join(",")' /tmp/secrets-after.json)"
 
-          verify_health() {
-            local url="$1"
-            local label="$2"
-            local ok=0
-            for i in $(seq 1 15); do
-              code="$(curl -sS -o /tmp/health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$url/api/internal/runtime-health")"
-              echo "$label runtime-health attempt $i HTTP $code"
-              if [ "$code" = 204 ]; then ok=1; break; fi
-              sleep 4
-            done
-            test "$ok" = 1
-          }
-
-          verify_health "$TARGET_URL" 'workers.dev v5'
-          verify_health 'https://certivoiq.com' 'production apex'
+          ok=0
+          for i in $(seq 1 15); do
+            code="$(curl -sS -o /tmp/health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+            echo "v7 runtime-health attempt $i HTTP $code"
+            if [ "$code" = 204 ]; then ok=1; break; fi
+            sleep 4
+          done
+          test "$ok" = 1
           node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
-          node scripts/verify-cloudflare-live-response.mjs 'https://certivoiq.com'
-          node scripts/verify-cloudflare-live-response.mjs 'https://www.certivoiq.com'
-          echo 'V5_RUNTIME_AND_EDGE_GATE=PASS'
+          echo 'V7_RUNTIME_AND_EDGE_GATE=PASS'
 
-      - name: Confirm both domains remain v5 and Worker Routes remain empty
+      - name: Confirm production domains remain v5 and Worker Routes remain empty
         shell: bash
         run: |
           set -euo pipefail
@@ -164,7 +155,7 @@ jobs:
           curl -fsS "${auth[@]}" "$api/zones/$ZONE_ID/workers/routes" -o /tmp/routes-final.json
           jq -e '.success == true and (.result|length)==0' /tmp/routes-final.json >/dev/null
           curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-final.json
-          test "$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-final.json)" = "$TARGET_WORKER"
-          test "$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-final.json)" = "$TARGET_WORKER"
+          test "$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-final.json)" = "$CURRENT_PRODUCTION_WORKER"
+          test "$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-final.json)" = "$CURRENT_PRODUCTION_WORKER"
           echo 'FINAL_DOMAIN_STATE=V5_V5'
           echo 'FINAL_WORKER_ROUTES=EMPTY'
