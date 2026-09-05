@@ -1,4 +1,4 @@
-name: Cloudflare v10 read-only production diagnostic
+name: Cloudflare pre-v12 read-only production diagnostic
 
 on:
   push:
@@ -17,27 +17,25 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-      FALLBACK_WORKER: certivoiq-launch-candidate-20260905-v9
-      TARGET_WORKER: certivoiq-launch-candidate-20260905-v10
-      FALLBACK_URL: https://certivoiq-launch-candidate-20260905-v9.rodsheka-watkins.workers.dev
-      TARGET_URL: https://certivoiq-launch-candidate-20260905-v10.rodsheka-watkins.workers.dev
+      V10_URL: https://certivoiq-launch-candidate-20260905-v10.rodsheka-watkins.workers.dev
+      V12_URL: https://certivoiq-launch-candidate-20260905-v12.rodsheka-watkins.workers.dev
       ZONE_NAME: certivoiq.com
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read-only v10 custom-domain and runtime diagnostic
+      - name: Read-only current custom-domain and runtime diagnostic
         shell: bash
         run: |
           set -u
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
           api='https://api.cloudflare.com/client/v4'
 
-          target_health="$(curl -sS -o /tmp/target-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
-          fallback_health="$(curl -sS -o /tmp/fallback-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$FALLBACK_URL/api/internal/runtime-health")"
-          www_health="$(curl -sS -o /tmp/www-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://www.certivoiq.com/api/internal/runtime-health')"
-          apex_health="$(curl -sS -o /tmp/apex-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://certivoiq.com/api/internal/runtime-health')"
-          echo "V10_WORKERS_DEV_HEALTH_AUTH_HTTP=$target_health"
-          echo "V9_WORKERS_DEV_HEALTH_AUTH_HTTP=$fallback_health"
+          v10_health="$(curl -sS -o /tmp/v10-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V10_URL/api/internal/runtime-health" || true)"
+          v12_health="$(curl -sS -o /tmp/v12-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V12_URL/api/internal/runtime-health" || true)"
+          www_health="$(curl -sS -o /tmp/www-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://www.certivoiq.com/api/internal/runtime-health' || true)"
+          apex_health="$(curl -sS -o /tmp/apex-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://certivoiq.com/api/internal/runtime-health' || true)"
+          echo "V10_WORKERS_DEV_HEALTH_AUTH_HTTP=$v10_health"
+          echo "V12_WORKERS_DEV_HEALTH_AUTH_HTTP=$v12_health"
           echo "WWW_HEALTH_AUTH_HTTP=$www_health"
           echo "APEX_HEALTH_AUTH_HTTP=$apex_health"
 
@@ -51,4 +49,4 @@ jobs:
             echo "APEX_SERVICE=$(jq -r '.result[]?|select(.hostname=="certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
           fi
 
-          echo 'READ_ONLY_V10_PRODUCTION_DIAGNOSTIC_COMPLETE'
+          echo 'READ_ONLY_PRE_V12_PRODUCTION_DIAGNOSTIC_COMPLETE'
