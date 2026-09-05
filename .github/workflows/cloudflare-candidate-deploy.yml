@@ -8,11 +8,6 @@ on:
         required: true
         default: certivoiq-cutover-candidate-20260903
         type: string
-  push:
-    branches:
-      - diag/live-build-marker-20260904
-    paths:
-      - .github/workflows/cloudflare-candidate-deploy.yml
 
 permissions:
   contents: read
@@ -24,7 +19,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_CANDIDATE_WORKER_NAME: ${{ inputs.candidate_worker_name || 'certivoiq-launch-candidate-20260904-v3' }}
+      CLOUDFLARE_CANDIDATE_WORKER_NAME: ${{ inputs.candidate_worker_name }}
 
     steps:
       - name: Require Cloudflare deployment credentials
@@ -40,10 +35,8 @@ jobs:
             exit 1
           fi
           echo "Cloudflare credentials are present (values not displayed)."
-          echo "Candidate source commit: $GITHUB_SHA"
-          echo "Candidate Worker: $CLOUDFLARE_CANDIDATE_WORKER_NAME"
 
-      - name: Checkout candidate source
+      - name: Checkout current main
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -61,15 +54,6 @@ jobs:
 
       - name: Test candidate config safety gate
         run: node --test scripts/test-cloudflare-candidate-config.mjs
-
-      - name: Verify final navigation source is present
-        shell: bash
-        run: |
-          set -euo pipefail
-          grep -F 'Upload Certification & OCR' src/components/app-shell.tsx
-          grep -F 'to: "/hotma-readiness", label: "HOTMA Readiness"' src/components/app-shell.tsx
-          grep -F 'const FOUNDER_EMAIL = "rjwatkins@certivoiq.com"' src/hooks/use-platform-dashboard-access.ts
-          grep -F 'const WWW_HOST = "www.certivoiq.com"' src/server.ts
 
       - name: Build exact candidate
         run: bun run build
