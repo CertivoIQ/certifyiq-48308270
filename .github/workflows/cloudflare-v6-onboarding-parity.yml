@@ -1,4 +1,4 @@
-name: CertivoIQ v12 certification operations candidate
+name: CertivoIQ certification operations bound-worker candidate
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      TARGET_WORKER: certivoiq-launch-candidate-20260905-v12
+      TARGET_WORKER: certivoiq-launch-candidate-20260905-v11
 
     steps:
       - uses: actions/checkout@v4
@@ -85,33 +85,33 @@ jobs:
       - name: Build exact current main
         run: bun run build
 
-      - name: Prepare isolated v12 candidate config
+      - name: Prepare bound-worker candidate config
         run: |
           node scripts/prepare-cloudflare-candidate-config.mjs \
             .output/server/wrangler.json \
-            .output/server/wrangler.v12.json \
+            .output/server/wrangler.bound.json \
             "$TARGET_WORKER"
 
-      - name: Deploy v12 to workers.dev only
+      - name: Deploy current release to bound v11 worker
         id: deploy
         shell: bash
         run: |
           set -euo pipefail
           log_file="$(mktemp)"
-          npx --yes wrangler@4 deploy --config .output/server/wrangler.v12.json 2>&1 | tee "$log_file"
+          npx --yes wrangler@4 deploy --config .output/server/wrangler.bound.json 2>&1 | tee "$log_file"
           candidate_url="$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$log_file" | tail -n 1 || true)"
           test -n "$candidate_url"
           echo "candidate_url=$candidate_url" >> "$GITHUB_OUTPUT"
           echo "Candidate URL: $candidate_url"
 
-      - name: Verify v12 live response boundary
+      - name: Verify bound v11 live response boundary
         shell: bash
         run: |
           set -euo pipefail
           candidate_url="${{ steps.deploy.outputs.candidate_url }}"
           for attempt in 1 2 3 4 5 6; do
             if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
-              echo 'V12_LIVE_RESPONSE_GATE=PASS'
+              echo 'BOUND_V11_LIVE_RESPONSE_GATE=PASS'
               exit 0
             fi
             test "$attempt" -lt 6
@@ -120,4 +120,4 @@ jobs:
 
       - name: Confirm production remains untouched
         run: |
-          echo 'Candidate only; no certivoiq.com custom domain, Worker Route, DNS, database, or billing changes were made.'
+          echo 'Candidate only; custom domains remain on v10 until protected runtime re-verification passes.'
