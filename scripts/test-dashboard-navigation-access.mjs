@@ -17,7 +17,9 @@ const hotmaRoute = read("src/routes/hotma-readiness.tsx");
 
 test("founder keeps all dashboard modes independent of staff-role resolution", () => {
   assert.match(dashboardAccess, /FOUNDER_EMAIL\s*=\s*"rjwatkins@certivoiq\.com"/);
-  assert.match(dashboardAccess, /const isFounder = user\?\.email/);
+  assert.match(dashboardAccess, /FOUNDER_USER_IDS\s*=\s*new Set\(\["e2f47e3c-416b-4bf5-ab5d-8e519b4afe7b"\]\)/);
+  assert.match(dashboardAccess, /normalizedEmail === FOUNDER_EMAIL/);
+  assert.match(dashboardAccess, /FOUNDER_USER_IDS\.has\(user\.id\)/);
   assert.match(dashboardAccess, /const allowedModes = isFounder \? DASHBOARD_ORDER : entitledModes/);
   assert.doesNotMatch(dashboardAccess, /isStaff\s*\?\s*DASHBOARD_ORDER/);
   assert.match(shell, /PLATFORM_DASHBOARD_LABELS/);
