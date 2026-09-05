@@ -1,3 +1,4 @@
+# Retrigger flattened TIC spatial OCR patch.
 name: Patch TIC spatial OCR integration
 
 on:
