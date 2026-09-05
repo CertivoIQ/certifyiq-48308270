@@ -1,4 +1,4 @@
-# Native TIC form-value extraction release.
+# Native TIC form-value extraction release — regression aligned.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
