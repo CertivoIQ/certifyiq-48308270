@@ -147,3 +147,22 @@ export const extractCertificationDocumentPreview = createServerFn({ method: "POS
       reviewQueueStatus: item.review_queue_status,
     } as const;
   });
+
+/** Documents list with automatic extraction metadata. */
+export const listCertificationDocuments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const db = context.supabase as any;
+    const { data, error } = await db
+      .from("certification_import_items")
+      .select("id, original_file_name, mime_type, status, extraction_provider, extracted_data, confidence, created_at, processed_at, error_message, upload_sequence, certification_type, jurisdiction, program_codes, review_queue_status, queued_for_review_at, tenant_profile_id, unit_id, property_id, portfolio_tenant_profiles(household_name), portfolio_units(unit_number), portfolio_properties(name)")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    return (data ?? []).map((item: any) => ({
+      ...item,
+      household_name: item.portfolio_tenant_profiles?.household_name ?? null,
+      unit_number: item.portfolio_units?.unit_number ?? null,
+      property_name: item.portfolio_properties?.name ?? null,
+    }));
+  });
