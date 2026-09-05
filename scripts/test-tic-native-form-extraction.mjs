@@ -13,9 +13,10 @@ test('fillable TIC values are read directly before OCR fallback', () => {
   assert.match(pdf, /preparedTextByPage/);
 });
 
-test('TIC visual fallback uses higher resolution and preserves native values', () => {
+test('TIC visual fallback uses optimized high-resolution rendering and preserves native values', () => {
   assert.match(pdf, /highResolutionFormCandidate/);
-  assert.match(pdf, /highResolutionFormCandidate \? 4\.5 : RENDER_SCALE/);
+  assert.match(pdf, /const TIC_RENDER_SCALE = 3\.5/);
+  assert.match(pdf, /highResolutionFormCandidate \? TIC_RENDER_SCALE : RENDER_SCALE/);
   assert.match(pdf, /combinedText/);
 });
 
