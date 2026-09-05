@@ -9,8 +9,8 @@ const parser = read("src/lib/portfolio-intake.ts");
 const intake = read("src/lib/portfolio-intake.functions.ts");
 const intakeUi = read("src/components/portfolio-intake-panel.tsx");
 const onboardingUi = read("src/components/portfolio-onboarding-panel.tsx");
-const certificationUi = read("src/components/certification-upload-panel.tsx");
-const extractionPreview = read("src/utils/certification-extraction-preview.functions.ts");
+const certificationUi = read("src/components/certification-upload-panel-v2.tsx");
+const ticIntake = read("src/utils/tic-certification-intake.functions.ts");
 const queueUi = read("src/components/certification-review-panel.tsx");
 const review = read("src/utils/certification-review.functions.ts");
 const properties = read("src/routes/properties.index.tsx");
@@ -79,24 +79,28 @@ test("clients explicitly select multiple certifications and server preserves glo
   assert.match(review, /review_queue_status: "completed"/);
 });
 
-test("onboarding and certification intake are separate production entry points", () => {
+test("onboarding and complete TIC intake are separate production entry points", () => {
   assert.match(properties, /<PortfolioOnboardingPanel/);
   assert.match(onboardingUi, /documentCount: 0/);
   assert.match(onboardingUi, /documentFileName: undefined/);
   assert.match(onboardingUi, /properties, units, and tenant profiles/);
   assert.doesNotMatch(onboardingUi, /uploadCertificationFile/);
 
+  assert.match(upload, /certification-upload-panel-v2/);
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
-  assert.match(certificationUi, /Review extracted information before saving/);
+  assert.match(certificationUi, /Review and correct the complete TIC before saving/);
+  assert.match(certificationUi, /TIC_FIELD_DEFINITIONS/);
+  assert.match(certificationUi, /sourcePreviewUrl/);
   assert.match(certificationUi, /Save Document/);
   assert.match(certificationUi, /Save & Start Review/);
   assert.doesNotMatch(certificationUi, /parsePortfolioIntakeCsv|createPortfolioIntake/);
-  assert.match(extractionPreview, /review_queue_status:\s*"not_queued"/);
-  assert.match(extractionPreview, /status:\s*"processing"/);
-  assert.match(extractionPreview, /const itemCompletion = data\.startReview/);
-  assert.match(extractionPreview, /review_queue_status:\s*"queued"/);
-  assert.match(extractionPreview, /historical_changes/);
+  assert.match(ticIntake, /review_queue_status:\s*"not_queued"/);
+  assert.match(ticIntake, /status:\s*"processing"/);
+  assert.match(ticIntake, /const itemCompletion = data\.startReview/);
+  assert.match(ticIntake, /review_queue_status:\s*"queued"/);
+  assert.match(ticIntake, /historical_changes/);
+  assert.match(ticIntake, /reviewer_supplied_fields/);
 
   assert.match(files, /<CertificationReviewPanel/);
   assert.match(files, /does not automatically enter compliance review/);
