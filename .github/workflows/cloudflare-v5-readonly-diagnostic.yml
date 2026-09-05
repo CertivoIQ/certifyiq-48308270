@@ -1,4 +1,4 @@
-name: Cloudflare v8 read-only production diagnostic
+name: Cloudflare v9 read-only production diagnostic
 
 on:
   push:
@@ -17,15 +17,15 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-      FALLBACK_WORKER: certivoiq-launch-candidate-20260905-v7
-      TARGET_WORKER: certivoiq-launch-candidate-20260905-v8
-      FALLBACK_URL: https://certivoiq-launch-candidate-20260905-v7.rodsheka-watkins.workers.dev
-      TARGET_URL: https://certivoiq-launch-candidate-20260905-v8.rodsheka-watkins.workers.dev
+      FALLBACK_WORKER: certivoiq-launch-candidate-20260905-v8
+      TARGET_WORKER: certivoiq-launch-candidate-20260905-v9
+      FALLBACK_URL: https://certivoiq-launch-candidate-20260905-v8.rodsheka-watkins.workers.dev
+      TARGET_URL: https://certivoiq-launch-candidate-20260905-v9.rodsheka-watkins.workers.dev
       ZONE_NAME: certivoiq.com
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read-only v8 custom-domain and runtime diagnostic
+      - name: Read-only v9 custom-domain and runtime diagnostic
         shell: bash
         run: |
           set -u
@@ -36,8 +36,8 @@ jobs:
           fallback_health="$(curl -sS -o /tmp/fallback-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$FALLBACK_URL/api/internal/runtime-health")"
           www_health="$(curl -sS -o /tmp/www-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://www.certivoiq.com/api/internal/runtime-health')"
           apex_health="$(curl -sS -o /tmp/apex-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://certivoiq.com/api/internal/runtime-health')"
-          echo "V8_WORKERS_DEV_HEALTH_AUTH_HTTP=$target_health"
-          echo "V7_WORKERS_DEV_HEALTH_AUTH_HTTP=$fallback_health"
+          echo "V9_WORKERS_DEV_HEALTH_AUTH_HTTP=$target_health"
+          echo "V8_WORKERS_DEV_HEALTH_AUTH_HTTP=$fallback_health"
           echo "WWW_HEALTH_AUTH_HTTP=$www_health"
           echo "APEX_HEALTH_AUTH_HTTP=$apex_health"
 
@@ -51,4 +51,4 @@ jobs:
             echo "APEX_SERVICE=$(jq -r '.result[]?|select(.hostname=="certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
           fi
 
-          echo 'READ_ONLY_V8_PRODUCTION_DIAGNOSTIC_COMPLETE'
+          echo 'READ_ONLY_V9_PRODUCTION_DIAGNOSTIC_COMPLETE'
