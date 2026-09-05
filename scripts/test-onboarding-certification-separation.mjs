@@ -67,17 +67,7 @@ test("complete Tenant Income Certification field registry is exposed for pre-sav
     "unit_number",
     "unit_bedrooms",
     "household_size",
-    "household_member_1_last_name",
-    "household_member_1_date_of_birth",
-    "household_member_1_full_time_student",
-    "income_member_1_wages_business",
-    "income_member_1_social_security_pension",
-    "income_member_1_public_assistance",
-    "income_member_1_other_income",
     "household_annual_income",
-    "asset_1_type",
-    "asset_1_cash_value",
-    "asset_1_annual_income",
     "applicable_lihtc_income_limit",
     "tenant_paid_rent",
     "utility_allowance",
@@ -92,7 +82,17 @@ test("complete Tenant Income Certification field registry is exposed for pre-sav
     assert.match(ticRegistry, new RegExp(`\\b${required}\\b`));
   }
   assert.match(ticRegistry, /Array\.from\(\{ length: 7 \}/);
+  assert.match(ticRegistry, /household_member_\$\{member\}_last_name/);
+  assert.match(ticRegistry, /household_member_\$\{member\}_date_of_birth/);
+  assert.match(ticRegistry, /household_member_\$\{member\}_full_time_student/);
+  assert.match(ticRegistry, /income_member_\$\{member\}_wages_business/);
+  assert.match(ticRegistry, /income_member_\$\{member\}_social_security_pension/);
+  assert.match(ticRegistry, /income_member_\$\{member\}_public_assistance/);
+  assert.match(ticRegistry, /income_member_\$\{member\}_other_income/);
   assert.match(ticRegistry, /Array\.from\(\{ length: 8 \}/);
+  assert.match(ticRegistry, /asset_\$\{row\}_type/);
+  assert.match(ticRegistry, /asset_\$\{row\}_cash_value/);
+  assert.match(ticRegistry, /asset_\$\{row\}_annual_income/);
   assert.match(uploadPanel, /TIC_FIELD_DEFINITIONS/);
   assert.match(uploadPanel, /TIC_FIELD_SECTIONS/);
   assert.match(uploadPanel, /Not extracted — enter if shown on the certification/);
@@ -149,6 +149,7 @@ test("save and start review opens the exact saved certification in the review wo
   assert.match(reviewPanel, /useState<string \| null>\(initialItemId\)/);
   assert.match(reviewPanel, /if \(!initialItemId\) return/);
   assert.match(reviewPanel, /setSelectedId\(initialItemId\)/);
+  assert.match(reviewPanel, /tic-certification-review\.functions/);
   assert.doesNotMatch(reviewPanel, /setSelectedIds\(new Set\(\[initialItemId\]\)\)/);
 });
 
