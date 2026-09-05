@@ -11,6 +11,7 @@ import { runCertificationReview } from '@/utils/tic-certification-review.functio
 import { listCertificationDocuments } from '@/utils/certification-extraction-preview.functions';
 import { markCertificationReviewFailed, queueCertificationReviews } from '@/lib/portfolio-intake.functions';
 import { useAccount } from '@/hooks/use-account';
+import { CertificationSupportingDocumentsPanel } from '@/components/certification-supporting-documents-panel';
 
 /**
  * Live review panel for the compliance vertical slice: uploaded documents show
@@ -261,6 +262,7 @@ export function CertificationReviewPanel({ initialItemId = null }: Certification
                     Extraction pending.
                   </div>
                 )}
+                {item.id === activeId ? <CertificationSupportingDocumentsPanel itemId={item.id} /> : null}
               </div>
             );
           })}
