@@ -1,3 +1,4 @@
+# Retrigger after optimized TIC render regression alignment.
 name: Patch OCR timeout performance
 
 on:
