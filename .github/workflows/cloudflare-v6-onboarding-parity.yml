@@ -1,4 +1,4 @@
-name: CertivoIQ certification operations bound-worker candidate
+name: CertivoIQ structured TIC bound-worker candidate
 
 on:
   push:
@@ -30,18 +30,27 @@ jobs:
         with:
           bun-version: 1.3.3
 
-      - name: Require exact certification operations source
+      - name: Require exact structured TIC source
         shell: bash
         run: |
           set -euo pipefail
           test -n "${CLOUDFLARE_API_TOKEN:-}"
           test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
-          grep -F -q 'certification-upload-panel-v3' src/routes/upload-certification.tsx
-          grep -F -q 'OCR_SIDECAR_STORAGE_MIME = "application/octet-stream"' src/components/certification-upload-panel-v3.tsx
-          grep -F -q 'Review the complete certification packet before saving' src/components/certification-upload-panel-v3.tsx
-          grep -F -q 'Supporting documents detected in this packet' src/components/certification-upload-panel-v3.tsx
-          grep -F -q 'TIC_FIELD_DEFINITIONS' src/components/certification-upload-panel-v3.tsx
-          grep -F -q 'Save & Start Review' src/components/certification-upload-panel-v3.tsx
+          grep -F -q 'certification-upload-panel-v4' src/routes/upload-certification.tsx
+          grep -F -q 'OCR_SIDECAR_STORAGE_MIME = "application/octet-stream"' src/components/certification-upload-panel-v4.tsx
+          grep -F -q 'CertivoIqTicReviewForm' src/components/certification-upload-panel-v4.tsx
+          grep -F -q 'CERTIVOIQ TENANT INCOME CERTIFICATION' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART I — DEVELOPMENT DATA' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART II — HOUSEHOLD COMPOSITION' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART III — GROSS ANNUAL INCOME' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART IV — INCOME FROM ASSETS' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART V — TOTAL HOUSEHOLD INCOME' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART VI — DETERMINATION OF INCOME ELIGIBILITY' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART VII — RENT' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART VIII — STUDENT STATUS' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'PART IX — PROGRAM TYPE' src/components/certivoiq-tic-review-form.tsx
+          grep -F -q 'TIC_FIELD_DEFINITIONS' src/components/certification-upload-panel-v4.tsx
+          grep -F -q 'Save & Start Review' src/components/certification-upload-panel-v4.tsx
           grep -F -q 'annual_student_certification' src/lib/tic-supporting-document-registry.ts
           grep -F -q 'zero_income_certification' src/lib/tic-supporting-document-registry.ts
           grep -F -q 'check_stub' src/lib/tic-supporting-document-registry.ts
@@ -64,8 +73,10 @@ jobs:
           grep -F -q "TESSERACT_VERSION = '7.0.0'" src/lib/pdf-ocr.ts
           grep -F -q 'PSM.SPARSE_TEXT' src/lib/pdf-ocr.ts
           grep -F -q 'First nonblank failed page' src/lib/pdf-ocr.ts
+          ! head -n 1 src/components/certivoiq-tic-review-form.tsx | grep -F -q 'eslint-disable react/'
+          grep -F -q '[-/]' src/lib/tic-field-extraction.ts
           echo "SOURCE_SHA=$(git rev-parse HEAD)"
-          echo 'CERTIFICATION_OPERATIONS_SOURCE_GATE=PASS'
+          echo 'STRUCTURED_TIC_SOURCE_GATE=PASS'
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -80,7 +91,7 @@ jobs:
           node --test scripts/test-onboarding-certification-separation.mjs
           node scripts/test-ocr-sidecar.mjs
           node --test scripts/test-certification-task-workflow.mjs
-          echo 'UPDATED_SUPPORTING_DOCUMENT_EVIDENCE_BOUNDARY=PASS'
+          echo 'STRUCTURED_TIC_EVIDENCE_BOUNDARY=PASS'
 
       - name: Build exact current main
         run: bun run build
@@ -111,13 +122,13 @@ jobs:
           candidate_url="${{ steps.deploy.outputs.candidate_url }}"
           for attempt in 1 2 3 4 5 6; do
             if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
-              echo 'BOUND_V11_LIVE_RESPONSE_GATE=PASS'
+              echo 'BOUND_V11_STRUCTURED_TIC_LIVE_RESPONSE_GATE=PASS'
               exit 0
             fi
             test "$attempt" -lt 6
             sleep 10
           done
 
-      - name: Confirm production remains untouched
+      - name: Confirm domain mapping remains stable
         run: |
-          echo 'Candidate only; custom domains remain on v10 until protected runtime re-verification passes.'
+          echo 'Existing custom-domain mapping remains on the bound v11 worker; this release updates that worker in place after green CI.'
