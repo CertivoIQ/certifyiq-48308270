@@ -14,8 +14,15 @@ test('fillable TIC values are read directly before OCR fallback', () => {
 });
 
 test('TIC visual fallback uses higher resolution and preserves native values', () => {
-  assert.match(pdf, /isTicFormPage \? 4\.5 : RENDER_SCALE/);
+  assert.match(pdf, /highResolutionFormCandidate/);
+  assert.match(pdf, /highResolutionFormCandidate \? 4\.5 : RENDER_SCALE/);
   assert.match(pdf, /combinedText/);
+});
+
+test('flattened TIC fallback requests OCR geometry for spatial cell mapping', () => {
+  assert.match(pdf, /extractTicSpatialValueLines/);
+  assert.match(pdf, /blocks:\s*true/);
+  assert.match(pdf, /spatialLines/);
 });
 
 test('source TIC continuation capacity is represented in the review form', () => {
