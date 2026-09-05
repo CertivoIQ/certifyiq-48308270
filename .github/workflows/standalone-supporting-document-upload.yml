@@ -1,0 +1,31 @@
+name: Standalone supporting document upload
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/utils/certification-supporting-upload.functions.ts'
+      - 'src/components/certification-supporting-documents-panel.tsx'
+      - 'src/lib/tic-supporting-document-registry.ts'
+      - 'supabase/migrations/20260905195900_tic_supporting_documents.sql'
+      - 'scripts/test-standalone-supporting-document-upload.mjs'
+      - '.github/workflows/standalone-supporting-document-upload.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/utils/certification-supporting-upload.functions.ts'
+      - 'src/components/certification-supporting-documents-panel.tsx'
+      - 'src/lib/tic-supporting-document-registry.ts'
+      - 'supabase/migrations/20260905195900_tic_supporting_documents.sql'
+      - 'scripts/test-standalone-supporting-document-upload.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run standalone supporting document regression
+        run: node --test scripts/test-standalone-supporting-document-upload.mjs
