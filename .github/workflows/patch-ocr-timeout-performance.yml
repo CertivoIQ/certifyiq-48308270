@@ -1,0 +1,36 @@
+name: Patch OCR timeout performance
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-ocr-timeout-performance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply OCR timeout and performance fix
+        run: python scripts/apply-ocr-timeout-performance-fix.py
+      - name: Verify targeted source
+        run: |
+          grep -F -q 'OCR_TIMEOUT_MESSAGE' src/lib/pdf-ocr.ts
+          grep -F -q 'const TIC_RENDER_SCALE = 3.5' src/lib/pdf-ocr.ts
+          grep -F -q 'includeBlocks ? { text: true, blocks: true } : { text: true }' src/lib/pdf-ocr.ts
+          grep -F -q 'highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE' src/lib/pdf-ocr.ts
+          grep -F -q 'Certification preparation stopped before staging.' src/components/certification-upload-panel-v4.tsx
+          node --test scripts/test-tic-spatial-extraction.mjs
+          node --test scripts/test-tic-native-form-extraction.mjs
+          git diff --check
+      - name: Commit application fix
+        run: |
+          git config user.name "CertivoIQ Release Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/lib/pdf-ocr.ts src/components/certification-upload-panel-v4.tsx
+          git commit -m "Fix OCR timeout handling and reduce TIC processing cost"
+          git push origin HEAD:main
