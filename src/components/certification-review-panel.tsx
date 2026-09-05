@@ -67,9 +67,10 @@ type EvidenceRef = { field?: string; documentRef?: string | null; page?: number 
 
 type CertificationReviewPanelProps = {
   initialItemId?: string | null;
+  initialAction?: "support" | "review";
 };
 
-export function CertificationReviewPanel({ initialItemId = null }: CertificationReviewPanelProps) {
+export function CertificationReviewPanel({ initialItemId = null, initialAction }: CertificationReviewPanelProps) {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(initialItemId);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -93,8 +94,17 @@ export function CertificationReviewPanel({ initialItemId = null }: Certification
   useEffect(() => {
     if (!initialItemId) return;
     setSelectedId(initialItemId);
-    setNotice('Saved certification opened from intake.');
-  }, [initialItemId]);
+    setNotice(
+      initialAction === 'support'
+        ? 'Pending certification opened from the Command Center. Attach one supporting document below.'
+        : initialAction === 'review'
+          ? 'Pending certification opened from the Command Center. Review this certification when ready.'
+          : 'Saved certification opened.'
+    );
+    window.setTimeout(() => {
+      document.getElementById(`certification-${initialItemId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }, [initialItemId, initialAction]);
 
   const review = useQuery({
     queryKey: ['certification-review', activeId],
@@ -103,8 +113,9 @@ export function CertificationReviewPanel({ initialItemId = null }: Certification
   });
 
   const runQueue = useMutation({
-    mutationFn: async () => {
-      const queued = await queueReviews({ data: { itemIds: [...selectedIds] } });
+    mutationFn: async (requestedIds?: string[]) => {
+      const itemIds = requestedIds?.length ? requestedIds : [...selectedIds];
+      const queued = await queueReviews({ data: { itemIds } });
       let completed = 0;
       let failed = 0;
       for (const item of queued.items) {
@@ -199,7 +210,7 @@ export function CertificationReviewPanel({ initialItemId = null }: Certification
           <button
             className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
             disabled={selectedIds.size === 0 || runQueue.isPending}
-            onClick={() => runQueue.mutate()}
+            onClick={() => runQueue.mutate([...selectedIds])}
           >
             <PlayCircle className="h-4 w-4" />
             {runQueue.isPending ? 'Reviewing queue…' : `Review selected (${selectedIds.size})`}
@@ -216,7 +227,7 @@ export function CertificationReviewPanel({ initialItemId = null }: Certification
           {items.data.map((item) => {
             const extracted = extractedEntries(item.extracted_data);
             return (
-              <div key={item.id} className={`rounded-lg border p-3 ${item.id === activeId ? 'border-primary bg-primary/5' : ''}`}>
+              <div id={`certification-${item.id}`} key={item.id} className={`rounded-lg border p-3 ${item.id === activeId ? 'border-primary bg-primary/5' : ''}`}>
                 <div className="flex flex-wrap items-center gap-3">
                   <input
                     type="checkbox"
@@ -262,6 +273,23 @@ export function CertificationReviewPanel({ initialItemId = null }: Certification
                     Extraction pending.
                   </div>
                 )}
+                {item.id === activeId && (item.review_queue_status === 'not_queued' || item.review_queue_status === 'queued') ? (
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                    <div>
+                      <p className="text-sm font-medium">Pending certification actions</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Attach supporting evidence before review, or begin the controlled review for this certification only.</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={runQueue.isPending}
+                      onClick={() => runQueue.mutate([item.id])}
+                      className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                    >
+                      <PlayCircle className="size-4" />
+                      {runQueue.isPending ? 'Reviewing…' : 'Review Certification'}
+                    </button>
+                  </div>
+                ) : null}
                 {item.id === activeId ? <CertificationSupportingDocumentsPanel itemId={item.id} /> : null}
               </div>
             );
