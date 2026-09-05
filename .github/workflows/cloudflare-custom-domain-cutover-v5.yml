@@ -1,5 +1,5 @@
 name: CertivoIQ v7 custom-domain production cutover
-# Re-run after verified v7 production runtime bindings.
+# Reassign existing Custom Domains with guarded detach/attach and rollback.
 
 on:
   workflow_dispatch:
@@ -40,7 +40,6 @@ jobs:
           echo 'SOURCE_AND_CREDENTIAL_GATE=PASS'
 
       - name: Preflight target Worker, zone, empty Worker Routes, domains, and cache-purge permission
-        id: preflight
         shell: bash
         run: |
           set -euo pipefail
@@ -48,6 +47,7 @@ jobs:
           api='https://api.cloudflare.com/client/v4'
 
           code="$(curl -sS -o /tmp/target-settings.json -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
+          echo "TARGET_SETTINGS_HTTP=$code"
           test "$code" = 200
 
           curl -fsS "${auth[@]}" "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
@@ -66,10 +66,13 @@ jobs:
           test "$apex_count" = 1
           old_www="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)"
           old_apex="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)"
-          test -n "$old_www"
-          test -n "$old_apex"
+          old_www_id="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.id' /tmp/domains-before.json)"
+          old_apex_id="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.id' /tmp/domains-before.json)"
+          test -n "$old_www"; test -n "$old_apex"; test -n "$old_www_id"; test -n "$old_apex_id"
           echo "OLD_WWW=$old_www" >> "$GITHUB_ENV"
           echo "OLD_APEX=$old_apex" >> "$GITHUB_ENV"
+          echo "OLD_WWW_ID=$old_www_id" >> "$GITHUB_ENV"
+          echo "OLD_APEX_ID=$old_apex_id" >> "$GITHUB_ENV"
           echo "PRE_CUTOVER_WWW_SERVICE=$old_www"
           echo "PRE_CUTOVER_APEX_SERVICE=$old_apex"
 
@@ -77,11 +80,13 @@ jobs:
           curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data "$purge_probe" "$api/zones/$zid/purge_cache" -o /tmp/purge-probe.json
           jq -e '.success == true' /tmp/purge-probe.json >/dev/null
 
-          [ "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")" = 204 ]
+          health="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+          echo "V7_PREFLIGHT_HEALTH_HTTP=$health"
+          test "$health" = 204
           node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
           echo 'PRE_CUTOVER_GATE=PASS'
 
-      - name: Promote www first and verify
+      - name: Transfer www to v7 and verify
         shell: bash
         run: |
           set -euo pipefail
@@ -89,37 +94,52 @@ jobs:
           api='https://api.cloudflare.com/client/v4'
 
           attach(){
-            host="$1"; service="$2"
+            host="$1"; service="$2"; out="$3"
             body="$(jq -nc --arg h "$host" --arg s "$service" --arg z "$ZONE_ID" --arg zn "$ZONE_NAME" '{hostname:$h,service:$s,zone_id:$z,zone_name:$zn}')"
-            curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains"
+            code="$(curl -sS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" -o "$out" -w '%{http_code}' "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains")"
+            echo "ATTACH host=$host service=$service HTTP=$code"
+            test "$code" = 200
+            jq -e --arg h "$host" --arg s "$service" '.success == true and .result.hostname==$h and .result.service==$s' "$out" >/dev/null
+          }
+          detach_id(){
+            id="$1"; out="$2"
+            code="$(curl -sS -X DELETE "${auth[@]}" -o "$out" -w '%{http_code}' "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains/$id")"
+            echo "DETACH id=$id HTTP=$code"
+            test "$code" = 200
+            jq -e '.success == true' "$out" >/dev/null
+          }
+          current_id(){
+            host="$1"
+            curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" | jq -r --arg h "$host" '.result[]? | select(.hostname==$h) | .id' | head -n1
           }
           rollback_www(){
+            set +e
             echo "Rolling www back to $OLD_WWW"
-            attach 'www.certivoiq.com' "$OLD_WWW" >/tmp/rollback-www.json || true
+            cid="$(current_id 'www.certivoiq.com')"
+            if [ -n "$cid" ]; then detach_id "$cid" /tmp/rollback-detach-www.json || true; fi
+            attach 'www.certivoiq.com' "$OLD_WWW" /tmp/rollback-attach-www.json || true
           }
           trap 'rollback_www' ERR
 
-          attach 'www.certivoiq.com' "$TARGET_WORKER" >/tmp/attach-www.json
-          jq -e --arg w "$TARGET_WORKER" '.success == true and .result.hostname=="www.certivoiq.com" and .result.service==$w' /tmp/attach-www.json >/dev/null
-
-          curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-www.json
-          jq -e --arg w "$TARGET_WORKER" '[.result[]|select(.hostname=="www.certivoiq.com" and .service==$w)]|length==1' /tmp/domains-www.json >/dev/null
-          curl -fsS "${auth[@]}" "$api/zones/$ZONE_ID/workers/routes" -o /tmp/routes-www.json
-          jq -e '.success == true and (.result|length)==0' /tmp/routes-www.json >/dev/null
+          detach_id "$OLD_WWW_ID" /tmp/detach-www.json
+          attach 'www.certivoiq.com' "$TARGET_WORKER" /tmp/attach-www.json
 
           ok=0
-          for i in $(seq 1 12); do
+          for i in $(seq 1 20); do
             code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" https://www.certivoiq.com/api/internal/runtime-health)"
             echo "www health attempt $i HTTP $code"
             if [ "$code" = 204 ]; then ok=1; break; fi
-            sleep 4
+            sleep 3
           done
           test "$ok" = 1
           node scripts/verify-cloudflare-live-response.mjs https://www.certivoiq.com
-          trap - ERR
-          echo 'WWW_PROMOTION_GATE=PASS'
 
-      - name: Promote apex second, purge both hostnames, and verify final state
+          curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-www.json
+          jq -e --arg w "$TARGET_WORKER" '[.result[]|select(.hostname=="www.certivoiq.com" and .service==$w)]|length==1' /tmp/domains-www.json >/dev/null
+          trap - ERR
+          echo 'WWW_TRANSFER_GATE=PASS'
+
+      - name: Transfer apex to v7, purge both hostnames, and verify final state
         shell: bash
         run: |
           set -euo pipefail
@@ -127,19 +147,40 @@ jobs:
           api='https://api.cloudflare.com/client/v4'
 
           attach(){
-            host="$1"; service="$2"
+            host="$1"; service="$2"; out="$3"
             body="$(jq -nc --arg h "$host" --arg s "$service" --arg z "$ZONE_ID" --arg zn "$ZONE_NAME" '{hostname:$h,service:$s,zone_id:$z,zone_name:$zn}')"
-            curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains"
+            code="$(curl -sS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" -o "$out" -w '%{http_code}' "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains")"
+            echo "ATTACH host=$host service=$service HTTP=$code"
+            test "$code" = 200
+            jq -e --arg h "$host" --arg s "$service" '.success == true and .result.hostname==$h and .result.service==$s' "$out" >/dev/null
+          }
+          detach_id(){
+            id="$1"; out="$2"
+            code="$(curl -sS -X DELETE "${auth[@]}" -o "$out" -w '%{http_code}' "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains/$id")"
+            echo "DETACH id=$id HTTP=$code"
+            test "$code" = 200
+            jq -e '.success == true' "$out" >/dev/null
+          }
+          current_id(){
+            host="$1"
+            curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" | jq -r --arg h "$host" '.result[]? | select(.hostname==$h) | .id' | head -n1
+          }
+          restore_host(){
+            host="$1"; old_service="$2"; label="$3"
+            cid="$(current_id "$host")"
+            if [ -n "$cid" ]; then detach_id "$cid" "/tmp/rollback-detach-$label.json" || true; fi
+            attach "$host" "$old_service" "/tmp/rollback-attach-$label.json" || true
           }
           rollback_all(){
-            echo "Rolling apex back to $OLD_APEX and www back to $OLD_WWW"
-            attach 'certivoiq.com' "$OLD_APEX" >/tmp/rollback-apex.json || true
-            attach 'www.certivoiq.com' "$OLD_WWW" >/tmp/rollback-www.json || true
+            set +e
+            echo "Rolling both domains back to v5 services"
+            restore_host 'certivoiq.com' "$OLD_APEX" apex
+            restore_host 'www.certivoiq.com' "$OLD_WWW" www
           }
           trap 'rollback_all' ERR
 
-          attach 'certivoiq.com' "$TARGET_WORKER" >/tmp/attach-apex.json
-          jq -e --arg w "$TARGET_WORKER" '.success == true and .result.hostname=="certivoiq.com" and .result.service==$w' /tmp/attach-apex.json >/dev/null
+          detach_id "$OLD_APEX_ID" /tmp/detach-apex.json
+          attach 'certivoiq.com' "$TARGET_WORKER" /tmp/attach-apex.json
 
           purge_body="$(jq -nc '{hosts:["www.certivoiq.com","certivoiq.com"]}')"
           curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data "$purge_body" "$api/zones/$ZONE_ID/purge_cache" -o /tmp/purge-final.json
@@ -153,11 +194,11 @@ jobs:
 
           for host in certivoiq.com www.certivoiq.com; do
             ok=0
-            for i in $(seq 1 12); do
+            for i in $(seq 1 20); do
               code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "https://$host/api/internal/runtime-health")"
               echo "$host health attempt $i HTTP $code"
               if [ "$code" = 204 ]; then ok=1; break; fi
-              sleep 4
+              sleep 3
             done
             test "$ok" = 1
             node scripts/verify-cloudflare-live-response.mjs "https://$host"
