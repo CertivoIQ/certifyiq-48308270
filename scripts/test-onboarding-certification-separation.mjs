@@ -69,16 +69,24 @@ test("scanned PDF OCR handles blank pages and form layouts without weakening evi
 test("complete Tenant Income Certification field registry is exposed in source-form order", () => {
   for (const required of [
     "current_date", "property_name", "building_identification_number", "unit_number", "unit_bedrooms",
-    "household_member_1_race", "household_member_1_ethnicity", "household_member_1_disability", "household_member_1_gender",
-    "total_income_e", "asset_actual_income_below_iit", "asset_1_current_disposed", "asset_1_category", "asset_1_income_method",
-    "total_nnpp", "total_income_assets_m", "household_annual_income", "applicable_lihtc_income_limit",
-    "tenant_paid_rent", "utility_allowance", "rent_assistance", "other_non_optional_charges", "gross_rent",
-    "all_occupants_full_time_students", "student_exception_code", "program_type_pennhomes", "program_type_pennhomes_home",
+    "total_income_e", "asset_actual_income_below_iit", "total_nnpp", "total_income_assets_m",
+    "household_annual_income", "applicable_lihtc_income_limit", "tenant_paid_rent", "utility_allowance",
+    "rent_assistance", "other_non_optional_charges", "gross_rent", "all_occupants_full_time_students",
+    "student_exception_code", "program_type_pennhomes", "program_type_pennhomes_home",
     "tenant_signature_date", "owner_representative_signature_date",
   ]) assert.match(ticRegistry, new RegExp(`\\b${required}\\b`));
 
   assert.match(ticRegistry, /Array\.from\(\{ length: 7 \}/);
   assert.match(ticRegistry, /Array\.from\(\{ length: 8 \}/);
+  for (const generated of [
+    "household_member_\\$\\{member\\}_race",
+    "household_member_\\$\\{member\\}_ethnicity",
+    "household_member_\\$\\{member\\}_disability",
+    "household_member_\\$\\{member\\}_gender",
+    "asset_\\$\\{row\\}_current_disposed",
+    "asset_\\$\\{row\\}_category",
+    "asset_\\$\\{row\\}_income_method",
+  ]) assert.match(ticRegistry, new RegExp(generated));
   assert.match(uploadPanel, /TIC_FIELD_DEFINITIONS/);
   assert.match(uploadPanel, /CertivoIqTicReviewForm/);
   for (const heading of [
