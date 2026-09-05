@@ -5,7 +5,16 @@ import { CertificationReviewPanel } from "@/components/certification-review-pane
 import { Button } from "@/components/ui/button";
 import { Building2 } from "lucide-react";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+type FilesSearch = {
+  item?: string;
+};
+
 export const Route = createFileRoute("/files/")({
+  validateSearch: (search: Record<string, unknown>): FilesSearch => ({
+    item: typeof search.item === "string" && UUID_PATTERN.test(search.item) ? search.item : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Certification Review Queue — CertivoIQ" },
@@ -17,6 +26,8 @@ export const Route = createFileRoute("/files/")({
 });
 
 function FilesPage() {
+  const { item } = Route.useSearch();
+
   return (
     <AppShell
       title="Certification review queue"
@@ -28,7 +39,7 @@ function FilesPage() {
           <p className="font-medium">Review only when you choose</p>
           <p className="mt-1 text-muted-foreground">Property, unit, tenant, and document intake does not automatically enter compliance review. Select the certifications you want reviewed below.</p>
         </div>
-        <CertificationReviewPanel />
+        <CertificationReviewPanel initialItemId={item} />
       </FreeReviewLeadGate>
     </AppShell>
   );
