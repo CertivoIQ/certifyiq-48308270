@@ -49,22 +49,33 @@ jobs:
           for name in "${required[@]}"; do
             test -n "${!name:-}" || { echo "Missing required GitHub secret: $name"; exit 1; }
           done
+          echo 'REQUIRED_GITHUB_SECRETS=PASS'
 
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
           api='https://api.cloudflare.com/client/v4'
-          test "$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")" = 200
+          settings_code="$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
+          echo "TARGET_SETTINGS_HTTP=$settings_code"
+          test "$settings_code" = 200
 
           curl -fsS "${auth[@]}" "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zone_count="$(jq -r '.result|length' /tmp/zones.json)"
+          echo "ZONE_MATCH_COUNT=$zone_count"
           zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
           test -n "$zid"
           echo "ZONE_ID=$zid" >> "$GITHUB_ENV"
 
           curl -fsS "${auth[@]}" "$api/zones/$zid/workers/routes" -o /tmp/routes-before.json
+          routes_count="$(jq -r '.result|length' /tmp/routes-before.json)"
+          echo "WORKER_ROUTES_COUNT=$routes_count"
           jq -e '.success == true and (.result|length)==0' /tmp/routes-before.json >/dev/null
 
           curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-before.json
-          test "$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)" = 'certivoiq-launch-candidate-20260904-v3'
-          test "$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)" = 'certivoiq-launch-candidate-20260904-v3'
+          www_service="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)"
+          apex_service="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)"
+          echo "WWW_SERVICE=$www_service"
+          echo "APEX_SERVICE=$apex_service"
+          test "$www_service" = 'certivoiq-launch-candidate-20260904-v3'
+          test "$apex_service" = 'certivoiq-launch-candidate-20260904-v3'
           echo 'ISOLATION_PREFLIGHT=PASS'
 
       - name: Bind production runtime secrets to v5 only
