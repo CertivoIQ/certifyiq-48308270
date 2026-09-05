@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+/* eslint-disable react/prop-types, react/jsx-props-no-spreading */
 import type { TicFieldDefinition } from "@/lib/tic-field-registry";
 import { TIC_FIELD_BY_KEY } from "@/lib/tic-field-registry";
 
