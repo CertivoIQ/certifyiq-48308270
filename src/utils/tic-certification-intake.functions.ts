@@ -7,8 +7,15 @@ import {
   ticFieldDefinition,
   ticFieldIsNumeric,
 } from "@/lib/tic-field-registry";
+import {
+  SUPPORTING_DOCUMENT_TYPE_SET,
+  supportingDocumentLabel,
+  type SupportingDocumentType,
+} from "@/lib/tic-supporting-document-registry";
+import { classifyPacketPages, groupSupportingPages } from "@/lib/tic-packet-classifier";
 
 const REVIEWER_CONFIRMED_PROVIDER = "reviewer-confirmed";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type StagedCertificationSource = {
   jobId: string;
@@ -26,6 +33,13 @@ type StagedCertificationSource = {
 type ConfirmedField = {
   field: string;
   value: string | number | null;
+};
+
+type SupportingClassificationChoice = SupportingDocumentType | "tic_page";
+
+type SupportingDocumentChoice = {
+  id: string;
+  documentType: SupportingClassificationChoice;
 };
 
 function validateSource(source: StagedCertificationSource) {
@@ -56,6 +70,17 @@ function normalizeConfirmedValue(field: string, value: string | number | null) {
   const text = String(value).trim();
   if (text.length > 500) throw new Error(`${ticFieldDefinition(field)?.label ?? field} is too long.`);
   return text || null;
+}
+
+function packetPagesFromMarkedText(text: string) {
+  const matches = [...text.matchAll(/^\s*page\s+(\d{1,3})\s*$/gim)];
+  if (!matches.length) return text.trim() ? [{ page: 1, text: text.trim() }] : [];
+  return matches.map((match, index) => {
+    const page = Number(match[1]);
+    const start = (match.index ?? 0) + match[0].length;
+    const end = index + 1 < matches.length ? (matches[index + 1]!.index ?? text.length) : text.length;
+    return { page, text: text.slice(start, end).trim() };
+  }).filter((page) => Number.isInteger(page.page) && page.page >= 1 && page.text);
 }
 
 async function extractStagedSource(supabase: any, userId: string, source: StagedCertificationSource) {
@@ -112,16 +137,46 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
   const confidence = result.facts.length
     ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length
     : 0;
-  return { result, confidence, sourceSha256 };
+  const packetPages = packetPagesFromMarkedText(documentText);
+  const pageClassifications = classifyPacketPages(packetPages);
+  const supportingDocuments = groupSupportingPages(pageClassifications);
+  return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments };
 }
 
-/** Read staged source bytes and return a complete, editable TIC preview. */
+export const listCertificationTenantDestinations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const db = context.supabase as any;
+    const { data, error } = await db
+      .from("portfolio_tenant_profiles")
+      .select("id, household_name, property_id, unit_id, certification_type, certification_effective_date, portfolio_units(unit_number), portfolio_properties(name)")
+      .eq("user_id", context.userId)
+      .order("household_name")
+      .limit(2000);
+    if (error) throw error;
+    return (data ?? []).map((profile: any) => ({
+      id: profile.id,
+      householdName: profile.household_name,
+      propertyId: profile.property_id,
+      unitId: profile.unit_id,
+      propertyName: profile.portfolio_properties?.name ?? null,
+      unitNumber: profile.portfolio_units?.unit_number ?? null,
+      certificationType: profile.certification_type ?? null,
+      certificationEffectiveDate: profile.certification_effective_date ?? null,
+    }));
+  });
+
+/** Read staged source bytes and return a complete, editable TIC preview plus read-only packet documents. */
 export const extractCertificationTicPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { source: StagedCertificationSource }) => ({ source: validateSource(data.source) }))
   .handler(async ({ data, context }) => {
     try {
-      const { result, confidence } = await extractStagedSource(context.supabase, context.userId, data.source);
+      const { result, confidence, pageClassifications, supportingDocuments } = await extractStagedSource(
+        context.supabase,
+        context.userId,
+        data.source,
+      );
       const signed = await context.supabase.storage
         .from("certification-imports")
         .createSignedUrl(data.source.storagePath, 20 * 60);
@@ -139,6 +194,8 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
         extractionProvider: result.provider,
         confidence,
         sourcePreviewUrl: signed.data?.signedUrl ?? null,
+        pageClassifications,
+        supportingDocuments,
       } as const;
     } catch (error) {
       return { error: error instanceof Error ? error.message : "The certification document could not be extracted." } as const;
@@ -146,14 +203,21 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
   });
 
 /**
- * Save reviewer-confirmed TIC values. OCR-proposed fields keep their source page
- * and snippet. Supported fields supplied during review that OCR missed are
- * recorded separately and are never misrepresented as OCR-derived evidence.
+ * Save reviewer-confirmed TIC values and preserve supporting pages as read-only
+ * tenant documents beneath the certification. OCR-proposed fields keep source
+ * provenance; values supplied during review are never represented as OCR facts.
  */
 export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { source: StagedCertificationSource; fields: ConfirmedField[]; startReview?: boolean }) => {
+  .inputValidator((data: {
+    source: StagedCertificationSource;
+    fields: ConfirmedField[];
+    tenantProfileId: string;
+    supportingDocuments?: SupportingDocumentChoice[];
+    startReview?: boolean;
+  }) => {
     const source = validateSource(data.source);
+    if (!UUID_PATTERN.test(String(data.tenantProfileId ?? ""))) throw new Error("Select the tenant file for this certification.");
     if (!Array.isArray(data.fields) || data.fields.length > TIC_FIELD_KEYS.length) {
       throw new Error("The TIC field confirmation is invalid.");
     }
@@ -164,12 +228,45 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       seen.add(entry.field);
       return { field: entry.field, value: entry.value ?? null };
     });
-    return { source, fields, startReview: data.startReview === true };
+    const supportingDocuments = Array.isArray(data.supportingDocuments)
+      ? data.supportingDocuments.map((entry) => {
+          if (!entry?.id || entry.id.length > 200) throw new Error("A supporting-document page group is invalid.");
+          const type = entry.documentType;
+          if (type !== "tic_page" && !SUPPORTING_DOCUMENT_TYPE_SET.has(type)) {
+            throw new Error("A supporting-document type is invalid.");
+          }
+          return { id: entry.id, documentType: type };
+        })
+      : [];
+    if (new Set(supportingDocuments.map((entry) => entry.id)).size !== supportingDocuments.length) {
+      throw new Error("A supporting-document page group was submitted more than once.");
+    }
+    return {
+      source,
+      fields,
+      tenantProfileId: data.tenantProfileId,
+      supportingDocuments,
+      startReview: data.startReview === true,
+    };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const db = supabase as any;
-    const { result, confidence, sourceSha256 } = await extractStagedSource(supabase, userId, data.source);
+    const { result, confidence, sourceSha256, supportingDocuments: serverSupportingDocuments } = await extractStagedSource(
+      supabase,
+      userId,
+      data.source,
+    );
+
+    const { data: tenant, error: tenantError } = await db
+      .from("portfolio_tenant_profiles")
+      .select("id, property_id, unit_id, household_name")
+      .eq("id", data.tenantProfileId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (tenantError) throw tenantError;
+    if (!tenant) throw new Error("The selected tenant file is not available to this account.");
+
     const originalByField = new Map(result.facts.map((fact) => [fact.field, fact]));
     const submittedByField = new Map(data.fields.map((entry) => [entry.field, entry.value]));
     const originalExtractedData = Object.fromEntries(result.facts.map((fact) => [fact.field, fact.value]));
@@ -183,7 +280,6 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       const submitted = wasSubmitted ? submittedByField.get(field)! : original?.value ?? null;
       const confirmed = normalizeConfirmedValue(field, submitted as string | number | null);
       if (confirmed !== null) confirmedExtractedData[field] = confirmed;
-
       if (original) {
         if (JSON.stringify(confirmed) !== JSON.stringify(original.value)) {
           corrections.push({ field, extractedValue: original.value, confirmedValue: confirmed });
@@ -193,12 +289,22 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       }
     }
 
+    const choiceByGroup = new Map(data.supportingDocuments.map((entry) => [entry.id, entry.documentType]));
+    const finalSupportingDocuments = serverSupportingDocuments
+      .map((group) => ({ ...group, documentType: choiceByGroup.get(group.id) ?? group.documentType }))
+      .filter((group) => group.documentType !== "tic_page") as Array<
+        (typeof serverSupportingDocuments)[number] & { documentType: SupportingDocumentType }
+      >;
+
     const confirmedAt = new Date().toISOString();
     const { data: item, error: itemError } = await db
       .from("certification_import_items")
       .insert({
         job_id: data.source.jobId,
         user_id: userId,
+        property_id: tenant.property_id,
+        unit_id: tenant.unit_id,
+        tenant_profile_id: tenant.id,
         storage_path: data.source.storagePath,
         original_file_name: data.source.originalFileName,
         mime_type: data.source.mimeType,
@@ -211,10 +317,17 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
           type: "tic_pre_save_confirmation",
           confirmed_at: confirmedAt,
           reviewer_id: userId,
+          tenant_profile_id: tenant.id,
           original_extracted_data: originalExtractedData,
           confirmed_extracted_data: confirmedExtractedData,
           corrections,
           reviewer_supplied_fields: reviewerSuppliedFields,
+          preserved_supporting_documents: finalSupportingDocuments.map((document) => ({
+            type: document.documentType,
+            page_start: document.pageStart,
+            page_end: document.pageEnd,
+            page_numbers: document.pageNumbers,
+          })),
         }],
         confidence,
         processed_at: confirmedAt,
@@ -253,6 +366,38 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         if (factError) throw factError;
       }
 
+      if (finalSupportingDocuments.length) {
+        const supportingRows = finalSupportingDocuments.map((document) => ({
+          user_id: userId,
+          tenant_profile_id: tenant.id,
+          certification_import_item_id: item.id,
+          storage_path: data.source.storagePath,
+          original_file_name: data.source.originalFileName,
+          document_category: "certification_support",
+          document_type: document.documentType,
+          display_name: supportingDocumentLabel(document.documentType),
+          mime_type: data.source.mimeType,
+          size_bytes: data.source.sizeBytes,
+          sha256: sourceSha256,
+          source_kind: "packet_page_range",
+          source_page_start: document.pageStart,
+          source_page_end: document.pageEnd,
+          source_page_numbers: document.pageNumbers,
+          classification_confidence: document.confidence,
+          classification_basis: document.classificationBasis,
+          immutable: true,
+          printable: true,
+          review_status: "pending_review",
+          metadata: {
+            parent_file_name: data.source.originalFileName,
+            parent_sha256: sourceSha256,
+            source_page_reference: true,
+          },
+        }));
+        const { error: supportingError } = await supabaseAdmin.from("portfolio_tenant_documents").insert(supportingRows);
+        if (supportingError) throw supportingError;
+      }
+
       const itemCompletion = data.startReview
         ? {
             status: "completed",
@@ -277,6 +422,8 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         .eq("user_id", userId);
       if (completeError) throw completeError;
     } catch (error) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("portfolio_tenant_documents").delete().eq("certification_import_item_id", item.id);
       await db.from("certification_import_items").delete().eq("id", item.id).eq("user_id", userId);
       throw error;
     }
@@ -286,9 +433,69 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       extractedData: confirmedExtractedData,
       correctionCount: corrections.length,
       reviewerSuppliedCount: reviewerSuppliedFields.length,
+      supportingDocumentCount: finalSupportingDocuments.length,
+      tenantProfileId: tenant.id,
       reviewQueueStatus: data.startReview ? "queued" : "not_queued",
       queuedForReview: data.startReview,
     } as const;
+  });
+
+export const listCertificationSupportingDocuments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { itemId: string }) => {
+    if (!UUID_PATTERN.test(String(data?.itemId ?? ""))) throw new Error("A certification item id is required.");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
+    const { data: rows, error } = await db
+      .from("portfolio_tenant_documents")
+      .select("id, certification_import_item_id, tenant_profile_id, storage_path, original_file_name, document_category, document_type, display_name, mime_type, size_bytes, sha256, source_kind, source_page_start, source_page_end, source_page_numbers, classification_confidence, classification_basis, immutable, printable, review_status, reviewed_at, created_at")
+      .eq("certification_import_item_id", data.itemId)
+      .eq("user_id", context.userId)
+      .order("source_page_start", { ascending: true });
+    if (error) throw error;
+
+    return Promise.all((rows ?? []).map(async (row: any) => {
+      const signed = await context.supabase.storage
+        .from("certification-imports")
+        .createSignedUrl(row.storage_path, 20 * 60);
+      const baseUrl = signed.data?.signedUrl ?? null;
+      const pageFragment = row.source_page_start && /application\/pdf/i.test(row.mime_type ?? "")
+        ? `#page=${row.source_page_start}`
+        : "";
+      return {
+        ...row,
+        display_name: row.display_name ?? supportingDocumentLabel(row.document_type),
+        open_url: baseUrl ? `${baseUrl}${pageFragment}` : null,
+        page_range_label: row.source_page_start
+          ? row.source_page_end && row.source_page_end !== row.source_page_start
+            ? `Pages ${row.source_page_start}–${row.source_page_end}`
+            : `Page ${row.source_page_start}`
+          : "Standalone document",
+      };
+    }));
+  });
+
+export const markCertificationSupportingDocumentReviewed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { documentId: string }) => {
+    if (!UUID_PATTERN.test(String(data?.documentId ?? ""))) throw new Error("A tenant document id is required.");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
+    const reviewedAt = new Date().toISOString();
+    const { data: row, error } = await db
+      .from("portfolio_tenant_documents")
+      .update({ review_status: "reviewed", reviewed_at: reviewedAt, reviewed_by: context.userId })
+      .eq("id", data.documentId)
+      .eq("user_id", context.userId)
+      .select("id, review_status, reviewed_at")
+      .maybeSingle();
+    if (error) throw error;
+    if (!row) throw new Error("That supporting document is not available.");
+    return row;
   });
 
 export const cancelCertificationTicPreview = createServerFn({ method: "POST" })
