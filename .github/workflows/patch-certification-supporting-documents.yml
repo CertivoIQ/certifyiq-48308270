@@ -1,0 +1,51 @@
+name: Patch certification supporting documents into review
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-certification-supporting-documents.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Add supporting document shelf to review panel
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/components/certification-review-panel.tsx')
+          text = path.read_text()
+
+          import_anchor = "import { useAccount } from '@/hooks/use-account';\n"
+          import_line = "import { CertificationSupportingDocumentsPanel } from '@/components/certification-supporting-documents-panel';\n"
+          if import_line not in text:
+              if import_anchor not in text:
+                  raise SystemExit('Review import anchor not found')
+              text = text.replace(import_anchor, import_anchor + import_line, 1)
+
+          body_anchor = """                )}\n              </div>\n            );\n"""
+          body_replacement = """                )}\n                {item.id === activeId ? <CertificationSupportingDocumentsPanel itemId={item.id} /> : null}\n              </div>\n            );\n"""
+          if 'CertificationSupportingDocumentsPanel itemId={item.id}' not in text:
+              if body_anchor not in text:
+                  raise SystemExit('Review card insertion anchor not found')
+              text = text.replace(body_anchor, body_replacement, 1)
+
+          path.write_text(text)
+          PY
+      - name: Commit review integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'CertivoIQ Release Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/components/certification-review-panel.tsx
+          git diff --cached --check
+          git commit -m 'Show supporting tenant documents in certification review'
+          git push origin HEAD:main
