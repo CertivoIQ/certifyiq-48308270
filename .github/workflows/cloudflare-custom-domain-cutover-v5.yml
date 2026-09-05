@@ -1,0 +1,163 @@
+name: CertivoIQ v5 custom-domain production cutover
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/cloudflare-custom-domain-cutover-v5.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-launch-candidate-20260904-v5
+      TARGET_URL: https://certivoiq-launch-candidate-20260904-v5.rodsheka-watkins.workers.dev
+      ZONE_NAME: certivoiq.com
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require production credentials and expected UI source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${OPERATIONS_WORKER_SECRET:-}"
+          grep -R -F -q 'Upload Certification & OCR' src
+          grep -R -F -q 'Onboarding & Portfolio Setup' src
+          echo 'SOURCE_AND_CREDENTIAL_GATE=PASS'
+
+      - name: Preflight target Worker, zone, empty Worker Routes, domains, and cache-purge permission
+        id: preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          api='https://api.cloudflare.com/client/v4'
+
+          code="$(curl -sS -o /tmp/target-settings.json -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")"
+          test "$code" = 200
+
+          curl -fsS "${auth[@]}" "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zid"
+          echo "ZONE_ID=$zid" >> "$GITHUB_ENV"
+
+          curl -fsS "${auth[@]}" "$api/zones/$zid/workers/routes" -o /tmp/routes-before.json
+          jq -e '.success == true and (.result|length)==0' /tmp/routes-before.json >/dev/null
+
+          curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-before.json
+          jq -e '.success == true' /tmp/domains-before.json >/dev/null
+          www_count="$(jq '[.result[]|select(.hostname=="www.certivoiq.com")]|length' /tmp/domains-before.json)"
+          apex_count="$(jq '[.result[]|select(.hostname=="certivoiq.com")]|length' /tmp/domains-before.json)"
+          test "$www_count" = 1
+          test "$apex_count" = 1
+          old_www="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)"
+          old_apex="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)"
+          test -n "$old_www"
+          test -n "$old_apex"
+          echo "OLD_WWW=$old_www" >> "$GITHUB_ENV"
+          echo "OLD_APEX=$old_apex" >> "$GITHUB_ENV"
+          echo "PRE_CUTOVER_WWW_SERVICE=$old_www"
+          echo "PRE_CUTOVER_APEX_SERVICE=$old_apex"
+
+          purge_probe="$(jq -nc '{files:["https://certivoiq.com/__certivoiq_cutover_permission_probe__"]}')"
+          curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data "$purge_probe" "$api/zones/$zid/purge_cache" -o /tmp/purge-probe.json
+          jq -e '.success == true' /tmp/purge-probe.json >/dev/null
+
+          [ "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")" = 204 ]
+          node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+          echo 'PRE_CUTOVER_GATE=PASS'
+
+      - name: Promote www first and verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          api='https://api.cloudflare.com/client/v4'
+
+          attach(){
+            host="$1"; service="$2"
+            body="$(jq -nc --arg h "$host" --arg s "$service" --arg z "$ZONE_ID" --arg zn "$ZONE_NAME" '{hostname:$h,service:$s,zone_id:$z,zone_name:$zn}')"
+            curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains"
+          }
+          rollback_www(){
+            echo "Rolling www back to $OLD_WWW"
+            attach 'www.certivoiq.com' "$OLD_WWW" >/tmp/rollback-www.json || true
+          }
+          trap 'rollback_www' ERR
+
+          attach 'www.certivoiq.com' "$TARGET_WORKER" >/tmp/attach-www.json
+          jq -e --arg w "$TARGET_WORKER" '.success == true and .result.hostname=="www.certivoiq.com" and .result.service==$w' /tmp/attach-www.json >/dev/null
+
+          curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-www.json
+          jq -e --arg w "$TARGET_WORKER" '[.result[]|select(.hostname=="www.certivoiq.com" and .service==$w)]|length==1' /tmp/domains-www.json >/dev/null
+          curl -fsS "${auth[@]}" "$api/zones/$ZONE_ID/workers/routes" -o /tmp/routes-www.json
+          jq -e '.success == true and (.result|length)==0' /tmp/routes-www.json >/dev/null
+
+          ok=0
+          for i in $(seq 1 12); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" https://www.certivoiq.com/api/internal/runtime-health)"
+            echo "www health attempt $i HTTP $code"
+            if [ "$code" = 204 ]; then ok=1; break; fi
+            sleep 4
+          done
+          test "$ok" = 1
+          node scripts/verify-cloudflare-live-response.mjs https://www.certivoiq.com
+          trap - ERR
+          echo 'WWW_PROMOTION_GATE=PASS'
+
+      - name: Promote apex second, purge both hostnames, and verify final state
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          api='https://api.cloudflare.com/client/v4'
+
+          attach(){
+            host="$1"; service="$2"
+            body="$(jq -nc --arg h "$host" --arg s "$service" --arg z "$ZONE_ID" --arg zn "$ZONE_NAME" '{hostname:$h,service:$s,zone_id:$z,zone_name:$zn}')"
+            curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains"
+          }
+          rollback_all(){
+            echo "Rolling apex back to $OLD_APEX and www back to $OLD_WWW"
+            attach 'certivoiq.com' "$OLD_APEX" >/tmp/rollback-apex.json || true
+            attach 'www.certivoiq.com' "$OLD_WWW" >/tmp/rollback-www.json || true
+          }
+          trap 'rollback_all' ERR
+
+          attach 'certivoiq.com' "$TARGET_WORKER" >/tmp/attach-apex.json
+          jq -e --arg w "$TARGET_WORKER" '.success == true and .result.hostname=="certivoiq.com" and .result.service==$w' /tmp/attach-apex.json >/dev/null
+
+          purge_body="$(jq -nc '{hosts:["www.certivoiq.com","certivoiq.com"]}')"
+          curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data "$purge_body" "$api/zones/$ZONE_ID/purge_cache" -o /tmp/purge-final.json
+          jq -e '.success == true' /tmp/purge-final.json >/dev/null
+
+          curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-final.json
+          jq -e --arg w "$TARGET_WORKER" '[.result[]|select((.hostname=="www.certivoiq.com" or .hostname=="certivoiq.com") and .service==$w)]|length==2' /tmp/domains-final.json >/dev/null
+
+          curl -fsS "${auth[@]}" "$api/zones/$ZONE_ID/workers/routes" -o /tmp/routes-final.json
+          jq -e '.success == true and (.result|length)==0' /tmp/routes-final.json >/dev/null
+
+          for host in certivoiq.com www.certivoiq.com; do
+            ok=0
+            for i in $(seq 1 12); do
+              code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "https://$host/api/internal/runtime-health")"
+              echo "$host health attempt $i HTTP $code"
+              if [ "$code" = 204 ]; then ok=1; break; fi
+              sleep 4
+            done
+            test "$ok" = 1
+            node scripts/verify-cloudflare-live-response.mjs "https://$host"
+          done
+
+          trap - ERR
+          echo "CUSTOM_DOMAIN_CUTOVER=PASS target=$TARGET_WORKER rollback_www=$OLD_WWW rollback_apex=$OLD_APEX routes=EMPTY purge=PASS"
