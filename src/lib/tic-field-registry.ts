@@ -25,6 +25,10 @@ const householdMemberFields = Array.from({ length: 7 }, (_, index) => {
     field(`household_member_${member}_last_name`, `${prefix} — last name`, "Part II — Household Composition", "text"),
     field(`household_member_${member}_first_name_middle_initial`, `${prefix} — first name & middle initial`, "Part II — Household Composition", "text"),
     field(`household_member_${member}_relationship`, `${prefix} — relationship to head`, "Part II — Household Composition", "text"),
+    field(`household_member_${member}_race`, `${prefix} — race`, "Part II — Household Composition", "text"),
+    field(`household_member_${member}_ethnicity`, `${prefix} — ethnicity`, "Part II — Household Composition", "text"),
+    field(`household_member_${member}_disability`, `${prefix} — disability status`, "Part II — Household Composition", "text"),
+    field(`household_member_${member}_gender`, `${prefix} — gender`, "Part II — Household Composition", "text"),
     field(`household_member_${member}_date_of_birth`, `${prefix} — date of birth`, "Part II — Household Composition", "date"),
     field(`household_member_${member}_age`, `${prefix} — age`, "Part II — Household Composition", "number"),
     field(`household_member_${member}_full_time_student`, `${prefix} — full-time student`, "Part II — Household Composition", "yes_no"),
@@ -36,11 +40,11 @@ const incomeMemberFields = Array.from({ length: 7 }, (_, index) => {
   const member = index + 1;
   const prefix = `Household member ${member}`;
   return [
-    field(`income_member_${member}_wages_business`, `${prefix} — wages / salaries / tips / business income`, "Part III — Annual Income", "currency"),
-    field(`income_member_${member}_social_security_pension`, `${prefix} — Social Security / SSI / pension / retirement`, "Part III — Annual Income", "currency"),
-    field(`income_member_${member}_public_assistance`, `${prefix} — public assistance`, "Part III — Annual Income", "currency"),
-    field(`income_member_${member}_other_income`, `${prefix} — other income`, "Part III — Annual Income", "currency"),
-    field(`income_member_${member}_total_income`, `${prefix} — total annual income`, "Part III — Annual Income", "currency"),
+    field(`income_member_${member}_wages_business`, `${prefix} — employment or wages`, "Part III — Gross Annual Income", "currency"),
+    field(`income_member_${member}_social_security_pension`, `${prefix} — Social Security / pensions`, "Part III — Gross Annual Income", "currency"),
+    field(`income_member_${member}_public_assistance`, `${prefix} — public assistance`, "Part III — Gross Annual Income", "currency"),
+    field(`income_member_${member}_other_income`, `${prefix} — other income`, "Part III — Gross Annual Income", "currency"),
+    field(`income_member_${member}_total_income`, `${prefix} — total annual income`, "Part III — Gross Annual Income", "currency"),
   ];
 }).flat();
 
@@ -49,7 +53,10 @@ const assetRowFields = Array.from({ length: 8 }, (_, index) => {
   return [
     field(`asset_${row}_household_member_number`, `Asset ${row} — household member #`, "Part IV — Income From Assets", "number"),
     field(`asset_${row}_type`, `Asset ${row} — type of asset`, "Part IV — Income From Assets", "text"),
+    field(`asset_${row}_current_disposed`, `Asset ${row} — current / disposed`, "Part IV — Income From Assets", "text"),
+    field(`asset_${row}_category`, `Asset ${row} — NNPP / Real / Tax Relief`, "Part IV — Income From Assets", "text"),
     field(`asset_${row}_cash_value`, `Asset ${row} — cash value`, "Part IV — Income From Assets", "currency"),
+    field(`asset_${row}_income_method`, `Asset ${row} — actual / imputed`, "Part IV — Income From Assets", "text"),
     field(`asset_${row}_annual_income`, `Asset ${row} — annual income from asset`, "Part IV — Income From Assets", "currency"),
   ];
 }).flat();
@@ -63,28 +70,26 @@ const signatureFields = Array.from({ length: 7 }, (_, index) => {
 }).flat();
 
 /**
- * Comprehensive generic LIHTC Tenant Income Certification (TIC) intake schema.
- *
- * State HFAs may add or rename fields. Aliases below cover common generic/state
- * wording while the UI always shows the full registry so a reviewer can fill a
- * field that OCR did not recover. Jurisdiction-specific fields can be appended
- * without changing the confirmation contract.
+ * Comprehensive LIHTC Tenant Income Certification intake schema.
+ * Includes the data elements present on the PHFA/HOTMA TIC supplied for the
+ * CertivoIQ review workspace while retaining generic fields used by other HFAs.
  */
 export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   field("certification_type", "Certification type", "Certification", "text", ["initial certification", "recertification", "other certification", "certification type"]),
   field("other_certification_type", "Other certification type / explanation", "Certification", "text", ["other certification type", "other explanation"]),
-  field("certification_effective_date", "Certification effective date", "Certification", "date", ["certification effective date", "effective date"]),
-  field("move_in_date", "Move-in date", "Certification", "date", ["move-in date", "move in date"]),
+  field("certification_effective_date", "Effective Date", "Certification", "date", ["certification effective date", "effective date"]),
+  field("move_in_date", "Move-in Date", "Certification", "date", ["move-in date", "move in date"]),
+  field("current_date", "Current Date", "Certification", "date", ["current date"]),
   field("certification_ending_date", "Certification ending date", "Certification", "date", ["ending date", "certification ending date"]),
   field("transfer_from_unit_number", "Transfer from unit #", "Certification", "text", ["transfer from unit", "transferred from unit"]),
 
-  field("property_name", "Property name", "Part I — Development Data", "text", ["property name", "development name", "project name"]),
-  field("property_address", "Property / building address", "Part I — Development Data", "text", ["property address", "building address", "address"]),
+  field("property_name", "Property Name", "Part I — Development Data", "text", ["property name", "development name", "project name"]),
+  field("property_address", "Address", "Part I — Development Data", "text", ["property address", "building address", "address"]),
   field("county", "County", "Part I — Development Data", "text", ["county"]),
-  field("building_identification_number", "Building Identification Number (BIN)", "Part I — Development Data", "text", ["bin #", "bin number", "building identification number"]),
-  field("unit_number", "Unit number", "Part I — Development Data", "text", ["unit #", "unit number"]),
-  field("unit_bedrooms", "Number of bedrooms", "Part I — Development Data", "number", ["# bedrooms", "number of bedrooms", "bedrooms"]),
-  field("tax_credit_number", "Tax credit #", "Part I — Development Data", "text", ["tax credit #", "tax credit number"]),
+  field("building_identification_number", "BIN#", "Part I — Development Data", "text", ["bin #", "bin#", "bin number", "building identification number"]),
+  field("unit_number", "Unit Number", "Part I — Development Data", "text", ["unit #", "unit number"]),
+  field("unit_bedrooms", "# Bedrooms", "Part I — Development Data", "number", ["# bedrooms", "number of bedrooms", "bedrooms"]),
+  field("tax_credit_number", "TC#", "Part I — Development Data", "text", ["tc#", "tc #", "tax credit #", "tax credit number"]),
   field("home_number", "HOME #", "Part I — Development Data", "text", ["home #", "home number"]),
   field("other_program_project_number", "Other program / project #", "Part I — Development Data", "text", ["fdic #", "project #", "program #"]),
 
@@ -93,11 +98,15 @@ export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   ...householdMemberFields,
 
   ...incomeMemberFields,
-  field("household_annual_income", "Total annual household income from all sources", "Part III — Annual Income", "currency", ["total annual household income from all sources", "household annual income", "annual income", "total household income", "total annual income"]),
+  field("total_income_e", "TOTAL INCOME (E)", "Part III — Gross Annual Income", "currency", ["total income (e)", "total income e"]),
+  field("household_annual_income", "Total Annual Household Income from all Sources", "Part V — Total Household Income", "currency", ["total annual household income from all sources", "household annual income", "total household income"]),
 
+  field("asset_actual_income_below_iit", "Actual income earned from all assets (F)", "Part IV — Income From Assets", "currency", ["actual income earned from all assets", "actual income from all assets"]),
   ...assetRowFields,
+  field("total_nnpp", "TOTAL of NNPP", "Part IV — Income From Assets", "currency", ["total of nnpp", "total nnpp", "net family assets"]),
+  field("total_income_assets_m", "TOTAL INCOME FROM ASSETS (M)", "Part IV — Income From Assets", "currency", ["total income from assets (m)", "total income from assets"]),
   field("total_asset_cash_value", "Total cash value of assets", "Part IV — Income From Assets", "currency", ["total cash value of assets", "total cash value"]),
-  field("total_asset_annual_income", "Total annual income from assets", "Part IV — Income From Assets", "currency", ["total annual income from assets", "total income from assets"]),
+  field("total_asset_annual_income", "Total annual income from assets", "Part IV — Income From Assets", "currency", ["total annual income from assets"]),
   field("household_net_assets", "Net family / household assets", "Part IV — Income From Assets", "currency", ["household net assets", "net family assets", "net assets"]),
   field("assets_disposed_less_than_fair_market_value", "Assets disposed of for less than fair market value in the prior 2 years", "Part IV — Income From Assets", "yes_no", ["assets disposed", "less than fair market value", "disposed of assets"]),
   field("assets_disposed_amount", "Amount / value of assets disposed of", "Part IV — Income From Assets", "currency", ["amount disposed", "value of assets disposed"]),
@@ -105,39 +114,46 @@ export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   field("hotma_asset_cap", "HOTMA asset cap", "Part IV — Income From Assets", "currency", ["hotma asset cap", "asset cap"]),
   field("hotma_asset_limit_exception", "HOTMA asset-limit exception / exclusion", "Part IV — Income From Assets", "text", ["asset limit exception", "asset exception", "asset exclusion"]),
 
-  field("applicable_lihtc_income_limit", "Current / applicable income limit per family size", "Part V — Determination of Income Eligibility", "currency", ["current income limit per family size", "applicable lihtc income limit", "applicable income limit", "60% income limit", "50% income limit"]),
-  field("current_income_limit_140_percent", "Current income limit × 140% (recertification)", "Part V — Determination of Income Eligibility", "currency", ["current income limit x 140%", "current income limit × 140%", "140% income limit"]),
-  field("income_exceeds_140_percent", "Household income exceeds 140% at recertification", "Part V — Determination of Income Eligibility", "yes_no", ["household income exceeds 140%", "income exceeds 140%"]),
-  field("household_income_at_move_in", "Household income at move-in", "Part V — Determination of Income Eligibility", "currency", ["household income at move-in", "household income at move in"]),
-  field("household_size_at_move_in", "Household size at move-in", "Part V — Determination of Income Eligibility", "number", ["household size at move-in", "household size at move in"]),
-  field("household_income_restriction_percent", "Household meets income restriction at (%)", "Part V — Determination of Income Eligibility", "number", ["household meets income restriction at", "income restriction at"]),
-  field("lihtc_income_limit_basis_pct", "LIHTC income-limit basis / unit designation (%)", "Part V — Determination of Income Eligibility", "number", ["income limit basis", "unit income designation", "imputed income limitation"]),
-  field("lihtc_minimum_set_aside_election", "LIHTC minimum set-aside election", "Part V — Determination of Income Eligibility", "text", ["minimum set-aside election", "minimum set aside election", "20-50", "40-60", "average income"]),
+  field("applicable_lihtc_income_limit", "Current Income Limit per Family Size", "Part VI — Determination of Income Eligibility", "currency", ["current income limit per family size", "applicable lihtc income limit", "applicable income limit"]),
+  field("current_income_limit_140_percent", "Current Income Limit × 140%", "Part VI — Determination of Income Eligibility", "currency", ["current income limit x 140%", "current income limit × 140%", "140% income limit"]),
+  field("income_exceeds_140_percent", "Household Income exceeds 140% at recertification", "Part VI — Determination of Income Eligibility", "yes_no", ["household income exceeds 140%", "income exceeds 140%"]),
+  field("household_income_at_move_in", "Household Income at Move-in", "Part VI — Determination of Income Eligibility", "currency", ["household income at move-in", "household income at move in"]),
+  field("household_size_at_move_in", "Household Size at Move-in", "Part VI — Determination of Income Eligibility", "number", ["household size at move-in", "household size at move in"]),
+  field("household_income_restriction_percent", "Household Meets Income Restriction at (%)", "Part VI — Determination of Income Eligibility", "number", ["household meets current income restriction at", "household meets income restriction at", "income restriction at"]),
+  field("lihtc_income_limit_basis_pct", "LIHTC income-limit basis / unit designation (%)", "Part VI — Determination of Income Eligibility", "number", ["income limit basis", "unit income designation", "imputed income limitation"]),
+  field("lihtc_minimum_set_aside_election", "LIHTC minimum set-aside election", "Part VI — Determination of Income Eligibility", "text", ["minimum set-aside election", "minimum set aside election", "20-50", "40-60", "average income"]),
 
-  field("tenant_paid_rent", "Tenant-paid rent", "Part VI — Rent", "currency", ["tenant paid rent", "tenant-paid rent"]),
-  field("utility_allowance", "Utility allowance amount", "Part VI — Rent", "currency", ["utility allowance"]),
-  field("utility_allowance_source", "Utility allowance source", "Part VI — Rent", "text", ["utility allowance source", "ua source"]),
-  field("rent_assistance", "Rent assistance", "Part VI — Rent", "currency", ["rent assistance", "rental assistance"]),
-  field("other_non_optional_charges", "Other non-optional charges", "Part VI — Rent", "currency", ["other non-optional charges", "other non optional charges"]),
-  field("gross_rent", "Gross rent for unit", "Part VI — Rent", "currency", ["gross rent for unit", "gross rent"]),
-  field("unit_rent_restriction_percent", "Unit meets rent restriction at (%)", "Part VI — Rent", "number", ["unit meets rent restriction at", "rent restriction at"]),
-  field("state_max_gross_rent", "Maximum rent limit for this unit", "Part VI — Rent", "currency", ["maximum rent limit for this unit", "state maximum gross rent", "max gross rent", "state max gross rent"]),
+  field("tenant_paid_rent", "Tenant Paid Rent", "Part VII — Rent", "currency", ["tenant paid rent", "tenant-paid rent"]),
+  field("utility_allowance", "Utility Allowance", "Part VII — Rent", "currency", ["utility allowance"]),
+  field("utility_allowance_source", "Utility Allowance Source", "Part VII — Rent", "text", ["utility allowance source", "ua source"]),
+  field("rent_assistance", "Rent Assistance", "Part VII — Rent", "currency", ["rent assistance", "rental assistance amount"]),
+  field("other_non_optional_charges", "Other non-optional charges", "Part VII — Rent", "currency", ["other non-optional charges", "other non optional charges"]),
+  field("gross_rent", "GROSS RENT FOR UNIT", "Part VII — Rent", "currency", ["gross rent for unit", "gross rent"]),
+  field("unit_rent_restriction_percent", "Unit Meets Rent Restriction at (%)", "Part VII — Rent", "number", ["unit meets rent restriction at", "rent restriction at"]),
+  field("state_max_gross_rent", "Maximum Rent Limit for this unit", "Part VII — Rent", "currency", ["maximum rent limit for this unit", "maximum rent limit for this unit:", "state maximum gross rent", "max gross rent"]),
+  field("rental_assistance_type", "Rental Assistance Type", "Part VII — Rent", "text", ["rental assistance type", "rent assistance type"]),
 
-  field("all_occupants_full_time_students", "Are all occupants full-time students?", "Part VII — Student Status", "yes_no", ["are all occupants full time students", "all occupants full-time students", "all occupants full time students"]),
-  field("student_exception_code", "Student exception code / explanation", "Part VII — Student Status", "text", ["student explanation", "student exception", "student exemption"]),
-  field("student_exception_tanf", "Student exception — TANF / AFDC assistance", "Part VII — Student Status", "yes_no", ["afdc", "tanf assistance"]),
-  field("student_exception_job_training", "Student exception — qualifying job training program", "Part VII — Student Status", "yes_no", ["job training program"]),
-  field("student_exception_single_parent", "Student exception — single parent with dependent child(ren)", "Part VII — Student Status", "yes_no", ["single parent", "dependent child"]),
-  field("student_exception_married_joint_return", "Student exception — married and entitled to file joint return", "Part VII — Student Status", "yes_no", ["married", "joint return"]),
-  field("student_exception_former_foster_care", "Student exception — formerly in foster care", "Part VII — Student Status", "yes_no", ["foster care"]),
+  field("all_occupants_full_time_students", "Are all occupants full-time students?", "Part VIII — Student Status", "yes_no", ["are all occupants full-time students", "are all occupants full time students", "all occupants full-time students"]),
+  field("student_exception_code", "Student Explanation / Exception", "Part VIII — Student Status", "text", ["student explanation", "student exception", "student exemption"]),
+  field("student_exception_tanf", "Student exception — TANF / AFDC assistance", "Part VIII — Student Status", "yes_no", ["afdc", "tanf assistance"]),
+  field("student_exception_job_training", "Student exception — qualifying job training program", "Part VIII — Student Status", "yes_no", ["job training program"]),
+  field("student_exception_single_parent", "Student exception — single parent with dependent child(ren)", "Part VIII — Student Status", "yes_no", ["single parent", "dependent child"]),
+  field("student_exception_married_joint_return", "Student exception — married and entitled to file joint return", "Part VIII — Student Status", "yes_no", ["married", "joint return"]),
+  field("student_exception_former_foster_care", "Student exception — formerly in foster care", "Part VIII — Student Status", "yes_no", ["foster care"]),
 
-  field("program_type_lihtc", "Program type — LIHTC", "Part VIII — Program / Assistance", "yes_no", ["lihtc", "low income housing tax credit"]),
-  field("program_type_home", "Program type — HOME", "Part VIII — Program / Assistance", "yes_no", ["home program"]),
-  field("program_type_tax_exempt_bond", "Program type — tax-exempt bond", "Part VIII — Program / Assistance", "yes_no", ["tax-exempt bond", "tax exempt bond"]),
-  field("program_type_rural_development", "Program type — Rural Development", "Part VIII — Program / Assistance", "yes_no", ["rural development", "rd"]),
-  field("program_type_hud", "Program type — HUD / project-based assistance", "Part VIII — Program / Assistance", "yes_no", ["hud", "project based"]),
-  field("program_type_other", "Program type — other", "Part VIII — Program / Assistance", "text", ["other program"]),
-  field("rental_assistance_type", "Rental assistance type", "Part VIII — Program / Assistance", "text", ["rental assistance type", "rent assistance type"]),
+  field("program_type_lihtc", "Program type — Tax Credit", "Part IX — Program Type", "yes_no", ["tax credit", "lihtc", "low income housing tax credit"]),
+  field("program_type_home", "Program type — HOME", "Part IX — Program Type", "yes_no", ["home program"]),
+  field("program_type_tax_exempt_bond", "Program type — Tax Exempt", "Part IX — Program Type", "yes_no", ["tax exempt", "tax-exempt bond", "tax exempt bond"]),
+  field("program_type_pennhomes", "Program type — PennHOMES", "Part IX — Program Type", "yes_no", ["pennhomes"]),
+  field("program_type_pennhomes_home", "Program type — PennHOMES/HOME", "Part IX — Program Type", "yes_no", ["pennhomes/home"]),
+  field("program_type_rural_development", "Program type — Rural Development", "Part IX — Program Type", "yes_no", ["rural development", "rd"]),
+  field("program_type_hud", "Program type — HUD / project-based assistance", "Part IX — Program Type", "yes_no", ["hud", "project based"]),
+  field("program_type_other", "Program type — other", "Part IX — Program Type", "text", ["other program"]),
+  field("program_lihtc_income_status", "Tax Credit income status", "Part IX — Program Type", "text"),
+  field("program_home_income_status", "HOME income status", "Part IX — Program Type", "text"),
+  field("program_tax_exempt_income_status", "Tax Exempt income status", "Part IX — Program Type", "text"),
+  field("program_pennhomes_income_status", "PennHOMES income status", "Part IX — Program Type", "text"),
+  field("program_pennhomes_home_income_status", "PennHOMES/HOME income status", "Part IX — Program Type", "text"),
 
   ...signatureFields,
   field("tenant_signature_date", "Tenant / household certification signature date", "Household Certification & Signatures", "date", ["tenant signature date", "signature date", "signed on"]),
