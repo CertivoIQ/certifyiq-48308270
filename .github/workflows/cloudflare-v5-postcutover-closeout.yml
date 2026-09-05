@@ -12,7 +12,7 @@ permissions:
 jobs:
   closeout:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -23,8 +23,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
 
-      - name: Confirm v5 routing state before purge
+      - name: Confirm post-purge v5 routing and runtime state
         shell: bash
         run: |
           set -euo pipefail
@@ -41,99 +47,56 @@ jobs:
 
           curl -fsS "${auth[@]}" "$api/zones/$zid/workers/routes" -o /tmp/routes-before.json
           jq -e '.success == true and (.result|length)==0' /tmp/routes-before.json >/dev/null
-
           curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-before.json
           test "$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)" = "$V5_WORKER"
           test "$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)" = "$V5_WORKER"
-          echo 'PRE_PURGE_DOMAIN_GATE=V5_V5'
-          echo 'PRE_PURGE_WORKER_ROUTES=EMPTY'
 
-      - name: Purge both production hostnames
-        shell: bash
-        run: |
-          set -euo pipefail
-          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          api='https://api.cloudflare.com/client/v4'
-          body="$(jq -nc '{hosts:["www.certivoiq.com","certivoiq.com"]}')"
-          code="$(curl -sS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data "$body" -o /tmp/purge.json -w '%{http_code}' "$api/zones/$ZONE_ID/purge_cache")"
-          echo "PURGE_HTTP=$code"
-          test "$code" = 200
-          jq -e '.success == true' /tmp/purge.json >/dev/null
-          echo 'PURGE_WWW_CERTIVOIQ_COM=PASS'
-          echo 'PURGE_CERTIVOIQ_COM=PASS'
-
-      - name: Verify production runtime and edge after purge
-        shell: bash
-        run: |
-          set -euo pipefail
           health="$(curl -sS -o /tmp/health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" https://certivoiq.com/api/internal/runtime-health)"
           echo "PRODUCTION_RUNTIME_HEALTH_HTTP=$health"
           test "$health" = 204
           node scripts/verify-cloudflare-live-response.mjs https://certivoiq.com
           node scripts/verify-cloudflare-live-response.mjs https://www.certivoiq.com
-          echo 'POST_PURGE_RUNTIME_AND_EDGE_GATE=PASS'
+          echo 'POST_PURGE_V5_RUNTIME_EDGE_GATE=PASS'
 
-      - name: Verify live navigation bundle labels
+      - name: Build unchanged application source
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/live-crawl
-          mkdir -p /tmp/live-crawl
-          python3 <<'PY'
-          import re, urllib.parse, urllib.request, pathlib, sys
-          origin = 'https://certivoiq.com/'
-          out = pathlib.Path('/tmp/live-crawl')
-          headers = {'User-Agent':'CertivoIQ-production-closeout/1.0','Cache-Control':'no-cache'}
+          bun install --frozen-lockfile
+          bun run build
+          echo 'REPRODUCTION_BUILD=PASS'
 
-          def get(url):
-              req = urllib.request.Request(url, headers=headers)
-              with urllib.request.urlopen(req, timeout=20) as r:
-                  return r.geturl(), r.read()
+      - name: Verify protected live navigation asset by exact SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          nav_asset="$(find .output/public/assets -maxdepth 1 -type f -name '*.js' -print0 | while IFS= read -r -d '' f; do
+            if grep -F -q 'Upload Certification & OCR' "$f" && grep -F -q 'Onboarding & Portfolio Setup' "$f"; then
+              printf '%s\n' "$f"
+            fi
+          done | head -1)"
+          test -n "$nav_asset"
+          ! grep -F -q 'Properties & Tenant Intake' "$nav_asset"
 
-          final_url, html = get(origin)
-          (out/'root.html').write_bytes(html)
-          text = html.decode('utf-8','ignore')
-          refs = set(re.findall(r'''(?:src|href)=["']([^"']+\.js(?:\?[^"']*)?)["']''', text))
-          queue = [urllib.parse.urljoin(final_url, x) for x in refs]
-          seen = set()
-          corpus = []
-          while queue and len(seen) < 300:
-              url = queue.pop(0)
-              parsed = urllib.parse.urlparse(url)
-              if parsed.netloc not in {'certivoiq.com','www.certivoiq.com'} or not parsed.path.endswith('.js'):
-                  continue
-              clean = urllib.parse.urlunparse(parsed._replace(query='', fragment=''))
-              if clean in seen:
-                  continue
-              seen.add(clean)
-              try:
-                  resolved, data = get(clean)
-              except Exception:
-                  continue
-              js = data.decode('utf-8','ignore')
-              corpus.append((resolved, js))
-              for ref in re.findall(r'''["']([^"']+\.js(?:\?[^"']*)?)["']''', js):
-                  nxt = urllib.parse.urljoin(resolved, ref)
-                  p = urllib.parse.urlparse(nxt)
-                  if p.netloc in {'certivoiq.com','www.certivoiq.com'}:
-                      queue.append(nxt)
+          nav_name="$(basename "$nav_asset")"
+          echo "REPRODUCED_NAV_ASSET=$nav_name"
+          code="$(curl -sS -H 'Cache-Control: no-cache' -o /tmp/live-nav.js -w '%{http_code}' "https://certivoiq.com/assets/$nav_name")"
+          echo "LIVE_NAV_ASSET_HTTP=$code"
+          test "$code" = 200
 
-          expected_a = 'Upload Certification & OCR'
-          expected_b = 'Onboarding & Portfolio Setup'
-          forbidden = 'Properties & Tenant Intake'
-          matches = [(u,j) for u,j in corpus if expected_a in j and expected_b in j]
-          if not matches:
-              print(f'LIVE_JS_FILES_CRAWLED={len(corpus)}')
-              raise SystemExit('No live JavaScript asset contained both expected navigation labels')
-          if any(forbidden in j for _,j in corpus):
-              raise SystemExit('Forbidden completed-Command-Center label is still present in live JavaScript corpus')
-          url, _ = matches[0]
-          print(f'LIVE_JS_FILES_CRAWLED={len(corpus)}')
-          print(f'LIVE_NAV_ASSET={url}')
-          print('LIVE_UPLOAD_CERTIFICATION_OCR_LABEL=PASS')
-          print('LIVE_ONBOARDING_PORTFOLIO_SETUP_LABEL=PASS')
-          print('LIVE_PROPERTIES_TENANT_INTAKE_LABEL_ABSENT=PASS')
-          PY
+          local_sha="$(sha256sum "$nav_asset" | awk '{print $1}')"
+          live_sha="$(sha256sum /tmp/live-nav.js | awk '{print $1}')"
+          echo "LOCAL_NAV_SHA256=$local_sha"
+          echo "LIVE_NAV_SHA256=$live_sha"
+          test "$local_sha" = "$live_sha"
+
+          grep -F -q 'Upload Certification & OCR' /tmp/live-nav.js
+          grep -F -q 'Onboarding & Portfolio Setup' /tmp/live-nav.js
+          ! grep -F -q 'Properties & Tenant Intake' /tmp/live-nav.js
+          echo 'LIVE_UPLOAD_CERTIFICATION_OCR_LABEL=PASS'
+          echo 'LIVE_ONBOARDING_PORTFOLIO_SETUP_LABEL=PASS'
+          echo 'LIVE_PROPERTIES_TENANT_INTAKE_LABEL_ABSENT=PASS'
+          echo 'LIVE_PROTECTED_NAV_ASSET_SHA256_MATCH=PASS'
 
       - name: Verify source navigation placement regression
         shell: bash
@@ -157,7 +120,8 @@ jobs:
           test "$(curl -sS -o /tmp/v3-settings.json -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$V3_WORKER/settings")" = 200
 
           curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-final.json
-          test "$(jq '[.result[]|select((.hostname=="www.certivoiq.com" or .hostname=="certivoiq.com") and .service==$V3)]|length' --arg V3 "$V3_WORKER" /tmp/domains-final.json)" = 0
+          v3_attached="$(jq --arg v3 "$V3_WORKER" '[.result[]|select((.hostname=="www.certivoiq.com" or .hostname=="certivoiq.com") and .service==$v3)]|length' /tmp/domains-final.json)"
+          test "$v3_attached" = 0
           test "$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-final.json)" = "$V5_WORKER"
           test "$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-final.json)" = "$V5_WORKER"
 
