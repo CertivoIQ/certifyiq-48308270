@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { Link } from '@tanstack/react-router';
@@ -64,9 +64,13 @@ function formatExtractedValue(field: string, value: unknown) {
 
 type EvidenceRef = { field?: string; documentRef?: string | null; page?: number | null; snippet?: string | null };
 
-export function CertificationReviewPanel() {
+type CertificationReviewPanelProps = {
+  initialItemId?: string | null;
+};
+
+export function CertificationReviewPanel({ initialItemId = null }: CertificationReviewPanelProps) {
   const queryClient = useQueryClient();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialItemId);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [jurisdiction, setJurisdiction] = useState('');
   const [certificationType, setCertificationType] = useState<
@@ -84,6 +88,12 @@ export function CertificationReviewPanel() {
 
   const items = useQuery({ queryKey: ['certification-items'], queryFn: () => listItems() });
   const activeId = selectedId ?? items.data?.[0]?.id ?? null;
+
+  useEffect(() => {
+    if (!initialItemId) return;
+    setSelectedId(initialItemId);
+    setNotice('Saved certification opened from intake.');
+  }, [initialItemId]);
 
   const review = useQuery({
     queryKey: ['certification-review', activeId],
