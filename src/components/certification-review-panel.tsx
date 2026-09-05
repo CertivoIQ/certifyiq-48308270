@@ -6,8 +6,8 @@ import { AlertTriangle, CheckCircle2, FileSearch, HelpCircle, PlayCircle, XCircl
 import {
   getCertificationReview,
   recordFindingDecision,
-  runCertificationReview,
 } from '@/utils/certification-review.functions';
+import { runCertificationReview } from '@/utils/tic-certification-review.functions';
 import { listCertificationDocuments } from '@/utils/certification-extraction-preview.functions';
 import { markCertificationReviewFailed, queueCertificationReviews } from '@/lib/portfolio-intake.functions';
 import { useAccount } from '@/hooks/use-account';
