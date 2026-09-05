@@ -1,4 +1,5 @@
 name: CertivoIQ v7 custom-domain production cutover
+# Re-run after verified v7 production runtime bindings.
 
 on:
   workflow_dispatch:
