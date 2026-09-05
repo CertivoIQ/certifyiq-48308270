@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  FOUNDER_DEFAULT_DASHBOARD,
+  founderDashboardSessionKey,
+  isFounderUser,
+  legacyPlatformDashboardStorageKey,
+} from "@/lib/founder-access";
 
 export type PlatformDashboardMode = "multifamily" | "pha" | "executive_demo";
 
@@ -11,9 +17,6 @@ export const PLATFORM_DASHBOARD_LABELS: Record<PlatformDashboardMode, string> = 
 };
 
 const DASHBOARD_ORDER: PlatformDashboardMode[] = ["multifamily", "pha", "executive_demo"];
-const STORAGE_PREFIX = "certivoiq:platform-dashboard";
-const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
-const FOUNDER_USER_IDS = new Set(["e2f47e3c-416b-4bf5-ab5d-8e519b4afe7b"]);
 
 function isPlatformDashboardMode(value: unknown): value is PlatformDashboardMode {
   return value === "multifamily" || value === "pha" || value === "executive_demo";
@@ -29,10 +32,7 @@ export function resolvePlatformDashboardMode(
 
 export function usePlatformDashboardAccess() {
   const { user } = useSession();
-  const normalizedEmail = user?.email?.trim().toLowerCase();
-  const isFounder =
-    normalizedEmail === FOUNDER_EMAIL ||
-    (user?.id ? FOUNDER_USER_IDS.has(user.id) : false);
+  const isFounder = isFounderUser(user);
   const query = useQuery({
     queryKey: ["platform-dashboard-access", user?.id],
     enabled: !!user && !isFounder,
@@ -54,20 +54,37 @@ export function usePlatformDashboardAccess() {
     (query.data ?? []).some((row) => row.dashboard_key === mode),
   );
 
-  // The founder must never lose cross-workspace access because of a staff-role,
-  // workspace-profile, navigation, RLS-query, or email-normalization regression.
-  // Other users remain strictly entitlement-based.
+  // Founder access is a platform invariant. Ordinary users remain strictly
+  // database-entitlement based.
   const allowedModes = isFounder ? DASHBOARD_ORDER : entitledModes;
 
-  const storageKey = user ? `${STORAGE_PREFIX}:${user.id}` : null;
-  const storedMode =
-    storageKey && typeof window !== "undefined" ? window.localStorage.getItem(storageKey) : null;
-  const selectedMode =
-    isPlatformDashboardMode(storedMode) && allowedModes.includes(storedMode) ? storedMode : null;
+  const storage =
+    typeof window === "undefined"
+      ? null
+      : isFounder
+        ? window.sessionStorage
+        : window.localStorage;
+  const storageKey = user
+    ? isFounder
+      ? founderDashboardSessionKey(user.id)
+      : legacyPlatformDashboardStorageKey(user.id)
+    : null;
+  const storedMode = storage && storageKey ? storage.getItem(storageKey) : null;
+
+  // A fresh founder browser session is always anchored to the operational
+  // Multifamily dashboard. PHA and Executive may be selected during the active
+  // session, but no old browser value can survive a fresh login and take over.
+  const selectedMode: PlatformDashboardMode | null = isFounder
+    ? isPlatformDashboardMode(storedMode) && allowedModes.includes(storedMode)
+      ? storedMode
+      : FOUNDER_DEFAULT_DASHBOARD
+    : isPlatformDashboardMode(storedMode) && allowedModes.includes(storedMode)
+      ? storedMode
+      : null;
 
   const selectDashboard = (mode: PlatformDashboardMode) => {
-    if (!storageKey || !allowedModes.includes(mode) || typeof window === "undefined") return false;
-    window.localStorage.setItem(storageKey, mode);
+    if (!storage || !storageKey || !allowedModes.includes(mode)) return false;
+    storage.setItem(storageKey, mode);
     return true;
   };
 
