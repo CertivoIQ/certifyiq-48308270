@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export const STAFF_DOMAIN = "certivoiq.com";
+const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
 
 /** Live Supabase session for the browser. */
 export function useSession() {
@@ -29,13 +30,16 @@ export function useSession() {
  * CertivoIQ staff check. The `staff` role is granted server-side only after an
  * active administrator- or manager-issued invitation is accepted. Client code
  * cannot grant the role, and RLS enforces staff authorization on CRM tables.
+ * The designated founder account is a platform-level exception for navigation
+ * and staff tooling; server-side authorization remains authoritative for data.
  */
 export function useIsStaff() {
   const { user, ready } = useSession();
+  const isFounder = user?.email?.trim().toLowerCase() === FOUNDER_EMAIL;
 
   const query = useQuery({
     queryKey: ["staff-role", user?.id],
-    enabled: !!user,
+    enabled: !!user && !isFounder,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_roles")
@@ -51,7 +55,7 @@ export function useIsStaff() {
   return {
     user,
     email: user?.email ?? null,
-    isStaff: query.data === true,
-    loading: !ready || (!!user && query.isLoading),
+    isStaff: isFounder || query.data === true,
+    loading: !ready || (!!user && !isFounder && query.isLoading),
   };
 }
