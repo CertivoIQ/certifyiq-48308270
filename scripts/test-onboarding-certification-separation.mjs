@@ -8,6 +8,7 @@ const dashboard = read("src/routes/_authenticated/dashboard.tsx");
 const uploadRoute = read("src/routes/upload-certification.tsx");
 const uploadPanel = read("src/components/certification-upload-panel.tsx");
 const reviewPanel = read("src/components/certification-review-panel.tsx");
+const filesRoute = read("src/routes/files.index.tsx");
 const extractionPreview = read("src/utils/certification-extraction-preview.functions.ts");
 const propertiesRoute = read("src/routes/properties.index.tsx");
 const onboardingPanel = read("src/components/portfolio-onboarding-panel.tsx");
@@ -70,6 +71,25 @@ test("confirmed certification can be saved alone or saved and explicitly started
   assert.match(extractionPreview, /review_order:\s*Date\.now\(\) \* 1000/);
   assert.match(extractionPreview, /reviewQueueStatus:\s*data\.startReview \? "queued" : "not_queued"/);
   assert.match(extractionPreview, /queuedForReview:\s*data\.startReview/);
+});
+
+test("save and start review opens the exact saved certification in the review workspace", () => {
+  assert.match(uploadPanel, /useNavigate/);
+  assert.match(
+    uploadPanel,
+    /if \(result\.queuedForReview\) \{[\s\S]*navigate\(\{ to: "\/files", search: \{ item: result\.itemId \} \}\)/,
+  );
+
+  assert.match(filesRoute, /validateSearch/);
+  assert.match(filesRoute, /UUID_PATTERN/);
+  assert.match(filesRoute, /const \{ item \} = Route\.useSearch\(\)/);
+  assert.match(filesRoute, /CertificationReviewPanel initialItemId=\{item\}/);
+
+  assert.match(reviewPanel, /initialItemId\?: string \| null/);
+  assert.match(reviewPanel, /useState<string \| null>\(initialItemId\)/);
+  assert.match(reviewPanel, /if \(!initialItemId\) return/);
+  assert.match(reviewPanel, /setSelectedId\(initialItemId\)/);
+  assert.doesNotMatch(reviewPanel, /setSelectedIds\(new Set\(\[initialItemId\]\)\)/);
 });
 
 test("LaunchPad requires actual onboarding data before the operational dashboard", () => {
