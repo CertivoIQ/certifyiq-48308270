@@ -54,8 +54,11 @@ const DEFAULT_PROFILE: WorkspaceProfile = {
   hud_50058_reporting_path: null,
 };
 
+const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
+
 export function useWorkspaceProfile() {
   const { user, ready } = useSession();
+  const isFounder = user?.email?.trim().toLowerCase() === FOUNDER_EMAIL;
   const queryClient = useQueryClient();
 
   const query = useQuery<ResolvedWorkspace>({
@@ -126,7 +129,9 @@ export function useWorkspaceProfile() {
   return {
     profile: resolved.profile,
     workspaceUserId: resolved.workspaceUserId,
-    phaRole: resolved.phaRole,
+    // Founder navigation is platform-wide. Treat the founder as a PHA workspace
+    // owner for client-side menu visibility without mutating any customer role.
+    phaRole: isFounder ? "workspace_owner" : resolved.phaRole,
     loading: !ready || (!!user && query.isLoading),
     refetch: query.refetch,
   };
