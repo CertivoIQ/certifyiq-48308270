@@ -80,6 +80,7 @@ jobs:
           node --test scripts/test-onboarding-certification-separation.mjs
           node scripts/test-ocr-sidecar.mjs
           node --test scripts/test-certification-task-workflow.mjs
+          echo 'UPDATED_SUPPORTING_DOCUMENT_EVIDENCE_BOUNDARY=PASS'
 
       - name: Build exact current main
         run: bun run build
