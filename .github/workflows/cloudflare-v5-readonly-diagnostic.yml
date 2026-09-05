@@ -88,4 +88,4 @@ jobs:
           fi
 
           echo 'READ_ONLY_VERSION_DIAGNOSTIC_COMPLETE'
-          echo 'REFRESH_MARKER=20260904-token-cache-purge-confirmed'
+          echo 'REFRESH_MARKER=20260905-onboarding-separation-check'
