@@ -19,60 +19,72 @@ jobs:
       OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
       SOURCE_WORKER: certivoiq-launch-candidate-20260904-v3
       TARGET_WORKER: certivoiq-launch-candidate-20260904-v5
+      SOURCE_URL: https://certivoiq-launch-candidate-20260904-v3.rodsheka-watkins.workers.dev
       TARGET_URL: https://certivoiq-launch-candidate-20260904-v5.rodsheka-watkins.workers.dev
+      STATED_V5_VERSION: d6f882ea-b31f-4c02-9321-928226bdbada
       ZONE_NAME: certivoiq.com
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read-only candidate diagnostics
+      - name: Read-only version and runtime diagnostics
         shell: bash
         run: |
           set -u
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
           api='https://api.cloudflare.com/client/v4'
 
-          for worker in "$SOURCE_WORKER" "$TARGET_WORKER"; do
-            safe="$(echo "$worker" | tr '[:lower:]-' '[:upper:]_')"
-            settings_file="/tmp/${worker}-settings.json"
-            settings_code="$(curl -sS -o "$settings_file" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/settings")"
-            echo "${safe}_SETTINGS_HTTP=$settings_code"
-            if [ "$settings_code" = 200 ]; then
-              echo "${safe}_BINDINGS=$(jq -r '[.result.bindings[]? | (.type // "unknown") + ":" + (.name // "unnamed")] | sort | join(",")' "$settings_file")"
-            fi
+          inspect_worker() {
+            local worker="$1"
+            local safe="$(echo "$worker" | tr '[:lower:]-' '[:upper:]_')"
+            local deployments="/tmp/${worker}-deployments.json"
+            local code
+            code="$(curl -sS -o "$deployments" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/deployments")"
+            echo "${safe}_DEPLOYMENTS_HTTP=$code"
+            [ "$code" = 200 ] || return 0
 
-            secrets_file="/tmp/${worker}-secrets.json"
-            secrets_code="$(curl -sS -o "$secrets_file" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/secrets")"
-            echo "${safe}_SECRETS_HTTP=$secrets_code"
-            if [ "$secrets_code" = 200 ]; then
-              echo "${safe}_SECRET_NAMES=$(jq -r '[.result[]?.name] | sort | join(",")' "$secrets_file")"
-            fi
-          done
+            jq -r '.result.deployments[]? | "DEPLOYMENT id=\(.id) created=\(.created_on) versions=" + ([.versions[]? | "\(.version_id)@\(.percentage)%"] | join(","))' "$deployments" | while IFS= read -r line; do
+              echo "${safe}_${line}"
+            done
 
-          health_auth_code="$(curl -sS -o /tmp/health-auth.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
-          echo "TARGET_HEALTH_AUTH_HTTP=$health_auth_code"
+            jq -r '.result.deployments[]?.versions[]?.version_id' "$deployments" | sort -u | while IFS= read -r vid; do
+              [ -n "$vid" ] || continue
+              local vf="/tmp/${worker}-${vid}.json"
+              local vc
+              vc="$(curl -sS -o "$vf" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/versions/$vid")"
+              echo "${safe}_VERSION_${vid}_HTTP=$vc"
+              if [ "$vc" = 200 ]; then
+                echo "${safe}_VERSION_${vid}_BINDINGS=$(jq -r '[.result.resources.bindings[]? | (.type // "unknown") + ":" + (.name // "unnamed")] | sort | join(",")' "$vf")"
+              fi
+            done
+          }
 
-          health_anon_code="$(curl -sS -o /tmp/health-anon.out -w '%{http_code}' "$TARGET_URL/api/internal/runtime-health")"
-          echo "TARGET_HEALTH_ANON_HTTP=$health_anon_code"
+          inspect_worker "$SOURCE_WORKER"
+          inspect_worker "$TARGET_WORKER"
 
-          root_code="$(curl -sS -L -o /tmp/root.out -w '%{http_code}' "$TARGET_URL/")"
-          echo "TARGET_ROOT_HTTP=$root_code"
-          echo "TARGET_ROOT_BYTES=$(wc -c < /tmp/root.out | tr -d ' ')"
-
-          if node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"; then
-            echo 'TARGET_LIVE_RESPONSE_GATE=PASS'
-          else
-            echo 'TARGET_LIVE_RESPONSE_GATE=FAIL'
+          stated_file=/tmp/stated-v5.json
+          stated_code="$(curl -sS -o "$stated_file" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/versions/$STATED_V5_VERSION")"
+          echo "STATED_V5_VERSION_HTTP=$stated_code"
+          if [ "$stated_code" = 200 ]; then
+            echo "STATED_V5_VERSION_BINDINGS=$(jq -r '[.result.resources.bindings[]? | (.type // "unknown") + ":" + (.name // "unnamed")] | sort | join(",")' "$stated_file")"
           fi
+
+          source_health="$(curl -sS -o /tmp/source-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$SOURCE_URL/api/internal/runtime-health")"
+          target_health="$(curl -sS -o /tmp/target-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+          www_health="$(curl -sS -o /tmp/www-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://www.certivoiq.com/api/internal/runtime-health')"
+          apex_health="$(curl -sS -o /tmp/apex-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://certivoiq.com/api/internal/runtime-health')"
+          echo "V3_WORKERS_DEV_HEALTH_AUTH_HTTP=$source_health"
+          echo "V5_WORKERS_DEV_HEALTH_AUTH_HTTP=$target_health"
+          echo "WWW_HEALTH_AUTH_HTTP=$www_health"
+          echo "APEX_HEALTH_AUTH_HTTP=$apex_health"
 
           curl -fsS "${auth[@]}" "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json || true
           zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json 2>/dev/null || true)"
           if [ -n "$zid" ]; then
-            routes_code="$(curl -sS -o /tmp/routes.json -w '%{http_code}' "${auth[@]}" "$api/zones/$zid/workers/routes")"
-            echo "ROUTES_HTTP=$routes_code"
+            curl -fsS "${auth[@]}" "$api/zones/$zid/workers/routes" -o /tmp/routes.json || true
             echo "ROUTES_COUNT=$(jq -r '.result|length' /tmp/routes.json 2>/dev/null || echo unknown)"
             curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains.json || true
             echo "WWW_SERVICE=$(jq -r '.result[]?|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
             echo "APEX_SERVICE=$(jq -r '.result[]?|select(.hostname=="certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
           fi
 
-          echo 'READ_ONLY_DIAGNOSTIC_COMPLETE'
+          echo 'READ_ONLY_VERSION_DIAGNOSTIC_COMPLETE'
