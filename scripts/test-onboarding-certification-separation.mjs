@@ -12,6 +12,7 @@ const filesRoute = read("src/routes/files.index.tsx");
 const extractionPreview = read("src/utils/certification-extraction-preview.functions.ts");
 const propertiesRoute = read("src/routes/properties.index.tsx");
 const onboardingPanel = read("src/components/portfolio-onboarding-panel.tsx");
+const pdfOcr = read("src/lib/pdf-ocr.ts");
 const catalog = read("src/lib/platform-data.ts");
 
 test("certification upload is distinct from portfolio and tenant onboarding", () => {
@@ -32,6 +33,19 @@ test("certification OCR sidecar stays compatible with the restricted storage buc
   assert.match(uploadPanel, /OCR_SIDECAR_STORAGE_MIME\s*=\s*"application\/octet-stream"/);
   assert.match(uploadPanel, /contentType:\s*OCR_SIDECAR_STORAGE_MIME/);
   assert.doesNotMatch(uploadPanel, /new Blob\(\[JSON\.stringify\(prepared\.sidecar\)\],\s*\{\s*type:\s*"application\/json"/);
+});
+
+test("scanned PDF OCR uses an explicit browser runtime and cannot silently emit an empty OCR sidecar", () => {
+  assert.match(pdfOcr, /TESSERACT_WORKER_PATH/);
+  assert.match(pdfOcr, /cdn\.jsdelivr\.net\/npm\/tesseract\.js@/);
+  assert.match(pdfOcr, /TESSERACT_CORE_PATH/);
+  assert.match(pdfOcr, /cdn\.jsdelivr\.net\/npm\/tesseract\.js-core@/);
+  assert.match(pdfOcr, /TESSERACT_LANG_PATH/);
+  assert.match(pdfOcr, /tessdata\.projectnaptha\.com\/4\.0\.0/);
+  assert.match(pdfOcr, /cacheMethod:\s*'none'/);
+  assert.match(pdfOcr, /workerBlobURL:\s*true/);
+  assert.match(pdfOcr, /if \(ocrPageCount === 0\)/);
+  assert.match(pdfOcr, /OCR completed but could not recover readable text/);
 });
 
 test("extracted certification fields must be reviewed or corrected before the document is saved", () => {
