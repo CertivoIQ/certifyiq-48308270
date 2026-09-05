@@ -62,7 +62,7 @@ function normalizeNumeric(raw: string) {
 function normalizeDate(raw: string) {
   const cleaned = boundedTail(raw);
   if (!cleaned) return null;
-  const numeric = cleaned.match(/\b(?:0?[1-9]|1[0-2])[\/-](?:0?[1-9]|[12]\d|3[01])[\/-](?:\d{2}|\d{4})\b/);
+  const numeric = cleaned.match(/\b(?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\d|3[01])[-/](?:\d{2}|\d{4})\b/);
   if (numeric?.[0]) return numeric[0];
   const iso = cleaned.match(/\b\d{4}-\d{2}-\d{2}\b/);
   if (iso?.[0]) return iso[0];
