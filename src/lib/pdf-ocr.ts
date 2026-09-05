@@ -46,6 +46,7 @@ const OCR_NO_TEXT_MESSAGE =
 type SharedOcrWorker = Awaited<ReturnType<(typeof import('tesseract.js'))['createWorker']>>;
 type OcrSource = Parameters<SharedOcrWorker['recognize']>[0];
 type OcrRecognition = Awaited<ReturnType<SharedOcrWorker['recognize']>>;
+type OcrPageSegMode = NonNullable<Parameters<SharedOcrWorker['setParameters']>[0]['tessedit_pageseg_mode']>;
 
 type OcrWorkerSlot = {
   worker: Promise<SharedOcrWorker>;
@@ -84,11 +85,25 @@ async function ensureOcrWorkerSlots(count: number) {
   }
 }
 
-async function recognizeWithSharedWorker(source: OcrSource, workerCount: number) {
+async function recognizeWithSharedWorker(
+  source: OcrSource,
+  workerCount: number,
+  pageSegMode?: OcrPageSegMode,
+) {
   await ensureOcrWorkerSlots(workerCount);
   const slot = sharedOcrSlots[nextOcrSlot % workerCount]!;
   nextOcrSlot += 1;
-  const recognition = slot.tail.then(async () => (await slot.worker).recognize(source, { rotateAuto: true }));
+  const recognition = slot.tail.then(async () => {
+    const worker = await slot.worker;
+    if (pageSegMode) {
+      await worker.setParameters({
+        tessedit_pageseg_mode: pageSegMode,
+        preserve_interword_spaces: '1',
+        user_defined_dpi: '300',
+      });
+    }
+    return worker.recognize(source, { rotateAuto: true });
+  });
   slot.tail = recognition.then(() => undefined, () => undefined);
   return recognition;
 }
@@ -199,6 +214,36 @@ function createHighContrastCanvas(source: HTMLCanvasElement): HTMLCanvasElement 
   return canvas;
 }
 
+function visualInkProfile(source: HTMLCanvasElement) {
+  const sampleWidth = Math.min(256, source.width);
+  const sampleHeight = Math.max(1, Math.round(source.height * (sampleWidth / Math.max(1, source.width))));
+  const { canvas, context } = createCanvas(sampleWidth, sampleHeight);
+  context.drawImage(source, 0, 0, canvas.width, canvas.height);
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  let inkPixels = 0;
+  let darkPixels = 0;
+  const total = Math.max(1, pixels.length / 4);
+
+  for (let index = 0; index < pixels.length; index += 4) {
+    const red = Number(pixels[index] ?? 255);
+    const green = Number(pixels[index + 1] ?? 255);
+    const blue = Number(pixels[index + 2] ?? 255);
+    const luminance = 0.299 * red + 0.587 * green + 0.114 * blue;
+    if (luminance < 235) inkPixels += 1;
+    if (luminance < 190) darkPixels += 1;
+  }
+
+  return {
+    inkRatio: inkPixels / total,
+    darkRatio: darkPixels / total,
+  };
+}
+
+function looksVisuallyBlank(source: HTMLCanvasElement) {
+  const profile = visualInkProfile(source);
+  return profile.darkRatio < 0.0005 && profile.inkRatio < 0.0025;
+}
+
 function normalizedRecognition(recognition: OcrRecognition) {
   const text = normalizePageText(recognition.data.text);
   const confidence = Number(recognition.data.confidence) / 100;
@@ -212,14 +257,35 @@ function recognitionScore(candidate: { text: string; confidence: number }) {
   return candidate.text.replace(/\s/g, '').length * Math.max(0.01, candidate.confidence);
 }
 
+function recognitionIsStrong(candidate: { text: string; confidence: number }) {
+  return candidate.text.replace(/\s/g, '').length >= 30 && candidate.confidence >= 0.15;
+}
+
 async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: number) {
-  const primary = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount));
-  const primaryWeak = primary.text.replace(/\s/g, '').length < 30 || primary.confidence < 0.15;
-  if (!primaryWeak) return primary;
+  const { PSM } = await import('tesseract.js');
+  const candidates: Array<{ text: string; confidence: number }> = [];
+
+  const auto = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.AUTO));
+  candidates.push(auto);
+  if (recognitionIsStrong(auto)) return auto;
 
   const contrastCanvas = createHighContrastCanvas(canvas);
-  const retry = normalizedRecognition(await recognizeWithSharedWorker(contrastCanvas, workerCount));
-  return recognitionScore(retry) > recognitionScore(primary) ? retry : primary;
+  const sparse = normalizedRecognition(
+    await recognizeWithSharedWorker(contrastCanvas, workerCount, PSM.SPARSE_TEXT),
+  );
+  candidates.push(sparse);
+  if (recognitionIsStrong(sparse)) {
+    return recognitionScore(sparse) > recognitionScore(auto) ? sparse : auto;
+  }
+
+  const block = normalizedRecognition(
+    await recognizeWithSharedWorker(contrastCanvas, workerCount, PSM.SINGLE_BLOCK),
+  );
+  candidates.push(block);
+
+  return candidates.reduce((best, candidate) =>
+    recognitionScore(candidate) > recognitionScore(best) ? candidate : best,
+  );
 }
 
 export type PrepareResult =
@@ -377,6 +443,7 @@ export async function prepareCertificationForReview(
     let completedCount = 0;
     let fatalError: Error | null = null;
     const pageErrors: Array<{ page: number; message: string }> = [];
+    const blankPages: number[] = [];
 
     async function runWorker() {
       while (!fatalError) {
@@ -401,20 +468,25 @@ export async function prepareCertificationForReview(
           const viewport = page.getViewport({ scale: RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
-          const { text, confidence } = await recognizeScannedCanvas(canvas, workerCount);
-          // Blank/illegible pages contribute no evidence. We retain the page
-          // failure below so an all-zero OCR result can never be mistaken for a
-          // successfully prepared scanned PDF.
-          if (text && Number.isFinite(confidence) && confidence > 0) {
-            pages.push({
-              page: pageNumber,
-              source: 'ocr',
-              engine: OCR_ENGINE,
-              ocrConfidence: Math.min(1, confidence),
-              text,
-            });
+
+          if (looksVisuallyBlank(canvas)) {
+            blankPages.push(pageNumber);
           } else {
-            pageErrors.push({ page: pageNumber, message: 'OCR returned no usable text or confidence after standard and high-contrast passes.' });
+            const { text, confidence } = await recognizeScannedCanvas(canvas, workerCount);
+            if (text && Number.isFinite(confidence) && confidence > 0) {
+              pages.push({
+                page: pageNumber,
+                source: 'ocr',
+                engine: OCR_ENGINE,
+                ocrConfidence: Math.min(1, confidence),
+                text,
+              });
+            } else {
+              pageErrors.push({
+                page: pageNumber,
+                message: 'OCR returned no usable text or confidence after AUTO, SPARSE_TEXT, and high-contrast single-block passes.',
+              });
+            }
           }
         } catch (error) {
           if (error instanceof Error && error.message === OCR_LIMIT_MESSAGE) {
@@ -437,34 +509,41 @@ export async function prepareCertificationForReview(
     if (fatalError) throw fatalError;
 
     pages.sort((a, b) => a.page - b.page);
-    const ocrPageCount = pages.filter((page) => page.source === 'ocr').length;
-    if (ocrPageCount === 0) {
-      const firstFailure = pageErrors[0];
-      const detail = firstFailure
-        ? ` First failed page: ${firstFailure.page}. ${firstFailure.message}`
-        : '';
-      throw new Error(`${OCR_NO_TEXT_MESSAGE}${detail}`);
+    blankPages.sort((a, b) => a - b);
+    pageErrors.sort((a, b) => a.page - b.page);
+
+    if (pageErrors.length) {
+      const firstFailure = pageErrors[0]!;
+      throw new Error(
+        `${OCR_NO_TEXT_MESSAGE} First nonblank failed page: ${firstFailure.page}. ${firstFailure.message}`,
+      );
     }
 
+    if (pages.length === 0) {
+      const blankDetail = blankPages.length
+        ? ` The PDF contains ${blankPages.length} visually blank page${blankPages.length === 1 ? '' : 's'} and no readable text pages.`
+        : '';
+      throw new Error(`${OCR_NO_TEXT_MESSAGE}${blankDetail}`);
+    }
+
+    const ocrPageCount = pages.filter((page) => page.source === 'ocr').length;
     reportProgress(onProgress, 'Finalizing certification text and provenance…', 99);
 
-    const result: PrepareResult = {
-      kind: 'ocr',
-      ocrPageCount,
+    const sidecar: OcrSidecar = {
+      schemaVersion: OCR_SIDECAR_VERSION,
+      sourceFileName: file.name,
       sourceSha256,
-      sidecar: {
-        schemaVersion: OCR_SIDECAR_VERSION,
-        sourceFileName: file.name,
-        sourceSha256,
-        sourceByteSize: file.size,
-        createdAt: new Date().toISOString(),
-        pageCount: pdf.numPages,
-        truncated: false,
-        pages,
-      },
+      sourceByteSize: file.size,
+      createdAt: new Date().toISOString(),
+      pageCount: pdf.numPages,
+      truncated: false,
+      pages,
     };
+
     reportProgress(onProgress, 'Certification preparation complete.', 100);
-    return result;
+    return ocrPageCount > 0
+      ? { kind: 'ocr', ocrPageCount, sourceSha256, sidecar }
+      : { kind: 'machine-readable', ocrPageCount: 0, sourceSha256, sidecar };
   } finally {
     await pdf.cleanup();
   }
