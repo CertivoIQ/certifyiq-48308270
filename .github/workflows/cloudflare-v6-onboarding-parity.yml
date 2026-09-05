@@ -58,8 +58,9 @@ jobs:
           grep -F -q 'getFieldObjects()' src/lib/pdf-ocr.ts
           grep -F -q 'ticPdfFormValueLinesByPage' src/lib/pdf-ocr.ts
           grep -F -q 'extractTicSpatialValueLines' src/lib/pdf-ocr.ts
-          grep -F -q 'blocks: true' src/lib/pdf-ocr.ts
-          grep -F -q 'highResolutionFormCandidate ? 4.5 : RENDER_SCALE' src/lib/pdf-ocr.ts
+          grep -F -q 'includeBlocks ? { text: true, blocks: true } : { text: true }' src/lib/pdf-ocr.ts
+          grep -F -q 'const TIC_RENDER_SCALE = 3.5' src/lib/pdf-ocr.ts
+          grep -F -q 'highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE' src/lib/pdf-ocr.ts
           grep -F -q 'spatialLines' src/lib/pdf-ocr.ts
           grep -F -q 'clusterRows' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'household member ${member} last name' src/lib/tic-field-registry.ts
