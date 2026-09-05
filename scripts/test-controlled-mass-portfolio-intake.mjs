@@ -10,6 +10,7 @@ const intake = read("src/lib/portfolio-intake.functions.ts");
 const intakeUi = read("src/components/portfolio-intake-panel.tsx");
 const onboardingUi = read("src/components/portfolio-onboarding-panel.tsx");
 const certificationUi = read("src/components/certification-upload-panel.tsx");
+const extractionPreview = read("src/utils/certification-extraction-preview.functions.ts");
 const queueUi = read("src/components/certification-review-panel.tsx");
 const review = read("src/utils/certification-review.functions.ts");
 const properties = read("src/routes/properties.index.tsx");
@@ -87,8 +88,13 @@ test("onboarding and certification intake are separate production entry points",
 
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
-  assert.match(certificationUi, /review_queue_status: "not_queued"/);
+  assert.match(certificationUi, /Review extracted information before saving/);
+  assert.match(certificationUi, /Confirm & Save Document/);
   assert.doesNotMatch(certificationUi, /parsePortfolioIntakeCsv|createPortfolioIntake/);
+  assert.match(extractionPreview, /review_queue_status:\s*"not_queued"/);
+  assert.match(extractionPreview, /status:\s*"processing"/);
+  assert.match(extractionPreview, /update\(\{ status: "completed" \}\)/);
+  assert.match(extractionPreview, /historical_changes/);
 
   assert.match(files, /<CertificationReviewPanel/);
   assert.match(files, /does not automatically enter compliance review/);
