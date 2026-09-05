@@ -52,7 +52,7 @@ function boundedTail(raw: string) {
 
 function normalizeNumeric(raw: string) {
   const cleaned = boundedTail(raw);
-  if (!cleaned || /[A-Za-z]{3,}/.test(cleaned) && cleaned.length > 40) return null;
+  if (!cleaned || (/[A-Za-z]{3,}/.test(cleaned) && cleaned.length > 40)) return null;
   const match = cleaned.match(/-?\$?\s*[\d,]+(?:\.\d+)?/);
   if (!match) return null;
   const numeric = Number(match[0].replace(/[$,\s]/g, ""));
