@@ -1,4 +1,4 @@
-name: Cloudflare pre-v12 read-only production diagnostic
+name: Cloudflare certification release read-only diagnostic
 
 on:
   push:
@@ -52,4 +52,4 @@ jobs:
             echo "APEX_SERVICE=$(jq -r '.result[]?|select(.hostname=="certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
           fi
 
-          echo 'READ_ONLY_PRE_V12_PRODUCTION_DIAGNOSTIC_COMPLETE'
+          echo 'READ_ONLY_CERTIFICATION_RELEASE_DIAGNOSTIC_COMPLETE'
