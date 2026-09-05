@@ -25,6 +25,12 @@ test("certification upload is distinct from portfolio and tenant onboarding", ()
   assert.doesNotMatch(onboardingPanel, /uploadCertificationFile|prepareCertificationForReview/);
 });
 
+test("certification OCR sidecar stays compatible with the restricted storage bucket", () => {
+  assert.match(uploadPanel, /OCR_SIDECAR_STORAGE_MIME\s*=\s*"application\/octet-stream"/);
+  assert.match(uploadPanel, /contentType:\s*OCR_SIDECAR_STORAGE_MIME/);
+  assert.doesNotMatch(uploadPanel, /new Blob\(\[JSON\.stringify\(prepared\.sidecar\)\],\s*\{\s*type:\s*"application\/json"/);
+});
+
 test("LaunchPad requires actual onboarding data before the operational dashboard", () => {
   assert.match(catalog, /Complete portfolio & tenant onboarding/);
   assert.match(catalog, /Upload your first certification/);
