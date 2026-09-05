@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  FOUNDER_DEFAULT_DASHBOARD,
+  founderDashboardSessionKey,
+  isFounderUser,
+  legacyPlatformDashboardStorageKey,
+} from "@/lib/founder-access";
 
 export const STAFF_DOMAIN = "certivoiq.com";
-const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
 
 /** Live Supabase session for the browser. */
 export function useSession() {
@@ -15,11 +20,18 @@ export function useSession() {
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       if (
         event === "SIGNED_IN" &&
-        next?.user.email?.trim().toLowerCase() === FOUNDER_EMAIL &&
+        isFounderUser(next?.user) &&
+        next?.user.id &&
         typeof window !== "undefined" &&
         window.location.pathname.startsWith("/auth")
       ) {
-        window.localStorage.setItem(`certivoiq:platform-dashboard:${next.user.id}`, "multifamily");
+        // Permanently retire the old persistent dashboard choice for founder.
+        // The current login receives a clean, session-only operational default.
+        window.localStorage.removeItem(legacyPlatformDashboardStorageKey(next.user.id));
+        window.sessionStorage.setItem(
+          founderDashboardSessionKey(next.user.id),
+          FOUNDER_DEFAULT_DASHBOARD,
+        );
       }
       setSession(next);
       setReady(true);
@@ -43,7 +55,7 @@ export function useSession() {
  */
 export function useIsStaff() {
   const { user, ready } = useSession();
-  const isFounder = user?.email?.trim().toLowerCase() === FOUNDER_EMAIL;
+  const isFounder = isFounderUser(user);
 
   const query = useQuery({
     queryKey: ["staff-role", user?.id],
