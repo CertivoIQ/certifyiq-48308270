@@ -33,7 +33,7 @@ jobs:
           api='https://api.cloudflare.com/client/v4'
 
           target_health="$(curl -sS -o /tmp/target-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
-          fallback_health="$(curl -sS -o /tmp/fallback-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$FALLBACK_URL/api/internal/runtime-health')"
+          fallback_health="$(curl -sS -o /tmp/fallback-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$FALLBACK_URL/api/internal/runtime-health")"
           www_health="$(curl -sS -o /tmp/www-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://www.certivoiq.com/api/internal/runtime-health')"
           apex_health="$(curl -sS -o /tmp/apex-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://certivoiq.com/api/internal/runtime-health')"
           echo "V8_WORKERS_DEV_HEALTH_AUTH_HTTP=$target_health"
