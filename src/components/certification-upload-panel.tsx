@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { FileUp, UploadCloud } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
 import { isOcrSupportedFile, prepareCertificationForReview } from "@/lib/pdf-ocr";
 import { uploadCertificationFile } from "@/lib/certification-upload";
+import { extractCertificationDocumentPreview } from "@/utils/certification-extraction-preview.functions";
 
 type Db = any;
 
@@ -19,6 +21,7 @@ function clampPercent(value: number) {
 
 export function CertificationUploadPanel() {
   const queryClient = useQueryClient();
+  const extractPreview = useServerFn(extractCertificationDocumentPreview);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -106,9 +109,9 @@ export function CertificationUploadPanel() {
         if (sidecarError) throw sidecarError;
       }
 
-      setProgressPercent(96);
+      setProgressPercent(95);
       setProgressLabel("Recording the certification in CertivoIQ…");
-      const { error: itemError } = await db.from("certification_import_items").insert({
+      const { data: item, error: itemError } = await db.from("certification_import_items").insert({
         job_id: job.id,
         user_id: user.id,
         storage_path: storagePath,
@@ -123,9 +126,28 @@ export function CertificationUploadPanel() {
         status: "completed",
         upload_sequence: 0,
         review_queue_status: "not_queued",
-      });
+      }).select("id").single();
       if (itemError) throw itemError;
 
+      setProgressPercent(97);
+      setProgressLabel("Extracting document information for Documents…");
+      let extractionMessage = "";
+      try {
+        const preview = await extractPreview({ data: { itemId: item.id } });
+        if ("error" in preview && preview.error) {
+          extractionMessage = ` Automatic extraction could not be completed: ${preview.error}`;
+        } else {
+          const fieldCount = preview.facts.length;
+          extractionMessage = fieldCount
+            ? ` ${fieldCount} extracted field${fieldCount === 1 ? "" : "s"} saved automatically to Documents.`
+            : " No supported fields were found automatically; the source document is still saved.";
+        }
+      } catch (error) {
+        extractionMessage = ` The source document is saved, but automatic extraction could not finish: ${error instanceof Error ? error.message : "unknown extraction error"}.`;
+      }
+
+      setProgressPercent(99);
+      setProgressLabel("Finalizing certification intake…");
       const { error: completeError } = await db.from("certification_import_jobs").update({
         status: "completed",
         processed_files: 1,
@@ -137,8 +159,8 @@ export function CertificationUploadPanel() {
       completed = true;
       setFile(null);
       setProgressPercent(100);
-      setProgressLabel("Certification upload complete.");
-      setMessage(`${file.name} is stored with OCR evidence and provenance. It has not been queued for compliance review yet.`);
+      setProgressLabel("Certification upload and extraction complete.");
+      setMessage(`${file.name} is stored with OCR evidence and provenance.${extractionMessage} It has not been queued for compliance review.`);
       await queryClient.invalidateQueries({ queryKey: ["certification-items"] });
     } catch (error) {
       const { data: authData } = await supabase.auth.getUser();
@@ -172,7 +194,7 @@ export function CertificationUploadPanel() {
         <div>
           <h2 className="font-semibold">Certification document intake</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Upload a certification package for OCR and evidence preparation. This workspace does not create properties, units, or tenant profiles.
+            Upload a certification package for OCR and evidence preparation. Extracted document information is saved automatically to Documents without starting compliance review.
           </p>
         </div>
       </div>
