@@ -1,0 +1,104 @@
+name: CertivoIQ v6 onboarding parity candidate
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cloudflare-v6-onboarding-parity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-deploy-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_WORKER: certivoiq-launch-candidate-20260905-v6
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+
+      - name: Require exact onboarding separation source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          grep -F -q 'CertificationUploadPanel' src/routes/upload-certification.tsx
+          ! grep -E -q 'PortfolioIntakePanel|PortfolioOnboardingPanel' src/routes/upload-certification.tsx
+          grep -F -q 'PortfolioOnboardingPanel' src/routes/properties.index.tsx
+          ! grep -E -q 'CertificationUploadPanel|PortfolioIntakePanel' src/routes/properties.index.tsx
+          grep -F -q 'intake_type: "certification_documents"' src/components/certification-upload-panel.tsx
+          grep -F -q 'Portfolio & tenant onboarding' src/components/portfolio-onboarding-panel.tsx
+          ! grep -F -q 'label: "Properties & Tenant Intake"' src/components/app-shell.tsx
+          grep -F -q 'label: "Onboarding & Portfolio Setup"' src/components/app-shell.tsx
+          grep -F -q 'Complete portfolio & tenant onboarding' src/lib/platform-data.ts
+          grep -F -q 'Upload your first certification' src/lib/platform-data.ts
+          grep -F -q 'customer_onboarding_progress' src/routes/_authenticated/dashboard.tsx
+          grep -F -q 'to="/properties"' src/routes/launchpad.tsx
+          grep -F -q 'to="/upload-certification"' src/routes/launchpad.tsx
+          echo "SOURCE_SHA=$(git rev-parse HEAD)"
+          echo 'ONBOARDING_SEPARATION_SOURCE_GATE=PASS'
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run focused regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test scripts/test-onboarding-certification-separation.mjs
+          node --test scripts/test-dashboard-navigation-access.mjs
+          node --test scripts/test-certification-task-workflow.mjs
+
+      - name: Build exact current main
+        run: bun run build
+
+      - name: Prepare isolated v6 candidate config
+        run: |
+          node scripts/prepare-cloudflare-candidate-config.mjs \
+            .output/server/wrangler.json \
+            .output/server/wrangler.v6.json \
+            "$TARGET_WORKER"
+
+      - name: Deploy v6 to workers.dev only
+        id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          log_file="$(mktemp)"
+          npx --yes wrangler@4 deploy --config .output/server/wrangler.v6.json 2>&1 | tee "$log_file"
+          candidate_url="$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$log_file" | tail -n 1 || true)"
+          test -n "$candidate_url"
+          echo "candidate_url=$candidate_url" >> "$GITHUB_OUTPUT"
+          echo "Candidate URL: $candidate_url"
+
+      - name: Verify v6 live response boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate_url="${{ steps.deploy.outputs.candidate_url }}"
+          for attempt in 1 2 3 4 5 6; do
+            if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
+              echo 'V6_LIVE_RESPONSE_GATE=PASS'
+              exit 0
+            fi
+            test "$attempt" -lt 6
+            sleep 10
+          done
+
+      - name: Confirm production remains untouched
+        run: |
+          echo 'Candidate only; no certivoiq.com custom domain, Worker Route, DNS, database, or billing changes were made.'
