@@ -33,21 +33,24 @@ test("certification OCR sidecar stays compatible with the restricted storage buc
   assert.doesNotMatch(uploadPanel, /new Blob\(\[JSON\.stringify\(prepared\.sidecar\)\],\s*\{\s*type:\s*"application\/json"/);
 });
 
-test("uploaded certifications automatically save extracted information to Documents without starting review", () => {
+test("extracted certification fields must be reviewed or corrected before the document is saved", () => {
   assert.match(uploadPanel, /extractCertificationDocumentPreview/);
-  assert.match(uploadPanel, /\.select\("id"\)\.single\(\)/);
-  assert.match(uploadPanel, /extractPreview\(\{\s*data:\s*\{\s*itemId:\s*item\.id\s*\}\s*\}\)/s);
-  assert.match(uploadPanel, /saved automatically to Documents/);
+  assert.match(uploadPanel, /confirmCertificationDocumentPreview/);
+  assert.match(uploadPanel, /cancelCertificationDocumentPreview/);
+  assert.match(uploadPanel, /Review extracted information before saving/);
+  assert.match(uploadPanel, /Confirm & Save Document/);
+  assert.match(uploadPanel, /will not appear in Documents or the Compliance Review Queue until you confirm it/);
+  assert.doesNotMatch(uploadPanel, /certification_import_items"\)\.insert\([\s\S]*status:\s*"completed"/);
 
-  assert.match(extractionPreview, /extractFactsFromText/);
-  assert.match(extractionPreview, /from\("certification_facts"\)\.delete\(\)\.eq\("item_id", item\.id\)/);
-  assert.match(extractionPreview, /extracted_data:\s*extractedData/);
-  assert.match(extractionPreview, /confidence,/);
-  assert.match(extractionPreview, /processed_at:\s*new Date\(\)\.toISOString\(\)/);
-  assert.doesNotMatch(extractionPreview, /review_queue_status:\s*"(queued|processing|completed)"/);
+  assert.match(extractionPreview, /Nothing is written to certification_import_items or certification_facts here/);
+  assert.match(extractionPreview, /confirmCertificationDocumentPreview/);
+  assert.match(extractionPreview, /historical_changes/);
+  assert.match(extractionPreview, /original_extracted_data/);
+  assert.match(extractionPreview, /confirmed_extracted_data/);
+  assert.match(extractionPreview, /human_verified:\s*true/);
+  assert.match(extractionPreview, /review_queue_status:\s*"not_queued"/);
+  assert.match(extractionPreview, /\.eq\("status", "completed"\)/);
 
-  assert.match(extractionPreview, /listCertificationDocuments/);
-  assert.match(extractionPreview, /extracted_data, confidence/);
   assert.match(reviewPanel, /Extracted document information/);
   assert.match(reviewPanel, /item\.extracted_data/);
   assert.match(reviewPanel, /Compliance review begins only when selected below/);
