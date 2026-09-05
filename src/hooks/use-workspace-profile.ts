@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { isFounderUser } from "@/lib/founder-access";
 
 export type OrganizationType =
   | "multifamily_owner_agent"
@@ -54,11 +55,9 @@ const DEFAULT_PROFILE: WorkspaceProfile = {
   hud_50058_reporting_path: null,
 };
 
-const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
-
 export function useWorkspaceProfile() {
   const { user, ready } = useSession();
-  const isFounder = user?.email?.trim().toLowerCase() === FOUNDER_EMAIL;
+  const isFounder = isFounderUser(user);
   const queryClient = useQueryClient();
 
   const query = useQuery<ResolvedWorkspace>({
