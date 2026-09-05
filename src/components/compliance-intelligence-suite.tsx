@@ -1,8 +1,8 @@
 import { Archive, Building2, ClipboardCheck, FileCheck2, Gauge, History, Plug, Send, ShieldCheck, UploadCloud } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { FEATURE_NAMES } from "@/lib/compliance-intelligence.mjs";
 import { CertificationReviewPanel } from "@/components/certification-review-panel";
-import { PortfolioIntakePanel } from "@/components/portfolio-intake-panel";
 import { FreeReviewLeadGate } from "@/components/FreeReviewLeadGate";
 
 const features: Array<{ name: string; description: string; icon: LucideIcon }> = [
@@ -28,7 +28,7 @@ export function ComplianceIntelligenceSuite() {
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary"><ShieldCheck className="h-4 w-4" /> CertivoIQ Compliance Intelligence Platform</div>
             <h1 className="text-3xl font-semibold tracking-tight">Compliance Intelligence Suite</h1>
-            <p className="mt-2 max-w-3xl text-muted-foreground">Import portfolio data first, choose certifications for review second, and preserve human control over every compliance decision.</p>
+            <p className="mt-2 max-w-3xl text-muted-foreground">Portfolio onboarding, certification intake, and compliance review remain separate so each step has a clear audit trail.</p>
           </div>
           <div className="rounded-xl border bg-muted/40 px-4 py-3 text-sm"><div className="font-medium">Client-controlled review queue</div><div className="mt-1 text-muted-foreground">No certification is reviewed merely because it was uploaded.</div></div>
         </div>
@@ -38,9 +38,15 @@ export function ComplianceIntelligenceSuite() {
       </section>
       <FreeReviewLeadGate>
         <div className="space-y-6">
-          <PortfolioIntakePanel />
           <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">
-            <div className="flex items-start gap-3"><Archive className="mt-0.5 size-5 text-primary" /><div><p className="font-medium">Review is optional after intake</p><p className="mt-1 text-muted-foreground">Select one or more imported tenants or certifications below only when you want CertivoIQ to run compliance review. Multi-select queues run in original upload order.</p></div></div>
+            <div className="flex items-start gap-3">
+              <Archive className="mt-0.5 size-5 text-primary" />
+              <div>
+                <p className="font-medium">Certification intake is separate from portfolio onboarding</p>
+                <p className="mt-1 text-muted-foreground">Upload and correct certification fields in the dedicated intake workspace, then save the document or save and start review.</p>
+                <Link to="/upload-certification" className="mt-3 inline-flex rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground">Upload Certification & OCR</Link>
+              </div>
+            </div>
           </section>
           <CertificationReviewPanel />
         </div>
