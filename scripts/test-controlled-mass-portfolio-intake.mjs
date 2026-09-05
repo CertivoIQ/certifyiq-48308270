@@ -8,9 +8,12 @@ const transitionFix = read("supabase/migrations/20260830104500_fix_certification
 const parser = read("src/lib/portfolio-intake.ts");
 const intake = read("src/lib/portfolio-intake.functions.ts");
 const intakeUi = read("src/components/portfolio-intake-panel.tsx");
+const onboardingUi = read("src/components/portfolio-onboarding-panel.tsx");
+const certificationUi = read("src/components/certification-upload-panel.tsx");
 const queueUi = read("src/components/certification-review-panel.tsx");
 const review = read("src/utils/certification-review.functions.ts");
 const properties = read("src/routes/properties.index.tsx");
+const upload = read("src/routes/upload-certification.tsx");
 const files = read("src/routes/files.index.tsx");
 
 test("portfolio, unit, tenant, and document records are tenant isolated", () => {
@@ -75,13 +78,20 @@ test("clients explicitly select multiple certifications and server preserves glo
   assert.match(review, /review_queue_status: "completed"/);
 });
 
-test("property intake and certification queue share the production workflow", () => {
-  assert.match(properties, /<PortfolioIntakePanel/);
-  assert.match(properties, /Choose certifications to review/);
+test("onboarding and certification intake are separate production entry points", () => {
+  assert.match(properties, /<PortfolioOnboardingPanel/);
+  assert.match(onboardingUi, /documentCount: 0/);
+  assert.match(onboardingUi, /documentFileName: undefined/);
+  assert.match(onboardingUi, /properties, units, and tenant profiles/);
+  assert.doesNotMatch(onboardingUi, /uploadCertificationFile/);
+
+  assert.match(upload, /<CertificationUploadPanel/);
+  assert.match(certificationUi, /intake_type: "certification_documents"/);
+  assert.match(certificationUi, /review_queue_status: "not_queued"/);
+  assert.doesNotMatch(certificationUi, /parsePortfolioIntakeCsv|createPortfolioIntake/);
+
   assert.match(files, /<CertificationReviewPanel/);
   assert.match(files, /does not automatically enter compliance review/);
   assert.match(review, /certification_type, jurisdiction, program_codes/);
   assert.match(review, /portfolio_tenant_profiles\(household_name\)/);
 });
-
-
