@@ -1,9 +1,12 @@
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
-import { Building2, CalendarDays, FileUp, ListChecks, Rocket, Search, ShieldCheck } from "lucide-react";
+import { Building2, CalendarDays, FileUp, ListChecks, Paperclip, PlayCircle, Rocket, Search, ShieldCheck } from "lucide-react";
 import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
+import { listCertificationDocuments } from "@/utils/certification-extraction-preview.functions";
 
 const PROGRAM_LABELS: Record<string, string> = {
   lihtc: "LIHTC",
@@ -21,6 +24,14 @@ const PROGRAM_LABELS: Record<string, string> = {
 
 export function ProductionDashboard() {
   const { profile } = useWorkspaceProfile();
+  const listCertifications = useServerFn(listCertificationDocuments);
+  const certifications = useQuery({
+    queryKey: ["certification-items"],
+    queryFn: () => listCertifications(),
+  });
+  const pendingCertifications = (certifications.data ?? []).filter((item) =>
+    item.review_queue_status === "not_queued" || item.review_queue_status === "queued",
+  );
   const hotmaApplicable = profile.derived_overlays.some((item) => item.startsWith("hotma_"));
 
   return (
@@ -57,10 +68,60 @@ export function ProductionDashboard() {
         <Link to="/audit-readiness" className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Stat label="Audit readiness" value="Open" hint="Prepare evidence, findings, and corrections" tone="flag" />
         </Link>
-        <Stat label="Certifications awaiting review" value={0} hint="Certification work queue" />
+        <Link to="/files" className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Stat label="Certifications awaiting review" value={pendingCertifications.length} hint="Open pending certification work" />
+        </Link>
         <Stat label="Open compliance findings" value={0} hint="Unresolved findings requiring action" />
         <Stat label="Recertifications due" value={0} hint="Next 30 days" />
         <Stat label="Properties requiring attention" value={0} hint="Risk and deadline driven" />
+      </div>
+
+      <div className="mt-4">
+        <Panel title="Certifications Awaiting Review" description="Saved certifications that have not yet completed compliance review. Open a tenant certification, attach one supporting document, or begin its review directly from the Command Center.">
+          {certifications.isLoading ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Loading pending certifications…</div>
+          ) : certifications.error ? (
+            <div className="rounded-lg border border-destructive/30 p-6 text-center text-sm text-destructive">Pending certifications could not be loaded.</div>
+          ) : pendingCertifications.length ? (
+            <div className="space-y-2">
+              {pendingCertifications.slice(0, 8).map((item) => (
+                <div key={item.id} className="flex flex-col gap-3 rounded-lg border border-border p-3 lg:flex-row lg:items-center lg:justify-between">
+                  <Link to="/files" search={{ item: item.id }} className="min-w-0 flex-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <div className="truncate text-sm font-medium">{item.household_name || item.original_file_name}</div>
+                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                      {item.property_name ? `${item.property_name}${item.unit_number ? ` · Unit ${item.unit_number}` : ""}` : item.original_file_name}
+                      {item.certification_type ? ` · ${item.certification_type.toLowerCase()}` : ""}
+                      {` · ${item.review_queue_status === "queued" ? "queued for review" : "saved / pending review"}`}
+                    </div>
+                  </Link>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to="/files" search={{ item: item.id, action: "support" }}>
+                        <Paperclip className="size-3.5" /> Attach Supporting Document
+                      </Link>
+                    </Button>
+                    <Button size="sm" asChild>
+                      <Link to="/files" search={{ item: item.id, action: "review" }}>
+                        <PlayCircle className="size-3.5" /> Review Certification
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {pendingCertifications.length > 8 ? (
+                <div className="pt-2 text-right">
+                  <Button size="sm" variant="outline" asChild><Link to="/files">Open all {pendingCertifications.length} pending certifications</Link></Button>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center">
+              <ListChecks className="mx-auto size-6 text-muted-foreground" />
+              <p className="mt-3 font-display text-[15px]">No certifications awaiting review</p>
+              <p className="mt-1 text-[12.5px] text-muted-foreground">Saved certifications that are not yet reviewed will appear here.</p>
+            </div>
+          )}
+        </Panel>
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1.45fr_1fr]">
