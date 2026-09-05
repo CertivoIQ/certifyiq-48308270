@@ -123,7 +123,10 @@ export function composeSidecarText(sidecar, expectedSource) {
     pages,
     ocrPageCount,
     textPageCount: pages.length - ocrPageCount,
-    skippedPageCount: rawPages.length - pages.length,
+    // Count pages that are absent or invalid against the original source page
+    // count. This preserves the audit signal for intentionally blank pages and
+    // for pages that were omitted because no trustworthy text was recovered.
+    skippedPageCount: Math.max(0, sourceIdentity.pageCount - pages.length),
     provider: ocrPageCount > 0 ? OCR_PROVIDER : TEXT_PROVIDER,
     truncated: false,
     sourceIdentity,
