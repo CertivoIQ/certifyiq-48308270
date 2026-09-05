@@ -1,4 +1,4 @@
-name: Restore www to v3 before v5 runtime repair
+name: Restore both production hostnames to v3
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  restore-www:
+  restore-v3:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Confirm exact partial-cutover state
+      - name: Confirm exact all-v5 state and empty Worker Routes
         shell: bash
         run: |
           set -euo pipefail
@@ -45,23 +45,31 @@ jobs:
           echo "PRE_RESTORE_WWW=$www"
           echo "PRE_RESTORE_APEX=$apex"
           test "$www" = "$V5_WORKER"
-          test "$apex" = "$V3_WORKER"
-          echo 'PARTIAL_STATE_GATE=PASS'
+          test "$apex" = "$V5_WORKER"
+          echo 'ALL_V5_STATE_GATE=PASS'
 
-      - name: Restore www to v3
+      - name: Restore apex first then www to v3 and purge
         shell: bash
         run: |
           set -euo pipefail
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
           api='https://api.cloudflare.com/client/v4'
-          body="$(jq -nc --arg h 'www.certivoiq.com' --arg s "$V3_WORKER" --arg z "$ZONE_ID" --arg zn "$ZONE_NAME" '{hostname:$h,service:$s,zone_id:$z,zone_name:$zn}')"
-          curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/restore-www.json
+          attach(){
+            host="$1"
+            body="$(jq -nc --arg h "$host" --arg s "$V3_WORKER" --arg z "$ZONE_ID" --arg zn "$ZONE_NAME" '{hostname:$h,service:$s,zone_id:$z,zone_name:$zn}')"
+            curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' --data "$body" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains"
+          }
+
+          attach 'certivoiq.com' > /tmp/restore-apex.json
+          jq -e --arg w "$V3_WORKER" '.success == true and .result.hostname=="certivoiq.com" and .result.service==$w' /tmp/restore-apex.json >/dev/null
+
+          attach 'www.certivoiq.com' > /tmp/restore-www.json
           jq -e --arg w "$V3_WORKER" '.success == true and .result.hostname=="www.certivoiq.com" and .result.service==$w' /tmp/restore-www.json >/dev/null
 
-          purge="$(jq -nc '{hosts:["www.certivoiq.com"]}')"
+          purge="$(jq -nc '{hosts:["www.certivoiq.com","certivoiq.com"]}')"
           curl -fsS -X POST "${auth[@]}" -H 'Content-Type: application/json' --data "$purge" "$api/zones/$ZONE_ID/purge_cache" -o /tmp/purge.json
           jq -e '.success == true' /tmp/purge.json >/dev/null
-          echo 'WWW_RESTORE_WRITE=PASS'
+          echo 'V3_RESTORE_WRITES=PASS'
 
       - name: Verify all-v3 state and empty Worker Routes
         shell: bash
