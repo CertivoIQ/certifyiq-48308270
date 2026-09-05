@@ -13,6 +13,7 @@ export const PLATFORM_DASHBOARD_LABELS: Record<PlatformDashboardMode, string> = 
 const DASHBOARD_ORDER: PlatformDashboardMode[] = ["multifamily", "pha", "executive_demo"];
 const STORAGE_PREFIX = "certivoiq:platform-dashboard";
 const FOUNDER_EMAIL = "rjwatkins@certivoiq.com";
+const FOUNDER_USER_IDS = new Set(["e2f47e3c-416b-4bf5-ab5d-8e519b4afe7b"]);
 
 function isPlatformDashboardMode(value: unknown): value is PlatformDashboardMode {
   return value === "multifamily" || value === "pha" || value === "executive_demo";
@@ -28,7 +29,10 @@ export function resolvePlatformDashboardMode(
 
 export function usePlatformDashboardAccess() {
   const { user } = useSession();
-  const isFounder = user?.email?.trim().toLowerCase() === FOUNDER_EMAIL;
+  const normalizedEmail = user?.email?.trim().toLowerCase();
+  const isFounder =
+    normalizedEmail === FOUNDER_EMAIL ||
+    (user?.id ? FOUNDER_USER_IDS.has(user.id) : false);
   const query = useQuery({
     queryKey: ["platform-dashboard-access", user?.id],
     enabled: !!user && !isFounder,
@@ -51,8 +55,8 @@ export function usePlatformDashboardAccess() {
   );
 
   // The founder must never lose cross-workspace access because of a staff-role,
-  // workspace-profile, navigation, or RLS-query regression. Other users remain
-  // strictly entitlement-based.
+  // workspace-profile, navigation, RLS-query, or email-normalization regression.
+  // Other users remain strictly entitlement-based.
   const allowedModes = isFounder ? DASHBOARD_ORDER : entitledModes;
 
   const storageKey = user ? `${STORAGE_PREFIX}:${user.id}` : null;
