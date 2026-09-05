@@ -1,4 +1,4 @@
-# Validated helper for flattened TIC spatial OCR integration.
+# Retrigger after spatial regression alignment.
 name: Patch TIC spatial OCR integration
 
 on:
