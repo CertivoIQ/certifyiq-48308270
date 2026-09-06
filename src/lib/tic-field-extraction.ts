@@ -1,6 +1,7 @@
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 import type { PageProvenance } from "@/lib/ocr-sidecar.mjs";
 import {
+  TIC_FIELD_BY_KEY,
   TIC_FIELD_DEFINITIONS,
   TIC_FIELD_KEYS,
   type TicFieldDefinition,
@@ -11,6 +12,8 @@ export type TicExtractionResult = {
   facts: ExtractedFact[];
   missingFields: string[];
 };
+
+export const DIRECT_TIC_FIELD_PREFIX = "__CERTIVOIQ_TIC_FIELD__";
 
 const FORM_BOUNDARIES = [
   "effective date", "move-in date", "move in date", "current date", "initial certification", "recertification",
@@ -126,16 +129,39 @@ function nextCandidateLine(lines: string[], start: number) {
 function certificationTypeFact(lines: string[]) {
   const text = lines.join(" ");
   const marked = [
-    ["Initial Certification", /(?:☒|✓|\bx\b)\s*initial certification|initial certification\s*(?:☒|✓|\bx\b)/i],
-    ["Recertification", /(?:☒|✓|\bx\b)\s*recertification|recertification\s*(?:☒|✓|\bx\b)/i],
-    ["Other", /(?:☒|✓|\bx\b)\s*other\b|\bother\b\s*(?:☒|✓|\bx\b)/i],
+    ["Initial Certification", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*initial certification|initial certification\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
+    ["Recertification", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*recertification|recertification\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
+    ["Other", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*other\b|\bother\b\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
   ] as const;
   return marked.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
 }
 
+function factFromValue(
+  definition: TicFieldDefinition,
+  value: string | number,
+  documentRef: string,
+  line: string,
+  page: number,
+  provenance?: PageProvenance,
+): ExtractedFact {
+  return {
+    field: definition.key,
+    value,
+    sourceDocumentRef: documentRef,
+    page,
+    snippet: line.trim().slice(0, 300),
+    confidence: provenance?.confidence ?? 0.99,
+    humanVerified: false,
+    requiredForDecision: false,
+    provider: provenance?.provider ?? "deterministic-text",
+  };
+}
+
 /**
  * Parse the TIC registry from OCR/native text. Extraction is only a proposal.
- * Blank form lines stay blank; nearby labels are never promoted into field data.
+ * Exact source-field mappings emitted by the native/spatial readers always win
+ * over loose OCR aliases. Blank form lines stay blank and neighboring labels
+ * are never promoted into field data.
  */
 export function extractTicFieldsFromText(
   text: string,
@@ -153,24 +179,35 @@ export function extractTicFieldsFromText(
   const facts: ExtractedFact[] = [];
   const found = new Set<string>();
 
-  const explicitCertificationType = certificationTypeFact(lines);
-  if (explicitCertificationType) {
-    const definition = TIC_FIELD_DEFINITIONS.find((entry) => entry.key === "certification_type")!;
-    const index = lines.findIndex((line) => line.toLowerCase().includes(explicitCertificationType.toLowerCase()));
-    const page = index >= 0 ? pageOfLine[index] ?? 1 : 1;
-    const provenance = pageProvenance?.get(page);
-    facts.push({
-      field: definition.key,
-      value: explicitCertificationType,
-      sourceDocumentRef: documentRef,
-      page,
-      snippet: index >= 0 ? lines[index]!.trim().slice(0, 300) : explicitCertificationType,
-      confidence: provenance?.confidence ?? 0.99,
-      humanVerified: false,
-      requiredForDecision: false,
-      provider: provenance?.provider ?? "deterministic-text",
-    });
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index] ?? "";
+    const direct = new RegExp(`^${DIRECT_TIC_FIELD_PREFIX}\\s+([a-z0-9_]+)\\s*:\\s*(.*)$`, "i").exec(line.trim());
+    if (!direct?.[1] || found.has(direct[1])) continue;
+    const definition = TIC_FIELD_BY_KEY.get(direct[1]);
+    if (!definition) continue;
+    const value = normalizeValue(definition, direct[2] ?? "");
+    if (value === null) continue;
+    const page = pageOfLine[index] ?? 1;
+    facts.push(factFromValue(definition, value, documentRef, line, page, pageProvenance?.get(page)));
     found.add(definition.key);
+  }
+
+  if (!found.has("certification_type")) {
+    const explicitCertificationType = certificationTypeFact(lines);
+    if (explicitCertificationType) {
+      const definition = TIC_FIELD_BY_KEY.get("certification_type")!;
+      const index = lines.findIndex((line) => line.toLowerCase().includes(explicitCertificationType.toLowerCase()));
+      const page = index >= 0 ? pageOfLine[index] ?? 1 : 1;
+      facts.push(factFromValue(
+        definition,
+        explicitCertificationType,
+        documentRef,
+        index >= 0 ? lines[index]! : explicitCertificationType,
+        page,
+        pageProvenance?.get(page),
+      ));
+      found.add(definition.key);
+    }
   }
 
   for (const definition of TIC_FIELD_DEFINITIONS) {
@@ -178,6 +215,7 @@ export function extractTicFieldsFromText(
     let extracted: ExtractedFact | null = null;
     for (let index = 0; index < lines.length && !extracted; index += 1) {
       const line = lines[index] ?? "";
+      if (line.startsWith(DIRECT_TIC_FIELD_PREFIX)) continue;
       const lower = line.toLowerCase();
       for (const alias of definition.aliases) {
         if (!lower.includes(alias.toLowerCase())) continue;
@@ -189,18 +227,7 @@ export function extractTicFieldsFromText(
         }
         if (value === null) continue;
         const page = pageOfLine[index] ?? 1;
-        const provenance = pageProvenance?.get(page);
-        extracted = {
-          field: definition.key,
-          value,
-          sourceDocumentRef: documentRef,
-          page,
-          snippet: line.trim().slice(0, 300),
-          confidence: provenance?.confidence ?? 0.99,
-          humanVerified: false,
-          requiredForDecision: false,
-          provider: provenance?.provider ?? "deterministic-text",
-        };
+        extracted = factFromValue(definition, value, documentRef, line, page, pageProvenance?.get(page));
         break;
       }
     }
