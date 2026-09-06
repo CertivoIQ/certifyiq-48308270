@@ -59,11 +59,11 @@ jobs:
           set -e
           cat /tmp/income-feature-types.txt
           test "$baseline_status" -eq 2
-          diff -u /tmp/income-baseline-types.txt /tmp/income-feature-types.txt
+          node -e "const fs=require('node:fs');const base=new Set(fs.readFileSync('/tmp/income-baseline-types.txt','utf8').trim().split('\n'));const added=fs.readFileSync('/tmp/income-feature-types.txt','utf8').trim().split('\n').filter(x=>!base.has(x));if(added.length){console.error(added.join('\n'));process.exit(1)}"
           printf "%s\n" "src/lib/tic-pdf-fill-core.ts(156,17): error TS2345: Argument of type 'StandardFonts' is not assignable to parameter of type 'PDFName'." > /tmp/income-known-baseline-types.txt
           diff -u /tmp/income-known-baseline-types.txt /tmp/income-feature-types.txt
           echo '::warning::One independently reproduced pre-existing TIC type error; calculator adds zero new errors. Full application build and calculator/server tests passed.'
-          printf '\n## Application typecheck baseline\nThe unchanged main commit 3a662a690d7e02bf5cd6fda16149c964864c0cd4 independently reproduces the single existing StandardFonts/PDFName error in src/lib/tic-pdf-fill-core.ts:156. This feature adds no new TypeScript errors. The full application build, strict Edge Function check, and 75 calculator tests passed.\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '\n## Application typecheck baseline\nUnchanged main independently reproduces the existing StandardFonts/PDFName error in src/lib/tic-pdf-fill-core.ts:156. The full build removes two stale generated-route diagnostics. This feature adds no TypeScript errors. The full application build, strict Edge Function check, and 75 calculator tests passed.\n' >> "$GITHUB_STEP_SUMMARY"
       - name: Commit tested implementation to feature branch
         run: |
           git config user.name 'CertivoIQ Release Bot'
