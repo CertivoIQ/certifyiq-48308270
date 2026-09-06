@@ -101,7 +101,7 @@ const MF_ADMIN: readonly NavItem[] = [
 
 const HELP_NAV: readonly NavItem[] = [
   { to: "/feature-suggestions", label: "Suggest a Feature", icon: Lightbulb },
-  { to: "/contact-support", label: "Support", icon: HelpCircle },
+  { to: "/contact-support", label: "Tech Support", icon: HelpCircle },
 ];
 
 const PHA_COMMAND: readonly PhaNavItem[] = [
@@ -379,3 +379,4 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
     </div>
   );
 }
+

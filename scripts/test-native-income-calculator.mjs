@@ -84,7 +84,22 @@ test('server recalculates rather than trusting a submitted result',()=>{const ap
 
 test('sourced limits retain precise decimal values',()=>assert.deepEqual(e.parseSourcedLimits('1=40000\n2=45000.123456'),{'1':'40000','2':'45000.123456'}));
 for(const invalid of ['', '2=45000\n2=46000','31=50000','2=45,000','2=1e3','2=-100','2=0.1234567','2=10000000000']) test('invalid limits fail closed: '+JSON.stringify(invalid),()=>assert.throws(()=>e.parseSourcedLimits(invalid)));
-test('saved version is not overwritten by current configuration fetch',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.ok(ui.includes('if (saved?.id) { setConfigurationLoading(false); return; }'));assert.ok(ui.includes('reload, saved?.id]'));});
+test('saved version is not overwritten by current configuration fetch',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.ok(ui.includes('if (saved?.id) { setConfigurationLoading(false); return; }'));assert.ok(ui.includes('reload, saved?.id, trial]'));});
 test('both pending metadata and configuration requests block saves',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.ok(ui.includes('const loading = metadataLoading || configurationLoading;'));assert.ok(ui.includes('!!visibleError'));});
 
 import "./test-income-control-labels.mjs";
+
+test('Trial worksheet computes without saved portfolio, while server default still requires it',()=>{
+ const i=input(); i.propertyId=''; i.unitId=''; i.tenantId='';
+ const trial=e.evaluate(i,[profile()],{requireSavedHousehold:false});
+ assert.equal(trial.prospectiveAnnual,'41600.00');
+ assert.equal(trial.results[0].comparison,'AT_OR_BELOW_LIMIT');
+ assert.equal(e.evaluate(i,[profile()]).results[0].comparison,'NOT_DETERMINED');
+});
+test('Trial worksheet retains missing-source and unknown-program blocks',()=>{
+ const i=input(); i.jobs[0].source='';
+ const r=e.evaluate(i,[profile()],{requireSavedHousehold:false});
+ assert.equal(r.prospectiveAnnual,null);
+ assert.equal(r.results[0].comparison,'NOT_DETERMINED');
+});
+

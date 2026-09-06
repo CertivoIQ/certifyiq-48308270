@@ -19,9 +19,13 @@ Deno.serve(async (req) => {
     const client = createClient(url, anonKey, { global: { headers: { Authorization: authorization } }, auth: { persistSession: false, autoRefreshToken: false } });
     const { data: auth, error: authError } = await client.auth.getUser(authorization.slice(7));
     if (authError || !auth.user || auth.user.is_anonymous) return json({ error: "A verified signed-in account is required." }, 401);
+    const { data: access, error: accessError } = await client.rpc("income_calculator_access");
+    if (accessError) return json({ error: "Could not verify Income Calculator access. Please sign in again or retry." }, 403);
+    if (!access?.allowed) return json({ error: access?.reason || "Income Calculator access is unavailable." }, 403);
     const userId = auth.user.id;
     const bodyText = await req.text(); if (new TextEncoder().encode(bodyText).length > 1_000_000) return json({ error: "Calculator request is too large." }, 413);
     const body = JSON.parse(bodyText); if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid request.");
+    if (access.mode === "trial" && ["save_profile", "save_snapshot", "sign_snapshot"].includes(body.action)) return json({ error: "A platform subscription is required to save calculator records to a portfolio. Your working trial calculator remains available while free reviews remain." }, 403);
     const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     // All privileged writes below follow ownership checks using the caller's RLS-scoped client.
     const ownedProperty = async (id: unknown) => { const { data, error } = await client.from("portfolio_properties").select("id,name,state_code,source_data").eq("id", uuid(id)).eq("user_id", userId).single(); if (error || !data) throw new Error("Property unavailable or access denied."); return data; };
@@ -99,3 +103,4 @@ Deno.serve(async (req) => {
     return json({ error: "Unknown Income Calculator action." }, 400);
   } catch (error) { return json({ error: error instanceof Error ? error.message : "Income Calculator could not complete the request." }, 422); }
 });
+

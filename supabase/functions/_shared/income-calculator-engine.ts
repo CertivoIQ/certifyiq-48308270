@@ -138,9 +138,9 @@ function jobValue(j: Job, effectiveDate: string): { value: Q; issues: string[] }
   const change = read(j.adjustment, "Documented net annual expected-change adjustment", issues, true); if (change.n !== 0n && !nonblank(j.changeSource)) issues.push("Expected-change adjustment requires its calculation and source reference.");
   value = add(value, change); if (value.n < 0n) issues.push("Job annual income cannot be negative."); return { value, issues };
 }
-export function evaluate(input: Input, approved: ApprovedProfile[]): Evaluation {
+export function evaluate(input: Input, approved: ApprovedProfile[], options: { requireSavedHousehold?: boolean } = {}): Evaluation {
   assertInput(input); const common: string[] = [];
-  if (!input.tenantId || !input.propertyId || !input.unitId) common.push("Select a saved property, unit, and household.");
+  if (options.requireSavedHousehold !== false && (!input.tenantId || !input.propertyId || !input.unitId)) common.push("Select a saved property, unit, and household.");
   if (!validDate(input.effectiveDate)) common.push("Valid certification effective date required.");
   if (!/^([1-9]|[12]\d|30)$/.test(input.householdSize)) common.push("Verified household size (1–30) required.");
   if (!input.householdReviewed) common.push("Household composition and income sources must be reviewed.");
@@ -203,3 +203,4 @@ export function parseSourcedLimits(text: string): Record<string, string> {
   if (!Object.keys(limits).length) throw new Error("At least one sourced household-size income limit is required.");
   return limits;
 }
+
