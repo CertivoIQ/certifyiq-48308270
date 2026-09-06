@@ -248,7 +248,7 @@ export function extractTicFieldsFromText(
     for (let index = 0; index < lines.length && !extracted; index += 1) {
       const line = lines[index] ?? "";
       if (line.startsWith(DIRECT_TIC_FIELD_PREFIX)) continue;
-      if (line.startsWith("__CERTIVOIQ_") || (strictCellPages.has(pageOfLine[index]) || supplementalPages.has(pageOfLine[index]))) continue;
+      if (line.startsWith("__CERTIVOIQ_") || (strictCellPages.has(pageOfLine[index]) || supplementalPages.has(pageOfLine[index] ?? 1))) continue;
       const lower = line.toLowerCase();
       for (const alias of definition.aliases) {
         if (!lower.includes(alias.toLowerCase())) continue;

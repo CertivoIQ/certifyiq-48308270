@@ -281,13 +281,15 @@ async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: nu
 
   const auto = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.AUTO, includeBlocks));
   candidates.push(auto);
-  if (recognitionIsStrong(auto)) return auto;
+  const needsFormLayoutRetry = /rental\s+application|annual\s+income\s+calculation\s+worksheet|adult\s+household\s+member/i.test(auto.text);
+  if (recognitionIsStrong(auto) && !needsFormLayoutRetry) return auto;
 
   const contrastCanvas = createHighContrastCanvas(canvas);
   const sparse = normalizedRecognition(
     await recognizeWithSharedWorker(contrastCanvas, workerCount, PSM.SPARSE_TEXT, includeBlocks),
   );
   candidates.push(sparse);
+  if (needsFormLayoutRetry && isTicContent(sparse.text) && !isTicContent(auto.text)) return sparse;
   if (recognitionIsStrong(sparse)) {
     return recognitionScore(sparse) > recognitionScore(auto) ? sparse : auto;
   }
@@ -639,3 +641,4 @@ export async function prepareCertificationForReview(
     await pdf.cleanup();
   }
 }
+

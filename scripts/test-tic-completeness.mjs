@@ -21,3 +21,13 @@ test('application pages are recognized by content, not page number',()=>{
  assert.equal(supplementalPageKind('ASSET INFORMATION Adjustments to Income OTHER INFORMATION'),'application_3');
  assert.equal(supplementalPageKind('bank statement checking balance'),null);
 });
+
+test('partial non-financial rows highlight their missing corresponding fields',()=>{
+ const f=ticCompletenessFindings({application_automobile_1_year:'2020',application_automobile_1_make:'Example',application_automobile_1_model:'Sedan'});
+ assert(f.some(x=>x.field==='application_automobile_1_tag_number'));
+ assert(!f.some(x=>x.field.startsWith('application_automobile_2')));
+});
+test('yes answer needs its explanation; no answer does not',()=>{
+ assert(ticCompletenessFindings({application_question_7:'Yes'}).some(f=>f.field==='application_question_7_explanation'));
+ assert(!ticCompletenessFindings({application_question_7:'No'}).some(f=>f.field==='application_question_7_explanation'));
+});

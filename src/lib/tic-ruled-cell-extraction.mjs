@@ -1,3 +1,4 @@
+import { supplementalRegions } from './tic-supplemental-layout.mjs';
 /** Bounded, image-backed TIC cell proposals. Never repairs letters or invents hidden values. */
 const FIELD='__CERTIVOIQ_TIC_FIELD__';
 export const BLOCKED='__CERTIVOIQ_TIC_UNRESOLVED__';
@@ -54,30 +55,28 @@ export function planTicCells(image,blocks){
  const r=rasterMask(image),lines=ocrLines(blocks),sourceWords=wordsOf(blocks),cells=[],blocked=[],groups=[];
  const add=(key,b,type='text',extra={})=>{b=bound(r,b);if(b.x1-b.x0<8||b.y1-b.y0<8)return; if(redacted(r,b)){blocked.push(key);return;} cells.push({key,bbox:b,contentBox:contentBounds(r,b),type,ink:hasInk(r,b),sourceWords:sourceWords.filter(w=>{const x=(w.bbox.x0+w.bbox.x1)/2,y=(w.bbox.y0+w.bbox.y1)/2;return x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1;}),...extra});};
  const find=re=>lines.find(l=>re.test(l.text));
- // The rental application has a different asset table and independent values.
- // Detect actual ruled columns and rows; never use physical page number as a template.
- const applicationAssets=find(/ASSET\s+INFORMATION/i),adjustments=find(/ADJUSTMENTS\s+TO\s+INCOME/i);
- if(applicationAssets&&adjustments&&adjustments.bbox.y0>applicationAssets.bbox.y1){
-  const headerLines=lines.filter(l=>l.bbox.y0>applicationAssets.bbox.y1&&l.bbox.y0<adjustments.bbox.y0);
-  const header=headerLines.map(l=>l.text).join(' ');
-  if(/type\s+of\s+asset/i.test(header)&&/value\s+or\s+amount/i.test(header)&&/interest/i.test(header)){
-   const labelLine=headerLines.find(l=>/type\s+of\s+asset/i.test(l.text));
-   const y0=Math.floor(labelLine.bbox.y0), y1=Math.floor(adjustments.bbox.y0-r.h*.025);
-   const xs=verticals(r,y0,y1);
-   if(xs.length===6){
-    const ys=horizontals(r,xs[0],xs.at(-1),y0,Math.min(r.h,y1+Math.round(r.h*.02)));
-    const labels=[/checking\s+account/i,/savings\s+account/i,/\bCD.?s\b/i,/T.?Bills|Keogh/i,/IRA/i,/money\s+market/i,/stock.*bonds/i,/mutual\s+funds/i,/real\s+estate/i,/trust\s+funds/i,/^other\b/i];
-    labels.forEach((re,i)=>{
-     const label=headerLines.find(l=>re.test(l.text));if(!label)return;
-     const middle=(label.bbox.y0+label.bbox.y1)/2;
-     const top=[...ys].reverse().find(y=>y<middle),bottom=ys.find(y=>y>middle);
-     if(top===undefined||bottom===undefined||bottom-top>r.h*.065)return;
-     const pad=Math.max(3,Math.round(r.h*.002));
-     ['institution','account','value','interest'].forEach((key,c)=>add(`application_asset_${i+1}_${key}`,{x0:xs[c+1]+pad,x1:xs[c+2]-pad,y0:top+pad,y1:bottom-pad},c<2?'text':'currency'));
+ const supplemental=supplementalRegions(lines,r.w,r.h);
+ if(supplemental.template){
+  for(const region of supplemental.regions) add(region.key,region.bbox,region.type);
+  const supplementalValues={};
+  for(const choice of supplemental.choices){
+    const readings=choice.options.map(option=>{
+      const b=bound(r,option.bbox),pad=Math.max(4,Math.round((b.x1-b.x0)*.24));let ink=0,total=0;
+      for(let y=b.y0+pad;y<b.y1-pad;y++)for(let x=b.x0+pad;x<b.x1-pad;x++){ink+=r.mask[y*r.w+x];total++;}
+      const edge = (vertical,at,start,end) => {
+        let hit=0;
+        for(let v=start;v<end;v++) { let dark=false; for(let d=-3;d<=3;d++) { const x=vertical?at+d:v,y=vertical?v:at+d; if(x>=0&&y>=0&&x<r.w&&y<r.h&&r.mask[y*r.w+x]) dark=true; } if(dark)hit++; }
+        return hit/Math.max(1,end-start);
+      };
+      const framed=[edge(true,b.x0,b.y0,b.y1),edge(true,b.x1,b.y0,b.y1),edge(false,b.y0,b.x0,b.x1),edge(false,b.y1,b.x0,b.x1)].every(n=>n>.5);
+      return {...option,fill:framed?ink/Math.max(1,total):NaN};
     });
-   }
+    const marked=readings.filter(o=>o.fill>=.09),clear=readings.filter(o=>o.fill<.02);
+    if(marked.length===1&&clear.length===readings.length-1) supplementalValues[choice.key]={value:marked[0].value,bbox:marked[0].bbox};
+    else if(readings.length===1&&clear.length===1) supplementalValues[choice.key]={value:'No',bbox:readings[0].bbox};
+    else blocked.push(choice.key);
   }
-  return {version:1,width:r.w,height:r.h,cells,blocked,groups:[],checkboxes:null};
+  return {version:1,width:r.w,height:r.h,cells,blocked,groups:[],checkboxes:null,supplementalValues};
  }
  const household=find(/HOUSEHOLD\s+COMPOSITION/i),income=find(/GROSS\s+ANNUAL\s+INCOME/i),assets=find(/INCOME\s+FROM\s+ASSETS/i);
  const profiles=[
@@ -216,6 +215,9 @@ export function finishTicCells(plan,sheet,blocks){
  for(const [key,val]of remapped)values.set(key,val);
  if(plan.checkboxes?.selected){values.set('certification_type',plan.checkboxes.selected);const selected=plan.checkboxes.candidates.find(c=>c.label===plan.checkboxes.selected);evidence.certification_type={bbox:{x0:selected.x0,y0:selected.y0,x1:selected.x1,y1:selected.y1},pageWidth:plan.width,pageHeight:plan.height,confidence:.85,method:'checkbox-interior'};}
  else if(plan.checkboxes)unresolved.add('certification_type');
+ for(const [key,entry] of Object.entries(plan.supplementalValues??{})){
+  values.set(key,entry.value);evidence[key]={bbox:entry.bbox,pageWidth:plan.width,pageHeight:plan.height,confidence:.8,method:'source-checkbox-interior'};
+ }
  for(const key of unresolved)values.delete(key);
  for(const [key,value]of values){if(key.endsWith('_number')&&key.startsWith('household_member_'))continue;
   out.push(`${FIELD} ${key}: ${value}`);

@@ -69,17 +69,17 @@ APPLICATION_QUESTIONS.forEach((question,i)=>{
 for(let i=1;i<=2;i++) row(s,`application_automobile_${i}`,['Year','Make','Model','Tag Number']);
 s=section('application_5','Rental Application — Page 5', 'Review the original authorization and declarations alongside these fields. Signature presence records existing source evidence; typing a name does not execute a signature. Race, ethnicity and sex disclosure is voluntary and does not control review eligibility.');
 for(const who of ['head','adult']){add(s,`application_signature_${who}_present`, `Signature (${who==='head'?'Head of Household':'Adult Household Member'}) present`,'yes_no');add(s,`application_signature_${who}_date`,'Date','date');}
-for(const [key,label] of [['hispanic','Hispanic or Latino'],['not_hispanic','Not Hispanic or Latino'],['american_indian','American Indian/Alaska Native'],['asian','Asian'],['black','Black or African American'],['pacific_islander','Native Hawaiian or Other Pacific Islander'],['white','White'],['male','Male'],['female','Female']]) add(s,`application_demographic_${key}`,label,'yes_no');
+for(const [key,label] of [['hispanic','Hispanic or Latino'],['not_hispanic','Not Hispanic or Latino'],['american_indian','American Indian/Alaska Native'],['asian','Asian'],['black','Black or African American'],['pacific_islander','Native Hawaiian or Other Pacific Islander'],['white','White'],['male','Male'],['female','Female']] as const) add(s,`application_demographic_${key}`,label,'yes_no');
 export const TIC_SUPPLEMENTAL_SECTIONS = sections;
 export const TIC_SUPPLEMENTAL_FIELDS = sections.flatMap(s=>s.fields);
 
 export function supplementalPageKind(text: string): string | null {
  const t=text.replace(/\s+/g,' ');
- if(/annual income calculation worksheet/i.test(t)&&/asset calculations/i.test(t))return 'worksheet';
+ if(/annual income calculation worksheet/i.test(t)&&/relationship/i.test(t)&&/description/i.test(t))return 'worksheet';
  if(/rental application/i.test(t)&&/household information/i.test(t)&&/housing information/i.test(t))return 'application_1';
  if(/personal references/i.test(t)&&/household income/i.test(t)&&/other income/i.test(t))return 'application_2';
  if(/asset information/i.test(t)&&/adjustments to income/i.test(t)&&/other information/i.test(t))return 'application_3';
  if(/full custody/i.test(t)&&/automobiles/i.test(t)&&/bankruptcy/i.test(t))return 'application_4';
- if(/signature.*head of household/i.test(t)&&/adult household member/i.test(t)&&/ethnicity/i.test(t))return 'application_5';
+ if(/head of household/i.test(t)&&/adult household member/i.test(t)&&/ethnicity/i.test(t))return 'application_5';
  return null;
 }

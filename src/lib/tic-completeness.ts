@@ -51,7 +51,7 @@ export function ticCompletenessFindings(values: Record<string, unknown>): TicCom
    const key=`application_question_${i}`;
    if(String(values[key]??'').toLowerCase()==='yes' && TIC_SUPPLEMENTAL_FIELDS.some(f=>f.key===key+'_explanation')) missing(key+'_explanation',`Question ${i}: complete the corresponding explanation for the Yes answer.`);
  }
- if(String(values.application_evicted??'').toLowerCase()==='yes') missing('application_evicted_explanation','Eviction question: complete the explanation for the Yes answer.');
+ if(String(values['application_evicted']??'').toLowerCase()==='yes') missing('application_evicted_explanation','Eviction question: complete the explanation for the Yes answer.');
  for(const who of ['head','adult']) if(String(values[`application_signature_${who}_present`]??'').toLowerCase()==='yes') missing(`application_signature_${who}_date`,`${who} signature is present but its date is missing.`);
  return findings;
 }
