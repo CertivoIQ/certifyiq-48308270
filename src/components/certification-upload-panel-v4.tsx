@@ -1,3 +1,4 @@
+import { ticCompletenessFindings } from "@/lib/tic-completeness";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -297,6 +298,7 @@ export function CertificationUploadPanel() {
 
   async function confirmAndSave(startReview: boolean) {
     if (!draft || busy) return;
+    if (startReview && ticCompletenessFindings(fieldValues).length) { setMessage("Complete the yellow findings before starting another review. You can still save your changes."); return; }
     if (stage !== "tic" || !draft.selectionDigest) { setMessage("Confirm document selection and rebuild the TIC before saving."); return; }
     if (!tenantProfileId) {
       setMessage("Select the tenant file before saving this certification packet.");
@@ -454,8 +456,8 @@ export function CertificationUploadPanel() {
             {tenantDestinations.data?.length === 0 ? <p className="mt-2 text-xs text-destructive">No tenant profiles are available. Complete Portfolio & Tenant Onboarding before saving a certification.</p> : null}
           </div>
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(360px,0.72fr)_minmax(760px,1.28fr)]">
-            <div className="rounded-xl border bg-background p-3 xl:sticky xl:top-4 xl:self-start">
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="rounded-xl border bg-background p-3 min-w-0 lg:sticky lg:top-4 lg:self-start">
               <div className="mb-3 flex items-center gap-2 text-sm font-medium"><FileSearch className="size-4" /> Selected TIC source</div>
               <div className="mb-2 flex flex-wrap gap-2">{draft.ticPages.map(page => <button type="button" key={page} disabled={busy} aria-pressed={viewTicPage === page} className="rounded border px-2 py-1 text-xs" onClick={() => setViewTicPage(page)}>TIC page {page}</button>)}</div>
               {draft.sourcePreviewUrl ? (
@@ -467,7 +469,7 @@ export function CertificationUploadPanel() {
               ) : <p className="rounded-lg border p-4 text-sm text-muted-foreground">Source preview is temporarily unavailable. The packet remains staged and unsaved.</p>}
             </div>
 
-            <div className="max-h-[84vh] overflow-y-auto pr-1">
+            <div className="min-w-0 max-h-[84vh] overflow-auto pr-1">
               <div className="mb-3 rounded-lg border bg-background p-3 text-sm">
                 <strong>CertivoIQ TIC Review Form.</strong> Values are placed into the same logical sections and tables as the source TIC. A blank source field stays blank rather than inheriting nearby labels.
               </div>
@@ -494,7 +496,7 @@ export function CertificationUploadPanel() {
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <button type="button" disabled={busy} onClick={() => void cancelStagedUpload()} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">Cancel Upload</button>
             <button type="button" disabled={busy || !tenantProfileId || stage !== "tic" || !draft.selectionDigest} onClick={() => void confirmAndSave(false)} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">{saveAction === "save" ? "Saving…" : "Save Document"}</button>
-            <button type="button" disabled={busy || !tenantProfileId || stage !== "tic" || !draft.selectionDigest} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
+            <button type="button" disabled={busy || !tenantProfileId || stage !== "tic" || !draft.selectionDigest || ticCompletenessFindings(fieldValues).length > 0} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
           </div>
         </div>
       )}
@@ -507,3 +509,4 @@ export function CertificationUploadPanel() {
     </section>
   );
 }
+

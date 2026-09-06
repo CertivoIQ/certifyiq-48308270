@@ -54,6 +54,31 @@ export function planTicCells(image,blocks){
  const r=rasterMask(image),lines=ocrLines(blocks),sourceWords=wordsOf(blocks),cells=[],blocked=[],groups=[];
  const add=(key,b,type='text',extra={})=>{b=bound(r,b);if(b.x1-b.x0<8||b.y1-b.y0<8)return; if(redacted(r,b)){blocked.push(key);return;} cells.push({key,bbox:b,contentBox:contentBounds(r,b),type,ink:hasInk(r,b),sourceWords:sourceWords.filter(w=>{const x=(w.bbox.x0+w.bbox.x1)/2,y=(w.bbox.y0+w.bbox.y1)/2;return x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1;}),...extra});};
  const find=re=>lines.find(l=>re.test(l.text));
+ // The rental application has a different asset table and independent values.
+ // Detect actual ruled columns and rows; never use physical page number as a template.
+ const applicationAssets=find(/ASSET\s+INFORMATION/i),adjustments=find(/ADJUSTMENTS\s+TO\s+INCOME/i);
+ if(applicationAssets&&adjustments&&adjustments.bbox.y0>applicationAssets.bbox.y1){
+  const headerLines=lines.filter(l=>l.bbox.y0>applicationAssets.bbox.y1&&l.bbox.y0<adjustments.bbox.y0);
+  const header=headerLines.map(l=>l.text).join(' ');
+  if(/type\s+of\s+asset/i.test(header)&&/value\s+or\s+amount/i.test(header)&&/interest/i.test(header)){
+   const labelLine=headerLines.find(l=>/type\s+of\s+asset/i.test(l.text));
+   const y0=Math.floor(labelLine.bbox.y0), y1=Math.floor(adjustments.bbox.y0-r.h*.025);
+   const xs=verticals(r,y0,y1);
+   if(xs.length===6){
+    const ys=horizontals(r,xs[0],xs.at(-1),y0,Math.min(r.h,y1+Math.round(r.h*.02)));
+    const labels=[/checking\s+account/i,/savings\s+account/i,/\bCD.?s\b/i,/T.?Bills|Keogh/i,/IRA/i,/money\s+market/i,/stock.*bonds/i,/mutual\s+funds/i,/real\s+estate/i,/trust\s+funds/i,/^other\b/i];
+    labels.forEach((re,i)=>{
+     const label=headerLines.find(l=>re.test(l.text));if(!label)return;
+     const middle=(label.bbox.y0+label.bbox.y1)/2;
+     const top=[...ys].reverse().find(y=>y<middle),bottom=ys.find(y=>y>middle);
+     if(top===undefined||bottom===undefined||bottom-top>r.h*.065)return;
+     const pad=Math.max(3,Math.round(r.h*.002));
+     ['institution','account','value','interest'].forEach((key,c)=>add(`application_asset_${i+1}_${key}`,{x0:xs[c+1]+pad,x1:xs[c+2]-pad,y0:top+pad,y1:bottom-pad},c<2?'text':'currency'));
+    });
+   }
+  }
+  return {version:1,width:r.w,height:r.h,cells,blocked,groups:[],checkboxes:null};
+ }
  const household=find(/HOUSEHOLD\s+COMPOSITION/i),income=find(/GROSS\s+ANNUAL\s+INCOME/i),assets=find(/INCOME\s+FROM\s+ASSETS/i);
  const profiles=[
   {start:household,end:income,part:'household',count:8,max:10,labels:[/last\s+name/i,/first\s+name/i,/date\s+of\s+birth/i],keys:['number','last_name','first_name_middle_initial','relationship','date_of_birth','full_time_student','ssn_or_alien_registration'],types:['number','text','text','text','date','yes_no','text']},
@@ -207,3 +232,4 @@ export function mergeCellProposals(spatialLines,cellLines){
  const keys=new Set(cellLines.map(line=>/^__CERTIVOIQ_TIC_(?:FIELD|UNRESOLVED)__\s+([a-z0-9_]+):/.exec(line)?.[1]).filter(Boolean));
  return [...spatialLines.filter(line=>!keys.has(/^__CERTIVOIQ_TIC_FIELD__\s+([a-z0-9_]+):/.exec(line)?.[1])),...cellLines];
 }
+

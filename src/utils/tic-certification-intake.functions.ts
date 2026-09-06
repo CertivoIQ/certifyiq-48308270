@@ -1,3 +1,4 @@
+import { ticCompletenessFindings } from "@/lib/tic-completeness";
 import { previewEvidenceValue } from "@/lib/preview-evidence-value";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
@@ -63,7 +64,7 @@ function validateSource(source: StagedCertificationSource) {
 }
 
 function normalizeConfirmedValue(field: string, value: string | number | null) {
-  if (value === null || value === "") return null;
+  if (value === null || String(value).trim() === "") return null;
   if (ticFieldIsNumeric(field)) {
     const numeric = typeof value === "number" ? value : Number(String(value).replace(/[$,%\s]/g, ""));
     if (!Number.isFinite(numeric)) throw new Error(`${ticFieldDefinition(field)?.label ?? field} must be a number.`);
@@ -296,6 +297,9 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     const certificationType = ticType === "initial certification" ? "INITIAL" : ticType === "recertification" ? "ANNUAL" : ticType === "other" ? data.otherReviewAction ?? null : null;
     if (data.startReview && !certificationType) throw new Error("Confirm the TIC certification type (and an explicit review action for Other) before starting review.");
 
+    const completionFindings = ticCompletenessFindings(confirmedExtractedData);
+    if (data.startReview && completionFindings.length) throw new Error(completionFindings.map(f => f.message).join(" "));
+
     const confirmedAt = new Date().toISOString();
     const { data: item, error: itemError } = await db
       .from("certification_import_items")
@@ -326,6 +330,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
           page_classification_version: "tic-packet-selection:1",
           original_extracted_data: originalExtractedData,
           confirmed_extracted_data: confirmedExtractedData,
+          completion_findings: completionFindings,
           corrections,
           reviewer_supplied_fields: reviewerSuppliedFields,
           preserved_supporting_documents: finalSupportingDocuments.map((document) => ({
@@ -405,6 +410,16 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         if (supportingError) throw supportingError;
       }
 
+      if (completionFindings.length) {
+        const { error: completionError } = await db.from("compliance_findings").insert(completionFindings.map(f => ({
+          item_id: item.id, user_id: userId, organization_id: `org-${userId}`,
+          rule_id: `TIC-COMPLETE-${f.field}`, rule_version: "1", rule_pack_id: "tic-completeness", rule_pack_version: "1",
+          jurisdiction: tenant.portfolio_properties?.jurisdiction ?? "US", status: "UNABLE_TO_DETERMINE", severity: "critical",
+          explanation: f.message, blocking_reasons: [f.code], evidence_refs: [{ field: f.field }],
+          engine_build: "tic-completeness:1", review_state: "unable_to_determine",
+        })));
+        if (completionError) throw completionError;
+      }
       const itemCompletion = data.startReview
         ? {
             status: "completed",
@@ -550,3 +565,4 @@ export const getCertificationPacketSelection = createServerFn({ method: "GET" })
     if (!item) throw new Error("That certification is not available to this account.");
     return selectionFromHistory(item.historical_changes, item.sha256 ?? "");
   });
+

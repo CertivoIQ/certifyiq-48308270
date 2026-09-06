@@ -1,3 +1,5 @@
+import { TIC_SUPPLEMENTAL_SECTIONS } from "@/lib/tic-supplemental-fields";
+import { ticCompletenessFindings } from "@/lib/tic-completeness";
 import type { TicFieldDefinition } from "@/lib/tic-field-registry";
 import { TIC_ASSET_ROW_COUNT, TIC_FIELD_BY_KEY, TIC_HOUSEHOLD_ROW_COUNT, TIC_INCOME_ROW_COUNT } from "@/lib/tic-field-registry";
 
@@ -38,8 +40,9 @@ function Field({
   const value = values[field] ?? "";
   const original = fact?.value == null ? "" : String(fact.value);
   const corrected = Boolean(fact && value.trim() !== original.trim());
+  const finding = ticCompletenessFindings(values).find(f => f.field === field);
   return (
-    <label className="block min-w-0">
+    <label id={`tic-field-${field}`} className="block min-w-0">
       <div className="mb-1 flex items-end justify-between gap-2">
         <span className={`${compact ? "text-[10px]" : "text-xs"} font-semibold leading-tight`}>{definition.label}</span>
         <span className={`shrink-0 text-[9px] ${corrected ? "font-semibold" : "text-slate-500"}`}>
@@ -48,6 +51,9 @@ function Field({
       </div>
       <input
         className={`${compact ? "h-8 px-2 text-xs" : "h-9 px-2.5 text-sm"} w-full rounded-none border border-slate-500 bg-white text-slate-950 outline-none focus:ring-2 focus:ring-slate-800/20`}
+        aria-invalid={Boolean(finding)}
+        title={finding?.message}
+        style={finding ? { backgroundColor: "#fef08a", borderColor: "#a16207" } : undefined}
         value={value}
         disabled={busy}
         inputMode={definition.type === "currency" || definition.type === "number" ? "decimal" : undefined}
@@ -77,8 +83,9 @@ function Choice({ field, option, label, values, busy, onChange }: Props & { fiel
 
 function YesNo({ field, prompt, values, factsByField, busy, onChange }: Props & { field: string; prompt: string }) {
   const fact = factsByField.get(field);
+  const finding = ticCompletenessFindings(values).find(f=>f.field===field);
   return (
-    <div>
+    <div id={`tic-field-${field}`} style={finding ? { backgroundColor: "#fef08a", padding: 6 } : undefined} title={finding?.message}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold">{prompt}</span>
         <span className="text-[9px] text-slate-500">{confidenceLabel(fact)}</span>
@@ -367,7 +374,21 @@ export function CertivoIqTicReviewForm(props: Props) {
           </div>
           <Field field="owner_representative_signature_date" {...props} placeholder="MM/DD/YYYY" />
         </div>
+        <div className="border border-yellow-500 bg-yellow-50 p-3 text-slate-950" aria-live="polite">
+          <h3 className="font-bold">Completion findings</h3>
+          {ticCompletenessFindings(props.values).length ? <ul className="list-disc pl-5">{ticCompletenessFindings(props.values).map(f => <li key={f.field}><a className="underline" href={`#tic-field-${f.field}`}>{f.message}</a></li>)}</ul> : <p className="text-xs">No incomplete asset amounts detected in the entered fields. Other evidence and review checks still apply.</p>}
+        </div>
+        {TIC_SUPPLEMENTAL_SECTIONS.map(section => <section key={section.id} className="mt-5">
+          <SectionTitle>{section.title}</SectionTitle>
+          {section.note && <p className="p-3 text-xs">{section.note}</p>}
+          <div className="grid gap-3 border border-slate-600 p-3 md:grid-cols-2">
+            {section.fields.map(definition => definition.type === 'yes_no'
+              ? <YesNo key={definition.key} field={definition.key} prompt={definition.label} {...props} />
+              : <Field key={definition.key} field={definition.key} {...props} />)}
+          </div>
+        </section>)}
       </div>
     </div>
   );
 }
+

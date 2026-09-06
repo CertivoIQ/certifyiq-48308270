@@ -1,3 +1,4 @@
+import { ticCompletenessFindings } from "@/lib/tic-completeness";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -240,6 +241,17 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       }
     }
 
+    const completionFindings = ticCompletenessFindings(Object.fromEntries(result.facts.map(f => [f.field, f.value])));
+    if (completionFindings.length) {
+      const message = completionFindings.map(f => f.message).join(" ");
+      const { error: completionError } = await supabase.from("certification_import_items").update({
+        status: "completed", review_queue_status: "not_queued", review_started_at: null,
+        error_message: message,
+      }).eq("id", item.id);
+      if (completionError) throw completionError;
+      return { error: message } as const;
+    }
+
     let statePack: StateCoverage | undefined;
     if (jurisdiction !== "US") {
       const { data: releases } = await supabase
@@ -380,3 +392,4 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       manifestSha256,
     } as const;
   });
+

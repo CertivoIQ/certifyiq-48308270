@@ -1,3 +1,4 @@
+import { supplementalPageKind } from "@/lib/tic-supplemental-fields";
 // TIC_CELL_REPAIR_V1
 import { selectedCertificationType, strictMappedValue } from "@/lib/tic-document-layout.mjs";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
@@ -172,6 +173,10 @@ export function extractTicFieldsFromText(
     return currentPage;
   });
 
+  const supplementalPages = new Set<number>();
+  for (const page of new Set(pageOfLine)) {
+    if (supplementalPageKind(lines.filter((_, i) => pageOfLine[i] === page).join("\n"))) supplementalPages.add(page);
+  }
   const strictCellPages = new Set(lines.flatMap((line, i) => line === "__CERTIVOIQ_TIC_CELL_MODE__: strict" ? [pageOfLine[i]] : []));
   const facts: ExtractedFact[] = [];
   const found = new Set<string>();
@@ -243,7 +248,7 @@ export function extractTicFieldsFromText(
     for (let index = 0; index < lines.length && !extracted; index += 1) {
       const line = lines[index] ?? "";
       if (line.startsWith(DIRECT_TIC_FIELD_PREFIX)) continue;
-      if (line.startsWith("__CERTIVOIQ_") || strictCellPages.has(pageOfLine[index])) continue;
+      if (line.startsWith("__CERTIVOIQ_") || (strictCellPages.has(pageOfLine[index]) || supplementalPages.has(pageOfLine[index]))) continue;
       const lower = line.toLowerCase();
       for (const alias of definition.aliases) {
         if (!lower.includes(alias.toLowerCase())) continue;
@@ -277,3 +282,4 @@ export function extractTicFieldsFromText(
     : "deterministic-text";
   return { provider, facts, missingFields };
 }
+
