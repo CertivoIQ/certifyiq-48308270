@@ -24,7 +24,13 @@ if(mode==='prepare'){
  const cfg=JSON.parse(await readFile('.output/server/wrangler.bound.json','utf8'));assert.equal(cfg.name,target);assert.ok(!cfg.routes&&!cfg.route&&!cfg.custom_domains,'Do not alter domain mappings');
  const settings=await api(`workers/scripts/${target}/settings`);
  for(const b of settings.bindings||[]){if(['plain_text','json','secret_text'].includes(b.type))continue;assert.ok(b.type==='assets'&&b.name===cfg.assets?.binding,`Existing binding ${b.name} requires preservation review`);}
- const required=['SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY'];for(const name of required)assert.ok((settings.bindings||[]).some(b=>b.name===name),`Missing existing runtime binding: ${name}`);
+ const required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY'];for(const name of required)assert.ok((settings.bindings||[]).some(b=>b.name===name),`Missing existing runtime binding: ${name}`);
+ // The existing auth middleware accepts both public-key names. Preserve the
+ // deployed Vite-prefixed name rather than requiring an unused duplicate secret.
+ const keyNames=['SUPABASE_PUBLISHABLE_KEY','VITE_SUPABASE_PUBLISHABLE_KEY'];
+ assert.ok((settings.bindings||[]).some(b=>keyNames.includes(b.name)),'Missing configured Supabase public-key binding (prefixed or unprefixed)');
+ const authSource=await readFile('src/integrations/supabase/auth-middleware.ts','utf8');
+ for(const name of keyNames)assert.ok(authSource.includes(`process.env['${name}']`),`Source no longer supports existing key alias ${name}`);
  await output('income-cloudflare-before.json',{worker:target,domains:await mapping(),deployment:await activeDeployment(),bindingNames:(settings.bindings||[]).map(b=>({name:b.name,type:b.type})).sort((a,b)=>a.name.localeCompare(b.name))});
  console.log('Existing worker, domain mapping, and resource bindings verified.');
 }else if(mode==='postflight'){
