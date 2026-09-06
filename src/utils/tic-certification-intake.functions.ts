@@ -1,3 +1,4 @@
+// TIC_CELL_REPAIR_V1
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -129,16 +130,18 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
   if (ocrDocument) documentText = ocrDocument.text;
   else documentText = (await extraction.extractDocumentText(bytes, source.mimeType, source.originalFileName)).text;
 
+  const packetPages = packetPagesFromMarkedText(documentText);
+  const pageClassifications = classifyPacketPages(packetPages);
+  const ticPageNumbers = new Set(pageClassifications.filter((page) => page.kind === "tic").map((page) => page.page));
+  const ticText = packetPages.filter((page) => ticPageNumbers.has(page.page)).map((page) => "Page " + page.page + "\n" + page.text).join("\n");
   const result = ticExtraction.extractTicFieldsFromText(
-    documentText,
+    ticText,
     source.originalFileName,
     ...(ocrDocument ? ([ocrDocument.pageProvenance] as const) : ([] as const)),
   );
   const confidence = result.facts.length
     ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length
     : 0;
-  const packetPages = packetPagesFromMarkedText(documentText);
-  const pageClassifications = classifyPacketPages(packetPages);
   const supportingDocuments = groupSupportingPages(pageClassifications);
   return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments };
 }

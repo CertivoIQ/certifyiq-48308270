@@ -1,3 +1,5 @@
+// TIC_CELL_REPAIR_V1
+import { TicCalculationReview } from "@/components/tic-calculation-review";
 import type { TicFieldDefinition } from "@/lib/tic-field-registry";
 import { TIC_ASSET_ROW_COUNT, TIC_FIELD_BY_KEY, TIC_HOUSEHOLD_ROW_COUNT, TIC_INCOME_ROW_COUNT } from "@/lib/tic-field-registry";
 
@@ -257,6 +259,7 @@ export function CertivoIqTicReviewForm(props: Props) {
   const { values, factsByField, busy, onChange } = props;
   return (
     <div className="mx-auto w-full max-w-[1180px] space-y-5">
+      <TicCalculationReview values={values} busy={busy} onChange={onChange} />
       <div className="overflow-hidden rounded-lg border border-slate-400 bg-white text-slate-950 shadow-sm">
         <div className="border-b-2 border-slate-900 p-3">
           <div className="grid items-start gap-3 md:grid-cols-[1fr_300px]">

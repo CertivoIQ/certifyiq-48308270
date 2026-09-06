@@ -1,3 +1,5 @@
+// TIC_CELL_REPAIR_V1
+import { isTicContent } from "@/lib/tic-cell-repair.mjs";
 import {
   SUPPORTING_DOCUMENT_DEFINITIONS,
   SUPPORTING_DOCUMENT_BY_TYPE,
@@ -47,6 +49,10 @@ export function classifyPacketPage(page: PacketPage): PacketPageClassification {
     };
   }
 
+  if (isTicContent(text)) {
+    return { page: page.page, kind: "tic", documentType: null, label: "Tenant Income Certification", confidence: 0.9, basis: "Recognized TIC title or multiple TIC continuation-page anchors." };
+  }
+
   let best:
     | { type: SupportingDocumentType; label: string; score: number; strong: number; weak: number }
     | null = null;
@@ -74,7 +80,7 @@ export function classifyPacketPage(page: PacketPage): PacketPageClassification {
     };
   }
 
-  if (ticSignals > 0) {
+  if (isTicContent(text)) {
     return {
       page: page.page,
       kind: "tic",

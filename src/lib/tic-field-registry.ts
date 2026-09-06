@@ -1,3 +1,4 @@
+// TIC_CELL_REPAIR_V1
 export type TicFieldType = "text" | "date" | "number" | "currency" | "yes_no";
 
 export type TicFieldDefinition = {
@@ -77,6 +78,7 @@ const signatureFields = Array.from({ length: TIC_SIGNATURE_ROW_COUNT }, (_, inde
 
 /** Comprehensive LIHTC Tenant Income Certification intake schema. */
 export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
+  field("calculation_review_note", "Calculation review note", "Calculation Review", "text", []),
   field("certification_type", "Certification type", "Certification", "text", ["certification type", "initial certification", "recertification", "other certification"]),
   field("other_certification_type", "Other certification type / explanation", "Certification", "text", ["other certification type", "other explanation"]),
   field("certification_effective_date", "Effective Date", "Certification", "date", ["certification effective date", "effective date"]),

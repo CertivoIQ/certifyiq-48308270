@@ -1,3 +1,4 @@
+// TIC_CELL_REPAIR_V1
 import {
   MAX_OCR_PAGES,
   MAX_PDF_PAGES,
@@ -13,6 +14,7 @@ import {
 } from '@/lib/ocr-sidecar.mjs';
 import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
 import { extractTicSpatialValueLines } from '@/lib/tic-spatial-extraction.mjs';
+import { nativePdfLayout, isTicContent } from '@/lib/tic-cell-repair.mjs';
 
 /**
  * Browser-side certification document extraction.
@@ -346,7 +348,7 @@ export async function prepareCertificationForReview(
         'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
       );
     }
-    const spatialLines = /tenant income certification/i.test(text)
+    const spatialLines = isTicContent(text)
       ? extractTicSpatialValueLines(blocks)
       : [];
     const combinedImageText = normalizePageText([text, ...spatialLines].filter(Boolean).join('\n'));
@@ -411,16 +413,19 @@ export async function prepareCertificationForReview(
         nextTextPage += 1;
         const page = await pdf.getPage(pageNumber);
         const content = await page.getTextContent();
-        const nativeText = normalizePageText(
-          content.items.map((item) => ('str' in item ? item.str : '')).join(' '),
-        );
+        const nativeViewport = page.getViewport({ scale: 1 });
+        const layout = nativePdfLayout(content.items, nativeViewport);
+        const nativeText = normalizePageText(layout.text || content.items.map((item) => ('str' in item ? item.str : '')).join(' '));
         const formValueLines = nativeFormValuesByPage.get(pageNumber) ?? [];
-        const text = normalizePageText([nativeText, ...formValueLines].filter(Boolean).join('\n'));
+        const nativeSpatialLines = isTicContent(nativeText)
+          ? extractTicSpatialValueLines(layout.blocks, nativeViewport.width, nativeViewport.height)
+          : [];
+        // Native form controls take precedence over spatial proposals for the same field.
+        const formKeys = new Set(formValueLines.map((line) => line.split(/\s+/)[1]));
+        const spatialValues = nativeSpatialLines.filter((line: string) => !formKeys.has(line.split(/\s+/)[1]));
+        const text = normalizePageText([nativeText, ...formValueLines, ...spatialValues].filter(Boolean).join('\n'));
         preparedTextByPage.set(pageNumber, text);
-        const isTicFormPage =
-          pageNumber <= 3 &&
-          /tenant income certification/i.test(nativeText) &&
-          !/instructions for completing/i.test(nativeText);
+        const isTicFormPage = isTicContent(nativeText) && formValueLines.length === 0 && nativeSpatialLines.length === 0;
         if (pageNeedsOcr(text) || isTicFormPage) needsOcr.push(pageNumber);
         else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
         completedTextPages += 1;
@@ -496,8 +501,8 @@ export async function prepareCertificationForReview(
         try {
           const page = await pdf.getPage(pageNumber);
           const preparedText = preparedTextByPage.get(pageNumber) ?? '';
-          const isTicFormPage = pageNumber <= 3 && /tenant income certification/i.test(preparedText);
-          const highResolutionFormCandidate = pageNumber <= 3;
+          const isTicFormPage = isTicContent(preparedText);
+          const highResolutionFormCandidate = isTicFormPage || pageNumber <= 3;
           const viewport = page.getViewport({ scale: highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
@@ -508,10 +513,10 @@ export async function prepareCertificationForReview(
             const { text, confidence, blocks } = await recognizeScannedCanvas(
               canvas,
               workerCount,
-              highResolutionFormCandidate,
+              true,
             );
             if (text && Number.isFinite(confidence) && confidence > 0) {
-              const ticDetected = isTicFormPage || /tenant income certification/i.test(`${preparedText} ${text}`);
+              const ticDetected = isTicFormPage || isTicContent(`${preparedText} ${text}`);
               const spatialLines = ticDetected
                 ? extractTicSpatialValueLines(blocks, canvas.width, canvas.height)
                 : [];

@@ -1,3 +1,5 @@
+// TIC_CELL_REPAIR_V1
+import { selectedCertificationType, strictMappedValue } from "@/lib/tic-cell-repair.mjs";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 import type { PageProvenance } from "@/lib/ocr-sidecar.mjs";
 import {
@@ -127,13 +129,7 @@ function nextCandidateLine(lines: string[], start: number) {
 }
 
 function certificationTypeFact(lines: string[]) {
-  const text = lines.join(" ");
-  const marked = [
-    ["Initial Certification", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*initial certification|initial certification\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
-    ["Recertification", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*recertification|recertification\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
-    ["Other", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*other\b|\bother\b\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
-  ] as const;
-  return marked.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
+  return selectedCertificationType(lines.join("\n"));
 }
 
 function factFromValue(
@@ -178,21 +174,35 @@ export function extractTicFieldsFromText(
 
   const facts: ExtractedFact[] = [];
   const found = new Set<string>();
+  const directCandidates = new Map<string, Set<string>>();
+  const conflictingDirectFields = new Set<string>();
+  for (const line of lines) {
+    const match = /^__CERTIVOIQ_TIC_FIELD__\s+([a-z0-9_]+)\s*:\s*(.*)$/i.exec(line.trim());
+    if (!match) continue;
+    const definition = TIC_FIELD_BY_KEY.get(match[1]);
+    if (!definition) continue;
+    const value = strictMappedValue(definition.type, match[2], definition.key);
+    if (value === null) { conflictingDirectFields.add(definition.key); continue; }
+    const values = directCandidates.get(definition.key) ?? new Set<string>();
+    values.add(JSON.stringify(value));
+    directCandidates.set(definition.key, values);
+    if (values.size > 1) conflictingDirectFields.add(definition.key);
+  }
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index] ?? "";
     const direct = new RegExp(`^${DIRECT_TIC_FIELD_PREFIX}\\s+([a-z0-9_]+)\\s*:\\s*(.*)$`, "i").exec(line.trim());
-    if (!direct?.[1] || found.has(direct[1])) continue;
+    if (!direct?.[1] || found.has(direct[1]) || conflictingDirectFields.has(direct[1])) continue;
     const definition = TIC_FIELD_BY_KEY.get(direct[1]);
     if (!definition) continue;
-    const value = normalizeValue(definition, direct[2] ?? "");
+    const value = strictMappedValue(definition.type, direct[2] ?? "", definition.key);
     if (value === null) continue;
     const page = pageOfLine[index] ?? 1;
     facts.push(factFromValue(definition, value, documentRef, line, page, pageProvenance?.get(page)));
     found.add(definition.key);
   }
 
-  if (!found.has("certification_type")) {
+  if (!found.has("certification_type") && !conflictingDirectFields.has("certification_type")) {
     const explicitCertificationType = certificationTypeFact(lines);
     if (explicitCertificationType) {
       const definition = TIC_FIELD_BY_KEY.get("certification_type")!;
@@ -211,7 +221,7 @@ export function extractTicFieldsFromText(
   }
 
   for (const definition of TIC_FIELD_DEFINITIONS) {
-    if (found.has(definition.key) || !definition.aliases.length) continue;
+    if (found.has(definition.key) || conflictingDirectFields.has(definition.key) || definition.key === "certification_type" || !definition.aliases.length) continue;
     let extracted: ExtractedFact | null = null;
     for (let index = 0; index < lines.length && !extracted; index += 1) {
       const line = lines[index] ?? "";

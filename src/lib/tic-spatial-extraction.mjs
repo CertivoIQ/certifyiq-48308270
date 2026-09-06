@@ -1,3 +1,6 @@
+// TIC_CELL_REPAIR_V1
+import { isTicContent } from './tic-cell-repair.mjs';
+
 const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
 const DIRECT_PREFIX = '__CERTIVOIQ_TIC_FIELD__';
 
@@ -181,7 +184,6 @@ function staticFieldLines(lines) {
 function markerScore(value) {
   const text = clean(value);
   if (/^(?:x|\[x\]|☒|✓|✔|■|●|◆)$/i.test(text)) return 4;
-  if (/^(?:@|#|8|b)$/i.test(text)) return 1;
   return 0;
 }
 
@@ -214,6 +216,7 @@ function selectedCertificationType(lines, words, pageWidth, pageHeight) {
   ];
   const direct = explicit.filter(([, pattern]) => pattern.test(raw));
   if (direct.length === 1) return direct[0][0];
+  if (direct.length > 1) return null;
 
   const options = [
     ['Initial Certification', [/^initial$/, /^certification$/]],
@@ -327,17 +330,19 @@ function incomeLines(words, table, pageWidth, pageHeight) {
   const extent = tableExtent(body, pageWidth);
   const boundaries = [0, 0.075, 0.325, 0.545, 0.755, 1];
   const out = [];
+  let incomeRow = 0;
   for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);
     const text = usefulRowText(parts);
     if (!text || /\btotal\b/.test(text) || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 10);
     if (!member || !parts.slice(1).some((value) => /\d/.test(value))) continue;
-    add(out, `income_member_${member}_household_member_number`, parts[0]);
-    add(out, `income_member_${member}_wages_business`, parts[1]);
-    add(out, `income_member_${member}_social_security_pension`, parts[2]);
-    add(out, `income_member_${member}_public_assistance`, parts[3]);
-    add(out, `income_member_${member}_other_income`, parts[4]);
+    if (++incomeRow > 10) break;
+    add(out, `income_member_${incomeRow}_household_member_number`, parts[0]);
+    add(out, `income_member_${incomeRow}_wages_business`, parts[1]);
+    add(out, `income_member_${incomeRow}_social_security_pension`, parts[2]);
+    add(out, `income_member_${incomeRow}_public_assistance`, parts[3]);
+    add(out, `income_member_${incomeRow}_other_income`, parts[4]);
   }
   return out;
 }
@@ -350,24 +355,26 @@ function assetLines(words, table, pageWidth, pageHeight, profile) {
     ? [0, 0.07, 0.29, 0.39, 0.51, 0.68, 0.79, 1]
     : [0, 0.075, 0.39, 0.47, 0.75, 1];
   const out = [];
+  let assetRow = 0;
   for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);
     const text = usefulRowText(parts);
     if (!text || /\b(total|threshold|imputed income threshold)\b/.test(text) || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 27);
     if (!member || !parts.slice(1).some(Boolean)) continue;
-    add(out, `asset_${member}_household_member_number`, parts[0]);
-    add(out, `asset_${member}_type`, parts[1]);
+    if (++assetRow > 27) break;
+    add(out, `asset_${assetRow}_household_member_number`, parts[0]);
+    add(out, `asset_${assetRow}_type`, parts[1]);
     if (profile === 'phfa') {
-      add(out, `asset_${member}_current_disposed`, parts[2]);
-      add(out, `asset_${member}_category`, parts[3]);
-      add(out, `asset_${member}_cash_value`, parts[4]);
-      add(out, `asset_${member}_income_method`, parts[5]);
-      add(out, `asset_${member}_annual_income`, parts[6]);
+      add(out, `asset_${assetRow}_current_disposed`, parts[2]);
+      add(out, `asset_${assetRow}_category`, parts[3]);
+      add(out, `asset_${assetRow}_cash_value`, parts[4]);
+      add(out, `asset_${assetRow}_income_method`, parts[5]);
+      add(out, `asset_${assetRow}_annual_income`, parts[6]);
     } else {
-      add(out, `asset_${member}_current_disposed`, parts[2]);
-      add(out, `asset_${member}_cash_value`, parts[3]);
-      add(out, `asset_${member}_annual_income`, parts[4]);
+      add(out, `asset_${assetRow}_current_disposed`, parts[2]);
+      add(out, `asset_${assetRow}_cash_value`, parts[3]);
+      add(out, `asset_${assetRow}_annual_income`, parts[4]);
     }
   }
   return out;
@@ -385,7 +392,7 @@ export function extractTicSpatialValueLines(blocks, suppliedWidth, suppliedHeigh
   const width = Number(suppliedWidth) > 0 ? Number(suppliedWidth) : Math.max(...words.map((word) => word.x1));
   const height = Number(suppliedHeight) > 0 ? Number(suppliedHeight) : Math.max(...words.map((word) => word.y1));
   const pageText = normalizedText(lines.map((line) => line.text).join(' '));
-  if (!/tenant income certification/.test(pageText)) return [];
+  if (!isTicContent(pageText)) return [];
 
   const householdTable = locateHouseholdTable(lines, height);
   const householdHeaderText = normalizedText(householdTable?.header?.text ?? '');

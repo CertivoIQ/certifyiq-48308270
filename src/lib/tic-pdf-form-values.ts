@@ -1,3 +1,6 @@
+// TIC_CELL_REPAIR_V1
+import { TIC_FIELD_DEFINITIONS } from "@/lib/tic-field-registry";
+
 type PdfFieldWidget = {
   value?: unknown;
   fieldValue?: unknown;
@@ -18,7 +21,7 @@ function cleanValue(value: unknown): string {
 }
 
 function widgetValue(widget: PdfFieldWidget): string {
-  for (const candidate of [widget.value, widget.fieldValue, widget.buttonValue]) {
+  for (const candidate of [widget.value, widget.fieldValue]) {
     const cleaned = cleanValue(candidate);
     if (cleaned) return cleaned;
   }
@@ -43,7 +46,7 @@ function yesNoFromButtonValue(value: string): "Yes" | "No" | null {
 }
 
 function rowFromSuffix(name: string, base: string, maxRows: number): number | null {
-  if (name === base) return 1;
+  if (name.toLowerCase() === base.toLowerCase()) return 1;
   const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = new RegExp(`^${escaped}-(\\d+)$`).exec(name);
   if (!match?.[1]) return null;
@@ -223,6 +226,38 @@ function selectedButtonField(name: string, value: string): [string, string] | nu
   return null;
 }
 
+function schemaFieldKey(name: string): string | null {
+  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const target = normalize(name);
+  const matches = TIC_FIELD_DEFINITIONS.filter((definition) =>
+    [definition.key, definition.label, ...definition.aliases].some((label) => normalize(label) === target));
+  return matches.length === 1 ? matches[0].key : null;
+}
+
+function appendSeparateNames(fieldObjects: PdfFieldObjects, byPage: Map<number, string[]>) {
+  const rows = new Map<string, { page: number; row: number; first: Set<string>; middle: Set<string> }>();
+  for (const [name, widgets] of Object.entries(fieldObjects)) {
+    const firstRow = rowFromSuffix(name, "First Name", 10);
+    const middleRow = rowFromSuffix(name, "Middle Initial", 10);
+    const canonical = /^household_member_(10|[1-9])_(first_name|middle_initial)$/.exec(name);
+    const row = firstRow ?? middleRow ?? (canonical ? Number(canonical[1]) : null);
+    if (!row) continue;
+    const part = firstRow || canonical?.[2] === "first_name" ? "first" : "middle";
+    for (const widget of widgets ?? []) {
+      const value = widgetValue(widget);
+      if (!value) continue;
+      const page = pageNumber(widget), id = page + ":" + row;
+      const entry = rows.get(id) ?? { page, row, first: new Set<string>(), middle: new Set<string>() };
+      entry[part].add(value);
+      rows.set(id, entry);
+    }
+  }
+  for (const entry of rows.values()) {
+    if (entry.first.size !== 1 || entry.middle.size > 1) continue;
+    pushLine(byPage, entry.page, directLine("household_member_" + entry.row + "_first_name_middle_initial", [...entry.first, ...entry.middle].join(" ")));
+  }
+}
+
 function pushLine(byPage: Map<number, string[]>, page: number, line: string) {
   const existing = byPage.get(page) ?? [];
   if (!existing.includes(line)) existing.push(line);
@@ -261,11 +296,12 @@ export function ticPdfFormValueLinesByPage(fieldObjects: PdfFieldObjects | null 
         continue;
       }
 
-      const key = staticFieldKey(name) ?? householdKey(name) ?? incomeHouseholdMemberKey(name) ?? incomeKey(name) ?? assetKey(name) ?? signatureKey(name);
+      const key = staticFieldKey(name) ?? householdKey(name) ?? incomeHouseholdMemberKey(name) ?? incomeKey(name) ?? assetKey(name) ?? signatureKey(name) ?? schemaFieldKey(name);
       if (!key) continue;
-      const normalizedValue = key.endsWith("_signature_present") ? "Yes" : value;
+      const normalizedValue = key.endsWith("_signature_present") ? (/^(no|false|off|0)$/i.test(value) ? "No" : "Yes") : value;
       pushLine(byPage, page, directLine(key, normalizedValue));
     }
   }
+  appendSeparateNames(fieldObjects, byPage);
   return byPage;
 }
