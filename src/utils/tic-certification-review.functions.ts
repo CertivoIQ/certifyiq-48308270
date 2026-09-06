@@ -244,7 +244,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     const completionValues = Object.fromEntries(result.facts.map(f => [f.field, f.value]));
     for (const entry of Array.isArray(item.historical_changes) ? item.historical_changes : []) {
       if (!entry || typeof entry !== "object" || !("original_extracted_data" in entry)) continue;
-      const original = entry.original_extracted_data;
+      const original = entry["original_extracted_data"];
       if (original && typeof original === "object") for (const [field, value] of Object.entries(original)) {
         if (field.startsWith("source_present_") && value === "Yes") completionValues[field] = value;
       }
