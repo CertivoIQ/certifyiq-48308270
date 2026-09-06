@@ -9,6 +9,8 @@ type PdfFieldWidget = {
 
 export type PdfFieldObjects = Record<string, PdfFieldWidget[]>;
 
+const DIRECT_PREFIX = "__CERTIVOIQ_TIC_FIELD__";
+
 function cleanValue(value: unknown): string {
   if (Array.isArray(value)) return value.map(cleanValue).filter(Boolean).join(", ");
   if (value == null) return "";
@@ -33,6 +35,13 @@ function isSelectedButton(value: string): boolean {
   return Boolean(normalized && !["off", "false", "0", "no", "none", "null", "undefined"].includes(normalized));
 }
 
+function yesNoFromButtonValue(value: string): "Yes" | "No" | null {
+  const normalized = value.toLowerCase();
+  if (/(?:^|[_\s-])yes(?:[_\s-]|$)/.test(normalized)) return "Yes";
+  if (/(?:^|[_\s-])no(?:[_\s-]|$)/.test(normalized)) return "No";
+  return null;
+}
+
 function rowFromSuffix(name: string, base: string, maxRows: number): number | null {
   if (name === base) return 1;
   const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -42,125 +51,162 @@ function rowFromSuffix(name: string, base: string, maxRows: number): number | nu
   return row >= 1 && row <= maxRows ? row : null;
 }
 
-function staticFieldAlias(name: string): string | null {
-  const aliases: Record<string, string> = {
-    "Movein Date": "move-in date",
-    "Current Date": "current date",
-    "Effective Date": "effective date",
-    "Other-0": "other certification type",
-    "Property Name": "property name",
-    County: "county",
-    TC: "tc#",
-    BIN: "bin#",
-    Address: "address",
-    "Unit Number": "unit number",
-    "# Bedrooms": "# bedrooms",
-    "Total Employment": "total employment",
-    "Total SS/Pensions": "total ss/pensions",
-    "Total Public Assistance": "total public assistance",
-    "Total Other Income": "total other income",
-    "Total Income": "total income (e)",
-    "Total Actual Income from Assets": "actual income earned from all assets",
-    "Total of NNPP": "total of nnpp",
-    "Total Income from Assets": "total income from assets",
-    "Total Annual Household Income": "total annual household income from all sources",
-    "Current Income Limit per Family Size": "current income limit per family size",
-    "Household Income at Movein": "household income at move-in",
-    "Household Size at Move-in": "household size at move-in",
-    "Tenant Paid Rent": "tenant paid rent",
-    "Utility Allowance": "utility allowance",
-    "Rent Assistance": "rent assistance",
-    "Rental Assistance Type": "rental assistance type",
-    "Other non-optional charges": "other non-optional charges",
-    "Gross Rent for Unit": "gross rent for unit",
-    "Maximum Rent Limit for this unit": "maximum rent limit for this unit",
-    "Student Status Explanation": "student explanation",
-    "Signature of OwnerRepresentative": "owner representative",
-    "Date-3": "owner signature date",
-  };
-  return aliases[name] ?? null;
+function directLine(key: string, value: string): string {
+  return `${DIRECT_PREFIX} ${key}: ${cleanValue(value)}`;
 }
 
-function householdAlias(name: string): string | null {
+function staticFieldKey(name: string): string | null {
+  const keys: Record<string, string> = {
+    "Movein Date": "move_in_date",
+    "Current Date": "current_date",
+    "Effective Date": "certification_effective_date",
+    "Other-0": "other_certification_type",
+    "Property Name": "property_name",
+    County: "county",
+    TC: "tax_credit_number",
+    BIN: "building_identification_number",
+    Address: "property_address",
+    "Unit Number": "unit_number",
+    "# Bedrooms": "unit_bedrooms",
+    "Total Employment": "total_employment_income",
+    "Total SS/Pensions": "total_social_security_pensions",
+    "Total Public Assistance": "total_public_assistance",
+    "Total Other Income": "total_other_income",
+    "Total Income": "total_income_e",
+    "Total Actual Income from Assets": "asset_actual_income_below_iit",
+    "Total of NNPP": "total_nnpp",
+    "Total Income from Assets": "total_income_assets_m",
+    "Total Annual Household Income": "household_annual_income",
+    "Current Income Limit per Family Size": "applicable_lihtc_income_limit",
+    "Household Income at Movein": "household_income_at_move_in",
+    "Household Size at Move-in": "household_size_at_move_in",
+    "Tenant Paid Rent": "tenant_paid_rent",
+    "Utility Allowance": "utility_allowance",
+    "Rent Assistance": "rent_assistance",
+    "Rental Assistance Type": "rental_assistance_type",
+    "Other non-optional charges": "other_non_optional_charges",
+    "Gross Rent for Unit": "gross_rent",
+    "Maximum Rent Limit for this unit": "state_max_gross_rent",
+    "Student Status Explanation": "student_exception_code",
+    "Date-3": "owner_representative_signature_date",
+  };
+  return keys[name] ?? null;
+}
+
+function householdKey(name: string): string | null {
   const columns: Array<[string, string]> = [
-    ["Last Name", "last name"],
-    ["First Name Middle Initial", "first name middle initial"],
+    ["Last Name", "last_name"],
+    ["First Name Middle Initial", "first_name_middle_initial"],
     ["Rel HH", "relationship"],
     ["Race", "race"],
     ["Ethn", "ethnicity"],
     ["Dsbs", "disability"],
     ["Gndr", "gender"],
-    ["Date of Birth", "date of birth"],
-    ["FIT Student", "full-time student"],
-    ["Social Security Or Alien Reg No", "ssn alien registration"],
+    ["Date of Birth", "date_of_birth"],
+    ["FIT Student", "full_time_student"],
+    ["Social Security Or Alien Reg No", "ssn_or_alien_registration"],
   ];
   for (const [base, suffix] of columns) {
     const row = rowFromSuffix(name, base, 10);
-    if (row) return `household member ${row} ${suffix}`;
+    if (row) return `household_member_${row}_${suffix}`;
   }
   return null;
 }
 
-function incomeAlias(name: string): string | null {
+function incomeKey(name: string): string | null {
   const columns: Array<[string, string]> = [
-    ["A Employment or Wages", "employment or wages"],
-    ["B Social SecurityPensions", "social security pensions"],
-    ["C Public Assistance", "public assistance"],
-    ["D Other Income", "other income"],
+    ["A Employment or Wages", "wages_business"],
+    ["B Social SecurityPensions", "social_security_pension"],
+    ["C Public Assistance", "public_assistance"],
+    ["D Other Income", "other_income"],
   ];
   for (const [base, suffix] of columns) {
     const row = rowFromSuffix(name, base, 10);
-    if (row) return `income member ${row} ${suffix}`;
+    if (row) return `income_member_${row}_${suffix}`;
   }
   return null;
 }
 
-function assetAlias(name: string): string | null {
+function assetKey(name: string): string | null {
   const columns: Array<[string, string]> = [
-    ["Hshld Mbr", "household member number"],
+    ["Hshld Mbr", "household_member_number"],
     ["G Type of Asset", "type"],
-    ["H Current Disposed", "current disposed"],
+    ["H Current Disposed", "current_disposed"],
     ["I NNPP  Real Tax Relief", "category"],
-    ["J Cash Value of Asset", "cash value"],
-    ["K Actual Imputed", "income method"],
-    ["L Annual Income from Asset", "annual income"],
+    ["J Cash Value of Asset", "cash_value"],
+    ["K Actual Imputed", "income_method"],
+    ["L Annual Income from Asset", "annual_income"],
   ];
   for (const [base, suffix] of columns) {
     const row = rowFromSuffix(name, base, 27);
-    if (row) return `asset ${row} ${suffix}`;
+    if (row) return `asset_${row}_${suffix}`;
   }
   return null;
 }
 
-function signatureAlias(name: string): string | null {
+function signatureKey(name: string): string | null {
   const dateRow = rowFromSuffix(name, "Date", 4);
-  if (dateRow) return `household member ${dateRow} signature date`;
+  if (dateRow) return `household_member_${dateRow}_signature_date`;
   const signatureRow = rowFromSuffix(name, "Signature", 4);
-  if (signatureRow) return `household member ${signatureRow} signature present`;
+  if (signatureRow) return `household_member_${signatureRow}_signature_present`;
   return null;
 }
 
-function selectedButtonAlias(name: string, value: string): [string, string] | null {
+function selectedButtonField(name: string, value: string): [string, string] | null {
   if (!isSelectedButton(value)) return null;
   if (["Initial Certification", "Recertification", "Other"].includes(name)) {
-    return ["certification type", name];
+    return ["certification_type", name];
   }
+  if (name === "at recertification") {
+    const answer = yesNoFromButtonValue(value);
+    return answer ? ["income_exceeds_140_percent", answer] : null;
+  }
+  if (name === "RadioButton") {
+    const answer = yesNoFromButtonValue(value);
+    return answer ? ["all_occupants_full_time_students", answer] : null;
+  }
+
   const incomeRestrictions: Record<string, string> = {
     "80": "80", "70": "70", "60": "60", "50": "50", "40": "40", "30": "30", "20": "20",
   };
-  if (incomeRestrictions[name]) return ["household meets income restriction at", incomeRestrictions[name]!];
+  if (incomeRestrictions[name]) return ["household_income_restriction_percent", incomeRestrictions[name]!];
+
   const rentRestrictions: Record<string, string> = {
     "80-0": "80", "70-0": "70", "60-0": "60", "50-0": "50", "40-0": "40", "30-0": "30", "20-0": "20",
   };
-  if (rentRestrictions[name]) return ["unit meets rent restriction at", rentRestrictions[name]!];
+  if (rentRestrictions[name]) return ["unit_rent_restriction_percent", rentRestrictions[name]!];
+
   const programs: Record<string, string> = {
-    "a Tax Credit": "program type tax credit",
-    "b HOME": "program type home",
-    "c Tax Exempt": "program type tax exempt",
-    "d PennHOMES": "program type pennhomes",
-    ePennHOMESHOME: "program type pennhomes home",
+    "a Tax Credit": "program_type_lihtc",
+    "b HOME": "program_type_home",
+    "c Tax Exempt": "program_type_tax_exempt_bond",
+    "d PennHOMES": "program_type_pennhomes",
+    ePennHOMESHOME: "program_type_pennhomes_home",
   };
   if (programs[name]) return [programs[name]!, "Yes"];
+
+  const homeStatus: Record<string, string> = {
+    "50 AMGI": "50% AMGI", "60 AMGI": "60% AMGI", "80 AMGI": "80% AMGI", OI: "OI",
+  };
+  if (homeStatus[name]) return ["program_home_income_status", homeStatus[name]!];
+
+  const taxExemptStatus: Record<string, string> = {
+    "50 AMGI-0": "50% AMGI", "60 AMGI-0": "60% AMGI", "80 AMGI-0": "80% AMGI", "OI-0": "OI",
+  };
+  if (taxExemptStatus[name]) return ["program_tax_exempt_income_status", taxExemptStatus[name]!];
+
+  const pennhomesStatus: Record<string, string> = {
+    "20 AMGI": "20% AMGI", "40 AMGI": "40% AMGI", "50 AMGI-1": "50% AMGI",
+    "60 AMGI-1": "60% AMGI", "80-1": "80% AMGI", "OI-1": "OI",
+  };
+  if (pennhomesStatus[name]) return ["program_pennhomes_income_status", pennhomesStatus[name]!];
+
+  const pennhomesHomeStatus: Record<string, string> = {
+    "20 AMGI-0": "20% AMGI", "40 AMGI-0": "40% AMGI", "50 AMGI-2": "50% AMGI",
+    "60 AMGI-2": "60% AMGI", "80-2": "80% AMGI", "O I": "OI",
+  };
+  if (pennhomesHomeStatus[name]) return ["program_pennhomes_home_income_status", pennhomesHomeStatus[name]!];
+
   return null;
 }
 
@@ -171,9 +217,9 @@ function pushLine(byPage: Map<number, string[]>, page: number, line: string) {
 }
 
 /**
- * Convert native Acrobat/PDF.js form controls into deterministic label/value
- * lines that the existing TIC field parser can consume before OCR fallback.
- * These values come from the PDF form data itself, not from visual inference.
+ * Convert native Acrobat/PDF.js form controls into exact CertivoIQ TIC field
+ * keys before OCR fallback. A source Last Name, County, Property Name, etc.
+ * therefore cannot be routed to a neighboring field by text-order heuristics.
  */
 export function ticPdfFormValueLinesByPage(fieldObjects: PdfFieldObjects | null | undefined): Map<number, string[]> {
   const byPage = new Map<number, string[]>();
@@ -183,21 +229,29 @@ export function ticPdfFormValueLinesByPage(fieldObjects: PdfFieldObjects | null 
     for (const widget of widgets ?? []) {
       const value = widgetValue(widget);
       if (!value) continue;
+      const page = pageNumber(widget);
 
-      const button = selectedButtonAlias(name, value);
+      const button = selectedButtonField(name, value);
       if (button) {
-        pushLine(byPage, pageNumber(widget), `${button[0]}: ${button[1]}`);
+        pushLine(byPage, page, directLine(button[0], button[1]));
         continue;
       }
+
       const type = String(widget.type ?? "").toLowerCase();
       if ((type.includes("button") || type.includes("checkbox") || type.includes("radio")) && !isSelectedButton(value)) {
         continue;
       }
 
-      const alias = staticFieldAlias(name) ?? householdAlias(name) ?? incomeAlias(name) ?? assetAlias(name) ?? signatureAlias(name);
-      if (!alias) continue;
-      const normalizedValue = alias.endsWith("signature present") ? "Yes" : value;
-      pushLine(byPage, pageNumber(widget), `${alias}: ${normalizedValue}`);
+      if (name === "Signature of OwnerRepresentative") {
+        pushLine(byPage, page, directLine("owner_representative_signature_present", "Yes"));
+        pushLine(byPage, page, directLine("owner_representative_name", value));
+        continue;
+      }
+
+      const key = staticFieldKey(name) ?? householdKey(name) ?? incomeKey(name) ?? assetKey(name) ?? signatureKey(name);
+      if (!key) continue;
+      const normalizedValue = key.endsWith("_signature_present") ? "Yes" : value;
+      pushLine(byPage, page, directLine(key, normalizedValue));
     }
   }
   return byPage;
