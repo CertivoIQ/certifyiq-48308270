@@ -13,6 +13,8 @@ import {
 } from '@/lib/ocr-sidecar.mjs';
 import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
 import { extractTicSpatialValueLines } from '@/lib/tic-spatial-extraction.mjs';
+import { nativePdfLayout, isTicContent } from '@/lib/tic-document-layout.mjs';
+import { planTicCells, cellSheetLayout, finishTicCells, mergeCellProposals } from '@/lib/tic-ruled-cell-extraction.mjs';
 
 /**
  * Browser-side certification document extraction.
@@ -300,6 +302,37 @@ async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: nu
   );
 }
 
+/** One bounded contact-sheet pass for recognized TICs. Original pixels remain unchanged. */
+async function recognizeTicCells(canvas: HTMLCanvasElement, blocks: unknown, workerCount: number) {
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) return [] as string[];
+  const plan = planTicCells(context.getImageData(0, 0, canvas.width, canvas.height), blocks);
+  const sheet = cellSheetLayout(plan);
+  if (!sheet.tiles.length) return finishTicCells(plan, sheet, []).lines;
+  if (sheet.width * sheet.height > 9_000_000) throw new Error('TIC cell review exceeds the safe image budget.');
+  const target = createCanvas(sheet.width, sheet.height);
+  try {
+    for (const tile of sheet.tiles) {
+      const b = tile.bbox;
+      // A neutral prefix helps the OCR engine retain isolated one-character cells.
+      // It is not source evidence and is explicitly excluded by finishTicCells.
+      target.context.fillStyle = '#000000';
+      target.context.font = '28px sans-serif';
+      target.context.fillText('Value:', 24, tile.y + tile.height - 4);
+      target.context.drawImage(canvas, b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0,
+        tile.x, tile.y, tile.width, tile.height);
+    }
+    const { PSM } = await import('tesseract.js');
+    const result = await recognizeWithSharedWorker(target.canvas, workerCount, PSM.SPARSE_TEXT, true);
+    return finishTicCells(plan, sheet, (result.data as typeof result.data & { blocks?: unknown }).blocks ?? []).lines;
+  } finally { target.canvas.width = 1; target.canvas.height = 1; }
+}
+
+function removeRedactedNativeValues(text: string, cellLines: readonly string[]) {
+  const blocked = new Set(cellLines.map(line => /^__CERTIVOIQ_TIC_UNRESOLVED__\s+([a-z0-9_]+):/.exec(line)?.[1]).filter(Boolean));
+  return text.split(/\r?\n/).filter(line => !blocked.has(/^__CERTIVOIQ_TIC_FIELD__\s+([a-z0-9_]+):/.exec(line)?.[1])).join('\n');
+}
+
 export type PrepareResult =
   | { kind: 'machine-readable'; sidecar: OcrSidecar; ocrPageCount: 0; sourceSha256: string }
   | { kind: 'ocr'; sidecar: OcrSidecar; ocrPageCount: number; sourceSha256: string };
@@ -347,10 +380,17 @@ export async function prepareCertificationForReview(
         'This certification image did not contain readable text. Upload a clearer scan or route it to manual review.',
       );
     }
-    const spatialLines = /tenant income certification/i.test(text)
+    const spatialLines = isTicContent(text)
       ? extractTicSpatialValueLines(blocks)
       : [];
-    const combinedImageText = normalizePageText([text, ...spatialLines].filter(Boolean).join('\n'));
+    let cellLines: string[] = [];
+    if (isTicContent(text)) {
+      const bitmap = await createImageBitmap(file);
+      const source = createCanvas(bitmap.width, bitmap.height);
+      try { source.context.drawImage(bitmap, 0, 0); cellLines = await recognizeTicCells(source.canvas, blocks, 1); }
+      finally { bitmap.close(); source.canvas.width = 1; source.canvas.height = 1; }
+    }
+    const combinedImageText = normalizePageText([text, ...mergeCellProposals(spatialLines, cellLines)].filter(Boolean).join('\n'));
     reportProgress(onProgress, 'Certification image preparation complete.', 100);
     return {
       kind: 'ocr',
@@ -412,16 +452,18 @@ export async function prepareCertificationForReview(
         nextTextPage += 1;
         const page = await pdf.getPage(pageNumber);
         const content = await page.getTextContent();
-        const nativeText = normalizePageText(
-          content.items.map((item) => ('str' in item ? item.str : '')).join(' '),
-        );
+        const nativeViewport = page.getViewport({ scale: 1 });
+        const layout = nativePdfLayout(content.items, nativeViewport);
+        const nativeText = normalizePageText(layout.text || content.items.map((item) => ('str' in item ? item.str : '')).join(' '));
         const formValueLines = nativeFormValuesByPage.get(pageNumber) ?? [];
-        const text = normalizePageText([nativeText, ...formValueLines].filter(Boolean).join('\n'));
+        const nativeSpatialLines = isTicContent(nativeText) ? extractTicSpatialValueLines(layout.blocks, nativeViewport.width, nativeViewport.height) : [];
+        const formKeys = new Set(formValueLines.map(line => line.split(/\s+/)[1]));
+        const spatialValues = nativeSpatialLines.filter((line: string) => !formKeys.has(line.split(/\s+/)[1]));
+        const text = normalizePageText([nativeText, ...formValueLines, ...spatialValues].filter(Boolean).join('\n'));
         preparedTextByPage.set(pageNumber, text);
-        const isTicFormPage =
-          pageNumber <= 3 &&
-          /tenant income certification/i.test(nativeText) &&
-          !/instructions for completing/i.test(nativeText);
+        // A partially read TIC still needs spatial OCR; a complete native household row does not.
+        const hasHousehold = /__CERTIVOIQ_TIC_FIELD__ household_member_1_last_name:/.test(text) && /__CERTIVOIQ_TIC_FIELD__ household_member_1_first_name_middle_initial:/.test(text);
+        const isTicFormPage = isTicContent(nativeText) && !hasHousehold && /household\s+composition/i.test(nativeText);
         if (pageNeedsOcr(text) || isTicFormPage) needsOcr.push(pageNumber);
         else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
         completedTextPages += 1;
@@ -497,8 +539,8 @@ export async function prepareCertificationForReview(
         try {
           const page = await pdf.getPage(pageNumber);
           const preparedText = preparedTextByPage.get(pageNumber) ?? '';
-          const isTicFormPage = pageNumber <= 3 && /tenant income certification/i.test(preparedText);
-          const highResolutionFormCandidate = pageNumber <= 3;
+          const isTicFormPage = isTicContent(preparedText);
+          const highResolutionFormCandidate = isTicFormPage || pageNumber <= 3;
           const viewport = page.getViewport({ scale: highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
@@ -509,15 +551,19 @@ export async function prepareCertificationForReview(
             const { text, confidence, blocks } = await recognizeScannedCanvas(
               canvas,
               workerCount,
-              highResolutionFormCandidate,
+              true,
             );
             if (text && Number.isFinite(confidence) && confidence > 0) {
-              const ticDetected = isTicFormPage || /tenant income certification/i.test(`${preparedText} ${text}`);
+              const ticDetected = isTicFormPage || isTicContent(text);
               const spatialLines = ticDetected
                 ? extractTicSpatialValueLines(blocks, canvas.width, canvas.height)
                 : [];
+              const cellLines = ticDetected ? await recognizeTicCells(canvas, blocks, workerCount) : [];
+              const exactKeys = new Set((nativeFormValuesByPage.get(pageNumber) ?? []).map(line => line.split(/\s+/)[1]));
+              const fallbackValues = mergeCellProposals(spatialLines, cellLines).filter((line: string) =>
+                line.startsWith('__CERTIVOIQ_TIC_UNRESOLVED__') || !exactKeys.has(line.split(/\s+/)[1]));
               const combinedText = normalizePageText(
-                [preparedTextByPage.get(pageNumber) ?? '', text, ...spatialLines].filter(Boolean).join('\n'),
+                [removeRedactedNativeValues(preparedTextByPage.get(pageNumber) ?? '', cellLines), text, ...fallbackValues].filter(Boolean).join('\n'),
               );
               pages.push({
                 page: pageNumber,

@@ -1,3 +1,5 @@
+// TIC_CELL_REPAIR_V1
+import { selectedCertificationType, strictMappedValue } from "@/lib/tic-document-layout.mjs";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 import type { PageProvenance } from "@/lib/ocr-sidecar.mjs";
 import {
@@ -127,13 +129,7 @@ function nextCandidateLine(lines: string[], start: number) {
 }
 
 function certificationTypeFact(lines: string[]) {
-  const text = lines.join(" ");
-  const marked = [
-    ["Initial Certification", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*initial certification|initial certification\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
-    ["Recertification", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*recertification|recertification\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
-    ["Other", /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*other\b|\bother\b\s*(?:☒|✓|✔|■|●|\[x\]|\bx\b)/i],
-  ] as const;
-  return marked.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
+  return selectedCertificationType(lines.join("\n"));
 }
 
 function factFromValue(
@@ -176,23 +172,54 @@ export function extractTicFieldsFromText(
     return currentPage;
   });
 
+  const strictCellPages = new Set(lines.flatMap((line, i) => line === "__CERTIVOIQ_TIC_CELL_MODE__: strict" ? [pageOfLine[i]] : []));
   const facts: ExtractedFact[] = [];
   const found = new Set<string>();
+  const directCandidates = new Map<string, Set<string>>();
+  const conflictingDirectFields = new Set<string>();
+  const cellMetadata = new Map<string, { confidence: number; coordinates: string; method: string }>();
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index] ?? '';
+    const blocked = /^__CERTIVOIQ_TIC_UNRESOLVED__\s+([a-z0-9_]+):/.exec(line);
+    if (blocked?.[1] && TIC_FIELD_BY_KEY.has(blocked[1])) conflictingDirectFields.add(blocked[1]);
+    const meta = /^__CERTIVOIQ_TIC_CELL__\s+([a-z0-9_]+):\s*(.{1,1000})$/.exec(line);
+    if (!meta?.[1] || !meta[2] || !TIC_FIELD_BY_KEY.has(meta[1])) continue;
+    try {
+      const value = JSON.parse(meta[2]);
+      const b = value.bbox;
+      if (!b || ![b.x0,b.y0,b.x1,b.y1,value.confidence].every(Number.isFinite) ||
+          b.x0 < 0 || b.y0 < 0 || b.x1 <= b.x0 || b.y1 <= b.y0 || b.x1 > 20000 || b.y1 > 20000 ||
+          value.confidence < 0 || value.confidence > 1 || !['isolated-cell','bounded-page-word','checkbox-interior'].includes(value.method)) continue;
+      cellMetadata.set(`${pageOfLine[index]}:${meta[1]}`, { confidence:value.confidence, coordinates:`${b.x0},${b.y0},${b.x1},${b.y1}`, method:value.method });
+    } catch { /* Malformed metadata never verifies a value. */ }
+  }
+  for (const line of lines) {
+    const match = /^__CERTIVOIQ_TIC_FIELD__\s+([a-z0-9_]+)\s*:\s*(.*)$/i.exec(line.trim());
+    if (!match) continue;
+    const definition = TIC_FIELD_BY_KEY.get(match[1]!);
+    if (!definition) continue;
+    const value = strictMappedValue(definition.type, match[2], definition.key);
+    if (value === null) { conflictingDirectFields.add(definition.key); continue; }
+    const values = directCandidates.get(definition.key) ?? new Set<string>();
+    values.add(JSON.stringify(value));
+    directCandidates.set(definition.key, values);
+    if (values.size > 1) conflictingDirectFields.add(definition.key);
+  }
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index] ?? "";
     const direct = new RegExp(`^${DIRECT_TIC_FIELD_PREFIX}\\s+([a-z0-9_]+)\\s*:\\s*(.*)$`, "i").exec(line.trim());
-    if (!direct?.[1] || found.has(direct[1])) continue;
+    if (!direct?.[1] || found.has(direct[1]) || conflictingDirectFields.has(direct[1])) continue;
     const definition = TIC_FIELD_BY_KEY.get(direct[1]);
     if (!definition) continue;
-    const value = normalizeValue(definition, direct[2] ?? "");
+    const value = strictMappedValue(definition.type, direct[2] ?? "", definition.key);
     if (value === null) continue;
     const page = pageOfLine[index] ?? 1;
     facts.push(factFromValue(definition, value, documentRef, line, page, pageProvenance?.get(page)));
     found.add(definition.key);
   }
 
-  if (!found.has("certification_type")) {
+  if (!found.has("certification_type") && !conflictingDirectFields.has("certification_type")) {
     const explicitCertificationType = certificationTypeFact(lines);
     if (explicitCertificationType) {
       const definition = TIC_FIELD_BY_KEY.get("certification_type")!;
@@ -211,11 +238,12 @@ export function extractTicFieldsFromText(
   }
 
   for (const definition of TIC_FIELD_DEFINITIONS) {
-    if (found.has(definition.key) || !definition.aliases.length) continue;
+    if (found.has(definition.key) || conflictingDirectFields.has(definition.key) || definition.key === "certification_type" || !definition.aliases.length) continue;
     let extracted: ExtractedFact | null = null;
     for (let index = 0; index < lines.length && !extracted; index += 1) {
       const line = lines[index] ?? "";
       if (line.startsWith(DIRECT_TIC_FIELD_PREFIX)) continue;
+      if (line.startsWith("__CERTIVOIQ_") || strictCellPages.has(pageOfLine[index])) continue;
       const lower = line.toLowerCase();
       for (const alias of definition.aliases) {
         if (!lower.includes(alias.toLowerCase())) continue;
@@ -237,6 +265,12 @@ export function extractTicFieldsFromText(
     }
   }
 
+  for (const fact of facts) {
+    const cell = cellMetadata.get(`${fact.page}:${fact.field}`);
+    if (!cell) continue;
+    fact.confidence = Math.min(fact.confidence, cell.confidence);
+    fact.snippet = `Source cell [${cell.coordinates}] (${cell.method}); ${fact.snippet ?? ''}`.slice(0, 300);
+  }
   const missingFields = TIC_FIELD_KEYS.filter((key) => !found.has(key));
   const provider = facts.some((fact) => fact.provider === "ocr-tesseract")
     ? "ocr-tesseract"

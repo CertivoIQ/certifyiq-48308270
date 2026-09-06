@@ -11,6 +11,7 @@ import {
 } from "@/lib/tic-supporting-document-registry";
 import {
   listCertificationSupportingDocuments,
+  getCertificationPacketSelection,
   markCertificationSupportingDocumentReviewed,
 } from "@/utils/tic-certification-intake.functions";
 import {
@@ -33,6 +34,8 @@ async function sha256File(file: File) {
 export function CertificationSupportingDocumentsPanel({ itemId }: CertificationSupportingDocumentsPanelProps) {
   const queryClient = useQueryClient();
   const listDocuments = useServerFn(listCertificationSupportingDocuments);
+  const getPacketSelection = useServerFn(getCertificationPacketSelection);
+  const packetSelection = useQuery({ queryKey: ["certification-packet-selection", itemId], queryFn: () => getPacketSelection({ data: { itemId } }) });
   const markReviewed = useServerFn(markCertificationSupportingDocumentReviewed);
   const getUploadEligibility = useServerFn(getCertificationSupportingUploadEligibility);
   const attachDocument = useServerFn(attachStandaloneCertificationSupportingDocument);
@@ -118,6 +121,13 @@ export function CertificationSupportingDocumentsPanel({ itemId }: CertificationS
 
   return (
     <div className="mt-3 rounded-lg border bg-background/70 p-3">
+      {packetSelection.isError && <p role="alert" className="mb-3 text-sm text-destructive">The saved include/omit selection could not be loaded. Do not assume all original packet pages are included.</p>}
+      {packetSelection.data && <div className="mb-3 rounded border p-3 text-sm">
+        <h4 className="font-semibold">Saved packet review scope</h4>
+        <p>TIC pages: {packetSelection.data.ticPages.join(", ")} · included supporting pages: {packetSelection.data.supportingPages.join(", ") || "None"}</p>
+        <p>Omitted from this review: {packetSelection.data.omittedPages.join(", ") || "None"}. Original source retained unchanged.</p>
+        <details className="mt-1"><summary>Omission reasons</summary>{packetSelection.data.choices.filter(choice => choice.role === "omit").map(choice => <p key={choice.page}>Page {choice.page}: {choice.reason}</p>)}</details>
+      </div>}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <FileText className="size-4 text-primary" />

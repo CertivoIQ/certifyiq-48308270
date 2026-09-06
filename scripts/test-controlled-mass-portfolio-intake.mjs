@@ -96,7 +96,11 @@ test("onboarding and structured complete TIC intake are separate production entr
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
   assert.match(certificationUi, /Tenant file destination/i);
-  assert.match(certificationUi, /Review the complete certification packet before saving/);
+  // The selection-first screen supersedes the old complete-packet review heading.
+  assert.match(certificationUi, /Organize the uploaded packet/);
+  assert.match(certificationUi, /<TicPacketOrganizer/);
+  assert.match(certificationUi, /pageSelections: pageChoices/);
+  assert.match(certificationUi, /stage !== "tic" \|\| !draft\.selectionDigest/);
   assert.match(certificationUi, /TIC_FIELD_DEFINITIONS/);
   assert.match(certificationUi, /CertivoIqTicReviewForm/);
   assert.match(ticReviewForm, /PART I — DEVELOPMENT DATA/);
@@ -107,7 +111,7 @@ test("onboarding and structured complete TIC intake are separate production entr
   assert.match(ticReviewForm, /PART VII — RENT/);
   assert.match(ticReviewForm, /PART VIII — STUDENT STATUS/);
   assert.match(ticReviewForm, /PART IX — PROGRAM TYPE/);
-  assert.match(certificationUi, /Supporting documents detected in this packet/);
+  assert.match(certificationUi, /Included supporting documents/);
   assert.match(certificationUi, /sourcePreviewUrl/);
   assert.match(certificationUi, /Save Document/);
   assert.match(certificationUi, /Save & Start Review/);

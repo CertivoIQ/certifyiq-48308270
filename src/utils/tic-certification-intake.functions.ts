@@ -13,7 +13,8 @@ import {
   supportingDocumentLabel,
   type SupportingDocumentType,
 } from "@/lib/tic-supporting-document-registry";
-import { classifyPacketPages, groupSupportingPages } from "@/lib/tic-packet-classifier";
+import { composeSidecarText, provenanceIndex } from "@/lib/ocr-sidecar.mjs";
+import { buildPacketSelection, selectionFromHistory, initialPageChoices, packetInventory, selectedSupportingPages, selectedTicText, validatePageChoices, type PacketPageChoice } from "@/lib/tic-packet-selection";
 
 const REVIEWER_CONFIRMED_PROVIDER = "reviewer-confirmed";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -73,18 +74,7 @@ function normalizeConfirmedValue(field: string, value: string | number | null) {
   return text || null;
 }
 
-function packetPagesFromMarkedText(text: string) {
-  const matches = [...text.matchAll(/^\s*page\s+(\d{1,3})\s*$/gim)];
-  if (!matches.length) return text.trim() ? [{ page: 1, text: text.trim() }] : [];
-  return matches.map((match, index) => {
-    const page = Number(match[1]);
-    const start = (match.index ?? 0) + match[0].length;
-    const end = index + 1 < matches.length ? (matches[index + 1]!.index ?? text.length) : text.length;
-    return { page, text: text.slice(start, end).trim() };
-  }).filter((page) => Number.isInteger(page.page) && page.page >= 1 && page.text);
-}
-
-async function extractStagedSource(supabase: any, userId: string, source: StagedCertificationSource) {
+async function extractStagedSource(supabase: any, userId: string, source: StagedCertificationSource, pageChoices?: PacketPageChoice[]) {
   const db = supabase as any;
   const { data: job, error: jobError } = await db
     .from("certification_import_jobs")
@@ -101,7 +91,7 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
 
   const extraction = await import("@/lib/certification-extraction.server");
   const ticExtraction = await import("@/lib/tic-field-extraction");
-  const { sha256Hex } = await import("@/lib/complianceDecisionAndManifest");
+  const { sha256Hex, hashJson } = await import("@/lib/complianceDecisionAndManifest");
   const download = await supabase.storage.from("certification-imports").download(source.storagePath);
   if (download.error || !download.data) throw new Error("The staged certification file could not be read for extraction.");
 
@@ -111,37 +101,27 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
     throw new Error("The staged certification does not match the uploaded source bytes.");
   }
 
-  let ocrDocument: Awaited<ReturnType<typeof extraction.loadOcrDocument>> = null;
-  const sidecarDownload = await supabase.storage
-    .from("certification-imports")
-    .download(extraction.sidecarPathFor(source.storagePath));
-  if (sidecarDownload.data) {
-    try {
-      ocrDocument = extraction.loadOcrDocument(
-        JSON.parse(await sidecarDownload.data.text()),
-        { fileName: source.originalFileName, sha256: sourceSha256, byteSize: bytes.byteLength },
-      );
-    } catch {
-      ocrDocument = null;
-    }
-  }
-
-  let documentText: string;
-  if (ocrDocument) documentText = ocrDocument.text;
-  else documentText = (await extraction.extractDocumentText(bytes, source.mimeType, source.originalFileName)).text;
-
+  const sidecarDownload = await supabase.storage.from("certification-imports").download(extraction.sidecarPathFor(source.storagePath));
+  if (sidecarDownload.error || !sidecarDownload.data) throw new Error("The source-bound page inventory is unavailable. Re-upload the packet; extraction will not guess its page boundaries.");
+  const composed = composeSidecarText(JSON.parse(await sidecarDownload.data.text()), {
+    fileName: source.originalFileName, sha256: sourceSha256, byteSize: bytes.byteLength,
+  });
+  const textByPage = new Map(composed.pages.map(page => [page.page, page.text]));
+  const packetPages = Array.from({ length: composed.sourceIdentity.pageCount }, (_, index) => ({
+    page: index + 1, text: textByPage.get(index + 1) ?? "",
+  }));
+  const pageClassifications = packetInventory(packetPages);
+  const selection = pageChoices ? buildPacketSelection(packetPages, pageChoices, sourceSha256) : null;
   const result = ticExtraction.extractTicFieldsFromText(
-    documentText,
+    selection ? selectedTicText(packetPages, selection) : "",
     source.originalFileName,
-    ...(ocrDocument ? ([ocrDocument.pageProvenance] as const) : ([] as const)),
+    provenanceIndex(composed.pages),
   );
-  const confidence = result.facts.length
-    ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length
-    : 0;
-  const packetPages = packetPagesFromMarkedText(documentText);
-  const pageClassifications = classifyPacketPages(packetPages);
-  const supportingDocuments = groupSupportingPages(pageClassifications);
-  return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments };
+  const confidence = result.facts.length ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length : 0;
+  const supportingDocuments = selection ? selectedSupportingPages(selection, pageClassifications) : [];
+  const selectionDigest = selection ? await hashJson(selection) : null;
+  return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments, selection, selectionDigest };
+
 }
 
 export const listCertificationTenantDestinations = createServerFn({ method: "GET" })
@@ -170,13 +150,17 @@ export const listCertificationTenantDestinations = createServerFn({ method: "GET
 /** Read staged source bytes and return a complete, editable TIC preview plus read-only packet documents. */
 export const extractCertificationTicPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { source: StagedCertificationSource }) => ({ source: validateSource(data.source) }))
+  .inputValidator((data: { source: StagedCertificationSource; pageSelections?: PacketPageChoice[] }) => ({
+    source: validateSource(data.source),
+    ...(data.pageSelections === undefined ? {} : { pageSelections: validatePageChoices(data.pageSelections, undefined, true) }),
+  }))
   .handler(async ({ data, context }) => {
     try {
-      const { result, confidence, pageClassifications, supportingDocuments } = await extractStagedSource(
+      const { result, confidence, pageClassifications, supportingDocuments, selection, selectionDigest } = await extractStagedSource(
         context.supabase,
         context.userId,
         data.source,
+        data.pageSelections,
       );
       const signed = await context.supabase.storage
         .from("certification-imports")
@@ -196,6 +180,10 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
         confidence,
         sourcePreviewUrl: signed.data?.signedUrl ?? null,
         pageClassifications,
+        pageSelections: selection?.choices ?? initialPageChoices(pageClassifications),
+        selectionDigest,
+        ticPages: selection?.ticPages ?? [],
+        omittedPages: selection?.omittedPages ?? [],
         supportingDocuments,
       } as const;
     } catch (error) {
@@ -215,9 +203,16 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     fields: ConfirmedField[];
     tenantProfileId: string;
     supportingDocuments?: SupportingDocumentChoice[];
+    pageSelections: PacketPageChoice[];
+    selectionDigest: string;
+    otherReviewAction?: "INITIAL" | "ANNUAL" | "INTERIM";
     startReview?: boolean;
   }) => {
     const source = validateSource(data.source);
+    const pageSelections = validatePageChoices(data.pageSelections, undefined, true);
+    if (typeof data.selectionDigest !== "string" || !/^[a-f0-9]{64}$/i.test(data.selectionDigest)) throw new Error("Confirm packet pages and rebuild the TIC before saving.");
+    if (data.otherReviewAction && !["INITIAL", "ANNUAL", "INTERIM"].includes(data.otherReviewAction)) throw new Error("Select a valid review action for Other certification.");
+    if (data.supportingDocuments?.length) throw new Error("Document selections changed. Reload intake and choose each packet page before saving.");
     if (!UUID_PATTERN.test(String(data.tenantProfileId ?? ""))) throw new Error("Select the tenant file for this certification.");
     if (!Array.isArray(data.fields) || data.fields.length > TIC_FIELD_KEYS.length) {
       throw new Error("The TIC field confirmation is invalid.");
@@ -246,6 +241,9 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       source,
       fields,
       tenantProfileId: data.tenantProfileId,
+      pageSelections,
+      selectionDigest: data.selectionDigest,
+      otherReviewAction: data.otherReviewAction,
       supportingDocuments,
       startReview: data.startReview === true,
     };
@@ -253,15 +251,17 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const db = supabase as any;
-    const { result, confidence, sourceSha256, supportingDocuments: serverSupportingDocuments } = await extractStagedSource(
+    const { result, confidence, sourceSha256, supportingDocuments: serverSupportingDocuments, selection, selectionDigest } = await extractStagedSource(
       supabase,
       userId,
       data.source,
+      data.pageSelections,
     );
+    if (!selection || data.selectionDigest !== selectionDigest) throw new Error("The selected packet pages no longer match this TIC preview. Rebuild the TIC from the current selections before saving.");
 
     const { data: tenant, error: tenantError } = await db
       .from("portfolio_tenant_profiles")
-      .select("id, property_id, unit_id, household_name")
+      .select("id, property_id, unit_id, household_name, program_codes, portfolio_properties(jurisdiction)")
       .eq("id", data.tenantProfileId)
       .eq("user_id", userId)
       .maybeSingle();
@@ -290,12 +290,11 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       }
     }
 
-    const choiceByGroup = new Map(data.supportingDocuments.map((entry) => [entry.id, entry.documentType]));
-    const finalSupportingDocuments = serverSupportingDocuments
-      .map((group) => ({ ...group, documentType: choiceByGroup.get(group.id) ?? group.documentType }))
-      .filter((group) => group.documentType !== "tic_page") as Array<
-        (typeof serverSupportingDocuments)[number] & { documentType: SupportingDocumentType }
-      >;
+    // Only explicitly included supporting pages become tenant documents; omitted pages stay in the original source only.
+    const finalSupportingDocuments = serverSupportingDocuments;
+    const ticType = String(confirmedExtractedData["certification_type"] ?? "").toLowerCase();
+    const certificationType = ticType === "initial certification" ? "INITIAL" : ticType === "recertification" ? "ANNUAL" : ticType === "other" ? data.otherReviewAction ?? null : null;
+    if (data.startReview && !certificationType) throw new Error("Confirm the TIC certification type (and an explicit review action for Other) before starting review.");
 
     const confirmedAt = new Date().toISOString();
     const { data: item, error: itemError } = await db
@@ -313,12 +312,18 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         sha256: sourceSha256,
         status: "processing",
         extraction_provider: result.provider,
+        certification_type: certificationType,
+        jurisdiction: tenant.portfolio_properties?.jurisdiction ?? null,
+        program_codes: Array.isArray(tenant.program_codes) ? tenant.program_codes : [],
         extracted_data: confirmedExtractedData,
         historical_changes: [{
           type: "tic_pre_save_confirmation",
           confirmed_at: confirmedAt,
           reviewer_id: userId,
           tenant_profile_id: tenant.id,
+          packet_selection: selection,
+          packet_selection_digest: selectionDigest,
+          page_classification_version: "tic-packet-selection:1",
           original_extracted_data: originalExtractedData,
           confirmed_extracted_data: confirmedExtractedData,
           corrections,
@@ -347,6 +352,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const confirmedFacts = Object.entries(confirmedExtractedData).map(([field, value]) => {
         const original = originalByField.get(field);
+        const corrected = !original || JSON.stringify(original.value) !== JSON.stringify(value);
         return {
           item_id: item.id,
           user_id: userId,
@@ -359,7 +365,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
           confidence: original?.confidence ?? 1,
           human_verified: true,
           required_for_decision: original?.requiredForDecision ?? false,
-          extraction_provider: original?.provider ?? REVIEWER_CONFIRMED_PROVIDER,
+          extraction_provider: corrected ? REVIEWER_CONFIRMED_PROVIDER : original?.provider ?? REVIEWER_CONFIRMED_PROVIDER,
         };
       });
       if (confirmedFacts.length) {
@@ -435,6 +441,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       correctionCount: corrections.length,
       reviewerSuppliedCount: reviewerSuppliedFields.length,
       supportingDocumentCount: finalSupportingDocuments.length,
+      omittedPageCount: selection.omittedPages.length,
       tenantProfileId: tenant.id,
       reviewQueueStatus: data.startReview ? "queued" : "not_queued",
       queuedForReview: data.startReview,
@@ -527,4 +534,19 @@ export const cancelCertificationTicPreview = createServerFn({ method: "POST" })
       .eq("user_id", userId);
     if (deleteError) throw deleteError;
     return { cancelled: true } as const;
+  });
+
+/** Saved include/omit scope for the review screen; original source pages are retained. */
+export const getCertificationPacketSelection = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { itemId: string }) => {
+    if (!UUID_PATTERN.test(String(data?.itemId ?? ""))) throw new Error("A certification item id is required.");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const { data: item, error } = await context.supabase.from("certification_import_items")
+      .select("id, sha256, historical_changes").eq("id", data.itemId).eq("user_id", context.userId).maybeSingle();
+    if (error) throw error;
+    if (!item) throw new Error("That certification is not available to this account.");
+    return selectionFromHistory(item.historical_changes, item.sha256 ?? "");
   });

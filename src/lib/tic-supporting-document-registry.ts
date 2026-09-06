@@ -7,6 +7,7 @@ export type SupportingDocumentType =
   | "no_child_support_certification"
   | "self_certification"
   | "affidavit"
+  | "bank_statement"
   | "check_stub"
   | "other_supporting_document";
 
@@ -112,6 +113,13 @@ export const SUPPORTING_DOCUMENT_DEFINITIONS: readonly SupportingDocumentDefinit
       /notary\s+public/i,
     ],
     weakSignals: [/under\s+penalty\s+of\s+perjury/i],
+  },
+  {
+    type: "bank_statement",
+    label: "Bank Statement",
+    aliases: ["Bank Statement", "Account Statement"],
+    strongSignals: [/bank\s+statement/i, /account\s+statement/i, /beginning\s+balance.*ending\s+balance/is],
+    weakSignals: [/statement\s+(?:period|date)/i, /interest\s+(?:earned|paid)/i, /account\s+(?:number|ending)/i],
   },
   {
     type: "check_stub",

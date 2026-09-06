@@ -1,0 +1,82 @@
+name: Verify staged TIC packet organizer
+on:
+  push:
+    branches: [fix/tic-packet-selection-20260906]
+    paths: [.github/workflows/tic-packet-integrate.yml]
+permissions:
+  contents: write
+concurrency:
+  group: tic-packet-integration
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.3'
+      - name: Decode exact staged source patch
+        run: |
+          python3 - <<'PY'
+          import base64, lzma, hashlib
+          from pathlib import Path
+          parts = [Path(f'scripts/tic-packet-patch.{i}.b64') for i in range(4)]
+          patch = lzma.decompress(base64.b64decode(''.join(p.read_text().strip() for p in parts)))
+          assert hashlib.sha256(patch).hexdigest() == '9c50549ca349b1bab8485d7ba8f64527dc44eac7946dc33683e8ab923a578e56'
+          Path('/tmp/tic-packet.patch').write_bytes(patch)
+          PY
+          git apply --unidiff-zero --check /tmp/tic-packet.patch
+          git apply --unidiff-zero /tmp/tic-packet.patch
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/components/certification-supporting-documents-panel.tsx')
+          s=p.read_text()
+          before='</p>)}</details>\n      </div>\n      <div className="flex flex-wrap'
+          assert s.count(before)==1
+          p.write_text(s.replace(before,'</p>)}</details>\n      </div>}\n      <div className="flex flex-wrap'))
+          # v2 already delegates to v4. v3 is an unreferenced legacy implementation
+          # whose old save contract omits required page selections. Retire it too.
+          Path('src/components/certification-upload-panel-v3.tsx').write_text('// All intake entry points use the selection-first implementation.\nexport { CertificationUploadPanel } from "./certification-upload-panel-v4";\n')
+          PY
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Regression tests
+        run: |
+          set -o pipefail
+          node --test scripts/test-tic-*.mjs scripts/test-certification-pipeline-performance.mjs scripts/test-onboarding-certification-separation.mjs | tee /tmp/packet-tests.txt
+      - name: Build and full strict types
+        run: |
+          set -o pipefail
+          bun run build 2>&1 | tee /tmp/packet-build.txt
+          node node_modules/typescript/bin/tsc --noEmit --pretty false | tee /tmp/packet-types.txt
+      - name: Actual organizer in Chromium with synthetic input only
+        run: |
+          npm install --prefix /tmp/tic-browser --ignore-scripts --no-audit --no-fund playwright@1.55.0
+          export CHROME_PATH="$(command -v google-chrome)"
+          node scripts/browser-acceptance-tic-packet.mjs
+      - name: Commit verified source on isolated branch only
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/fix/tic-packet-selection-20260906'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/certification-supporting-documents-panel.tsx src/components/certification-upload-panel-v3.tsx src/components/certification-upload-panel-v4.tsx src/components/tic-packet-organizer.tsx src/lib/pdf-ocr.ts src/lib/tic-document-layout.d.mts src/lib/tic-document-layout.mjs src/lib/tic-field-extraction.ts src/lib/tic-packet-classifier.ts src/lib/tic-packet-selection.ts src/lib/tic-pdf-form-values.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-supporting-document-registry.ts src/utils/tic-certification-intake.functions.ts src/utils/tic-certification-review.functions.ts scripts/browser-acceptance-tic-packet.mjs scripts/test-tic-packet-selection.mjs scripts/test-onboarding-certification-separation.mjs docs/tic-packet-selection.md .github/workflows/tic-packet-selection.yml
+          git rm scripts/tic-packet-patch.0.b64 scripts/tic-packet-patch.1.b64 scripts/tic-packet-patch.2.b64 scripts/tic-packet-patch.3.b64 .github/workflows/tic-packet-integrate.yml
+          git commit -m 'Integrate tested selection-first TIC packet organizer and retire stale intake'
+          git push origin HEAD:fix/tic-packet-selection-20260906
+          git rev-parse HEAD > /tmp/packet-source-commit.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tic-packet-integration-evidence
+          retention-days: 7
+          path: |
+            /tmp/packet-tests.txt
+            /tmp/packet-build.txt
+            /tmp/packet-types.txt
+            /tmp/packet-source-commit.txt
+            packet-browser-evidence

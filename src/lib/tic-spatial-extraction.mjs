@@ -1,3 +1,5 @@
+import { isTicContent } from './tic-document-layout.mjs';
+
 const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
 const DIRECT_PREFIX = '__CERTIVOIQ_TIC_FIELD__';
 
@@ -33,7 +35,24 @@ function flattenBlocks(blocks) {
       }
     }
   }
-  return { words, lines };
+  // OCR engines may return each table cell as a separate line/block. Rejoin only
+  // physically aligned fragments, not the arbitrary reading order of blocks.
+  const rows = [];
+  for (const line of [...lines].sort((a, b) => a.y0 - b.y0 || a.x0 - b.x0)) {
+    const row = rows.at(-1);
+    const tolerance = Math.max(2, (line.y1 - line.y0) * 0.4);
+    if (!row || Math.abs(row.y0 - line.y0) > tolerance) rows.push({ y0: line.y0, fragments: [line] });
+    else row.fragments.push(line);
+  }
+  const joined = rows.map(row => {
+    if (row.fragments.length === 1) return row.fragments[0];
+    const fragments = row.fragments.sort((a, b) => a.x0 - b.x0);
+    const rowWords = fragments.flatMap(line => line.words).sort((a, b) => a.x0 - b.x0);
+    const text = fragments.map(line => line.text).join(' ');
+    return { text, words: rowWords, x0: Math.min(...fragments.map(line => line.x0)), x1: Math.max(...fragments.map(line => line.x1)),
+      y0: Math.min(...fragments.map(line => line.y0)), y1: Math.max(...fragments.map(line => line.y1)) };
+  });
+  return { words, lines: joined };
 }
 
 function normalizedText(value) {
@@ -79,14 +98,11 @@ function clusterRows(words, startY, endY, pageHeight) {
   return rows.map((row) => ({ ...row, words: row.words.sort((a, b) => a.x0 - b.x0) }));
 }
 
-function tableExtent(words, width) {
-  const xs = words.flatMap((word) => [word.x0, word.x1]).filter(Number.isFinite);
-  if (!xs.length) return { x0: width * 0.025, x1: width * 0.975 };
-  const min = Math.max(0, Math.min(...xs));
-  const max = Math.min(width, Math.max(...xs));
-  const span = max - min;
-  if (span < width * 0.55) return { x0: width * 0.025, x1: width * 0.975 };
-  return { x0: Math.max(0, min - width * 0.01), x1: Math.min(width, max + width * 0.01) };
+function tableExtent(_words, width) {
+  // Never scale a table to its populated cells. A blank/redacted SSN or empty
+  // income column must not shrink the grid and move names into other columns.
+  // These normalized template bounds are proposals, not arbitrary-layout proof.
+  return { x0: width * 0.025, x1: width * 0.975 };
 }
 
 function splitColumns(rowWords, extent, boundaries) {
@@ -181,7 +197,6 @@ function staticFieldLines(lines) {
 function markerScore(value) {
   const text = clean(value);
   if (/^(?:x|\[x\]|☒|✓|✔|■|●|◆)$/i.test(text)) return 4;
-  if (/^(?:@|#|8|b)$/i.test(text)) return 1;
   return 0;
 }
 
@@ -214,6 +229,7 @@ function selectedCertificationType(lines, words, pageWidth, pageHeight) {
   ];
   const direct = explicit.filter(([, pattern]) => pattern.test(raw));
   if (direct.length === 1) return direct[0][0];
+  if (direct.length > 1) return null;
 
   const options = [
     ['Initial Certification', [/^initial$/, /^certification$/]],
@@ -327,17 +343,19 @@ function incomeLines(words, table, pageWidth, pageHeight) {
   const extent = tableExtent(body, pageWidth);
   const boundaries = [0, 0.075, 0.325, 0.545, 0.755, 1];
   const out = [];
+  let sourceRow = 0;
   for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);
     const text = usefulRowText(parts);
     if (!text || /\btotal\b/.test(text) || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 10);
     if (!member || !parts.slice(1).some((value) => /\d/.test(value))) continue;
-    add(out, `income_member_${member}_household_member_number`, parts[0]);
-    add(out, `income_member_${member}_wages_business`, parts[1]);
-    add(out, `income_member_${member}_social_security_pension`, parts[2]);
-    add(out, `income_member_${member}_public_assistance`, parts[3]);
-    add(out, `income_member_${member}_other_income`, parts[4]);
+    if (++sourceRow > 10) break;
+    add(out, `income_member_${sourceRow}_household_member_number`, parts[0]);
+    add(out, `income_member_${sourceRow}_wages_business`, parts[1]);
+    add(out, `income_member_${sourceRow}_social_security_pension`, parts[2]);
+    add(out, `income_member_${sourceRow}_public_assistance`, parts[3]);
+    add(out, `income_member_${sourceRow}_other_income`, parts[4]);
   }
   return out;
 }
@@ -350,24 +368,26 @@ function assetLines(words, table, pageWidth, pageHeight, profile) {
     ? [0, 0.07, 0.29, 0.39, 0.51, 0.68, 0.79, 1]
     : [0, 0.075, 0.39, 0.47, 0.75, 1];
   const out = [];
+  let sourceRow = 0;
   for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);
     const text = usefulRowText(parts);
     if (!text || /\b(total|threshold|imputed income threshold)\b/.test(text) || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 27);
     if (!member || !parts.slice(1).some(Boolean)) continue;
-    add(out, `asset_${member}_household_member_number`, parts[0]);
-    add(out, `asset_${member}_type`, parts[1]);
+    if (++sourceRow > 27) break;
+    add(out, `asset_${sourceRow}_household_member_number`, parts[0]);
+    add(out, `asset_${sourceRow}_type`, parts[1]);
     if (profile === 'phfa') {
-      add(out, `asset_${member}_current_disposed`, parts[2]);
-      add(out, `asset_${member}_category`, parts[3]);
-      add(out, `asset_${member}_cash_value`, parts[4]);
-      add(out, `asset_${member}_income_method`, parts[5]);
-      add(out, `asset_${member}_annual_income`, parts[6]);
+      add(out, `asset_${sourceRow}_current_disposed`, parts[2]);
+      add(out, `asset_${sourceRow}_category`, parts[3]);
+      add(out, `asset_${sourceRow}_cash_value`, parts[4]);
+      add(out, `asset_${sourceRow}_income_method`, parts[5]);
+      add(out, `asset_${sourceRow}_annual_income`, parts[6]);
     } else {
-      add(out, `asset_${member}_current_disposed`, parts[2]);
-      add(out, `asset_${member}_cash_value`, parts[3]);
-      add(out, `asset_${member}_annual_income`, parts[4]);
+      add(out, `asset_${sourceRow}_current_disposed`, parts[2]);
+      add(out, `asset_${sourceRow}_cash_value`, parts[3]);
+      add(out, `asset_${sourceRow}_annual_income`, parts[4]);
     }
   }
   return out;
@@ -385,7 +405,7 @@ export function extractTicSpatialValueLines(blocks, suppliedWidth, suppliedHeigh
   const width = Number(suppliedWidth) > 0 ? Number(suppliedWidth) : Math.max(...words.map((word) => word.x1));
   const height = Number(suppliedHeight) > 0 ? Number(suppliedHeight) : Math.max(...words.map((word) => word.y1));
   const pageText = normalizedText(lines.map((line) => line.text).join(' '));
-  if (!/tenant income certification/.test(pageText)) return [];
+  if (!isTicContent(lines.map(line => line.text).join('\n'))) return [];
 
   const householdTable = locateHouseholdTable(lines, height);
   const householdHeaderText = normalizedText(householdTable?.header?.text ?? '');
