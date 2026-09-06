@@ -45,14 +45,19 @@ function findLine(lines, pattern, afterY = -Infinity) {
     .sort((a, b) => a.y0 - b.y0)[0] ?? null;
 }
 
-function section(lines, currentPattern, nextPatterns, pageHeight) {
-  const title = findLine(lines, currentPattern);
-  if (!title) return null;
-  const next = nextPatterns
-    .map((pattern) => findLine(lines, pattern, title.y1 + 1))
+function firstMatchingLine(lines, patterns, afterY = -Infinity) {
+  return patterns
+    .map((pattern) => findLine(lines, pattern, afterY))
     .filter(Boolean)
     .sort((a, b) => a.y0 - b.y0)[0] ?? null;
-  return { start: title.y0, titleBottom: title.y1, end: next?.y0 ?? pageHeight };
+}
+
+function explicitMemberNumber(value, max) {
+  const normalized = clean(value).replace(/[()#.]/g, '').trim();
+  const match = normalized.match(/^(10|[1-9])$/);
+  if (!match) return null;
+  const number = Number(match[1]);
+  return number >= 1 && number <= max ? number : null;
 }
 
 function clusterRows(words, startY, endY, pageHeight) {
@@ -95,11 +100,6 @@ function splitColumns(rowWords, extent, boundaries) {
   return result.map((tokens) => clean(tokens.join(' ')));
 }
 
-function memberNumber(value, fallback) {
-  const match = clean(value).match(/\b(10|[1-9])\b/);
-  return match ? Number(match[1]) : fallback;
-}
-
 function usefulRowText(parts) {
   return normalizedText(parts.join(' '));
 }
@@ -114,27 +114,106 @@ function add(lines, alias, value) {
   lines.push(`${alias}: ${cleaned}`);
 }
 
-function householdLines(words, sectionBounds, pageWidth, pageHeight, profile) {
-  if (!sectionBounds) return [];
-  const height = sectionBounds.end - sectionBounds.start;
-  const startY = sectionBounds.titleBottom + Math.max(pageHeight * 0.012, height * 0.20);
-  const endY = sectionBounds.end - pageHeight * 0.006;
-  const body = words.filter((word) => word.cy >= startY && word.cy < endY);
+function locateHouseholdTable(lines, pageHeight) {
+  const title = firstMatchingLine(lines, [/part\s*ii\b.*household/, /household\s+composition/]);
+  if (!title) return null;
+  const header = firstMatchingLine(
+    lines,
+    [
+      /last\s+name.*first\s+name/,
+      /first\s+name.*last\s+name/,
+    ],
+    title.y1,
+  );
+  const bodyStart = (header?.y1 ?? title.y1) + Math.max(2, pageHeight * 0.003);
+  const next = firstMatchingLine(
+    lines,
+    [
+      /part\s*iii\b/,
+      /gross\s+annual\s+income/,
+      /employment.*wages.*(?:social|security|pension)/,
+      /social\s+security.*public\s+assistance/,
+      /part\s*iv[a-b]?\b/,
+      /type\s+of\s+asset.*cash\s+value/,
+      /part\s*v\b/,
+    ],
+    bodyStart,
+  );
+  return {
+    start: bodyStart,
+    end: Math.max(bodyStart, next?.y0 ?? pageHeight),
+    header,
+  };
+}
+
+function locateIncomeTable(lines, pageHeight) {
+  const title = firstMatchingLine(lines, [/part\s*iii\b.*(?:gross|annual).*income/, /gross\s+annual\s+income/]);
+  const header = firstMatchingLine(
+    lines,
+    [
+      /employment.*wages.*(?:social|security|pension)/,
+      /social\s+security.*public\s+assistance.*other\s+income/,
+    ],
+    title?.y1 ?? -Infinity,
+  );
+  if (!title && !header) return null;
+  const anchorBottom = header?.y1 ?? title?.y1 ?? 0;
+  const bodyStart = anchorBottom + Math.max(2, pageHeight * 0.003);
+  const next = firstMatchingLine(
+    lines,
+    [
+      /part\s*iv[a-b]?\b/,
+      /income\s+from\s+assets/,
+      /type\s+of\s+asset.*(?:cash\s+value|annual\s+income)/,
+      /part\s*v\b/,
+      /total\s+household\s+income/,
+    ],
+    bodyStart,
+  );
+  return { start: bodyStart, end: Math.max(bodyStart, next?.y0 ?? pageHeight) };
+}
+
+function locateAssetTable(lines, pageHeight) {
+  const title = firstMatchingLine(lines, [/part\s*iv[a-b]?\b.*income.*assets/, /income\s+from\s+assets/, /part\s*iv\b.*assets/]);
+  const header = firstMatchingLine(
+    lines,
+    [
+      /type\s+of\s+asset.*(?:cash\s+value|annual\s+income)/,
+      /cash\s+value.*annual\s+income/,
+    ],
+    title?.y1 ?? -Infinity,
+  );
+  if (!title && !header) return null;
+  const anchorBottom = header?.y1 ?? title?.y1 ?? 0;
+  const bodyStart = anchorBottom + Math.max(2, pageHeight * 0.003);
+  const next = firstMatchingLine(
+    lines,
+    [
+      /part\s*v\b/,
+      /total\s+household\s+income/,
+      /household\s+certification/,
+      /part\s*vi\b/,
+    ],
+    bodyStart,
+  );
+  return { start: bodyStart, end: Math.max(bodyStart, next?.y0 ?? pageHeight) };
+}
+
+function householdLines(words, table, pageWidth, pageHeight, profile) {
+  if (!table || table.end <= table.start) return [];
+  const body = words.filter((word) => word.cy >= table.start && word.cy < table.end);
   const extent = tableExtent(body, pageWidth);
   const boundaries = profile === 'phfa'
     ? [0, 0.065, 0.235, 0.405, 0.47, 0.535, 0.60, 0.665, 0.765, 0.86, 1]
     : [0, 0.075, 0.295, 0.455, 0.64, 0.79, 0.885, 1];
   const out = [];
-  let fallback = 1;
-  for (const row of clusterRows(body, startY, endY, pageHeight)) {
+  for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);
     const text = usefulRowText(parts);
     if (!text || isHeaderOrNote(text)) continue;
-    const member = memberNumber(parts[0], fallback);
-    if (!member || member > 10) continue;
-    const nonNumber = parts.slice(1).filter(Boolean);
-    if (!nonNumber.length) continue;
-    fallback = Math.max(fallback, member + 1);
+    const member = explicitMemberNumber(parts[0], 10);
+    if (!member) continue;
+    if (!parts.slice(1).some(Boolean)) continue;
     if (profile === 'phfa') {
       add(out, `household member ${member} last name`, parts[1]);
       add(out, `household member ${member} first name middle initial`, parts[2]);
@@ -158,24 +237,19 @@ function householdLines(words, sectionBounds, pageWidth, pageHeight, profile) {
   return out;
 }
 
-function incomeLines(words, sectionBounds, pageWidth, pageHeight) {
-  if (!sectionBounds) return [];
-  const height = sectionBounds.end - sectionBounds.start;
-  const startY = sectionBounds.titleBottom + Math.max(pageHeight * 0.012, height * 0.22);
-  const endY = sectionBounds.end - pageHeight * 0.008;
-  const body = words.filter((word) => word.cy >= startY && word.cy < endY);
+function incomeLines(words, table, pageWidth, pageHeight) {
+  if (!table || table.end <= table.start) return [];
+  const body = words.filter((word) => word.cy >= table.start && word.cy < table.end);
   const extent = tableExtent(body, pageWidth);
   const boundaries = [0, 0.075, 0.325, 0.545, 0.755, 1];
   const out = [];
-  let fallback = 1;
-  for (const row of clusterRows(body, startY, endY, pageHeight)) {
+  for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);
     const text = usefulRowText(parts);
     if (!text || /\btotal\b/.test(text) || isHeaderOrNote(text)) continue;
-    const member = memberNumber(parts[0], fallback);
-    if (!member || member > 10) continue;
+    const member = explicitMemberNumber(parts[0], 10);
+    if (!member) continue;
     if (!parts.slice(1).some((value) => /\d/.test(value))) continue;
-    fallback = Math.max(fallback, member + 1);
     add(out, `income member ${member} employment or wages`, parts[1]);
     add(out, `income member ${member} social security pensions`, parts[2]);
     add(out, `income member ${member} public assistance`, parts[3]);
@@ -184,27 +258,22 @@ function incomeLines(words, sectionBounds, pageWidth, pageHeight) {
   return out;
 }
 
-function assetLines(words, sectionBounds, pageWidth, pageHeight, profile) {
-  if (!sectionBounds) return [];
-  const height = sectionBounds.end - sectionBounds.start;
-  const startY = sectionBounds.titleBottom + Math.max(pageHeight * 0.014, height * 0.22);
-  const endY = sectionBounds.end - pageHeight * 0.008;
-  const body = words.filter((word) => word.cy >= startY && word.cy < endY);
+function assetLines(words, table, pageWidth, pageHeight, profile) {
+  if (!table || table.end <= table.start) return [];
+  const body = words.filter((word) => word.cy >= table.start && word.cy < table.end);
   const extent = tableExtent(body, pageWidth);
   const boundaries = profile === 'phfa'
     ? [0, 0.07, 0.29, 0.39, 0.51, 0.68, 0.79, 1]
     : [0, 0.075, 0.39, 0.47, 0.75, 1];
   const out = [];
-  let fallback = 1;
-  for (const row of clusterRows(body, startY, endY, pageHeight)) {
+  for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);
     const text = usefulRowText(parts);
     if (!text || /\b(total|threshold|imputed income threshold)\b/.test(text) || isHeaderOrNote(text)) continue;
-    const member = memberNumber(parts[0], fallback);
-    if (!member || member > 27) continue;
+    const member = explicitMemberNumber(parts[0], 27);
+    if (!member) continue;
     if (!parts.slice(1).some(Boolean)) continue;
-    fallback = Math.max(fallback, member + 1);
-    add(out, `asset ${member} household member number`, parts[0] || String(member));
+    add(out, `asset ${member} household member number`, parts[0]);
     add(out, `asset ${member} type`, parts[1]);
     if (profile === 'phfa') {
       add(out, `asset ${member} current disposed`, parts[2]);
@@ -234,14 +303,17 @@ export function extractTicSpatialValueLines(blocks, suppliedWidth, suppliedHeigh
   const pageText = normalizedText(lines.map((line) => line.text).join(' '));
   if (!/tenant income certification/.test(pageText)) return [];
 
-  const profile = /\brace\b|\bethn\b|\bdsbs\b|\bgndr\b/.test(pageText) ? 'phfa' : 'legacy';
-  const part2 = section(lines, /part\s*ii\b.*household/, [/part\s*iii\b/, /part\s*iv\b/, /part\s*v\b/], height);
-  const part3 = section(lines, /part\s*iii\b.*(?:gross|annual).*income/, [/part\s*iv\b/, /part\s*v\b/], height);
-  const part4 = section(lines, /part\s*iv[a-b]?\b.*income.*assets|part\s*iv\b.*assets/, [/part\s*v\b/, /household certification/, /part\s*vi\b/], height);
+  const householdTable = locateHouseholdTable(lines, height);
+  const householdHeaderText = normalizedText(householdTable?.header?.text ?? '');
+  const profile = /\brace\b|\bethn\b|\bdsbs\b|\bgndr\b|\bethnicity\b|\bdisability\b/.test(householdHeaderText)
+    ? 'phfa'
+    : 'legacy';
+  const incomeTable = locateIncomeTable(lines, height);
+  const assetTable = locateAssetTable(lines, height);
 
   return [
-    ...householdLines(words, part2, width, height, profile),
-    ...incomeLines(words, part3, width, height),
-    ...assetLines(words, part4, width, height, profile),
+    ...householdLines(words, householdTable, width, height, profile),
+    ...incomeLines(words, incomeTable, width, height),
+    ...assetLines(words, assetTable, width, height, profile),
   ];
 }
