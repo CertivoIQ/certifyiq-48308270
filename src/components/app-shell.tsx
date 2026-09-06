@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   Briefcase,
   Building2,
+  Calculator,
   ChevronDown,
   ClipboardCheck,
   ClipboardList,
@@ -77,6 +78,7 @@ type PhaNavKey =
 type PhaNavItem = NavItem & { key: PhaNavKey };
 
 const MF_COMMAND: readonly NavItem[] = [
+  { to: "/income-calculator", label: "Income Calculator", icon: Calculator },
   { to: "/upload-certification", label: "Upload Certification & OCR", icon: FileUp },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/tasks", label: "Tasks", icon: ClipboardCheck },
@@ -103,6 +105,7 @@ const HELP_NAV: readonly NavItem[] = [
 ];
 
 const PHA_COMMAND: readonly PhaNavItem[] = [
+  { to: "/income-calculator", label: "Income Calculator", icon: Calculator, key: "family_read" },
   { to: "/upload-certification", label: "Upload Certification & OCR", icon: FileUp, key: "command" },
   { to: "/dashboard", label: "Command Center", icon: LayoutDashboard, key: "command" },
   { to: "/tasks", label: "Tasks", icon: ClipboardCheck, key: "tasks" },
