@@ -1,0 +1,62 @@
+name: Repair calculator control names
+on:
+  push:
+    branches: [fix/income-control-accessible-names]
+    paths: ['.github/workflows/repair-income-control-names.yml']
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+      - name: Correct names on the exact tested control source
+        run: |
+          test "$(git hash-object src/components/income-calculator.tsx)" = a357ab583162fa623af9af3b66b9ab74caf19d69
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/components/income-calculator.tsx');s=p.read_text()
+          old='<input className={inputClass} type={type}'
+          assert s.count(old)==1
+          s=s.replace(old,'<input aria-label={title} className={inputClass} type={type}')
+          old='<select value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>'
+          assert s.count(old)==1
+          s=s.replace(old,'<select aria-label={title} value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>')
+          p.write_text(s)
+          p=Path('scripts/test-native-income-calculator.mjs');s=p.read_text()
+          assert 'test-income-control-labels.mjs' not in s
+          p.write_text(s+'\nimport "./test-income-control-labels.mjs";\n')
+          PY
+          cat > scripts/test-income-control-labels.mjs <<'JS'
+          import test from 'node:test';
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const source=readFileSync('src/components/income-calculator.tsx','utf8');
+          test('calculator text and date inputs keep an explicit name independent of hint text',()=>{
+            const field=source.slice(source.indexOf('function Field('),source.indexOf('function Choose('));
+            assert.match(field,/<input aria-label=\{title\}/);
+            assert.match(field,/<label/);
+          });
+          test('calculator dropdown name does not include option contents',()=>{
+            const choose=source.slice(source.indexOf('function Choose('),source.indexOf('function Check('));
+            assert.match(choose,/<select aria-label=\{title\}/);
+            assert.match(choose,/<label/);
+          });
+          JS
+      - name: Run calculator and onboarding regressions
+        run: |
+          bun install --frozen-lockfile
+          node --test scripts/test-native-income-calculator.mjs scripts/test-onboarding-handoff.mjs
+      - name: Commit application and test source only
+        run: |
+          git config user.name 'CertivoIQ Release Bot'
+          git config user.email 'release-bot@certivoiq.com'
+          git add src/components/income-calculator.tsx scripts/test-native-income-calculator.mjs scripts/test-income-control-labels.mjs
+          git commit -m 'Add explicit accessible names to native income controls and regression checks'
+          git push origin HEAD:fix/income-control-accessible-names
