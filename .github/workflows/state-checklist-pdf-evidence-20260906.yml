@@ -1,4 +1,4 @@
-name: State checklist targeted PDF recovery 20260906
+name: State checklist delegated PDF recovery 20260906
 on:
   pull_request:
     branches: [main]
@@ -7,72 +7,71 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
 jobs:
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: state-checklist-supplement-original-pdfs
-          path: prior
-          run-id: 34014034810
-          github-token: ${{ github.token }}
       - run: command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y poppler-utils)
-      - name: Capture exact recovered links without database writes
+      - name: Capture remaining original PDFs without database writes
         run: |
           python3 - <<'PY'
-          import importlib.util,json,os,re,concurrent.futures as cf
+          import importlib.util,json,os,re,concurrent.futures as cf,hashlib
           from pathlib import Path
           from urllib.parse import urlsplit,urlunsplit,quote,urljoin
           spec=importlib.util.spec_from_file_location('cap',Path('scripts/capture-state-checklist-pdfs-20260906.py'));c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
-          c.OUT=Path('artifacts/targeted-pdf-recovery');c.OUT.mkdir(parents=True,exist_ok=True)
-          c.UA='Mozilla/5.0 (compatible; CertivoIQ-Source-Research/2.1)'
+          c.OUT=Path('artifacts/delegated-pdf-recovery');c.OUT.mkdir(parents=True,exist_ok=True)
+          c.UA='Mozilla/5.0 (compatible; CertivoIQ-Source-Research/2.2)'
           def norm(u):
               p=urlsplit(u);return urlunsplit((p.scheme,p.netloc,quote(p.path,safe='/%:@-._~!$&\'()*+,;='),quote(p.query,safe='=&%:@/?+'),''))
           inventory=json.loads(Path('src/lib/nationwide-state-source-discovery.json').read_text());names={j['state_code']:j['agency'] for j in inventory['jurisdictions']}
-          config={'MS':(['mshomecorp.com','archivemhc.com'],['https://www.mshomecorp.com/property-managers/htc-compliance-forms-and-resources/','https://www.mshomecorp.com/property-managers/housing-tax-credit-compliance/']),'NJ':(['nj.gov','njhousing.gov'],['https://www.nj.gov/dca/hmfa/developers/lihtc/compliance/','https://www.nj.gov/dca/hmfa/developers/lihtc/compliance/incomelimits.shtml']),'LA':(['lhc.la.gov'],['https://www.lhc.la.gov/low-income-housing-tax-credit-lihtc-program','https://www.lhc.la.gov/resources-for-housing-development']),'US':(['huduser.gov','hud.gov'],['https://www.huduser.gov/portal/datasets/inflationary-adjustments-notifications.html'])}
-          extra={'NJ':['https://www.nj.gov/dca/hmfa/developers/docs/lihtc/compliance/incomelimits/tc_2026_income_limits.pdf','https://www.nj.gov/dca/hmfa/developers/docs/lihtc/compliance/incomelimits/tc_2025_Utility_Allowance_Schedule.pdf'],'LA':['https://www.lhc.la.gov/hubfs/Document%20Libraries/Housing%20Development/Funding%20Opportunities/LIHTC/LIHTC_Manual_2026.pdf'],'MS':['https://archivemhc.com/Compliance/Manual/2023%20CMP.pdf','https://archivemhc.com/Compliance/Resources/HTC/2026%20MTSP%20Limits.pdf','https://archivemhc.com/Compliance/Forms/HTC/Tenant%20Income%20Certification.pdf']}
-          prior=json.loads(Path('prior/manifest.json').read_text())
+          config={
+           'CT':(['chfa.org','spectrumlihtc.com'],['https://www.chfa.org/owners-property-managers/lihtc-compliance/','https://spectrumlihtc.com/state-monitoring/connecticut/']),
+           'HI':(['dbedt.hawaii.gov','spectrumlihtc.com'],['https://dbedt.hawaii.gov/hhfdc/developers/hmmf_html/','https://spectrumlihtc.com/state-monitoring/hawaii/']),
+           'DE':(['destatehousing.com','spectrumlihtc.com'],['https://spectrumlihtc.com/state-monitoring/delaware/']),
+           'MA':(['mass.gov','spectrumlihtc.com'],['https://spectrumlihtc.com/state-monitoring/massachusetts/','https://spectrumlihtc.com/mass-guide/']),
+           'AK':(['ahfc.us'],['https://www.ahfc.us/pros/compliance-audit/affordable-housing-compliance-reference-manual']),
+           'WV':(['wvhdf.com'],['https://www.wvhdf.com/programs/multi-family-programs-and-resources/','https://www.wvhdf.com/wp-content/uploads/2026/03/WVHDF-Certification-Waiver-Procedures.pdf']),
+           'AL':(['ahfa.com'],['https://www.ahfa.com/programs/rental-housing/compliance'])
+          }
           def task(state):
-              domains,seeds=config[state];candidates={};failures=[];discovery=[]
-              def add(u,label,parent):
+              domains,seeds=config[state];candidates={};failures=[];discovery=[];queue=list(seeds);seen=set();folder=c.OUT/state;folder.mkdir(exist_ok=True)
+              def add(u,label,parent,context=''):
                   u=norm(u)
-                  if c.allowed(u,domains):candidates[u]={'url':u,'label':label,'parent':parent,'context':''}
-              for u in extra.get(state,[]):add(u,u.rsplit('/',1)[-1],seeds[0])
-              if state=='MS':
-                  for r in prior['results']:
-                      if r['state_code']=='MS':
-                          for x in r.get('failures',[]):
-                              if '.pdf' in x['url'].lower():add(x['url'],x.get('label',x['url'].rsplit('/',1)[-1]),seeds[0])
+                  if c.allowed(u,domains):candidates[u]={'url':u,'label':label,'parent':parent,'context':context}
               for u in seeds:
+                  if '.pdf' in u.lower():add(u,u.rsplit('/',1)[-1],None)
+              while queue and len(seen)<8:
+                  u=queue.pop(0)
+                  if u in seen or '.pdf' in u.lower():continue
+                  seen.add(u)
                   try:
-                      b,final,headers,status=c.fetch(u,domains,25);parser=c.Links();parser.feed(b.decode('utf-8',errors='replace'));discovery.append({'url':u,'retrieved_at':c.now()})
+                      b,final,headers,status=c.fetch(u,domains,20);parser=c.Links();parser.feed(b.decode('utf-8',errors='replace'));sh=hashlib.sha256(b).hexdigest();(folder/(sh+'.html')).write_bytes(b);discovery.append({'url':u,'final_url':final,'retrieved_at':c.now(),'html_sha256':sh})
                       for href,label,heading in parser.links:
-                          v=urljoin(final,href)
-                          if '.pdf' not in v.lower():continue
-                          full=(label+' '+v).lower()
-                          if state=='MS' and re.search(r'/201[0-9]|/202[01245](?:%20|\s)|non.metropolitan.*202[0-5]',full):continue
-                          if state=='NJ' and re.search(r'tc_20(0|1)|tc_202[0-4]|202[0-4].*utility',full):continue
-                          if state=='LA' and not re.search(r'qap|qualified.allocation|hotma|2026.*limit|compliance',full):continue
-                          if state=='US' and not re.search(r'2027.*passbook|cy2027|2027.*revised',full):continue
-                          add(v,label,final)
-                  except Exception as e:failures.append({'url':u,'reason':str(e)})
+                          v=norm(urljoin(final,href));full=(label+' '+v+' '+heading).lower()
+                          if not c.allowed(v,domains):continue
+                          if '.pdf' in v.lower():
+                              if re.search(r'(201[0-9]|202[0-5]).*(income.limit|rent.limit|income.and.rent)|(?:income|rent).*limits.*(?:201[0-9]|202[0-5])',full):continue
+                              if state=='CT' and 'chfa.org' in urlsplit(v).netloc and not re.search(r'compliance|hotma|utility|tenant',full):continue
+                              if state=='WV' and not re.search(r'waiver|income|rent|compliance|training|utility',full):continue
+                              if state=='HI' and not ('spectrumlihtc.com' in v or re.search(r'compliance|hotma|utility|tenant|2026.*limit',full)):continue
+                              add(v,label,final,heading)
+                          elif state=='AK' and re.search(r'forms|rents|income|utility',label+' '+v,re.I):queue.append(v)
+                  except Exception as e:failures.append({'url':u,'reason':str(e)[:300]})
               ordered=list(candidates.values())[:100];docs=[]
               for item in ordered:
-                  try:docs.append(c.capture(state,item,domains,names.get(state,'U.S. Department of Housing and Urban Development')))
-                  except Exception as e:failures.append({'url':item['url'],'reason':str(e)})
+                  try:docs.append(c.capture(state,item,domains,names[state]))
+                  except Exception as e:failures.append({'url':item['url'],'reason':str(e)[:300]})
               print(state,'captured',len(docs),'failures',len(failures),flush=True)
-              return {'state_code':state,'discovery_pages':discovery,'captured_documents':docs,'failures':failures}
-          with cf.ThreadPoolExecutor(max_workers=4) as pool:results=list(pool.map(task,config))
-          (c.OUT/'manifest.json').write_text(json.dumps({'capture_completed_at':c.now(),'run_id':os.getenv('GITHUB_RUN_ID'),'results':results,'policy':'Exact original PDF capture only. Content review and independent validation remain required. No database writes.'},indent=2))
+              return {'state_code':state,'authority_name':names[state],'discovery_pages':discovery,'captured_documents':docs,'failures':failures,'delegation_review_required':state=='MA'}
+          with cf.ThreadPoolExecutor(max_workers=7) as pool:results=list(pool.map(task,config))
+          (c.OUT/'manifest.json').write_text(json.dumps({'capture_completed_at':c.now(),'run_id':os.getenv('GITHUB_RUN_ID'),'results':results,'policy':'Exact original PDF capture only. Agency delegation, content match and independent validation remain separate review gates. No database writes or approvals.'},indent=2))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: state-checklist-targeted-recovery-pdfs
-          path: artifacts/targeted-pdf-recovery/
+          name: state-checklist-delegated-recovery-pdfs
+          path: artifacts/delegated-pdf-recovery/
           retention-days: 90
           if-no-files-found: error
