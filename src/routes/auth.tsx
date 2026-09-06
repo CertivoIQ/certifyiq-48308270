@@ -14,9 +14,10 @@ import { verifyAndDisableRecoveryCode } from "@/utils/mfa.functions";
 type Mode = "signin" | "signup" | "forgot";
 type AuthTarget = "/dashboard" | "/pricing" | "/launchpad" | "/trial";
 
-function afterAuthTarget(): AuthTarget {
+// Inspecting a return destination must not consume it before authentication succeeds.
+function afterAuthTarget(consume = false): AuthTarget {
   const saved = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("certivoiq:after-auth") : null;
-  if (saved) sessionStorage.removeItem("certivoiq:after-auth");
+  if (saved && consume) sessionStorage.removeItem("certivoiq:after-auth");
   if (saved === "/pricing" || saved === "/launchpad" || saved === "/trial") return saved;
   return "/dashboard";
 }
@@ -85,6 +86,7 @@ function AuthPage() {
         return;
       }
 
+      afterAuthTarget(true);
       navigate({ to: target as AuthTarget, replace: true });
     })();
 
@@ -95,7 +97,7 @@ function AuthPage() {
 
   async function proceedAfterMfa() {
     const { data } = await supabase.auth.getSession();
-    if (data.session) navigate({ to: isFreeReviewReturn() ? "/trial" : afterAuthTarget(), replace: true });
+    if (data.session) navigate({ to: isFreeReviewReturn() ? "/trial" : afterAuthTarget(true), replace: true });
   }
 
   async function handleMfaVerify() {
@@ -132,7 +134,7 @@ function AuthPage() {
         if (search.returnTo === "/trial" && typeof sessionStorage !== "undefined") sessionStorage.setItem("certivoiq:after-auth", "/trial");
         const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${returnTo}`, data: { full_name: name } } });
         if (error) throw error;
-        if (data.session) { navigate({ to: returnTo, replace: true }); return; }
+        if (data.session) { afterAuthTarget(true); navigate({ to: returnTo, replace: true }); return; }
         setSentTo({ kind: "verify", email });
         toast.success("Verify your email", { description: "We sent a confirmation link to " + email });
       } else if (mode === "forgot") {
@@ -150,7 +152,7 @@ function AuthPage() {
         const { data: factors } = await supabase.auth.mfa.listFactors();
         const verified = factors?.totp?.find((factor) => factor.status === "verified");
         if (verified) { setMfaFactorId(verified.id); setMfaMode(true); setMfaCode(""); return; }
-        navigate({ to: isFreeReviewReturn() ? "/trial" : afterAuthTarget(), replace: true });
+        navigate({ to: isFreeReviewReturn() ? "/trial" : afterAuthTarget(true), replace: true });
       }
     } catch (err) { toast.error(err instanceof Error ? err.message : "Something went wrong"); }
     finally { setBusy(false); }
