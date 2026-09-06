@@ -35,15 +35,37 @@ test("registry inventories 76 LIHTC procedures across 21 states including Nebras
   assert.equal(new Set(procedures.map((procedure) => procedure.jurisdiction)).size, 21);
   assert.ok(procedures.every((procedure) => procedure.program === "LIHTC"));
   assert.ok(procedures.every((procedure) => !Object.hasOwn(procedure, "evaluate")));
+  const neProcedures = listComplianceProcedures({ stateCode: "NE" });
   assert.deepEqual(
-    listComplianceProcedures({ stateCode: "NE" })
-      .map((procedure) => procedure.id)
-      .sort(),
+    neProcedures.map((procedure) => procedure.id).sort(),
     [
       "STATE-NE-AFFORDABILITY-PERIOD-BOUNDARY",
       "STATE-NE-NONCOMPLIANCE-RESPONSE",
       "STATE-NE-QUALIFIED-CONTRACT-DECONTROL-CERTIFICATION",
     ],
+  );
+  const neSourceTrace = new Set(
+    neProcedures.flatMap((procedure) => procedure.sourceTrace),
+  );
+  assert.ok(
+    neSourceTrace.has(
+      "https://www.nifa.org/developers-property-managers/lihtc-compliance",
+    ),
+  );
+  assert.ok(
+    neSourceTrace.has(
+      "https://www.nifa.org/developers-property-managers/forms-docs",
+    ),
+  );
+  assert.ok(
+    neSourceTrace.has(
+      "https://www.nifa.org/developers-property-managers/qualified-contract-toolkit",
+    ),
+  );
+  assert.ok(
+    neProcedures.every((procedure) =>
+      procedure.citation.includes("https://www.nifa.org/"),
+    ),
   );
 });
 
@@ -161,6 +183,29 @@ test("source-bound event date alone never activates raw client procedure inputs"
       ),
     ),
   );
+
+  const descriptors = new Map(
+    listComplianceProcedures({ stateCode: "PA" }).map((procedure) => [
+      procedure.id,
+      procedure,
+    ]),
+  );
+  for (const finding of scan.findings) {
+    const descriptor = descriptors.get(finding.procedureId);
+    assert.ok(descriptor);
+    assert.equal(finding.rulePackId, "compliance-procedure-blocker-inventory");
+    assert.equal(
+      finding.rulePackVersion,
+      COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
+    );
+    assert.notEqual(finding.rulePackId, statePack.id);
+    assert.notEqual(finding.rulePackVersion, statePack.version);
+    assert.equal(finding.statePackBindingStatus, "UNBOUND");
+    assert.equal(finding.effectiveDateBindingStatus, "UNBOUND");
+    assert.equal(finding.procedureInventoryBuild, descriptor.engineBuild);
+    assert.equal(finding.procedureEffectiveFrom, descriptor.effectiveFrom);
+    assert.deepEqual(finding.procedureSourceTrace, descriptor.sourceTrace);
+  }
 });
 
 test("a malformed supplied effective-to date invalidates the state pack gate", () => {
@@ -178,6 +223,28 @@ test("a malformed supplied effective-to date invalidates the state pack gate", (
       finding.blockingReasons.includes(
         "STATE_COMPLIANCE_PROCEDURE_PACK_NOT_VALIDATED",
       ),
+    ),
+  );
+});
+
+test("trusted event dates outside the supplied metadata window remain blocked and unbound", () => {
+  const scan = scanRecertificationComplianceProcedures({
+    programs: ["LIHTC"],
+    stateCode: "PA",
+    statePack: { ...statePack, effectiveFrom: "2026-09-01" },
+    trustedEventDate,
+    recertificationInput: {},
+  });
+
+  assert.equal(scan.evaluatedProcedureCount, 0);
+  assert.ok(
+    scan.findings.every(
+      (finding) =>
+        finding.statePackBindingStatus === "UNBOUND" &&
+        finding.effectiveDateBindingStatus === "UNBOUND" &&
+        finding.blockingReasons.includes(
+          "STATE_COMPLIANCE_PROCEDURE_PACK_NOT_EFFECTIVE",
+        ),
     ),
   );
 });
