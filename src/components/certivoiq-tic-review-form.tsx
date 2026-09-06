@@ -164,7 +164,16 @@ function IncomeTable({ values, factsByField, busy, onChange }: Props) {
         <tbody>
           {members.map((member) => (
             <tr key={member}>
-              <td className="border border-slate-600 px-2 py-1 text-center font-semibold">{member}</td>
+              <td className="border border-slate-600 p-0">
+                <input
+                  aria-label={def(`income_member_${member}_household_member_number`)?.label ?? `Income row ${member} — HH Mbr #`}
+                  className="h-8 w-full border-0 bg-white px-2 text-center text-xs font-semibold outline-none focus:ring-2 focus:ring-inset focus:ring-slate-800/20"
+                  value={values[`income_member_${member}_household_member_number`] ?? ""}
+                  disabled={busy}
+                  inputMode="numeric"
+                  onChange={(event) => onChange(`income_member_${member}_household_member_number`, event.target.value)}
+                />
+              </td>
               {["wages_business", "social_security_pension", "public_assistance", "other_income"].map((suffix) => {
                 const field = `income_member_${member}_${suffix}`;
                 return (
@@ -258,6 +267,9 @@ export function CertivoIqTicReviewForm(props: Props) {
                 <Choice field="certification_type" option="Recertification" label="Recertification" {...props} />
                 <Choice field="certification_type" option="Other" label="Other" {...props} />
               </div>
+              {(values.certification_type ?? "").toLowerCase() === "other" ? (
+                <div className="mt-2 max-w-md"><Field field="other_certification_type" {...props} compact /></div>
+              ) : null}
             </div>
             <div className="grid gap-2">
               <Field field="certification_effective_date" {...props} compact placeholder="MM/DD/YYYY" />

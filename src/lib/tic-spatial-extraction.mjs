@@ -199,7 +199,7 @@ function optionWordIndex(words, patterns) {
   return -1;
 }
 
-function selectedCertificationType(lines, pageWidth) {
+function selectedCertificationType(lines, words, pageWidth, pageHeight) {
   const line = firstMatchingLine(lines, [
     /initial\s+certification.*recertification.*other/,
     /initial\s+certification.*recertification/,
@@ -226,7 +226,8 @@ function selectedCertificationType(lines, pageWidth) {
     if (index < 0) continue;
     const anchor = line.words[index];
     let score = 0;
-    for (const word of line.words) {
+    for (const word of words) {
+      if (Math.abs(word.cy - anchor.cy) > Math.max(8, pageHeight * 0.012)) continue;
       if (word.x1 > anchor.x0 || word.x1 < anchor.x0 - pageWidth * 0.055) continue;
       score = Math.max(score, markerScore(word.text));
     }
@@ -332,6 +333,7 @@ function incomeLines(words, table, pageWidth, pageHeight) {
     if (!text || /\btotal\b/.test(text) || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 10);
     if (!member || !parts.slice(1).some((value) => /\d/.test(value))) continue;
+    add(out, `income_member_${member}_household_member_number`, parts[0]);
     add(out, `income_member_${member}_wages_business`, parts[1]);
     add(out, `income_member_${member}_social_security_pension`, parts[2]);
     add(out, `income_member_${member}_public_assistance`, parts[3]);
@@ -394,7 +396,7 @@ export function extractTicSpatialValueLines(blocks, suppliedWidth, suppliedHeigh
   const assetTable = locateAssetTable(lines, height);
 
   const out = [...staticFieldLines(lines)];
-  const certificationType = selectedCertificationType(lines, width);
+  const certificationType = selectedCertificationType(lines, words, width, height);
   if (certificationType) add(out, 'certification_type', certificationType);
   if (certificationType === 'Other') {
     const explanation = otherCertificationText(lines);

@@ -42,14 +42,15 @@ const householdMemberFields = Array.from({ length: TIC_HOUSEHOLD_ROW_COUNT }, (_
 }).flat();
 
 const incomeMemberFields = Array.from({ length: TIC_INCOME_ROW_COUNT }, (_, index) => {
-  const member = index + 1;
-  const prefix = `Household member ${member}`;
+  const row = index + 1;
+  const prefix = `Income row ${row}`;
   return [
-    field(`income_member_${member}_wages_business`, `${prefix} — employment or wages`, "Part III — Gross Annual Income", "currency", [`income member ${member} employment or wages`]),
-    field(`income_member_${member}_social_security_pension`, `${prefix} — Social Security / pensions`, "Part III — Gross Annual Income", "currency", [`income member ${member} social security pensions`]),
-    field(`income_member_${member}_public_assistance`, `${prefix} — public assistance`, "Part III — Gross Annual Income", "currency", [`income member ${member} public assistance`]),
-    field(`income_member_${member}_other_income`, `${prefix} — other income`, "Part III — Gross Annual Income", "currency", [`income member ${member} other income`]),
-    field(`income_member_${member}_total_income`, `${prefix} — total annual income`, "Part III — Gross Annual Income", "currency", [`income member ${member} total annual income`]),
+    field(`income_member_${row}_household_member_number`, `${prefix} — HH Mbr #`, "Part III — Gross Annual Income", "number", [`income member ${row} household member number`]),
+    field(`income_member_${row}_wages_business`, `${prefix} — employment or wages`, "Part III — Gross Annual Income", "currency", [`income member ${row} employment or wages`]),
+    field(`income_member_${row}_social_security_pension`, `${prefix} — Social Security / pensions`, "Part III — Gross Annual Income", "currency", [`income member ${row} social security pensions`]),
+    field(`income_member_${row}_public_assistance`, `${prefix} — public assistance`, "Part III — Gross Annual Income", "currency", [`income member ${row} public assistance`]),
+    field(`income_member_${row}_other_income`, `${prefix} — other income`, "Part III — Gross Annual Income", "currency", [`income member ${row} other income`]),
+    field(`income_member_${row}_total_income`, `${prefix} — total annual income`, "Part III — Gross Annual Income", "currency", [`income member ${row} total annual income`]),
   ];
 }).flat();
 

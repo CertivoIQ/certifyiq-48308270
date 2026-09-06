@@ -62,6 +62,8 @@ test('native PDF source labels map directly to matching CertivoIQ keys', () => {
     assert.ok(formMap.includes(target), `source field ${source} must map to ${target}`);
   }
   assert.match(formMap, /DIRECT_PREFIX = "__CERTIVOIQ_TIC_FIELD__"/);
+  assert.match(formMap, /function incomeHouseholdMemberKey/);
+  assert.match(formMap, /income_member_\$\{row\}_household_member_number/);
   assert.match(fieldExtraction, /DIRECT_TIC_FIELD_PREFIX = "__CERTIVOIQ_TIC_FIELD__"/);
 });
 
@@ -72,6 +74,8 @@ test('certification type is a first-class mapped field for Initial, Recertificat
   assert.match(review, /option="Initial Certification"/);
   assert.match(review, /option="Recertification"/);
   assert.match(review, /option="Other"/);
+  assert.match(formMap, /incomeHouseholdMemberKey/);
+  assert.match(review, /other_certification_type/);
 });
 
 test('exact keyed TIC values are parsed before generic OCR aliases', () => {

@@ -74,6 +74,7 @@ test('legacy flattened TIC household and income cells map by exact field key', (
   assert(values.includes(direct('household_member_1_relationship', 'H')));
   assert(values.includes(direct('household_member_1_date_of_birth', '01/17/1965')));
   assert(values.includes(direct('household_member_1_full_time_student', 'N')));
+  assert(values.includes(direct('income_member_1_household_member_number', '1')));
   assert(values.includes(direct('income_member_1_wages_business', '25544.40')));
   assert(values.includes(direct('income_member_1_social_security_pension', '0.00')));
   assert(values.includes(direct('asset_1_type', 'CHECKING')));

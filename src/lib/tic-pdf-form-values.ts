@@ -77,6 +77,7 @@ function staticFieldKey(name: string): string | null {
     "Total of NNPP": "total_nnpp",
     "Total Income from Assets": "total_income_assets_m",
     "Total Annual Household Income": "household_annual_income",
+    "Textfield-11": "household_annual_income",
     "Current Income Limit per Family Size": "applicable_lihtc_income_limit",
     "Household Income at Movein": "household_income_at_move_in",
     "Household Size at Move-in": "household_size_at_move_in",
@@ -111,6 +112,18 @@ function householdKey(name: string): string | null {
     if (row) return `household_member_${row}_${suffix}`;
   }
   return null;
+}
+
+function incomeHouseholdMemberKey(name: string): string | null {
+  const match = /^HH Mbr-(\d+)$/.exec(name);
+  if (!match?.[1]) return null;
+  const suffix = Number(match[1]);
+  const row = suffix >= 4 && suffix <= 8
+    ? suffix - 3
+    : suffix >= 14 && suffix <= 18
+      ? suffix - 8
+      : null;
+  return row ? `income_member_${row}_household_member_number` : null;
 }
 
 function incomeKey(name: string): string | null {
@@ -248,7 +261,7 @@ export function ticPdfFormValueLinesByPage(fieldObjects: PdfFieldObjects | null 
         continue;
       }
 
-      const key = staticFieldKey(name) ?? householdKey(name) ?? incomeKey(name) ?? assetKey(name) ?? signatureKey(name);
+      const key = staticFieldKey(name) ?? householdKey(name) ?? incomeHouseholdMemberKey(name) ?? incomeKey(name) ?? assetKey(name) ?? signatureKey(name);
       if (!key) continue;
       const normalizedValue = key.endsWith("_signature_present") ? "Yes" : value;
       pushLine(byPage, page, directLine(key, normalizedValue));
