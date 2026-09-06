@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const pdf = readFileSync('src/lib/pdf-ocr.ts', 'utf8');
 const formMap = readFileSync('src/lib/tic-pdf-form-values.ts', 'utf8');
+const fieldExtraction = readFileSync('src/lib/tic-field-extraction.ts', 'utf8');
 const registry = readFileSync('src/lib/tic-field-registry.ts', 'utf8');
 const review = readFileSync('src/components/certivoiq-tic-review-form.tsx', 'utf8');
 
@@ -35,9 +36,47 @@ test('source TIC continuation capacity is represented in the review form', () =>
   assert.match(review, /TIC_ASSET_ROW_COUNT/);
 });
 
-test('native PDF row names map to deterministic TIC aliases', () => {
-  assert.match(formMap, /Last Name/);
-  assert.match(formMap, /A Employment or Wages/);
-  assert.match(formMap, /G Type of Asset/);
-  assert.match(formMap, /household member \$\{row\}/);
+test('native PDF source labels map directly to matching CertivoIQ keys', () => {
+  const requiredPairs = [
+    ['Property Name', 'property_name'],
+    ['County', 'county'],
+    ['TC', 'tax_credit_number'],
+    ['BIN', 'building_identification_number'],
+    ['Address', 'property_address'],
+    ['Unit Number', 'unit_number'],
+    ['# Bedrooms', 'unit_bedrooms'],
+    ['Last Name', 'last_name'],
+    ['First Name Middle Initial', 'first_name_middle_initial'],
+    ['Rel HH', 'relationship'],
+    ['Date of Birth', 'date_of_birth'],
+    ['FIT Student', 'full_time_student'],
+    ['A Employment or Wages', 'wages_business'],
+    ['B Social SecurityPensions', 'social_security_pension'],
+    ['C Public Assistance', 'public_assistance'],
+    ['D Other Income', 'other_income'],
+    ['G Type of Asset', 'type'],
+    ['J Cash Value of Asset', 'cash_value'],
+  ];
+  for (const [source, target] of requiredPairs) {
+    assert.ok(formMap.includes(source), `source field ${source} must be recognized`);
+    assert.ok(formMap.includes(target), `source field ${source} must map to ${target}`);
+  }
+  assert.match(formMap, /DIRECT_PREFIX = "__CERTIVOIQ_TIC_FIELD__"/);
+  assert.match(fieldExtraction, /DIRECT_TIC_FIELD_PREFIX = "__CERTIVOIQ_TIC_FIELD__"/);
+});
+
+test('certification type is a first-class mapped field for Initial, Recertification, and Other', () => {
+  assert.match(formMap, /\["Initial Certification", "Recertification", "Other"\]/);
+  assert.match(formMap, /\["certification_type", name\]/);
+  assert.match(registry, /field\("certification_type"/);
+  assert.match(review, /option="Initial Certification"/);
+  assert.match(review, /option="Recertification"/);
+  assert.match(review, /option="Other"/);
+});
+
+test('exact keyed TIC values are parsed before generic OCR aliases', () => {
+  assert.match(fieldExtraction, /for \(let index = 0; index < lines\.length; index \+= 1\)/);
+  assert.match(fieldExtraction, /TIC_FIELD_BY_KEY\.get\(direct\[1\]\)/);
+  assert.match(fieldExtraction, /if \(found\.has\(definition\.key\)/);
+  assert.match(fieldExtraction, /if \(line\.startsWith\(DIRECT_TIC_FIELD_PREFIX\)\) continue/);
 });
