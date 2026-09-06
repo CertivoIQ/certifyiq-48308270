@@ -109,30 +109,49 @@ const moduleEffectiveFrom = (module) =>
       name.endsWith("_EFFECTIVE_FROM") && typeof value === "string",
   )?.[1] ?? null;
 
-const sourceCitation = (module) => {
-  const source = Object.entries(module).find(([name]) =>
+const sourceTraceFor = (module) => {
+  const traces = [];
+  const add = (value) => {
+    const text = String(value ?? "").trim();
+    if (text && !traces.includes(text)) traces.push(text);
+  };
+  const visit = (value, key = "", root = false) => {
+    if (typeof value === "string") {
+      if (
+        root ||
+        /^https?:\/\//i.test(value) ||
+        /(citation|title|url|source|document|page|manual|form|toolkit|authority)/i.test(
+          key,
+        )
+      ) {
+        add(value);
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item, key, root);
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    for (const [nestedKey, nestedValue] of Object.entries(value)) {
+      visit(nestedValue, nestedKey, false);
+    }
+  };
+
+  for (const [name, source] of Object.entries(module).filter(([name]) =>
     /_SOURCE(?:S)?$/.test(name),
-  )?.[1];
-  if (!source) return "Controlled state compliance rule pack";
-  const records = Array.isArray(source) ? source : [source];
-  return (
-    records
-      .map((record) =>
-        typeof record === "string"
-          ? record
-          : record?.citation ??
-            record?.title ??
-            record?.url ??
-            record?.source_url,
-      )
-      .filter(Boolean)
-      .join("; ") || "Controlled state compliance rule pack"
-  );
+  )) {
+    visit(source, name, true);
+  }
+  return traces.length
+    ? traces
+    : ["Controlled state compliance rule pack"];
 };
 
 function buildStateProcedures() {
-  return Object.entries(STATE_MODULES).flatMap(([stateCode, module]) =>
-    Object.entries(module)
+  return Object.entries(STATE_MODULES).flatMap(([stateCode, module]) => {
+    const sourceTrace = Object.freeze(sourceTraceFor(module));
+    return Object.entries(module)
       .filter(
         ([name, value]) =>
           name.startsWith("evaluate") && typeof value === "function",
@@ -147,10 +166,11 @@ function buildStateProcedures() {
           program: "LIHTC",
           engineBuild: moduleBuild(module),
           effectiveFrom: moduleEffectiveFrom(module),
-          citation: sourceCitation(module),
+          citation: sourceTrace.join("; "),
+          sourceTrace,
         }),
-      ),
-  );
+      );
+  });
 }
 
 const STATE_PROCEDURES = Object.freeze(buildStateProcedures());
@@ -260,18 +280,21 @@ function statePackWindowGate(packWindow, eventDate) {
       };
 }
 
-function inventoryFinding(procedure, reasonCode, reason, statePack) {
+function inventoryFinding(procedure, reasonCode, reason) {
   return {
     procedureId: procedure.id,
     procedureName: procedure.name,
     procedureCategory: procedure.category,
     procedureProgram: procedure.program ?? "LIHTC",
+    procedureInventoryBuild: procedure.engineBuild,
+    procedureEffectiveFrom: procedure.effectiveFrom ?? null,
+    procedureSourceTrace: [...(procedure.sourceTrace ?? [procedure.citation])],
     ruleId: procedure.id,
     ruleVersion: procedure.engineBuild,
-    rulePackId:
-      statePack?.id ??
-      `state-${String(procedure.jurisdiction).toLowerCase()}-procedures`,
-    rulePackVersion: statePack?.version ?? "UNVALIDATED",
+    rulePackId: "compliance-procedure-blocker-inventory",
+    rulePackVersion: COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
+    statePackBindingStatus: "UNBOUND",
+    effectiveDateBindingStatus: "UNBOUND",
     jurisdiction: procedure.jurisdiction,
     severity: "critical",
     citation: procedure.citation,
@@ -296,7 +319,9 @@ function syntheticProcedure(stateCode, suffix, title) {
     jurisdiction: stateCode || "STATE",
     program: "LIHTC",
     engineBuild: COMPLIANCE_PROCEDURE_REGISTRY_BUILD,
+    effectiveFrom: null,
     citation: "Controlled state compliance rule pack",
+    sourceTrace: Object.freeze(["Controlled state compliance rule pack"]),
   };
 }
 
@@ -361,7 +386,6 @@ export function scanRecertificationComplianceProcedures(input = {}) {
           procedure,
           "STATE_COMPLIANCE_PROCEDURE_JURISDICTION_REQUIRED",
           "The LIHTC recertification does not identify the state whose compliance procedure inventory applies.",
-          input.statePack,
         ),
       ],
     });
@@ -386,7 +410,6 @@ export function scanRecertificationComplianceProcedures(input = {}) {
           procedure,
           "STATE_COMPLIANCE_PROCEDURE_INVENTORY_MISSING",
           "No deterministic LIHTC compliance procedure inventory is installed for this state.",
-          input.statePack,
         ),
       ],
     });
@@ -404,7 +427,6 @@ export function scanRecertificationComplianceProcedures(input = {}) {
           procedure,
           packGate.reasonCode,
           packGate.reason,
-          input.statePack,
         ),
       ),
     });
@@ -422,7 +444,6 @@ export function scanRecertificationComplianceProcedures(input = {}) {
           procedure,
           eventDateGate.reasonCode,
           eventDateGate.reason,
-          input.statePack,
         ),
       ),
     });
@@ -440,7 +461,6 @@ export function scanRecertificationComplianceProcedures(input = {}) {
           procedure,
           windowGate.reasonCode,
           windowGate.reason,
-          input.statePack,
         ),
       ),
     });
@@ -456,7 +476,7 @@ export function scanRecertificationComplianceProcedures(input = {}) {
     stateCode,
     selectedProcedureCount: procedures.length,
     findings: procedures.map((procedure) =>
-      inventoryFinding(procedure, reasonCode, reason, input.statePack),
+      inventoryFinding(procedure, reasonCode, reason),
     ),
   });
 }
