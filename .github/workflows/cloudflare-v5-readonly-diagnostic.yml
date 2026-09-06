@@ -54,3 +54,5 @@ jobs:
           fi
 
           echo 'READ_ONLY_POST_CUTOVER_CERTIFICATION_RELEASE_DIAGNOSTIC_COMPLETE'
+
+# ops trigger: independent post-deploy v11 certification diagnostic
