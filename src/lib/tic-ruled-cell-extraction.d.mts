@@ -1,0 +1,12 @@
+export type CellBox={x0:number;y0:number;x1:number;y1:number};
+export type CellWord={text:string;confidence:number;bbox:CellBox};
+export type TicCell={key:string;bbox:CellBox;contentBox:CellBox|null;type:string;ink:boolean;sourceWords:CellWord[];group?:string;column?:number};
+export type CellEvidence={bbox:CellBox;pageWidth:number;pageHeight:number;confidence:number;method:string};
+export type TicCellPlan={version:number;width:number;height:number;cells:TicCell[];blocked:string[];groups:{id:string;part:string;row:number}[];checkboxes:{selected:string|null;candidates:({label:string;fill:number}&CellBox)[]}|null};
+export type TicCellSheet={width:number;height:number;tiles:(TicCell&{x:number;y:number;width:number;height:number;scale:number})[]};
+export function planTicCells(image:{width:number;height:number;data:Uint8ClampedArray|Uint8Array},blocks:unknown):TicCellPlan;
+export function cellSheetLayout(plan:TicCellPlan):TicCellSheet;
+export function finishTicCells(plan:TicCellPlan,sheet:TicCellSheet,blocks:unknown):{lines:string[];values:Record<string,string>;unresolved:string[];evidence:Record<string,CellEvidence>};
+export function mergeCellProposals(spatialLines:string[],cellLines:string[]):string[];
+export function rasterMask(image:{width:number;height:number;data:Uint8ClampedArray|Uint8Array}):{w:number;h:number;mask:Uint8Array};
+export const BLOCKED:string;

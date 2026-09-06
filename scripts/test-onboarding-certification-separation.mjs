@@ -126,9 +126,11 @@ test("standard supporting documents are classified and preserved beneath the TIC
   assert.match(packetClassifier, /groupSupportingPages/);
   assert.match(packetClassifier, /kind: "tic"/);
   assert.match(packetClassifier, /kind: "supporting"/);
-  assert.match(uploadPanel, /Supporting documents detected in this packet/);
-  assert.match(uploadPanel, /Part of TIC — do not create a supporting record/);
-  assert.match(uploadPanel, /Open source pages/);
+  assert.match(uploadPanel, /Included supporting documents/);
+  assert.match(uploadPanel, /TicPacketOrganizer/);
+  assert.match(uploadPanel, /pageSelections: pageChoices/);
+  assert.match(ticIntake, /selectionDigest/);
+  assert.match(uploadPanel, /Open source page/);
   assert.match(ticIntake, /supportingDocuments: serverSupportingDocuments/);
   assert.match(ticIntake, /source_kind: "packet_page_range"/);
   assert.match(ticIntake, /immutable: true/);
@@ -151,7 +153,7 @@ test("certification packet must be stored in a tenant file", () => {
   assert.match(uploadPanel, /listCertificationTenantDestinations/);
   assert.match(uploadPanel, /Tenant file destination/);
   assert.match(uploadPanel, /Select tenant file/);
-  assert.match(uploadPanel, /disabled=\{busy \|\| !tenantProfileId\}/);
+  assert.match(uploadPanel, /disabled=\{busy \|\| !tenantProfileId \|\| stage !== "tic" \|\| !draft\.selectionDigest\}/);
   assert.match(ticIntake, /tenantProfileId: string/);
   assert.match(ticIntake, /portfolio_tenant_profiles/);
   assert.match(ticIntake, /tenant_profile_id: tenant\.id/);

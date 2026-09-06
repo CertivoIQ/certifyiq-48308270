@@ -5,6 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { FileSearch, FileText, FileUp, UploadCloud } from "lucide-react";
 
+import { TicPacketOrganizer } from "@/components/tic-packet-organizer";
+import { validatePageChoices, type PacketPageChoice, type PacketPageInventory } from "@/lib/tic-packet-selection";
 import { CertivoIqTicReviewForm } from "@/components/certivoiq-tic-review-form";
 import { supabase } from "@/integrations/supabase/client";
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
@@ -66,6 +68,10 @@ type ExtractionDraft = {
   extractionProvider: string;
   sourcePreviewUrl: string | null;
   supportingDocuments: SupportingPreviewGroup[];
+  pageClassifications: PacketPageInventory[];
+  selectionDigest: string | null;
+  ticPages: number[];
+  omittedPages: number[];
 };
 
 const ACCEPTED_DOCUMENT_TYPES = ".pdf,.png,.jpg,.jpeg,.webp";
@@ -105,7 +111,10 @@ export function CertificationUploadPanel() {
   const [file, setFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<ExtractionDraft | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
-  const [supportingTypes, setSupportingTypes] = useState<Record<string, SupportingClassificationChoice>>({});
+  const [pageChoices, setPageChoices] = useState<PacketPageChoice[]>([]);
+  const [stage, setStage] = useState<"organize" | "tic">("organize");
+  const [viewTicPage, setViewTicPage] = useState(1);
+  const [otherReviewAction, setOtherReviewAction] = useState<"" | "INITIAL" | "ANNUAL" | "INTERIM">("");
   const [tenantProfileId, setTenantProfileId] = useState("");
   const [busy, setBusy] = useState(false);
   const [saveAction, setSaveAction] = useState<"save" | "review" | null>(null);
@@ -206,7 +215,7 @@ export function CertificationUploadPanel() {
       };
 
       setProgressPercent(96);
-      setProgressLabel("Parsing the TIC into the CertivoIQ review form…");
+      setProgressLabel("Identifying TIC pages and organizing other documents for your decision…");
       const preview = await extractPreview({ data: { source } });
       if ("error" in preview) throw new Error(preview.error || "The certification extraction could not be completed.");
 
@@ -216,9 +225,9 @@ export function CertificationUploadPanel() {
       setFieldValues(Object.fromEntries(
         TIC_FIELD_DEFINITIONS.map((definition) => [definition.key, extractedByField.get(definition.key) ?? ""]),
       ));
-      setSupportingTypes(Object.fromEntries(
-        supportingDocuments.map((document) => [document.id, document.documentType]),
-      ));
+      setPageChoices(preview.pageSelections);
+      setStage("organize");
+      setOtherReviewAction("");
       setDraft({
         source,
         facts,
@@ -227,11 +236,15 @@ export function CertificationUploadPanel() {
         extractionProvider: preview.extractionProvider,
         sourcePreviewUrl: preview.sourcePreviewUrl,
         supportingDocuments,
+        pageClassifications: preview.pageClassifications,
+        selectionDigest: preview.selectionDigest,
+        ticPages: [...preview.ticPages],
+        omittedPages: [...preview.omittedPages],
       });
       setFile(null);
       setProgressPercent(100);
-      setProgressLabel("CertivoIQ TIC review form ready — nothing has been saved yet.");
-      setMessage("Compare the source on the left with the structured TIC on the right. Blank source fields remain blank; correct only values that are actually present on the certification.");
+      setProgressLabel("Packet identified — confirm which documents belong in this review.");
+      setMessage("Detected TIC pages are preselected. Decide which remaining pages to include or omit before building the TIC. Nothing has been saved to the tenant file.");
     } catch (error) {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id;
@@ -249,8 +262,42 @@ export function CertificationUploadPanel() {
     }
   }
 
+  function changePageChoices(choices: PacketPageChoice[]) {
+    setPageChoices(choices);
+    setFieldValues({});
+    setOtherReviewAction("");
+    setDraft(current => current ? { ...current, facts: [], selectionDigest: null, ticPages: [], supportingDocuments: [] } : null);
+  }
+
+  async function extractSelectedPages() {
+    if (!draft || busy) return;
+    setBusy(true);
+    setMessage("");
+    try {
+      validatePageChoices(pageChoices, draft.pageClassifications.length, true);
+      const preview = await extractPreview({ data: { source: draft.source, pageSelections: pageChoices } });
+      if ("error" in preview) throw new Error(preview.error || "The selected TIC pages could not be extracted.");
+      const facts = preview.facts as PreviewFact[];
+      const extracted = new Map(facts.map(fact => [fact.field, fieldText(fact.value)]));
+      setFieldValues(Object.fromEntries(TIC_FIELD_DEFINITIONS.map(definition => [definition.key, extracted.get(definition.key) ?? ""])));
+      setDraft({ ...draft, facts, missingFields: [...preview.missingFields], confidence: preview.confidence, extractionProvider: preview.extractionProvider,
+        sourcePreviewUrl: preview.sourcePreviewUrl, supportingDocuments: preview.supportingDocuments, pageClassifications: preview.pageClassifications,
+        selectionDigest: preview.selectionDigest, ticPages: [...preview.ticPages], omittedPages: [...preview.omittedPages] });
+      setPageChoices(preview.pageSelections);
+      setViewTicPage(preview.ticPages[0] ?? 1);
+      setStage("tic");
+      setProgressPercent(100);
+      setProgressLabel("TIC built only from your selected certification pages.");
+      const namesMissing = !extracted.get("household_member_1_last_name") || !extracted.get("household_member_1_first_name_middle_initial");
+      setMessage(namesMissing ? "Household-name cells were not fully recovered. Compare the selected TIC with the source and correct unreadable or missed fields; this is not a completed extraction." : "Compare every populated cell with the selected source TIC. Included supporting pages are separate; omitted pages were not used to populate this form.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Selected-page extraction failed.");
+    } finally { setBusy(false); }
+  }
+
   async function confirmAndSave(startReview: boolean) {
     if (!draft || busy) return;
+    if (stage !== "tic" || !draft.selectionDigest) { setMessage("Confirm document selection and rebuild the TIC before saving."); return; }
     if (!tenantProfileId) {
       setMessage("Select the tenant file before saving this certification packet.");
       return;
@@ -269,10 +316,9 @@ export function CertificationUploadPanel() {
             field: definition.key,
             value: fieldValues[definition.key] ?? "",
           })),
-          supportingDocuments: draft.supportingDocuments.map((document) => ({
-            id: document.id,
-            documentType: supportingTypes[document.id] ?? document.documentType,
-          })),
+          pageSelections: pageChoices,
+          selectionDigest: draft.selectionDigest,
+          ...(otherReviewAction ? { otherReviewAction } : {}),
           startReview,
         },
       });
@@ -280,10 +326,12 @@ export function CertificationUploadPanel() {
       const changeText = changes
         ? ` ${result.correctionCount} OCR correction${result.correctionCount === 1 ? "" : "s"} and ${result.reviewerSuppliedCount} previously missed TIC field${result.reviewerSuppliedCount === 1 ? "" : "s"} were recorded.`
         : " No TIC field changes were needed.";
-      const supportText = ` ${result.supportingDocumentCount} supporting document${result.supportingDocumentCount === 1 ? " was" : "s were"} preserved under the tenant certification.`;
+      const supportText = ` ${result.supportingDocumentCount} selected supporting page(s) preserved; ${result.omittedPageCount} page(s) omitted from review and retained only in the original packet.`;
       setDraft(null);
       setFieldValues({});
-      setSupportingTypes({});
+      setPageChoices([]);
+      setStage("organize");
+      setOtherReviewAction("");
       setTenantProfileId("");
       setProgressPercent(100);
       if (result.queuedForReview) {
@@ -319,7 +367,9 @@ export function CertificationUploadPanel() {
       await cancelPreview({ data: { source: draft.source } });
       setDraft(null);
       setFieldValues({});
-      setSupportingTypes({});
+      setPageChoices([]);
+      setStage("organize");
+      setOtherReviewAction("");
       setTenantProfileId("");
       setProgressPercent(0);
       setProgressLabel("Choose a certification to begin.");
@@ -338,7 +388,7 @@ export function CertificationUploadPanel() {
         <div>
           <h2 className="font-semibold">Certification document intake</h2>
           <p className="mt-1 max-w-5xl text-sm text-muted-foreground">
-            Upload the full Tenant Income Certification packet. CertivoIQ maps the TIC into a structured form that follows the source layout for field-by-field verification before anything is saved.
+            Upload the full Tenant Income Certification packet. First choose the TIC pages and which supporting documents to include or omit. CertivoIQ then maps only the selected TIC pages into the editable form.
           </p>
         </div>
       </div>
@@ -367,7 +417,7 @@ export function CertificationUploadPanel() {
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-sm">
             <span>{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB selected` : "One certification packet per upload"}</span>
             <button type="button" disabled={!file || busy} onClick={() => void uploadCertification()} className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50">
-              {busy ? "Extracting…" : "Upload & build TIC review form"}
+              {busy ? "Identifying documents…" : "Upload & identify documents"}
             </button>
           </div>
         </>
@@ -375,15 +425,23 @@ export function CertificationUploadPanel() {
         <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold">Review the complete certification packet before saving</h3>
+              <h3 className="font-semibold">{stage === "organize" ? "Organize the uploaded packet" : "2. Check extracted TIC fields"}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{draft.source.originalFileName} is temporarily staged only. Nothing appears in Documents or the Compliance Review Queue until you confirm it.</p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
-              <div className="rounded-full border bg-background px-2 py-1">{Math.round(draft.confidence * 100)}% average TIC extraction confidence</div>
-              <div className="mt-1">{draft.facts.length} source values mapped · {draft.missingFields.length} fields left blank for review</div>
+              <div>{draft.pageClassifications.length} original packet pages</div>
+              {stage === "tic" && <div className="mt-1">{draft.facts.length} proposed fields · confirm cell accuracy, not just OCR confidence</div>}
             </div>
           </div>
 
+          {stage === "organize" ? (
+            <TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} />
+          ) : <>
+          <div className="mt-4 rounded border bg-background p-3 text-sm">
+            <strong>TIC pages: {draft.ticPages.join(", ")}</strong> · {draft.supportingDocuments.length} included supporting page(s) · omitted pages: {draft.omittedPages.join(", ") || "None"}.
+            <button type="button" disabled={busy} className="ml-3 underline" onClick={() => setStage("organize")}>Change document selection</button>
+            <p className="mt-1 text-xs text-muted-foreground">Changing page roles clears unsaved field corrections and requires a fresh extraction. The original file is not altered.</p>
+          </div>
           <div className="mt-4 rounded-xl border bg-background p-4">
             <label className="text-sm font-semibold" htmlFor="tenant-destination">Tenant file destination</label>
             <p className="mt-1 text-xs text-muted-foreground">The TIC and every preserved supporting document will be stored under this tenant.</p>
@@ -398,10 +456,11 @@ export function CertificationUploadPanel() {
 
           <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(360px,0.72fr)_minmax(760px,1.28fr)]">
             <div className="rounded-xl border bg-background p-3 xl:sticky xl:top-4 xl:self-start">
-              <div className="mb-3 flex items-center gap-2 text-sm font-medium"><FileSearch className="size-4" /> Original staged TIC</div>
+              <div className="mb-3 flex items-center gap-2 text-sm font-medium"><FileSearch className="size-4" /> Selected TIC source</div>
+              <div className="mb-2 flex flex-wrap gap-2">{draft.ticPages.map(page => <button type="button" key={page} disabled={busy} aria-pressed={viewTicPage === page} className="rounded border px-2 py-1 text-xs" onClick={() => setViewTicPage(page)}>TIC page {page}</button>)}</div>
               {draft.sourcePreviewUrl ? (
                 isPdfSource(draft.source) ? (
-                  <iframe title={`Source certification ${draft.source.originalFileName}`} src={draft.sourcePreviewUrl} className="h-[78vh] min-h-[720px] w-full rounded-lg border bg-white" />
+                  <iframe key={viewTicPage} title={`Source certification page ${viewTicPage}`} src={sourcePageUrl(draft.sourcePreviewUrl, draft.source, viewTicPage) ?? undefined} className="h-[78vh] min-h-[720px] w-full rounded-lg border bg-white" />
                 ) : (
                   <div className="max-h-[78vh] overflow-auto rounded-lg border bg-white p-2"><img src={draft.sourcePreviewUrl} alt="Staged certification source" className="mx-auto max-w-full" /></div>
                 )
@@ -421,38 +480,21 @@ export function CertificationUploadPanel() {
             </div>
           </div>
 
-          {draft.supportingDocuments.length > 0 ? (
-            <div className="mt-4 rounded-xl border bg-background p-4">
-              <div className="flex items-center gap-2"><FileText className="size-4 text-primary" /><h4 className="text-sm font-semibold">Supporting documents detected in this packet</h4></div>
-              <p className="mt-1 text-xs text-muted-foreground">These pages are preserved read-only. You may correct only the document classification before saving.</p>
-              <div className="mt-3 grid gap-3 lg:grid-cols-2">
-                {draft.supportingDocuments.map((document) => {
-                  const openUrl = sourcePageUrl(draft.sourcePreviewUrl, draft.source, document.pageStart);
-                  const selectedType = supportingTypes[document.id] ?? document.documentType;
-                  return (
-                    <div key={document.id} className="rounded-lg border p-3">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div><div className="text-sm font-medium">{document.label}</div><div className="mt-1 text-xs text-muted-foreground">{document.pageStart === document.pageEnd ? `Page ${document.pageStart}` : `Pages ${document.pageStart}–${document.pageEnd}`} · {Math.round(document.confidence * 100)}% classification confidence</div></div>
-                        {openUrl ? <a href={openUrl} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary underline-offset-4 hover:underline">Open source pages</a> : null}
-                      </div>
-                      <label className="mt-3 block text-xs font-medium">Store as
-                        <select className="mt-1 w-full rounded-md border bg-background px-2 py-2 text-sm" value={selectedType} disabled={busy} onChange={(event) => setSupportingTypes((current) => ({ ...current, [document.id]: event.target.value as SupportingClassificationChoice }))}>
-                          <option value="tic_page">Part of TIC — do not create a supporting record</option>
-                          {SUPPORTING_DOCUMENT_DEFINITIONS.map((definition) => <option key={definition.type} value={definition.type}>{definition.label}</option>)}
-                        </select>
-                      </label>
-                      <p className="mt-2 text-[11px] text-muted-foreground">{document.classificationBasis}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
+          <div className="mt-4 rounded-xl border bg-background p-4">
+            <h4 className="text-sm font-semibold">Included supporting documents</h4>
+            <p className="mt-1 text-xs text-muted-foreground">Only these selected pages are included beneath the TIC. Source contents are preserved read-only.</p>
+            {draft.supportingDocuments.map(document => <p className="mt-2 text-sm" key={document.id}>{document.label} · original page {document.pageStart} {draft.sourcePreviewUrl && <a className="underline" href={sourcePageUrl(draft.sourcePreviewUrl, draft.source, document.pageStart) ?? undefined} target="_blank" rel="noreferrer">Open source page</a>}</p>)}
+            {!draft.supportingDocuments.length && <p className="mt-2 text-sm">No supporting documents selected. Required-evidence checks still apply.</p>}
+          </div>
+          {(fieldValues["certification_type"] ?? "").toLowerCase() === "other" && <label className="mt-4 block text-sm">Review action for Other certification
+            <select className="ml-2 rounded border bg-background p-2" value={otherReviewAction} disabled={busy} onChange={e => setOtherReviewAction(e.target.value as typeof otherReviewAction)}><option value="">Select before starting review</option><option value="INITIAL">Initial</option><option value="ANNUAL">Annual recertification</option><option value="INTERIM">Interim</option></select>
+          </label>}
+          </>}
 
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <button type="button" disabled={busy} onClick={() => void cancelStagedUpload()} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">Cancel Upload</button>
-            <button type="button" disabled={busy || !tenantProfileId} onClick={() => void confirmAndSave(false)} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">{saveAction === "save" ? "Saving…" : "Save Document"}</button>
-            <button type="button" disabled={busy || !tenantProfileId} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
+            <button type="button" disabled={busy || !tenantProfileId || stage !== "tic" || !draft.selectionDigest} onClick={() => void confirmAndSave(false)} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">{saveAction === "save" ? "Saving…" : "Save Document"}</button>
+            <button type="button" disabled={busy || !tenantProfileId || stage !== "tic" || !draft.selectionDigest} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+import { administrativePageLabel, isTicContent } from "@/lib/tic-document-layout.mjs";
 import {
   SUPPORTING_DOCUMENT_DEFINITIONS,
   SUPPORTING_DOCUMENT_BY_TYPE,
@@ -47,6 +48,10 @@ export function classifyPacketPage(page: PacketPage): PacketPageClassification {
     };
   }
 
+  const administrative = administrativePageLabel(text);
+  if (administrative) return { page: page.page, kind: "unclassified", documentType: null, label: administrative, confidence: 0.9, basis: "Administrative heading detected. Awaiting user include/omit decision; not TIC evidence." };
+  if (isTicContent(text)) return { page: page.page, kind: "tic", documentType: null, label: "Tenant Income Certification", confidence: 0.9, basis: "TIC title or multiple form sections detected. Confirm selected TIC pages before field extraction." };
+
   let best:
     | { type: SupportingDocumentType; label: string; score: number; strong: number; weak: number }
     | null = null;
@@ -74,7 +79,7 @@ export function classifyPacketPage(page: PacketPage): PacketPageClassification {
     };
   }
 
-  if (ticSignals > 0) {
+  if (isTicContent(text)) {
     return {
       page: page.page,
       kind: "tic",

@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 import type { PackRelease, StateCoverage } from "@/lib/stateCoverageRegistry";
+import { selectionFromHistory } from "@/lib/tic-packet-selection";
 import { TIC_FIELD_KEYS } from "@/lib/tic-field-registry";
 
 function organizationIdFor(userId: string) {
@@ -101,7 +102,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
 
     const { data: item, error: itemError } = await supabase
       .from("certification_import_items")
-      .select("id, storage_path, original_file_name, mime_type, size_bytes, sha256, status, certification_type, jurisdiction, program_codes, extraction_provider")
+      .select("id, storage_path, original_file_name, mime_type, size_bytes, sha256, status, certification_type, jurisdiction, program_codes, extraction_provider, historical_changes")
       .eq("id", data.itemId)
       .maybeSingle();
     if (itemError) throw itemError;
@@ -142,6 +143,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     }
     const bytes = await download.data.arrayBuffer();
     const documentSha256 = await sha256Hex(bytes);
+    const packetSelection = selectionFromHistory(item.historical_changes, documentSha256);
     if (bytes.byteLength !== item.size_bytes || (item.sha256 && item.sha256 !== documentSha256)) {
       const message = "The stored certification no longer matches the file recorded at upload. Upload it again before review.";
       await supabase
@@ -183,11 +185,15 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     let documentKind: "pdf" | "text" | "pdf-ocr";
 
     if ((confirmedRows ?? []).length) {
+      if (packetSelection && (confirmedRows ?? []).some(row => row.source_page !== null && !packetSelection.ticPages.includes(row.source_page))) {
+        throw new Error("A saved TIC field points outside the selected TIC pages. Reconfirm packet selection before review.");
+      }
       result = storedFactsResult((confirmedRows ?? []) as StoredFact[], fallbackProvider);
       documentKind = ocrDocument
         ? ocrDocument.documentKind
         : (/application\/pdf/i.test(item.mime_type) || /\.pdf$/i.test(item.original_file_name) ? "pdf" : "text");
     } else {
+      if (packetSelection) throw new Error("This selected packet has no confirmed TIC fields. Reopen intake; the complete original packet will not be used as fallback evidence.");
       let documentText: string;
       if (ocrDocument) {
         documentText = ocrDocument.text;
@@ -295,6 +301,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         ? "fail"
         : "pass";
     const manifest = {
+      packetSelection,
       schemaVersion: "1.1",
       reviewId: item.id,
       organizationId,
