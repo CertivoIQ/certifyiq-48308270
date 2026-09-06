@@ -76,8 +76,8 @@ patch(
 
 patch(
   'scripts/test-tic-native-form-extraction.mjs',
-  `    ['A Employment or Wages', 'wages_business'],`,
-  `    ['HH Mbr-4', 'household_member_number'],\n    ['A Employment or Wages', 'wages_business'],`,
+  `  assert.match(formMap, /DIRECT_PREFIX = "__CERTIVOIQ_TIC_FIELD__"/);`,
+  `  assert.match(formMap, /DIRECT_PREFIX = "__CERTIVOIQ_TIC_FIELD__"/);\n  assert.match(formMap, /function incomeHouseholdMemberKey/);\n  assert.match(formMap, /income_member_\\$\\{row\\}_household_member_number/);`,
 );
 
 patch(
