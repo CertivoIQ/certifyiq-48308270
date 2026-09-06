@@ -44,7 +44,7 @@ export async function persistPortfolioOnboarding(db: Db, userId: string, rows: O
       latest_import_job_id: job.id, source_data: row.sourceData,
     });
     const properties = await upsertGroups(db, "portfolio_properties", [...propertyRows.values()], "user_id,external_id", "id,external_id");
-    const propertyIds = new Map(properties.map((row) => [String(row.external_id), String(row.id)]));
+    const propertyIds = new Map(properties.map((row) => [String(row["external_id"]), String(row["id"])]));
     const unitRows = new Map<string, RecordData>();
     for (const row of rows) {
       const propertyId = propertyIds.get(row.propertyExternalId);
@@ -55,7 +55,7 @@ export async function persistPortfolioOnboarding(db: Db, userId: string, rows: O
       });
     }
     const units = await upsertGroups(db, "portfolio_units", [...unitRows.values()], "user_id,property_id,external_id", "id,property_id,external_id");
-    const unitIds = new Map(units.map((row) => [JSON.stringify([String(row.property_id), String(row.external_id)]), String(row.id)]));
+    const unitIds = new Map(units.map((row) => [JSON.stringify([String(row["property_id"]), String(row["external_id"])]), String(row["id"])]));
     const tenantRows = new Map<string, RecordData>();
     for (const row of rows) {
       const propertyId = propertyIds.get(row.propertyExternalId);
