@@ -279,7 +279,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     for (const field of TIC_FIELD_KEYS) {
       const original = originalByField.get(field);
       const wasSubmitted = submittedByField.has(field);
-      const submitted = wasSubmitted ? submittedByField.get(field)! : original?.value ?? null;
+      const submitted = field.startsWith("source_present_") ? original?.value ?? null : wasSubmitted ? submittedByField.get(field)! : original?.value ?? null;
       const confirmed = normalizeConfirmedValue(field, submitted as string | number | null);
       if (confirmed !== null) confirmedExtractedData[field] = confirmed;
       if (original) {
@@ -411,7 +411,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       }
 
       if (completionFindings.length) {
-        const { error: completionError } = await db.from("compliance_findings").insert(completionFindings.map(f => ({
+        const { error: completionError } = await supabaseAdmin.from("compliance_findings").insert(completionFindings.map(f => ({
           item_id: item.id, user_id: userId, organization_id: `org-${userId}`,
           rule_id: `TIC-COMPLETE-${f.field}`, rule_version: "1", rule_pack_id: "tic-completeness", rule_pack_version: "1",
           jurisdiction: tenant.portfolio_properties?.jurisdiction ?? "US", status: "UNABLE_TO_DETERMINE", severity: "critical",

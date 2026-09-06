@@ -83,3 +83,5 @@ export function supplementalPageKind(text: string): string | null {
  if(/head of household/i.test(t)&&/adult household member/i.test(t)&&/ethnicity/i.test(t))return 'application_5';
  return null;
 }
+
+export const TIC_SOURCE_PRESENCE_FIELDS: TicFieldDefinition[] = [...new Set(TIC_SUPPLEMENTAL_FIELDS.map(f => /^(application_(?:member|reference|residence|automobile|other_income|asset)_\d+|application_employment_(?:current|previous)|worksheet_(?:member|income|asset)_\d+)_/.exec(f.key)?.[1]).filter((v): v is string => Boolean(v)))].map(group=>({key:`source_present_${group}`,label:'Source row contains information',type:'yes_no',section:'Source activity',aliases:[]}));

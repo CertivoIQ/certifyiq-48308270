@@ -51,6 +51,16 @@ function labelMatch(line,re){
  const hit=spans.filter(s=>s.end>m.index&&s.start<m.index+m[0].length);
  return {x0:hit[0].word.bbox.x0,x1:hit.at(-1).word.bbox.x1,y0:Math.min(...hit.map(s=>s.word.bbox.y0)),y1:Math.max(...hit.map(s=>s.word.bbox.y1)),match:m[0],words,tail:spans.filter(s=>s.start>=m.index+m[0].length).map(s=>s.word)};
 }
+function hasWrittenContent(r,box){
+ const b=bound(r,box),w=b.x1-b.x0,h=b.y1-b.y0,mask=new Uint8Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++)mask[y*w+x]=r.mask[(b.y0+y)*r.w+b.x0+x];
+ const remove=new Set();
+ for(let y=0;y<h;y++){let start=0;for(let x=0;x<=w;x++){if(x<w&&mask[y*w+x])continue;if(x-start>Math.max(40,w*.45))for(let i=start;i<x;i++)remove.add(y*w+i);start=x+1;}}
+ for(let x=0;x<w;x++){let start=0;for(let y=0;y<=h;y++){if(y<h&&mask[y*w+x])continue;if(y-start>Math.max(18,h*.55))for(let i=start;i<y;i++)remove.add(i*w+x);start=y+1;}}
+ for(const i of remove)mask[i]=0;
+ let count=0,minY=h,maxY=0;for(let i=0;i<mask.length;i++)if(mask[i]){count++;minY=Math.min(minY,Math.floor(i/w));maxY=Math.max(maxY,Math.floor(i/w));}
+ return count>Math.max(35,w*h*.004)&&maxY-minY>Math.max(6,h*.22);
+}
 export function planTicCells(image,blocks){
  const r=rasterMask(image),lines=ocrLines(blocks),sourceWords=wordsOf(blocks),cells=[],blocked=[],groups=[];
  const add=(key,b,type='text',extra={})=>{b=bound(r,b);if(b.x1-b.x0<8||b.y1-b.y0<8)return; if(redacted(r,b)){blocked.push(key);return;} cells.push({key,bbox:b,contentBox:contentBounds(r,b),type,ink:hasInk(r,b),sourceWords:sourceWords.filter(w=>{const x=(w.bbox.x0+w.bbox.x1)/2,y=(w.bbox.y0+w.bbox.y1)/2;return x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1;}),...extra});};
@@ -59,6 +69,15 @@ export function planTicCells(image,blocks){
  if(supplemental.template){
   for(const region of supplemental.regions) add(region.key,region.bbox,region.type);
   const supplementalValues={};
+  for(const cell of cells){
+    const group=/^(application_(?:member|reference|residence|automobile|other_income|asset)_\d+|application_employment_(?:current|previous)|worksheet_(?:member|income|asset)_\d+)_/.exec(cell.key)?.[1];
+    if(group&&cell.contentBox&&(!/^application_(?:member|residence)_/.test(group)||(/_name_first_middle_last$|_address$/.test(cell.key)&&!/_landlord_address$/.test(cell.key)))&&cell.contentBox.y1>cell.bbox.y0+(cell.bbox.y1-cell.bbox.y0)*.4&&hasWrittenContent(r,cell.bbox)) supplementalValues[`source_present_${group}`]={value:'Yes',bbox:cell.bbox};
+  }
+  for(const key of blocked){
+    const group=/^(application_(?:member|reference|residence|automobile|other_income|asset)_\d+|application_employment_(?:current|previous)|worksheet_(?:member|income|asset)_\d+)_/.exec(key)?.[1];
+    const region=supplemental.regions.find(r=>r.key===key);
+    if(group&&region) supplementalValues[`source_present_${group}`]={value:'Yes',bbox:region.bbox};
+  }
   for(const choice of supplemental.choices){
     const readings=choice.options.map(option=>{
       const b=bound(r,option.bbox),pad=Math.max(4,Math.round((b.x1-b.x0)*.24));let ink=0,total=0;
@@ -216,7 +235,7 @@ export function finishTicCells(plan,sheet,blocks){
  if(plan.checkboxes?.selected){values.set('certification_type',plan.checkboxes.selected);const selected=plan.checkboxes.candidates.find(c=>c.label===plan.checkboxes.selected);evidence.certification_type={bbox:{x0:selected.x0,y0:selected.y0,x1:selected.x1,y1:selected.y1},pageWidth:plan.width,pageHeight:plan.height,confidence:.85,method:'checkbox-interior'};}
  else if(plan.checkboxes)unresolved.add('certification_type');
  for(const [key,entry] of Object.entries(plan.supplementalValues??{})){
-  values.set(key,entry.value);evidence[key]={bbox:entry.bbox,pageWidth:plan.width,pageHeight:plan.height,confidence:.8,method:'source-checkbox-interior'};
+  values.set(key,entry.value);evidence[key]={bbox:entry.bbox,pageWidth:plan.width,pageHeight:plan.height,confidence:.8,method:key.startsWith('source_present_')?'source-row-ink':'source-checkbox-interior'};
  }
  for(const key of unresolved)values.delete(key);
  for(const [key,value]of values){if(key.endsWith('_number')&&key.startsWith('household_member_'))continue;

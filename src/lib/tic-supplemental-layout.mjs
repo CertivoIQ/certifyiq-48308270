@@ -18,7 +18,7 @@ export function supplementalRegions(lines,width,height) {
    ['total_of_all_income_sources',996,392,1072,409],['total_asset_cash_value',301,740,391,761],
    ['total_actual_income',902,745,997,767],['passbook_rate_percent',579,810,678,833],['total_imputed_income',900,811,1002,834],
    ['greatest_asset_income',903,884,1003,911],['total_income',273,950,375,981],['total_asset_income',579,955,680,983],
-   ['total_annual_income',910,959,1017,985],['qualifying_income_limit_percent',787,1080,829,1103],['qualifying_income_limit',838,1080,892,1103],['variance',949,1080,1020,1103],['total_reported_income',469,1136,551,1157],
+   ['total_annual_income',910,959,1017,985],['total_reported_income',469,1136,551,1157],
   ]) add(`worksheet_${name}`,x0,y0,x1,y1);
   table('worksheet_member',['Member','Relationship','Gender','DOB','Age','Citizenship','Disabled','Elderly','Student','Eligible Student','Joint Custody'],[131,267,358,408,491,547,635,698,752,808,944,1075],[284,319]);
   table('worksheet_income',['Member','Source','Frequency','Pay Type','Dollars Per Hour','Hours Per Period','Periods Per Year','Income Per Year'],[131,267,418,492,584,698,887,990,1075],[371,391]);
@@ -26,11 +26,13 @@ export function supplementalRegions(lines,width,height) {
  }
  if(near(/rental application/i,140)&&near(/household information/i,492)&&near(/housing information/i,900)) {
   template='application_1';
-  for(const [name,x0,y0,x1,y1] of [['office_date',990,103,1150,136],['office_time',997,138,1162,192],['apartment_community',329,310,682,362],['today_date',901,314,1134,358],['telephone_number',346,363,649,400],['bedrooms_needed',982,363,1123,403],['email_address',309,404,766,446],['how_did_you_hear_about_the_community',476,440,1135,480]]) add(`application_${name}`,x0,y0,x1,y1);
+  for(const [name,x0,y0,x1,y1] of [['office_date',997,132,1156,165],['office_time',997,165,1162,192],['apartment_community',329,310,682,362],['today_date',851,313,1134,358],['telephone_number',346,363,649,400],['bedrooms_needed',982,363,1123,403],['email_address',309,404,766,446],['how_did_you_hear_about_the_community',476,440,1135,480]]) add(`application_${name}`,x0,y0,x1,y1);
   table('application_member',['Name (First, Middle, Last)','Relationship to Head of Household','Sex','Social Security Number','Birthdate (Month, day, year)','Marital Status'],[97,387,551,661,851,1011,1120],[640,683,726,768,811,854,897]);
+  const selfName=regions.find(r=>r.key==='application_member_1_name_first_middle_last');
+  if(selfName)selfName.bbox.x0=154*width/1237;
   for(let r=1;r<=3;r++) {
-   const offset=(r-1)*153;
-   for(const [name,x0,y0,x1,y1] of [['address',248,926,721,961],['city',767,928,865,963],['state',920,929,997,962],['zip',1031,929,1131,963],['landlord',272,963,722,996],['landlord_phone',909,965,1129,996],['landlord_address',274,998,720,1024],['landlord_city',762,998,865,1024],['landlord_state',920,998,997,1024],['landlord_zip',1031,998,1131,1024],['rent',184,1026,240,1058],['how_long',387,1026,551,1058],['leaving_for',676,1026,1131,1058]]) add(`application_residence_${r}_${name}`,x0,y0+offset,x1,y1+offset);
+   const offset=r===1?0:r===2?151:294;
+   for(const [name,x0,y0,x1,y1] of [['address',248,926,721,961],['city',767,928,865,963],['state',920,929,997,962],['zip',1031,929,1131,963],['landlord',272,963,722,996],['landlord_phone',909,965,1129,996],['landlord_address',274,998,720,1024],['landlord_city',762,998,865,1024],['landlord_state',920,998,997,1024],['landlord_zip',1031,998,1131,1024],['rent',184,1026,240,1058],['how_long',387,1026,514,1058],['leaving_for',638,1026,1131,1058]]) add(`application_residence_${r}_${name}`,r>1&&name==='address'?265:x0,y0+offset,x1,y1+offset);
   }
   add('application_evicted',615,1362,721,1389,'yes_no');add('application_evicted_explanation',109,1392,1133,1453);
  }

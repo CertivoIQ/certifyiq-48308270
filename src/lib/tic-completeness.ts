@@ -33,12 +33,17 @@ export function ticCompletenessFindings(values: Record<string, unknown>): TicCom
    if (blank(values[field]) && !findings.some(f=>f.field===field)) findings.push({field,code:'TIC_PARTIAL_INFORMATION',message});
  };
  for (const [group, fields] of groups) {
-   if (!fields.some(f=>!blank(values[f.key]))) continue;
-   for (const f of fields) missing(f.key, `${group.replace(/_/g,' ')}: ${f.label} is missing from this partially completed row.`);
+   if (values[`source_present_${group}`] !== 'Yes' && !fields.some(f=>!blank(values[f.key]))) continue;
+   for (const f of fields) {
+     if(group.startsWith('application_employment_') && /_(?:salary|per_hour|per_month)$/.test(f.key)) {
+       if(['salary','per_hour','per_month'].some(k=>!blank(values[`${group}_${k}`]))) continue;
+     }
+     missing(f.key, `${group.replace(/_/g,' ')}: ${f.label} is missing from this partially completed row.`);
+   }
  }
  for(let i=1;i<=11;i++) {
    const prefix=`application_asset_${i}_`;
-   if(['institution','account','value','interest'].some(k=>!blank(values[prefix+k])) && !(/^0(?:\.0+)?$/.test(String(values[prefix+'institution']??'').trim()) && ['account','value','interest'].every(k=>blank(values[prefix+k])))) {
+   if((values[`source_present_application_asset_${i}`] === 'Yes' || ['institution','account','value','interest'].some(k=>!blank(values[prefix+k]))) && !(/^0(?:\.0+)?$/.test(String(values[prefix+'institution']??'').trim()) && ['account','value','interest'].every(k=>blank(values[prefix+k])))) {
      for(const [key,label] of [['institution','Bank/Where Held and Phone Number'],['account','Account #'],['value','Value or Amount'],['interest','Interest Earned']]) missing(prefix+key,`Rental application asset ${i}: ${label} is missing from this partially completed row.`);
    }
  }
