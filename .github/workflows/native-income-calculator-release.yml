@@ -54,9 +54,12 @@ jobs:
         run: |
           set -euo pipefail
           node --test scripts/test-native-income-calculator.mjs | tee /tmp/income-calculator-tests.txt
+          node --test scripts/test-income-release-identity.mjs | tee /tmp/income-release-tests.txt
           node --test scripts/test-tic-spatial-extraction.mjs scripts/test-tic-native-form-extraction.mjs scripts/test-command-center-certification-actions.mjs scripts/test-standalone-supporting-document-upload.mjs scripts/test-controlled-mass-portfolio-intake.mjs scripts/test-onboarding-certification-separation.mjs scripts/test-certification-task-workflow.mjs | tee /tmp/income-certification-tests.txt
           node scripts/test-ocr-sidecar.mjs
           deno check --config supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts
+      - name: Include source identity in Vite and Nitro public asset manifest
+        run: node scripts/verify-native-income-calculator-release.mjs identity
       - name: Build exact checked-out application
         run: bun run build
       - name: Require zero calculator and menu errors and no new platform diagnostics
@@ -109,7 +112,7 @@ jobs:
             /tmp/income-*-types.json
             /tmp/income-type-gate.json
             /tmp/income-*-tests.txt
-            .output/public/assets/income-calculator-release.json
+            income-build-verification.json
             income-cloudflare-before.json
             income-cloudflare-after.json
             income-live-verification.json
