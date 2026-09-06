@@ -82,8 +82,8 @@ patch(
 
 patch(
   'scripts/test-tic-native-form-extraction.mjs',
-  `  assert.match(formMap, /\["certification_type", name\]/);`,
-  `  assert.match(formMap, /\["certification_type", name\]/);\n  assert.match(formMap, /incomeHouseholdMemberKey/);\n  assert.match(review, /other_certification_type/);`,
+  `  assert.match(review, /option="Other"/);`,
+  `  assert.match(review, /option="Other"/);\n  assert.match(formMap, /incomeHouseholdMemberKey/);\n  assert.match(review, /other_certification_type/);`,
 );
 
 console.log('PASS: source TIC and CertivoIQ TIC parity patch applied');
