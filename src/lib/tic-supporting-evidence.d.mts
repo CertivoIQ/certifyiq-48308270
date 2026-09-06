@@ -1,0 +1,8 @@
+export type SupportingEvidence = { id: string; kind: 'check_stub' | 'bank_statement'; page: number; sourceDocumentRef: string; sourceSha256: string; fields: Record<string, { value: string; page: number; snippet: string; confidence: number }>; issues: string[]; status: string };
+export type SupportingRecord = { evidenceId: string; periodEnd: string; owner: string; institution: string; amount: string; cashValue?: string; accountLast4?: string };
+export type SupportingCalculation = { kind: 'wages' | 'bank_interest'; destinationRow: string; frequency: string; policyRef: string; reason: string; reviewConfirmed: boolean; balanceMethod?: string; records: SupportingRecord[] };
+export function extractSupportingEvidence(pages: readonly {page: number; text: string}[], classifications: readonly {page: number; kind: string; documentType: string | null}[], source: {fileName: string; sha256: string}, provenance?: Map<number, {confidence?: number}>): SupportingEvidence[];
+export function resolveReviewCertificationType(values: Record<string, unknown>): 'INITIAL' | 'ANNUAL' | 'INTERIM' | null;
+export function calculateSupportingProposal(input: SupportingCalculation): { changes: Record<string, string>; formula: string; annual: string; status: string };
+export function validateSupportingCalculations(events: unknown, evidence: SupportingEvidence[], values: Record<string, unknown>): unknown[];
+export function summarizeCalculationHistory(history: unknown): Array<{kind: string; formula: string; policyRef: string; reason: string; destinationRow: number; retainedInSavedTic: boolean; sourcePages: number[]; confirmedAt: string}>;

@@ -1,25 +1,22 @@
 name: TIC cell repair candidate integration
-
 on:
   push:
     branches: [fix/tic-cell-recognition-20260905]
     paths:
       - .github/workflows/tic-cell-repair-candidate.yml
-      - scripts/apply-tic-cell-repair.mjs
+      - scripts/apply-tic-evidence-wiring.mjs
+      - scripts/apply-tic-recognition-hardening.mjs
       - scripts/finalize-tic-cell-repair.mjs
-      - scripts/test-tic-cell-repair.mjs
-      - scripts/test-tic-repair-integration.mjs
-      - src/lib/tic-cell-repair.mjs
-      - src/lib/tic-cell-repair.d.mts
-      - src/components/tic-calculation-review.tsx
-
+      - scripts/check-tic-supporting-types.mjs
+      - scripts/test-tic-*.mjs
+      - src/lib/tic-supporting-evidence.mjs
+      - src/lib/tic-supporting-evidence.d.mts
+      - src/components/tic-supporting-evidence-review.tsx
 permissions:
   contents: write
-
 concurrency:
   group: tic-cell-repair-candidate
   cancel-in-progress: false
-
 jobs:
   verify:
     if: github.ref == 'refs/heads/fix/tic-cell-recognition-20260905'
@@ -35,49 +32,44 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.3.3'
-      - name: Apply exact integration edits
-        run: node scripts/apply-tic-cell-repair.mjs
+      - name: Apply exact evidence and recognition integration edits
+        run: |
+          node scripts/apply-tic-evidence-wiring.mjs
+          node scripts/apply-tic-recognition-hardening.mjs
+          git diff --check
       - name: Install locked dependencies
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Check strict types for repaired module roots
-        run: node scripts/finalize-tic-cell-repair.mjs
-      - name: Run synthetic unit and actual-module integration tests
         run: |
-          set -euo pipefail
-          node --test scripts/test-tic-cell-repair.mjs scripts/test-tic-repair-integration.mjs | tee tic-repair-test-results.txt
+          node scripts/finalize-tic-cell-repair.mjs
+          node scripts/check-tic-supporting-types.mjs
+      - name: Verify TIC extraction, evidence calculations and intake separation
+        run: |
+          set -o pipefail
+          node --test scripts/test-tic-*.mjs scripts/test-certification-pipeline-performance.mjs scripts/test-onboarding-certification-separation.mjs | tee /tmp/tic-verification.txt
       - name: Build without deployment
-        run: npm run build
+        run: |
+          set -o pipefail
+          npm run build | tee /tmp/tic-build.txt
       - name: Commit verified integration to candidate branch only
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = 'refs/heads/fix/tic-cell-recognition-20260905'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/lib/tic-field-extraction.ts src/lib/tic-pdf-form-values.ts src/lib/pdf-ocr.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-packet-classifier.ts src/utils/tic-certification-intake.functions.ts src/lib/tic-field-registry.ts src/components/certivoiq-tic-review-form.tsx src/components/tic-calculation-review.tsx
+          git add src/components/certification-review-panel.tsx src/components/certification-upload-panel-v4.tsx src/components/certivoiq-tic-review-form.tsx src/lib/pdf-ocr.ts src/lib/tic-cell-repair.mjs src/lib/tic-field-extraction.ts src/lib/tic-field-registry.ts src/lib/tic-pdf-form-values.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-supporting-document-registry.ts src/utils/certification-review.functions.ts src/utils/tic-certification-intake.functions.ts src/utils/tic-certification-review.functions.ts src/components/tic-calculation-review.tsx
           if ! git diff --cached --quiet; then
-            git commit -m 'Wire tested TIC cell recognition and calculation review into candidate'
+            git commit -m 'Connect source-bound supporting calculations and preserve TIC review type'
             git push origin HEAD:fix/tic-cell-recognition-20260905
           fi
-      - name: Preserve candidate source and verification evidence
+          git rev-parse HEAD > /tmp/tic-verified-commit.txt
+      - name: Preserve verification evidence
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: certivoiq-tic-cell-repair
-          retention-days: 14
+          name: tic-verification-evidence
           path: |
-            src/lib/tic-field-extraction.ts
-            src/lib/tic-pdf-form-values.ts
-            src/lib/pdf-ocr.ts
-            src/lib/tic-spatial-extraction.mjs
-            src/lib/tic-packet-classifier.ts
-            src/lib/tic-field-registry.ts
-            src/lib/tic-cell-repair.mjs
-            src/lib/tic-cell-repair.d.mts
-            src/utils/tic-certification-intake.functions.ts
-            src/components/certivoiq-tic-review-form.tsx
-            src/components/tic-calculation-review.tsx
-            scripts/apply-tic-cell-repair.mjs
-            scripts/finalize-tic-cell-repair.mjs
-            scripts/test-tic-cell-repair.mjs
-            scripts/test-tic-repair-integration.mjs
-            docs/tic-cell-repair-status.md
-            tic-repair-test-results.txt
+            /tmp/tic-verification.txt
+            /tmp/tic-build.txt
+            /tmp/tic-verified-commit.txt
+          retention-days: 7
