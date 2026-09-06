@@ -1,4 +1,4 @@
-# Hardened TIC section-boundary post-deploy verification for v11.
+# Exact source-field to CertivoIQ TIC parity post-deploy verification for v11.
 name: Cloudflare certification release read-only diagnostic
 
 on:
