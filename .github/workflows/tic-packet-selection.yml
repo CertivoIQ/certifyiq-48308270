@@ -1,0 +1,20 @@
+name: TIC packet selection
+on:
+  push:
+    branches: [fix/tic-packet-selection-20260906]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: git archive --format=tar HEAD src scripts supabase package.json package-lock.json bun.lock tsconfig.json vite.config.ts AGENTS.md public config data docs .github > /tmp/tic-packet-source.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tic-packet-source
+          path: /tmp/tic-packet-source.tar
+          retention-days: 1
