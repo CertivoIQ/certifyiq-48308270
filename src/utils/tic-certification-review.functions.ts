@@ -1,3 +1,4 @@
+import { ticCompletenessFindings } from "@/lib/tic-completeness";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -240,6 +241,25 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       }
     }
 
+    const completionValues = Object.fromEntries(result.facts.map(f => [f.field, f.value]));
+    for (const entry of Array.isArray(item.historical_changes) ? item.historical_changes : []) {
+      if (!entry || typeof entry !== "object" || !("original_extracted_data" in entry)) continue;
+      const original = entry["original_extracted_data"];
+      if (original && typeof original === "object") for (const [field, value] of Object.entries(original)) {
+        if (field.startsWith("source_present_") && value === "Yes") completionValues[field] = value;
+      }
+    }
+    const completionFindings = ticCompletenessFindings(completionValues);
+    if (completionFindings.length) {
+      const message = completionFindings.map(f => f.message).join(" ");
+      const { error: completionError } = await supabase.from("certification_import_items").update({
+        status: "completed", review_queue_status: "not_queued", review_started_at: null,
+        error_message: message,
+      }).eq("id", item.id);
+      if (completionError) throw completionError;
+      return { error: message } as const;
+    }
+
     let statePack: StateCoverage | undefined;
     if (jurisdiction !== "US") {
       const { data: releases } = await supabase
@@ -380,3 +400,4 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       manifestSha256,
     } as const;
   });
+

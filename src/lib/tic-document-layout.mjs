@@ -43,7 +43,13 @@ export function isTicContent(text) {
   const title = lines.some(line => /^tenant\s+income\s+certification(?:\s*\([^)]*\))?\s*$/i.test(line));
   const header = /tenant\s+income\s+certification/i.test(normalized.slice(0, 1500));
   const cells = /last\s+name.{0,50}first\s+name/i.test(normalized) || /type\s+of\s+asset.{0,100}cash\s+value/i.test(normalized);
-  return title || count >= 2 || (header && count >= 1 && cells);
+  const supplemental = (/annual income calculation worksheet/i.test(normalized) && /relationship/i.test(normalized) && /description/i.test(normalized))
+    || (/rental application/i.test(normalized) && /household information/i.test(normalized) && /housing information/i.test(normalized))
+    || (/personal references/i.test(normalized) && /household income/i.test(normalized) && /other income/i.test(normalized))
+    || (/asset information/i.test(normalized) && /adjustments to income/i.test(normalized) && /other information/i.test(normalized))
+    || (/full custody/i.test(normalized) && /automobiles/i.test(normalized) && /bankruptcy/i.test(normalized))
+    || (/head of household/i.test(normalized) && /adult household member/i.test(normalized) && /ethnicity/i.test(normalized));
+  return supplemental || title || count >= 2 || (header && count >= 1 && cells);
 }
 
 export function strictMappedValue(type, raw, key = '') {
@@ -108,4 +114,5 @@ export function nativePdfLayout(items, viewport) {
   });
   return { text: lines.map(line => line.text).join('\n'), blocks: [{ paragraphs: [{ lines }] }] };
 }
+
 

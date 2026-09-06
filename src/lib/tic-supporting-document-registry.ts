@@ -1,4 +1,6 @@
 export type SupportingDocumentType =
+  | "employment_verification"
+  | "rental_application"
   | "annual_student_certification"
   | "voluntary_race_ethnicity_disability"
   | "zero_income_certification"
@@ -20,6 +22,8 @@ export type SupportingDocumentDefinition = {
 };
 
 export const SUPPORTING_DOCUMENT_DEFINITIONS: readonly SupportingDocumentDefinition[] = [
+  {type: "employment_verification", label: "Employment Verification", aliases: ["Employment Verification", "Verification of Employment"], strongSignals: [/employment\s+verification/i, /verification\s+of\s+employment/i]},
+  {type: "rental_application", label: "Rental Application", aliases: ["Rental Application", "Application for Rental"], strongSignals: [/rental\s+application/i, /application\s+for\s+rental/i]},
   {
     type: "annual_student_certification",
     label: "Annual Student Certification",
@@ -164,3 +168,4 @@ export const TIC_PAGE_SIGNALS = [
   /determination\s+of\s+income\s+eligibility/i,
   /gross\s+rent\s+for\s+unit/i,
 ] as const;
+

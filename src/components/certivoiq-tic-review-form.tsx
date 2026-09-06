@@ -1,5 +1,10 @@
+import { createContext, useContext, useMemo } from "react";
+import { TIC_SUPPLEMENTAL_SECTIONS } from "@/lib/tic-supplemental-fields";
+import { ticCompletenessFindings } from "@/lib/tic-completeness";
 import type { TicFieldDefinition } from "@/lib/tic-field-registry";
 import { TIC_ASSET_ROW_COUNT, TIC_FIELD_BY_KEY, TIC_HOUSEHOLD_ROW_COUNT, TIC_INCOME_ROW_COUNT } from "@/lib/tic-field-registry";
+
+const CompletionContext = createContext(new Map<string, string>());
 
 type FactMeta = {
   page: number | null;
@@ -32,6 +37,7 @@ function Field({
   compact = false,
   placeholder,
 }: Props & { field: string; compact?: boolean; placeholder?: string }) {
+  const finding = useContext(CompletionContext).get(field);
   const definition = def(field);
   if (!definition) return null;
   const fact = factsByField.get(field);
@@ -39,7 +45,7 @@ function Field({
   const original = fact?.value == null ? "" : String(fact.value);
   const corrected = Boolean(fact && value.trim() !== original.trim());
   return (
-    <label className="block min-w-0">
+    <label id={`tic-field-${field}`} className="block min-w-0">
       <div className="mb-1 flex items-end justify-between gap-2">
         <span className={`${compact ? "text-[10px]" : "text-xs"} font-semibold leading-tight`}>{definition.label}</span>
         <span className={`shrink-0 text-[9px] ${corrected ? "font-semibold" : "text-slate-500"}`}>
@@ -48,6 +54,9 @@ function Field({
       </div>
       <input
         className={`${compact ? "h-8 px-2 text-xs" : "h-9 px-2.5 text-sm"} w-full rounded-none border border-slate-500 bg-white text-slate-950 outline-none focus:ring-2 focus:ring-slate-800/20`}
+        aria-invalid={Boolean(finding)}
+        title={finding}
+        style={finding ? { backgroundColor: "#fef08a", borderColor: "#a16207" } : undefined}
         value={value}
         disabled={busy}
         inputMode={definition.type === "currency" || definition.type === "number" ? "decimal" : undefined}
@@ -77,8 +86,9 @@ function Choice({ field, option, label, values, busy, onChange }: Props & { fiel
 
 function YesNo({ field, prompt, values, factsByField, busy, onChange }: Props & { field: string; prompt: string }) {
   const fact = factsByField.get(field);
+  const finding = useContext(CompletionContext).get(field);
   return (
-    <div>
+    <div id={`tic-field-${field}`} style={finding ? { backgroundColor: "#fef08a", padding: 6 } : undefined} title={finding}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold">{prompt}</span>
         <span className="text-[9px] text-slate-500">{confidenceLabel(fact)}</span>
@@ -253,9 +263,32 @@ function ProgramColumn({ field, statusField, label, options, values, factsByFiel
   );
 }
 
+function SupplementalFields({ fields, ...props }: Props & { fields: readonly TicFieldDefinition[] }) {
+  const blocks: { id: string; rows: Map<string, TicFieldDefinition[]>; fields: TicFieldDefinition[] }[] = [];
+  for (const definition of fields) {
+    const match = /^(application_(?:member|reference|residence|automobile|other_income|asset)|worksheet_(?:member|income|asset))_(\d+)_/.exec(definition.key);
+    if (!match) { blocks.push({id: definition.key, rows: new Map(), fields: [definition]}); continue; }
+    let block = blocks.find(b=>b.id===match[1]);
+    if(!block){ block={id:match[1]!,rows:new Map(),fields:[]};blocks.push(block); }
+    block.rows.set(match[2]!,[...(block.rows.get(match[2]!)??[]),definition]);
+  }
+  return <div className="space-y-3 p-3">{blocks.map(block=>block.rows.size ?
+    <div key={block.id} className="overflow-x-auto"><table className="w-full border-collapse text-xs">
+      <tbody>{[...block.rows.entries()].map(([row,definitions])=><tr key={row}>
+        <th className="border border-slate-500 p-2">{row}</th>
+        {definitions.map(definition=><td key={definition.key} className="min-w-[150px] border border-slate-500 p-2 align-top"><Field field={definition.key} compact {...props}/></td>)}
+      </tr>)}</tbody></table></div>
+    : <div key={block.id}>{block.fields.map(definition=>definition.type==='yes_no'
+      ? <YesNo key={definition.key} field={definition.key} prompt={definition.label} {...props}/>
+      : <Field key={definition.key} field={definition.key} {...props}/>)}</div>
+  )}</div>;
+}
+
 export function CertivoIqTicReviewForm(props: Props) {
   const { values, factsByField, busy, onChange } = props;
+  const completion = useMemo(()=>new Map(ticCompletenessFindings(values).map(f=>[f.field,f.message])),[values]);
   return (
+    <CompletionContext.Provider value={completion}>
     <div className="mx-auto w-full max-w-[1180px] space-y-5">
       <div className="overflow-hidden rounded-lg border border-slate-400 bg-white text-slate-950 shadow-sm">
         <div className="border-b-2 border-slate-900 p-3">
@@ -367,7 +400,18 @@ export function CertivoIqTicReviewForm(props: Props) {
           </div>
           <Field field="owner_representative_signature_date" {...props} placeholder="MM/DD/YYYY" />
         </div>
+        <div className="border border-yellow-500 bg-yellow-50 p-3 text-slate-950" aria-live="polite">
+          <h3 className="font-bold">Completion findings</h3>
+          {ticCompletenessFindings(props.values).length ? <ul className="list-disc pl-5">{ticCompletenessFindings(props.values).map(f => <li key={f.field}><a className="underline" href={`#tic-field-${f.field}`}>{f.message}</a></li>)}</ul> : <p className="text-xs">No incomplete asset amounts detected in the entered fields. Other evidence and review checks still apply.</p>}
+        </div>
+        {TIC_SUPPLEMENTAL_SECTIONS.map(section => <section key={section.id} className="mt-5">
+          <SectionTitle>{section.title}</SectionTitle>
+          {section.note && <p className="p-3 text-xs">{section.note}</p>}
+          <SupplementalFields fields={section.fields} {...props} />
+        </section>)}
       </div>
     </div>
+    </CompletionContext.Provider>
   );
 }
+
