@@ -1,6 +1,4 @@
 declare module "@/lib/compliance-procedure-registry.mjs" {
-  import type { StatePackInput } from "@/lib/compliance-rule-engine.mjs";
-
   export const COMPLIANCE_PROCEDURE_REGISTRY_BUILD: string;
   export const COMPLIANCE_PROCEDURE_SCAN_MODE: Readonly<{
     blockerInventory: "BLOCKER_INVENTORY";
@@ -21,6 +19,29 @@ declare module "@/lib/compliance-procedure-registry.mjs" {
     engineBuild: string;
     effectiveFrom: string | null;
     citation: string;
+    sourceTrace: readonly string[];
+  }
+
+  /**
+   * Metadata gate only. It does not bind this supplied pack to any installed
+   * procedure. Exact procedure/build/source-digest binding requires a future
+   * immutable server-side manifest.
+   */
+  export interface ComplianceProcedureStatePackInput {
+    id?: string;
+    state_code?: string;
+    jurisdiction?: string;
+    code?: string;
+    status?: string;
+    approvedBy?: string | boolean;
+    approved_by?: string | boolean;
+    version?: string;
+    validatedRuleCount?: number | string;
+    validated_rule_count?: number | string;
+    effectiveFrom?: string;
+    effective_from?: string;
+    effectiveTo?: string | null;
+    effective_to?: string | null;
   }
 
   export interface TrustedSourceBoundEventDate {
@@ -37,10 +58,15 @@ declare module "@/lib/compliance-procedure-registry.mjs" {
     procedureName: string;
     procedureCategory: string;
     procedureProgram: "LIHTC";
+    procedureInventoryBuild: string;
+    procedureEffectiveFrom: string | null;
+    procedureSourceTrace: string[];
     ruleId: string;
     ruleVersion: string;
-    rulePackId: string;
+    rulePackId: "compliance-procedure-blocker-inventory";
     rulePackVersion: string;
+    statePackBindingStatus: "UNBOUND";
+    effectiveDateBindingStatus: "UNBOUND";
     jurisdiction: string;
     severity: "critical";
     citation: string;
@@ -59,7 +85,7 @@ declare module "@/lib/compliance-procedure-registry.mjs" {
     programs?: readonly string[];
     stateCode?: string;
     jurisdiction?: string;
-    statePack?: StatePackInput | null;
+    statePack?: ComplianceProcedureStatePackInput | null;
     recertificationInput?: Record<string, unknown>;
     /**
      * Server-built only. Raw eventDate fields and extracted client facts are
