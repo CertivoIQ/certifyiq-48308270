@@ -1,77 +1,67 @@
-name: State checklist delegated PDF recovery 20260906
+name: State checklist PDF continuation 20260906
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [research/state-pack-pdf-evidence-20260906]
     paths:
       - .github/workflows/state-checklist-pdf-evidence-20260906.yml
+      - scripts/continue-state-checklist-evidence-20260906.py
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: state-checklist-continuation-research
+  cancel-in-progress: false
 jobs:
   capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - run: command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y poppler-utils)
-      - name: Capture remaining original PDFs without database writes
-        run: |
-          python3 - <<'PY'
-          import importlib.util,json,os,re,concurrent.futures as cf,hashlib
-          from pathlib import Path
-          from urllib.parse import urlsplit,urlunsplit,quote,urljoin
-          spec=importlib.util.spec_from_file_location('cap',Path('scripts/capture-state-checklist-pdfs-20260906.py'));c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
-          c.OUT=Path('artifacts/delegated-pdf-recovery');c.OUT.mkdir(parents=True,exist_ok=True)
-          c.UA='Mozilla/5.0 (compatible; CertivoIQ-Source-Research/2.2)'
-          def norm(u):
-              p=urlsplit(u);return urlunsplit((p.scheme,p.netloc,quote(p.path,safe='/%:@-._~!$&\'()*+,;='),quote(p.query,safe='=&%:@/?+'),''))
-          inventory=json.loads(Path('src/lib/nationwide-state-source-discovery.json').read_text());names={j['state_code']:j['agency'] for j in inventory['jurisdictions']}
-          config={
-           'CT':(['chfa.org','spectrumlihtc.com'],['https://www.chfa.org/owners-property-managers/lihtc-compliance/','https://spectrumlihtc.com/state-monitoring/connecticut/']),
-           'HI':(['dbedt.hawaii.gov','spectrumlihtc.com'],['https://dbedt.hawaii.gov/hhfdc/developers/hmmf_html/','https://spectrumlihtc.com/state-monitoring/hawaii/']),
-           'DE':(['destatehousing.com','spectrumlihtc.com'],['https://spectrumlihtc.com/state-monitoring/delaware/']),
-           'MA':(['mass.gov','spectrumlihtc.com'],['https://spectrumlihtc.com/state-monitoring/massachusetts/','https://spectrumlihtc.com/mass-guide/']),
-           'AK':(['ahfc.us'],['https://www.ahfc.us/pros/compliance-audit/affordable-housing-compliance-reference-manual']),
-           'WV':(['wvhdf.com'],['https://www.wvhdf.com/programs/multi-family-programs-and-resources/','https://www.wvhdf.com/wp-content/uploads/2026/03/WVHDF-Certification-Waiver-Procedures.pdf']),
-           'AL':(['ahfa.com'],['https://www.ahfa.com/programs/rental-housing/compliance'])
-          }
-          def task(state):
-              domains,seeds=config[state];candidates={};failures=[];discovery=[];queue=list(seeds);seen=set();folder=c.OUT/state;folder.mkdir(exist_ok=True)
-              def add(u,label,parent,context=''):
-                  u=norm(u)
-                  if c.allowed(u,domains):candidates[u]={'url':u,'label':label,'parent':parent,'context':context}
-              for u in seeds:
-                  if '.pdf' in u.lower():add(u,u.rsplit('/',1)[-1],None)
-              while queue and len(seen)<8:
-                  u=queue.pop(0)
-                  if u in seen or '.pdf' in u.lower():continue
-                  seen.add(u)
-                  try:
-                      b,final,headers,status=c.fetch(u,domains,20);parser=c.Links();parser.feed(b.decode('utf-8',errors='replace'));sh=hashlib.sha256(b).hexdigest();(folder/(sh+'.html')).write_bytes(b);discovery.append({'url':u,'final_url':final,'retrieved_at':c.now(),'html_sha256':sh})
-                      for href,label,heading in parser.links:
-                          v=norm(urljoin(final,href));full=(label+' '+v+' '+heading).lower()
-                          if not c.allowed(v,domains):continue
-                          if '.pdf' in v.lower():
-                              if re.search(r'(201[0-9]|202[0-5]).*(income.limit|rent.limit|income.and.rent)|(?:income|rent).*limits.*(?:201[0-9]|202[0-5])',full):continue
-                              if state=='CT' and 'chfa.org' in urlsplit(v).netloc and not re.search(r'compliance|hotma|utility|tenant',full):continue
-                              if state=='WV' and not re.search(r'waiver|income|rent|compliance|training|utility',full):continue
-                              if state=='HI' and not ('spectrumlihtc.com' in v or re.search(r'compliance|hotma|utility|tenant|2026.*limit',full)):continue
-                              add(v,label,final,heading)
-                          elif state=='AK' and re.search(r'forms|rents|income|utility',label+' '+v,re.I):queue.append(v)
-                  except Exception as e:failures.append({'url':u,'reason':str(e)[:300]})
-              ordered=list(candidates.values())[:100];docs=[]
-              for item in ordered:
-                  try:docs.append(c.capture(state,item,domains,names[state]))
-                  except Exception as e:failures.append({'url':item['url'],'reason':str(e)[:300]})
-              print(state,'captured',len(docs),'failures',len(failures),flush=True)
-              return {'state_code':state,'authority_name':names[state],'discovery_pages':discovery,'captured_documents':docs,'failures':failures,'delegation_review_required':state=='MA'}
-          with cf.ThreadPoolExecutor(max_workers=7) as pool:results=list(pool.map(task,config))
-          (c.OUT/'manifest.json').write_text(json.dumps({'capture_completed_at':c.now(),'run_id':os.getenv('GITHUB_RUN_ID'),'results':results,'policy':'Exact original PDF capture only. Agency delegation, content match and independent validation remain separate review gates. No database writes or approvals.'},indent=2))
-          PY
-      - uses: actions/upload-artifact@v4
+      - name: Capture scoped original PDFs without database writes or approvals
+        run: python3 scripts/continue-state-checklist-evidence-20260906.py
+      - name: Retain compact manifest
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: state-checklist-delegated-recovery-pdfs
-          path: artifacts/delegated-pdf-recovery/
+          name: checklist-continuation-manifest
+          path: artifacts/checklist-continuation-20260906/manifest.json
           retention-days: 90
-          if-no-files-found: error
+          if-no-files-found: warn
+      - name: Retain New York and Northeast original evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checklist-continuation-northeast-pdfs
+          path: |
+            artifacts/checklist-continuation-20260906/NY/
+            artifacts/checklist-continuation-20260906/NH/
+            artifacts/checklist-continuation-20260906/PA/
+            artifacts/checklist-continuation-20260906/MA/
+            artifacts/checklist-continuation-20260906/ME/
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Retain other original evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checklist-continuation-other-pdfs
+          path: |
+            artifacts/checklist-continuation-20260906/AK/
+            artifacts/checklist-continuation-20260906/IL/
+            artifacts/checklist-continuation-20260906/WA/
+            artifacts/checklist-continuation-20260906/KS/
+            artifacts/checklist-continuation-20260906/WI/
+            artifacts/checklist-continuation-20260906/MI/
+            artifacts/checklist-continuation-20260906/MT/
+            artifacts/checklist-continuation-20260906/OR/
+            artifacts/checklist-continuation-20260906/AZ/
+            artifacts/checklist-continuation-20260906/FL/
+            artifacts/checklist-continuation-20260906/AL/
+            artifacts/checklist-continuation-20260906/CA/
+            artifacts/checklist-continuation-20260906/TN/
+            artifacts/checklist-continuation-20260906/TX/
+            artifacts/checklist-continuation-20260906/NE/
+            artifacts/checklist-continuation-20260906/SD/
+          retention-days: 90
+          if-no-files-found: warn
