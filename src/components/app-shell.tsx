@@ -163,7 +163,7 @@ function routeIsActive(pathname: string, to: string) {
   return to === "/dashboard" ? pathname === to : pathname === to || pathname.startsWith(`${to}/`);
 }
 
-function NavLink({ item, onNavigate, nested = false }: { item: NavItem; onNavigate?: () => void; nested?: boolean }) {
+function NavLink({ item, onNavigate, nested = false }: { item: NavItem; onNavigate?: (() => void) | undefined; nested?: boolean }) {
   const { to, label, icon: Icon } = item;
   return (
     <Link
@@ -192,7 +192,7 @@ function NavGroup({
   icon: LucideIcon;
   items: readonly NavItem[];
   pathname: string;
-  onNavigate?: () => void;
+  onNavigate?: (() => void) | undefined;
   initiallyOpen?: boolean;
 }) {
   const active = items.some((item) => routeIsActive(pathname, item.to));
@@ -224,7 +224,7 @@ function Wordmark() {
   return <Link to="/dashboard" className="flex items-center gap-2.5"><img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" /></Link>;
 }
 
-function NavLinks({ onNavigate, dashboardMode }: { onNavigate?: () => void; dashboardMode: PlatformDashboardMode }) {
+function NavLinks({ onNavigate, dashboardMode }: { onNavigate?: (() => void) | undefined; dashboardMode: PlatformDashboardMode }) {
   const { isStaff } = useIsStaff();
   const { accessLevel, canManageStaff } = useCrmStaffAuthority();
   const { phaRole } = useWorkspaceProfile();

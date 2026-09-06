@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 const dir = mkdtempSync(join(tmpdir(), 'certivoiq-income-test-'));
 const tsc = process.env.TSC || (process.env.CI ? resolve('node_modules/.bin/tsc') : 'tsc');
-execFileSync(tsc, ['supabase/functions/_shared/income-calculator-engine.ts','--target','ES2022','--module','ES2022','--outDir',dir,'--strict','--skipLibCheck'], {stdio:'inherit'});
+execFileSync(tsc, ['supabase/functions/_shared/income-calculator-engine.ts','--target','ES2022','--module','ES2022','--outDir',dir,'--strict','--noUncheckedIndexedAccess','--noPropertyAccessFromIndexSignature','--exactOptionalPropertyTypes','--noImplicitReturns','--skipLibCheck'], {stdio:'inherit'});
 const e = await import(pathToFileURL(join(dir, 'income-calculator-engine.js')).href);
 process.on('exit', () => rmSync(dir,{recursive:true,force:true}));
 const profile = (program='LIHTC', patch={}) => ({id:`profile-${program}`,createdAt:'2026-09-01T00:00:00Z',profile:{...e.newProfile(program),agency:'Synthetic test agency',implementation:'HOTMA',effectiveFrom:'2026-01-01',effectiveTo:'2027-12-31',policyVersion:'TEST-NOT-A-LIVE-POLICY',policySource:'Synthetic policy fixture',evidencePolicy:'Synthetic evidence fixture',minEvidenceMonths:'2',designation:'Synthetic designation',geography:'Synthetic geography',limitSource:'Synthetic limit fixture',limitFrom:'2026-01-01',limitTo:'2027-12-31',limits:{'2':'50000'},...patch}});
@@ -81,3 +81,8 @@ test('ambiguous HUD program must not silently become Multifamily',()=>assert.equ
 test('unknown JSON structure and frequencies are rejected',()=>{assert.throws(()=>e.evaluate({foo:1},[]));const i=input();i.jobs[0].frequency='DAILY';assert.throws(()=>e.evaluate(i,[profile()]));});
 test('signed report displays its stored calculation rather than current draft recomputation',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.match(ui,/saved\?\.calculation \?\? evaluate/);assert.match(ui,/setSaved\(null\)/);assert.doesNotMatch(ui,/localStorage\.setItem|sessionStorage\.setItem/);});
 test('server recalculates rather than trusting a submitted result',()=>{const api=readFileSync('supabase/functions/income-calculator/index.ts','utf8');assert.match(api,/evaluate\(input, config\.profiles\)/);assert.match(api,/auth\.getUser/);assert.match(api,/\.eq\("user_id", userId\)/);assert.match(api,/canonical\(recalculated\) !== canonical\(snapshot\.calculation\)/);});
+
+test('sourced limits retain precise decimal values',()=>assert.deepEqual(e.parseSourcedLimits('1=40000\n2=45000.123456'),{'1':'40000','2':'45000.123456'}));
+for(const invalid of ['', '2=45000\n2=46000','31=50000','2=45,000','2=1e3','2=-100','2=0.1234567','2=10000000000']) test('invalid limits fail closed: '+JSON.stringify(invalid),()=>assert.throws(()=>e.parseSourcedLimits(invalid)));
+test('saved version is not overwritten by current configuration fetch',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.ok(ui.includes('if (saved?.id) { setConfigurationLoading(false); return; }'));assert.ok(ui.includes('reload, saved?.id]'));});
+test('both pending metadata and configuration requests block saves',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.ok(ui.includes('const loading = metadataLoading || configurationLoading;'));assert.ok(ui.includes('!!visibleError'));});

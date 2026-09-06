@@ -29,7 +29,7 @@ const div = (a: Q, b: Q): Q => q(a.n * b.d, a.d * b.n);
 const neg = (a: Q): Q => ({ n: -a.n, d: a.d });
 function decimal(s: string, signed = false): Q {
   if (typeof s !== "string" || !(signed ? /^-?\d{1,10}(\.\d{1,6})?$/ : /^\d{1,10}(\.\d{1,6})?$/).test(s)) throw new Error("Enter a valid decimal (up to six decimal places; no commas).");
-  const [whole, fraction = ""] = s.split("."); const d = 10n ** BigInt(fraction.length);
+  const [whole = "", fraction = ""] = s.split("."); const d = 10n ** BigInt(fraction.length);
   return q(BigInt(whole.replace("-", "")) * d * (s.startsWith("-") ? -1n : 1n) + BigInt(fraction || "0") * (s.startsWith("-") ? -1n : 1n), d);
 }
 function read(s: string, label: string, issues: string[], signed = false): Q { try { return decimal(s, signed); } catch { issues.push(`${label}: valid amount required.`); return ZERO; } }
@@ -65,18 +65,18 @@ function strings(v: Record<string, unknown>, keys: string[]) { for (const k of k
 function booleans(v: Record<string, unknown>, keys: string[]) { for (const k of keys) if (typeof v[k] !== "boolean") throw new Error(`Invalid ${k}.`); }
 function enumeration(value: unknown, allowed: readonly string[], name: string) { if (typeof value !== "string" || !allowed.includes(value)) throw new Error(`Invalid ${name}.`); }
 function array(v: unknown, max = 240): asserts v is unknown[] { if (!Array.isArray(v) || v.length > max) throw new Error("Invalid or oversized input collection."); }
-function lineShape(v: unknown) { object(v); strings(v, ["id", "member", "label", "amount", "source"]); booleans(v, ["reviewed"]); enumeration(v.frequency, Object.keys(FREQUENCIES), "frequency"); }
+function lineShape(v: unknown) { object(v); strings(v, ["id", "member", "label", "amount", "source"]); booleans(v, ["reviewed"]); enumeration(v["frequency"], Object.keys(FREQUENCIES), "frequency"); }
 export function assertInput(v: unknown): asserts v is Input {
   object(v); strings(v, ["tenantId", "propertyId", "unitId", "effectiveDate", "householdSize"]); booleans(v, ["householdReviewed", "changesReviewed"]);
-  enumeration(v.certificationType, ["INITIAL", "ANNUAL", "INTERIM", "OTHER"], "certification type"); enumeration(v.subsidy, ["NONE", "PUBLIC_HOUSING", "FEDERAL_TENANT_BASED", "FEDERAL_STATE_PROJECT_BASED", "UNKNOWN"], "subsidy");
-  array(v.jobs, 60); for (const j of v.jobs) { object(j); strings(j, ["id", "member", "employer", "rate", "hours", "overtimeRate", "overtimeHours", "gross", "weeks", "adjustment", "changeSource", "source"]); booleans(j, ["reviewed"]); enumeration(j.mode, ["HOURLY", "PAY_PERIOD", "STUB_AVERAGE"], "wage basis"); enumeration(j.frequency, Object.keys(FREQUENCIES), "frequency"); array(j.stubs); for (const s of j.stubs) { object(s); strings(s, ["id", "start", "end", "gross", "rate", "hours", "overtimeRate", "overtimeHours", "extras", "source", "discrepancyReason"]); booleans(s, ["reviewed", "completePeriod"]); } }
+  enumeration(v["certificationType"], ["INITIAL", "ANNUAL", "INTERIM", "OTHER"], "certification type"); enumeration(v["subsidy"], ["NONE", "PUBLIC_HOUSING", "FEDERAL_TENANT_BASED", "FEDERAL_STATE_PROJECT_BASED", "UNKNOWN"], "subsidy");
+  array(v["jobs"], 60); for (const j of v["jobs"]) { object(j); strings(j, ["id", "member", "employer", "rate", "hours", "overtimeRate", "overtimeHours", "gross", "weeks", "adjustment", "changeSource", "source"]); booleans(j, ["reviewed"]); enumeration(j["mode"], ["HOURLY", "PAY_PERIOD", "STUB_AVERAGE"], "wage basis"); enumeration(j["frequency"], Object.keys(FREQUENCIES), "frequency"); array(j["stubs"]); for (const s of j["stubs"]) { object(s); strings(s, ["id", "start", "end", "gross", "rate", "hours", "overtimeRate", "overtimeHours", "extras", "source", "discrepancyReason"]); booleans(s, ["reviewed", "completePeriod"]); } }
   for (const k of ["otherIncome", "assets", "historyAdjustments"]) { array(v[k]); for (const l of v[k]) lineShape(l); }
-  array(v.history, 12); for (const h of v.history) { object(h); strings(h, ["start", "end", "amount", "source"]); booleans(h, ["reviewed"]); }
-  array(v.layers, 20); for (const l of v.layers) { object(l); strings(l, ["program", "finalAmount", "determinationDate", "validThrough", "authority", "determinationSource", "evidenceMonths", "evidenceSource"]); booleans(l, ["determinationReviewed", "evidenceReviewed", "treatmentReviewed", "assetsReviewed", "reconciliationReviewed"]); for (const k of ["adjustments", "deductions", "agi"]) { array(l[k]); for (const x of l[k]) lineShape(x); } }
+  array(v["history"], 12); for (const h of v["history"]) { object(h); strings(h, ["start", "end", "amount", "source"]); booleans(h, ["reviewed"]); }
+  array(v["layers"], 20); for (const l of v["layers"]) { object(l); strings(l, ["program", "finalAmount", "determinationDate", "validThrough", "authority", "determinationSource", "evidenceMonths", "evidenceSource"]); booleans(l, ["determinationReviewed", "evidenceReviewed", "treatmentReviewed", "assetsReviewed", "reconciliationReviewed"]); for (const k of ["adjustments", "deductions", "agi"]) { array(l[k]); for (const x of l[k]) lineShape(x); } }
 }
 export function assertProfile(v: unknown): asserts v is Profile {
   object(v); strings(v, ["program", "agency", "effectiveFrom", "effectiveTo", "policyVersion", "policySource", "evidencePolicy", "minEvidenceMonths", "designation", "geography", "limitSource", "limitFrom", "limitTo"]);
-  enumeration(v.definition, ["PART5", "IRS_AGI", "RD_ADJUSTED", "MANUAL"], "definition"); enumeration(v.implementation, ["LEGACY", "HOTMA", "SPECIAL", "UNRESOLVED"], "implementation"); enumeration(v.method, ["AUTO", "ACCEPTED", "STREAMLINED", "MANUAL"], "method"); enumeration(v.rounding, ["CENTS", "WHOLE_NEAREST", "WHOLE_UP", "WHOLE_DOWN"], "rounding"); object(v.limits); if (Object.keys(v.limits).length > 30) throw new Error("Too many income-limit sizes."); for (const [k, amount] of Object.entries(v.limits)) { if (!/^[1-9]\d?$/.test(k) || Number(k) > 30 || typeof amount !== "string") throw new Error("Invalid household-size limit."); decimal(amount); }
+  enumeration(v["definition"], ["PART5", "IRS_AGI", "RD_ADJUSTED", "MANUAL"], "definition"); enumeration(v["implementation"], ["LEGACY", "HOTMA", "SPECIAL", "UNRESOLVED"], "implementation"); enumeration(v["method"], ["AUTO", "ACCEPTED", "STREAMLINED", "MANUAL"], "method"); enumeration(v["rounding"], ["CENTS", "WHOLE_NEAREST", "WHOLE_UP", "WHOLE_DOWN"], "rounding"); object(v["limits"]); if (Object.keys(v["limits"]).length > 30) throw new Error("Too many income-limit sizes."); for (const [k, amount] of Object.entries(v["limits"])) { if (!/^[1-9]\d?$/.test(k) || Number(k) > 30 || typeof amount !== "string") throw new Error("Invalid household-size limit."); decimal(amount); }
 }
 export function profileIssues(p: Profile): string[] {
   assertProfile(p); const issues: string[] = [];
@@ -188,4 +188,18 @@ export function evaluate(input: Input, approved: ApprovedProfile[]): Evaluation 
     return { program: layer.program, route, profileId: active?.id || null, policyVersion: p?.policyVersion || null, annualIncome: incomeCents === null ? null : currency(incomeCents), incomeLimit: limitCents === null ? null : currency(limitCents), difference: comparison === "NOT_DETERMINED" ? null : currency(incomeCents! - limitCents!), comparison, issues: unique, basis };
   });
   return { engineVersion: ENGINE_VERSION, status: "Pending Final Review", prospectiveAnnual: sharedIssues.length || assetIssues.length ? null : money(projected), historicalAnnual: historyIssues.length || assetIssues.length ? null : money(historical), jobResults, results, reviewable: results.length > 0 && results.every((r) => r.comparison !== "NOT_DETERMINED") };
+}
+
+/** Parse only explicitly sourced limits; blanks and duplicate sizes fail closed. */
+export function parseSourcedLimits(text: string): Record<string, string> {
+  const limits: Record<string, string> = {};
+  for (const row of text.split("\n").filter((r) => r.trim())) {
+    const match = /^\s*([1-9]\d?)\s*=\s*(\d+(?:\.\d{1,6})?)\s*$/.exec(row);
+    const size = match?.[1], amount = match?.[2];
+    if (!size || !amount || Number(size) > 30 || Object.hasOwn(limits, size)) throw new Error("Each limit row requires a unique household size (1–30) and exact amount, without commas.");
+    decimal(amount);
+    limits[size] = amount;
+  }
+  if (!Object.keys(limits).length) throw new Error("At least one sourced household-size income limit is required.");
+  return limits;
 }
