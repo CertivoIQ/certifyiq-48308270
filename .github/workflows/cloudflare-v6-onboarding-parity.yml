@@ -1,4 +1,4 @@
-# Flattened TIC hardened section-boundary release.
+# Exact source-field to CertivoIQ TIC parity release.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
@@ -62,16 +62,23 @@ jobs:
           grep -F -q 'const TIC_RENDER_SCALE = 3.5' src/lib/pdf-ocr.ts
           grep -F -q 'highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE' src/lib/pdf-ocr.ts
           grep -F -q 'spatialLines' src/lib/pdf-ocr.ts
-          grep -F -q 'clusterRows' src/lib/tic-spatial-extraction.mjs
+          grep -F -q '__CERTIVOIQ_TIC_FIELD__' src/lib/tic-field-extraction.ts
+          grep -F -q '__CERTIVOIQ_TIC_FIELD__' src/lib/tic-pdf-form-values.ts
+          grep -F -q '__CERTIVOIQ_TIC_FIELD__' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'TIC_FIELD_BY_KEY.get(direct[1])' src/lib/tic-field-extraction.ts
+          grep -F -q '"Property Name": "property_name"' src/lib/tic-pdf-form-values.ts
+          grep -F -q 'County: "county"' src/lib/tic-pdf-form-values.ts
+          grep -F -q 'BIN: "building_identification_number"' src/lib/tic-pdf-form-values.ts
+          grep -F -q 'Address: "property_address"' src/lib/tic-pdf-form-values.ts
+          grep -F -q '"Unit Number": "unit_number"' src/lib/tic-pdf-form-values.ts
+          grep -F -q '"# Bedrooms": "unit_bedrooms"' src/lib/tic-pdf-form-values.ts
+          grep -F -q '["certification_type", name]' src/lib/tic-pdf-form-values.ts
+          grep -F -q 'household_member_${member}_last_name' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'household_member_${member}_first_name_middle_initial' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'income_member_${member}_wages_business' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'asset_${member}_cash_value' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'explicitMemberNumber' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'locateHouseholdTable' src/lib/tic-spatial-extraction.mjs
-          grep -F -q 'employment.*wages.*' src/lib/tic-spatial-extraction.mjs
-          grep -F -q 'household member ${member} last name' src/lib/tic-field-registry.ts
-          grep -F -q 'income member ${member} employment or wages' src/lib/tic-field-registry.ts
-          grep -F -q 'asset ${row} cash value' src/lib/tic-field-registry.ts
-          grep -F -q 'Last Name' src/lib/tic-pdf-form-values.ts
-          grep -F -q 'A Employment or Wages' src/lib/tic-pdf-form-values.ts
-          grep -F -q 'G Type of Asset' src/lib/tic-pdf-form-values.ts
           grep -F -q 'annual_student_certification' src/lib/tic-supporting-document-registry.ts
           grep -F -q 'zero_income_certification' src/lib/tic-supporting-document-registry.ts
           grep -F -q 'check_stub' src/lib/tic-supporting-document-registry.ts
@@ -97,7 +104,7 @@ jobs:
           ! head -n 1 src/components/certivoiq-tic-review-form.tsx | grep -F -q 'eslint-disable react/'
           grep -F -q '[-/]' src/lib/tic-field-extraction.ts
           echo "SOURCE_SHA=$(git rev-parse HEAD)"
-          echo 'STRUCTURED_TIC_HARDENED_SPATIAL_SOURCE_GATE=PASS'
+          echo 'STRUCTURED_TIC_EXACT_FIELD_PARITY_SOURCE_GATE=PASS'
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -114,7 +121,7 @@ jobs:
           node --test scripts/test-onboarding-certification-separation.mjs
           node scripts/test-ocr-sidecar.mjs
           node --test scripts/test-certification-task-workflow.mjs
-          echo 'STRUCTURED_TIC_HARDENED_SPATIAL_EVIDENCE_BOUNDARY=PASS'
+          echo 'STRUCTURED_TIC_EXACT_FIELD_PARITY_EVIDENCE_BOUNDARY=PASS'
 
       - name: Build exact current main
         run: bun run build
@@ -145,7 +152,7 @@ jobs:
           candidate_url="${{ steps.deploy.outputs.candidate_url }}"
           for attempt in 1 2 3 4 5 6; do
             if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
-              echo 'BOUND_V11_HARDENED_SPATIAL_TIC_LIVE_RESPONSE_GATE=PASS'
+              echo 'BOUND_V11_EXACT_FIELD_PARITY_LIVE_RESPONSE_GATE=PASS'
               exit 0
             fi
             test "$attempt" -lt 6
