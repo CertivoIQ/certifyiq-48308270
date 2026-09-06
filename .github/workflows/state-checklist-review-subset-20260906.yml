@@ -24,23 +24,22 @@ jobs:
           python3 - <<'PY'
           import json,pathlib,hashlib,shutil
           root=pathlib.Path('archived');out=pathlib.Path('review-subset');out.mkdir()
-          manifests=list(root.rglob('manifest.json'))
-          manifest=next(json.loads(p.read_text()) for p in manifests if 'results' in json.loads(p.read_text()))
-          selected=[]
-          wanted=set('1cee80cf936bcc64666c9d0e5ba8cbb384b6c20a83176f5ae2b47500a035e22e 266e0738d1f7f479ec164efaeeaad4ad28523491997dd15fe7b822f25c2f3c6e aef90a3b54d1afaa328a644dc77848ad2d50697ce5802f182e1020f9d2753c6a 169a3057777b9cd57b472755b0c38f9c090a82a977e7d4b7ed45502b981c5fb7 c848a68ff79c8f1a463f1c239336df930cb67bcbd8ab8866eda77beb833f06c3 c368a76bdda3fe3d2a49d88754491c1c69b5153516a136527b9faf4ef21cc901 82b3675b297bb2aeaa2b11bb62e81f4663a196c08bfb8e5dffeed6048ff0f329 762b9de0b298385c3a3727db3333ed700c1664a42f5215fb0661804e4c243e20 d74f11c271d980859d0eadf1b6f1d466835325ad8425211366f666a5ba87050d 577de1733e23d019c6f9939b30df95f6e420db4f68698b54c170dd67718e0f7d f056dab4ad1f456ef8587a127d4b27c142f60ae7cba94582d767cde2e9a7e96e 84ce3765af070a9dfcec3e25653fcb2b30740b35426a94b14acc0aca70f5bb77 9f14175ec3e1285201ebf4e5479f3c16ec9d99f12626662b10812a8dfc558beb a24a4fbce8626c68d21bf29abb096a062d03ca50702955af114a2dd8f5f0ccf4 7bb7cb43cbb73aa30509e1af604ef30adec51b225ce3570bf5d1e93d2b891577 482e2c1b80b17b645647ec7b23751e944271be0eae85dda4a58ce0dc41dd1ca6 8504e27f04a3ec91344eba3eca0c4f9d375bb398d6af068c5a8a4c1a05a11f7c aeb844977db43f2ba8599c0a85b1ba8eceae2b842fabf98dfc62b2a39fd73aee 02e6b24add6e938fe3e406fc2ad5ab474b97637d5830e1c5df580b099972ccc2 6f052415ebc2131ccdf09af4c9e572b41757c5e07a290a1f2057826bab7833fb 0545eec66105527ae26248a3cf55fd50489ef343697ec5a1bb27c3994bfdc9ab'.split())
+          manifest=next(json.loads(p.read_text()) for p in root.rglob('manifest.json') if 'results' in json.loads(p.read_text()))
+          selected=[];seen=set()
           for result in manifest['results']:
+            s=result['state_code']
             for doc in result['captured_documents']:
-              sha=doc['source_sha256']
-              if sha not in wanted:continue
-              matches=list(root.rglob(sha+'.pdf')))
+              u=doc['source_url'];h=u+' '+doc['link_label'];sha=doc['source_sha256']
+              take=(s=='MA' and '/2025-2026-lihtc-qap/download' in u) or (s=='ME' and ('notice-2026-' in u or 'training-webinars' in u)) or (s=='MN' and ('general_info_tutorial' in u or 'mhfa_1042363' in u)) or (s=='PA' and ('phfa-property-compliance-manual' in u or '2026-rent-summary' in u)) or (s=='IL' and ('MB-634' in u or 'MB-632' in u)) or (s=='KS' and 'Compliance-Update-February-2024' in u) or (s=='WA' and '130Zb_Post-Year15' in u)
+              if not take or sha in seen:continue
+              matches=list(root.rglob(sha+'.pdf'))
               if not matches:raise RuntimeError('Missing original '+sha)
               original=matches[0];data=original.read_bytes()
               if hashlib.sha256(data).hexdigest()!=sha:raise RuntimeError('Hash mismatch '+sha)
-              dest=out/doc['state_code'];dest.mkdir(exist_ok=True)
-              shutil.copy2(original,dest/original.name)
+              dest=out/s;dest.mkdir(exist_ok=True);shutil.copy2(original,dest/original.name)
               for txt in root.rglob(sha+'.txt'):shutil.copy2(txt,dest/txt.name);break
-              selected.append(doc);wanted.remove(sha)
-          if wanted:raise RuntimeError('Selection incomplete '+str(wanted))
+              selected.append(doc);seen.add(sha)
+          if len(selected)!=21:raise RuntimeError('Unexpected selection count '+str(len(selected)))
           (out/'manifest.json').write_text(json.dumps({'records':selected,'original_run_id':34013717716,'original_artifact_id':9983304630,'original_artifact_digest':'sha256:2606e00453a090c94c35344790b6285db1d10a75f36468b425062febc91161ef','archive_sha256_verification_passed':True,'policy':'Byte-preserving selected archive recovery only. No new retrieval dates or approvals.'},indent=2))
           print('RECOVERED_AND_SHA_VERIFIED',len(selected))
           PY
