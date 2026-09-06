@@ -19,6 +19,7 @@ const packetClassifier = read("src/lib/tic-packet-classifier.ts");
 const supportMigration = read("supabase/migrations/20260905195900_tic_supporting_documents.sql");
 const propertiesRoute = read("src/routes/properties.index.tsx");
 const onboardingPanel = read("src/components/portfolio-onboarding-panel.tsx");
+const onboardingStorage = read("src/lib/portfolio-onboarding-storage.ts");
 const pdfOcr = read("src/lib/pdf-ocr.ts");
 const catalog = read("src/lib/platform-data.ts");
 
@@ -34,7 +35,9 @@ test("certification upload is distinct from portfolio and tenant onboarding", ()
   assert.match(propertiesRoute, /PortfolioOnboardingPanel/);
   assert.doesNotMatch(propertiesRoute, /CertificationUploadPanel|PortfolioIntakePanel/);
   assert.match(onboardingPanel, /Portfolio & tenant onboarding/);
-  assert.match(onboardingPanel, /documentCount: 0/);
+  assert.match(onboardingPanel, /createPortfolioOnboarding/);
+  assert.match(onboardingStorage, /total_files: 0/);
+  assert.doesNotMatch(onboardingStorage, /portfolio_tenant_documents|certification_import_items/);
   assert.doesNotMatch(onboardingPanel, /uploadCertificationFile|prepareCertificationForReview/);
 });
 
