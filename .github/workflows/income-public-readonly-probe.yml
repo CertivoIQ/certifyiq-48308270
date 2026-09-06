@@ -1,0 +1,25 @@
+name: Read-only calculator public release probe
+on:
+  push:
+    branches: [fix/income-release-identity]
+    paths: ['.github/workflows/income-public-readonly-probe.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Inspect only public calculator release responses
+        run: |
+          node --input-type=module <<'NODE'
+          import {createHash} from 'node:crypto';
+          const origins=['https://certivoiq-launch-candidate-20260905-v11.rodsheka-watkins.workers.dev','https://certivoiq.com','https://www.certivoiq.com'];
+          const paths=['/assets/income-calculator-release.json','/assets/income-calculator-release.json?release=deca5129d55b2db3a306e04b32764bd13daf22ae','/assets/income-calculator-DtZZV42e.js','/income-calculator','/auth'];
+          for(const origin of origins)for(const path of paths){
+            try{const r=await fetch(origin+path,{redirect:'manual',headers:{'cache-control':'no-cache'},signal:AbortSignal.timeout(20000)});const bytes=Buffer.from(await r.arrayBuffer());console.log(JSON.stringify({origin,path,status:r.status,type:r.headers.get('content-type'),location:r.headers.get('location'),bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),calculatorLabel:bytes.includes(Buffer.from('Income Calculator')),bodySample:r.status===404?bytes.toString().slice(0,220):undefined}));}catch(e){console.log(JSON.stringify({origin,path,error:e.message}));}
+          }
+          NODE
