@@ -6,20 +6,36 @@ export const REQUIRED_STATE_DOCUMENT_FAMILIES = Object.freeze([
   "UTILITY_ALLOWANCE",
   "COMPLIANCE_FORMS",
   "COMPLIANCE_TRAINING",
+  "LIHTC_CONTROLLING_AUTHORITY",
 ]);
 
 // Deterministic release requires the source families needed to make and test
 // compliance determinations. Training is captured when published, but the
 // absence of training material does not itself prevent a rule release.
 export const RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES = Object.freeze([
-  "COMPLIANCE_GUIDEBOOK",
-  "INCOME_LIMITS",
-  "RENT_LIMITS",
-  "UTILITY_ALLOWANCE",
-  "COMPLIANCE_FORMS",
+  "LIHTC_CONTROLLING_AUTHORITY",
 ]);
 
+export const PROGRAM_RELEASE_DOCUMENT_FAMILIES = Object.freeze({
+  LIHTC: RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES,
+});
+
+// State income/rent limits normally inherit from the controlled federal HUD MTSP
+// source. Utility guidance, forms, change notices, and training are overlays:
+// capture and validate them when the allocating agency publishes and relies on
+// them, but their non-publication does not by itself block an LIHTC release.
+
 const FAMILY_PATTERNS = Object.freeze({
+  LIHTC_CONTROLLING_AUTHORITY: [
+    /qualified\s+allocation\s+plan|\bqap\b/i,
+    /allocation[-_\s]+plan/i,
+    /compliance[-_\s]+(?:manual|guidebook|handbook|guide|plan)/i,
+    /compliance[-_\s]+monitoring[-_\s]+plan/i,
+    /tax\s+credit\s+(?:compliance\s+)?manual/i,
+    /capital\s+programs\s+manual/i,
+    /monitoring\s+(?:manual|rule)/i,
+    /state[-_\s]+(?:statute|rule)/i,
+  ],
   COMPLIANCE_RULE_CHANGES: [
     /compliance[-_\s]+(?:rule|procedure)/i,
     /rule[-_\s]+changes?/i,
@@ -72,6 +88,7 @@ const FAMILY_PATTERNS = Object.freeze({
 });
 
 const FAMILY_NEGATIVE_PATTERNS = Object.freeze({
+  LIHTC_CONTROLLING_AUTHORITY: [/draft/i, /proposed/i, /archive/i, /superseded/i],
   COMPLIANCE_RULE_CHANGES: [/archive/i, /proposed/i, /notice\s+of\s+rulemaking/i],
   COMPLIANCE_GUIDEBOOK: [/application/i, /qualified\s+allocation|\bqap\b/i],
   INCOME_LIMITS: [/homeownership/i, /single.family/i],
@@ -133,6 +150,7 @@ export function classifyDocument({ label, url, sourceType = "" }) {
     const positive = FAMILY_PATTERNS[family].reduce((score, pattern) => score + (pattern.test(haystack) ? 2 : 0), 0);
     const negative = FAMILY_NEGATIVE_PATTERNS[family].reduce((score, pattern) => score + (pattern.test(haystack) ? 3 : 0), 0);
     const score = positive - negative;
+    if (family === "LIHTC_CONTROLLING_AUTHORITY" && negative > 0) continue;
     if (score > 0) families.push({ family, score });
   }
   return Object.freeze({
@@ -191,11 +209,26 @@ export function coverageGaps(stateCode, documents) {
   );
 }
 
-export function releaseCoverageGaps(stateCode, documents) {
+export function releaseCoverageGaps(
+  stateCode,
+  documents,
+  { programs = ["LIHTC"] } = {},
+) {
+  const normalizedPrograms = programs.map((program) => String(program).toUpperCase());
+  const unsupportedPrograms = normalizedPrograms.filter(
+    (program) => !PROGRAM_RELEASE_DOCUMENT_FAMILIES[program],
+  );
+  const required = unsupportedPrograms.length
+    ? ["UNSUPPORTED_PROGRAM_DOCUMENT_PROFILE"]
+    : [...new Set(
+        normalizedPrograms.flatMap(
+          (program) => PROGRAM_RELEASE_DOCUMENT_FAMILIES[program],
+        ),
+      )];
   return gapRows(
     stateCode,
     documents,
-    RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES,
+    required,
     "RELEASE_CRITICAL_DOCUMENT_NOT_CAPTURED",
   );
 }

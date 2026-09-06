@@ -8,7 +8,7 @@ import { promisify } from "node:util";
 import { extractDeclaredEffectiveDate } from "../src/lib/nationwide-state-source-evidence-pipeline.mjs";
 import {
   classifyDocument,
-  coverageGaps,
+  releaseCoverageGaps,
   extractOfficialLinks,
   selectCurrentDocuments,
 } from "../src/lib/state-validation-document-families.mjs";
@@ -348,7 +348,7 @@ async function worker() {
       blocked_count: documents.length - captured.length,
       discovery_failures: discovery.discoveryFailures,
       documents,
-      coverage_gaps: coverageGaps(
+      coverage_gaps: releaseCoverageGaps(
         jurisdiction.state_code,
         captured.map((item) => ({ families: item.document_families })),
       ),
@@ -385,7 +385,7 @@ const states = [...results.reduce((byState, item) => {
   const captured = item.documents.filter((document) => document.capture_status === "captured_unvalidated");
   return {
     ...item,
-    coverage_gaps: coverageGaps(
+    coverage_gaps: releaseCoverageGaps(
       item.state_code,
       captured.map((document) => ({ families: document.document_families })),
     ),
@@ -413,7 +413,8 @@ const manifest = {
   schema_version: "2026-08-29.2",
   captured_at: new Date().toISOString(),
   state_count: states.length,
-  required_document_families: [
+  required_document_families: ["LIHTC_CONTROLLING_AUTHORITY"],
+  discoverable_document_families: [
     "COMPLIANCE_RULE_CHANGES",
     "COMPLIANCE_GUIDEBOOK",
     "INCOME_LIMITS",

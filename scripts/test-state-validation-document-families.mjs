@@ -111,29 +111,72 @@ test("reports every unpublished or undiscovered intake family as a fail-closed g
   assert.ok(gaps.every((gap) => gap.compliance_activation_allowed === false));
 });
 
-test("release coverage requires compliance evidence but not training publication", () => {
+test("LIHTC release coverage requires controlling state authority, not optional publications", () => {
   const releaseComplete = [
     {
       families: [
+        "LIHTC_CONTROLLING_AUTHORITY",
         "COMPLIANCE_GUIDEBOOK",
-        "INCOME_LIMITS",
-        "RENT_LIMITS",
-        "UTILITY_ALLOWANCE",
-        "COMPLIANCE_FORMS",
       ],
     },
   ];
   assert.deepEqual(releaseCoverageGaps("WV", releaseComplete), []);
-  assert.equal(RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES.length, 5);
+  assert.deepEqual(
+    RELEASE_CRITICAL_STATE_DOCUMENT_FAMILIES,
+    ["LIHTC_CONTROLLING_AUTHORITY"],
+  );
 
   const incomplete = releaseCoverageGaps("WV", [
-    { families: ["COMPLIANCE_GUIDEBOOK", "COMPLIANCE_FORMS"] },
+    {
+      families: [
+        "INCOME_LIMITS",
+        "RENT_LIMITS",
+        "UTILITY_ALLOWANCE",
+        "COMPLIANCE_FORMS",
+        "COMPLIANCE_TRAINING",
+      ],
+    },
   ]);
   assert.deepEqual(
     incomplete.map((gap) => gap.document_family),
-    ["INCOME_LIMITS", "RENT_LIMITS", "UTILITY_ALLOWANCE"],
+    ["LIHTC_CONTROLLING_AUTHORITY"],
   );
   assert.ok(incomplete.every((gap) => gap.compliance_activation_allowed === false));
+});
+
+test("recognizes current authority aliases and rejects nonoperative versions", () => {
+  for (const label of [
+    "LIHTC Compliance Monitoring Plan",
+    "2026 Qualified Allocation Plan",
+    "2026 Capital Programs Manual",
+  ]) {
+    assert.ok(
+      classifyDocument({ label, url: "https://agency.gov/current.pdf" })
+        .families.includes("LIHTC_CONTROLLING_AUTHORITY"),
+      label,
+    );
+  }
+  for (const label of [
+    "Draft 2027 Qualified Allocation Plan",
+    "Proposed LIHTC Compliance Manual",
+    "Archived Compliance Monitoring Plan",
+    "Superseded Tax Credit Compliance Manual",
+  ]) {
+    assert.equal(
+      classifyDocument({ label, url: "https://agency.gov/document.pdf" })
+        .families.includes("LIHTC_CONTROLLING_AUTHORITY"),
+      false,
+      label,
+    );
+  }
+});
+
+test("unsupported program document profiles remain fail closed", () => {
+  assert.deepEqual(
+    releaseCoverageGaps("VA", [], { programs: ["SECTION_8"] })
+      .map((gap) => gap.document_family),
+    ["UNSUPPORTED_PROGRAM_DOCUMENT_PROFILE"],
+  );
 });
 
 test("TN/TX targeted capture is allowlisted, exact-byte hashed, and cannot self-activate", () => {
