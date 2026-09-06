@@ -55,6 +55,7 @@ jobs:
           node --test scripts/test-income-release-identity.mjs | tee /tmp/income-release-tests.txt
           node --test scripts/test-tic-spatial-extraction.mjs scripts/test-tic-native-form-extraction.mjs scripts/test-command-center-certification-actions.mjs scripts/test-standalone-supporting-document-upload.mjs scripts/test-controlled-mass-portfolio-intake.mjs scripts/test-onboarding-certification-separation.mjs scripts/test-certification-task-workflow.mjs | tee /tmp/income-certification-tests.txt
           node --test scripts/test-onboarding-handoff.mjs | tee /tmp/income-onboarding-tests.txt
+          node --experimental-strip-types --test scripts/test-training.mjs
           node scripts/test-ocr-sidecar.mjs
           deno check --config supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts
       - name: Include source identity in Vite and Nitro public asset manifest
@@ -118,3 +119,4 @@ jobs:
             income-live-verification.json
           if-no-files-found: warn
           retention-days: 14
+
