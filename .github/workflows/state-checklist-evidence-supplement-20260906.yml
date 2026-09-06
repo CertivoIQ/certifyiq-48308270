@@ -1,0 +1,88 @@
+name: State checklist evidence supplements 20260906
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/capture-state-checklist-supplement-20260906.py
+      - .github/workflows/state-checklist-evidence-supplement-20260906.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: checklist-evidence-supplement-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+jobs:
+  partition-existing-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: state-checklist-original-pdfs-20260906
+          path: evidence
+          run-id: 34013717716
+          github-token: ${{ github.token }}
+      - name: Partition exact PDFs without altering bytes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil,json,hashlib
+          root=Path('evidence');out=Path('partitions');out.mkdir()
+          files=sorted(root.rglob('*.pdf'));group=1;size=0
+          for p in files:
+              if size+p.stat().st_size>180*1024*1024:group+=1;size=0
+              rel=p.relative_to(root);q=out/('part-'+str(group))/rel;q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q);size+=p.stat().st_size
+          for p in root.rglob('*'):
+              if p.is_file() and p.suffix in ('.txt','.json','.csv'):
+                  q=Path('readable')/p.relative_to(root);q.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,q)
+          print('PARTITIONS',group,'PDFS',len(files))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-readable-evidence
+          path: readable/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-pdf-part-1
+          path: partitions/part-1/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-pdf-part-2
+          path: partitions/part-2/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-pdf-part-3
+          path: partitions/part-3/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-pdf-part-4
+          path: partitions/part-4/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-pdf-part-5
+          path: partitions/part-5/
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-pdf-part-6
+          path: partitions/part-6/
+          retention-days: 90
+  supplemental-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y poppler-utils)
+      - run: python3 scripts/capture-state-checklist-supplement-20260906.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: state-checklist-supplement-original-pdfs
+          path: artifacts/state-checklist-supplement-20260906/
+          retention-days: 90
+          if-no-files-found: error
