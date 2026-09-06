@@ -1,0 +1,36 @@
+name: Apply TIC source-field parity patches
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tic-source-field-parity-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply parity patches
+        run: node scripts/patch-tic-source-field-parity.mjs
+      - name: Run focused parity regressions
+        run: |
+          node --test scripts/test-tic-spatial-extraction.mjs
+          node --test scripts/test-tic-native-form-extraction.mjs
+      - name: Commit source changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'CertivoIQ Release Bot'
+          git config user.email 'release-bot@certivoiq.com'
+          git add src/lib/tic-field-registry.ts src/components/certivoiq-tic-review-form.tsx src/lib/tic-pdf-form-values.ts src/lib/tic-spatial-extraction.mjs scripts/test-tic-spatial-extraction.mjs scripts/test-tic-native-form-extraction.mjs
+          git diff --cached --quiet && { echo 'No changes to commit'; exit 0; }
+          git commit -m 'Complete source TIC field parity'
+          git push origin HEAD:main
