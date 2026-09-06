@@ -1,0 +1,41 @@
+name: Native Income Calculator integration
+on:
+  push:
+    branches: ['feat/native-income-calculator']
+    paths:
+      - '.github/workflows/native-income-calculator-install.yml'
+      - 'scripts/install-native-income-calculator.mjs'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/native-income-calculator
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Materialize reviewed calculator source and navigation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/install-native-income-calculator.mjs
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Native calculator regression tests
+        run: node --test scripts/test-native-income-calculator.mjs
+      - name: Build application and generate authenticated route
+        run: npm run build
+      - name: Typecheck application
+        run: npx tsc --noEmit
+      - name: Commit tested implementation to feature branch
+        run: |
+          git config user.name 'CertivoIQ Release Bot'
+          git config user.email 'release-bot@certivoiq.com'
+          git add docs/native-income-calculator.md scripts/test-native-income-calculator.mjs src/components/income-calculator.tsx src/components/app-shell.tsx src/routes/_authenticated/income-calculator.tsx src/routeTree.gen.ts supabase/functions/_shared/income-calculator-engine.ts supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts supabase/migrations/20260906025632_native_income_calculator_immutable_records.sql
+          git diff --cached --quiet && exit 0
+          git commit -m 'Build native program-selectable Income Calculator with immutable review snapshots'
+          git push origin HEAD:feat/native-income-calculator
