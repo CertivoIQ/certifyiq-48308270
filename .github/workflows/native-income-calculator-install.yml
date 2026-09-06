@@ -25,10 +25,26 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.4.5
-      - name: Materialize reviewed calculator source and navigation
+      - name: Materialize candidate source only when missing
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/install-native-income-calculator.mjs
+        run: |
+          test -f src/components/income-calculator.tsx || node scripts/install-native-income-calculator.mjs
+      - name: Preserve candidate source on isolated feature branch for repair
+        run: |
+          git config user.name 'CertivoIQ Release Bot'
+          git config user.email 'release-bot@certivoiq.com'
+          git add docs/native-income-calculator.md scripts/test-native-income-calculator.mjs src/components/income-calculator.tsx src/components/app-shell.tsx src/routes/_authenticated/income-calculator.tsx supabase/functions/_shared/income-calculator-engine.ts supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts supabase/migrations/20260906025632_native_income_calculator_immutable_records.sql
+          if ! git diff --cached --quiet; then
+            git commit -m 'Preserve native calculator candidate for integration repair; not a release'
+            git push origin HEAD:feat/native-income-calculator
+          fi
+          git archive --format=tar HEAD -o /tmp/native-income-calculator-source.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-income-calculator-source
+          path: /tmp/native-income-calculator-source.tar
+          retention-days: 1
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
       - name: Native calculator regression tests
@@ -37,38 +53,11 @@ jobs:
         run: deno check --config supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts
       - name: Build application and generate authenticated route
         run: bun run build
-      - name: Verify no new application type errors against unchanged main
-        shell: bash
-        run: |
-          set -euo pipefail
-          set +e
-          node_modules/.bin/tsc --noEmit --pretty false > /tmp/income-feature-types.txt 2>&1
-          feature_status=$?
-          set -e
-          if [ "$feature_status" -eq 0 ]; then
-            echo 'Application typecheck passed with zero errors.'
-            exit 0
-          fi
-          if [ "$feature_status" -ne 2 ]; then cat /tmp/income-feature-types.txt; exit "$feature_status"; fi
-          git fetch --no-tags --depth=1 origin 3a662a690d7e02bf5cd6fda16149c964864c0cd4
-          git worktree add --detach /tmp/certivoiq-income-baseline 3a662a690d7e02bf5cd6fda16149c964864c0cd4
-          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/certivoiq-income-baseline/node_modules
-          set +e
-          (cd /tmp/certivoiq-income-baseline && node_modules/.bin/tsc --noEmit --pretty false) > /tmp/income-baseline-types.txt 2>&1
-          baseline_status=$?
-          set -e
-          cat /tmp/income-feature-types.txt
-          test "$baseline_status" -eq 2
-          node -e "const fs=require('node:fs');const base=new Set(fs.readFileSync('/tmp/income-baseline-types.txt','utf8').trim().split('\n'));const added=fs.readFileSync('/tmp/income-feature-types.txt','utf8').trim().split('\n').filter(x=>!base.has(x));if(added.length){console.error(added.join('\n'));process.exit(1)}"
-          printf "%s\n" "src/lib/tic-pdf-fill-core.ts(156,17): error TS2345: Argument of type 'StandardFonts' is not assignable to parameter of type 'PDFName'." > /tmp/income-known-baseline-types.txt
-          diff -u /tmp/income-known-baseline-types.txt /tmp/income-feature-types.txt
-          echo '::warning::One independently reproduced pre-existing TIC type error; calculator adds zero new errors. Full application build and calculator/server tests passed.'
-          printf '\n## Application typecheck baseline\nUnchanged main independently reproduces the existing StandardFonts/PDFName error in src/lib/tic-pdf-fill-core.ts:156. The full build removes two stale generated-route diagnostics. This feature adds no TypeScript errors. The full application build, strict Edge Function check, and 75 calculator tests passed.\n' >> "$GITHUB_STEP_SUMMARY"
-      - name: Commit tested implementation to feature branch
-        run: |
-          git config user.name 'CertivoIQ Release Bot'
-          git config user.email 'release-bot@certivoiq.com'
-          git add docs/native-income-calculator.md scripts/test-native-income-calculator.mjs src/components/income-calculator.tsx src/components/app-shell.tsx src/routes/_authenticated/income-calculator.tsx src/routeTree.gen.ts supabase/functions/_shared/income-calculator-engine.ts supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts supabase/migrations/20260906025632_native_income_calculator_immutable_records.sql
-          git diff --cached --quiet && exit 0
-          git commit -m 'Build native program-selectable Income Calculator with immutable review snapshots'
-          git push origin HEAD:feat/native-income-calculator
+      - name: Full application diagnostics (no suppression)
+        run: node_modules/.bin/tsc --noEmit --pretty false > /tmp/calculator-full-types.txt 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-income-calculator-diagnostics
+          path: /tmp/calculator-full-types.txt
+          retention-days: 1
