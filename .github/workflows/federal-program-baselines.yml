@@ -1,0 +1,29 @@
+name: Federal Program Baselines
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/capture-federal-program-baselines.mjs
+      - .github/workflows/federal-program-baselines.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Capture exact HUD federal program baselines
+        run: node scripts/capture-federal-program-baselines.mjs
+      - name: Upload exact HUD baseline evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: federal-program-baselines
+          path: artifacts/federal-program-baselines.json
+          if-no-files-found: error
+          retention-days: 30
