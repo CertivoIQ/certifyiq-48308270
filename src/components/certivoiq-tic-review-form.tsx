@@ -267,7 +267,7 @@ export function CertivoIqTicReviewForm(props: Props) {
                 <Choice field="certification_type" option="Recertification" label="Recertification" {...props} />
                 <Choice field="certification_type" option="Other" label="Other" {...props} />
               </div>
-              {(values.certification_type ?? "").toLowerCase() === "other" ? (
+              {(values['certification_type'] ?? "").toLowerCase() === "other" ? (
                 <div className="mt-2 max-w-md"><Field field="other_certification_type" {...props} compact /></div>
               ) : null}
             </div>

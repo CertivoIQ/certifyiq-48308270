@@ -9,19 +9,19 @@ export type PortfolioIntakeRow = {
   propertyExternalId: string;
   propertyName: string;
   state: string;
-  propertyAddress?: string;
-  city?: string;
-  postalCode?: string;
+  propertyAddress?: string | undefined;
+  city?: string | undefined;
+  postalCode?: string | undefined;
   unitExternalId: string;
   unitNumber: string;
-  bedrooms?: number;
+  bedrooms?: number | undefined;
   tenantExternalId: string;
   householdName: string;
-  moveInDate?: string;
+  moveInDate?: string | undefined;
   certificationType: "INITIAL" | "ANNUAL" | "INTERIM";
-  certificationEffectiveDate?: string;
+  certificationEffectiveDate?: string | undefined;
   programCodes: string[];
-  documentFileName?: string;
+  documentFileName?: string | undefined;
 };
 
 function parseCsvRecords(text: string) {

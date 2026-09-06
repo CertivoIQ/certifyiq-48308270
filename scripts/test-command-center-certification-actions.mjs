@@ -28,7 +28,7 @@ test("each pending certification exposes attach and review actions from command 
 
 test("review route validates command center action and opens the exact certification", () => {
   assert.match(filesRoute, /action\?: "support" \| "review"/);
-  assert.match(filesRoute, /search\.action === "support" \|\| search\.action === "review"/);
+  assert.match(filesRoute, /search\[\x27action\x27\] === "support" \|\| search\[\x27action\x27\] === "review"/);
   assert.match(filesRoute, /const \{ item, action \} = Route\.useSearch\(\)/);
   assert.match(filesRoute, /CertificationReviewPanel initialItemId=\{item\} initialAction=\{action\}/);
 

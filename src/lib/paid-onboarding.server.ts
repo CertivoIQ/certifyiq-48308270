@@ -1,13 +1,13 @@
 import { assertLiveBillingConfiguration } from "@/lib/billing-config.server";
 import type { StripeEnv } from "@/lib/stripe.server";
 
-type PaidOnboardingEnvironment = Pick<
+type PaidOnboardingEnvironment = Partial<Pick<
   NodeJS.ProcessEnv,
   | "PAID_ONBOARDING_ENABLED"
   | "PAYMENTS_LIVE_VERIFIED"
   | "LIVE_BILLING_VERIFICATION_ENABLED"
   | "LIVE_BILLING_VERIFIER_USER_ID"
->;
+>>;
 
 type PaidOnboardingRequest = { actorUserId?: string };
 

@@ -1,3 +1,4 @@
+import { previewEvidenceValue } from "@/lib/preview-evidence-value";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -146,7 +147,7 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
 export const listCertificationTenantDestinations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data, error } = await db
       .from("portfolio_tenant_profiles")
       .select("id, household_name, property_id, unit_id, certification_type, certification_effective_date, portfolio_units(unit_number), portfolio_properties(name)")
@@ -154,7 +155,7 @@ export const listCertificationTenantDestinations = createServerFn({ method: "GET
       .order("household_name")
       .limit(2000);
     if (error) throw error;
-    return (data ?? []).map((profile: any) => ({
+    return (data ?? []).map((profile) => ({
       id: profile.id,
       householdName: profile.household_name,
       propertyId: profile.property_id,
@@ -183,7 +184,7 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
       return {
         facts: result.facts.map((fact) => ({
           field: fact.field,
-          value: fact.value,
+          value: previewEvidenceValue(fact.value),
           page: fact.page,
           snippet: fact.snippet,
           confidence: fact.confidence,

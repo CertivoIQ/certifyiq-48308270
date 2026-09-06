@@ -203,7 +203,8 @@ function createHighContrastCanvas(source: HTMLCanvasElement): HTMLCanvasElement 
     const green = Number(pixels[index + 1] ?? 255);
     const blue = Number(pixels[index + 2] ?? 255);
     const luminance = Math.round((0.299 * red + 0.587 * green + 0.114 * blue) * alpha + 255 * (1 - alpha));
-    histogram[Math.max(0, Math.min(255, luminance))] += 1;
+    const bin = Math.max(0, Math.min(255, luminance));
+    histogram[bin] = (histogram[bin] ?? 0) + 1;
   }
 
   const threshold = otsuThreshold(histogram, Math.max(1, pixels.length / 4));

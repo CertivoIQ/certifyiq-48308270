@@ -8,14 +8,14 @@ import { Building2 } from "lucide-react";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type FilesSearch = {
-  item?: string;
-  action?: "support" | "review";
+  item?: string | undefined;
+  action?: "support" | "review" | undefined;
 };
 
 export const Route = createFileRoute("/files/")({
   validateSearch: (search: Record<string, unknown>): FilesSearch => ({
-    item: typeof search.item === "string" && UUID_PATTERN.test(search.item) ? search.item : undefined,
-    action: search.action === "support" || search.action === "review" ? search.action : undefined,
+    item: typeof search['item'] === "string" && UUID_PATTERN.test(search['item']) ? search['item'] : undefined,
+    action: search['action'] === "support" || search['action'] === "review" ? search['action'] : undefined,
   }),
   head: () => ({
     meta: [

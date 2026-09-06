@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -165,6 +166,8 @@ export function PortfolioOnboardingPanel() {
           <div className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${progressPercent}%` }} />
         </div>
       </div>
+
+      <div className="mt-4"><Link to="/launchpad" className="text-sm font-medium text-primary underline">Return to setup checklist</Link></div>
 
       {message ? <p className="mt-3 rounded-lg border bg-background p-3 text-sm" role="status">{message}</p> : null}
 

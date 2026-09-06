@@ -43,7 +43,8 @@ export function PhaDashboard() {
   const m=metrics.data??EMPTY;
   const hotma103 = profile.derived_overlays.includes("hotma_103");
   const selectedProgram = profile.pha_programs.find((program) => ENGINE_PROGRAMS[program]);
-  const implementationRoute = selectedProgram && profile.pha_hotma_cohort ? classifyPhaHotmaImplementation({module_id:"PHA-HOTMA-FULL-SECTIONS-102-104",program:ENGINE_PROGRAMS[selectedProgram],program_applicability_validated:true,pha_cohort:profile.pha_hotma_cohort,transaction_effective_date:"2027-01-01",controlled_source_release_approved:true,current_rule_version_validated:true,source_status_conflict:false,hud_50058_reporting_path:profile.hud_50058_reporting_path??undefined}) : null;
+  const engineProgram = selectedProgram ? ENGINE_PROGRAMS[selectedProgram] : undefined;
+  const implementationRoute = engineProgram && profile.pha_hotma_cohort ? classifyPhaHotmaImplementation({module_id:"PHA-HOTMA-FULL-SECTIONS-102-104",program:engineProgram,program_applicability_validated:true,pha_cohort:profile.pha_hotma_cohort,transaction_effective_date:"2027-01-01",controlled_source_release_approved:true,current_rule_version_validated:true,source_status_conflict:false,...(profile.hud_50058_reporting_path ? {hud_50058_reporting_path:profile.hud_50058_reporting_path} : {})}) : null;
   const futureGuidance = implementationRoute?.reason_code === "PHA_HOTMA_DEADLINE_PENDING_HUD_GUIDANCE";
   const cohortConfigured = Boolean(profile.pha_hotma_cohort && profile.hud_50058_reporting_path);
   const readinessHint = !cohortConfigured ? "Complete PHA cohort and HUD-50058 routing setup" : futureGuidance ? "HUD cohort-specific deadline guidance pending" : "Standard PIH implementation route configured";

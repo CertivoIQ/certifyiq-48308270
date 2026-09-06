@@ -279,8 +279,8 @@ async function updateCrm(
     updated_at: now,
   };
   if (state === "active") {
-    fields.stage = "won";
-    fields.plan =
+    fields['stage'] = "won";
+    fields['plan'] =
       invoiceMetadata(invoice)["license_kind"] === "pha"
         ? "CertivoIQ PHA Annual License"
         : "CertivoIQ Multifamily Enterprise Annual License";

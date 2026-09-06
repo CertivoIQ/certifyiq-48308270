@@ -25,8 +25,8 @@ const VALIDATION_STATUSES = new Set([
 
 export const Route = createFileRoute("/_authenticated/state-rule-validation")({
   validateSearch: (search: Record<string, unknown>) => {
-    const requestedState = typeof search.state === "string" ? search.state.toUpperCase() : "";
-    const requestedStatus = typeof search.status === "string" ? search.status : "";
+    const requestedState = typeof search['state'] === "string" ? search['state'].toUpperCase() : "";
+    const requestedStatus = typeof search['status'] === "string" ? search['status'] : "";
     return {
       state: /^(?:[A-Z]{2}|ALL)$/.test(requestedState) ? requestedState : undefined,
       status: VALIDATION_STATUSES.has(requestedStatus) ? requestedStatus : undefined,
@@ -197,7 +197,7 @@ function SourceReviewCard({
   onDraft: (draft: Draft) => void;
   onDecision: (decision: "captured_unvalidated" | "verified" | "blocked" | "rejected") => void;
   busy: boolean;
-  inheritedByState?: string;
+  inheritedByState?: string | undefined;
 }) {
   const excludedRedundant =
     source.agent_verification_status === "rejected" &&
@@ -290,7 +290,7 @@ function SourceReviewCard({
                 id={`notes-${source.id}`}
                 rows={3}
                 maxLength={4000}
-                value={draft.notes}
+                value={draft['notes']}
                 placeholder="Record what was checked and why this decision is supportable. Minimum 10 characters."
                 onChange={(event) => onDraft({ ...draft, notes: event.target.value })}
               />
@@ -368,7 +368,7 @@ function StateRuleValidationWorkspace() {
         p_decision: decision,
         p_source_sha256: draft.sha256 || null,
         p_retrieved_at: draft.retrievedAt ? new Date(draft.retrievedAt).toISOString() : null,
-        p_notes: draft.notes,
+        p_notes: draft['notes'],
         p_effective_date: draft.effectiveDate || null,
         p_supersession_notes: draft.supersessionNotes || null,
       });
@@ -800,7 +800,7 @@ function StateRuleValidationWorkspace() {
                   <option value="US">Federal shared — all 50 states</option>
                   {statePacks.map((pack) => (
                     <option key={pack.id} value={pack.state_code}>
-                      {pack.state_code} — {labelFor(pack.status)}
+                      {pack.state_code} — {labelFor(pack['status'])}
                     </option>
                   ))}
                 </select>
@@ -853,9 +853,9 @@ function StateRuleValidationWorkspace() {
                 const draft = drafts[source.id] ?? {
                   sha256: source.source_sha256 ?? "",
                   retrievedAt: source.retrieved_at ? source.retrieved_at.slice(0, 16) : "",
-                  notes: typeof existing.notes === "string" ? existing.notes : "",
-                  effectiveDate: typeof existing.effective_date === "string" ? existing.effective_date : "",
-                  supersessionNotes: typeof existing.supersession_notes === "string" ? existing.supersession_notes : "",
+                  notes: typeof existing['notes'] === "string" ? existing['notes'] : "",
+                  effectiveDate: typeof existing['effective_date'] === "string" ? existing['effective_date'] : "",
+                  supersessionNotes: typeof existing['supersession_notes'] === "string" ? existing['supersession_notes'] : "",
                 };
                 return (
                   <SourceReviewCard

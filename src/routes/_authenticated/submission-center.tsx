@@ -113,8 +113,9 @@ function SubmissionCenterPage() {
 
         setDestinations(result);
 
-        if (result.length) {
-          setAgencyId(result[0].id);
+        const first = result[0];
+        if (first) {
+          setAgencyId(first.id);
         }
       } catch (error) {
         if (!cancelled) {
@@ -219,7 +220,7 @@ function SubmissionCenterPage() {
           certificationId: selectedItemId,
           agencyId,
           propertyId: propertyId.trim(),
-          propertyName: propertyName.trim() || undefined,
+          ...(propertyName.trim() ? { propertyName: propertyName.trim() } : {}),
           program: program.trim(),
           reportingPeriod: reportingPeriod.trim(),
         },

@@ -178,7 +178,7 @@ export function CertificationUploadPanel() {
       setProgressPercent(96);
       setProgressLabel("Preparing extracted fields for your review…");
       const preview = await extractPreview({ data: { source } });
-      if ("error" in preview && preview.error) throw new Error(preview.error);
+      if ("error" in preview) throw new Error(preview.error || "The certification extraction could not be completed.");
 
       const facts = preview.facts as PreviewFact[];
       setFieldValues(Object.fromEntries(facts.map((fact) => [fact.field, fieldText(fact.value)])));

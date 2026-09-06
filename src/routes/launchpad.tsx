@@ -1,3 +1,4 @@
+import { verifySavedOrganizationProfile } from "@/lib/organization-onboarding";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, ExternalLink, LifeBuoy, Loader2, Rocket, UploadCloud } from "lucide-react";
@@ -48,13 +49,29 @@ function StepDestinationButton({ stepId }: { stepId: number }) {
 
   switch (stepId) {
     case 2:
-      return <Button variant="outline" asChild><Link to="/workspace-setup">{content}</Link></Button>;
+      return (
+        <Button variant="outline" asChild>
+          <Link to="/workspace-setup">{content}</Link>
+        </Button>
+      );
     case 3:
-      return <Button variant="outline" asChild><Link to="/properties">{content}</Link></Button>;
+      return (
+        <Button variant="outline" asChild>
+          <Link to="/properties">{content}</Link>
+        </Button>
+      );
     case 4:
-      return <Button variant="outline" asChild><Link to="/upload-certification">{content}</Link></Button>;
+      return (
+        <Button variant="outline" asChild>
+          <Link to="/upload-certification">{content}</Link>
+        </Button>
+      );
     case 5:
-      return <Button variant="outline" asChild><Link to="/account/security">{content}</Link></Button>;
+      return (
+        <Button variant="outline" asChild>
+          <Link to="/account/security">{content}</Link>
+        </Button>
+      );
     default:
       return null;
   }
@@ -66,6 +83,8 @@ function LaunchPadPage() {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [completedAt, setCompletedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,86 +92,100 @@ function LaunchPadPage() {
     let cancelled = false;
 
     async function loadProgress() {
-      setLoading(true);
-      setError(null);
+      try {
+        setLoading(true);
+        setHasLoadedProgress(false);
+        setError(null);
 
-      const { data, error: loadError } = await supabase
-        .from("customer_onboarding_progress")
-        .select("current_step, completed_steps, completed_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
+        const { data, error: loadError } = await supabase
+          .from("customer_onboarding_progress")
+          .select("current_step, completed_steps, completed_at")
+          .eq("user_id", user.id)
+          .abortSignal(AbortSignal.timeout(20000))
+          .maybeSingle();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (loadError) {
-        setError("Your onboarding progress could not be loaded.");
-        setLoading(false);
-        return;
-      }
-
-      if (data) {
-        const normalized = normalizeOnboardingProgress({
-          currentStep: data.current_step,
-          completedSteps: data.completed_steps,
-          completedAt: data.completed_at,
-          totalSteps: LAUNCHPAD_STEPS.length,
-        });
-        const storedSteps = data.completed_steps ?? [];
-        const needsRepair =
-          normalized.currentStep !== data.current_step ||
-          normalized.completedAt !== data.completed_at ||
-          normalized.completedSteps.length !== storedSteps.length ||
-          normalized.completedSteps.some((id, index) => id !== storedSteps[index]);
-
-        if (needsRepair) {
-          const { error: repairError } = await supabase
-            .from("customer_onboarding_progress")
-            .upsert(
-              {
-                user_id: user.id,
-                current_step: normalized.currentStep,
-                completed_steps: normalized.completedSteps,
-                completed_at: normalized.completedAt,
-              },
-              { onConflict: "user_id" },
-            );
-
-          if (cancelled) return;
-          if (repairError) {
-            setError("Your saved onboarding progress is inconsistent and could not be repaired.");
-            setLoading(false);
-            return;
-          }
+        if (loadError) {
+          setError("Your onboarding progress could not be loaded.");
+          setLoading(false);
+          return;
         }
 
-        setStep(normalized.currentStep);
-        setCompletedSteps(normalized.completedSteps);
-        setCompletedAt(normalized.completedAt);
-        setLoading(false);
-        return;
-      }
+        if (data) {
+          const normalized = normalizeOnboardingProgress({
+            currentStep: data.current_step,
+            completedSteps: data.completed_steps,
+            completedAt: data.completed_at,
+            totalSteps: LAUNCHPAD_STEPS.length,
+          });
+          const storedSteps = data.completed_steps ?? [];
+          const needsRepair =
+            normalized.currentStep !== data.current_step ||
+            normalized.completedAt !== data.completed_at ||
+            normalized.completedSteps.length !== storedSteps.length ||
+            normalized.completedSteps.some((id, index) => id !== storedSteps[index]);
 
-      const { error: createError } = await supabase
-        .from("customer_onboarding_progress")
-        .insert({
+          if (needsRepair) {
+            const { error: repairError } = await supabase
+              .from("customer_onboarding_progress")
+              .upsert(
+                {
+                  user_id: user.id,
+                  current_step: normalized.currentStep,
+                  completed_steps: normalized.completedSteps,
+                  completed_at: normalized.completedAt,
+                },
+                { onConflict: "user_id" },
+              );
+
+            if (cancelled) return;
+            if (repairError) {
+              setError("Your saved onboarding progress is inconsistent and could not be repaired.");
+              setLoading(false);
+              return;
+            }
+          }
+
+          setHasLoadedProgress(true);
+          setStep(normalized.currentStep);
+          setCompletedSteps(normalized.completedSteps);
+          setCompletedAt(normalized.completedAt);
+          setLoading(false);
+          return;
+        }
+
+        const { error: createError } = await supabase.from("customer_onboarding_progress").insert({
           user_id: user.id,
           current_step: 1,
           completed_steps: [],
           completed_at: null,
         });
 
-      if (cancelled) return;
-      if (createError) {
-        setError("Your onboarding checklist could not be started.");
+        if (cancelled) return;
+        if (createError) {
+          setError("Your onboarding checklist could not be started. Reload your saved progress to retry.");
+        } else {
+          setHasLoadedProgress(true);
+        }
+        setLoading(false);
+      } catch (cause) {
+        if (!cancelled)
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Your onboarding progress could not be loaded. Refresh to retry.",
+          );
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     }
 
     void loadProgress();
     return () => {
       cancelled = true;
     };
-  }, [user.id]);
+  }, [user.id, loadAttempt]);
 
   async function saveProgress(
     nextStep: number,
@@ -162,46 +195,66 @@ function LaunchPadPage() {
     setSaving(true);
     setError(null);
 
-    const { error: saveError } = await supabase
-      .from("customer_onboarding_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          current_step: nextStep,
-          completed_steps: nextCompletedSteps,
-          completed_at: nextCompletedAt,
-        },
-        { onConflict: "user_id" },
+    try {
+      const { data: saved, error: saveError } = await supabase
+        .from("customer_onboarding_progress")
+        .upsert(
+          {
+            user_id: user.id,
+            current_step: nextStep,
+            completed_steps: nextCompletedSteps,
+            completed_at: nextCompletedAt,
+          },
+          { onConflict: "user_id" },
+        )
+        .select("current_step,completed_steps,completed_at")
+        .abortSignal(AbortSignal.timeout(20000))
+        .single();
+      if (saveError || !saved)
+        throw new Error("Your progress was not saved. Please try again before leaving this page.");
+      setStep(saved.current_step);
+      setCompletedSteps(saved.completed_steps);
+      setCompletedAt(saved.completed_at);
+      return true;
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Your progress was not saved. Please retry.",
       );
-
-    if (saveError) {
-      setError("Your progress was not saved. Please try again before leaving this page.");
-      setSaving(false);
       return false;
+    } finally {
+      setSaving(false);
     }
-
-    setStep(nextStep);
-    setCompletedSteps(nextCompletedSteps);
-    setCompletedAt(nextCompletedAt);
-    setSaving(false);
-    return true;
   }
 
   async function validateCurrentStep(currentId: number) {
+    if (currentId === 2) await verifySavedOrganizationProfile(user.id);
     if (currentId === 3) {
       const [properties, units, tenants] = await Promise.all([
-        supabase.from("portfolio_properties").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("portfolio_units").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("portfolio_tenant_profiles").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase
+          .from("portfolio_properties")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        supabase
+          .from("portfolio_units")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        supabase
+          .from("portfolio_tenant_profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
       ]);
 
       if (properties.error || units.error || tenants.error) {
-        setError("CertivoIQ could not verify the portfolio onboarding task. Open the setup workspace and try again.");
+        setError(
+          "CertivoIQ could not verify the portfolio onboarding task. Open the setup workspace and try again.",
+        );
         return false;
       }
 
       if (!properties.count || !units.count || !tenants.count) {
-        setError("Complete Portfolio & Tenant Onboarding first. At least one property, unit, and tenant profile must be loaded before this task can be completed.");
+        setError(
+          "Complete Portfolio & Tenant Onboarding first. At least one property, unit, and tenant profile must be loaded before this task can be completed.",
+        );
         return false;
       }
     }
@@ -214,12 +267,16 @@ function LaunchPadPage() {
         .eq("status", "completed");
 
       if (certification.error) {
-        setError("CertivoIQ could not verify the certification upload task. Open Upload Certification & OCR and try again.");
+        setError(
+          "CertivoIQ could not verify the certification upload task. Open Upload Certification & OCR and try again.",
+        );
         return false;
       }
 
       if (!certification.count) {
-        setError("Upload at least one certification in Upload Certification & OCR before completing this onboarding task.");
+        setError(
+          "Upload at least one certification in Upload Certification & OCR before completing this onboarding task.",
+        );
         return false;
       }
     }
@@ -228,25 +285,36 @@ function LaunchPadPage() {
   }
 
   async function continueSetup() {
+    if (saving || !hasLoadedProgress) return;
     const currentId = LAUNCHPAD_STEPS[step - 1]!.id;
     setSaving(true);
     setError(null);
-    const valid = await validateCurrentStep(currentId);
-    if (!valid) {
+    try {
+      const valid = await validateCurrentStep(currentId);
+      if (!valid) {
+        setSaving(false);
+        return;
+      }
+
+      const nextCompletedSteps = Array.from(new Set([...completedSteps, currentId])).sort(
+        (a, b) => a - b,
+      );
+      const finishing = step === LAUNCHPAD_STEPS.length;
+
+      await saveProgress(
+        finishing ? step : step + 1,
+        nextCompletedSteps,
+        finishing ? new Date().toISOString() : completedAt,
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The current step could not be verified. Please retry.",
+      );
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const nextCompletedSteps = Array.from(
-      new Set([...completedSteps, currentId]),
-    ).sort((a, b) => a - b);
-    const finishing = step === LAUNCHPAD_STEPS.length;
-
-    await saveProgress(
-      finishing ? step : step + 1,
-      nextCompletedSteps,
-      finishing ? new Date().toISOString() : completedAt,
-    );
   }
 
   async function goBack() {
@@ -255,11 +323,7 @@ function LaunchPadPage() {
       completedSteps,
       totalSteps: LAUNCHPAD_STEPS.length,
     });
-    await saveProgress(
-      previous.currentStep,
-      previous.completedSteps,
-      previous.completedAt,
-    );
+    await saveProgress(previous.currentStep, previous.completedSteps, previous.completedAt);
   }
 
   async function restartSetup() {
@@ -268,10 +332,7 @@ function LaunchPadPage() {
 
   if (loading) {
     return (
-      <AppShell
-        title="CertivoIQ LaunchPad"
-        subtitle="Self-directed account setup"
-      >
+      <AppShell title="CertivoIQ LaunchPad" subtitle="Self-directed account setup">
         <Panel bodyClassName="flex items-center gap-3 p-6">
           <Loader2 className="size-5 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">Loading your saved onboarding progress…</p>
@@ -282,9 +343,7 @@ function LaunchPadPage() {
 
   const done = completedAt !== null;
   const current = LAUNCHPAD_STEPS[Math.min(step - 1, LAUNCHPAD_STEPS.length - 1)]!;
-  const pct = done
-    ? 100
-    : Math.round((completedSteps.length / LAUNCHPAD_STEPS.length) * 100);
+  const pct = done ? 100 : Math.round((completedSteps.length / LAUNCHPAD_STEPS.length) * 100);
 
   return (
     <AppShell
@@ -329,11 +388,7 @@ function LaunchPadPage() {
                     <span
                       key={item.id}
                       className={`h-2 w-8 rounded-full ${
-                        complete
-                          ? "bg-seal"
-                          : item.id === step && !done
-                            ? "bg-primary"
-                            : "bg-muted"
+                        complete ? "bg-seal" : item.id === step && !done ? "bg-primary" : "bg-muted"
                       }`}
                     />
                   );
@@ -342,15 +397,19 @@ function LaunchPadPage() {
             </div>
 
             {error ? (
-              <div className="mt-5 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <div
+                role="alert"
+                className="mt-5 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+              >
                 {error}
+                {!hasLoadedProgress ? <Button variant="outline" className="ml-3" onClick={() => setLoadAttempt(v => v + 1)}>Reload saved progress</Button> : null}
               </div>
             ) : null}
 
             <div className="mt-6 flex flex-wrap gap-2">
               {!done ? <StepDestinationButton stepId={current.id} /> : null}
               {!done && step > 1 ? (
-                <Button variant="outline" onClick={() => void goBack()} disabled={saving}>
+                <Button variant="outline" onClick={() => void goBack()} disabled={saving || !hasLoadedProgress}>
                   Back
                 </Button>
               ) : null}
@@ -365,13 +424,13 @@ function LaunchPadPage() {
                   <Button variant="outline" asChild>
                     <Link to="/dashboard">Open dashboard</Link>
                   </Button>
-                  <Button variant="outline" onClick={() => void restartSetup()} disabled={saving}>
+                  <Button variant="outline" onClick={() => void restartSetup()} disabled={saving || !hasLoadedProgress}>
                     {saving ? <Loader2 className="size-4 animate-spin" /> : null}
                     Review setup again
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => void continueSetup()} disabled={saving}>
+                <Button onClick={() => void continueSetup()} disabled={saving || !hasLoadedProgress}>
                   {saving ? <Loader2 className="size-4 animate-spin" /> : null}
                   {current.cta}
                 </Button>
@@ -396,9 +455,7 @@ function LaunchPadPage() {
                     >
                       {complete ? <Check className="size-3" /> : null}
                     </span>
-                    <span className={complete ? "" : "text-muted-foreground"}>
-                      {item.title}
-                    </span>
+                    <span className={complete ? "" : "text-muted-foreground"}>{item.title}</span>
                   </li>
                 );
               })}
@@ -417,7 +474,8 @@ function LaunchPadPage() {
           </Panel>
 
           <div className="rounded-lg border border-border bg-muted/30 p-4 text-xs leading-5 text-muted-foreground">
-            Do not enter passwords, payment-card numbers, or unnecessary resident information in onboarding or support messages.
+            Do not enter passwords, payment-card numbers, or unnecessary resident information in
+            onboarding or support messages.
           </div>
         </div>
       </div>

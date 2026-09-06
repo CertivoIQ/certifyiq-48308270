@@ -64,9 +64,9 @@ async function readRows<T>(table: string, orderColumn: string): Promise<T[]> {
   return (data ?? []) as unknown as T[];
 }
 
-function riskTone(risk: string): "neutral" | "warning" | "danger" | "seal" {
-  if (risk === "tier_4_human_approval") return "danger";
-  if (risk === "tier_3_reversible") return "warning";
+function riskTone(risk: string): "neutral" | "flag" | "reject" | "seal" {
+  if (risk === "tier_4_human_approval") return "reject";
+  if (risk === "tier_3_reversible") return "flag";
   if (risk === "tier_2_prepare") return "seal";
   return "neutral";
 }
@@ -145,7 +145,7 @@ function OperationsControlCenter() {
                   <Workflow className="size-4 text-amber-600" />
                   <span className="font-medium">{job.job_type}</span>
                   <Pill tone={riskTone(job.risk_tier)}>{job.risk_tier.replaceAll("_", " ")}</Pill>
-                  <Pill tone={job.status === "completed" ? "seal" : job.status === "quarantined" ? "danger" : "neutral"}>{job.status}</Pill>
+                  <Pill tone={job.status === "completed" ? "seal" : job.status === "quarantined" ? "reject" : "neutral"}>{job.status}</Pill>
                 </div>
                 <p className="cite mt-1">{job.worker} · correlation {job.correlation_id}</p>
                 <p className="mt-1 text-xs text-muted-foreground">Attempt {job.attempts} of {job.max_attempts} · scheduled {new Date(job.scheduled_at).toLocaleString()}</p>
@@ -162,7 +162,7 @@ function OperationsControlCenter() {
                 <div className="flex items-center gap-2">
                   {approval.status === "approved" ? <CheckCircle2 className="size-4 text-emerald-600" /> : <Clock3 className="size-4 text-amber-600" />}
                   <span className="font-medium">{approval.action_type}</span>
-                  <Pill tone={approval.status === "pending" ? "warning" : approval.status === "approved" ? "seal" : "danger"}>{approval.status}</Pill>
+                  <Pill tone={approval.status === "pending" ? "flag" : approval.status === "approved" ? "seal" : "reject"}>{approval.status}</Pill>
                 </div>
                 <p className="cite mt-1">Snapshot {approval.snapshot_sha256.slice(0, 16)}…</p>
                 <p className="mt-1 text-xs text-muted-foreground">Expires {new Date(approval.expires_at).toLocaleString()}</p>
@@ -193,7 +193,7 @@ function OperationsControlCenter() {
           <ul className="divide-y divide-border">
             {data.communications.map((item) => (
               <li key={item.id} className="px-5 py-4">
-                <div className="flex items-center gap-2"><span className="font-medium">{item.subject ?? item.channel}</span><Pill tone={item.status === "sent" ? "seal" : item.status === "draft" ? "neutral" : "warning"}>{item.status}</Pill></div>
+                <div className="flex items-center gap-2"><span className="font-medium">{item.subject ?? item.channel}</span><Pill tone={item.status === "sent" ? "seal" : item.status === "draft" ? "neutral" : "flag"}>{item.status}</Pill></div>
                 <p className="cite mt-1">{item.channel} · {new Date(item.created_at).toLocaleString()}</p>
               </li>
             ))}

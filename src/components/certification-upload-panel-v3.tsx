@@ -100,7 +100,7 @@ function FieldEditor({
   onChange,
 }: {
   definition: TicFieldDefinition;
-  fact?: PreviewFact;
+  fact?: PreviewFact | undefined;
   value: string;
   busy: boolean;
   onChange: (value: string) => void;
@@ -266,7 +266,7 @@ export function CertificationUploadPanel() {
       setProgressPercent(96);
       setProgressLabel("Separating TIC fields and supporting packet pages…");
       const preview = await extractPreview({ data: { source } });
-      if ("error" in preview && preview.error) throw new Error(preview.error);
+      if ("error" in preview) throw new Error(preview.error || "The certification extraction could not be completed.");
 
       const facts = preview.facts as PreviewFact[];
       const supportingDocuments = preview.supportingDocuments as SupportingPreviewGroup[];
