@@ -10,11 +10,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: fix/tic-cell-recognition-20260905
           persist-credentials: false
       - name: Package source for isolated verification
-        run: git archive --format=tar HEAD src scripts supabase package.json package-lock.json tsconfig.json vite.config.ts > /tmp/tic-source.tar
+        run: |
+          git rev-parse HEAD > /tmp/tic-candidate-sha.txt
+          git archive --format=tar HEAD > /tmp/tic-source.tar
       - uses: actions/upload-artifact@v4
         with:
-          name: tic-source
-          path: /tmp/tic-source.tar
+          name: tic-candidate-source
+          path: |
+            /tmp/tic-source.tar
+            /tmp/tic-candidate-sha.txt
           retention-days: 1
