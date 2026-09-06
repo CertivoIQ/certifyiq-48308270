@@ -1,0 +1,21 @@
+name: Onboarding repair source snapshot
+on:
+  push:
+    branches: [fix/onboarding-calculator-acceptance]
+    paths: ['.github/workflows/onboarding-source-snapshot.yml']
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 54bc2b5e672f661348f1125b51cab93387722855
+      - name: Export tracked source only
+        run: git archive --format=tar HEAD > /tmp/onboarding-source.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onboarding-exact-source
+          path: /tmp/onboarding-source.tar
+          retention-days: 2
