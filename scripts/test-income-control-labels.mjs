@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import vm from 'node:vm';
+import ts from 'typescript';
+import {renderToStaticMarkup} from 'react-dom/server';
+const source=readFileSync('src/components/income-calculator.tsx','utf8');
+const helpers=source.slice(source.indexOf('function Field('),source.indexOf('function Check('));
+const compiled=ts.transpileModule(helpers,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+const ctx={exports:{},require:createRequire(import.meta.url),inputClass:'test-input'};vm.createContext(ctx);vm.runInContext(compiled+'\nexports.Field=Field;exports.Choose=Choose;',ctx);
+for(const title of ['Property','Unit','Household'])test(`Calculator selection has the exact visible accessible name: ${title}`,()=>{const element=ctx.exports.Choose({title,value:'test',onChange:()=>{},options:[{value:'',label:`Select ${title}`},{value:'test',label:'TEST ONLY - choice text'}]});const html=renderToStaticMarkup(element);assert.ok(html.includes(`<select aria-label="${title}"`));assert.ok(html.includes('TEST ONLY - choice text'));assert.equal(element.props.children[1].props['aria-label'],title);});
+test('Wage field name stays exact when a help hint is present',()=>{const title='Regular hourly rate ($)';const el=ctx.exports.Field({title,value:'20',onChange:()=>{},decimal:true,hint:'Exact rate, do not round'});const html=renderToStaticMarkup(el);assert.ok(html.includes('aria-label="Regular hourly rate ($)"'));assert.ok(html.includes('Exact rate, do not round'));assert.equal(el.props.children[1].props.value,'20');assert.equal(el.props.children[1].props.inputMode,'decimal');});
+test('Explicit names do not change field selection or edit handlers',()=>{let selected;const choose=ctx.exports.Choose({title:'Property',value:'old',options:[],onChange:v=>{selected=v;}});choose.props.children[1].props.onChange({target:{value:'new'}});assert.equal(selected,'new');const field=ctx.exports.Field({title:'Position',value:'',onChange:v=>{selected=v;}});field.props.children[1].props.onChange({target:{value:'TEST ONLY'}});assert.equal(selected,'TEST ONLY');});
