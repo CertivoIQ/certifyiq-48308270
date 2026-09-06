@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/tic-cell-repair-candidate.yml
       - scripts/apply-tic-cell-repair.mjs
+      - scripts/finalize-tic-cell-repair.mjs
       - scripts/test-tic-cell-repair.mjs
       - scripts/test-tic-repair-integration.mjs
       - src/lib/tic-cell-repair.mjs
@@ -38,8 +39,12 @@ jobs:
         run: node scripts/apply-tic-cell-repair.mjs
       - name: Install locked dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Check strict types for repaired module roots
+        run: node scripts/finalize-tic-cell-repair.mjs
       - name: Run synthetic unit and actual-module integration tests
-        run: node --test scripts/test-tic-cell-repair.mjs scripts/test-tic-repair-integration.mjs
+        run: |
+          set -euo pipefail
+          node --test scripts/test-tic-cell-repair.mjs scripts/test-tic-repair-integration.mjs | tee tic-repair-test-results.txt
       - name: Build without deployment
         run: npm run build
       - name: Commit verified integration to candidate branch only
@@ -48,8 +53,31 @@ jobs:
           test "$GITHUB_REF" = 'refs/heads/fix/tic-cell-recognition-20260905'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/lib/tic-field-extraction.ts src/lib/tic-pdf-form-values.ts src/lib/pdf-ocr.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-packet-classifier.ts src/utils/tic-certification-intake.functions.ts src/lib/tic-field-registry.ts src/components/certivoiq-tic-review-form.tsx
+          git add src/lib/tic-field-extraction.ts src/lib/tic-pdf-form-values.ts src/lib/pdf-ocr.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-packet-classifier.ts src/utils/tic-certification-intake.functions.ts src/lib/tic-field-registry.ts src/components/certivoiq-tic-review-form.tsx src/components/tic-calculation-review.tsx
           if ! git diff --cached --quiet; then
             git commit -m 'Wire tested TIC cell recognition and calculation review into candidate'
             git push origin HEAD:fix/tic-cell-recognition-20260905
           fi
+      - name: Preserve candidate source and verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: certivoiq-tic-cell-repair
+          retention-days: 14
+          path: |
+            src/lib/tic-field-extraction.ts
+            src/lib/tic-pdf-form-values.ts
+            src/lib/pdf-ocr.ts
+            src/lib/tic-spatial-extraction.mjs
+            src/lib/tic-packet-classifier.ts
+            src/lib/tic-field-registry.ts
+            src/lib/tic-cell-repair.mjs
+            src/lib/tic-cell-repair.d.mts
+            src/utils/tic-certification-intake.functions.ts
+            src/components/certivoiq-tic-review-form.tsx
+            src/components/tic-calculation-review.tsx
+            scripts/apply-tic-cell-repair.mjs
+            scripts/finalize-tic-cell-repair.mjs
+            scripts/test-tic-cell-repair.mjs
+            scripts/test-tic-repair-integration.mjs
+            docs/tic-cell-repair-status.md
+            tic-repair-test-results.txt
