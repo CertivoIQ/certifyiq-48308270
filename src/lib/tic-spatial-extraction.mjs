@@ -1,4 +1,5 @@
 const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+const DIRECT_PREFIX = '__CERTIVOIQ_TIC_FIELD__';
 
 function bboxOf(value) {
   const box = value?.bbox;
@@ -108,94 +109,180 @@ function isHeaderOrNote(text) {
   return /\b(last name|first name|middle initial|relationship|date of birth|student|social security|employment|wages|pensions|public assistance|other income|type of asset|cash value|annual income|optional|indicates responses|total|part ii|part iii|part iv)\b/.test(text);
 }
 
-function add(lines, alias, value) {
-  const cleaned = clean(value);
+function cleanFieldValue(value) {
+  return clean(value)
+    .replace(/[☐□▢◻◽]/g, ' ')
+    .replace(/_{2,}/g, ' ')
+    .replace(/\.{3,}/g, ' ')
+    .replace(/^[:=\-–—#\s]+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function add(lines, key, value) {
+  const cleaned = cleanFieldValue(value);
   if (!cleaned) return;
-  lines.push(`${alias}: ${cleaned}`);
+  lines.push(`${DIRECT_PREFIX} ${key}: ${cleaned}`);
+}
+
+const STATIC_LABELS = [
+  ['certification_effective_date', /effective\s+date\s*:?/i],
+  ['move_in_date', /move[ -]?in\s+date\s*:?/i],
+  ['current_date', /current\s+date\s*:?/i],
+  ['property_name', /property\s+name\s*:?/i],
+  ['county', /county\s*:?/i],
+  ['tax_credit_number', /\btc\s*#\s*:?/i],
+  ['building_identification_number', /\bbin\s*#\s*:?/i],
+  ['property_address', /\baddress\s*:?/i],
+  ['unit_number', /unit\s+number\s*:?/i],
+  ['unit_bedrooms', /#\s*bedrooms?\s*:?/i],
+  ['applicable_lihtc_income_limit', /current\s+income\s+limit\s+per\s+family\s+size\s*:?/i],
+  ['current_income_limit_140_percent', /current\s+income\s+limit\s*[x×]\s*140%\s*:?/i],
+  ['household_income_at_move_in', /household\s+income\s+at\s+move[ -]?in\s*:?/i],
+  ['household_size_at_move_in', /household\s+size\s+at\s+move[ -]?in\s*:?/i],
+  ['rental_assistance_type', /rental\s+assistance\s+type\s*:?/i],
+  ['tenant_paid_rent', /tenant\s+paid\s+rent\s*:?/i],
+  ['rent_assistance', /rent\s+assistance\s*:?/i],
+  ['utility_allowance', /utility\s+allowance\s*:?/i],
+  ['other_non_optional_charges', /other\s+non[ -]?optional\s+charges\s*:?/i],
+  ['gross_rent', /gross\s+rent\s+for\s+unit\s*:?/i],
+  ['state_max_gross_rent', /maximum\s+rent\s+limit\s+for\s+this\s+unit\s*:?/i],
+  ['student_exception_code', /student\s+explanation\s*:?/i],
+  ['household_annual_income', /total\s+annual\s+household\s+income(?:\s+from\s+all\s+sources)?\s*:?/i],
+  ['total_income_e', /total\s+income\s*\(e\)\s*:?/i],
+  ['asset_actual_income_below_iit', /total\s+of\s+actual\s+income\s+earned\s+from\s+all\s+assets(?:\s*\(f\))?\s*:?/i],
+  ['total_nnpp', /total\s+of\s+nnpp\s*:?/i],
+  ['total_income_assets_m', /total\s+income\s+from\s+assets(?:\s*\(m\))?\s*:?/i],
+];
+
+function staticFieldLines(lines) {
+  const out = [];
+  for (const line of lines) {
+    const hits = [];
+    for (const [key, pattern] of STATIC_LABELS) {
+      const match = pattern.exec(line.text);
+      if (match && Number.isFinite(match.index)) {
+        hits.push({ key, start: match.index, end: match.index + match[0].length });
+      }
+    }
+    hits.sort((a, b) => a.start - b.start || a.end - b.end);
+    for (let index = 0; index < hits.length; index += 1) {
+      const hit = hits[index];
+      const next = hits[index + 1];
+      const raw = line.text.slice(hit.end, next?.start ?? line.text.length);
+      const value = cleanFieldValue(raw);
+      if (!value) continue;
+      add(out, hit.key, value);
+    }
+  }
+  return out;
+}
+
+function markerScore(value) {
+  const text = clean(value);
+  if (/^(?:x|\[x\]|☒|✓|✔|■|●|◆)$/i.test(text)) return 4;
+  if (/^(?:@|#|8|b)$/i.test(text)) return 1;
+  return 0;
+}
+
+function optionWordIndex(words, patterns) {
+  for (let index = 0; index <= words.length - patterns.length; index += 1) {
+    let matches = true;
+    for (let offset = 0; offset < patterns.length; offset += 1) {
+      if (!patterns[offset].test(normalizedText(words[index + offset]?.text ?? ''))) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return index;
+  }
+  return -1;
+}
+
+function selectedCertificationType(lines, pageWidth) {
+  const line = firstMatchingLine(lines, [
+    /initial\s+certification.*recertification.*other/,
+    /initial\s+certification.*recertification/,
+  ]);
+  if (!line) return null;
+
+  const raw = line.text;
+  const explicit = [
+    ['Initial Certification', /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*initial\s+certification/i],
+    ['Recertification', /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*recertification/i],
+    ['Other', /(?:☒|✓|✔|■|●|\[x\]|\bx\b)\s*other\b/i],
+  ];
+  const direct = explicit.filter(([, pattern]) => pattern.test(raw));
+  if (direct.length === 1) return direct[0][0];
+
+  const options = [
+    ['Initial Certification', [/^initial$/, /^certification$/]],
+    ['Recertification', [/^recertification$/]],
+    ['Other', [/^other$/]],
+  ];
+  const scored = [];
+  for (const [label, patterns] of options) {
+    const index = optionWordIndex(line.words, patterns);
+    if (index < 0) continue;
+    const anchor = line.words[index];
+    let score = 0;
+    for (const word of line.words) {
+      if (word.x1 > anchor.x0 || word.x1 < anchor.x0 - pageWidth * 0.055) continue;
+      score = Math.max(score, markerScore(word.text));
+    }
+    scored.push({ label, score });
+  }
+  const best = scored.sort((a, b) => b.score - a.score);
+  return best[0]?.score > 0 && best[0]?.score > (best[1]?.score ?? 0) ? best[0].label : null;
+}
+
+function otherCertificationText(lines) {
+  const line = firstMatchingLine(lines, [/initial\s+certification.*recertification.*other/]);
+  if (!line) return '';
+  const match = /\bother\b\s*[:=\-–—]?\s*(.*)$/i.exec(line.text);
+  const value = cleanFieldValue(match?.[1] ?? '');
+  if (!value || /current\s+date/i.test(value)) return '';
+  return value;
 }
 
 function locateHouseholdTable(lines, pageHeight) {
   const title = firstMatchingLine(lines, [/part\s*ii\b.*household/, /household\s+composition/]);
   if (!title) return null;
-  const header = firstMatchingLine(
-    lines,
-    [
-      /last\s+name.*first\s+name/,
-      /first\s+name.*last\s+name/,
-    ],
-    title.y1,
-  );
+  const header = firstMatchingLine(lines, [/last\s+name.*first\s+name/, /first\s+name.*last\s+name/], title.y1);
   const bodyStart = (header?.y1 ?? title.y1) + Math.max(2, pageHeight * 0.003);
-  const next = firstMatchingLine(
-    lines,
-    [
-      /part\s*iii\b/,
-      /gross\s+annual\s+income/,
-      /employment.*wages.*(?:social|security|pension)/,
-      /social\s+security.*public\s+assistance/,
-      /part\s*iv[a-b]?\b/,
-      /type\s+of\s+asset.*cash\s+value/,
-      /part\s*v\b/,
-    ],
-    bodyStart,
-  );
-  return {
-    start: bodyStart,
-    end: Math.max(bodyStart, next?.y0 ?? pageHeight),
-    header,
-  };
+  const next = firstMatchingLine(lines, [
+    /part\s*iii\b/, /gross\s+annual\s+income/, /employment.*wages.*(?:social|security|pension)/,
+    /social\s+security.*public\s+assistance/, /part\s*iv[a-b]?\b/, /type\s+of\s+asset.*cash\s+value/, /part\s*v\b/,
+  ], bodyStart);
+  return { start: bodyStart, end: Math.max(bodyStart, next?.y0 ?? pageHeight), header };
 }
 
 function locateIncomeTable(lines, pageHeight) {
   const title = firstMatchingLine(lines, [/part\s*iii\b.*(?:gross|annual).*income/, /gross\s+annual\s+income/]);
-  const header = firstMatchingLine(
-    lines,
-    [
-      /employment.*wages.*(?:social|security|pension)/,
-      /social\s+security.*public\s+assistance.*other\s+income/,
-    ],
-    title?.y1 ?? -Infinity,
-  );
+  const header = firstMatchingLine(lines, [
+    /employment.*wages.*(?:social|security|pension)/,
+    /social\s+security.*public\s+assistance.*other\s+income/,
+  ], title?.y1 ?? -Infinity);
   if (!title && !header) return null;
   const anchorBottom = header?.y1 ?? title?.y1 ?? 0;
   const bodyStart = anchorBottom + Math.max(2, pageHeight * 0.003);
-  const next = firstMatchingLine(
-    lines,
-    [
-      /part\s*iv[a-b]?\b/,
-      /income\s+from\s+assets/,
-      /type\s+of\s+asset.*(?:cash\s+value|annual\s+income)/,
-      /part\s*v\b/,
-      /total\s+household\s+income/,
-    ],
-    bodyStart,
-  );
+  const next = firstMatchingLine(lines, [
+    /part\s*iv[a-b]?\b/, /income\s+from\s+assets/, /type\s+of\s+asset.*(?:cash\s+value|annual\s+income)/,
+    /part\s*v\b/, /total\s+household\s+income/,
+  ], bodyStart);
   return { start: bodyStart, end: Math.max(bodyStart, next?.y0 ?? pageHeight) };
 }
 
 function locateAssetTable(lines, pageHeight) {
   const title = firstMatchingLine(lines, [/part\s*iv[a-b]?\b.*income.*assets/, /income\s+from\s+assets/, /part\s*iv\b.*assets/]);
-  const header = firstMatchingLine(
-    lines,
-    [
-      /type\s+of\s+asset.*(?:cash\s+value|annual\s+income)/,
-      /cash\s+value.*annual\s+income/,
-    ],
-    title?.y1 ?? -Infinity,
-  );
+  const header = firstMatchingLine(lines, [
+    /type\s+of\s+asset.*(?:cash\s+value|annual\s+income)/,
+    /cash\s+value.*annual\s+income/,
+  ], title?.y1 ?? -Infinity);
   if (!title && !header) return null;
   const anchorBottom = header?.y1 ?? title?.y1 ?? 0;
   const bodyStart = anchorBottom + Math.max(2, pageHeight * 0.003);
-  const next = firstMatchingLine(
-    lines,
-    [
-      /part\s*v\b/,
-      /total\s+household\s+income/,
-      /household\s+certification/,
-      /part\s*vi\b/,
-    ],
-    bodyStart,
-  );
+  const next = firstMatchingLine(lines, [/part\s*v\b/, /total\s+household\s+income/, /household\s+certification/, /part\s*vi\b/], bodyStart);
   return { start: bodyStart, end: Math.max(bodyStart, next?.y0 ?? pageHeight) };
 }
 
@@ -212,26 +299,22 @@ function householdLines(words, table, pageWidth, pageHeight, profile) {
     const text = usefulRowText(parts);
     if (!text || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 10);
-    if (!member) continue;
-    if (!parts.slice(1).some(Boolean)) continue;
+    if (!member || !parts.slice(1).some(Boolean)) continue;
+    add(out, `household_member_${member}_last_name`, parts[1]);
+    add(out, `household_member_${member}_first_name_middle_initial`, parts[2]);
+    add(out, `household_member_${member}_relationship`, parts[3]);
     if (profile === 'phfa') {
-      add(out, `household member ${member} last name`, parts[1]);
-      add(out, `household member ${member} first name middle initial`, parts[2]);
-      add(out, `household member ${member} relationship`, parts[3]);
-      add(out, `household member ${member} race`, parts[4]);
-      add(out, `household member ${member} ethnicity`, parts[5]);
-      add(out, `household member ${member} disability`, parts[6]);
-      add(out, `household member ${member} gender`, parts[7]);
-      add(out, `household member ${member} date of birth`, parts[8]);
-      add(out, `household member ${member} full-time student`, parts[9]);
-      add(out, `household member ${member} ssn alien registration`, parts[10]);
+      add(out, `household_member_${member}_race`, parts[4]);
+      add(out, `household_member_${member}_ethnicity`, parts[5]);
+      add(out, `household_member_${member}_disability`, parts[6]);
+      add(out, `household_member_${member}_gender`, parts[7]);
+      add(out, `household_member_${member}_date_of_birth`, parts[8]);
+      add(out, `household_member_${member}_full_time_student`, parts[9]);
+      add(out, `household_member_${member}_ssn_or_alien_registration`, parts[10]);
     } else {
-      add(out, `household member ${member} last name`, parts[1]);
-      add(out, `household member ${member} first name middle initial`, parts[2]);
-      add(out, `household member ${member} relationship`, parts[3]);
-      add(out, `household member ${member} date of birth`, parts[4]);
-      add(out, `household member ${member} full-time student`, parts[5]);
-      add(out, `household member ${member} ssn alien registration`, parts[6]);
+      add(out, `household_member_${member}_date_of_birth`, parts[4]);
+      add(out, `household_member_${member}_full_time_student`, parts[5]);
+      add(out, `household_member_${member}_ssn_or_alien_registration`, parts[6]);
     }
   }
   return out;
@@ -248,12 +331,11 @@ function incomeLines(words, table, pageWidth, pageHeight) {
     const text = usefulRowText(parts);
     if (!text || /\btotal\b/.test(text) || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 10);
-    if (!member) continue;
-    if (!parts.slice(1).some((value) => /\d/.test(value))) continue;
-    add(out, `income member ${member} employment or wages`, parts[1]);
-    add(out, `income member ${member} social security pensions`, parts[2]);
-    add(out, `income member ${member} public assistance`, parts[3]);
-    add(out, `income member ${member} other income`, parts[4]);
+    if (!member || !parts.slice(1).some((value) => /\d/.test(value))) continue;
+    add(out, `income_member_${member}_wages_business`, parts[1]);
+    add(out, `income_member_${member}_social_security_pension`, parts[2]);
+    add(out, `income_member_${member}_public_assistance`, parts[3]);
+    add(out, `income_member_${member}_other_income`, parts[4]);
   }
   return out;
 }
@@ -271,29 +353,29 @@ function assetLines(words, table, pageWidth, pageHeight, profile) {
     const text = usefulRowText(parts);
     if (!text || /\b(total|threshold|imputed income threshold)\b/.test(text) || isHeaderOrNote(text)) continue;
     const member = explicitMemberNumber(parts[0], 27);
-    if (!member) continue;
-    if (!parts.slice(1).some(Boolean)) continue;
-    add(out, `asset ${member} household member number`, parts[0]);
-    add(out, `asset ${member} type`, parts[1]);
+    if (!member || !parts.slice(1).some(Boolean)) continue;
+    add(out, `asset_${member}_household_member_number`, parts[0]);
+    add(out, `asset_${member}_type`, parts[1]);
     if (profile === 'phfa') {
-      add(out, `asset ${member} current disposed`, parts[2]);
-      add(out, `asset ${member} category`, parts[3]);
-      add(out, `asset ${member} cash value`, parts[4]);
-      add(out, `asset ${member} income method`, parts[5]);
-      add(out, `asset ${member} annual income`, parts[6]);
+      add(out, `asset_${member}_current_disposed`, parts[2]);
+      add(out, `asset_${member}_category`, parts[3]);
+      add(out, `asset_${member}_cash_value`, parts[4]);
+      add(out, `asset_${member}_income_method`, parts[5]);
+      add(out, `asset_${member}_annual_income`, parts[6]);
     } else {
-      add(out, `asset ${member} current disposed`, parts[2]);
-      add(out, `asset ${member} cash value`, parts[3]);
-      add(out, `asset ${member} annual income`, parts[4]);
+      add(out, `asset_${member}_current_disposed`, parts[2]);
+      add(out, `asset_${member}_cash_value`, parts[3]);
+      add(out, `asset_${member}_annual_income`, parts[4]);
     }
   }
   return out;
 }
 
 /**
- * Recover row/cell values from flattened TIC pages using OCR geometry.
- * This never invents values: only words already returned by Tesseract are
- * reassigned to deterministic TIC row/column aliases.
+ * Recover exact source-field values from flattened TIC pages. Repeated table
+ * cells use OCR geometry; labeled header/static fields use bounded label spans.
+ * Output is keyed directly to the CertivoIQ TIC registry, so recognized values
+ * cannot drift into neighboring fields.
  */
 export function extractTicSpatialValueLines(blocks, suppliedWidth, suppliedHeight) {
   const { words, lines } = flattenBlocks(blocks);
@@ -311,9 +393,18 @@ export function extractTicSpatialValueLines(blocks, suppliedWidth, suppliedHeigh
   const incomeTable = locateIncomeTable(lines, height);
   const assetTable = locateAssetTable(lines, height);
 
-  return [
+  const out = [...staticFieldLines(lines)];
+  const certificationType = selectedCertificationType(lines, width);
+  if (certificationType) add(out, 'certification_type', certificationType);
+  if (certificationType === 'Other') {
+    const explanation = otherCertificationText(lines);
+    if (explanation) add(out, 'other_certification_type', explanation);
+  }
+
+  out.push(
     ...householdLines(words, householdTable, width, height, profile),
     ...incomeLines(words, incomeTable, width, height),
     ...assetLines(words, assetTable, width, height, profile),
-  ];
+  );
+  return out;
 }
