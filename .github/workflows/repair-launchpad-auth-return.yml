@@ -19,7 +19,6 @@ jobs:
       - name: Apply exact guarded source correction
         run: |
           test "$(git hash-object src/routes/auth.tsx)" = 03fa170b41a8743ef1bffd9c0b95e57acafcc9c1
-          test "$(git hash-object .github/workflows/native-income-calculator-release.yml)" = bfb9323d3e54cd72b1138e5f8c90ab2e565a4211
           python3 - <<'PY'
           from pathlib import Path
           p=Path('src/routes/auth.tsx');s=p.read_text()
@@ -34,9 +33,9 @@ jobs:
           s=s.replace('if (data.session) { navigate({ to: returnTo, replace: true }); return; }','if (data.session) { afterAuthTarget(true); navigate({ to: returnTo, replace: true }); return; }')
           assert s.count('afterAuthTarget(true)')==4
           p.write_text(s)
-          p=Path('.github/workflows/native-income-calculator-release.yml');s=p.read_text()
-          assert s.count('node --test scripts/test-onboarding-handoff.mjs |')==1
-          p.write_text(s.replace('node --test scripts/test-onboarding-handoff.mjs |','node --test scripts/test-onboarding-handoff.mjs scripts/test-income-auth-return.mjs |'))
+          p=Path('scripts/test-onboarding-handoff.mjs');s=p.read_text()
+          assert 'test-income-auth-return.mjs' not in s
+          p.write_text(s+'\n// Sign-in must preserve the onboarding destination until authentication succeeds.\nimport "./test-income-auth-return.mjs";\n')
           PY
           cat > scripts/test-income-auth-return.mjs <<'JS'
           import test from 'node:test';
@@ -70,12 +69,11 @@ jobs:
       - name: Verify regression and syntax
         run: |
           bun install --frozen-lockfile
-          node --test scripts/test-income-auth-return.mjs scripts/test-onboarding-handoff.mjs
-      - name: Commit source and remove one-time repair transport
+          node --test scripts/test-onboarding-handoff.mjs
+      - name: Commit only application and test files
         run: |
           git config user.name 'CertivoIQ Release Bot'
           git config user.email 'release-bot@certivoiq.com'
-          git rm .github/workflows/repair-launchpad-auth-return.yml
-          git add src/routes/auth.tsx scripts/test-income-auth-return.mjs .github/workflows/native-income-calculator-release.yml
+          git add src/routes/auth.tsx scripts/test-income-auth-return.mjs scripts/test-onboarding-handoff.mjs
           git commit -m 'Preserve LaunchPad return until sign-in succeeds; add eight navigation regressions'
           git push origin HEAD:fix/preserve-launchpad-login-return
