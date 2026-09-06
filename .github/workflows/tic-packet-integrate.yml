@@ -5,6 +5,9 @@ on:
     paths: [.github/workflows/tic-packet-integrate.yml]
 permissions:
   contents: write
+concurrency:
+  group: tic-packet-integration
+  cancel-in-progress: false
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -36,6 +39,9 @@ jobs:
           before='</p>)}</details>\n      </div>\n      <div className="flex flex-wrap'
           assert s.count(before)==1
           p.write_text(s.replace(before,'</p>)}</details>\n      </div>}\n      <div className="flex flex-wrap'))
+          # v2 already delegates to v4. v3 is an unreferenced legacy implementation
+          # whose old save contract omits required page selections. Retire it too.
+          Path('src/components/certification-upload-panel-v3.tsx').write_text('// All intake entry points use the selection-first implementation.\nexport { CertificationUploadPanel } from "./certification-upload-panel-v4";\n')
           PY
       - run: bun install --frozen-lockfile --ignore-scripts
       - name: Regression tests
@@ -58,28 +64,19 @@ jobs:
           test "$GITHUB_REF" = 'refs/heads/fix/tic-packet-selection-20260906'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/components/certification-supporting-documents-panel.tsx src/components/certification-upload-panel-v4.tsx src/components/tic-packet-organizer.tsx src/lib/pdf-ocr.ts src/lib/tic-document-layout.d.mts src/lib/tic-document-layout.mjs src/lib/tic-field-extraction.ts src/lib/tic-packet-classifier.ts src/lib/tic-packet-selection.ts src/lib/tic-pdf-form-values.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-supporting-document-registry.ts src/utils/tic-certification-intake.functions.ts src/utils/tic-certification-review.functions.ts scripts/browser-acceptance-tic-packet.mjs scripts/test-tic-packet-selection.mjs scripts/test-onboarding-certification-separation.mjs docs/tic-packet-selection.md .github/workflows/tic-packet-selection.yml
+          git add src/components/certification-supporting-documents-panel.tsx src/components/certification-upload-panel-v3.tsx src/components/certification-upload-panel-v4.tsx src/components/tic-packet-organizer.tsx src/lib/pdf-ocr.ts src/lib/tic-document-layout.d.mts src/lib/tic-document-layout.mjs src/lib/tic-field-extraction.ts src/lib/tic-packet-classifier.ts src/lib/tic-packet-selection.ts src/lib/tic-pdf-form-values.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-supporting-document-registry.ts src/utils/tic-certification-intake.functions.ts src/utils/tic-certification-review.functions.ts scripts/browser-acceptance-tic-packet.mjs scripts/test-tic-packet-selection.mjs scripts/test-onboarding-certification-separation.mjs docs/tic-packet-selection.md .github/workflows/tic-packet-selection.yml
           git rm scripts/tic-packet-patch.0.b64 scripts/tic-packet-patch.1.b64 scripts/tic-packet-patch.2.b64 scripts/tic-packet-patch.3.b64 .github/workflows/tic-packet-integrate.yml
-          git commit -m 'Integrate tested selection-first TIC packet organizer and remove staging scripts'
+          git commit -m 'Integrate tested selection-first TIC packet organizer and retire stale intake'
           git push origin HEAD:fix/tic-packet-selection-20260906
           git rev-parse HEAD > /tmp/packet-source-commit.txt
-      - name: Prepare public OCR dependencies for local private-file testing
-        if: always()
-        run: |
-          mkdir -p /tmp/tic-local-runtime/lang
-          npm install --prefix /tmp/tic-local-runtime --ignore-scripts --no-audit --no-fund tesseract.js@7.0.0 pdfjs-dist@6.2.108 @napi-rs/canvas@1.0.8
-          curl --fail --location --max-time 120 https://tessdata.projectnaptha.com/4.0.0_best/eng.traineddata.gz -o /tmp/tic-local-runtime/lang/eng.traineddata.gz
-          sha256sum /tmp/tic-local-runtime/lang/eng.traineddata.gz > /tmp/tic-local-runtime/lang/SHA256.txt
-          tar -czf /tmp/tic-local-runtime.tar.gz -C /tmp/tic-local-runtime .
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tic-packet-integration-and-local-runtime
-          retention-days: 1
+          name: tic-packet-integration-evidence
+          retention-days: 7
           path: |
             /tmp/packet-tests.txt
             /tmp/packet-build.txt
             /tmp/packet-types.txt
             /tmp/packet-source-commit.txt
-            /tmp/tic-local-runtime.tar.gz
             packet-browser-evidence
