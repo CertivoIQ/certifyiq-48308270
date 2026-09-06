@@ -68,7 +68,9 @@ test("portfolio and tenant intake is a separate LaunchPad onboarding task", () =
   assert.match(propertiesRoute, /PortfolioOnboardingPanel/);
   assert.doesNotMatch(propertiesRoute, /CertificationUploadPanel|PortfolioIntakePanel/);
   assert.match(portfolioOnboarding, /Portfolio & tenant onboarding/);
-  assert.match(portfolioOnboarding, /certification files are not uploaded here/i);
+  assert.match(portfolioOnboarding, /Certification documents are uploaded separately/);
+  assert.match(portfolioOnboarding, /createPortfolioOnboarding/);
+  assert.doesNotMatch(portfolioOnboarding, /uploadCertificationFile|prepareCertificationForReview/);
   assert.match(launchpad, /case 3:[\s\S]*to="\/properties"/);
   assert.match(launchpad, /case 4:[\s\S]*to="\/upload-certification"/);
   assert.match(launchpad, /At least one property, unit, and tenant profile must be loaded/);

@@ -5,6 +5,37 @@ export const PORTFOLIO_IMPORT_COLUMNS = [
   "document_file_name",
 ] as const;
 
+export const PORTFOLIO_REQUIRED_IMPORT_COLUMNS = [
+  "property_external_id", "property_name", "state", "unit_external_id", "unit_number",
+  "tenant_external_id", "household_name", "certification_type",
+] as const;
+
+type PortfolioImportColumn = typeof PORTFOLIO_IMPORT_COLUMNS[number];
+
+// Only explicit, equivalent headings are mapped. Never derive identity from names,
+// unit numbers, or row positions: stable external IDs are used for database upserts.
+const HEADER_ALIASES: Partial<Record<PortfolioImportColumn, readonly string[]>> = {
+  property_external_id: ["property_id", "property_code", "external_property_id"],
+  state: ["state_code"],
+  property_address: ["property_address_line_1", "address_line_1"],
+  postal_code: ["zip_code", "zipcode"],
+  unit_external_id: ["unit_id", "unit_code", "external_unit_id"],
+  unit_number: ["unit_no", "apartment_number"],
+  bedrooms: ["bedroom_count"],
+  tenant_external_id: ["tenant_id", "tenant_code", "resident_id", "resident_code", "household_id", "external_tenant_id"],
+  household_name: ["tenant_name", "resident_name", "head_of_household_name"],
+  certification_type: ["cert_type"],
+  certification_effective_date: ["cert_effective_date"],
+};
+
+const normalizeHeader = (value: string) => value.trim().toLowerCase().replace(/[\s_\-\u200B-\u200D\uFEFF]+/g, "");
+const headerLookup = new Map<string, PortfolioImportColumn>();
+for (const column of PORTFOLIO_IMPORT_COLUMNS) {
+  for (const label of [column, ...(HEADER_ALIASES[column] ?? [])]) {
+    headerLookup.set(normalizeHeader(label), column);
+  }
+}
+
 export type PortfolioIntakeRow = {
   propertyExternalId: string;
   propertyName: string;
@@ -24,7 +55,34 @@ export type PortfolioIntakeRow = {
   documentFileName?: string | undefined;
 };
 
-function parseCsvRecords(text: string) {
+function prepareCsvInput(text: string) {
+  const cleaned = text.replace(/^\uFEFF/, "").replace(/^(?:[ \t]*(?:\r\n|\r|\n))+/, "");
+  // Some spreadsheet exports place a separator directive before the headings.
+  const directive = /^sep=([,;\t])(?:\r\n|\r|\n)/i.exec(cleaned);
+  if (directive) return { text: cleaned.slice(directive[0].length), delimiter: directive[1]! };
+
+  const counts = new Map([[",", 0], [";", 0], ["\t", 0]]);
+  let quoted = false;
+  for (let i = 0; i < cleaned.length; i += 1) {
+    const char = cleaned[i]!;
+    if (char === '"') {
+      if (quoted && cleaned[i + 1] === '"') i += 1;
+      else quoted = !quoted;
+    } else if (!quoted) {
+      if (char === "\r" || char === "\n") break;
+      if (counts.has(char)) counts.set(char, counts.get(char)! + 1);
+    }
+  }
+  // Detect the separator from the header only, never from addresses or program values.
+  let delimiter = ",";
+  let count = 0;
+  for (const [candidate, candidateCount] of counts) {
+    if (candidateCount > count) { delimiter = candidate; count = candidateCount; }
+  }
+  return { text: cleaned, delimiter };
+}
+
+function parseCsvRecords(text: string, delimiter: string) {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -36,12 +94,14 @@ function parseCsvRecords(text: string) {
       else if (char === '"') quoted = false;
       else field += char;
     } else if (char === '"') quoted = true;
-    else if (char === ",") { row.push(field); field = ""; }
-    else if (char === "\n") { row.push(field.replace(/\r$/, "")); rows.push(row); row = []; field = ""; }
-    else field += char;
+    else if (char === delimiter) { row.push(field); field = ""; }
+    else if (char === "\n" || char === "\r") {
+      row.push(field); rows.push(row); row = []; field = "";
+      if (char === "\r" && text[i + 1] === "\n") i += 1;
+    } else field += char;
   }
   if (quoted) throw new Error("The CSV contains an unclosed quoted value.");
-  if (field.length || row.length) { row.push(field.replace(/\r$/, "")); rows.push(row); }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
   return rows.filter((values) => values.some((value) => value.trim()));
 }
 
@@ -55,16 +115,34 @@ const dateOrUndefined = (value: string, label: string, rowNumber: number) => {
 };
 
 export function parsePortfolioIntakeCsv(text: string): PortfolioIntakeRow[] {
-  const records = parseCsvRecords(text);
+  const prepared = prepareCsvInput(text);
+  const records = parseCsvRecords(prepared.text, prepared.delimiter);
   if (records.length < 2) throw new Error("The intake CSV must include a header and at least one tenant row.");
-  const headers = records[0]!.map((value) => value.trim().toLowerCase());
-  const required = ["property_external_id","property_name","state","unit_external_id","unit_number","tenant_external_id","household_name","certification_type"];
-  for (const column of required) if (!headers.includes(column)) throw new Error(`Missing required column: ${column}`);
-  const index = (name: string) => headers.indexOf(name);
-  const get = (values: string[], name: string) => index(name) < 0 ? "" : (values[index(name)] ?? "").trim();
+  const headers = records[0]!.map((value) => headerLookup.get(normalizeHeader(value)) ?? "");
+  const seen = new Map<string, number>();
+  headers.forEach((header, index) => {
+    if (!header) return; // Unrelated export columns remain ignored.
+    const prior = seen.get(header);
+    if (prior !== undefined) throw new Error(`Columns ${prior + 1} and ${index + 1} both map to ${header}. Keep only one column for this field to avoid importing the wrong value.`);
+    seen.set(header, index);
+  });
+  const missing = PORTFOLIO_REQUIRED_IMPORT_COLUMNS.filter((column) => !seen.has(column));
+  if (missing.length) {
+    const identityHelp = missing.some((column) => column.endsWith("_external_id"))
+      ? " External IDs are stable property, unit, and tenant reference codes from your records, not personal identification numbers. Keep the same codes on future imports; do not substitute names."
+      : "";
+    throw new Error(`Missing required column${missing.length === 1 ? "" : "s"}: ${missing.join(", ")}. Put column headings in the first row or use Download onboarding CSV. Property ID / Property Code, Unit ID, and Tenant ID / Resident ID are also accepted.${identityHelp}`);
+  }
+  const get = (values: string[], name: PortfolioImportColumn) => {
+    const index = seen.get(name);
+    return index === undefined ? "" : (values[index] ?? "").trim();
+  };
 
   return records.slice(1).map((values, offset) => {
     const rowNumber = offset + 2;
+    if (values.slice(headers.length).some((value) => value.trim())) {
+      throw new Error(`Row ${rowNumber}: more values than column headings. Quote values containing the CSV separator and check the header row.`);
+    }
     const state = get(values, "state").toUpperCase();
     const certificationType = get(values, "certification_type").toUpperCase();
     if (!/^[A-Z]{2}$/.test(state)) throw new Error(`Row ${rowNumber}: state must be a two-letter code.`);
