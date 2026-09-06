@@ -29,6 +29,14 @@ jobs:
           PY
           git apply --unidiff-zero --check /tmp/tic-packet.patch
           git apply --unidiff-zero /tmp/tic-packet.patch
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/components/certification-supporting-documents-panel.tsx')
+          s=p.read_text()
+          before='</p>)}</details>\n      </div>\n      <div className="flex flex-wrap'
+          assert s.count(before)==1
+          p.write_text(s.replace(before,'</p>)}</details>\n      </div>}\n      <div className="flex flex-wrap'))
+          PY
       - run: bun install --frozen-lockfile --ignore-scripts
       - name: Regression tests
         run: |
@@ -37,7 +45,7 @@ jobs:
       - name: Build and full strict types
         run: |
           set -o pipefail
-          bun run build > /tmp/packet-build.txt 2>&1
+          bun run build 2>&1 | tee /tmp/packet-build.txt
           node node_modules/typescript/bin/tsc --noEmit --pretty false | tee /tmp/packet-types.txt
       - name: Actual organizer in Chromium with synthetic input only
         run: |
@@ -56,6 +64,7 @@ jobs:
           git push origin HEAD:fix/tic-packet-selection-20260906
           git rev-parse HEAD > /tmp/packet-source-commit.txt
       - name: Prepare public OCR dependencies for local private-file testing
+        if: always()
         run: |
           mkdir -p /tmp/tic-local-runtime/lang
           npm install --prefix /tmp/tic-local-runtime --ignore-scripts --no-audit --no-fund tesseract.js@7.0.0 pdfjs-dist@6.2.108 @napi-rs/canvas@1.0.8
