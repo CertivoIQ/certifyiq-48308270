@@ -57,7 +57,10 @@ jobs:
           npm run build | tee tic-build.txt
       - name: Record tested revision
         run: |
-          git diff --exit-code -- src
+          # The router regenerates this build artifact from existing route modules.
+          # Preserve its diff separately; all other source must stay unchanged.
+          git diff -- src/routeTree.gen.ts > tic-generated-route-diff.txt
+          git diff --exit-code -- src ':(exclude)src/routeTree.gen.ts'
           git rev-parse HEAD > tic-verified-commit.txt
       - name: Preserve repair source and verification evidence
         uses: actions/upload-artifact@v4
@@ -83,3 +86,4 @@ jobs:
             tic-verification.txt
             tic-build.txt
             tic-verified-commit.txt
+            tic-generated-route-diff.txt
