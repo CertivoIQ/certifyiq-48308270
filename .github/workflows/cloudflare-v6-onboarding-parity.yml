@@ -1,4 +1,4 @@
-# Flattened TIC spatial extraction release.
+# Flattened TIC hardened section-boundary release.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
@@ -63,6 +63,9 @@ jobs:
           grep -F -q 'highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE' src/lib/pdf-ocr.ts
           grep -F -q 'spatialLines' src/lib/pdf-ocr.ts
           grep -F -q 'clusterRows' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'explicitMemberNumber' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'locateHouseholdTable' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'employment.*wages.*' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'household member ${member} last name' src/lib/tic-field-registry.ts
           grep -F -q 'income member ${member} employment or wages' src/lib/tic-field-registry.ts
           grep -F -q 'asset ${row} cash value' src/lib/tic-field-registry.ts
@@ -94,7 +97,7 @@ jobs:
           ! head -n 1 src/components/certivoiq-tic-review-form.tsx | grep -F -q 'eslint-disable react/'
           grep -F -q '[-/]' src/lib/tic-field-extraction.ts
           echo "SOURCE_SHA=$(git rev-parse HEAD)"
-          echo 'STRUCTURED_TIC_SPATIAL_SOURCE_GATE=PASS'
+          echo 'STRUCTURED_TIC_HARDENED_SPATIAL_SOURCE_GATE=PASS'
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -111,7 +114,7 @@ jobs:
           node --test scripts/test-onboarding-certification-separation.mjs
           node scripts/test-ocr-sidecar.mjs
           node --test scripts/test-certification-task-workflow.mjs
-          echo 'STRUCTURED_TIC_SPATIAL_EVIDENCE_BOUNDARY=PASS'
+          echo 'STRUCTURED_TIC_HARDENED_SPATIAL_EVIDENCE_BOUNDARY=PASS'
 
       - name: Build exact current main
         run: bun run build
@@ -142,7 +145,7 @@ jobs:
           candidate_url="${{ steps.deploy.outputs.candidate_url }}"
           for attempt in 1 2 3 4 5 6; do
             if node scripts/verify-cloudflare-live-response.mjs "$candidate_url"; then
-              echo 'BOUND_V11_SPATIAL_TIC_LIVE_RESPONSE_GATE=PASS'
+              echo 'BOUND_V11_HARDENED_SPATIAL_TIC_LIVE_RESPONSE_GATE=PASS'
               exit 0
             fi
             test "$attempt" -lt 6
