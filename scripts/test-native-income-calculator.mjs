@@ -86,3 +86,5 @@ test('sourced limits retain precise decimal values',()=>assert.deepEqual(e.parse
 for(const invalid of ['', '2=45000\n2=46000','31=50000','2=45,000','2=1e3','2=-100','2=0.1234567','2=10000000000']) test('invalid limits fail closed: '+JSON.stringify(invalid),()=>assert.throws(()=>e.parseSourcedLimits(invalid)));
 test('saved version is not overwritten by current configuration fetch',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.ok(ui.includes('if (saved?.id) { setConfigurationLoading(false); return; }'));assert.ok(ui.includes('reload, saved?.id]'));});
 test('both pending metadata and configuration requests block saves',()=>{const ui=readFileSync('src/components/income-calculator.tsx','utf8');assert.ok(ui.includes('const loading = metadataLoading || configurationLoading;'));assert.ok(ui.includes('!!visibleError'));});
+
+import "./test-income-control-labels.mjs";
