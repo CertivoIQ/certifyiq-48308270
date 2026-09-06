@@ -1,0 +1,30 @@
+name: AHFA utility methodology exact PDF
+on:
+  push:
+    branches: [research/state-pack-pdf-evidence-20260906]
+    paths: [.github/workflows/ahfa-utility-methodology-evidence-20260906.yml]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture exact AHFA manual without approvals or database writes
+        run: |
+          python3 - <<'PY'
+          import importlib.util,json,os
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location('cap',Path('scripts/capture-state-checklist-pdfs-20260906.py'));c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
+          c.OUT=Path('artifacts/ahfa-methodology');c.OUT.mkdir(parents=True,exist_ok=True)
+          r=c.capture('AL',{'url':'https://ahfa.atl1.cdn.digitaloceanspaces.com/multifamily/compliance/compliance-manual.pdf','label':'AHFA Compliance Manual — revised November 17, 2025','parent':'https://www.ahfa.com/programs/rental-housing/compliance'},['ahfa.com','ahfa.atl1.cdn.digitaloceanspaces.com'],'Alabama Housing Finance Authority')
+          (c.OUT/'manifest.json').write_text(json.dumps({'records':[r],'run_id':os.getenv('GITHUB_RUN_ID'),'policy':'Original PDF bytes retained. Utility-methodology content must be reviewed separately; no approval or rule activation.'},indent=2))
+          print(r['source_sha256'],r['byte_size'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ahfa-utility-methodology-pdf
+          path: artifacts/ahfa-methodology/
+          retention-days: 90
+          if-no-files-found: error
