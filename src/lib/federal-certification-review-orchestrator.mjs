@@ -13,7 +13,6 @@ import {
   RULE_EVALUATION_STATUS,
   evaluateCertification,
   evaluateLayeredProgramRestrictions,
-  evaluateRecertificationOccupancyControls,
   evaluateTenantFileEligibility,
   normalizeCertificationPrograms,
 } from "./compliance-rule-engine.mjs";
