@@ -31,10 +31,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.3'
       - name: Apply exact integration edits
         run: node scripts/apply-tic-cell-repair.mjs
       - name: Install locked dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: bun install --frozen-lockfile --ignore-scripts
       - name: Run synthetic unit and actual-module integration tests
         run: node --test scripts/test-tic-cell-repair.mjs scripts/test-tic-repair-integration.mjs
       - name: Build without deployment
