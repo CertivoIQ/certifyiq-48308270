@@ -11,6 +11,8 @@ on:
       - 'supabase/functions/_shared/income-calculator-engine.ts'
       - 'supabase/functions/income-calculator/**'
       - 'scripts/*income*.mjs'
+      - 'src/**'
+      - 'scripts/test-onboarding-handoff.mjs'
   push:
     branches: [main]
     paths:
@@ -20,6 +22,8 @@ on:
       - 'supabase/functions/_shared/income-calculator-engine.ts'
       - 'supabase/functions/income-calculator/**'
       - 'scripts/*income*.mjs'
+      - 'src/**'
+      - 'scripts/test-onboarding-handoff.mjs'
 permissions:
   contents: read
 concurrency:
@@ -44,28 +48,24 @@ jobs:
           deno-version: v2.4.5
       - name: Install frozen dependencies
         run: bun install --frozen-lockfile
-      - name: Capture unchanged pre-feature typecheck baseline
-        run: |
-          git fetch --no-tags --depth=1 origin 3a662a690d7e02bf5cd6fda16149c964864c0cd4
-          git worktree add --detach /tmp/income-baseline 3a662a690d7e02bf5cd6fda16149c964864c0cd4
-          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/income-baseline/node_modules
-          node scripts/check-income-type-baseline.mjs capture /tmp/income-baseline /tmp/income-baseline-types.json
       - name: Calculator and certification regressions
         run: |
           set -euo pipefail
           node --test scripts/test-native-income-calculator.mjs | tee /tmp/income-calculator-tests.txt
           node --test scripts/test-income-release-identity.mjs | tee /tmp/income-release-tests.txt
           node --test scripts/test-tic-spatial-extraction.mjs scripts/test-tic-native-form-extraction.mjs scripts/test-command-center-certification-actions.mjs scripts/test-standalone-supporting-document-upload.mjs scripts/test-controlled-mass-portfolio-intake.mjs scripts/test-onboarding-certification-separation.mjs scripts/test-certification-task-workflow.mjs | tee /tmp/income-certification-tests.txt
+          node --test scripts/test-onboarding-handoff.mjs | tee /tmp/income-onboarding-tests.txt
           node scripts/test-ocr-sidecar.mjs
           deno check --config supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts
       - name: Include source identity in Vite and Nitro public asset manifest
         run: node scripts/verify-native-income-calculator-release.mjs identity
       - name: Build exact checked-out application
         run: bun run build
-      - name: Require zero calculator and menu errors and no new platform diagnostics
+      - name: Require a completely clean strict application typecheck
         run: |
-          node scripts/check-income-type-baseline.mjs capture . /tmp/income-current-types.json
-          node scripts/check-income-type-baseline.mjs compare /tmp/income-baseline-types.json /tmp/income-current-types.json /tmp/income-type-gate.json
+          set -euo pipefail
+          node node_modules/typescript/bin/tsc --noEmit --pretty false | tee /tmp/income-application-typecheck.txt
+          printf '{"fullApplicationTypecheckClean":true,"diagnostics":0}\n' > /tmp/income-type-gate.json
       - name: Record release identity and prepare existing bound-worker configuration
         run: |
           node scripts/verify-native-income-calculator-release.mjs prepare
@@ -109,7 +109,7 @@ jobs:
         with:
           name: native-income-calculator-release-evidence
           path: |
-            /tmp/income-*-types.json
+            /tmp/income-application-typecheck.txt
             /tmp/income-type-gate.json
             /tmp/income-*-tests.txt
             income-build-verification.json
