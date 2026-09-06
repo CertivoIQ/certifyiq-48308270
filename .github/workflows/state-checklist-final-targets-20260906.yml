@@ -1,0 +1,53 @@
+name: State checklist targeted closing evidence
+on:
+  push:
+    branches: [research/state-pack-pdf-evidence-20260906]
+    paths: [.github/workflows/state-checklist-final-targets-20260906.yml]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - run: command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y poppler-utils)
+      - name: Capture original PDF bytes only
+        run: |
+          python3 - <<'PY'
+          import importlib.util,json,os,concurrent.futures as cf,hashlib,re
+          from pathlib import Path
+          from urllib.parse import urljoin
+          spec=importlib.util.spec_from_file_location('cap',Path('scripts/capture-state-checklist-pdfs-20260906.py'));c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
+          c.OUT=Path('artifacts/final-targets');c.OUT.mkdir(parents=True,exist_ok=True);c.UA='Mozilla/5.0 (compatible; CertivoIQ-Official-Source-Research/2.4)'
+          config={
+            'AL':('Alabama Housing Finance Authority',['ahfa.com','ahfa.atl1.cdn.digitaloceanspaces.com'],[('https://ahfa.atl1.cdn.digitaloceanspaces.com/multifamily/compliance/ahfa-online-utility-allowance-instructions.pdf','AHFA Online Utility Allowance Instructions','https://www.ahfa.com/programs/rental-housing/compliance')]),
+            'MO':('Missouri Housing Development Commission',['mhdc.com'],[('https://mhdc.com/media/b2bnflz5/income-averaging-webinar-slides.pdf','MHDC Income Averaging Webinar Slides',None),('https://mhdc.com/media/czqjkuoc/income-averaging-webinar-questions-and-answers.pdf','MHDC Income Averaging Webinar Questions and Answers',None)]),
+            'AK':('Alaska Housing Finance Corporation',['ahfc.us'],[('https://www.ahfc.us/download_file/8460/457','AHFC Compliance Portal Training Outline','https://www.ahfc.us/pros/compliance-audit/affordable-housing-compliance-reference-manual')]),
+            'TX':('Texas Department of Housing and Community Affairs',['tdhca.texas.gov'],[('https://www.tdhca.texas.gov/sites/default/files/pmcdocs/24-Assets-HOTMA-Changes.pdf','TDHCA Assets HOTMA Changes','https://www.tdhca.texas.gov/compliance-division')])
+          }
+          def task(state):
+            agency,domains,items=config[state];records=[];fail=[];discovery=[]
+            if state=='AL':
+              try:
+                u='https://www.ahfa.com/programs/rental-housing/compliance';b,final,h,status=c.fetch(u,domains,15);p=c.Links();p.feed(b.decode('utf-8',errors='replace'));discovery=[{'url':u,'sha256':hashlib.sha256(b).hexdigest(),'retrieved_at':c.now(),'purpose':'link_provenance_only'}]
+                for href,label,heading in p.links:
+                  v=urljoin(final,href)
+                  if c.allowed(v,domains) and re.search(r'2026.*training|owner.and.management.responsibilities',label,re.I):
+                    if '.pdf' in v.lower():items.append((v,label,u))
+                    else:fail.append({'url':v,'label':label,'reason':'linked_training_not_pdf'})
+              except Exception as e:fail.append({'url':u,'reason':str(e)[:200]})
+            for u,label,parent in items:
+              try:records.append(c.capture(state,{'url':u,'label':label,'parent':parent},domains,agency))
+              except Exception as e:fail.append({'url':u,'reason':str(e)[:200]})
+            return {'state_code':state,'authority_name':agency,'captured_documents':records,'failures':fail,'discovery_pages':discovery}
+          with cf.ThreadPoolExecutor(max_workers=4) as pool:results=list(pool.map(task,config))
+          (c.OUT/'manifest.json').write_text(json.dumps({'results':results,'run_id':os.getenv('GITHUB_RUN_ID'),'capture_completed_at':c.now(),'policy':'Exact original PDF bytes and SHA-256 only; content review required. No database writes, approval or activation.'},indent=2))
+          for r in results:print(r['state_code'],len(r['captured_documents']),r['failures'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-final-targeted-pdfs
+          path: artifacts/final-targets/
+          retention-days: 90
+          if-no-files-found: error
