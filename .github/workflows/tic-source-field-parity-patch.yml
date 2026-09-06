@@ -1,3 +1,4 @@
+# Retry after correcting the final test anchor.
 name: Apply TIC source-field parity patches
 
 on:
