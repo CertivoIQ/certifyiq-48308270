@@ -46,11 +46,11 @@ type TaskItem = {
   occurredAt: string;
   destination: TaskDestination;
   actionLabel: string;
-  approvalId?: string;
+  approvalId?: string | undefined;
   approvalType?: string;
-  validationStateCode?: string;
-  findingId?: string;
-  caseId?: string;
+  validationStateCode?: string | undefined;
+  findingId?: string | undefined;
+  caseId?: string | undefined;
   workflowRole?: "employee" | "manager";
   attention?: boolean;
 };

@@ -86,7 +86,8 @@ export const createPortfolioIntake = createServerFn({ method: "POST" })
     const { data: tenants, error: tenantError } = await db.from("portfolio_tenant_profiles")
       .upsert(tenantRows, { onConflict: "user_id,external_id" }).select("id,external_id,property_id,unit_id");
     if (tenantError) throw tenantError;
-    const tenantIds = new Map(tenants.map((row: any) => [row.external_id, row]));
+    const mappedTenants = z.array(z.object({ id: z.string().uuid(), external_id: z.string(), property_id: z.string().uuid(), unit_id: z.string().uuid() })).parse(tenants);
+    const tenantIds = new Map(mappedTenants.map((row) => [row.external_id, row]));
 
     const { error: countError } = await db.from("certification_import_jobs").update({
       parsed_property_count: properties.length, parsed_unit_count: units.length, parsed_tenant_count: tenants.length,
@@ -95,6 +96,7 @@ export const createPortfolioIntake = createServerFn({ method: "POST" })
 
     const documentMappings = data.rows.filter((row) => row.documentFileName).map((row) => {
       const tenant = tenantIds.get(row.tenantExternalId);
+      if (!tenant) throw new Error("The imported tenant destination could not be verified.");
       return {
         documentFileName: row.documentFileName!,
         propertyId: tenant.property_id as string,
@@ -143,19 +145,19 @@ export const finalizePortfolioIntake = createServerFn({ method: "POST" })
 export const listPortfolioSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = context.supabase as unknown as Db;
+    const db = context.supabase;
     const [properties, units, tenants] = await Promise.all([
-      db.from("portfolio_properties").select("id,external_id,name,state_code,city,created_at").order("name"),
-      db.from("portfolio_units").select("id,property_id"),
-      db.from("portfolio_tenant_profiles").select("id,property_id,unit_id"),
+      db.from("portfolio_properties").select("id,external_id,name,state_code,city,created_at").eq("user_id", context.userId).order("name"),
+      db.from("portfolio_units").select("id,property_id").eq("user_id", context.userId),
+      db.from("portfolio_tenant_profiles").select("id,property_id,unit_id").eq("user_id", context.userId),
     ]);
     if (properties.error) throw properties.error;
     if (units.error) throw units.error;
     if (tenants.error) throw tenants.error;
-    return properties.data.map((property: any) => ({
+    return (properties.data ?? []).map((property) => ({
       ...property,
-      unitCount: units.data.filter((unit: any) => unit.property_id === property.id).length,
-      tenantCount: tenants.data.filter((tenant: any) => tenant.property_id === property.id).length,
+      unitCount: (units.data ?? []).filter((unit) => unit.property_id === property.id).length,
+      tenantCount: (tenants.data ?? []).filter((tenant) => tenant.property_id === property.id).length,
     }));
   });
 

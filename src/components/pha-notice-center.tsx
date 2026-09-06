@@ -59,7 +59,7 @@ function dollars(value: number | null | undefined) {
 }
 
 function legalAuthority(snapshot: Record<string, unknown> | null | undefined) {
-  const authority = snapshot?.authority_code;
+  const authority = snapshot?.['authority_code'];
   return typeof authority === "string" ? authority : null;
 }
 

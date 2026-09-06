@@ -19,7 +19,9 @@ export function createStripeClient(env: StripeEnv): Stripe {
   if (env === "live") assertLiveBillingConfiguration();
   const connectionApiKey = getConnectionApiKey(env);
   return new Stripe(connectionApiKey, {
-    apiVersion: "2026-07-29.dahlia",
+    // Preserve the deployed API contract; this SDK types only its own release version.
+    // Keep this narrow version adapter separate from response/data validation.
+    apiVersion: "2026-07-29.dahlia" as NonNullable<NonNullable<ConstructorParameters<typeof Stripe>[1]>["apiVersion"]>,
   });
 }
 

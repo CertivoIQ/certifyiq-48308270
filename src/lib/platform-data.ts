@@ -239,7 +239,7 @@ export const LAUNCHPAD_STEPS = [
     lead: "Review the organization name, operating states, affordable-housing programs, and primary contact.",
     detail:
       "Use verified organization information. Do not include resident or applicant data in the organization profile.",
-    cta: "Mark profile complete",
+    cta: "Verify saved profile & continue",
   },
   {
     id: 3,

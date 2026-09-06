@@ -208,7 +208,7 @@ export function CertificationUploadPanel() {
       setProgressPercent(96);
       setProgressLabel("Parsing the TIC into the CertivoIQ review form…");
       const preview = await extractPreview({ data: { source } });
-      if ("error" in preview && preview.error) throw new Error(preview.error);
+      if ("error" in preview) throw new Error(preview.error || "The certification extraction could not be completed.");
 
       const facts = preview.facts as PreviewFact[];
       const supportingDocuments = preview.supportingDocuments as SupportingPreviewGroup[];

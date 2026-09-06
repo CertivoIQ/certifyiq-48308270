@@ -241,6 +241,7 @@ export function PortfolioIntakePanel() {
       const { data: authData } = await supabase.auth.getUser();
       const user = authData.user;
       if (!user) throw new Error("Please sign in before importing portfolio data.");
+      const userId = user.id;
       const db = supabase as unknown as Db;
 
       const filePercents = Array.from({ length: documents.length }, () => 0);
@@ -259,7 +260,7 @@ export function PortfolioIntakePanel() {
 
         updateFileProgress(sequence, 2, `Starting ${sequence + 1} of ${documents.length}: ${file.name}`);
         setMessage(`Uploading and reading ${sequence + 1} of ${documents.length}: ${file.name}`);
-        const path = `${user.id}/${intake.jobId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        const path = `${userId}/${intake.jobId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
         const pipelineStartedAt = performance.now();
         let uploadPercent = 0;
@@ -300,7 +301,7 @@ export function PortfolioIntakePanel() {
         }
 
         const { data: item, error: itemError } = await db.from("certification_import_items").insert({
-          job_id: intake.jobId, user_id: user.id, storage_path: path, original_file_name: file.name,
+          job_id: intake.jobId, user_id: userId, storage_path: path, original_file_name: file.name,
           mime_type: file.type || "application/octet-stream", size_bytes: file.size,
           sha256: prepared?.sourceSha256 ?? null,
           upload_duration_ms: Math.round(uploadOutcome.value.durationMs),
@@ -314,7 +315,7 @@ export function PortfolioIntakePanel() {
         }).select("id").single();
         if (itemError) throw itemError;
         const { error: documentError } = await db.from("portfolio_tenant_documents").insert({
-          user_id: user.id, tenant_profile_id: mapping.tenantProfileId,
+          user_id: userId, tenant_profile_id: mapping.tenantProfileId,
           certification_import_item_id: item.id, storage_path: path, original_file_name: file.name,
           document_category: "certification_support",
         });

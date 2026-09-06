@@ -1,3 +1,4 @@
+import { previewEvidenceValue } from "@/lib/preview-evidence-value";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -139,7 +140,7 @@ export const extractCertificationDocumentPreview = createServerFn({ method: "POS
       return {
         facts: result.facts.map((fact) => ({
           field: fact.field,
-          value: fact.value,
+          value: previewEvidenceValue(fact.value),
           page: fact.page,
           snippet: fact.snippet,
           confidence: fact.confidence,
@@ -179,7 +180,7 @@ export const confirmCertificationDocumentPreview = createServerFn({ method: "POS
     const db = supabase as any;
     const { result, confidence, sourceSha256 } = await extractStagedSource(supabase, userId, data.source);
     const originalByField = new Map(result.facts.map((fact) => [fact.field, fact]));
-    const submittedByField = new Map(data.fields.map((entry) => [entry.field, entry.value]));
+    const submittedByField = new Map<string, string | number | null>(data.fields.map((entry) => [entry.field, entry.value]));
     const originalExtractedData = Object.fromEntries(result.facts.map((fact) => [fact.field, fact.value]));
     const confirmedExtractedData: Record<string, string | number> = {};
     const corrections: Array<{ field: string; extractedValue: unknown; confirmedValue: unknown }> = [];
@@ -329,15 +330,16 @@ export const cancelCertificationDocumentPreview = createServerFn({ method: "POST
 export const listCertificationDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data, error } = await db
       .from("certification_import_items")
       .select("id, original_file_name, mime_type, status, extraction_provider, extracted_data, confidence, created_at, processed_at, error_message, upload_sequence, certification_type, jurisdiction, program_codes, review_queue_status, queued_for_review_at, tenant_profile_id, unit_id, property_id, portfolio_tenant_profiles(household_name), portfolio_units(unit_number), portfolio_properties(name)")
+      .eq("user_id", context.userId)
       .eq("status", "completed")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw error;
-    return (data ?? []).map((item: any) => ({
+    return (data ?? []).map((item) => ({
       ...item,
       household_name: item.portfolio_tenant_profiles?.household_name ?? null,
       unit_number: item.portfolio_units?.unit_number ?? null,

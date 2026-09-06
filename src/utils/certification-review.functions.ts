@@ -384,14 +384,15 @@ export const getCertificationReview = createServerFn({ method: "GET" })
 export const listCertificationItems = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data, error } = await db
       .from("certification_import_items")
       .select("id, original_file_name, mime_type, status, extraction_provider, created_at, processed_at, error_message, upload_sequence, certification_type, jurisdiction, program_codes, review_queue_status, queued_for_review_at, tenant_profile_id, unit_id, property_id, portfolio_tenant_profiles(household_name), portfolio_units(unit_number), portfolio_properties(name)")
+      .eq("user_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw error;
-    return (data ?? []).map((item: any) => ({
+    return (data ?? []).map((item) => ({
       ...item,
       household_name: item.portfolio_tenant_profiles?.household_name ?? null,
       unit_number: item.portfolio_units?.unit_number ?? null,

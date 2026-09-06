@@ -98,5 +98,7 @@ export async function requireControlledPortalConfiguration(
     );
   }
 
-  return validateControlledPortalConfiguration(matches[0]);
+  const match = matches[0];
+  if (!match) throw new Error("No controlled billing portal configuration is available.");
+  return validateControlledPortalConfiguration(match);
 }

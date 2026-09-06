@@ -174,7 +174,8 @@ export function PhaFamilyWorkflow() {
   const selected = useMemo(() => rows.find((row) => row.id === selectedId) ?? null, [rows, selectedId]);
 
   useEffect(() => {
-    if (!selectedId && rows.length > 0) setSelectedId(rows[0].id);
+    const first = rows[0];
+    if (!selectedId && first) setSelectedId(first.id);
   }, [rows, selectedId]);
 
   useEffect(() => {

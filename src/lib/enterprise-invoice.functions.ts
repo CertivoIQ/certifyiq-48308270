@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "@/lib/stripe.server";
@@ -16,8 +18,8 @@ type EnterpriseInvoiceInput = {
   crmAccountId?: string;
   organizationName: string;
   billingEmail: string;
-  purchaseOrderNumber?: string;
-  promotionCode?: string;
+  purchaseOrderNumber?: string | undefined;
+  promotionCode?: string | undefined;
   netDays?: number;
   allowCard?: boolean;
   environment: StripeEnv;
@@ -100,16 +102,14 @@ async function requireMonthlyPrice(
 }
 
 async function requireStaff(context: {
-  supabase: {
-    rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
-  };
+  supabase: SupabaseClient<Database>;
   userId: string;
 }) {
-  const { data: isStaff } = await context.supabase.rpc("has_role", {
+  const { data: isStaff, error } = await context.supabase.rpc("has_role", {
     _user_id: context.userId,
     _role: "staff",
   });
-  if (!isStaff) throw new Response("Unauthorized", { status: 403 });
+  if (error || !isStaff) throw new Response("Unauthorized", { status: 403 });
 }
 
 async function resolvePricingClass(
@@ -435,8 +435,8 @@ export const automateEnterpriseLicenseInvoice = createServerFn({ method: "POST" 
   .inputValidator(
     (data: {
       accountId: string;
-      purchaseOrderNumber?: string;
-      promotionCode?: string;
+      purchaseOrderNumber?: string | undefined;
+      promotionCode?: string | undefined;
       netDays?: number;
       allowCard?: boolean;
       environment: StripeEnv;

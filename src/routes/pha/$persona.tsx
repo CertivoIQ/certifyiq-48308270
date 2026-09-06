@@ -199,6 +199,7 @@ function PhaPersonaPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!page) return;
     if (selectedRole !== persona) {
       toast.error("Please select your affordable housing role before continuing.");
       return;

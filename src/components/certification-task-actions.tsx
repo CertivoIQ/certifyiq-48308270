@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 type CertificationTaskActionsProps = {
-  findingId?: string;
-  caseId?: string;
+  findingId?: string | undefined;
+  caseId?: string | undefined;
   active: boolean;
   onCompleted: () => void;
 };

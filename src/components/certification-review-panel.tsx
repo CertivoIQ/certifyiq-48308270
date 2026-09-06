@@ -66,8 +66,8 @@ function formatExtractedValue(field: string, value: unknown) {
 type EvidenceRef = { field?: string; documentRef?: string | null; page?: number | null; snippet?: string | null };
 
 type CertificationReviewPanelProps = {
-  initialItemId?: string | null;
-  initialAction?: "support" | "review";
+  initialItemId?: string | null | undefined;
+  initialAction?: "support" | "review" | undefined;
 };
 
 export function CertificationReviewPanel({ initialItemId = null, initialAction }: CertificationReviewPanelProps) {
