@@ -67,8 +67,6 @@ function AuthPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const target = isFreeReviewReturn() ? "/trial" : afterAuthTarget();
-
     void (async () => {
       const [{ data: sessionData }, { data: factorsData }, { data: aalData }] = await Promise.all([
         supabase.auth.getSession(),
@@ -85,6 +83,9 @@ function AuthPage() {
         return;
       }
 
+      // Consume the stored destination only after an authenticated session and
+      // its MFA requirements are satisfied, never when the sign-in form mounts.
+      const target = isFreeReviewReturn() ? "/trial" : afterAuthTarget();
       navigate({ to: target as AuthTarget, replace: true });
     })();
 
