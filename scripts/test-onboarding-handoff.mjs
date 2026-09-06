@@ -1,3 +1,4 @@
+import './test-income-control-labels.mjs';
 import './test-income-auth-return-target.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
