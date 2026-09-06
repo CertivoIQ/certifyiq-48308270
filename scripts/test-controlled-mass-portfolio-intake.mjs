@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import "./test-portfolio-onboarding-mapping.mjs";
 
 const read = (path) => readFileSync(path, "utf8");
 const migration = read("supabase/migrations/20260830103000_controlled_mass_portfolio_tenant_intake.sql");
@@ -10,6 +11,7 @@ const parser = read("src/lib/portfolio-intake.ts");
 const intake = read("src/lib/portfolio-intake.functions.ts");
 const intakeUi = read("src/components/portfolio-intake-panel.tsx");
 const onboardingUi = read("src/components/portfolio-onboarding-panel.tsx");
+const onboardingStorage = read("src/lib/portfolio-onboarding-storage.ts");
 const certificationUi = read("src/components/certification-upload-panel-v4.tsx");
 const ticReviewForm = read("src/components/certivoiq-tic-review-form.tsx");
 const supportingRegistry = read("src/lib/tic-supporting-document-registry.ts");
@@ -84,8 +86,9 @@ test("clients explicitly select multiple certifications and server preserves glo
 
 test("onboarding and structured complete TIC intake are separate production entry points", () => {
   assert.match(properties, /<PortfolioOnboardingPanel/);
-  assert.match(onboardingUi, /documentCount: 0/);
-  assert.match(onboardingUi, /documentFileName: undefined/);
+  assert.match(onboardingUi, /createPortfolioOnboarding/);
+  assert.match(onboardingStorage, /total_files: 0/);
+  assert.doesNotMatch(onboardingStorage, /portfolio_tenant_documents|certification_import_items/);
   assert.match(onboardingUi, /properties, units, and tenant profiles/);
   assert.doesNotMatch(onboardingUi, /uploadCertificationFile/);
 
