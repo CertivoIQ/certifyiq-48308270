@@ -162,3 +162,5 @@ jobs:
       - name: Confirm domain mapping remains stable
         run: |
           echo 'Existing custom-domain mapping remains on the bound v11 worker; this release updates that worker in place after green CI.'
+
+# ops trigger: deploy green main application state to already-bound v11 worker
