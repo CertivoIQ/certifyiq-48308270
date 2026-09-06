@@ -61,8 +61,14 @@ test("annual reviews invoke and retain recertification scope blockers", () => {
     certificationType: "ANNUAL",
   });
 
-  assert.equal(result.counts.unableToDetermine, 2);
+  assert.equal(result.counts.unableToDetermine, 3);
   assert.ok(result.controlResults.recertification);
+  assert.equal(result.controlResults.complianceProcedures.evaluatedProcedureCount, 0);
+  assert.ok(
+    result.controlResults.complianceProcedures.findings[0].blockingReasons.includes(
+      "STATE_COMPLIANCE_PROCEDURE_JURISDICTION_REQUIRED",
+    ),
+  );
   const recertification = result.findings.find(
     (finding) =>
       finding.ruleId ===
@@ -232,4 +238,100 @@ test("MFH reviews promote blocked owner-policy controls into the sign-off decisi
   );
   assert.ok(result.counts.unableToDetermine >= 7);
   assert.equal(signOffAllowed(result), false);
+});
+
+
+const PA_STATE_PACK = {
+  id: "pa-lihtc-controlled",
+  state_code: "PA",
+  jurisdiction: "PA",
+  status: "validated",
+  approvedBy: "reviewer-2",
+  effectiveFrom: "2026-01-01",
+  version: "2026.1",
+  validatedRuleCount: 4,
+};
+
+test("annual LIHTC reviews expose state procedures only as fail-closed inventory blockers", () => {
+  const facts = COMPLETE_NARROW_FACTS.map((item) =>
+    item.field === "certification_effective_date"
+      ? { ...item, humanVerified: true }
+      : item,
+  );
+  const result = evaluateFederalCertificationReview({
+    facts,
+    programs: ["LIHTC"],
+    jurisdiction: "PA",
+    statePack: PA_STATE_PACK,
+    certificationType: "ANNUAL",
+    eventDate: "2026-03-05",
+    procedureInputs: {
+      "STATE-PA-GROSS-RENT": {
+        monthly_contract_rent: 900,
+        tenant_paid_utility_allowance: 100,
+        maximum_lihtc_gross_rent: 1000,
+      },
+    },
+    complianceProcedureInputs: {
+      "STATE-PA-ANNUAL-RECERTIFICATION-FILE": {
+        tenant_income_certification_present: true,
+      },
+    },
+  });
+
+  const inventory = result.controlResults.complianceProcedures;
+  assert.equal(inventory.mode, "BLOCKER_INVENTORY");
+  assert.equal(inventory.selectedProcedureCount, 4);
+  assert.equal(inventory.evaluatedProcedureCount, 0);
+  assert.equal(inventory.findings.length, 4);
+  assert.ok(
+    inventory.findings.every(
+      (finding) =>
+        finding.status === "UNABLE_TO_DETERMINE" &&
+        finding.ruleEvaluationStatus === "BLOCKED" &&
+        finding.inventoryOnly === true &&
+        finding.blockingReasons.includes(
+          "STATE_COMPLIANCE_PROCEDURE_EVENT_DATE_NOT_TRUSTED",
+        ),
+    ),
+  );
+  assert.ok(
+    result.findings
+      .filter((finding) => finding.inventoryOnly === true)
+      .every((finding) => finding.status !== "PASS" && finding.status !== "FAIL"),
+  );
+  assert.equal(signOffAllowed(result), false);
+});
+
+test("annual non-LIHTC reviews do not select state LIHTC procedures", () => {
+  const result = evaluateFederalCertificationReview({
+    facts: [],
+    programs: ["HCV_TENANT_BASED"],
+    jurisdiction: "PA",
+    statePack: PA_STATE_PACK,
+    certificationType: "ANNUAL",
+  });
+
+  const inventory = result.controlResults.complianceProcedures;
+  assert.equal(inventory.mode, "NOT_APPLICABLE");
+  assert.equal(inventory.selectedProcedureCount, 0);
+  assert.equal(inventory.evaluatedProcedureCount, 0);
+  assert.deepEqual(inventory.findings, []);
+});
+
+test("initial LIHTC reviews do not add recertification procedure inventory", () => {
+  const result = evaluateFederalCertificationReview({
+    facts: COMPLETE_NARROW_FACTS,
+    programs: ["LIHTC"],
+    jurisdiction: "PA",
+    statePack: PA_STATE_PACK,
+    certificationType: "INITIAL",
+  });
+
+  assert.equal(result.controlResults.recertification, null);
+  assert.equal(result.controlResults.complianceProcedures, null);
+  assert.equal(
+    result.findings.some((finding) => finding.inventoryOnly === true),
+    false,
+  );
 });

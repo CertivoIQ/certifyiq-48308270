@@ -55,6 +55,7 @@
     "test:state-source-sd": "node --test scripts/test-south-dakota-source-audit.mjs",
     "test:state-source-id-nm-hi-gu": "node --test scripts/test-id-nm-hi-gu-source-audit.mjs",
     "test:orchestrator": "node --test scripts/test-federal-certification-review-orchestrator.mjs",
+    "test:procedures": "node --test scripts/test-compliance-procedure-registry.mjs",
     "test:federal-packs": "node --test scripts/test-federal-program-rule-pack-registry.mjs",
     "test:mfh-hotma": "node --test scripts/test-mfh-hotma-rule-engine.mjs",
     "test:pha-hotma": "node --test scripts/test-pha-hotma-implementation-engine.mjs",

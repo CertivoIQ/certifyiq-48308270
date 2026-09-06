@@ -13,17 +13,17 @@ import {
   RULE_EVALUATION_STATUS,
   evaluateCertification,
   evaluateLayeredProgramRestrictions,
-  evaluateRecertificationOccupancyControls,
   evaluateTenantFileEligibility,
   normalizeCertificationPrograms,
 } from "./compliance-rule-engine.mjs";
 import { classifyAllMfhHotmaOwnerSystemControls } from "./mfh-hotma-owner-system-engine.mjs";
 import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
 import { classifyAllPhaHotmaImplementationModules } from "./pha-hotma-implementation-engine.mjs";
+import { scanRecertificationComplianceProcedures } from "./compliance-procedure-registry.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
-  "federal-review-orchestrator-2026.08.5";
-export const FEDERAL_REVIEW_PACK_VERSION = "2026.08.5";
+  "federal-review-orchestrator-2026.09.1";
+export const FEDERAL_REVIEW_PACK_VERSION = "2026.09.1";
 
 const CONTROL = Object.freeze({
   tenantEligibility: Object.freeze({
@@ -173,12 +173,19 @@ export function evaluateFederalCertificationReview(input = {}) {
     .trim()
     .toUpperCase();
   let recertification = null;
+  let complianceProcedures = null;
   if (["ANNUAL", "INTERIM"].includes(certificationType)) {
-    recertification = evaluateRecertificationOccupancyControls({
-      ...(input.recertificationInput ?? {}),
-      program_inventory:
-        input.recertificationInput?.program_inventory ?? programs,
+    complianceProcedures = scanRecertificationComplianceProcedures({
+      programs,
+      stateCode: input.jurisdiction,
+      statePack: input.statePack,
+      recertificationInput: {
+        ...(input.recertificationInput ?? {}),
+        program_inventory:
+          input.recertificationInput?.program_inventory ?? programs,
+      },
     });
+    recertification = complianceProcedures.baseline;
   } else if (certificationType !== "INITIAL") {
     recertification = blockedControl(
       "CERTIFICATION_TYPE_NOT_DECLARED",
@@ -240,6 +247,7 @@ export function evaluateFederalCertificationReview(input = {}) {
           recertification,
         )]
       : []),
+    ...(complianceProcedures?.findings ?? []),
     ...(layeredPrograms
       ? [controlFinding(CONTROL.layeredPrograms, layeredPrograms)]
       : []),
@@ -258,6 +266,7 @@ export function evaluateFederalCertificationReview(input = {}) {
     controlResults: {
       tenantEligibility,
       recertification,
+      complianceProcedures,
       layeredPrograms,
       mfhHotma,
       mfhHotmaOperations,
