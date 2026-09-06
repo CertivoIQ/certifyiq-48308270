@@ -1,0 +1,52 @@
+name: TIC cell repair candidate integration
+
+on:
+  push:
+    branches: [fix/tic-cell-recognition-20260905]
+    paths:
+      - .github/workflows/tic-cell-repair-candidate.yml
+      - scripts/apply-tic-cell-repair.mjs
+      - scripts/test-tic-cell-repair.mjs
+      - scripts/test-tic-repair-integration.mjs
+      - src/lib/tic-cell-repair.mjs
+      - src/lib/tic-cell-repair.d.mts
+      - src/components/tic-calculation-review.tsx
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tic-cell-repair-candidate
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/fix/tic-cell-recognition-20260905'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/tic-cell-recognition-20260905
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply exact integration edits
+        run: node scripts/apply-tic-cell-repair.mjs
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run synthetic unit and actual-module integration tests
+        run: node --test scripts/test-tic-cell-repair.mjs scripts/test-tic-repair-integration.mjs
+      - name: Build without deployment
+        run: npm run build
+      - name: Commit verified integration to candidate branch only
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/fix/tic-cell-recognition-20260905'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/lib/tic-field-extraction.ts src/lib/tic-pdf-form-values.ts src/lib/pdf-ocr.ts src/lib/tic-spatial-extraction.mjs src/lib/tic-packet-classifier.ts src/utils/tic-certification-intake.functions.ts src/lib/tic-field-registry.ts src/components/certivoiq-tic-review-form.tsx
+          if ! git diff --cached --quiet; then
+            git commit -m 'Wire tested TIC cell recognition and calculation review into candidate'
+            git push origin HEAD:fix/tic-cell-recognition-20260905
+          fi
