@@ -21,7 +21,9 @@ const roots = ['src/components/tic-calculation-review.tsx', 'src/lib/tic-field-e
 const configFile = ts.readConfigFile('tsconfig.json', ts.sys.readFile);
 if (configFile.error) throw new Error(ts.flattenDiagnosticMessageText(configFile.error.messageText, '\n'));
 const config = ts.parseJsonConfigFileContent(configFile.config, ts.sys, process.cwd());
-const program = ts.createProgram(roots, config.options);
+// The application supplies ambient module declarations in separate .d.ts files.
+const ambient = config.fileNames.filter(file => /\.d\.(?:ts|mts|cts)$/.test(file));
+const program = ts.createProgram([...roots, ...ambient], config.options);
 const rootPaths = new Set(roots.map(file => path.resolve(file)));
 const diagnostics = ts.getPreEmitDiagnostics(program).filter(diagnostic => diagnostic.category === ts.DiagnosticCategory.Error && (!diagnostic.file || rootPaths.has(path.resolve(diagnostic.file.fileName))));
 if (diagnostics.length) {
