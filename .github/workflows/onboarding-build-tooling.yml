@@ -1,0 +1,26 @@
+name: Onboarding offline build tooling
+on:
+  push:
+    branches: [fix/onboarding-calculator-acceptance]
+    paths: ['.github/workflows/onboarding-build-tooling.yml']
+permissions:
+  contents: read
+jobs:
+  tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 54bc2b5e672f661348f1125b51cab93387722855
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+      - run: bun install --frozen-lockfile
+      - name: Export dependency toolchain only
+        run: tar -czf /tmp/onboarding-node-modules.tar.gz node_modules
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onboarding-offline-tooling
+          path: /tmp/onboarding-node-modules.tar.gz
+          retention-days: 1
+          compression-level: 0
