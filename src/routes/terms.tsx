@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PublicShell } from "@/components/public-shell";
 import { COMMERCIAL_TERMS } from "@/lib/plan-catalog";
 
+import { BETA_NOTICE, SECURITY_DISCLOSURE } from "@/lib/beta-terms";
+
 function usd(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -27,8 +29,14 @@ export const Route = createFileRoute("/terms")({
 
 function TermsOfUse() {
   return (
-    <PublicShell title="Terms of Use" subtitle="Effective August 30, 2026">
+    <PublicShell title="Terms of Use" subtitle="Effective September 6, 2026">
       <article className="mx-auto max-w-3xl space-y-7 text-sm leading-7 text-muted-foreground">
+        <section>
+          <h2 className="font-display text-xl text-foreground">Beta Testing and issue reporting</h2>
+          <p className="mt-2">{BETA_NOTICE}</p>
+          <p className="mt-2">Trial users may use the Income Calculator while they have free certification reviews remaining. Calculator use does not consume a free review. Trial calculator access ends when all 3 free certification reviews are exhausted; an active platform subscription provides continued access.</p>
+        </section>
+
         <section>
           <h2 className="font-display text-xl text-foreground">Agreement and business use</h2>
           <p className="mt-2">
@@ -136,6 +144,11 @@ function TermsOfUse() {
           </p>
         </section>
 
+        <section id="security-disclosure">
+          <h2 className="font-display text-xl text-foreground">Security disclosure</h2>
+          <p className="mt-2">{SECURITY_DISCLOSURE}</p>
+        </section>
+
         <section>
           <h2 className="font-display text-xl text-foreground">Accounts and acceptable use</h2>
           <p className="mt-2">
@@ -193,3 +206,4 @@ function TermsOfUse() {
     </PublicShell>
   );
 }
+

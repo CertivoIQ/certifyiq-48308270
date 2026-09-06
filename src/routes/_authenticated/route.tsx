@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
+import { readSessionWindow, endExpiredSession } from "@/lib/session-window";
+
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
@@ -11,6 +13,9 @@ export const Route = createFileRoute("/_authenticated")({
     ]);
     if (error || !data.user) throw redirect({ to: "/auth" });
 
+    const sessionWindow = await readSessionWindow();
+    if (!sessionWindow.valid) { await endExpiredSession(); throw redirect({ to: "/auth" }); }
+
     const hasVerifiedFactor = factors?.totp?.some((factor) => factor.status === "verified");
     if (hasVerifiedFactor && aal?.currentLevel !== "aal2") {
       throw redirect({ to: "/auth", search: { mode: "signin" } });
@@ -20,3 +25,4 @@ export const Route = createFileRoute("/_authenticated")({
   },
   component: () => <Outlet />,
 });
+

@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { SessionWindowGuard } from "@/components/session-window-guard";
 import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
@@ -161,6 +162,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <SessionWindowGuard />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <WizardHelper />
@@ -169,3 +171,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+

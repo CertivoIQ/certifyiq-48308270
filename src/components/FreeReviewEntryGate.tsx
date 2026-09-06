@@ -12,6 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Panel } from "@/components/ui-kit";
 
+import { SignupAgreement } from "@/components/signup-agreement";
+import { BETA_TERMS_VERSION } from "@/lib/beta-terms";
+
 const PENDING_KEY = "certivoiq:pending-free-review-lead";
 const splitList = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean);
 
@@ -28,7 +31,7 @@ function readPending(): FormState | null {
     return null;
   }
 }
-function savePending(form: FormState) { if (typeof sessionStorage !== "undefined") sessionStorage.setItem(PENDING_KEY, JSON.stringify(form)); }
+function savePending(form: FormState) { if (typeof sessionStorage !== "undefined") sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...form, password: "" })); }
 function clearPending() { if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(PENDING_KEY); }
 
 export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
@@ -38,6 +41,7 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
   const getLead = useServerFn(getFreeReviewLead);
   const [form, setForm] = useState<FormState>(() => readPending() ?? emptyForm);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [verificationRequired, setVerificationRequired] = useState(false);
   const [message, setMessage] = useState("");
@@ -90,10 +94,11 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
       }
 
       if (!hasUser) {
+        if (!acceptedTerms) throw new Error("Please accept the Terms & Agreements, including the Beta Testing notice.");
         if (!form.fullName.trim()) throw new Error("Full name is required to create your CertivoIQ account.");
         if (form.password.length < 8) throw new Error("Password must be at least 8 characters.");
         savePending({ ...form, ...normalized });
-        const { data, error } = await supabase.auth.signUp({ email: normalized.email, password: form.password, options: { emailRedirectTo: `${window.location.origin}/trial`, data: { full_name: form.fullName.trim() } } });
+        const { data, error } = await supabase.auth.signUp({ email: normalized.email, password: form.password, options: { emailRedirectTo: `${window.location.origin}/trial`, data: { full_name: form.fullName.trim(), terms_version: BETA_TERMS_VERSION, terms_accepted_at: new Date().toISOString() } } });
         if (error) throw error;
         if (!data.session) {
           setVerificationRequired(true);
@@ -138,8 +143,10 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
         <div className="lg:col-span-2"><Label>Housing programs in your portfolio *</Label><Input required value={form.programs.join(", ")} onChange={(e) => update("programs", splitList(e.target.value))} placeholder="LIHTC, Section 8, HOME" /></div>
         <div className="lg:col-span-2 rounded-lg border bg-muted/30 p-4"><label className="flex items-start gap-3 text-sm leading-5"><input type="checkbox" checked={form.marketingConsent} onChange={(e) => update("marketingConsent", e.target.checked)} className="mt-1 size-4 rounded border" /><span>Optional: I agree to receive CertivoIQ marketing emails about compliance updates and plan recommendations. Operational emails needed to deliver my FREE reviews are sent separately. I can unsubscribe from marketing emails at any time.</span></label></div>
         <div className="lg:col-span-2 grid gap-3 sm:grid-cols-3 rounded-lg border border-border p-4 text-sm"><div className="flex gap-2"><Building2 className="size-4 text-primary" /><span>CRM company record</span></div><div className="flex gap-2"><Users className="size-4 text-primary" /><span>Decision-maker contact</span></div><div className="flex gap-2"><Mail className="size-4 text-primary" /><span>Personalized email fields</span></div></div>
-        <Button className="lg:col-span-2 w-full sm:w-auto" size="lg" type="submit" disabled={busy}>{busy ? "Preparing your FREE reviews…" : hasUser ? "Continue to my 3 FREE certification reviews" : "Create my account & start my 3 FREE certification reviews"}</Button>
+        {!hasUser && <div className="lg:col-span-2"><SignupAgreement checked={acceptedTerms} onChange={setAcceptedTerms} /></div>}
+        <Button className="lg:col-span-2 w-full sm:w-auto" size="lg" type="submit" disabled={busy || (!hasUser && !acceptedTerms)}>{busy ? "Preparing your FREE reviews…" : hasUser ? "Continue to my 3 FREE certification reviews" : "Create my account & start my 3 FREE certification reviews"}</Button>
       </form>
     </Panel>
   );
 }
+

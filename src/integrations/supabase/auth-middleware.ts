@@ -109,6 +109,11 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       throw new Error('Unauthorized: No user ID found in token');
     }
 
+    const { data: sessionWindow, error: sessionError } = await supabase.rpc("get_session_window" as never);
+    if (sessionError || !(sessionWindow as unknown as { valid?: boolean })?.valid) {
+      throw new Error("Your 7-day login session has ended. Please sign in again.");
+    }
+
     return next({
       context: {
         supabase,
@@ -118,3 +123,4 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     });
   },
 );
+
