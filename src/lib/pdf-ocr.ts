@@ -1,3 +1,4 @@
+// TIC_RECOGNITION_HARDENING_V1
 // TIC_CELL_REPAIR_V1
 import {
   MAX_OCR_PAGES,
@@ -271,7 +272,7 @@ function recognitionScore(candidate: { text: string; confidence: number }) {
 }
 
 function recognitionIsStrong(candidate: { text: string; confidence: number }) {
-  return candidate.text.replace(/\s/g, '').length >= 30 && candidate.confidence >= 0.15;
+  return candidate.text.replace(/\s/g, '').length >= 30 && candidate.confidence >= 0.75;
 }
 
 async function recognizeScannedCanvas(canvas: HTMLCanvasElement, workerCount: number, includeBlocks = false) {
@@ -425,7 +426,10 @@ export async function prepareCertificationForReview(
         const spatialValues = nativeSpatialLines.filter((line: string) => !formKeys.has(line.split(/\s+/)[1]));
         const text = normalizePageText([nativeText, ...formValueLines, ...spatialValues].filter(Boolean).join('\n'));
         preparedTextByPage.set(pageNumber, text);
-        const isTicFormPage = isTicContent(nativeText) && formValueLines.length === 0 && nativeSpatialLines.length === 0;
+        const sourceValues = [...formValueLines, ...nativeSpatialLines];
+        const hasTypeValue = sourceValues.some(line => /^__CERTIVOIQ_TIC_FIELD__ certification_type:/.test(line));
+        const hasTableValues = sourceValues.some(line => /^__CERTIVOIQ_TIC_FIELD__ (?:household_member_\d+_(?:last_name|first_name_middle_initial)|income_member_\d+_wages_business|asset_\d+_cash_value):/.test(line));
+        const isTicFormPage = isTicContent(nativeText) && (!hasTableValues || (/initial\s+certification.*recertification/is.test(nativeText) && !hasTypeValue));
         if (pageNeedsOcr(text) || isTicFormPage) needsOcr.push(pageNumber);
         else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
         completedTextPages += 1;

@@ -1,3 +1,4 @@
+// TIC_EVIDENCE_WIRING_V1
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -5,6 +6,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { FileSearch, FileText, FileUp, UploadCloud } from "lucide-react";
 
+import { TicSupportingEvidenceReview } from "@/components/tic-supporting-evidence-review";
+import type { SupportingEvidence, SupportingCalculation } from "@/lib/tic-supporting-evidence.mjs";
 import { CertivoIqTicReviewForm } from "@/components/certivoiq-tic-review-form";
 import { supabase } from "@/integrations/supabase/client";
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
@@ -66,6 +69,7 @@ type ExtractionDraft = {
   extractionProvider: string;
   sourcePreviewUrl: string | null;
   supportingDocuments: SupportingPreviewGroup[];
+  supportingEvidence: SupportingEvidence[];
 };
 
 const ACCEPTED_DOCUMENT_TYPES = ".pdf,.png,.jpg,.jpeg,.webp";
@@ -104,6 +108,7 @@ export function CertificationUploadPanel() {
 
   const [file, setFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<ExtractionDraft | null>(null);
+  const [calculationReviews, setCalculationReviews] = useState<SupportingCalculation[]>([]);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [supportingTypes, setSupportingTypes] = useState<Record<string, SupportingClassificationChoice>>({});
   const [tenantProfileId, setTenantProfileId] = useState("");
@@ -219,6 +224,7 @@ export function CertificationUploadPanel() {
       setSupportingTypes(Object.fromEntries(
         supportingDocuments.map((document) => [document.id, document.documentType]),
       ));
+      setCalculationReviews([]);
       setDraft({
         source,
         facts,
@@ -227,6 +233,7 @@ export function CertificationUploadPanel() {
         extractionProvider: preview.extractionProvider,
         sourcePreviewUrl: preview.sourcePreviewUrl,
         supportingDocuments,
+        supportingEvidence: preview.supportingEvidence ?? [],
       });
       setFile(null);
       setProgressPercent(100);
@@ -274,6 +281,7 @@ export function CertificationUploadPanel() {
             documentType: supportingTypes[document.id] ?? document.documentType,
           })),
           startReview,
+          calculationReviews,
         },
       });
       const changes = result.correctionCount + result.reviewerSuppliedCount;
@@ -421,6 +429,14 @@ export function CertificationUploadPanel() {
             </div>
           </div>
 
+          <div className="mt-4">
+            <TicSupportingEvidenceReview key={draft.source.sha256} evidence={draft.supportingEvidence} values={fieldValues} busy={busy} sourceUrl={draft.sourcePreviewUrl}
+              onApply={(changes, calculation) => {
+                setFieldValues(current => ({ ...current, ...changes }));
+                setCalculationReviews(current => [...current, calculation]);
+              }} />
+            {calculationReviews.length > 0 && <p className="mt-2 text-xs text-muted-foreground">{calculationReviews.length} source-bound calculation correction(s) will be recorded when this TIC is saved. Final review remains separate.</p>}
+          </div>
           {draft.supportingDocuments.length > 0 ? (
             <div className="mt-4 rounded-xl border bg-background p-4">
               <div className="flex items-center gap-2"><FileText className="size-4 text-primary" /><h4 className="text-sm font-semibold">Supporting documents detected in this packet</h4></div>

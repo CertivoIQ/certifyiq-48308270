@@ -1,3 +1,4 @@
+// TIC_EVIDENCE_WIRING_V1
 export type SupportingDocumentType =
   | "annual_student_certification"
   | "voluntary_race_ethnicity_disability"
@@ -7,6 +8,7 @@ export type SupportingDocumentType =
   | "no_child_support_certification"
   | "self_certification"
   | "affidavit"
+  | "bank_statement"
   | "check_stub"
   | "other_supporting_document";
 
@@ -112,6 +114,13 @@ export const SUPPORTING_DOCUMENT_DEFINITIONS: readonly SupportingDocumentDefinit
       /notary\s+public/i,
     ],
     weakSignals: [/under\s+penalty\s+of\s+perjury/i],
+  },
+  {
+    type: "bank_statement",
+    label: "Bank / Credit Union Statement",
+    aliases: ["Bank Statement", "Credit Union Statement", "Account Statement"],
+    strongSignals: [/bank\s+statement/i, /credit\s+union\s+statement/i, /statement\s+period.*(?:ending|closing|beginning)\s+balance/is, /account\s+statement.*balance/is],
+    weakSignals: [/interest\s+(?:earned|paid)/i, /account\s+(?:number|holder)/i, /ending\s+balance/i],
   },
   {
     type: "check_stub",

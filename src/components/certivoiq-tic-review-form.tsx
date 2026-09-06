@@ -1,3 +1,4 @@
+// TIC_EVIDENCE_WIRING_V1
 // TIC_CELL_REPAIR_V1
 import { TicCalculationReview } from "@/components/tic-calculation-review";
 import type { TicFieldDefinition } from "@/lib/tic-field-registry";
@@ -271,7 +272,13 @@ export function CertivoIqTicReviewForm(props: Props) {
                 <Choice field="certification_type" option="Other" label="Other" {...props} />
               </div>
               {(values.certification_type ?? "").toLowerCase() === "other" ? (
-                <div className="mt-2 max-w-md"><Field field="other_certification_type" {...props} compact /></div>
+                <div className="mt-2 max-w-md space-y-2"><Field field="other_certification_type" {...props} compact />
+                  <label className="block text-xs">Review action for Other (source selection stays Other)
+                    <select className="mt-1 w-full border border-slate-500 bg-white p-2" value={values.other_certification_review_action ?? ""} disabled={busy} onChange={event => onChange("other_certification_review_action", event.target.value)}>
+                      <option value="">Select before starting review</option><option value="INITIAL">Initial / admission review</option><option value="ANNUAL">Annual review</option><option value="INTERIM">Interim review</option>
+                    </select>
+                  </label>
+                </div>
               ) : null}
             </div>
             <div className="grid gap-2">

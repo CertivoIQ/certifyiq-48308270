@@ -1,3 +1,4 @@
+// TIC_RECOGNITION_HARDENING_V1
 /** TIC intake proposals only. No inferred verification, approval, or eligibility. */
 const compact = value => String(value ?? '').replace(/\s+/g, ' ').trim();
 const checked = /^(?:\[\s*x\s*\]|☒|☑|✓|✔|■|x)$/i;
@@ -24,10 +25,14 @@ export function selectedCertificationType(text) {
 export function isTicContent(text) {
   const normalized = compact(text);
   if (/^(?:tenant\s+income\s+certification\s*[:\u2013\u2014-]?\s*)?instructions\s+(?:for\s+)?(?:completing|to\s+complete)/i.test(normalized)) return false;
-  if (/tenant\s+income\s+certification/i.test(normalized)) return true;
+  const headingLines = String(text ?? '').split(/\r?\n/).map(compact);
+  if (headingLines.slice(0, 8).some(line => /^(?:instructions\s+(?:for\s+)?(?:completing|to\s+complete)|tenant\s+income\s+certification\s*[-:–—]?\s*instructions)\b/i.test(line))) return false;
+  if (headingLines.some(line => /^tenant\s+income\s+certification\b/i.test(line))) return true;
   const sections = [/part\s+ii\b.*household\s+composition/i, /part\s+iii\b.*gross\s+annual\s+income/i,
     /part\s+iv[a-b]?\b.*income\s+from\s+assets/i, /part\s+v\b.*total\s+household\s+income/i,
-    /last\s+name.*first\s+name.*(?:birth|relationship)/i, /type\s+of\s+asset.*cash\s+value/i];
+    /last\s+name.*first\s+name.*(?:birth|relationship)/i, /type\s+of\s+asset.*cash\s+value/i,
+    /part\s+vi\b.*determination\s+of\s+income\s+eligibility/i,
+    /part\s+vii\b.*rent/i, /part\s+viii\b.*student/i, /part\s+ix\b.*program\s+type/i];
   return sections.filter(pattern => pattern.test(normalized)).length >= 2;
 }
 

@@ -1,4 +1,6 @@
+// TIC_EVIDENCE_WIRING_V1
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { summarizeCalculationHistory } from "@/lib/tic-supporting-evidence.mjs";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { PackRelease, StateCoverage } from "@/lib/stateCoverageRegistry";
@@ -353,7 +355,7 @@ export const getCertificationReview = createServerFn({ method: "GET" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const [facts, findings] = await Promise.all([
+    const [facts, findings, history] = await Promise.all([
       context.supabase
         .from("certification_facts")
         .select("field_name, field_value, source_document_ref, source_page, source_snippet, confidence, human_verified, extraction_provider")
@@ -364,9 +366,11 @@ export const getCertificationReview = createServerFn({ method: "GET" })
         .select("id, rule_id, rule_version, rule_pack_id, rule_pack_version, jurisdiction, status, severity, explanation, blocking_reasons, evidence_refs, review_state, engine_build")
         .eq("item_id", data.itemId)
         .order("severity"),
+      context.supabase.from("certification_import_items").select("historical_changes").eq("id", data.itemId).eq("user_id", context.userId).maybeSingle(),
     ]);
     if (facts.error) throw facts.error;
     if (findings.error) throw findings.error;
+    if (history.error) throw history.error;
 
     const findingIds = (findings.data ?? []).map((finding) => finding.id);
     const reviews = findingIds.length
@@ -378,7 +382,7 @@ export const getCertificationReview = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (reviews.error) throw reviews.error;
 
-    return { facts: facts.data ?? [], findings: findings.data ?? [], reviews: reviews.data ?? [] };
+    return { facts: facts.data ?? [], findings: findings.data ?? [], reviews: reviews.data ?? [], calculations: summarizeCalculationHistory(history.data?.historical_changes) };
   });
 
 export const listCertificationItems = createServerFn({ method: "GET" })

@@ -1,3 +1,4 @@
+// TIC_EVIDENCE_WIRING_V1
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -325,6 +326,21 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
         </div>
       )}
 
+      {review.data && review.data.calculations.length > 0 && (
+        <section className="mt-5 space-y-3 rounded-xl border p-4" aria-label="Saved calculation review">
+          <h3 className="font-semibold">Saved calculation worksheets — pending final review</h3>
+          {review.data.calculations.map((calculation, index) => (
+            <article key={index} className="rounded border bg-muted/20 p-3 text-sm">
+              <p className="font-medium">{calculation.kind === 'wages' ? 'Employment income' : 'Bank balance / actual interest'} · TIC row {calculation.destinationRow}</p>
+              <p className="mt-1">{calculation.formula}</p>
+              <p className="mt-1 text-xs">Source pages: {calculation.sourcePages.join(', ')} · Policy: {calculation.policyRef}</p>
+              <p className="mt-1 text-xs">Reason: {calculation.reason}</p>
+              {!calculation.retainedInSavedTic && <p className="mt-1 text-xs font-semibold">The TIC was edited after this calculation; review the final saved amount against this worksheet.</p>}
+            </article>
+          ))}
+          <p className="text-xs text-muted-foreground">Calculation records are not final approvals. Confirm current property-specific income/rent limits and applicable program rules before final review.</p>
+        </section>
+      )}
       {review.data && review.data.findings.length > 0 && (
         <div className="mt-6 space-y-3">
           {review.data.findings.map((finding) => {

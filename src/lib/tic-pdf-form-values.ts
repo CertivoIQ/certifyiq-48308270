@@ -1,3 +1,4 @@
+// TIC_RECOGNITION_HARDENING_V1
 // TIC_CELL_REPAIR_V1
 import { TIC_FIELD_DEFINITIONS } from "@/lib/tic-field-registry";
 
@@ -170,9 +171,8 @@ function signatureKey(name: string): string | null {
 
 function selectedButtonField(name: string, value: string): [string, string] | null {
   if (!isSelectedButton(value)) return null;
-  if (["Initial Certification", "Recertification", "Other"].includes(name)) {
-    return ["certification_type", name];
-  }
+  const certificationChoice = ["Initial Certification", "Recertification", "Other"].find(choice => choice.toLowerCase() === name.trim().toLowerCase());
+  if (certificationChoice) { name = certificationChoice; return ["certification_type", name]; }
   if (name === "at recertification") {
     const answer = yesNoFromButtonValue(value);
     return answer ? ["income_exceeds_140_percent", answer] : null;

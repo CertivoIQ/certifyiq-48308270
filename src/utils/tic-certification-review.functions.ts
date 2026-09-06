@@ -1,4 +1,6 @@
+// TIC_EVIDENCE_WIRING_V1
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { resolveReviewCertificationType } from "@/lib/tic-supporting-evidence.mjs";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
@@ -101,13 +103,18 @@ export const runCertificationReview = createServerFn({ method: "POST" })
 
     const { data: item, error: itemError } = await supabase
       .from("certification_import_items")
-      .select("id, storage_path, original_file_name, mime_type, size_bytes, sha256, status, certification_type, jurisdiction, program_codes, extraction_provider")
+      .select("id, storage_path, original_file_name, mime_type, size_bytes, sha256, status, certification_type, jurisdiction, program_codes, extraction_provider, extracted_data")
       .eq("id", data.itemId)
       .maybeSingle();
     if (itemError) throw itemError;
     if (!item) return { error: "That certification file is not available." } as const;
 
-    const certificationType = data.certificationType ?? item.certification_type;
+    const sourceType = item.extracted_data && typeof item.extracted_data === "object" && !Array.isArray(item.extracted_data)
+      ? resolveReviewCertificationType(item.extracted_data as Record<string, unknown>) : null;
+    if (sourceType && data.certificationType && data.certificationType !== sourceType) {
+      return { error: "The requested review type conflicts with the saved TIC. Correct and confirm the TIC rather than silently changing its certification type." } as const;
+    }
+    const certificationType = sourceType ?? data.certificationType ?? item.certification_type;
     if (!certificationType || !["INITIAL", "ANNUAL", "INTERIM"].includes(certificationType)) {
       return { error: "Select a certification type before review." } as const;
     }

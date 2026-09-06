@@ -1,5 +1,7 @@
+// TIC_EVIDENCE_WIRING_V1
 // TIC_CELL_REPAIR_V1
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { extractSupportingEvidence, validateSupportingCalculations, resolveReviewCertificationType } from "@/lib/tic-supporting-evidence.mjs";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -143,7 +145,8 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
     ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length
     : 0;
   const supportingDocuments = groupSupportingPages(pageClassifications);
-  return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments };
+  const supportingEvidence = extractSupportingEvidence(packetPages, pageClassifications, { fileName: source.originalFileName, sha256: sourceSha256 }, ocrDocument?.pageProvenance);
+  return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments, supportingEvidence };
 }
 
 export const listCertificationTenantDestinations = createServerFn({ method: "GET" })
@@ -175,7 +178,7 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
   .inputValidator((data: { source: StagedCertificationSource }) => ({ source: validateSource(data.source) }))
   .handler(async ({ data, context }) => {
     try {
-      const { result, confidence, pageClassifications, supportingDocuments } = await extractStagedSource(
+      const { result, confidence, pageClassifications, supportingDocuments, supportingEvidence } = await extractStagedSource(
         context.supabase,
         context.userId,
         data.source,
@@ -199,6 +202,7 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
         sourcePreviewUrl: signed.data?.signedUrl ?? null,
         pageClassifications,
         supportingDocuments,
+        supportingEvidence,
       } as const;
     } catch (error) {
       return { error: error instanceof Error ? error.message : "The certification document could not be extracted." } as const;
@@ -218,6 +222,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     tenantProfileId: string;
     supportingDocuments?: SupportingDocumentChoice[];
     startReview?: boolean;
+    calculationReviews?: unknown;
   }) => {
     const source = validateSource(data.source);
     if (!UUID_PATTERN.test(String(data.tenantProfileId ?? ""))) throw new Error("Select the tenant file for this certification.");
@@ -250,12 +255,13 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       tenantProfileId: data.tenantProfileId,
       supportingDocuments,
       startReview: data.startReview === true,
+      calculationReviews: data.calculationReviews,
     };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const db = supabase as any;
-    const { result, confidence, sourceSha256, supportingDocuments: serverSupportingDocuments } = await extractStagedSource(
+    const { result, confidence, sourceSha256, supportingDocuments: serverSupportingDocuments, supportingEvidence } = await extractStagedSource(
       supabase,
       userId,
       data.source,
@@ -263,7 +269,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
 
     const { data: tenant, error: tenantError } = await db
       .from("portfolio_tenant_profiles")
-      .select("id, property_id, unit_id, household_name")
+      .select("id, property_id, unit_id, household_name, program_codes, portfolio_properties(state_code)")
       .eq("id", data.tenantProfileId)
       .eq("user_id", userId)
       .maybeSingle();
@@ -292,6 +298,9 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       }
     }
 
+    const certificationType = resolveReviewCertificationType(confirmedExtractedData);
+    if (data.startReview && !certificationType) throw new Error("Confirm the certification type. For Other, select the review action without changing the source TIC selection.");
+    const calculationReviews = validateSupportingCalculations(data.calculationReviews, supportingEvidence, confirmedExtractedData);
     const choiceByGroup = new Map(data.supportingDocuments.map((entry) => [entry.id, entry.documentType]));
     const finalSupportingDocuments = serverSupportingDocuments
       .map((group) => ({ ...group, documentType: choiceByGroup.get(group.id) ?? group.documentType }))
@@ -308,6 +317,9 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         property_id: tenant.property_id,
         unit_id: tenant.unit_id,
         tenant_profile_id: tenant.id,
+        certification_type: certificationType,
+        jurisdiction: tenant.portfolio_properties?.state_code ?? null,
+        program_codes: Array.isArray(tenant.program_codes) ? tenant.program_codes : [],
         storage_path: data.source.storagePath,
         original_file_name: data.source.originalFileName,
         mime_type: data.source.mimeType,
@@ -325,6 +337,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
           confirmed_extracted_data: confirmedExtractedData,
           corrections,
           reviewer_supplied_fields: reviewerSuppliedFields,
+          calculation_reviews: calculationReviews,
           preserved_supporting_documents: finalSupportingDocuments.map((document) => ({
             type: document.documentType,
             page_start: document.pageStart,
@@ -349,6 +362,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const confirmedFacts = Object.entries(confirmedExtractedData).map(([field, value]) => {
         const original = originalByField.get(field);
+        const sourceUnchanged = !!original && JSON.stringify(original.value) === JSON.stringify(value);
         return {
           item_id: item.id,
           user_id: userId,
@@ -357,11 +371,11 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
           field_value: value as never,
           source_document_ref: data.source.originalFileName,
           source_page: original?.page ?? null,
-          source_snippet: original?.snippet ?? "Entered during pre-save TIC review; OCR did not provide a value for this field.",
+          source_snippet: sourceUnchanged ? original.snippet : "Entered or corrected during pre-save TIC review. Original extraction and calculation sources are retained in the confirmation history.",
           confidence: original?.confidence ?? 1,
           human_verified: true,
           required_for_decision: original?.requiredForDecision ?? false,
-          extraction_provider: original?.provider ?? REVIEWER_CONFIRMED_PROVIDER,
+          extraction_provider: sourceUnchanged ? original.provider ?? result.provider : REVIEWER_CONFIRMED_PROVIDER,
         };
       });
       if (confirmedFacts.length) {

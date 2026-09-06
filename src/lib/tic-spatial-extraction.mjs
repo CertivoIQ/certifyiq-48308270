@@ -1,3 +1,4 @@
+// TIC_RECOGNITION_HARDENING_V1
 // TIC_CELL_REPAIR_V1
 import { isTicContent } from './tic-cell-repair.mjs';
 
@@ -290,13 +291,36 @@ function locateAssetTable(lines, pageHeight) {
   return { start: bodyStart, end: Math.max(bodyStart, next?.y0 ?? pageHeight) };
 }
 
+function householdHeaderBoundaries(table, extent, profile) {
+  const words = table?.header?.words ?? [];
+  const patterns = profile === 'phfa'
+    ? [/^hh\s+mbr$/, /^last\s+name$/, /^first\s+name$/, /^(?:rel\s+hh|relationship)$/, /^race$/, /^(?:ethn|ethnicity)$/, /^(?:dsbs|disability)$/, /^(?:gndr|gender)$/, /^date\s+(?:of\s+)?birth$/, /^(?:f\/?t\s+)?student$/, /^social\s+security$/]
+    : [/^hh\s+mbr$/, /^last\s+name$/, /^first\s+name$/, /^(?:rel\s+hh|relationship)$/, /^date\s+(?:of\s+)?birth$/, /^(?:f\/?t\s+)?student$/, /^social(?:\s+security)?$/];
+  const centers = [];
+  for (const pattern of patterns) {
+    let center = null;
+    for (let start=0; start<words.length && center === null; start++) {
+      for (let end=start+1; end<=Math.min(words.length,start+4); end++) {
+        const span=words.slice(start,end);
+        if (pattern.test(normalizedText(span.map(word=>word.text).join(' ')))) { center=(span[0].x0+span.at(-1).x1)/2; break; }
+      }
+    }
+    if (center === null || (centers.length && center <= centers.at(-1))) return null;
+    centers.push(center);
+  }
+  const width=extent.x1-extent.x0;
+  const edges=[0,...centers.slice(1).map((center,index)=>((center+centers[index])/2-extent.x0)/width),1];
+  return edges.every((value,index)=>index===0 || value>edges[index-1]) ? edges : null;
+}
+
 function householdLines(words, table, pageWidth, pageHeight, profile) {
   if (!table || table.end <= table.start) return [];
   const body = words.filter((word) => word.cy >= table.start && word.cy < table.end);
   const extent = tableExtent(body, pageWidth);
-  const boundaries = profile === 'phfa'
-    ? [0, 0.065, 0.235, 0.405, 0.47, 0.535, 0.60, 0.665, 0.765, 0.86, 1]
-    : [0, 0.075, 0.295, 0.455, 0.64, 0.79, 0.885, 1];
+  // Eleven PHFA cells require twelve edges; prefer source header geometry.
+  const boundaries = householdHeaderBoundaries(table, extent, profile) ?? (profile === 'phfa'
+    ? [0, 0.065, 0.235, 0.405, 0.47, 0.535, 0.60, 0.665, 0.72, 0.835, 0.885, 1]
+    : [0, 0.075, 0.295, 0.455, 0.64, 0.79, 0.885, 1]);
   const out = [];
   for (const row of clusterRows(body, table.start, table.end, pageHeight)) {
     const parts = splitColumns(row.words, extent, boundaries);

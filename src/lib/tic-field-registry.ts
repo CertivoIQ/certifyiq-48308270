@@ -1,3 +1,4 @@
+// TIC_EVIDENCE_WIRING_V1
 // TIC_CELL_REPAIR_V1
 export type TicFieldType = "text" | "date" | "number" | "currency" | "yes_no";
 
@@ -80,6 +81,7 @@ const signatureFields = Array.from({ length: TIC_SIGNATURE_ROW_COUNT }, (_, inde
 export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   field("calculation_review_note", "Calculation review note", "Calculation Review", "text", []),
   field("certification_type", "Certification type", "Certification", "text", ["certification type", "initial certification", "recertification", "other certification"]),
+  field("other_certification_review_action", "Review action for Other certification", "Certification", "text", []),
   field("other_certification_type", "Other certification type / explanation", "Certification", "text", ["other certification type", "other explanation"]),
   field("certification_effective_date", "Effective Date", "Certification", "date", ["certification effective date", "effective date"]),
   field("move_in_date", "Move-in Date", "Certification", "date", ["move-in date", "move in date"]),
