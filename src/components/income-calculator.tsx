@@ -32,10 +32,10 @@ async function request<T>(payload: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 function Field({ title, value, onChange, type = "text", hint, decimal = false }: { title: string; value: string; onChange: (v: string) => void; type?: "text" | "date"; hint?: string; decimal?: boolean }) {
-  return <label className="block min-w-0 text-xs font-medium">{title}<input className={inputClass} type={type} inputMode={decimal ? "decimal" : undefined} value={value} maxLength={type === "date" ? undefined : 2000} onChange={(e) => onChange(e.target.value)} list={title.toLowerCase().includes("source") ? "income-document-references" : undefined} />{hint ? <span className="mt-1 block font-normal leading-5 text-muted-foreground">{hint}</span> : null}</label>;
+  return <label className="block min-w-0 text-xs font-medium">{title}<input aria-label={title} className={inputClass} type={type} inputMode={decimal ? "decimal" : undefined} value={value} maxLength={type === "date" ? undefined : 2000} onChange={(e) => onChange(e.target.value)} list={title.toLowerCase().includes("source") ? "income-document-references" : undefined} />{hint ? <span className="mt-1 block font-normal leading-5 text-muted-foreground">{hint}</span> : null}</label>;
 }
 function Choose({ title, value, onChange, options }: { title: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
-  return <label className="block min-w-0 text-xs font-medium">{title}<select value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>{options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>;
+  return <label className="block min-w-0 text-xs font-medium">{title}<select aria-label={title} value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>{options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label>;
 }
 function Check({ children, checked, onChange }: { children: ReactNode; checked: boolean; onChange: (v: boolean) => void }) {
   return <label className="flex items-start gap-2 text-sm leading-5"><input className="mt-1 size-4 shrink-0 accent-primary" type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} /><span>{children}</span></label>;
