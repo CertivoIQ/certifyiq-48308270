@@ -67,6 +67,7 @@ jobs:
           bun run test:compliance
           bun run test:slice
           bun run test:orchestrator
+          bun run test:procedures
           bun run test:federal-packs
           node --test scripts/test-federal-controlled-source-activation.mjs
           node --test scripts/test-local-property-overlay-intake.mjs
