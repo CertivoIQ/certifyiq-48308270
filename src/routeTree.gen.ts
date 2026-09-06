@@ -17,6 +17,7 @@ import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as DemoDashboardRouteImport } from './routes/demo-dashboard'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as FounderSetupRouteImport } from './routes/founder-setup'
+import { Route as HotmaReadinessRouteImport } from './routes/hotma-readiness'
 import { Route as LaunchpadRouteImport } from './routes/launchpad'
 import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -26,6 +27,7 @@ import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrialRouteImport } from './routes/trial'
+import { Route as UploadCertificationRouteImport } from './routes/upload-certification'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedAuditReadinessRouteImport } from './routes/_authenticated/audit-readiness'
 import { Route as AuthenticatedAuditSimulatorRouteImport } from './routes/_authenticated/audit-simulator'
@@ -38,7 +40,9 @@ import { Route as AuthenticatedCrmPhaControlsRouteImport } from './routes/_authe
 import { Route as AuthenticatedCrmStaffRouteImport } from './routes/_authenticated/crm-staff'
 import { Route as AuthenticatedCrmSupportRouteImport } from './routes/_authenticated/crm-support'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDocumentIntelligenceRouteImport } from './routes/_authenticated/document-intelligence'
 import { Route as AuthenticatedFeatureSuggestionsRouteImport } from './routes/_authenticated/feature-suggestions'
+import { Route as AuthenticatedIncomeCalculatorRouteImport } from './routes/_authenticated/income-calculator'
 import { Route as AuthenticatedMarketingKitRouteImport } from './routes/_authenticated/marketing-kit'
 import { Route as AuthenticatedPha50058RouteImport } from './routes/_authenticated/pha-50058'
 import { Route as AuthenticatedPhaAccommodationsRouteImport } from './routes/_authenticated/pha-accommodations'
@@ -79,6 +83,7 @@ import { Route as PropertiesIndexRouteImport } from './routes/properties.index'
 import { Route as PropertiesPropertyIdRouteImport } from './routes/properties.$propertyId'
 import { Route as AuthenticatedAccountSecurityRouteImport } from './routes/_authenticated/account.security'
 import { Route as AuthenticatedCrmOperationsRouteImport } from './routes/_authenticated/crm/operations'
+import { Route as ApiInternalRuntimeHealthRouteImport } from './routes/api/internal/runtime-health'
 import { Route as ApiPublicFederalHousingNewsRouteImport } from './routes/api/public/federal-housing-news'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedCrmAccountsAccountIdRouteImport } from './routes/_authenticated/crm.accounts.$accountId'
@@ -128,6 +133,11 @@ const FounderSetupRoute = FounderSetupRouteImport.update({
   path: '/founder-setup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HotmaReadinessRoute = HotmaReadinessRouteImport.update({
+  id: '/hotma-readiness',
+  path: '/hotma-readiness',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LaunchpadRoute = LaunchpadRouteImport.update({
   id: '/launchpad',
   path: '/launchpad',
@@ -171,6 +181,11 @@ const TermsRoute = TermsRouteImport.update({
 const TrialRoute = TrialRouteImport.update({
   id: '/trial',
   path: '/trial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UploadCertificationRoute = UploadCertificationRouteImport.update({
+  id: '/upload-certification',
+  path: '/upload-certification',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -238,10 +253,22 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDocumentIntelligenceRoute =
+  AuthenticatedDocumentIntelligenceRouteImport.update({
+    id: '/document-intelligence',
+    path: '/document-intelligence',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFeatureSuggestionsRoute =
   AuthenticatedFeatureSuggestionsRouteImport.update({
     id: '/feature-suggestions',
     path: '/feature-suggestions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIncomeCalculatorRoute =
+  AuthenticatedIncomeCalculatorRouteImport.update({
+    id: '/income-calculator',
+    path: '/income-calculator',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingKitRoute =
@@ -468,6 +495,12 @@ const AuthenticatedCrmOperationsRoute =
     path: '/operations',
     getParentRoute: () => AuthenticatedCrmRoute,
   } as any)
+const ApiInternalRuntimeHealthRoute =
+  ApiInternalRuntimeHealthRouteImport.update({
+    id: '/api/internal/runtime-health',
+    path: '/api/internal/runtime-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicFederalHousingNewsRoute =
   ApiPublicFederalHousingNewsRouteImport.update({
     id: '/api/public/federal-housing-news',
@@ -528,6 +561,7 @@ export interface FileRoutesByFullPath {
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/founder-setup': typeof FounderSetupRoute
+  '/hotma-readiness': typeof HotmaReadinessRoute
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
@@ -537,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
+  '/upload-certification': typeof UploadCertificationRoute
   '/welcome': typeof WelcomeRoute
   '/audit-readiness': typeof AuthenticatedAuditReadinessRoute
   '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
@@ -549,7 +584,9 @@ export interface FileRoutesByFullPath {
   '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/document-intelligence': typeof AuthenticatedDocumentIntelligenceRoute
   '/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
+  '/income-calculator': typeof AuthenticatedIncomeCalculatorRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/pha-50058': typeof AuthenticatedPha50058Route
   '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -590,6 +627,7 @@ export interface FileRoutesByFullPath {
   '/properties/': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/crm/operations': typeof AuthenticatedCrmOperationsRoute
+  '/api/internal/runtime-health': typeof ApiInternalRuntimeHealthRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
@@ -608,6 +646,7 @@ export interface FileRoutesByTo {
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/founder-setup': typeof FounderSetupRoute
+  '/hotma-readiness': typeof HotmaReadinessRoute
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
@@ -617,6 +656,7 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
+  '/upload-certification': typeof UploadCertificationRoute
   '/welcome': typeof WelcomeRoute
   '/audit-readiness': typeof AuthenticatedAuditReadinessRoute
   '/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
@@ -629,7 +669,9 @@ export interface FileRoutesByTo {
   '/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/crm-support': typeof AuthenticatedCrmSupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/document-intelligence': typeof AuthenticatedDocumentIntelligenceRoute
   '/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
+  '/income-calculator': typeof AuthenticatedIncomeCalculatorRoute
   '/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/pha-50058': typeof AuthenticatedPha50058Route
   '/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -670,6 +712,7 @@ export interface FileRoutesByTo {
   '/properties': typeof PropertiesIndexRoute
   '/account/security': typeof AuthenticatedAccountSecurityRoute
   '/crm/operations': typeof AuthenticatedCrmOperationsRoute
+  '/api/internal/runtime-health': typeof ApiInternalRuntimeHealthRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
@@ -690,6 +733,7 @@ export interface FileRoutesById {
   '/demo-dashboard': typeof DemoDashboardRoute
   '/findings': typeof FindingsRoute
   '/founder-setup': typeof FounderSetupRoute
+  '/hotma-readiness': typeof HotmaReadinessRoute
   '/launchpad': typeof LaunchpadRoute
   '/methodology': typeof MethodologyRoute
   '/pricing': typeof PricingRoute
@@ -699,6 +743,7 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
   '/trial': typeof TrialRoute
+  '/upload-certification': typeof UploadCertificationRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/audit-readiness': typeof AuthenticatedAuditReadinessRoute
   '/_authenticated/audit-simulator': typeof AuthenticatedAuditSimulatorRoute
@@ -711,7 +756,9 @@ export interface FileRoutesById {
   '/_authenticated/crm-staff': typeof AuthenticatedCrmStaffRoute
   '/_authenticated/crm-support': typeof AuthenticatedCrmSupportRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/document-intelligence': typeof AuthenticatedDocumentIntelligenceRoute
   '/_authenticated/feature-suggestions': typeof AuthenticatedFeatureSuggestionsRoute
+  '/_authenticated/income-calculator': typeof AuthenticatedIncomeCalculatorRoute
   '/_authenticated/marketing-kit': typeof AuthenticatedMarketingKitRoute
   '/_authenticated/pha-50058': typeof AuthenticatedPha50058Route
   '/_authenticated/pha-accommodations': typeof AuthenticatedPhaAccommodationsRoute
@@ -752,6 +799,7 @@ export interface FileRoutesById {
   '/properties/': typeof PropertiesIndexRoute
   '/_authenticated/account/security': typeof AuthenticatedAccountSecurityRoute
   '/_authenticated/crm/operations': typeof AuthenticatedCrmOperationsRoute
+  '/api/internal/runtime-health': typeof ApiInternalRuntimeHealthRoute
   '/api/public/federal-housing-news': typeof ApiPublicFederalHousingNewsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/crm/accounts/$accountId': typeof AuthenticatedCrmAccountsAccountIdRoute
@@ -772,6 +820,7 @@ export interface FileRouteTypes {
     | '/demo-dashboard'
     | '/findings'
     | '/founder-setup'
+    | '/hotma-readiness'
     | '/launchpad'
     | '/methodology'
     | '/pricing'
@@ -781,6 +830,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/terms'
     | '/trial'
+    | '/upload-certification'
     | '/welcome'
     | '/audit-readiness'
     | '/audit-simulator'
@@ -793,7 +843,9 @@ export interface FileRouteTypes {
     | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
+    | '/document-intelligence'
     | '/feature-suggestions'
+    | '/income-calculator'
     | '/marketing-kit'
     | '/pha-50058'
     | '/pha-accommodations'
@@ -834,6 +886,7 @@ export interface FileRouteTypes {
     | '/properties/'
     | '/account/security'
     | '/crm/operations'
+    | '/api/internal/runtime-health'
     | '/api/public/federal-housing-news'
     | '/api/public/health'
     | '/crm/accounts/$accountId'
@@ -852,6 +905,7 @@ export interface FileRouteTypes {
     | '/demo-dashboard'
     | '/findings'
     | '/founder-setup'
+    | '/hotma-readiness'
     | '/launchpad'
     | '/methodology'
     | '/pricing'
@@ -861,6 +915,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/terms'
     | '/trial'
+    | '/upload-certification'
     | '/welcome'
     | '/audit-readiness'
     | '/audit-simulator'
@@ -873,7 +928,9 @@ export interface FileRouteTypes {
     | '/crm-staff'
     | '/crm-support'
     | '/dashboard'
+    | '/document-intelligence'
     | '/feature-suggestions'
+    | '/income-calculator'
     | '/marketing-kit'
     | '/pha-50058'
     | '/pha-accommodations'
@@ -914,6 +971,7 @@ export interface FileRouteTypes {
     | '/properties'
     | '/account/security'
     | '/crm/operations'
+    | '/api/internal/runtime-health'
     | '/api/public/federal-housing-news'
     | '/api/public/health'
     | '/crm/accounts/$accountId'
@@ -933,6 +991,7 @@ export interface FileRouteTypes {
     | '/demo-dashboard'
     | '/findings'
     | '/founder-setup'
+    | '/hotma-readiness'
     | '/launchpad'
     | '/methodology'
     | '/pricing'
@@ -942,6 +1001,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/terms'
     | '/trial'
+    | '/upload-certification'
     | '/welcome'
     | '/_authenticated/audit-readiness'
     | '/_authenticated/audit-simulator'
@@ -954,7 +1014,9 @@ export interface FileRouteTypes {
     | '/_authenticated/crm-staff'
     | '/_authenticated/crm-support'
     | '/_authenticated/dashboard'
+    | '/_authenticated/document-intelligence'
     | '/_authenticated/feature-suggestions'
+    | '/_authenticated/income-calculator'
     | '/_authenticated/marketing-kit'
     | '/_authenticated/pha-50058'
     | '/_authenticated/pha-accommodations'
@@ -995,6 +1057,7 @@ export interface FileRouteTypes {
     | '/properties/'
     | '/_authenticated/account/security'
     | '/_authenticated/crm/operations'
+    | '/api/internal/runtime-health'
     | '/api/public/federal-housing-news'
     | '/api/public/health'
     | '/_authenticated/crm/accounts/$accountId'
@@ -1015,6 +1078,7 @@ export interface RootRouteChildren {
   DemoDashboardRoute: typeof DemoDashboardRoute
   FindingsRoute: typeof FindingsRoute
   FounderSetupRoute: typeof FounderSetupRoute
+  HotmaReadinessRoute: typeof HotmaReadinessRoute
   LaunchpadRoute: typeof LaunchpadRoute
   MethodologyRoute: typeof MethodologyRoute
   PricingRoute: typeof PricingRoute
@@ -1024,6 +1088,7 @@ export interface RootRouteChildren {
   SecurityRoute: typeof SecurityRoute
   TermsRoute: typeof TermsRoute
   TrialRoute: typeof TrialRoute
+  UploadCertificationRoute: typeof UploadCertificationRoute
   WelcomeRoute: typeof WelcomeRoute
   ApiChatRoute: typeof ApiChatRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -1033,6 +1098,7 @@ export interface RootRouteChildren {
   FilesIndexRoute: typeof FilesIndexRoute
   PhaIndexRoute: typeof PhaIndexRoute
   PropertiesIndexRoute: typeof PropertiesIndexRoute
+  ApiInternalRuntimeHealthRoute: typeof ApiInternalRuntimeHealthRoute
   ApiPublicFederalHousingNewsRoute: typeof ApiPublicFederalHousingNewsRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiInternalOperationsTickRoute: typeof ApiInternalOperationsTickRoute
@@ -1101,6 +1167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FounderSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hotma-readiness': {
+      id: '/hotma-readiness'
+      path: '/hotma-readiness'
+      fullPath: '/hotma-readiness'
+      preLoaderRoute: typeof HotmaReadinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/launchpad': {
       id: '/launchpad'
       path: '/launchpad'
@@ -1162,6 +1235,13 @@ declare module '@tanstack/react-router' {
       path: '/trial'
       fullPath: '/trial'
       preLoaderRoute: typeof TrialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upload-certification': {
+      id: '/upload-certification'
+      path: '/upload-certification'
+      fullPath: '/upload-certification'
+      preLoaderRoute: typeof UploadCertificationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/welcome': {
@@ -1248,11 +1328,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/document-intelligence': {
+      id: '/_authenticated/document-intelligence'
+      path: '/document-intelligence'
+      fullPath: '/document-intelligence'
+      preLoaderRoute: typeof AuthenticatedDocumentIntelligenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/feature-suggestions': {
       id: '/_authenticated/feature-suggestions'
       path: '/feature-suggestions'
       fullPath: '/feature-suggestions'
       preLoaderRoute: typeof AuthenticatedFeatureSuggestionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/income-calculator': {
+      id: '/_authenticated/income-calculator'
+      path: '/income-calculator'
+      fullPath: '/income-calculator'
+      preLoaderRoute: typeof AuthenticatedIncomeCalculatorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing-kit': {
@@ -1535,6 +1629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmOperationsRouteImport
       parentRoute: typeof AuthenticatedCrmRoute
     }
+    '/api/internal/runtime-health': {
+      id: '/api/internal/runtime-health'
+      path: '/api/internal/runtime-health'
+      fullPath: '/api/internal/runtime-health'
+      preLoaderRoute: typeof ApiInternalRuntimeHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/federal-housing-news': {
       id: '/api/public/federal-housing-news'
       path: '/api/public/federal-housing-news'
@@ -1627,7 +1728,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCrmStaffRoute: typeof AuthenticatedCrmStaffRoute
   AuthenticatedCrmSupportRoute: typeof AuthenticatedCrmSupportRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDocumentIntelligenceRoute: typeof AuthenticatedDocumentIntelligenceRoute
   AuthenticatedFeatureSuggestionsRoute: typeof AuthenticatedFeatureSuggestionsRoute
+  AuthenticatedIncomeCalculatorRoute: typeof AuthenticatedIncomeCalculatorRoute
   AuthenticatedMarketingKitRoute: typeof AuthenticatedMarketingKitRoute
   AuthenticatedPha50058Route: typeof AuthenticatedPha50058Route
   AuthenticatedPhaAccommodationsRoute: typeof AuthenticatedPhaAccommodationsRoute
@@ -1674,7 +1777,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCrmStaffRoute: AuthenticatedCrmStaffRoute,
   AuthenticatedCrmSupportRoute: AuthenticatedCrmSupportRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDocumentIntelligenceRoute:
+    AuthenticatedDocumentIntelligenceRoute,
   AuthenticatedFeatureSuggestionsRoute: AuthenticatedFeatureSuggestionsRoute,
+  AuthenticatedIncomeCalculatorRoute: AuthenticatedIncomeCalculatorRoute,
   AuthenticatedMarketingKitRoute: AuthenticatedMarketingKitRoute,
   AuthenticatedPha50058Route: AuthenticatedPha50058Route,
   AuthenticatedPhaAccommodationsRoute: AuthenticatedPhaAccommodationsRoute,
@@ -1724,6 +1830,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoDashboardRoute: DemoDashboardRoute,
   FindingsRoute: FindingsRoute,
   FounderSetupRoute: FounderSetupRoute,
+  HotmaReadinessRoute: HotmaReadinessRoute,
   LaunchpadRoute: LaunchpadRoute,
   MethodologyRoute: MethodologyRoute,
   PricingRoute: PricingRoute,
@@ -1733,6 +1840,7 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityRoute: SecurityRoute,
   TermsRoute: TermsRoute,
   TrialRoute: TrialRoute,
+  UploadCertificationRoute: UploadCertificationRoute,
   WelcomeRoute: WelcomeRoute,
   ApiChatRoute: ApiChatRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
@@ -1742,6 +1850,7 @@ const rootRouteChildren: RootRouteChildren = {
   FilesIndexRoute: FilesIndexRoute,
   PhaIndexRoute: PhaIndexRoute,
   PropertiesIndexRoute: PropertiesIndexRoute,
+  ApiInternalRuntimeHealthRoute: ApiInternalRuntimeHealthRoute,
   ApiPublicFederalHousingNewsRoute: ApiPublicFederalHousingNewsRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiInternalOperationsTickRoute: ApiInternalOperationsTickRoute,

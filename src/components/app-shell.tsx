@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   Briefcase,
   Building2,
+  Calculator,
   ChevronDown,
   ClipboardCheck,
   ClipboardList,
@@ -77,6 +78,7 @@ type PhaNavKey =
 type PhaNavItem = NavItem & { key: PhaNavKey };
 
 const MF_COMMAND: readonly NavItem[] = [
+  { to: "/income-calculator", label: "Income Calculator", icon: Calculator },
   { to: "/upload-certification", label: "Upload Certification & OCR", icon: FileUp },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/tasks", label: "Tasks", icon: ClipboardCheck },
@@ -103,6 +105,7 @@ const HELP_NAV: readonly NavItem[] = [
 ];
 
 const PHA_COMMAND: readonly PhaNavItem[] = [
+  { to: "/income-calculator", label: "Income Calculator", icon: Calculator, key: "family_read" },
   { to: "/upload-certification", label: "Upload Certification & OCR", icon: FileUp, key: "command" },
   { to: "/dashboard", label: "Command Center", icon: LayoutDashboard, key: "command" },
   { to: "/tasks", label: "Tasks", icon: ClipboardCheck, key: "tasks" },
@@ -160,7 +163,7 @@ function routeIsActive(pathname: string, to: string) {
   return to === "/dashboard" ? pathname === to : pathname === to || pathname.startsWith(`${to}/`);
 }
 
-function NavLink({ item, onNavigate, nested = false }: { item: NavItem; onNavigate?: () => void; nested?: boolean }) {
+function NavLink({ item, onNavigate, nested = false }: { item: NavItem; onNavigate?: (() => void) | undefined; nested?: boolean }) {
   const { to, label, icon: Icon } = item;
   return (
     <Link
@@ -189,7 +192,7 @@ function NavGroup({
   icon: LucideIcon;
   items: readonly NavItem[];
   pathname: string;
-  onNavigate?: () => void;
+  onNavigate?: (() => void) | undefined;
   initiallyOpen?: boolean;
 }) {
   const active = items.some((item) => routeIsActive(pathname, item.to));
@@ -221,7 +224,7 @@ function Wordmark() {
   return <Link to="/dashboard" className="flex items-center gap-2.5"><img src="/certivoiq-logo-dark.png" alt="CertivoIQ" className="h-12 w-auto object-contain" /></Link>;
 }
 
-function NavLinks({ onNavigate, dashboardMode }: { onNavigate?: () => void; dashboardMode: PlatformDashboardMode }) {
+function NavLinks({ onNavigate, dashboardMode }: { onNavigate?: (() => void) | undefined; dashboardMode: PlatformDashboardMode }) {
   const { isStaff } = useIsStaff();
   const { accessLevel, canManageStaff } = useCrmStaffAuthority();
   const { phaRole } = useWorkspaceProfile();
