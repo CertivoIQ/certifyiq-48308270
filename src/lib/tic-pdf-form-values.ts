@@ -231,7 +231,7 @@ function schemaFieldKey(name: string): string | null {
   const target = normalize(name);
   const matches = TIC_FIELD_DEFINITIONS.filter((definition) =>
     [definition.key, definition.label, ...definition.aliases].some((label) => normalize(label) === target));
-  return matches.length === 1 ? matches[0].key : null;
+  return matches.length === 1 ? matches[0]!.key : null;
 }
 
 function appendSeparateNames(fieldObjects: PdfFieldObjects, byPage: Map<number, string[]>) {

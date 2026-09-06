@@ -19,14 +19,14 @@ export function TicCalculationReview({ values, busy, onChange }: Props) {
   try {
     const entries = periods.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => line.split('|').map(part => part.trim()));
     if (entries.some(parts => parts.length !== 2 || !parts[0])) throw new Error('Each line requires a unique document/pay-period reference | gross pay.');
-    if (new Set(entries.map(parts => parts[0].toLowerCase())).size !== entries.length) throw new Error('Duplicate pay-period references must be resolved.');
-    projection = projectGrossPay({ amounts: entries.map(parts => parts[1]), frequency, policyRef: policy });
+    if (new Set(entries.map(parts => parts[0]!.toLowerCase())).size !== entries.length) throw new Error('Duplicate pay-period references must be resolved.');
+    projection = projectGrossPay({ amounts: entries.map(parts => parts[1]!), frequency, policyRef: policy });
   } catch (cause) { projectionError = cause instanceof Error ? cause.message : 'Check the worksheet inputs.'; }
 
   function apply(changes: Record<string, string>, detail: string) {
     setError('');
     if (!checked || !reason.trim()) { setError('Confirm the source review and enter a correction reason.'); return; }
-    const note = [values.calculation_review_note, `${detail}; reason: ${reason.trim()}`].filter(Boolean).join('\n');
+    const note = [values['calculation_review_note'], `${detail}; reason: ${reason.trim()}`].filter(Boolean).join('\n');
     if (note.length > 500) { setError('The calculation note exceeds 500 characters. Shorten the note before applying; no inputs were changed.'); return; }
     for (const [field, value] of Object.entries(changes)) onChange(field, value);
     onChange('calculation_review_note', note);
@@ -66,7 +66,7 @@ export function TicCalculationReview({ values, busy, onChange }: Props) {
         <button type="button" className="rounded border border-slate-700 px-3 py-2 text-sm disabled:opacity-50" disabled={busy || !checked || !reason.trim() || !projection || !/^(?:10|[1-9])$/.test(values[`income_member_${incomeRow}_household_member_number`] ?? '')} onClick={() => projection && apply({ [`income_member_${incomeRow}_wages_business`]: projection.annual }, `Income row ${incomeRow}: ${projection.formula} = ${projection.annual}; ${policy}; sources: ${periods.replace(/\n/g, '; ')}`)}>Apply gross-pay proposal</button>
       </div>
       {error && <p role="alert" className="text-sm font-semibold">{error}</p>}
-      <label className="block text-sm">Saved calculation review note<textarea className={inputClass} value={values.calculation_review_note ?? ''} maxLength={500} rows={3} disabled={busy} onChange={event => onChange('calculation_review_note', event.target.value)} /></label>
+      <label className="block text-sm">Saved calculation review note<textarea className={inputClass} value={values['calculation_review_note'] ?? ''} maxLength={500} rows={3} disabled={busy} onChange={event => onChange('calculation_review_note', event.target.value)} /></label>
       <p className="text-xs">Save the TIC to persist applied values and the note through the existing confirmation workflow. Unapplied worksheet entries are not saved.</p>
     </section>
   );

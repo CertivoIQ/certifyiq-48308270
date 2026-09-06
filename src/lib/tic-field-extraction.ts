@@ -179,7 +179,7 @@ export function extractTicFieldsFromText(
   for (const line of lines) {
     const match = /^__CERTIVOIQ_TIC_FIELD__\s+([a-z0-9_]+)\s*:\s*(.*)$/i.exec(line.trim());
     if (!match) continue;
-    const definition = TIC_FIELD_BY_KEY.get(match[1]);
+    const definition = TIC_FIELD_BY_KEY.get(match[1]!);
     if (!definition) continue;
     const value = strictMappedValue(definition.type, match[2], definition.key);
     if (value === null) { conflictingDirectFields.add(definition.key); continue; }
