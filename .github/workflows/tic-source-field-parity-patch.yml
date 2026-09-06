@@ -1,4 +1,4 @@
-# Retry after correcting the final test anchor.
+# Retry after correcting the native HH-member regression assertion.
 name: Apply TIC source-field parity patches
 
 on:
