@@ -1,0 +1,46 @@
+name: State checklist exact PDF research 20260906
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/capture-state-checklist-pdfs-20260906.py
+      - .github/workflows/state-checklist-pdf-evidence-20260906.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: state-checklist-pdf-research-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure PDF text tooling
+        run: |
+          command -v pdftotext || (sudo apt-get update -qq && sudo apt-get install -y poppler-utils)
+      - name: Check syntax
+        run: python3 -m py_compile scripts/capture-state-checklist-pdfs-20260906.py
+      - name: Capture official PDFs and exact SHA-256 evidence (no database writes)
+        run: python3 scripts/capture-state-checklist-pdfs-20260906.py
+      - name: Preserve original PDFs, extracted text and evidence manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-original-pdfs-20260906
+          path: artifacts/state-checklist-pdf-evidence-20260906/
+          retention-days: 90
+          if-no-files-found: error
+          compression-level: 6
+      - name: Preserve compact manifests separately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-checklist-manifests-20260906
+          path: |
+            artifacts/state-checklist-pdf-evidence-20260906/manifest.json
+            artifacts/state-checklist-pdf-evidence-20260906/sha256-manifest.csv
+            artifacts/state-checklist-pdf-evidence-20260906/SHA256SUMS
+          retention-days: 90
+          if-no-files-found: error
