@@ -14,6 +14,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     PhaHotmaAllModuleResult,
     PhaHotmaImplementationInput,
   } from "@/lib/pha-hotma-implementation-engine.mjs";
+  import type { ComplianceProcedureScanResult } from "@/lib/compliance-procedure-registry.mjs";
 
   export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD: string;
   export const FEDERAL_REVIEW_PACK_VERSION: string;
@@ -29,6 +30,7 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     layeredProgramInput?: Record<string, unknown>;
     recertificationInput?: Record<string, unknown>;
     mfhHotmaInput?: Omit<MfhHotmaReviewInput, "module_id">;
+    mfhHotmaOperationsInput?: Record<string, unknown>;
     phaHotmaInput?: Omit<PhaHotmaImplementationInput, "module_id" | "program">;
   }
 
@@ -38,8 +40,10 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
     controlResults: {
       tenantEligibility: Record<string, unknown>;
       recertification: Record<string, unknown> | null;
+      complianceProcedures: ComplianceProcedureScanResult | null;
       layeredPrograms: Record<string, unknown> | null;
       mfhHotma: MfhHotmaAllModuleResult | null;
+      mfhHotmaOperations: Record<string, unknown> | null;
       phaHotma: Array<PhaHotmaAllModuleResult & { program: string }> | null;
     };
   }
