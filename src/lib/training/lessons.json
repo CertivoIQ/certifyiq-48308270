@@ -1,0 +1,2061 @@
+[
+  {
+    "id": "training",
+    "title": "Getting started",
+    "href": "/training",
+    "category": "Getting started",
+    "audience": "all",
+    "summary": "Choose a learning path and follow a walkthrough without changing operational records.",
+    "steps": [
+      {
+        "title": "Find a page",
+        "instruction": "Search by page, tab, or task. Filter by workspace or topic to narrow the lesson list."
+      },
+      {
+        "title": "Follow the walkthrough",
+        "instruction": "Read the steps in order. Open the page in a separate tab when you are ready; your normal account permissions and subscription still apply."
+      },
+      {
+        "title": "Track your learning",
+        "instruction": "Mark a lesson complete after reviewing its steps. Progress is saved on this device for your signed-in account. Completion is a learning aid, not a compliance approval."
+      },
+      {
+        "title": "Get help",
+        "instruction": "For a platform issue, use Help → Tech Support. Include the page, steps, expected result, and error message, without passwords or sensitive tenant details."
+      }
+    ],
+    "coveredRoutes": [
+      "/training"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "auth",
+    "title": "Sign in, signup & password recovery",
+    "href": "/auth",
+    "category": "Getting started",
+    "audience": "all",
+    "summary": "Create or recover your account and understand session expiry.",
+    "steps": [
+      {
+        "title": "Create an account",
+        "instruction": "Choose signup, enter your account details, open the Terms & Agreements, and check the required agreement only after reading it. Complete any email verification requested."
+      },
+      {
+        "title": "Sign in",
+        "instruction": "Use your registered email and password. Complete any required verification. Your session lasts up to seven days from login; refreshing a page does not restart that period."
+      },
+      {
+        "title": "Recover access",
+        "instruction": "Choose Forgot password, request a reset email, and use its link to enter and confirm a new password. Request a fresh link if it has expired."
+      },
+      {
+        "title": "Leave a shared device",
+        "instruction": "Use Sign out when finished. Do not share passwords, verification codes, or recovery codes with Tech Support."
+      }
+    ],
+    "coveredRoutes": [
+      "/auth",
+      "/reset-password"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "trial",
+    "title": "Free trial",
+    "href": "/trial",
+    "category": "Getting started",
+    "audience": "all",
+    "summary": "Use the three-review trial and its working Income Calculator.",
+    "steps": [
+      {
+        "title": "Start the trial",
+        "instruction": "Create an account or sign in from the trial entry screen. Review and accept the signup agreement when creating an account."
+      },
+      {
+        "title": "Review selected certifications",
+        "instruction": "Upload a permitted certification and explicitly select it for review. Check the remaining free-review allowance before running reviews."
+      },
+      {
+        "title": "Use the calculator",
+        "instruction": "Open Income Calculator while free reviews remain. Calculating does not itself consume a certification review. Working trial calculations can be printed; saving portfolio calculator records requires a subscription."
+      },
+      {
+        "title": "After three reviews",
+        "instruction": "Once all three free reviews are used, trial calculator access ends. Review subscription options or contact Tech Support if the allowance appears incorrect."
+      }
+    ],
+    "coveredRoutes": [
+      "/trial"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "workspace-setup",
+    "title": "Organization & Programs",
+    "href": "/workspace-setup",
+    "category": "Getting started",
+    "audience": "all",
+    "summary": "Configure the organization, jurisdictions, and actual program layers.",
+    "steps": [
+      {
+        "title": "Organization profile",
+        "instruction": "Enter the organization name, type, contact information, and states where it operates."
+      },
+      {
+        "title": "Program selection",
+        "instruction": "Select every operated program. Use the actual property or agency funding documents; do not add a program merely to expose another screen."
+      },
+      {
+        "title": "PHA configuration",
+        "instruction": "For a PHA, confirm program operations, agency cohort, and reporting path against the agency's applicable source records."
+      },
+      {
+        "title": "Save and verify",
+        "instruction": "Save the profile, confirm the saved values, then return to Onboarding & Portfolio Setup. HOTMA applicability is derived from the program configuration."
+      }
+    ],
+    "coveredRoutes": [
+      "/workspace-setup"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "launchpad",
+    "title": "Onboarding & Portfolio Setup",
+    "href": "/launchpad",
+    "category": "Getting started",
+    "audience": "all",
+    "summary": "Complete the six saved setup steps.",
+    "steps": [
+      {
+        "title": "1 · Welcome to CertivoIQ",
+        "instruction": "Start the setup checklist. Each later checkpoint checks saved records."
+      },
+      {
+        "title": "2 · Confirm organization profile",
+        "instruction": "Open Organization & Programs, save the required profile, return, and select Verify saved profile & continue."
+      },
+      {
+        "title": "3 · Complete portfolio & tenant onboarding",
+        "instruction": "Import properties, units, and tenant profiles through portfolio onboarding. Return and verify; at least one saved property, unit, and tenant profile is required."
+      },
+      {
+        "title": "4 · Upload first certification",
+        "instruction": "Open Upload Certification & OCR and complete a certification upload. Portfolio CSV onboarding does not satisfy this checkpoint."
+      },
+      {
+        "title": "5 · Set team access",
+        "instruction": "Review account security and grant only the access each team member needs through the appropriate administrator controls."
+      },
+      {
+        "title": "6 · Confirm operational readiness",
+        "instruction": "Review the saved setup and support path, then complete onboarding. This confirms setup, not compliance approval."
+      }
+    ],
+    "coveredRoutes": [
+      "/launchpad"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "properties",
+    "title": "Portfolio & tenant onboarding",
+    "href": "/properties",
+    "category": "Getting started",
+    "audience": "all",
+    "summary": "Match varying CSV headers and import property, unit, and tenant records.",
+    "steps": [
+      {
+        "title": "Choose your file",
+        "instruction": "Choose a portfolio and tenant CSV/TSV. The template is optional; use your own headers and map equivalent fields."
+      },
+      {
+        "title": "Match fields & preview",
+        "instruction": "Check each source column, destination field, and sample value. Map property identifiers consistently so units and tenants attach to the correct property."
+      },
+      {
+        "title": "Resolve dates and state",
+        "instruction": "Choose the actual date format and supply an actual property state when required. Fix preview errors; never infer missing resident information."
+      },
+      {
+        "title": "Confirm import",
+        "instruction": "Review the preview and explicit confirmation before importing. Inspect the resulting counts and return to the setup checklist. Certification documents belong in Upload Certification & OCR."
+      }
+    ],
+    "coveredRoutes": [
+      "/properties"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "dashboard",
+    "title": "Dashboard / Command Center",
+    "href": "/dashboard",
+    "category": "Daily work",
+    "audience": "all",
+    "summary": "Read the workspace overview and open the source queue behind each item.",
+    "steps": [
+      {
+        "title": "Confirm workspace",
+        "instruction": "Check the workspace and active program profile. Available navigation depends on your role and organization."
+      },
+      {
+        "title": "Portfolio operations",
+        "instruction": "Review certifications awaiting review, Needs Your Attention, due dates, and upcoming compliance work. Open the underlying task or certification to act."
+      },
+      {
+        "title": "Portfolio status & audit readiness",
+        "instruction": "Use summaries to prioritize work, then inspect the source records and outstanding evidence before treating an item as complete."
+      },
+      {
+        "title": "PHA queues",
+        "instruction": "For a PHA, review families, HUD-50058, inspections, accommodations, portability, and waiting-list queues appropriate to your role."
+      },
+      {
+        "title": "Program configuration",
+        "instruction": "Check program configuration and HOTMA readiness when applicable. Demonstration workspace figures are examples, not your live portfolio."
+      }
+    ],
+    "coveredRoutes": [
+      "/dashboard"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "upload-certification-tic-parts",
+    "title": "Upload Certification & OCR",
+    "href": "/upload-certification",
+    "category": "Certifications",
+    "audience": "all",
+    "summary": "Review the original source and extracted certification before saving.",
+    "steps": [
+      {
+        "title": "Select a packet",
+        "instruction": "Upload PDF, PNG, JPEG, or WEBP certification documents within the displayed size and page limits. Use portfolio onboarding for tenant CSV files."
+      },
+      {
+        "title": "Choose destination",
+        "instruction": "Select the existing tenant file when saving to the portfolio. Confirm the property, unit, and household before continuing."
+      },
+      {
+        "title": "Review source and form",
+        "instruction": "Compare the original TIC source preview with the editable CertivoIQ TIC Review Form. Correct extraction errors using the source; leave unresolved values for review."
+      },
+      {
+        "title": "Classify supporting pages",
+        "instruction": "Review supporting-document classifications and original pages. Use Part of TIC — do not create supporting record for pages that belong to the certification itself."
+      },
+      {
+        "title": "Save or cancel",
+        "instruction": "Save only after checking the packet and destination. Cancel Upload abandons the staged upload. Starting a compliance review is a separate explicit action in the review queue."
+      }
+    ],
+    "coveredRoutes": [
+      "/upload-certification"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "upload-certification",
+    "title": "TIC Review Form · Parts I–IX",
+    "href": "/upload-certification",
+    "category": "Certifications",
+    "audience": "all",
+    "summary": "Walk through every part of the editable TIC review form.",
+    "steps": [
+      {
+        "title": "Certification heading",
+        "instruction": "Confirm Initial Certification, Recertification, or Other and the effective date from the original source."
+      },
+      {
+        "title": "Part I · Development Data",
+        "instruction": "Check property, building, unit, and program identifiers against the uploaded form."
+      },
+      {
+        "title": "Part II · Household Composition",
+        "instruction": "Review each member and the applicable household fields. Preserve source values rather than guessing missing details."
+      },
+      {
+        "title": "Part III · Gross Annual Income",
+        "instruction": "Check annual wages, Social Security, public assistance, and other income for each member against supporting sources."
+      },
+      {
+        "title": "Part IV · Assets",
+        "instruction": "Review the applicable IVA or IVB asset section and its threshold context. Check asset amounts and actual or imputed income against the source."
+      },
+      {
+        "title": "Part V · Total Household Income",
+        "instruction": "Reconcile the income and asset-income totals with their supporting rows."
+      },
+      {
+        "title": "Household certification",
+        "instruction": "Inspect the household certification and source signatures. An extracted signature field is not permission to sign for someone else."
+      },
+      {
+        "title": "Part VI · Income Eligibility",
+        "instruction": "Check household size, applicable income limit, and eligibility fields against the correct program and effective date."
+      },
+      {
+        "title": "Part VII · Rent",
+        "instruction": "Review rent, utility allowance, subsidy, and related rent-limit fields using the applicable sources."
+      },
+      {
+        "title": "Part VIII · Student Status",
+        "instruction": "Review the student-status selections and any required supporting evidence."
+      },
+      {
+        "title": "Part IX · Program Type",
+        "instruction": "Confirm all applicable program selections. Check the owner/representative signature area before saving the reviewed form."
+      }
+    ],
+    "coveredRoutes": [
+      "/upload-certification"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "files-detail",
+    "title": "Certification Review Queue",
+    "href": "/files",
+    "category": "Certifications",
+    "audience": "all",
+    "summary": "Select exactly which uploaded certifications to review and inspect their evidence.",
+    "steps": [
+      {
+        "title": "Find uploaded records",
+        "instruction": "Locate the certification in the queue. An uploaded or extracted file has not automatically received a completed compliance review."
+      },
+      {
+        "title": "Set review context",
+        "instruction": "Confirm Initial, Annual, or Interim certification type and the applicable jurisdiction."
+      },
+      {
+        "title": "Select and review",
+        "instruction": "Check only the intended records and choose Review selected. During a trial, verify the remaining allowance first."
+      },
+      {
+        "title": "Inspect evidence and results",
+        "instruction": "Open the selected certification's evidence and findings. Compare extracted values to source pages; ambiguous or missing evidence must remain unresolved."
+      },
+      {
+        "title": "Correct and re-review",
+        "instruction": "Attach the appropriate supporting evidence and resolve the documented issue. Re-review through the controlled workflow; use Tasks for required follow-up."
+      }
+    ],
+    "coveredRoutes": [
+      "/files",
+      "/compliance-intelligence"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "files",
+    "title": "Certification detail demonstration",
+    "href": "/files",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Understand the legacy file-detail tabs using sample records.",
+    "steps": [
+      {
+        "title": "Open a sample file",
+        "instruction": "The legacy file-detail page uses the demonstration dataset. Open an available sample from its linked demonstration view; use the live Certification Review Queue for customer work."
+      },
+      {
+        "title": "Calculation tab",
+        "instruction": "Inspect how income calculations and source references are presented in the example."
+      },
+      {
+        "title": "Extraction tab",
+        "instruction": "Compare sample extracted fields and source provenance. Do not copy sample values into a real household."
+      },
+      {
+        "title": "Findings tab",
+        "instruction": "Read each example finding and cited rule. Validate the applicable current source in the live workflow."
+      },
+      {
+        "title": "Timeline tab",
+        "instruction": "Review the sample sequence of upload, review, and follow-up events. The sample timeline is not your account history."
+      }
+    ],
+    "coveredRoutes": [
+      "/files/$fileId"
+    ],
+    "status": "demonstration"
+  },
+  {
+    "id": "income-calculator",
+    "title": "Income Calculator · all tabs",
+    "href": "/income-calculator",
+    "category": "Certifications",
+    "audience": "all",
+    "summary": "Build a supported calculation for each applicable program layer.",
+    "steps": [
+      {
+        "title": "Household",
+        "instruction": "For a subscribed portfolio, select property, unit, and household. During a trial, choose the working program layers. Confirm certification type, date, household size, assistance, composition, and expected changes."
+      },
+      {
+        "title": "Jobs & Pay",
+        "instruction": "Choose the documented basis: hourly rate and hours, pay-period gross and frequency, or comparable paystub average. Enter overtime with its actual rate and hours. Do not count alternate bases for the same job twice."
+      },
+      {
+        "title": "Other Income & Assets",
+        "instruction": "Add separate supported income and asset rows. Do not enter wages again as other income. Review evidence and any applicable exclusions."
+      },
+      {
+        "title": "Prior 12 Months",
+        "instruction": "Use the required historical coverage only when applicable to the program method. A three-month sample does not replace a required twelve-month history."
+      },
+      {
+        "title": "Program Adjustments",
+        "instruction": "Review exclusions, deductions, adjusted income, or accepted determinations separately for each program layer, including dates and evidence. Do not transfer one program's deductions to another."
+      },
+      {
+        "title": "Property Rule Setup / Program Rule Inputs",
+        "instruction": "Confirm authority, policy, effective dates, income limits, household tiers, and rounding from documented sources. Paid rule profiles require the controlled signature flow. Trial inputs are working inputs with a review checkbox."
+      },
+      {
+        "title": "Results & Review",
+        "instruction": "Inspect annual income, the applicable limit, difference, and each program's result. Resolve Not determined items before final review. Paid snapshots are recomputed when saved; record the responsible party's name, position, and signature when required. Print only for the intended audience."
+      }
+    ],
+    "coveredRoutes": [
+      "/income-calculator"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "tasks",
+    "title": "Tasks",
+    "href": "/tasks",
+    "category": "Daily work",
+    "audience": "all",
+    "summary": "Complete operational follow-up through its source record.",
+    "steps": [
+      {
+        "title": "Choose a queue",
+        "instruction": "Review active tasks, awaiting approval, verification required, and exceptions. Prioritize due dates and unresolved evidence."
+      },
+      {
+        "title": "Open the source",
+        "instruction": "Open the linked certification, finding, validation, or filing. Read the reason and required action before changing anything."
+      },
+      {
+        "title": "Complete the action",
+        "instruction": "Attach or correct supported evidence and use the available resolution or approval action. Required source validation and final-review controls still apply."
+      },
+      {
+        "title": "Verify the result",
+        "instruction": "Return to Tasks and confirm the status changed. If it stays blocked, inspect the remaining prerequisite and report a reproducible issue to Tech Support."
+      }
+    ],
+    "coveredRoutes": [
+      "/tasks"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "audit-readiness",
+    "title": "Audit Operations",
+    "href": "/audit-readiness",
+    "category": "Compliance & audit",
+    "audience": "all",
+    "summary": "Create a preparation checklist, resolve findings, and record final review.",
+    "steps": [
+      {
+        "title": "Start a preparation run",
+        "instruction": "Choose organization, portfolio, or property scope, jurisdiction, and framework. Create the readiness checklist for that scope."
+      },
+      {
+        "title": "Review the checklist",
+        "instruction": "Inspect program inventory, restrictions, limits, reports, occupancy, leases, inspections, TICs, verifications, hashes, findings, and notices as applicable."
+      },
+      {
+        "title": "Resolve corrective actions",
+        "instruction": "Open the source records for missing evidence or findings. Unresolved requirements block completion; a checklist does not replace the underlying evidence."
+      },
+      {
+        "title": "Pending final review",
+        "instruction": "When prerequisites clear, the responsible party reviews the package and records their name, position, and signature. Confirm the correct scope before signing."
+      },
+      {
+        "title": "Export & history",
+        "instruction": "Export the permitted evidence package and check the signed confirmation. Preparation history retains snapshots; preserve the locked final-review record."
+      }
+    ],
+    "coveredRoutes": [
+      "/audit-readiness"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "document-intelligence",
+    "title": "Document Intelligence",
+    "href": "/document-intelligence",
+    "category": "Compliance & audit",
+    "audience": "all",
+    "summary": "Read recognition, source, and document-version controls.",
+    "steps": [
+      {
+        "title": "Browse the registry",
+        "instruction": "Find the document type and review required fields, signatures, program applicability, and effective dates."
+      },
+      {
+        "title": "Filter support status",
+        "instruction": "Distinguish supported recognition from needs source validation or other incomplete states."
+      },
+      {
+        "title": "Inspect recent documents",
+        "instruction": "Open relevant certification documents and compare recognition with the actual uploaded source."
+      },
+      {
+        "title": "Resolve source gaps",
+        "instruction": "Route missing or ambiguous source evidence through validation. Recognition alone is not a compliance determination."
+      }
+    ],
+    "coveredRoutes": [
+      "/document-intelligence"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "rules",
+    "title": "Program Compliance / Federal & Source Rules",
+    "href": "/rules",
+    "category": "Compliance & audit",
+    "audience": "all",
+    "summary": "Inspect applicable rule layers and source versions.",
+    "steps": [
+      {
+        "title": "Choose the layer",
+        "instruction": "Review federal, state, local, agency, and property requirements relevant to the selected programs."
+      },
+      {
+        "title": "Inspect source provenance",
+        "instruction": "Check issuing authority, version, effective date, and validation status rather than relying on a title alone."
+      },
+      {
+        "title": "Review state registry",
+        "instruction": "Open the jurisdiction's available source information. Missing or unvalidated sources cannot be treated as released rules."
+      },
+      {
+        "title": "Preserve history",
+        "instruction": "Use the version applicable to the certification date. Superseded versions remain evidence for historical work."
+      }
+    ],
+    "coveredRoutes": [
+      "/rules"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "state-rule-validation",
+    "title": "State Rule Validation",
+    "href": "/state-rule-validation",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Capture exact official source bytes and complete independent validation.",
+    "steps": [
+      {
+        "title": "Select state & status",
+        "instruction": "Use the state and status filters to inspect queued, captured, verified, blocked, rejected, or historical records."
+      },
+      {
+        "title": "Capture exact evidence",
+        "instruction": "Identify the exact official document, issuing authority, program, document type, source URL, retrieval date, and effective date. Record the exact file's SHA-256."
+      },
+      {
+        "title": "Review applicability",
+        "instruction": "Check content against the checklist requirement, completeness, and supersession history. A matching title or landing page is insufficient."
+      },
+      {
+        "title": "Independent validation",
+        "instruction": "Use the required independent administrator review; do not approve your own evidence as the second reviewer. Shared federal evidence retains its own validation controls."
+      },
+      {
+        "title": "Verify release status",
+        "instruction": "Confirm every release prerequisite is satisfied before activation. Blocked source records remain pending until their specific issue is resolved."
+      }
+    ],
+    "coveredRoutes": [
+      "/state-rule-validation"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "submission-center",
+    "title": "Submission Center",
+    "href": "/submission-center",
+    "category": "Compliance & audit",
+    "audience": "all",
+    "summary": "Prepare a controlled filing and distinguish preparation from external delivery.",
+    "steps": [
+      {
+        "title": "Choose eligible work",
+        "instruction": "Select a live certification and validated destination. Check that rule authority and submission authorization are allowed."
+      },
+      {
+        "title": "Confirm reporting context",
+        "instruction": "Verify property identifier and name, program, reporting period, and required destination details."
+      },
+      {
+        "title": "Prepare the manifest",
+        "instruction": "Review the draft manifest and evidence. Resolve all blockers before requesting submission."
+      },
+      {
+        "title": "Authorize & verify delivery",
+        "instruction": "External delivery requires its separate authorization. Check the submission result and receipt; a prepared draft is not proof of delivery."
+      }
+    ],
+    "coveredRoutes": [
+      "/submission-center"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "hotma-readiness",
+    "title": "HOTMA Readiness",
+    "href": "/hotma-readiness",
+    "category": "Compliance & audit",
+    "audience": "all",
+    "summary": "Review applicability and source-backed readiness for your workspace.",
+    "steps": [
+      {
+        "title": "Confirm program context",
+        "instruction": "Read the workspace's applicable HOTMA overlays. Do not choose readiness from a calendar date alone."
+      },
+      {
+        "title": "Review readiness controls",
+        "instruction": "Check source validation, policy, evidence, calculation, and system/reporting prerequisites shown on the page."
+      },
+      {
+        "title": "PHA cohort & reporting",
+        "instruction": "For PHA work, inspect the applicable cohort, program control matrix, reporting path, and blocked families or HUD-50058 items."
+      },
+      {
+        "title": "Resolve exceptions",
+        "instruction": "Open the linked policy or evidence gap. Authorized staff maintain authoritative controls; agency preferences cannot override them."
+      }
+    ],
+    "coveredRoutes": [
+      "/hotma-readiness",
+      "/pha-hotma"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "account-security",
+    "title": "Users & Account Security",
+    "href": "/account/security",
+    "category": "Administration & help",
+    "audience": "all",
+    "summary": "Protect your account and understand session handling.",
+    "steps": [
+      {
+        "title": "Review security",
+        "instruction": "Open Users & Security or Account Security from Administration. Review the available authentication controls."
+      },
+      {
+        "title": "Enroll MFA",
+        "instruction": "Follow the on-screen authenticator enrollment, then enter the current code to confirm. Keep the enrollment secret private."
+      },
+      {
+        "title": "Keep recovery codes safe",
+        "instruction": "Save recovery codes somewhere secure outside Tech Support messages. Use the appropriate administrator invitation page to manage other users."
+      },
+      {
+        "title": "End a session",
+        "instruction": "Sign out on shared devices. The login session expires after seven days even when tokens refresh; sign in again when prompted."
+      }
+    ],
+    "coveredRoutes": [
+      "/account/security"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "billing",
+    "title": "Billing & checkout return",
+    "href": "/billing",
+    "category": "Administration & help",
+    "audience": "all",
+    "summary": "Review authorized subscription and invoice information.",
+    "steps": [
+      {
+        "title": "Confirm authority",
+        "instruction": "Billing controls are limited by account and role. Have the authorized organization contact handle procurement and payment actions."
+      },
+      {
+        "title": "Review scope",
+        "instruction": "Inspect the subscription, licensed scope, invoice information, and signed commercial terms. Pay attention to any test-environment banner."
+      },
+      {
+        "title": "Complete authorized payment",
+        "instruction": "Follow the displayed invoice or checkout flow only for an approved purchase."
+      },
+      {
+        "title": "Check the return state",
+        "instruction": "After checkout returns, verify the recorded billing status. A browser redirect by itself does not establish a completed payment; contact Tech Support for a discrepancy."
+      }
+    ],
+    "coveredRoutes": [
+      "/billing",
+      "/checkout/return"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "contact-support",
+    "title": "Tech Support",
+    "href": "/contact-support",
+    "category": "Administration & help",
+    "audience": "all",
+    "summary": "Report a platform issue with enough detail for investigation.",
+    "steps": [
+      {
+        "title": "Describe the issue",
+        "instruction": "Enter your contact details and a specific subject identifying the affected page."
+      },
+      {
+        "title": "Provide reproducible steps",
+        "instruction": "Describe what you selected, what you expected, what happened, and the error text. Include the approximate time and browser when helpful."
+      },
+      {
+        "title": "Protect sensitive information",
+        "instruction": "Do not include passwords, verification codes, recovery codes, full payment details, or unnecessary tenant information."
+      },
+      {
+        "title": "Submit & retain confirmation",
+        "instruction": "Submit the case and retain its confirmation or case number. CertivoIQ remains in Beta Testing until July 11, 2027; report platform issues here."
+      }
+    ],
+    "coveredRoutes": [
+      "/contact-support"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "supportiq",
+    "title": "SupportIQ",
+    "href": "/supportiq",
+    "category": "Administration & help",
+    "audience": "all",
+    "summary": "Find routine product guidance and escalate account-specific issues.",
+    "steps": [
+      {
+        "title": "Ask a product question",
+        "instruction": "Describe the screen or workflow you need help using without including sensitive resident information."
+      },
+      {
+        "title": "Review the guidance",
+        "instruction": "Compare instructions with the current page and your permissions. Product guidance does not approve a compliance determination."
+      },
+      {
+        "title": "Escalate when needed",
+        "instruction": "Use Help → Tech Support for access failures, security concerns, billing disputes, or a reproducible platform issue. Retain the case reference."
+      }
+    ],
+    "coveredRoutes": [
+      "/supportiq"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "feature-suggestions",
+    "title": "Suggest a Feature",
+    "href": "/feature-suggestions",
+    "category": "Administration & help",
+    "audience": "all",
+    "summary": "Submit a workflow idea and follow its review status.",
+    "steps": [
+      {
+        "title": "Choose category & importance",
+        "instruction": "Choose feature, workflow, integration, reporting, accessibility, or another relevant category."
+      },
+      {
+        "title": "Explain the outcome",
+        "instruction": "Enter a clear title, current problem, proposed behavior, affected page, and expected improvement. Your account and role context are attached."
+      },
+      {
+        "title": "Submit & track",
+        "instruction": "Send the suggestion and review Your recent suggestions for its status. A submitted idea is not a delivery commitment."
+      },
+      {
+        "title": "Use support for issues",
+        "instruction": "For a broken workflow or urgent access problem, submit a Tech Support case instead."
+      }
+    ],
+    "coveredRoutes": [
+      "/feature-suggestions"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-family-intake",
+    "title": "Family Intake & Evidence",
+    "href": "/pha-family-intake",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Create a family action and establish its evidence.",
+    "steps": [
+      {
+        "title": "Create a family action",
+        "instruction": "Choose the actual program and action, such as admission, annual, interim, or portability. Confirm the effective date and family identity."
+      },
+      {
+        "title": "Collect evidence",
+        "instruction": "Record household and verification information from the supporting documents. Review applicable EIV evidence and dates."
+      },
+      {
+        "title": "Resolve conflicts",
+        "instruction": "Inspect conflicting or missing evidence and document its resolution. Do not release a determination with unresolved required evidence."
+      },
+      {
+        "title": "Continue to reexamination",
+        "instruction": "Open the saved action in Families & Reexaminations and verify the evidence is attached to the intended family."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-family-intake"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-families",
+    "title": "Families & Reexaminations",
+    "href": "/pha-families",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Review family actions and program-specific determinations.",
+    "steps": [
+      {
+        "title": "Select the family action",
+        "instruction": "Find the correct family, program, action type, and effective date in the queue."
+      },
+      {
+        "title": "Determination workbench",
+        "instruction": "Review annual income, applicable deductions, minimum rent, utility allowance, payment standard, gross rent, and rent to owner as appropriate for the program."
+      },
+      {
+        "title": "Program-specific controls",
+        "instruction": "Review applicable flat-rent choices, mixed-family proration, and other controls using validated policy and evidence. Do not substitute another program's method."
+      },
+      {
+        "title": "Save & follow prerequisites",
+        "instruction": "Save the validated determination, resolve notice prerequisites, and inspect the related HUD-50058 queue status."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-families"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-portability",
+    "title": "HCV Portability",
+    "href": "/pha-portability",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Track portability coordination and supporting evidence.",
+    "steps": [
+      {
+        "title": "Start the linked action",
+        "instruction": "Create or select the HCV portability family action before adding the portability record."
+      },
+      {
+        "title": "Coordinate the port",
+        "instruction": "Confirm initial and receiving PHA information, direction, dates, and required coordination evidence."
+      },
+      {
+        "title": "Review HUD-52665 evidence",
+        "instruction": "Attach and check the required portability documentation and applicable billing or absorption decision."
+      },
+      {
+        "title": "Track the register",
+        "instruction": "Review open actions, follow-up, and audit history. Recording a coordination step does not confirm an external PHA completed it."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-portability"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-hcv-lease-up",
+    "title": "HCV Lease-Up",
+    "href": "/pha-hcv-lease-up",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Move from voucher issuance to an evidence-supported HAP contract.",
+    "steps": [
+      {
+        "title": "Voucher issuance",
+        "instruction": "Select the correct family action and record the voucher details and supporting evidence."
+      },
+      {
+        "title": "RFTA & tenancy approval",
+        "instruction": "Review the request for tenancy approval, unit, rent, inspection prerequisites, and required supporting records."
+      },
+      {
+        "title": "HAP contract",
+        "instruction": "Check contract execution details and dates only after the required controls clear."
+      },
+      {
+        "title": "Payment blockers",
+        "instruction": "Review payment-related holds and resolve their source evidence. Do not treat a saved lease-up record as payment authorization."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-hcv-lease-up"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-pbv-operations",
+    "title": "PBV Operations",
+    "href": "/pha-pbv-operations",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Maintain project-based voucher contract and family controls.",
+    "steps": [
+      {
+        "title": "Contract register",
+        "instruction": "Select the correct PBV project and HAP contract. Review the term and source evidence."
+      },
+      {
+        "title": "Contract & rent actions",
+        "instruction": "Review documented contract changes and rent-to-owner actions with their effective dates and supporting authority."
+      },
+      {
+        "title": "Family right to move",
+        "instruction": "Track the family's applicable right-to-move request and linked action without treating it as automatic approval."
+      },
+      {
+        "title": "Current work",
+        "instruction": "Review pending controls and resolve missing evidence before advancing the action."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-pbv-operations"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-pbv-waiting-lists",
+    "title": "PBV Waiting Lists",
+    "href": "/pha-pbv-waiting-lists",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Manage PBV list structure, referrals, and eligibility controls.",
+    "steps": [
+      {
+        "title": "Select list structure",
+        "instruction": "Confirm central, shared, project-specific, or approved owner-maintained list arrangements against validated policy."
+      },
+      {
+        "title": "Review applicants",
+        "instruction": "Check applicant records, verified preferences, and the intended project or list."
+      },
+      {
+        "title": "Manage referrals",
+        "instruction": "Record the referral and review PHA eligibility prerequisites before an owner offer."
+      },
+      {
+        "title": "Inspect history & holds",
+        "instruction": "Review selection history and unresolved accommodation or eligibility holds before moving forward."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-pbv-waiting-lists"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-public-housing-operations",
+    "title": "Public Housing Operations",
+    "href": "/pha-public-housing-operations",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Track rent elections and over-income actions.",
+    "steps": [
+      {
+        "title": "Select the household action",
+        "instruction": "Confirm the Public Housing family, effective date, and current determination."
+      },
+      {
+        "title": "Rent election",
+        "instruction": "Review the supported rent choice and applicable evidence under the validated policy."
+      },
+      {
+        "title": "Over-income monitoring",
+        "instruction": "Inspect monitoring records, notices, and required follow-up. Use the dates and controls shown for the actual case."
+      },
+      {
+        "title": "Controlled next steps",
+        "instruction": "Review alternative-rent lease or termination prerequisites as applicable. Do not bypass a required notice or review."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-public-housing-operations"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-public-housing-admissions",
+    "title": "Public Housing Admissions",
+    "href": "/pha-public-housing-admissions",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Review development admission controls before offering a unit.",
+    "steps": [
+      {
+        "title": "Development admission profile",
+        "instruction": "Confirm the development, applicable designation, accessibility information, and policy sources."
+      },
+      {
+        "title": "Targeting & deconcentration",
+        "instruction": "Review fiscal-year targeting and deconcentration controls applicable to the admission."
+      },
+      {
+        "title": "Applicant eligibility",
+        "instruction": "Check verified evidence and unresolved holds linked to the applicant."
+      },
+      {
+        "title": "Final unit offer",
+        "instruction": "Advance an offer only after the required controls clear. Waiting-list rank alone does not establish admission approval."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-public-housing-admissions"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-public-housing-occupancy",
+    "title": "Public Housing Occupancy",
+    "href": "/pha-public-housing-occupancy",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Record leases, transfers, and occupancy controls.",
+    "steps": [
+      {
+        "title": "Lease record",
+        "instruction": "Select the household and unit; review the applicable lease, evidence, and signature requirements."
+      },
+      {
+        "title": "Execute supported changes",
+        "instruction": "Record execution details and effective dates only when the required records are available."
+      },
+      {
+        "title": "Transfers",
+        "instruction": "Link the destination unit and any related accommodation, notice, or grievance records."
+      },
+      {
+        "title": "Inspect holds",
+        "instruction": "Resolve occupancy holds through the underlying workflow and retain the history."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-public-housing-occupancy"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-mod-rehab-operations",
+    "title": "Mod Rehab Operations",
+    "href": "/pha-mod-rehab-operations",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Use the separate Mod Rehab contract and HAP workflow.",
+    "steps": [
+      {
+        "title": "Contract register",
+        "instruction": "Select the correct Mod Rehab contract and inspect its program and source evidence."
+      },
+      {
+        "title": "HAP actions",
+        "instruction": "Review the requested action, effective dates, family context, and required supporting records."
+      },
+      {
+        "title": "Rent adjustment or abatement",
+        "instruction": "Check applicable validated sources and evidence before recording an adjustment or abatement."
+      },
+      {
+        "title": "Follow up",
+        "instruction": "Review pending work and history. Do not reuse HCV or PBV assumptions for a Mod Rehab determination."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-mod-rehab-operations"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-waiting-lists",
+    "title": "Waiting Lists",
+    "href": "/pha-waiting-lists",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Manage HCV and Public Housing lists under validated policies.",
+    "steps": [
+      {
+        "title": "Choose program & list",
+        "instruction": "Select the intended HCV or Public Housing list and confirm the applicable Administrative Plan or ACOP."
+      },
+      {
+        "title": "Preference definitions",
+        "instruction": "Use controlled preferences supported by the active policy. Review evidence for each applicant's claimed preference."
+      },
+      {
+        "title": "Selection",
+        "instruction": "Review eligibility, ranking, and required controls before recording a selection."
+      },
+      {
+        "title": "History & accommodations",
+        "instruction": "Inspect selection history and accommodation holds. Resolve open required reviews before any removal."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-waiting-lists"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-50058",
+    "title": "HUD-50058 Queue",
+    "href": "/pha-50058",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Review reporting readiness, attempts, and actual responses.",
+    "steps": [
+      {
+        "title": "Inspect routing readiness",
+        "instruction": "Select the family action and confirm program, cohort, reporting path, and required determination and notice prerequisites."
+      },
+      {
+        "title": "Submission controls",
+        "instruction": "Review release blockers and the prepared payload before an authorized submission attempt."
+      },
+      {
+        "title": "Attempt history",
+        "instruction": "Inspect the saved payload snapshot and external response for each attempt. An attempt is not an acceptance."
+      },
+      {
+        "title": "Corrections & resubmission",
+        "instruction": "Resolve reported errors, document the correction, and use the controlled resubmission action. Verify the resulting response."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-50058"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-inspections",
+    "title": "NSPIRE Inspections",
+    "href": "/pha-inspections",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Schedule and document inspections using the assigned standards.",
+    "steps": [
+      {
+        "title": "Schedule inspection",
+        "instruction": "Choose the correct property or unit and record the inspection context and date."
+      },
+      {
+        "title": "Check standards profile",
+        "instruction": "Review the system-assigned standards and transition profile. A reinspection retains the required original standard context."
+      },
+      {
+        "title": "Findings & corrections",
+        "instruction": "Record observed findings and the required corrective evidence. Use the applicable displayed deadlines and program controls."
+      },
+      {
+        "title": "Verify closure",
+        "instruction": "Review correction evidence and outstanding holds before closing the inspection."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-inspections"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-nspire-standards",
+    "title": "NSPIRE Standards Control",
+    "href": "/pha-nspire-standards",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Inspect official standards evidence and activation gates.",
+    "steps": [
+      {
+        "title": "Official bundle",
+        "instruction": "Review the source bundle, document counts, hashes, and applicable standards version."
+      },
+      {
+        "title": "Deficiency records",
+        "instruction": "Check that required deficiencies and program-specific timing controls are populated and source-backed."
+      },
+      {
+        "title": "Independent attestations",
+        "instruction": "Authorized validators record the required two distinct attestations. Do not substitute duplicate or self-approved reviews."
+      },
+      {
+        "title": "Activation status",
+        "instruction": "Confirm every prerequisite before activation. Missing evidence keeps the standards control blocked."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-nspire-standards"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-accommodations",
+    "title": "Reasonable Accommodations",
+    "href": "/pha-accommodations",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Track requests and their linked workflow holds.",
+    "steps": [
+      {
+        "title": "Create or select a request",
+        "instruction": "Identify the affected workflow and record only the information required for the accommodation review."
+      },
+      {
+        "title": "Link affected work",
+        "instruction": "Link applications, waiting lists, inspections, reexaminations, hearings, or communications as applicable."
+      },
+      {
+        "title": "Review & communicate",
+        "instruction": "Record the supported decision and effective-communication requirements through the authorized process."
+      },
+      {
+        "title": "Verify holds",
+        "instruction": "Check that linked controls reflect the decision. An open required review prevents waiting-list removal."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-accommodations"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-notices",
+    "title": "Family Notices",
+    "href": "/pha-notices",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Prepare and issue notices after determination and source checks.",
+    "steps": [
+      {
+        "title": "Determination queue",
+        "instruction": "Select the correct family action and verify the saved determination."
+      },
+      {
+        "title": "Template & authority",
+        "instruction": "Check the active policy, legal source, required notice template, and effective version."
+      },
+      {
+        "title": "Preview",
+        "instruction": "Review recipient details, dates, content, and evidence. Previewing is not issuing or delivering a notice."
+      },
+      {
+        "title": "Issue & verify",
+        "instruction": "Use the authorized issuance action, retain its record, and check whether related HUD-50058 prerequisites have cleared."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-notices"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-policies",
+    "title": "Policies & Notice Controls",
+    "href": "/pha-policies",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Maintain agency policy versions and dependent notice controls.",
+    "steps": [
+      {
+        "title": "Choose policy type",
+        "instruction": "Select Administrative Plan, ACOP, or Mod Rehab policy as applicable to the program."
+      },
+      {
+        "title": "Record version & source",
+        "instruction": "Review the source, effective dates, version, and supporting evidence."
+      },
+      {
+        "title": "Validate explicitly",
+        "instruction": "Complete required validation before treating the policy as active."
+      },
+      {
+        "title": "Supersession & notices",
+        "instruction": "Confirm the new active version and retained history. Missing active policy or legal sources can block family notices."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-policies"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-source-library",
+    "title": "Source Library",
+    "href": "/pha-source-library",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Review controlled agency and federal source records.",
+    "steps": [
+      {
+        "title": "Find a source",
+        "instruction": "Search or browse the relevant program and document type."
+      },
+      {
+        "title": "Check scope",
+        "instruction": "Distinguish agency/workspace sources from authoritative federal controls managed by authorized staff."
+      },
+      {
+        "title": "Inspect evidence",
+        "instruction": "Check exact source, effective date, version, hash, and validation status where shown."
+      },
+      {
+        "title": "Template dependencies",
+        "instruction": "Verify that notice templates use current validated sources and active policy before relying on them."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-source-library"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-reports",
+    "title": "Reports & Evidence",
+    "href": "/pha-reports",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Inspect and export the permitted family evidence manifest.",
+    "steps": [
+      {
+        "title": "Choose scope",
+        "instruction": "Select the intended family action or reporting scope available to your role."
+      },
+      {
+        "title": "Review the manifest",
+        "instruction": "Inspect actions, evidence, calculations, notices, HUD-50058 records, and rule references."
+      },
+      {
+        "title": "Resolve integrity flags",
+        "instruction": "Open missing or inconsistent source records and correct the underlying issue."
+      },
+      {
+        "title": "Export responsibly",
+        "instruction": "Export only the authorized scope and share through your approved organization process."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-reports"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-agency-settings",
+    "title": "Settings & Integrations",
+    "href": "/pha-agency-settings",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Review agency defaults and actual integration readiness.",
+    "steps": [
+      {
+        "title": "Operational defaults",
+        "instruction": "Confirm the agency's configured defaults and program context."
+      },
+      {
+        "title": "Escalations",
+        "instruction": "Review assigned responsibilities and escalation settings so blocked work reaches the appropriate role."
+      },
+      {
+        "title": "Integration registry",
+        "instruction": "Inspect each integration's status and required validation. Pending setup does not mean connected."
+      },
+      {
+        "title": "Verify saved settings",
+        "instruction": "Save authorized changes and confirm their recorded values; use Tech Support for a connection issue."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-agency-settings"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha-users",
+    "title": "Users & Permissions",
+    "href": "/pha-users",
+    "category": "PHA workflows",
+    "audience": "pha",
+    "summary": "Invite and maintain agency access with the appropriate authority.",
+    "steps": [
+      {
+        "title": "Confirm administrator access",
+        "instruction": "Agency owners and authorized administrators manage users. Choose the minimum role required for the work."
+      },
+      {
+        "title": "Prepare an invitation",
+        "instruction": "Check the recipient email, agency context, and role before sending an actual invitation."
+      },
+      {
+        "title": "Track invitation state",
+        "instruction": "Distinguish sent, delivered, accepted, expired, and revoked states. Invitations expire after seven days."
+      },
+      {
+        "title": "Maintain access",
+        "instruction": "Review active users and deactivate access when required. Historical work remains part of the audit record."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha-users"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm",
+    "title": "CRM Pipeline",
+    "href": "/crm",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Manage verified account opportunities and follow-up.",
+    "steps": [
+      {
+        "title": "Pipeline",
+        "instruction": "Review stages and opportunity context; use verified account information rather than assuming a lead is qualified."
+      },
+      {
+        "title": "Accounts & contacts",
+        "instruction": "Open the account detail to check ownership, contact source, and relevant decision-maker role."
+      },
+      {
+        "title": "Activity & materials",
+        "instruction": "Review timeline, follow-up, and approved materials. Sending outreach is a separate deliberate action requiring authorization."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm-crm-account-details",
+    "title": "CRM Account Details",
+    "href": "/crm",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Review an account's evidence, contacts, and activity.",
+    "steps": [
+      {
+        "title": "Open an account",
+        "instruction": "Choose the actual account from Pipeline to open its detail page."
+      },
+      {
+        "title": "Account facts & contacts",
+        "instruction": "Verify organization, ownership or management, decision-maker role, and contact source before updating records."
+      },
+      {
+        "title": "Opportunity & timeline",
+        "instruction": "Review opportunity details and logged activity. Record supported changes and planned follow-up without inventing contact outcomes."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm/accounts/$accountId"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm-billing",
+    "title": "CRM Billing",
+    "href": "/crm-billing",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Review enterprise billing under staff permissions.",
+    "steps": [
+      {
+        "title": "Choose the account",
+        "instruction": "Confirm the customer and contract scope before opening billing records."
+      },
+      {
+        "title": "Invoices & status",
+        "instruction": "Review the recorded invoice, entitlement, and payment state. Follow the signed commercial terms."
+      },
+      {
+        "title": "Authorized actions",
+        "instruction": "Use only billing actions permitted to your role and approved for the customer. Verify the resulting status."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm-billing"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm-documents",
+    "title": "CRM Documents",
+    "href": "/crm-documents",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Find and maintain approved staff materials.",
+    "steps": [
+      {
+        "title": "Choose a category",
+        "instruction": "Browse one-pagers, decks, case studies, brand assets, and worksheets."
+      },
+      {
+        "title": "Review the document",
+        "instruction": "Check version, intended audience, and approval status before use."
+      },
+      {
+        "title": "Handle private materials",
+        "instruction": "Keep internal documents within authorized staff access. Confirm a material is approved before external sharing."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm-documents"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm-support",
+    "title": "CRM Support",
+    "href": "/crm-support",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Triage and follow customer support cases.",
+    "steps": [
+      {
+        "title": "Choose the queue",
+        "instruction": "Review open, pending, critical, unassigned, and resolved cases."
+      },
+      {
+        "title": "Read the case",
+        "instruction": "Inspect the issue, customer context, priority, assignee, and conversation before responding."
+      },
+      {
+        "title": "Assign & follow up",
+        "instruction": "Use authorized controls to route work, record investigation, and follow up. Do not include unnecessary resident details in a response."
+      },
+      {
+        "title": "Resolution",
+        "instruction": "Confirm the issue outcome and record the case status with an understandable explanation."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm-support"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm-operations",
+    "title": "CRM Operations",
+    "href": "/crm/operations",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Supervise operational jobs, approvals, and incidents.",
+    "steps": [
+      {
+        "title": "Work queues",
+        "instruction": "Inspect pending jobs and their evidence before advancing work."
+      },
+      {
+        "title": "Approvals",
+        "instruction": "Follow required approval authority and independent review. Do not self-approve where a separate reviewer is required."
+      },
+      {
+        "title": "Incidents & quarantine",
+        "instruction": "Review incident details and quarantined items; resolve the documented blocker through the prescribed controls."
+      },
+      {
+        "title": "Communications",
+        "instruction": "Review drafts and their approval state. A prepared draft is not permission to send."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm/operations"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm-pha-controls",
+    "title": "CRM PHA Controls",
+    "href": "/crm-pha-controls",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Maintain authoritative PHA program and reporting controls.",
+    "steps": [
+      {
+        "title": "Source controls",
+        "instruction": "Review validated program sources and effective versions."
+      },
+      {
+        "title": "Cohort & reporting",
+        "instruction": "Inspect authoritative cohort and reporting-path controls rather than agency preferences."
+      },
+      {
+        "title": "Review & activate",
+        "instruction": "Resolve source or review prerequisites before activating a control, retaining historical evidence."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm-pha-controls"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "crm-staff",
+    "title": "Staff Access",
+    "href": "/crm-staff",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Invite and maintain internal staff or approved beta access.",
+    "steps": [
+      {
+        "title": "Administrator authority",
+        "instruction": "Only authorized administrators or managers may manage staff access."
+      },
+      {
+        "title": "Prepare the invitation",
+        "instruction": "Choose the intended internal or beta PHA access, exact recipient, and appropriate role. Review before sending."
+      },
+      {
+        "title": "Track acceptance",
+        "instruction": "Check delivery, acceptance, expiry, or revocation. Sent does not mean access has been accepted."
+      },
+      {
+        "title": "Deactivate appropriately",
+        "instruction": "Remove access when needed while preserving historical activity and audit records."
+      }
+    ],
+    "coveredRoutes": [
+      "/crm-staff"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "marketing-kit",
+    "title": "Marketing Kit",
+    "href": "/marketing-kit",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Review printable product material before approved use.",
+    "steps": [
+      {
+        "title": "Choose material",
+        "instruction": "Open the available one-page or printable product content."
+      },
+      {
+        "title": "Check current claims",
+        "instruction": "Verify features, pricing, and availability against current approved terms before sharing."
+      },
+      {
+        "title": "Print or share",
+        "instruction": "Use the page's print/export controls for approved purposes. Preparing a document does not send outreach."
+      }
+    ],
+    "coveredRoutes": [
+      "/marketing-kit"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "founder-setup",
+    "title": "Founder activation",
+    "href": "/founder-setup",
+    "category": "Staff administration",
+    "audience": "staff",
+    "summary": "Understand the restricted one-time founder setup.",
+    "steps": [
+      {
+        "title": "Restricted use",
+        "instruction": "This flow is only for the designated founder account. Team members use ordinary invitations and sign-in."
+      },
+      {
+        "title": "Verification",
+        "instruction": "The designated founder follows the verification and sign-in steps. Do not share credentials or verification links."
+      },
+      {
+        "title": "Already activated",
+        "instruction": "After activation, use normal sign-in and Staff Access for administration. Do not create another founder identity."
+      }
+    ],
+    "coveredRoutes": [
+      "/founder-setup"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "findings",
+    "title": "Findings & Corrections",
+    "href": "/findings",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Read the sample findings view.",
+    "steps": [
+      {
+        "title": "Inspect examples",
+        "instruction": "This legacy view contains demonstration findings. Use the live Certification Review Queue and Tasks for actual customer corrections."
+      },
+      {
+        "title": "Review finding details",
+        "instruction": "Read the sample severity, rule reference, certification, and remediation context."
+      },
+      {
+        "title": "Apply the workflow, not sample values",
+        "instruction": "For a real record, validate evidence and use its controlled resolution action. A sample finding is not a live compliance determination."
+      }
+    ],
+    "coveredRoutes": [
+      "/findings"
+    ],
+    "status": "demonstration"
+  },
+  {
+    "id": "properties-property-detail",
+    "title": "Property detail",
+    "href": "/properties",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Understand the sample property overview.",
+    "steps": [
+      {
+        "title": "Open a property example",
+        "instruction": "The legacy property-detail screen uses demonstration records. For real imports, use Portfolio & tenant onboarding."
+      },
+      {
+        "title": "Property overview",
+        "instruction": "Review sample risk score, program designations, overdue recertifications, and upcoming audit information."
+      },
+      {
+        "title": "Certifications",
+        "instruction": "Inspect linked sample certifications and risk factors. Do not treat these examples as your portfolio data."
+      }
+    ],
+    "coveredRoutes": [
+      "/properties/$propertyId"
+    ],
+    "status": "demonstration"
+  },
+  {
+    "id": "portfolio-compliance",
+    "title": "Portfolio Compliance",
+    "href": "/portfolio-compliance",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Explore a sample portfolio readiness table.",
+    "steps": [
+      {
+        "title": "Read the table",
+        "instruction": "This page presents example property readiness information."
+      },
+      {
+        "title": "Compare sample properties",
+        "instruction": "Inspect the displayed risk and readiness measures to understand the overview format."
+      },
+      {
+        "title": "Use actual evidence",
+        "instruction": "Open Dashboard, Tasks, or Audit Operations for current account records and controlled follow-up."
+      }
+    ],
+    "coveredRoutes": [
+      "/portfolio-compliance"
+    ],
+    "status": "demonstration"
+  },
+  {
+    "id": "audit-simulator",
+    "title": "Audit Simulator",
+    "href": "/audit-simulator",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Explore a sample audit framework and findings presentation.",
+    "steps": [
+      {
+        "title": "Choose the framework",
+        "instruction": "Select the displayed federal or state framework and jurisdiction options."
+      },
+      {
+        "title": "Inspect sample results",
+        "instruction": "The current simulator uses sample findings and a demonstration score; it does not run a live portfolio audit."
+      },
+      {
+        "title": "Prepare a real audit",
+        "instruction": "Use Audit Operations to create a scope-specific preparation checklist and collect actual evidence."
+      }
+    ],
+    "coveredRoutes": [
+      "/audit-simulator"
+    ],
+    "status": "demonstration"
+  },
+  {
+    "id": "demo-dashboard",
+    "title": "Executive Demo Dashboard",
+    "href": "/demo-dashboard",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Explore the demonstration portfolio oversight view.",
+    "steps": [
+      {
+        "title": "Review sample metrics",
+        "instruction": "Inspect the executive overview and example portfolio information."
+      },
+      {
+        "title": "Explore linked views",
+        "instruction": "Open the demonstration sections to understand navigation and reporting structure."
+      },
+      {
+        "title": "Return to live work",
+        "instruction": "Use the signed-in Dashboard for your authorized operational workspace. Sample metrics are not your organization's results."
+      }
+    ],
+    "coveredRoutes": [
+      "/demo-dashboard"
+    ],
+    "status": "demonstration"
+  },
+  {
+    "id": "copilot",
+    "title": "Compliance Assistant",
+    "href": "/copilot",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Explore cited explanations using the demonstration questions.",
+    "steps": [
+      {
+        "title": "Choose a suggested question",
+        "instruction": "The current walkthrough uses prepared responses for the sample portfolio."
+      },
+      {
+        "title": "Inspect the answer",
+        "instruction": "Read the explanation and citations to understand the presentation. These sample responses are not current advice for your own household."
+      },
+      {
+        "title": "Use the actual review record",
+        "instruction": "For customer work, inspect validated sources, evidence, and results in the Certification Review Queue. Use Tech Support for product issues."
+      }
+    ],
+    "coveredRoutes": [
+      "/copilot"
+    ],
+    "status": "demonstration"
+  },
+  {
+    "id": "pms-hub",
+    "title": "PMS Integration Hub",
+    "href": "/pms-hub",
+    "category": "Administration & help",
+    "audience": "all",
+    "summary": "Understand the current provider setup screen.",
+    "steps": [
+      {
+        "title": "Choose a provider",
+        "instruction": "Review the listed provider and the proposed connection context."
+      },
+      {
+        "title": "Begin connection setup",
+        "instruction": "The current setup button displays setup guidance; it does not establish a working external connection."
+      },
+      {
+        "title": "Confirm readiness",
+        "instruction": "Use Tech Support to coordinate supported integration work. Do not assume data is syncing until a connection is explicitly validated."
+      }
+    ],
+    "coveredRoutes": [
+      "/pms-hub"
+    ],
+    "status": "setup"
+  },
+  {
+    "id": "welcome",
+    "title": "Product overview",
+    "href": "/welcome",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Learn the product workflow and available starting points.",
+    "steps": [
+      {
+        "title": "Explore the product",
+        "instruction": "Review the product explanation and workflow examples."
+      },
+      {
+        "title": "Choose your workspace",
+        "instruction": "Use the relevant Multifamily or PHA information and compare features with your intended work."
+      },
+      {
+        "title": "Start or return",
+        "instruction": "Open the trial or sign in to your account. Demonstration scenarios are examples."
+      }
+    ],
+    "coveredRoutes": [
+      "/welcome"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pha",
+    "title": "PHA product & role pages",
+    "href": "/pha",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Explore PHA features by operational role.",
+    "steps": [
+      {
+        "title": "PHA overview",
+        "instruction": "Review the agency workflow and program coverage presented on the product page."
+      },
+      {
+        "title": "Role pages",
+        "instruction": "Follow the available executive, compliance, HCV, Public Housing, finance, or technology role links to understand the relevant workflow."
+      },
+      {
+        "title": "Operational access",
+        "instruction": "Use your signed-in workspace to perform actual work; product role pages do not grant permissions."
+      }
+    ],
+    "coveredRoutes": [
+      "/pha",
+      "/pha/$persona"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "pricing",
+    "title": "Pricing",
+    "href": "/pricing",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Review platform scope and commercial options.",
+    "steps": [
+      {
+        "title": "Compare offerings",
+        "instruction": "Review the applicable Multifamily or PHA scope and listed features."
+      },
+      {
+        "title": "Review optional services",
+        "instruction": "Check any optional service or implementation item separately from the platform license."
+      },
+      {
+        "title": "Confirm terms",
+        "instruction": "Review the current offer conditions and signed order terms with the authorized purchasing contact before committing."
+      }
+    ],
+    "coveredRoutes": [
+      "/pricing"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "terms",
+    "title": "Terms & Agreements",
+    "href": "/terms",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Understand the agreement accepted at signup.",
+    "steps": [
+      {
+        "title": "Read the agreement",
+        "instruction": "Review service scope, account responsibilities, trial and subscription terms, and applicable limitations."
+      },
+      {
+        "title": "Beta Testing",
+        "instruction": "CertivoIQ remains in Beta Testing until July 11, 2027. Report platform issues through Help → Tech Support."
+      },
+      {
+        "title": "Security disclosure",
+        "instruction": "Review account protection, security limitations, session handling, and incident reporting. Never send passwords or recovery codes in a support case."
+      }
+    ],
+    "coveredRoutes": [
+      "/terms"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "privacy",
+    "title": "Privacy",
+    "href": "/privacy",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Understand information handling and privacy contacts.",
+    "steps": [
+      {
+        "title": "Read the notice",
+        "instruction": "Review the information described, its use, and applicable sharing and retention information."
+      },
+      {
+        "title": "Review your responsibilities",
+        "instruction": "Use only information you are authorized to handle in the platform."
+      },
+      {
+        "title": "Questions or requests",
+        "instruction": "Use the contact or request process stated in the current notice for privacy questions."
+      }
+    ],
+    "coveredRoutes": [
+      "/privacy"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "security",
+    "title": "Security information",
+    "href": "/security",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Read the platform's published security information.",
+    "steps": [
+      {
+        "title": "Review published controls",
+        "instruction": "Read the current security information and its stated scope."
+      },
+      {
+        "title": "Protect your account",
+        "instruction": "Use a unique password, available MFA, and appropriate team permissions. Sign out of shared devices."
+      },
+      {
+        "title": "Report concerns",
+        "instruction": "Use Help → Tech Support for suspected security issues without disclosing passwords, authentication codes, or unnecessary resident data."
+      }
+    ],
+    "coveredRoutes": [
+      "/security"
+    ],
+    "status": "guide"
+  },
+  {
+    "id": "methodology",
+    "title": "Methodology",
+    "href": "/methodology",
+    "category": "Reference & demos",
+    "audience": "all",
+    "summary": "Understand how evidence and rule validation support results.",
+    "steps": [
+      {
+        "title": "Review the workflow",
+        "instruction": "Read how extraction, evidence records, source validation, and rule evaluation connect."
+      },
+      {
+        "title": "Understand uncertainty",
+        "instruction": "Missing or ambiguous evidence must stay unresolved until supported; an extracted field is not itself a validated fact."
+      },
+      {
+        "title": "Final review",
+        "instruction": "Use source-backed results and the required responsible-party review, position, and signature. A training completion does not authorize a determination."
+      }
+    ],
+    "coveredRoutes": [
+      "/methodology"
+    ],
+    "status": "guide"
+  }
+]

@@ -109,6 +109,9 @@ export function CrmShell({
               <Link to="/feature-suggestions"><Lightbulb className="size-4" /> Suggest Feature</Link>
             </Button>
             <Button size="sm" variant="ghost" asChild>
+              <Link to="/training">Training</Link>
+            </Button>
+            <Button size="sm" variant="ghost" asChild>
               <Link to="/crm-support">Support</Link>
             </Button>
             <Button size="sm" variant="ghost" asChild>
@@ -148,3 +151,4 @@ export function CrmShell({
     </div>
   );
 }
+

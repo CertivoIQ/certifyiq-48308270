@@ -13,6 +13,7 @@ import {
   FileSearch,
   FileUp,
   HelpCircle,
+  BookOpen,
   LayoutDashboard,
   Library,
   Lightbulb,
@@ -100,6 +101,7 @@ const MF_ADMIN: readonly NavItem[] = [
 ];
 
 const HELP_NAV: readonly NavItem[] = [
+  { to: "/training", label: "Training", icon: BookOpen },
   { to: "/feature-suggestions", label: "Suggest a Feature", icon: Lightbulb },
   { to: "/contact-support", label: "Tech Support", icon: HelpCircle },
 ];
@@ -379,4 +381,5 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
     </div>
   );
 }
+
 
