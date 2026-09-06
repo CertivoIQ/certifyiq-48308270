@@ -1,0 +1,20 @@
+name: TIC intake development check
+on:
+  push:
+    branches: [fix/tic-field-mirroring-20260905]
+permissions:
+  contents: read
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Package source for isolated verification
+        run: git archive --format=tar HEAD src scripts supabase package.json package-lock.json tsconfig.json vite.config.ts > /tmp/tic-source.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tic-source
+          path: /tmp/tic-source.tar
+          retention-days: 1
