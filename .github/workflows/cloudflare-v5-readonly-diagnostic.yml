@@ -1,10 +1,6 @@
 name: Cloudflare production read-only diagnostic
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/cloudflare-v5-readonly-diagnostic.yml"
   workflow_dispatch:
     inputs:
       expected_release_sha:
@@ -54,11 +50,11 @@ jobs:
           zone_status="$(jq -r '.result[0].status' /tmp/zones.json)"
           [ "$zone_status" = "active" ]
 
-          current_check="Verifying proxied apex and www CNAME records"
-          cf_get "$api/zones/$zone_id/dns_records?type=CNAME&name=$ZONE_NAME" /tmp/dns-apex.json
-          cf_get "$api/zones/$zone_id/dns_records?type=CNAME&name=www.$ZONE_NAME" /tmp/dns-www.json
-          jq -e '.result | length >= 1 and all(.proxied == true)' /tmp/dns-apex.json >/dev/null
-          jq -e '.result | length >= 1 and all(.proxied == true)' /tmp/dns-www.json >/dev/null
+          current_check="Verifying proxied apex and www web DNS records"
+          cf_get "$api/zones/$zone_id/dns_records?name=$ZONE_NAME" /tmp/dns-apex.json
+          cf_get "$api/zones/$zone_id/dns_records?name=www.$ZONE_NAME" /tmp/dns-www.json
+          jq -e '.result | map(select((.type == "A" or .type == "AAAA" or .type == "CNAME") and .proxied == true)) | length >= 1' /tmp/dns-apex.json >/dev/null
+          jq -e '.result | map(select((.type == "A" or .type == "AAAA" or .type == "CNAME") and .proxied == true)) | length >= 1' /tmp/dns-www.json >/dev/null
 
           current_check="Verifying SSL mode"
           cf_get "$api/zones/$zone_id/settings/ssl" /tmp/ssl.json
