@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-09-07T00:00:00Z",
+  "capturedAt": "2026-09-07T06:12:00Z",
   "production": {
     "projectRef": "emnkzxkcpnyvglwxraxm",
     "region": "ca-central-1",
     "status": "ACTIVE_HEALTHY",
-    "migrationCount": 123,
+    "migrationCount": 125,
     "migrations": [
       {
         "name": "84d5187e-63e4-45c1-bca5-6473d7902fab",
@@ -498,13 +498,21 @@
       {
         "version": "20260907050904",
         "name": "reconcile_verified_first_sale_monitor"
+      },
+      {
+        "version": "20260907060833",
+        "name": "secure_workspace_profile_refresh"
+      },
+      {
+        "version": "20260907061020",
+        "name": "restrict_workspace_refresh_trigger"
       }
     ]
   },
   "repository": {
     "fullName": "Watkin5/certifyiq-48308270",
-    "baselineCommit": "7901a96115761c5e61cc2e94a6ca75cb8a35abc3",
-    "migrationCount": 174
+    "baselineCommit": "af5189655b31e18fceff23b3350c8e13e1e5b1d7",
+    "migrationCount": 176
   },
   "reconciliation": {
     "strategy": "controlled-history-baseline",
@@ -576,6 +584,6 @@
         "version": "20260907030432"
       }
     ],
-    "note": "Historical names diverged before this baseline. Do not replay repository-only history into production. From this baseline forward, every production DDL change must be represented by a reviewed repository migration and recorded in both histories. The 20260907050904 forward reconciliation is recorded in both production and this repository."
+    "note": "Historical names diverged before this baseline. Do not replay repository-only history into production. From this baseline forward, every production DDL change must be represented by a reviewed repository migration and recorded in both histories. Forward reconciliations through 20260907061020 are recorded in both production and this repository."
   }
 }
