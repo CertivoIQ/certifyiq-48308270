@@ -49,7 +49,7 @@ test("verified-source UI places activation directly under review notes", () => {
     route,
     /Review notes[\s\S]*Activate \$\{activation\.state_code\} state pack/,
   );
-  assert.match(route, /disabled=!activation\.viewer_can_activate/);
+  assert.match(route, /disabled=\{!activation\.viewer_can_activate/);
   assert.doesNotMatch(
     route,
     /This source no longer requires verification[\s\S]{0,160}must be completed by a different Administrator/,
