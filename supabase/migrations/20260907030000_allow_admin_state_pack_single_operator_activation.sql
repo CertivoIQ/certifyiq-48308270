@@ -1,15 +1,57 @@
--- Allow a single active Administrator to verify and activate a state rule pack.
+-- Make the founder account the single-operator exception for state-pack activation.
 --
--- This removes only the actor-separation requirement. Activation remains fail-closed
--- unless all required state and shared federal sources are verified, the exact source
--- snapshot is present, activation notes are supplied, and the caller is an active admin.
+-- rjwatkins@certivoiq.com may activate a fully verified source snapshot that the same
+-- account first-reviewed. Every other Administrator remains subject to dual control.
+-- Source completeness, snapshot binding, notes, role checks, and audit evidence remain.
 
 alter table public.state_rule_pack_activation_events
   drop constraint if exists state_rule_pack_activation_events_distinct_activator;
 
+create or replace function public.enforce_state_rule_pack_activation_actor()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'pg_catalog', 'public', 'auth'
+as $function$
+declare
+  v_is_authorized_founder boolean := false;
+begin
+  select exists (
+    select 1
+    from auth.users user_account
+    join public.crm_staff_access access
+      on access.user_id = user_account.id
+    where user_account.id = new.activator_id
+      and lower(trim(user_account.email)) = 'rjwatkins@certivoiq.com'
+      and access.status = 'active'
+      and access.access_level = 'admin'
+  ) into v_is_authorized_founder;
+
+  if new.activator_id = any(new.first_reviewer_ids)
+     and not v_is_authorized_founder then
+    raise exception 'A different Administrator must activate this state pack';
+  end if;
+
+  if v_is_authorized_founder
+     and new.activator_id = any(new.first_reviewer_ids) then
+    new.evidence := coalesce(new.evidence, '{}'::jsonb) || jsonb_build_object(
+      'founder_single_operator_override', true,
+      'founder_override_scope', 'second_verifier_only',
+      'founder_override_account', 'rjwatkins@certivoiq.com'
+    );
+  end if;
+
+  return new;
+end;
+$function$;
+
+revoke all on function public.enforce_state_rule_pack_activation_actor() from public;
+
 drop trigger if exists enforce_state_rule_pack_activation_actor
   on public.state_rule_pack_activation_events;
-drop function if exists public.enforce_state_rule_pack_activation_actor();
+create trigger enforce_state_rule_pack_activation_actor
+before insert on public.state_rule_pack_activation_events
+for each row execute function public.enforce_state_rule_pack_activation_actor();
 
 create or replace function public.activate_state_rule_pack(
   p_pack_candidate_id uuid,
@@ -18,7 +60,7 @@ create or replace function public.activate_state_rule_pack(
 returns jsonb
 language plpgsql
 security definer
-set search_path to 'pg_catalog', 'public'
+set search_path to 'pg_catalog', 'public', 'auth'
 as $function$
 declare
   v_user_id uuid := auth.uid();
@@ -27,6 +69,7 @@ declare
   v_notes text := trim(coalesce(p_notes, ''));
   v_event_id uuid;
   v_result jsonb;
+  v_is_authorized_founder boolean := false;
   v_is_first_reviewer boolean := false;
 begin
   if v_user_id is null then
@@ -42,6 +85,13 @@ begin
   ) then
     raise exception 'Active Administrator authority required';
   end if;
+
+  select exists (
+    select 1
+    from auth.users user_account
+    where user_account.id = v_user_id
+      and lower(trim(user_account.email)) = 'rjwatkins@certivoiq.com'
+  ) into v_is_authorized_founder;
 
   if char_length(v_notes) < 10 or char_length(v_notes) > 4000 then
     raise exception 'Activation notes must contain 10 to 4000 characters';
@@ -75,36 +125,35 @@ begin
 
   v_is_first_reviewer := v_user_id = any(v_snapshot.first_reviewer_ids);
 
+  if v_is_first_reviewer and not v_is_authorized_founder then
+    raise exception 'A different Administrator must activate this state pack';
+  end if;
+
   insert into public.state_rule_pack_activation_events (
-    pack_candidate_id,
-    state_code,
-    inventory_generated_at,
-    activator_id,
-    first_reviewer_ids,
-    verified_source_count,
-    source_snapshot_sha256,
-    activated_on,
-    notes,
-    evidence
+    pack_candidate_id, state_code, inventory_generated_at, activator_id,
+    first_reviewer_ids, verified_source_count, source_snapshot_sha256,
+    activated_on, notes, evidence
   )
   values (
-    v_pack.id,
-    v_pack.state_code,
-    v_pack.inventory_generated_at,
-    v_user_id,
-    v_snapshot.first_reviewer_ids,
-    v_snapshot.verified_source_count,
-    v_snapshot.source_snapshot_sha256,
-    current_date,
-    v_notes,
+    v_pack.id, v_pack.state_code, v_pack.inventory_generated_at, v_user_id,
+    v_snapshot.first_reviewer_ids, v_snapshot.verified_source_count,
+    v_snapshot.source_snapshot_sha256, current_date, v_notes,
     jsonb_build_object(
-      'control', 'authorized_admin_activation',
+      'control', case
+        when v_is_authorized_founder and v_is_first_reviewer
+          then 'founder_single_operator_activation'
+        else 'independent_second_validation'
+      end,
       'state_code', v_pack.state_code,
       'inventory_generated_at', v_pack.inventory_generated_at,
       'verified_source_count', v_snapshot.verified_source_count,
       'first_reviewer_count', array_length(v_snapshot.first_reviewer_ids, 1),
-      'activator_was_source_reviewer', v_is_first_reviewer,
-      'single_operator_activation_allowed', true
+      'founder_override', v_is_authorized_founder and v_is_first_reviewer,
+      'founder_override_account', case
+        when v_is_authorized_founder and v_is_first_reviewer
+          then 'rjwatkins@certivoiq.com'
+        else null
+      end
     )
   )
   returning id into v_event_id;
@@ -117,7 +166,7 @@ begin
   return v_result || jsonb_build_object(
     'activation_event_id', v_event_id,
     'activated_on', current_date,
-    'activator_was_source_reviewer', v_is_first_reviewer
+    'founder_override', v_is_authorized_founder and v_is_first_reviewer
   );
 exception
   when unique_violation then
@@ -141,11 +190,12 @@ returns table(
 )
 language plpgsql
 security definer
-set search_path to 'pg_catalog', 'public'
+set search_path to 'pg_catalog', 'public', 'auth'
 as $function$
 declare
   v_user_id uuid := auth.uid();
   v_is_admin boolean := false;
+  v_is_authorized_founder boolean := false;
 begin
   if v_user_id is null then
     raise exception 'Authentication required';
@@ -169,6 +219,13 @@ begin
       and access.access_level = 'admin'
   ) into v_is_admin;
 
+  select exists (
+    select 1
+    from auth.users user_account
+    where user_account.id = v_user_id
+      and lower(trim(user_account.email)) = 'rjwatkins@certivoiq.com'
+  ) into v_is_authorized_founder;
+
   return query
   select
     pack.id,
@@ -184,6 +241,10 @@ begin
       and snapshot.sources_ready
       and activation.id is null
       and coalesce(array_length(snapshot.first_reviewer_ids, 1), 0) > 0
+      and (
+        v_is_authorized_founder
+        or not (v_user_id = any(snapshot.first_reviewer_ids))
+      )
     ),
     pack.validated_on,
     activation.activated_on
@@ -207,6 +268,3 @@ grant execute on function public.activate_state_rule_pack(uuid, text) to authent
 
 revoke all on function public.state_rule_pack_activation_readiness() from public, anon;
 grant execute on function public.state_rule_pack_activation_readiness() to authenticated, service_role;
-
-comment on function public.activate_state_rule_pack(uuid, text) is
-  'Activates a fully verified state rule pack for an active Administrator; the Administrator may also be a source reviewer.';
