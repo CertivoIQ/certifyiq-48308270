@@ -36,7 +36,10 @@ begin
  if (public.get_session_window()->>'valid')::boolean then raise exception 'Another user session accepted'; end if;
  if not has_function_privilege('authenticated','private.session_window()','execute') then raise exception 'Authenticated session window execution is required'; end if;
  if has_function_privilege('anon','private.session_window()','execute') then raise exception 'Anonymous session window execution exposed'; end if;
+ if not has_function_privilege('authenticated','private.income_calculator_access()','execute') then raise exception 'Authenticated calculator access helper execution is required'; end if;
+ if has_function_privilege('anon','private.income_calculator_access()','execute') then raise exception 'Anonymous calculator access helper exposed'; end if;
  if has_function_privilege('anon','public.income_calculator_access()','execute') then raise exception 'Anonymous calculator access exposed'; end if;
 end $test$;
 
 rollback;
+

@@ -13,8 +13,9 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const gmailUser = Deno.env.get("GMAIL_USER") || "support@certivoiq.com";
-  const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+  const gmailUser = (Deno.env.get("GMAIL_USER") || "support@certivoiq.com").trim();
+  // Google displays app passwords in spaced groups; SMTP requires the credential itself.
+  const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD")?.replace(/\s/g, "");
   const workerSecret = Deno.env.get("SUPPORT_NOTIFICATION_WORKER_SECRET");
 
   if (!supabaseUrl || !serviceRoleKey || !gmailPassword) {
@@ -113,3 +114,4 @@ Deno.serve(async (req: Request) => {
 
   return json({ processed: sent + failed, sent, failed });
 });
+
