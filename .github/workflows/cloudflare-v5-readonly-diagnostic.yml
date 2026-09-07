@@ -1,11 +1,16 @@
-# Exact source-field to CertivoIQ TIC parity post-deploy verification for v11.
-name: Cloudflare certification release read-only diagnostic
+name: Cloudflare production read-only diagnostic
 
 on:
   push:
+    branches: [main]
     paths:
-      - '.github/workflows/cloudflare-v5-readonly-diagnostic.yml'
+      - ".github/workflows/cloudflare-v5-readonly-diagnostic.yml"
   workflow_dispatch:
+    inputs:
+      expected_release_sha:
+        description: "Approved 40-character Git release SHA (defaults to this commit)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -13,44 +18,86 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-      V10_URL: https://certivoiq-launch-candidate-20260905-v10.rodsheka-watkins.workers.dev
-      V11_URL: https://certivoiq-launch-candidate-20260905-v11.rodsheka-watkins.workers.dev
-      V12_URL: https://certivoiq-launch-candidate-20260905-v12.rodsheka-watkins.workers.dev
       ZONE_NAME: certivoiq.com
+      EXPECTED_RELEASE_SHA: ${{ inputs.expected_release_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read-only current custom-domain and runtime diagnostic
+      - name: Verify Cloudflare zone, DNS, TLS, domains, and release identity
         shell: bash
         run: |
-          set -u
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          [[ "$EXPECTED_RELEASE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]
+
+          api="https://api.cloudflare.com/client/v4"
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          api='https://api.cloudflare.com/client/v4'
+          cf_get() {
+            local url="$1"
+            local destination="$2"
+            curl --fail-with-body --silent --show-error "${auth[@]}" "$url" -o "$destination"
+            jq -e '.success == true' "$destination" >/dev/null
+          }
 
-          v10_health="$(curl -sS -o /tmp/v10-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V10_URL/api/internal/runtime-health" || true)"
-          v11_health="$(curl -sS -o /tmp/v11-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V11_URL/api/internal/runtime-health" || true)"
-          v12_health="$(curl -sS -o /tmp/v12-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$V12_URL/api/internal/runtime-health" || true)"
-          www_health="$(curl -sS -o /tmp/www-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://www.certivoiq.com/api/internal/runtime-health' || true)"
-          apex_health="$(curl -sS -o /tmp/apex-health.out -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" 'https://certivoiq.com/api/internal/runtime-health' || true)"
-          echo "V10_WORKERS_DEV_HEALTH_AUTH_HTTP=$v10_health"
-          echo "V11_WORKERS_DEV_HEALTH_AUTH_HTTP=$v11_health"
-          echo "V12_WORKERS_DEV_HEALTH_AUTH_HTTP=$v12_health"
-          echo "WWW_HEALTH_AUTH_HTTP=$www_health"
-          echo "APEX_HEALTH_AUTH_HTTP=$apex_health"
+          cf_get "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" /tmp/zones.json
+          zone_count="$(jq '.result | length' /tmp/zones.json)"
+          [ "$zone_count" -eq 1 ]
+          zone_id="$(jq -r '.result[0].id' /tmp/zones.json)"
+          zone_status="$(jq -r '.result[0].status' /tmp/zones.json)"
+          [ "$zone_status" = "active" ]
 
-          curl -fsS "${auth[@]}" "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json || true
-          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json 2>/dev/null || true)"
-          if [ -n "$zid" ]; then
-            curl -fsS "${auth[@]}" "$api/zones/$zid/workers/routes" -o /tmp/routes.json || true
-            echo "ROUTES_COUNT=$(jq -r '.result|length' /tmp/routes.json 2>/dev/null || echo unknown)"
-            curl -fsS "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains.json || true
-            echo "WWW_SERVICE=$(jq -r '.result[]?|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
-            echo "APEX_SERVICE=$(jq -r '.result[]?|select(.hostname=="certivoiq.com")|.service' /tmp/domains.json 2>/dev/null || true)"
-          fi
+          cf_get "$api/zones/$zone_id/dns_records?type=CNAME&name=$ZONE_NAME" /tmp/dns-apex.json
+          cf_get "$api/zones/$zone_id/dns_records?type=CNAME&name=www.$ZONE_NAME" /tmp/dns-www.json
+          jq -e '.result | length >= 1 and all(.proxied == true)' /tmp/dns-apex.json >/dev/null
+          jq -e '.result | length >= 1 and all(.proxied == true)' /tmp/dns-www.json >/dev/null
 
-          echo 'READ_ONLY_POST_CUTOVER_CERTIFICATION_RELEASE_DIAGNOSTIC_COMPLETE'
+          cf_get "$api/zones/$zone_id/settings/ssl" /tmp/ssl.json
+          ssl_mode="$(jq -r '.result.value' /tmp/ssl.json)"
+          [[ "$ssl_mode" = "full" || "$ssl_mode" = "strict" ]]
+
+          cf_get "$api/zones/$zone_id/settings/min_tls_version" /tmp/min-tls.json
+          min_tls="$(jq -r '.result.value' /tmp/min-tls.json)"
+          [[ "$min_tls" = "1.2" || "$min_tls" = "1.3" ]]
+
+          cf_get "$api/zones/$zone_id/settings/always_use_https" /tmp/https.json
+          [ "$(jq -r '.result.value' /tmp/https.json)" = "on" ]
+
+          cf_get "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" /tmp/domains.json
+          apex_service="$(jq -r --arg host "$ZONE_NAME" '.result[] | select(.hostname == $host) | .service' /tmp/domains.json)"
+          www_service="$(jq -r --arg host "www.$ZONE_NAME" '.result[] | select(.hostname == $host) | .service' /tmp/domains.json)"
+          test -n "$apex_service"
+          [ "$apex_service" = "$www_service" ]
+
+          cf_get "$api/zones/$zone_id/workers/routes" /tmp/routes.json
+
+          apex_http="$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' "https://$ZONE_NAME/")"
+          www_http="$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' "https://www.$ZONE_NAME/")"
+          [ "$apex_http" = "200" ]
+          [ "$www_http" = "200" ]
+
+          live_sha=""
+          for attempt in $(seq 1 30); do
+            curl --fail-with-body --silent --show-error --location "https://$ZONE_NAME/api/public/health" -o /tmp/health.json
+            live_sha="$(jq -r '.releaseSha // empty' /tmp/health.json)"
+            if [ "$live_sha" = "${EXPECTED_RELEASE_SHA,,}" ]; then
+              break
+            fi
+            sleep 20
+          done
+          [ "$live_sha" = "${EXPECTED_RELEASE_SHA,,}" ]
+
+          {
+            echo "## Cloudflare production diagnostic"
+            echo "- Zone: $ZONE_NAME ($zone_status)"
+            echo "- Worker service: $apex_service"
+            echo "- TLS mode: $ssl_mode"
+            echo "- Minimum TLS: $min_tls"
+            echo "- Apex/WWW HTTP: $apex_http/$www_http"
+            echo "- Release SHA: $live_sha"
+            echo "- Mutation performed: no"
+          } >> "$GITHUB_STEP_SUMMARY"
