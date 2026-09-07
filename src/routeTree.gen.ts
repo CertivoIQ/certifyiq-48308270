@@ -26,6 +26,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TrainingRouteImport } from './routes/training'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as UploadCertificationRouteImport } from './routes/upload-certification'
 import { Route as WelcomeRouteImport } from './routes/welcome'
@@ -176,6 +177,11 @@ const SecurityRoute = SecurityRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrainingRoute = TrainingRouteImport.update({
+  id: '/training',
+  path: '/training',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrialRoute = TrialRouteImport.update({
@@ -570,6 +576,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
+  '/training': typeof TrainingRoute
   '/trial': typeof TrialRoute
   '/upload-certification': typeof UploadCertificationRoute
   '/welcome': typeof WelcomeRoute
@@ -655,6 +662,7 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
+  '/training': typeof TrainingRoute
   '/trial': typeof TrialRoute
   '/upload-certification': typeof UploadCertificationRoute
   '/welcome': typeof WelcomeRoute
@@ -742,6 +750,7 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/security': typeof SecurityRoute
   '/terms': typeof TermsRoute
+  '/training': typeof TrainingRoute
   '/trial': typeof TrialRoute
   '/upload-certification': typeof UploadCertificationRoute
   '/welcome': typeof WelcomeRoute
@@ -829,6 +838,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/security'
     | '/terms'
+    | '/training'
     | '/trial'
     | '/upload-certification'
     | '/welcome'
@@ -914,6 +924,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/security'
     | '/terms'
+    | '/training'
     | '/trial'
     | '/upload-certification'
     | '/welcome'
@@ -1000,6 +1011,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/security'
     | '/terms'
+    | '/training'
     | '/trial'
     | '/upload-certification'
     | '/welcome'
@@ -1087,6 +1099,7 @@ export interface RootRouteChildren {
   RulesRoute: typeof RulesRoute
   SecurityRoute: typeof SecurityRoute
   TermsRoute: typeof TermsRoute
+  TrainingRoute: typeof TrainingRoute
   TrialRoute: typeof TrialRoute
   UploadCertificationRoute: typeof UploadCertificationRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -1228,6 +1241,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/training': {
+      id: '/training'
+      path: '/training'
+      fullPath: '/training'
+      preLoaderRoute: typeof TrainingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trial': {
@@ -1839,6 +1859,7 @@ const rootRouteChildren: RootRouteChildren = {
   RulesRoute: RulesRoute,
   SecurityRoute: SecurityRoute,
   TermsRoute: TermsRoute,
+  TrainingRoute: TrainingRoute,
   TrialRoute: TrialRoute,
   UploadCertificationRoute: UploadCertificationRoute,
   WelcomeRoute: WelcomeRoute,

@@ -14,288 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      portfolio_tenant_documents: {
-        Row: {
-          certification_import_item_id: string | null
-          classification_basis: string | null
-          classification_confidence: number | null
-          created_at: string
-          display_name: string | null
-          document_category: string
-          document_type: string | null
-          id: string
-          immutable: boolean
-          metadata: Json
-          mime_type: string | null
-          original_file_name: string
-          printable: boolean
-          review_status: string
-          reviewed_at: string | null
-          reviewed_by: string | null
-          sha256: string | null
-          size_bytes: number | null
-          source_kind: string
-          source_page_end: number | null
-          source_page_numbers: number[]
-          source_page_start: number | null
-          storage_path: string
-          tenant_profile_id: string
-          uploaded_at: string
-          user_id: string
-        }
-        Insert: {
-          certification_import_item_id?: string | null
-          classification_basis?: string | null
-          classification_confidence?: number | null
-          created_at?: string
-          display_name?: string | null
-          document_category?: string
-          document_type?: string | null
-          id?: string
-          immutable?: boolean
-          metadata?: Json
-          mime_type?: string | null
-          original_file_name: string
-          printable?: boolean
-          review_status?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sha256?: string | null
-          size_bytes?: number | null
-          source_kind?: string
-          source_page_end?: number | null
-          source_page_numbers?: number[]
-          source_page_start?: number | null
-          storage_path: string
-          tenant_profile_id: string
-          uploaded_at?: string
-          user_id: string
-        }
-        Update: {
-          certification_import_item_id?: string | null
-          classification_basis?: string | null
-          classification_confidence?: number | null
-          created_at?: string
-          display_name?: string | null
-          document_category?: string
-          document_type?: string | null
-          id?: string
-          immutable?: boolean
-          metadata?: Json
-          mime_type?: string | null
-          original_file_name?: string
-          printable?: boolean
-          review_status?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sha256?: string | null
-          size_bytes?: number | null
-          source_kind?: string
-          source_page_end?: number | null
-          source_page_numbers?: number[]
-          source_page_start?: number | null
-          storage_path?: string
-          tenant_profile_id?: string
-          uploaded_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "portfolio_tenant_documents_certification_import_item_id_fkey"
-            columns: ["certification_import_item_id"]
-            isOneToOne: false
-            referencedRelation: "certification_import_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "portfolio_tenant_documents_tenant_profile_id_fkey"
-            columns: ["tenant_profile_id"]
-            isOneToOne: false
-            referencedRelation: "portfolio_tenant_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      portfolio_tenant_profiles: {
-        Row: {
-          certification_effective_date: string | null
-          certification_type: string | null
-          created_at: string
-          external_id: string
-          household_name: string
-          id: string
-          latest_import_job_id: string | null
-          move_in_date: string | null
-          program_codes: string[]
-          property_id: string
-          source_data: Json
-          unit_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          certification_effective_date?: string | null
-          certification_type?: string | null
-          created_at?: string
-          external_id: string
-          household_name: string
-          id?: string
-          latest_import_job_id?: string | null
-          move_in_date?: string | null
-          program_codes?: string[]
-          property_id: string
-          source_data?: Json
-          unit_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          certification_effective_date?: string | null
-          certification_type?: string | null
-          created_at?: string
-          external_id?: string
-          household_name?: string
-          id?: string
-          latest_import_job_id?: string | null
-          move_in_date?: string | null
-          program_codes?: string[]
-          property_id?: string
-          source_data?: Json
-          unit_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "portfolio_tenant_profiles_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "portfolio_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "portfolio_tenant_profiles_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "portfolio_units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "portfolio_tenant_profiles_latest_import_job_id_fkey"
-            columns: ["latest_import_job_id"]
-            isOneToOne: false
-            referencedRelation: "certification_import_jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      portfolio_units: {
-        Row: {
-          bedrooms: number | null
-          created_at: string
-          external_id: string
-          id: string
-          latest_import_job_id: string | null
-          property_id: string
-          source_data: Json
-          unit_number: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          bedrooms?: number | null
-          created_at?: string
-          external_id: string
-          id?: string
-          latest_import_job_id?: string | null
-          property_id: string
-          source_data?: Json
-          unit_number: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          bedrooms?: number | null
-          created_at?: string
-          external_id?: string
-          id?: string
-          latest_import_job_id?: string | null
-          property_id?: string
-          source_data?: Json
-          unit_number?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "portfolio_units_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "portfolio_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "portfolio_units_latest_import_job_id_fkey"
-            columns: ["latest_import_job_id"]
-            isOneToOne: false
-            referencedRelation: "certification_import_jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      portfolio_properties: {
-        Row: {
-          address_line1: string | null
-          city: string | null
-          created_at: string
-          external_id: string
-          id: string
-          latest_import_job_id: string | null
-          name: string
-          postal_code: string | null
-          source_data: Json
-          state_code: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          address_line1?: string | null
-          city?: string | null
-          created_at?: string
-          external_id: string
-          id?: string
-          latest_import_job_id?: string | null
-          name: string
-          postal_code?: string | null
-          source_data?: Json
-          state_code: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          address_line1?: string | null
-          city?: string | null
-          created_at?: string
-          external_id?: string
-          id?: string
-          latest_import_job_id?: string | null
-          name?: string
-          postal_code?: string | null
-          source_data?: Json
-          state_code?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "portfolio_properties_latest_import_job_id_fkey"
-            columns: ["latest_import_job_id"]
-            isOneToOne: false
-            referencedRelation: "certification_import_jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       _nspire_import_chunks: {
         Row: {
           payload: string
@@ -438,114 +156,57 @@ export type Database = {
       }
       certification_import_items: {
         Row: {
-          certification_type: string | null
           confidence: number | null
           created_at: string
           error_message: string | null
           extracted_data: Json
-          extraction_duration_ms: number | null
           extraction_provider: string | null
-          findings: Json
-          historical_changes: Json
           id: string
           job_id: string
-          jurisdiction: string | null
-          matched_certification_id: string | null
           mime_type: string
           original_file_name: string
           processed_at: string | null
-          program_codes: string[]
-          property_id: string | null
-          queued_for_review_at: string | null
-          review_finished_at: string | null
-          review_order: number | null
-          review_queue_status: string
-          review_started_at: string | null
           sha256: string | null
           size_bytes: number
           status: string
           storage_path: string
-          tenant_profile_id: string | null
-          total_intake_duration_ms: number | null
-          unit_id: string | null
           updated_at: string
-          upload_duration_ms: number | null
-          upload_sequence: number | null
-          upload_transport: string | null
           user_id: string
         }
         Insert: {
-          certification_type?: string | null
           confidence?: number | null
           created_at?: string
           error_message?: string | null
           extracted_data?: Json
-          extraction_duration_ms?: number | null
           extraction_provider?: string | null
-          findings?: Json
-          historical_changes?: Json
           id?: string
           job_id: string
-          jurisdiction?: string | null
-          matched_certification_id?: string | null
           mime_type: string
           original_file_name: string
           processed_at?: string | null
-          program_codes?: string[]
-          property_id?: string | null
-          queued_for_review_at?: string | null
-          review_finished_at?: string | null
-          review_order?: number | null
-          review_queue_status?: string
-          review_started_at?: string | null
           sha256?: string | null
           size_bytes: number
           status?: string
           storage_path: string
-          tenant_profile_id?: string | null
-          total_intake_duration_ms?: number | null
-          unit_id?: string | null
           updated_at?: string
-          upload_duration_ms?: number | null
-          upload_sequence?: number | null
-          upload_transport?: string | null
           user_id: string
         }
         Update: {
-          certification_type?: string | null
           confidence?: number | null
           created_at?: string
           error_message?: string | null
           extracted_data?: Json
-          extraction_duration_ms?: number | null
           extraction_provider?: string | null
-          findings?: Json
-          historical_changes?: Json
           id?: string
           job_id?: string
-          jurisdiction?: string | null
-          matched_certification_id?: string | null
           mime_type?: string
           original_file_name?: string
           processed_at?: string | null
-          program_codes?: string[]
-          property_id?: string | null
-          queued_for_review_at?: string | null
-          review_finished_at?: string | null
-          review_order?: number | null
-          review_queue_status?: string
-          review_started_at?: string | null
           sha256?: string | null
           size_bytes?: number
           status?: string
           storage_path?: string
-          tenant_profile_id?: string | null
-          total_intake_duration_ms?: number | null
-          unit_id?: string | null
           updated_at?: string
-          upload_duration_ms?: number | null
-          upload_sequence?: number | null
-          upload_transport?: string | null
           user_id?: string
         }
         Relationships: [
@@ -554,27 +215,6 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "certification_import_jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certification_import_items_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "portfolio_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certification_import_items_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "portfolio_units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certification_import_items_tenant_profile_id_fkey"
-            columns: ["tenant_profile_id"]
-            isOneToOne: false
-            referencedRelation: "portfolio_tenant_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6164,6 +5804,27 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_dashboard_access: {
+        Row: {
+          dashboard_key: string
+          granted_at: string
+          granted_by: string
+          user_id: string
+        }
+        Insert: {
+          dashboard_key: string
+          granted_at?: string
+          granted_by?: string
+          user_id: string
+        }
+        Update: {
+          dashboard_key?: string
+          granted_at?: string
+          granted_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pms_connections: {
         Row: {
           created_at: string
@@ -7008,12 +6669,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7037,11 +6698,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7062,11 +6723,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7087,11 +6748,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7104,11 +6765,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
