@@ -5,7 +5,7 @@
     "projectRef": "emnkzxkcpnyvglwxraxm",
     "region": "ca-central-1",
     "status": "ACTIVE_HEALTHY",
-    "migrationCount": 122,
+    "migrationCount": 123,
     "migrations": [
       {
         "name": "84d5187e-63e4-45c1-bca5-6473d7902fab",
@@ -494,12 +494,16 @@
       {
         "name": "remove_second_admin_state_pack_activation",
         "version": "20260907030432"
+      },
+      {
+        "version": "20260907050904",
+        "name": "reconcile_verified_first_sale_monitor"
       }
     ]
   },
   "repository": {
     "fullName": "Watkin5/certifyiq-48308270",
-    "baselineCommit": "f531f10cf4c3ff6ad3f49d8a3c3abb8c0a24ab51",
+    "baselineCommit": "7901a96115761c5e61cc2e94a6ca75cb8a35abc3",
     "migrationCount": 174
   },
   "reconciliation": {
@@ -572,6 +576,6 @@
         "version": "20260907030432"
       }
     ],
-    "note": "Historical names diverged before this baseline. Do not replay repository-only history into production. From this baseline forward, every production DDL change must be represented by a reviewed repository migration and recorded in both histories."
+    "note": "Historical names diverged before this baseline. Do not replay repository-only history into production. From this baseline forward, every production DDL change must be represented by a reviewed repository migration and recorded in both histories. The 20260907050904 forward reconciliation is recorded in both production and this repository."
   }
 }
