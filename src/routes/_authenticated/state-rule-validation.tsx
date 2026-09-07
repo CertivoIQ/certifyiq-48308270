@@ -302,8 +302,8 @@ function SourceReviewCard({
                 <CheckCircle2 className="size-4" /> First verification complete
               </p>
               <p className="mt-1 text-muted-foreground">
-                This source no longer requires verification. State-pack activation is a separate action
-                that must be completed by a different Administrator.
+                This source no longer requires verification. State-pack activation is a separate action.
+                The authorized founder account can activate the completed pack.
               </p>
             </div>
           ) : (
