@@ -30,7 +30,9 @@ jobs:
       - name: Verify Cloudflare zone, DNS, TLS, domains, and release identity
         shell: bash
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          current_check="Validating required diagnostic inputs"
+          trap 'echo "::error title=Cloudflare diagnostic failed::$current_check" >&2' ERR
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
           [[ "$EXPECTED_RELEASE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]
@@ -44,6 +46,7 @@ jobs:
             jq -e '.success == true' "$destination" >/dev/null
           }
 
+          current_check="Looking up certivoiq.com in the configured Cloudflare account"
           cf_get "$api/zones?name=$ZONE_NAME&account.id=$CLOUDFLARE_ACCOUNT_ID" /tmp/zones.json
           zone_count="$(jq '.result | length' /tmp/zones.json)"
           [ "$zone_count" -eq 1 ]
@@ -51,35 +54,43 @@ jobs:
           zone_status="$(jq -r '.result[0].status' /tmp/zones.json)"
           [ "$zone_status" = "active" ]
 
+          current_check="Verifying proxied apex and www CNAME records"
           cf_get "$api/zones/$zone_id/dns_records?type=CNAME&name=$ZONE_NAME" /tmp/dns-apex.json
           cf_get "$api/zones/$zone_id/dns_records?type=CNAME&name=www.$ZONE_NAME" /tmp/dns-www.json
           jq -e '.result | length >= 1 and all(.proxied == true)' /tmp/dns-apex.json >/dev/null
           jq -e '.result | length >= 1 and all(.proxied == true)' /tmp/dns-www.json >/dev/null
 
+          current_check="Verifying SSL mode"
           cf_get "$api/zones/$zone_id/settings/ssl" /tmp/ssl.json
           ssl_mode="$(jq -r '.result.value' /tmp/ssl.json)"
           [[ "$ssl_mode" = "full" || "$ssl_mode" = "strict" ]]
 
+          current_check="Verifying minimum TLS version"
           cf_get "$api/zones/$zone_id/settings/min_tls_version" /tmp/min-tls.json
           min_tls="$(jq -r '.result.value' /tmp/min-tls.json)"
           [[ "$min_tls" = "1.2" || "$min_tls" = "1.3" ]]
 
+          current_check="Verifying Always Use HTTPS"
           cf_get "$api/zones/$zone_id/settings/always_use_https" /tmp/https.json
           [ "$(jq -r '.result.value' /tmp/https.json)" = "on" ]
 
+          current_check="Verifying Worker custom domains"
           cf_get "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" /tmp/domains.json
           apex_service="$(jq -r --arg host "$ZONE_NAME" '.result[] | select(.hostname == $host) | .service' /tmp/domains.json)"
           www_service="$(jq -r --arg host "www.$ZONE_NAME" '.result[] | select(.hostname == $host) | .service' /tmp/domains.json)"
           test -n "$apex_service"
           [ "$apex_service" = "$www_service" ]
 
+          current_check="Reading Worker routes"
           cf_get "$api/zones/$zone_id/workers/routes" /tmp/routes.json
 
+          current_check="Verifying apex and www HTTP responses"
           apex_http="$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' "https://$ZONE_NAME/")"
           www_http="$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' "https://www.$ZONE_NAME/")"
           [ "$apex_http" = "200" ]
           [ "$www_http" = "200" ]
 
+          current_check="Verifying live production release SHA"
           live_sha=""
           for attempt in $(seq 1 30); do
             curl --fail-with-body --silent --show-error --location "https://$ZONE_NAME/api/public/health" -o /tmp/health.json
