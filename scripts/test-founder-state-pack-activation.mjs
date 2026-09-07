@@ -43,8 +43,13 @@ test("other administrators still require an independent activator", () => {
   assert.match(migration, /enforce_state_rule_pack_activation_actor/);
 });
 
-test("verified-source UI explains the founder activation path", () => {
+test("verified-source UI places activation directly under review notes", () => {
   assert.match(route, /The authorized founder account can activate the completed pack/);
+  assert.match(
+    route,
+    /Review notes[\s\S]*Activate \$\{activation\.state_code\} state pack/,
+  );
+  assert.match(route, /disabled=\{!activation\.viewer_can_activate/);
   assert.doesNotMatch(
     route,
     /This source no longer requires verification[\s\S]{0,160}must be completed by a different Administrator/,

@@ -189,6 +189,9 @@ function SourceReviewCard({
   draft,
   onDraft,
   onDecision,
+  activation,
+  onActivate,
+  activationBusy,
   busy,
   inheritedByState,
 }: {
@@ -196,6 +199,9 @@ function SourceReviewCard({
   draft: Draft;
   onDraft: (draft: Draft) => void;
   onDecision: (decision: "captured_unvalidated" | "verified" | "blocked" | "rejected") => void;
+  activation?: ActivationReadiness | undefined;
+  onActivate: (pack: ActivationReadiness) => void;
+  activationBusy: boolean;
   busy: boolean;
   inheritedByState?: string | undefined;
 }) {
@@ -294,6 +300,32 @@ function SourceReviewCard({
                 placeholder="Record what was checked and why this decision is supportable. Minimum 10 characters."
                 onChange={(event) => onDraft({ ...draft, notes: event.target.value })}
               />
+              {source.agent_verification_status === "verified" && activation ? (
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  {activation.activation_recorded ? (
+                    <Pill tone="seal">State pack active</Pill>
+                  ) : (
+                    <Button
+                      type="button"
+                      disabled={!activation.viewer_can_activate || activationBusy}
+                      onClick={() => onActivate(activation)}
+                    >
+                      <ShieldCheck className="size-4" />
+                      {activationBusy ? "Activating…" : `Activate ${activation.state_code} state pack`}
+                    </Button>
+                  )}
+                  {!activation.activation_recorded && !activation.sources_ready ? (
+                    <p className="text-xs text-muted-foreground">
+                      Activation becomes available after every required source is verified.
+                    </p>
+                  ) : null}
+                  {!activation.activation_recorded && activation.sources_ready && !activation.viewer_can_activate ? (
+                    <p className="text-xs text-muted-foreground">
+                      Active Administrator authorization is required.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
           {source.agent_verification_status === "verified" ? (
@@ -397,7 +429,7 @@ function StateRuleValidationWorkspace() {
   const activatePack = useMutation({
     mutationFn: async (pack: ActivationReadiness) => {
       const confirmed = window.confirm(
-        `Activate the ${pack.state_code} state rule pack? This records your independent second validation.`,
+        `Activate the ${pack.state_code} state rule pack? This records the authorized activation in the audit log.`,
       );
       if (!confirmed) throw new Error("Activation cancelled");
       // Generated database types intentionally lag controlled launch migrations.
@@ -405,7 +437,7 @@ function StateRuleValidationWorkspace() {
       const client = supabase as any;
       const { data, error } = await client.rpc("activate_state_rule_pack", {
         p_pack_candidate_id: pack.pack_candidate_id,
-        p_notes: "Independent second validation completed in the State Rule Validation workspace.",
+        p_notes: "Authorized state-pack activation completed in the State Rule Validation workspace.",
       });
       if (error) throw error;
       return data as { state_code: string; validated_on: string; pack_status: string };
@@ -467,6 +499,7 @@ function StateRuleValidationWorkspace() {
   const selectedPack = statePacks.find((pack) => pack.state_code === stateCode);
   const activatedPacks = statePacks.filter((pack) => pack.compliance_activation_allowed).length;
   const activations = query.data?.activations ?? [];
+  const selectedActivation = activations.find((pack) => pack.state_code === stateCode);
   const completedSourceActivations = activations.filter((pack) => pack.activation_recorded).length;
   const allSourceActivationsRecorded =
     statePacks.length > 0 &&
@@ -863,6 +896,11 @@ function StateRuleValidationWorkspace() {
                     source={source}
                     draft={draft}
                     busy={review.isPending && review.variables?.source.id === source.id}
+                    activation={selectedActivation}
+                    activationBusy={
+                      activatePack.isPending &&
+                      activatePack.variables?.pack_candidate_id === selectedActivation?.pack_candidate_id
+                    }
                     inheritedByState={
                       source.scope === "FEDERAL_SHARED" && stateCode !== "ALL" && stateCode !== "US"
                         ? stateCode
@@ -870,6 +908,7 @@ function StateRuleValidationWorkspace() {
                     }
                     onDraft={(next) => setDrafts((current) => ({ ...current, [source.id]: next }))}
                     onDecision={(decision) => review.mutate({ source, decision })}
+                    onActivate={(pack) => activatePack.mutate(pack)}
                   />
                 );
               })}
