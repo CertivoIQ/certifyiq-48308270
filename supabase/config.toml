@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.merlin-procedure-worker]
 verify_jwt = false
+
+[functions.income-calculator]
+verify_jwt = false
+
+[functions.support-notification-worker]
+verify_jwt = false
