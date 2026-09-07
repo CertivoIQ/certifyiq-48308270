@@ -336,8 +336,8 @@ begin
     and coalesce(source_sha256, '') ~ '^[0-9a-f]{64}$'
   );
 
-  if remaining_missing <> 6 then
-    raise exception 'Expected 6 inaccessible authority indexes after capture, found %', remaining_missing;
+  if remaining_missing <> 21 then
+    raise exception 'Expected 21 inaccessible authority indexes after capture, found %', remaining_missing;
   end if;
 
   update public.state_rule_pack_candidates pack
