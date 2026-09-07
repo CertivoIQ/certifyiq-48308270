@@ -34,6 +34,8 @@ begin
  if (public.get_session_window()->>'valid')::boolean then raise exception 'Token refresh extended original login'; end if;
  perform set_config('request.jwt.claims',jsonb_build_object('sub',gen_random_uuid(),'role','authenticated','session_id',sid)::text,true);
  if (public.get_session_window()->>'valid')::boolean then raise exception 'Another user session accepted'; end if;
+ if not has_function_privilege('authenticated','private.session_window()','execute') then raise exception 'Authenticated session window execution is required'; end if;
+ if has_function_privilege('anon','private.session_window()','execute') then raise exception 'Anonymous session window execution exposed'; end if;
  if has_function_privilege('anon','public.income_calculator_access()','execute') then raise exception 'Anonymous calculator access exposed'; end if;
 end $test$;
 
