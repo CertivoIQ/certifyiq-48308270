@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-09-07T00:00:00Z",
+  "production": {
+    "projectRef": "emnkzxkcpnyvglwxraxm",
+    "region": "ca-central-1",
+    "status": "ACTIVE_HEALTHY",
+    "migrationCount": 122,
+    "migrations": [
+      {
+        "name": "84d5187e-63e4-45c1-bca5-6473d7902fab",
+        "version": "20260806203000"
+      },
+      {
+        "name": "bf09ec55-3f2b-4a4d-b60e-568001e98e31",
+        "version": "20260806203023"
+      },
+      {
+        "name": "6216ef0a-9dcb-470f-9888-8ce0ad786071",
+        "version": "20260806204115"
+      },
+      {
+        "name": "13b4bf99-3c30-42d3-8dcf-3b11ec4e1f59",
+        "version": "20260806214115"
+      },
+      {
+        "name": "703291ac-68ff-4398-bc0a-7fe1e6ff441c",
+        "version": "20260806214140"
+      },
+      {
+        "name": "9f023f95-da52-4f42-90e4-c35cdc74f759",
+        "version": "20260806221712"
+      },
+      {
+        "name": "b7094513-d8f0-4996-ace2-e22d6841e7f9",
+        "version": "20260806223015"
+      },
+      {
+        "name": "94ab4833-1049-483d-80c3-2041953d7ebc",
+        "version": "20260807014210"
+      },
+      {
+        "name": "db258c82-d6a4-4e91-8a3a-1a13d5c81aa2",
+        "version": "20260807023316"
+      },
+      {
+        "name": "0904fd95-cb1a-46c5-904b-09fdb46c4739",
+        "version": "20260807023405"
+      },
+      {
+        "name": "0509a30b-7e40-4e62-8275-61bf1d594c81",
+        "version": "20260807032122"
+      },
+      {
+        "name": "3b0a90e0-8928-4ece-8b98-8e5b1622ee41",
+        "version": "20260807062942"
+      },
+      {
+        "name": "7fa85c03-0158-4b22-b919-6b98b7a4d8fc",
+        "version": "20260808170000"
+      },
+      {
+        "name": "crm_verified_affordable_housing_leads",
+        "version": "20260808180000"
+      },
+      {
+        "name": "147395bf-0f23-42f5-bd52-a39f0c28c9fb",
+        "version": "20260808200639"
+      },
+      {
+        "name": "998839a9-6af5-4333-94fd-45138531a966",
+        "version": "20260808213618"
+      },
+      {
+        "name": "compliance_intelligence_suite",
+        "version": "20260809030000"
+      },
+      {
+        "name": "crm_ownership_fields",
+        "version": "20260809030001"
+      },
+      {
+        "name": "crm_document_library",
+        "version": "20260810020000"
+      },
+      {
+        "name": "38b9974c-d297-4c9b-8bef-a21388415946",
+        "version": "20260810204216"
+      },
+      {
+        "name": "93a64af8-1593-4916-8ca2-e9a04362d461",
+        "version": "20260810204242"
+      },
+      {
+        "name": "mass_upload_requires_subscription",
+        "version": "20260811193000"
+      },
+      {
+        "name": "harden_security_definer_functions",
+        "version": "20260811210000"
+      },
+      {
+        "name": "1e31ce21-c0d9-4faa-b885-bffe258aa5ae",
+        "version": "20260811235034"
+      },
+      {
+        "name": "42ccac19-03da-4579-82c9-19f241b5791c",
+        "version": "20260811235035"
+      },
+      {
+        "name": "a317e288-a5f8-4990-ad87-ae210704836f",
+        "version": "20260811235143"
+      },
+      {
+        "name": "c231ed2c-209d-4101-b260-fd04f4ce3041",
+        "version": "20260812031452"
+      },
+      {
+        "name": "add_hfa_delivery_receipts",
+        "version": "20260814031000"
+      },
+      {
+        "name": "bind_finding_reviews_to_manifest",
+        "version": "20260814054500"
+      },
+      {
+        "name": "add_supportiq_cases",
+        "version": "20260814103000"
+      },
+      {
+        "name": "add_hfa_transmission_tokens",
+        "version": "20260819161500"
+      },
+      {
+        "name": "add_finding_review_lifecycle",
+        "version": "20260819173000"
+      },
+      {
+        "name": "add_finding_review_revocation_link",
+        "version": "20260820064000"
+      },
+      {
+        "name": "validate_finding_review_revocation_target",
+        "version": "20260820173000"
+      },
+      {
+        "name": "queue_all_state_rule_packs_for_agent_verification",
+        "version": "20260828184819"
+      },
+      {
+        "name": "production_parity_operations_control_plane",
+        "version": "20260828190854"
+      },
+      {
+        "name": "production_parity_operations_worker_runtime",
+        "version": "20260828190907"
+      },
+      {
+        "name": "production_parity_crm_staff_access_invitations",
+        "version": "20260828190916"
+      },
+      {
+        "name": "harden_production_parity_permissions",
+        "version": "20260828190953"
+      },
+      {
+        "name": "remove_public_function_execution_grants",
+        "version": "20260828191034"
+      },
+      {
+        "name": "founder_admin_bootstrap",
+        "version": "20260828194939"
+      },
+      {
+        "name": "harden_founder_admin_bootstrap_execution",
+        "version": "20260828195012"
+      },
+      {
+        "name": "state_rule_validation_workspace",
+        "version": "20260828213023"
+      },
+      {
+        "name": "compliance_assurance_control_plane",
+        "version": "20260828215318"
+      },
+      {
+        "name": "optimize_compliance_assurance_rls",
+        "version": "20260828215411"
+      },
+      {
+        "name": "repair_state_pack_source_blockers",
+        "version": "20260829002916"
+      },
+      {
+        "name": "harden_privileged_rpc_surface",
+        "version": "20260829010120"
+      },
+      {
+        "name": "restore_nspire_registry_schema",
+        "version": "20260829010822"
+      },
+      {
+        "name": "pha_nspire_standards_activation",
+        "version": "20260829010830"
+      },
+      {
+        "name": "pha_nspire_bundle_integrity",
+        "version": "20260829010837"
+      },
+      {
+        "name": "load_verified_nspire_registry",
+        "version": "20260829010846"
+      },
+      {
+        "name": "harden_nspire_release_rpcs",
+        "version": "20260829011244"
+      },
+      {
+        "name": "record_pilot_state_source_captures",
+        "version": "20260829013045"
+      },
+      {
+        "name": "harden_customer_file_storage",
+        "version": "20260829014419"
+      },
+      {
+        "name": "harden_certification_import_jobs",
+        "version": "20260829014838"
+      },
+      {
+        "name": "admin_add_state_source_records",
+        "version": "20260829032545"
+      },
+      {
+        "name": "add_california_ctcac_form_captures",
+        "version": "20260829062922"
+      },
+      {
+        "name": "pha_production_schema_parity",
+        "version": "20260829063753"
+      },
+      {
+        "name": "pha_public_housing_occupancy_completion",
+        "version": "20260829064257"
+      },
+      {
+        "name": "pha_function_security_hardening",
+        "version": "20260829064936"
+      },
+      {
+        "name": "pha_hcv_trigger_security_hardening",
+        "version": "20260829065546"
+      },
+      {
+        "name": "record_remaining_state_source_captures",
+        "version": "20260829065638"
+      },
+      {
+        "name": "resolve_final_six_source_blocks",
+        "version": "20260829081232"
+      },
+      {
+        "name": "reconcile_final_source_pack_status",
+        "version": "20260829081622"
+      },
+      {
+        "name": "launch_hardening_and_fk_indexes",
+        "version": "20260829172447"
+      },
+      {
+        "name": "optimize_rls_auth_initplans",
+        "version": "20260829172539"
+      },
+      {
+        "name": "retention_purge_audit",
+        "version": "20260829172737"
+      },
+      {
+        "name": "add_state_validation_document_families",
+        "version": "20260829195048"
+      },
+      {
+        "name": "audit_final_review_confirmations",
+        "version": "20260829230253"
+      },
+      {
+        "name": "activate_validated_state_rule_packs",
+        "version": "20260829235050"
+      },
+      {
+        "name": "exclude_redundant_state_sources",
+        "version": "20260829235656"
+      },
+      {
+        "name": "allow_beta_crm_staff_email_domains",
+        "version": "20260830001422"
+      },
+      {
+        "name": "dual_control_state_rule_pack_activation",
+        "version": "20260830010924"
+      },
+      {
+        "name": "index_state_rule_pack_activation_activator",
+        "version": "20260830011250"
+      },
+      {
+        "name": "certification_role_task_workflow",
+        "version": "20260830015410"
+      },
+      {
+        "name": "fix_certification_workflow_digest",
+        "version": "20260830015850"
+      },
+      {
+        "name": "index_certification_workflow_foreign_keys",
+        "version": "20260830020115"
+      },
+      {
+        "name": "bind_state_rule_activation_to_validated_release",
+        "version": "20260830080223"
+      },
+      {
+        "name": "certification_pending_final_review_confirmation",
+        "version": "20260830081253"
+      },
+      {
+        "name": "disable_legacy_unsigned_certification_final_approval",
+        "version": "20260830081259"
+      },
+      {
+        "name": "product_feature_suggestions",
+        "version": "20260830092221"
+      },
+      {
+        "name": "controlled_mass_portfolio_tenant_intake",
+        "version": "20260830104035"
+      },
+      {
+        "name": "fix_certification_import_updated_at_columns",
+        "version": "20260830104139"
+      },
+      {
+        "name": "deterministic_state_rule_release_workbench",
+        "version": "20260830104302"
+      },
+      {
+        "name": "reconcile_20260830_state_document_crawl_delta",
+        "version": "20260830104733"
+      },
+      {
+        "name": "harden_deterministic_evidence_recorders",
+        "version": "20260830105740"
+      },
+      {
+        "name": "require_complete_source_extraction",
+        "version": "20260830110447"
+      },
+      {
+        "name": "reconcile_illinois_authority_page_source_delta",
+        "version": "20260830181940"
+      },
+      {
+        "name": "capture_confirmed_remaining_state_gap_documents",
+        "version": "20260830183210"
+      },
+      {
+        "name": "expand_il_utility_rule_extraction",
+        "version": "20260830190437"
+      },
+      {
+        "name": "index_rule_supersession_replacement",
+        "version": "20260830190812"
+      },
+      {
+        "name": "correct_il_manual_rule_citations",
+        "version": "20260830191142"
+      },
+      {
+        "name": "complete_il_utility_instruction_extraction",
+        "version": "20260830191654"
+      },
+      {
+        "name": "restore_self_directed_onboarding_progress",
+        "version": "20260831172947"
+      },
+      {
+        "name": "harden_onboarding_progress_grants",
+        "version": "20260831173049"
+      },
+      {
+        "name": "paid_license_database_integrity",
+        "version": "20260901125130"
+      },
+      {
+        "name": "gate3_enterprise_billing_terminal_controls",
+        "version": "20260901234753"
+      },
+      {
+        "name": "gate4_internal_staff_domain_policy",
+        "version": "20260902021347"
+      },
+      {
+        "name": "gate4_tn_tx_release_critical_sources",
+        "version": "20260902033233"
+      },
+      {
+        "name": "compliance_document_registry",
+        "version": "20260902043218"
+      },
+      {
+        "name": "bind_core_hud_form_sources",
+        "version": "20260902044027"
+      },
+      {
+        "name": "bind_hud_lease_notice_sources",
+        "version": "20260902045011"
+      },
+      {
+        "name": "grant_founder_platform_dashboard_access",
+        "version": "20260903185749"
+      },
+      {
+        "name": "state_rule_program_document_requirement_gate",
+        "version": "20260903204603"
+      },
+      {
+        "name": "require_sha_for_state_source_validation_status",
+        "version": "20260903205144"
+      },
+      {
+        "name": "refine_section_202_811_document_matches",
+        "version": "20260903205556"
+      },
+      {
+        "name": "exclude_discovery_provenance_from_state_source_snapshot",
+        "version": "20260903205647"
+      },
+      {
+        "name": "harden_state_rule_document_requirements",
+        "version": "20260904162004"
+      },
+      {
+        "name": "harden_authenticated_security_definer_functions",
+        "version": "20260904170122"
+      },
+      {
+        "name": "certification_pipeline_performance_metrics",
+        "version": "20260904194348"
+      },
+      {
+        "name": "optimize_certification_import_items",
+        "version": "20260904194815"
+      },
+      {
+        "name": "add_certification_extraction_provider",
+        "version": "20260905171300"
+      },
+      {
+        "name": "tic_supporting_documents",
+        "version": "20260905202744"
+      },
+      {
+        "name": "native_income_calculator_immutable_records",
+        "version": "20260906025632"
+      },
+      {
+        "name": "add_found_state_compliance_manuals",
+        "version": "20260906043322"
+      },
+      {
+        "name": "seven_day_session_and_trial_calculator_access",
+        "version": "20260906080303"
+      },
+      {
+        "name": "activate_seven_day_session_request_check",
+        "version": "20260906080916"
+      },
+      {
+        "name": "support_ticket_email_notifications",
+        "version": "20260906204721"
+      },
+      {
+        "name": "schedule_support_notification_worker",
+        "version": "20260906205001"
+      },
+      {
+        "name": "allow_service_role_session_window",
+        "version": "20260906205146"
+      },
+      {
+        "name": "restore_authenticated_session_window_execute",
+        "version": "20260907001124"
+      },
+      {
+        "name": "remove_second_admin_state_pack_activation",
+        "version": "20260907030432"
+      }
+    ]
+  },
+  "repository": {
+    "fullName": "Watkin5/certifyiq-48308270",
+    "baselineCommit": "f531f10cf4c3ff6ad3f49d8a3c3abb8c0a24ab51",
+    "migrationCount": 174
+  },
+  "reconciliation": {
+    "strategy": "controlled-history-baseline",
+    "repositoryOnlyCount": 68,
+    "productionOnlyCount": 16,
+    "productionOnly": [
+      {
+        "name": "queue_all_state_rule_packs_for_agent_verification",
+        "version": "20260828184819"
+      },
+      {
+        "name": "production_parity_operations_control_plane",
+        "version": "20260828190854"
+      },
+      {
+        "name": "production_parity_operations_worker_runtime",
+        "version": "20260828190907"
+      },
+      {
+        "name": "production_parity_crm_staff_access_invitations",
+        "version": "20260828190916"
+      },
+      {
+        "name": "remove_public_function_execution_grants",
+        "version": "20260828191034"
+      },
+      {
+        "name": "pha_production_schema_parity",
+        "version": "20260829063753"
+      },
+      {
+        "name": "allow_beta_crm_staff_email_domains",
+        "version": "20260830001422"
+      },
+      {
+        "name": "reconcile_20260830_state_document_crawl_delta",
+        "version": "20260830104733"
+      },
+      {
+        "name": "restore_self_directed_onboarding_progress",
+        "version": "20260831172947"
+      },
+      {
+        "name": "require_sha_for_state_source_validation_status",
+        "version": "20260903205144"
+      },
+      {
+        "name": "refine_section_202_811_document_matches",
+        "version": "20260903205556"
+      },
+      {
+        "name": "exclude_discovery_provenance_from_state_source_snapshot",
+        "version": "20260903205647"
+      },
+      {
+        "name": "support_ticket_email_notifications",
+        "version": "20260906204721"
+      },
+      {
+        "name": "schedule_support_notification_worker",
+        "version": "20260906205001"
+      },
+      {
+        "name": "allow_service_role_session_window",
+        "version": "20260906205146"
+      },
+      {
+        "name": "remove_second_admin_state_pack_activation",
+        "version": "20260907030432"
+      }
+    ],
+    "note": "Historical names diverged before this baseline. Do not replay repository-only history into production. From this baseline forward, every production DDL change must be represented by a reviewed repository migration and recorded in both histories."
+  }
+}
