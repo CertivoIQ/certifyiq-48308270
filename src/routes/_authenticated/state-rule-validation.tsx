@@ -918,3 +918,5 @@ function StateRuleValidationWorkspace() {
       )}
     </AppShell>
   );
+}
+
