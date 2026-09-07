@@ -5945,6 +5945,48 @@ export type Database = {
         }
         Relationships: []
       }
+      state_rule_pack_candidates: {
+        Row: {
+          agent_verification_required: boolean
+          blocked_source_count: number
+          candidate_manifest: Json
+          compliance_activation_allowed: boolean
+          created_at: string
+          id: string
+          inventory_generated_at: string
+          source_candidate_count: number
+          state_code: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_verification_required?: boolean
+          blocked_source_count?: number
+          candidate_manifest: Json
+          compliance_activation_allowed?: boolean
+          created_at?: string
+          id?: string
+          inventory_generated_at: string
+          source_candidate_count: number
+          state_code: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_verification_required?: boolean
+          blocked_source_count?: number
+          candidate_manifest?: Json
+          compliance_activation_allowed?: boolean
+          created_at?: string
+          id?: string
+          inventory_generated_at?: string
+          source_candidate_count?: number
+          state_code?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       state_rule_pack_releases: {
         Row: {
           approved_at: string | null
@@ -6001,6 +6043,127 @@ export type Database = {
           version?: string
         }
         Relationships: []
+      }
+      state_rule_source_candidates: {
+        Row: {
+          agent_verification_status: string
+          authority_name: string
+          candidate_status: string
+          compliance_activation_allowed: boolean
+          created_at: string
+          exact_bytes_captured: boolean
+          id: string
+          inventory_generated_at: string
+          official_domain: string
+          origin_file: string
+          program: string
+          retrieved_at: string | null
+          scope: string
+          source_sha256: string | null
+          source_type: string
+          source_url: string
+          state_code: string
+          updated_at: string
+          verification_evidence: Json
+        }
+        Insert: {
+          agent_verification_status?: string
+          authority_name: string
+          candidate_status: string
+          compliance_activation_allowed?: boolean
+          created_at?: string
+          exact_bytes_captured?: boolean
+          id?: string
+          inventory_generated_at: string
+          official_domain: string
+          origin_file: string
+          program: string
+          retrieved_at?: string | null
+          scope: string
+          source_sha256?: string | null
+          source_type: string
+          source_url: string
+          state_code: string
+          updated_at?: string
+          verification_evidence?: Json
+        }
+        Update: {
+          agent_verification_status?: string
+          authority_name?: string
+          candidate_status?: string
+          compliance_activation_allowed?: boolean
+          created_at?: string
+          exact_bytes_captured?: boolean
+          id?: string
+          inventory_generated_at?: string
+          official_domain?: string
+          origin_file?: string
+          program?: string
+          retrieved_at?: string | null
+          scope?: string
+          source_sha256?: string | null
+          source_type?: string
+          source_url?: string
+          state_code?: string
+          updated_at?: string
+          verification_evidence?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "state_rule_source_candidates_state_code_inventory_generate_fkey"
+            columns: ["state_code", "inventory_generated_at"]
+            isOneToOne: false
+            referencedRelation: "state_rule_pack_candidates"
+            referencedColumns: ["state_code", "inventory_generated_at"]
+          },
+        ]
+      }
+      state_rule_source_verification_events: {
+        Row: {
+          created_at: string
+          decision: string
+          evidence: Json
+          id: string
+          notes: string
+          prior_status: string
+          retrieved_at: string | null
+          reviewer_id: string
+          source_candidate_id: string
+          source_sha256: string | null
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          evidence?: Json
+          id?: string
+          notes: string
+          prior_status: string
+          retrieved_at?: string | null
+          reviewer_id: string
+          source_candidate_id: string
+          source_sha256?: string | null
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          evidence?: Json
+          id?: string
+          notes?: string
+          prior_status?: string
+          retrieved_at?: string | null
+          reviewer_id?: string
+          source_candidate_id?: string
+          source_sha256?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "state_rule_source_verification_events_source_candidate_id_fkey"
+            columns: ["source_candidate_id"]
+            isOneToOne: false
+            referencedRelation: "state_rule_source_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       state_rule_sources: {
         Row: {
@@ -6374,6 +6537,7 @@ export type Database = {
         Args: { target_family_action_id: string }
         Returns: Json
       }
+      claim_certivoiq_founder_admin: { Args: never; Returns: Json }
       claim_crm_staff_invitation: { Args: never; Returns: Json }
       crm_staff_can_manage: { Args: { _user_id: string }; Returns: boolean }
       crm_staff_is_admin: { Args: { _user_id: string }; Returns: boolean }
@@ -6588,6 +6752,18 @@ export type Database = {
       refresh_pha_nspire_release_counts: {
         Args: { target_release_id: string }
         Returns: undefined
+      }
+      review_state_rule_source_candidate: {
+        Args: {
+          p_candidate_id: string
+          p_decision: string
+          p_effective_date?: string
+          p_notes?: string
+          p_retrieved_at?: string
+          p_source_sha256?: string
+          p_supersession_notes?: string
+        }
+        Returns: Json
       }
       select_next_pha_waiting_list_applicant: {
         Args: { target_waiting_list_id: string }
