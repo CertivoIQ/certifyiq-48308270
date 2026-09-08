@@ -1,7 +1,8 @@
-const BUILD = "tic-recalculation-1.0.3";
+const BUILD = "tic-recalculation-1.0.4";
 const RULE_PACK_ID = "CERTIVOIQ-TIC-ARITHMETIC";
-const RULE_PACK_VERSION = "1.0.3";
+const RULE_PACK_VERSION = "1.0.4";
 const TOLERANCE = 0.01;
+const MINIMUM_CONFIDENCE = 0.85;
 // This is the arithmetic threshold printed on the recognized Annual Income
 // Calculation Worksheet template. It is NOT used as program eligibility
 // authority; separate controlled rule packs determine applicable HOTMA/program rules.
@@ -19,9 +20,13 @@ function money(value) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+function reliable(fact) {
+  return Boolean(fact?.humanVerified) || Number(fact?.confidence ?? 0) >= MINIMUM_CONFIDENCE;
+}
+
 function refs(facts, fields) {
   const wanted = new Set(fields);
-  return facts.filter((fact) => wanted.has(fact.field)).map((fact) => ({
+  return facts.filter((fact) => wanted.has(fact.field) && reliable(fact)).map((fact) => ({
     field: fact.field,
     documentRef: fact.sourceDocumentRef ?? null,
     page: fact.page ?? null,
@@ -33,11 +38,13 @@ function refs(facts, fields) {
 
 function makeFinding(facts, ruleId, label, reportedField, reported, calculated, componentFields) {
   if (![reported, calculated].every(Number.isFinite)) return null;
+  const evidence = refs(facts, [reportedField, ...componentFields]);
+  if (!evidence.some((ref) => ref.field === reportedField)) return null;
   const variance = money(reported - calculated);
   if (variance === null || Math.abs(variance) <= TOLERANCE) return null;
   return {
     ruleId,
-    ruleVersion: "1.0.3",
+    ruleVersion: "1.0.4",
     rulePackId: RULE_PACK_ID,
     rulePackVersion: RULE_PACK_VERSION,
     jurisdiction: "federal",
@@ -49,12 +56,26 @@ function makeFinding(facts, ruleId, label, reportedField, reported, calculated, 
     status: "FAIL",
     explanation: `${label} does not reconcile. Reported on TIC: $${reported.toFixed(2)}. Calculated by CertivoIQ: $${calculated.toFixed(2)}. Variance: $${variance.toFixed(2)}.`,
     blockingReasons: [],
-    evidenceRefs: refs(facts, [reportedField, ...componentFields]),
+    evidenceRefs: evidence,
   };
 }
 
 function factMap(facts) {
-  return new Map(facts.map((fact) => [fact.field, fact]));
+  const map = new Map();
+  const conflicts = new Set();
+  for (const fact of facts) {
+    if (!reliable(fact) || conflicts.has(fact.field)) continue;
+    const value = numeric(fact.value);
+    if (value === null) continue;
+    const prior = map.get(fact.field);
+    if (prior && numeric(prior.value) !== value) {
+      map.delete(fact.field);
+      conflicts.add(fact.field);
+      continue;
+    }
+    map.set(fact.field, fact);
+  }
+  return map;
 }
 
 function valueOf(map, field) {
@@ -66,10 +87,21 @@ function calculatedValue(calculated, field) {
 }
 
 function indexedValues(facts, pattern) {
-  return facts
-    .filter((fact) => pattern.test(fact.field))
-    .map((fact) => ({ field: fact.field, value: numeric(fact.value) }))
-    .filter((entry) => entry.value !== null);
+  const byField = new Map();
+  const conflicts = new Set();
+  for (const fact of facts) {
+    if (!pattern.test(fact.field) || !reliable(fact) || conflicts.has(fact.field)) continue;
+    const value = numeric(fact.value);
+    if (value === null) continue;
+    const prior = byField.get(fact.field);
+    if (prior !== undefined && prior !== value) {
+      byField.delete(fact.field);
+      conflicts.add(fact.field);
+      continue;
+    }
+    byField.set(fact.field, value);
+  }
+  return [...byField].map(([field, value]) => ({ field, value }));
 }
 
 function sum(values) {
