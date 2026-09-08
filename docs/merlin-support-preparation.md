@@ -1,40 +1,38 @@
-# CertivoIQ Merlin and support preparation — September 8, 2026
+# CertivoIQ Merlin and support automation — September 8, 2026
 
-## Current state
-Groq is connected: the saved GROQ_API_KEY successfully generated a response from openai/gpt-oss-20b (HTTP 200). No OpenAI credit purchase or Google project repair is required for this connection. No paid-provider fallback is configured.
+## Live operation
+- Merlin source capture and Groq draft extraction: hourly at minute 7, under certivoiq-merlin-preparation.
+- Support preparation: every five minutes.
+- Absence watchdog: every fifteen minutes.
+- The previous separate source-only schedule was replaced, preventing duplicate scheduling.
 
-Source preparation runs hourly at minute 7. Support preparation runs every five minutes. The absence watchdog remains active. AI extraction scheduling remains disabled pending a successful full PDF pilot.
+Merlin runs in Supabase without this chat or the founder's computer remaining open. It processes one document section per invocation, with one active native worker and at most 24 native attempts per rolling 24 hours. Provider quotas may reduce throughput further. At the final check, pilot/source testing had used 20 native attempts in the last 24 hours; the worker will wait automatically when that cap is reached.
 
-## Groq pilot scope
-The deployed worker preserves official-domain checks, redirect checks, exact SHA-256 matching, a private PDF snapshot bucket, single-use scheduler credentials, one active native worker, and a 24-attempt rolling daily cap.
-PDF text is parsed with pinned unpdf 1.8.1. Single-request extraction accepts up to 25 pages and 12,000 extracted characters; pages with insufficient text require OCR. Longer documents require a segmented processing path and are held for review rather than silently truncated.
-Each inference uses at most 3,500 completion tokens, low reasoning effort, a strict JSON schema, and a 120-second timeout. At most five concise procedures are requested. Every citation must contain a 5–20-word excerpt found verbatim in the cited PDF page's normalized text.
-Results can only become pending_independent_validation and remain unusable for compliance determinations. Text parsing does not verify table layout or images. Draft coverage is explicitly partial.
-Attempt and token caps do not guarantee a dollar spending limit if the Groq account is upgraded later.
+## Verified live results
+The Groq key passed real inference. A complete one-section Idaho sample notice produced three cited draft procedures. All three were verified in the database as pending_independent_validation and unusable for compliance determinations.
+The longer KHC utility policy was split into eight sections. Two sections have been saved, containing five checkpointed draft procedures. A failed citation attempt did not lose section one; the next invocation resumed section two successfully. The document remains queued until all eight sections are processed. Its next eligible time at the final check was September 9, 00:53 UTC; the hourly scheduler can pick it up after that, subject to the shared attempt limit.
+The active cron configuration was verified. Its first naturally scheduled AI invocation has not yet been observed; the same dispatch path passed the direct live pilots.
 
-## Live findings
-- Groq credential and inference preflight passed.
-- The archived Delaware income-limit PDF reached inference but produced no acceptable cited procedure extraction. No procedures were saved from those failed attempts.
-- Source download timeouts, source HTTP 403, and oversized files were surfaced without bypassing access restrictions.
-- The short Idaho sample notice reached extraction, but its citations failed validation; no draft was committed. Full document extraction has not yet passed, so scheduled AI processing is not enabled.
-- The KHC utility policy exceeded the text budget and was routed to segmentation review.
-- A PDF cleanup compatibility defect was fixed; the attempt consumed by that implementation defect was restored with an audit event.
-- Explicitly scheduled jobs now take priority over the held backlog within each retry class.
-- Empty procedure results, OCR-required documents, and documents requiring segmentation are routed to review.
-- Six Node source/structure tests passed. A rollback-isolated SQL test confirmed segmentation-required failure quarantines the job and rejects duplicate failure updates. An initial test attempt could not claim while a live worker held the concurrency slot; it passed after the worker finished.
-- Security advisor findings remain the existing private-table RLS notices and pg_net placement warning.
+## How extraction works
+Pinned unpdf 1.8.1 parses the verified PDF. Text is partitioned into bounded sections while preserving every extracted word and its PDF page. The model selects IDs for actual source spans; Merlin constructs quotations and page citations from those spans. Application and database checks reject missing or invented references.
+Groq openai/gpt-oss-120b processes one section per request, with a strict schema, at most three draft procedures and 2,400 completion tokens. Draft fields stay concise. Checkpoints persist in a private RLS-protected table. A successful section releases the lease and schedules continuation one hour later without consuming a failure retry. No partial procedure rows are exposed as a completed document.
+Only the final section triggers atomic document/procedure/event/job completion. Duplicate or out-of-order sections, expired leases, or changed source hashes cannot advance progress.
 
-## Support preparation
-Internal suggested replies and investigation checklists use deterministic templates; no model API is needed. They are deduplicated against changed open-case inputs and do not send messages, assign cases, close cases, or make compliance decisions. A protected exclusion table excludes the verified system-test ticket. No real open support cases existed in the audited population.
+## Boundaries and exceptions
+All results remain research drafts. Matching quotations prove the quoted text occurs in the source; they do not prove the model's interpretation or legal completeness. Table layout, images, cross-page context, sample-form applicability, and full procedural coverage still require independent validation. No automated compliance approvals are enabled.
+The source cap remains 5 MB. Parser limits are 250 pages, one million extracted characters, 150,000 words, and 100 sections. More than 100 accumulated procedures requires review. Pages with insufficient extractable text are held for OCR; source access denials, missing files, changed hashes, and oversized files are routed to review.
+Provider credential/quota failures pause AI work for an hour, preserve document retries and create one operations incident. Successful inference clears the provider incident. There is no paid-provider fallback or automatic credit purchase. Groq account billing settings remain the user's responsibility; worker caps are not a dollar-denominated budget.
 
-## Operations
-Secrets stay in Supabase; never put their values in source files or chat.
-Preflight: select private.dispatch_merlin_preparation(true);
-Single AI pilot: select private.dispatch_merlin_preparation(false);
-Source-only dispatch: select private.dispatch_merlin_source_preparation();
-Pause source schedule: select cron.unschedule('certivoiq-merlin-source-preparation');
-Pause support schedule: select cron.unschedule('certivoiq-support-preparation');
-Provider quota/credential failures defer work for one hour and preserve document retries. A successful preflight clears the provider incident.
-Inspect operations_jobs, merlin_procedure_documents.source_snapshot, merlin_procedure_extraction_events, operations_incidents, and staff-only support_case_notes. Cron dispatch success alone is not proof that a worker completed.
+## Support and founder absence
+Support preparation writes internal suggested replies and investigation checklists from deterministic templates, deduplicated against changed case inputs. It does not send replies, assign or close cases, or make compliance decisions.
+The watchdog records operational exceptions. Because no human backup has been appointed, compliance approvals and support exceptions requiring judgment still wait for an authorized person.
 
-Source and review code is recorded in draft PR https://github.com/Watkin5/certifyiq-48308270/pull/430. No frontend deployment or PR merge was performed.
+## Verification and operations
+Ten Node tests passed, covering source boundaries, PDF validation, extraction structure, word/page preservation, source-ID grounding, scanned-page rejection, and empty sections.
+Rollback-isolated SQL tests passed for checkpoint recovery, duplicate prevention, invented-quotation rejection, changed-source rejection, atomic finalization, restricted access and non-authoritative results. Live tests verified complete extraction plus saved-progress recovery. Security advisors show expected service-only private-table RLS notices and the existing pg_net placement warning.
+Pause Merlin: select cron.unschedule('certivoiq-merlin-preparation');
+Pause support: select cron.unschedule('certivoiq-support-preparation');
+Inspect private.merlin_segment_progress, operations_jobs, merlin_procedure_documents, merlin_procedures, merlin_procedure_extraction_events, operations_incidents, and staff-only support_case_notes.
+Restore schedules using scripts/schedule-merlin-support-preparation.sql.
+
+Implementation and operating scripts: https://github.com/Watkin5/certifyiq-48308270/pull/430 (draft; deployed runtime/database changes are recorded here). No frontend deployment or merge was performed.
