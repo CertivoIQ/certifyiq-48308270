@@ -6,6 +6,7 @@ import { FileSearch, Library, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { StateDocumentLibrary } from "@/components/state-document-library";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
@@ -181,6 +182,7 @@ function DocumentIntelligencePage() {
       title="Document Intelligence"
       subtitle="Versioned forms, effective periods, required evidence, signatures, and recognition controls"
     >
+      <StateDocumentLibrary />
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Registry forms" value={registry.data?.length ?? 0} hint="Controlled form families and revisions" />
         <Stat label="Validated supported" value={validatedCount} hint="Source and validation controls complete" />

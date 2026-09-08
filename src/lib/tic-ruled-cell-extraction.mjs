@@ -149,15 +149,34 @@ export function planTicCells(image,blocks){
  const numberFields=[['total_income_e',/TOTAL\s+INCOME\s*\([A-Z][A-Z]?\)/i],['household_annual_income',/Total\s+Annual\s+Household\s+Income/i],['applicable_lihtc_income_limit',/Current\s+Income\s+Limit\s+per\s+Family\s+Size/i],['tenant_paid_rent',/Tenant\s+Paid\s+Rent/i],['utility_allowance',/Utility\s+Allowance/i],['rent_assistance',/Rental\s+Assistance\s*:/i],['other_non_optional_charges',/Other\s+non-optional\s+charges\s+and\s+mandatory\s+fees/i],['gross_rent',/Gross\s+Rent\s+For\s+Unit/i],['total_income_assets_m',/TOTAL\s+INCOME\s+FROM\s+ASSETS\s*\(K\)/i]];
  for(const [key,re] of numberFields){
   const line=lines.find(l=>re.test(l.text));if(!line)continue;const m=labelMatch(line,re);if(!m)continue;
-  const money=m.tail.filter(w=>/^\$?\d[\d,]*\.\d{2}$/.test(w.text));
+  // OCR often splits the label and its right-aligned amount into separate blocks.
+  // Match the original words on the same baseline, not only this OCR line's tail.
+  const center=(m.y0+m.y1)/2,height=Math.max(8,m.y1-m.y0);
+  const money=sourceWords.filter(w=>w.bbox.x0>=m.x1&&Math.abs((w.bbox.y0+w.bbox.y1)/2-center)<=height*.65&&/^\$?\d[\d,]*\.\d{2}$/.test(w.text));
   if(money.length!==1)continue;const b=money[0].bbox;
   add(key,{x0:b.x0-5,x1:b.x1+6,y0:b.y0-4,y1:b.y1+4},'currency');
  }
- return {version:1,width:r.w,height:r.h,cells:cells.slice(0,90),blocked:[...new Set([...blocked,...cells.slice(90).map(c=>c.key)])],groups,checkboxes:certificationCheckboxes(r,lines)};
+ const supplementalValues={};
+ for(const [key,heading] of [['unit_rent_restriction_percent',/unit\s+meets\s+rent\s+restriction/i],['household_income_restriction_percent',/designated\s+income\s+restriction|household\s+meets\s+income\s+restriction/i]]){
+  const title=lines.find(l=>heading.test(l.text));if(!title)continue;
+  const rows=lines.filter(l=>l.bbox.y0>=title.bbox.y0&&l.bbox.y0-title.bbox.y1<r.h*.07&&l.bbox.x0>=title.bbox.x0-r.h*.02&&/\b(?:20|30|40|50|60|70|80)\s*%/.test(l.text));
+  const readings=rows.map(l=>readCheckboxLine(r,l,[...l.text.matchAll(/\b(20|30|40|50|60|70|80)\s*%/g)].map(m=>[m[1],new RegExp('\\b'+m[1]+'\\s*%')])));
+  const selected=readings.filter(Boolean).filter(c=>c.selected);
+  if(readings.length&&readings.every(Boolean)&&selected.length===1)supplementalValues[key]={value:selected[0].selected,bbox:title.bbox};
+ }
+ const studentQuestion=lines.find(l=>/are\s+all\s+occupants\s+full[-\s]?time\s+students/i.test(l.text));
+ if(studentQuestion){
+  const answer=lines.find(l=>l.bbox.y0>=studentQuestion.bbox.y0&&l.bbox.y0-studentQuestion.bbox.y1<r.h*.065&&/\byes\b.*\bno\b/i.test(l.text));
+  if(answer){const choice=readCheckboxLine(r,answer,[['Yes',/\byes\b/i],['No',/\bno\b/i]]);if(choice?.selected)supplementalValues.all_occupants_full_time_students={value:choice.selected,bbox:answer.bbox};}
+ }
+ return {version:1,width:r.w,height:r.h,cells:cells.slice(0,90),blocked:[...new Set([...blocked,...cells.slice(90).map(c=>c.key)])],groups,checkboxes:certificationCheckboxes(r,lines),supplementalValues};
 }
 function certificationCheckboxes(r,lines){
  const line=lines.find(l=>/initial\s+certification/i.test(l.text)&&/recertification/i.test(l.text)&&/other/i.test(l.text));
- if(!line)return null; const b=bound(r,{x0:Math.max(0,line.bbox.x0-15),x1:line.bbox.x1+15,y0:line.bbox.y0-8,y1:line.bbox.y1+8}),seen=new Uint8Array((b.x1-b.x0)*(b.y1-b.y0)),components=[];
+ return line?readCheckboxLine(r,line,[['Initial Certification',/initial\s+certification/i],['Recertification',/recertification/i],['Other',/other/i]]):null;
+}
+function readCheckboxLine(r,line,options){
+ const b=bound(r,{x0:Math.max(0,line.bbox.x0-r.h*.025),x1:line.bbox.x1+15,y0:line.bbox.y0-8,y1:line.bbox.y1+8}),seen=new Uint8Array((b.x1-b.x0)*(b.y1-b.y0)),components=[];
  const width=b.x1-b.x0,inside=(x,y)=>x>=b.x0&&x<b.x1&&y>=b.y0&&y<b.y1;
  for(let y=b.y0;y<b.y1;y++)for(let x=b.x0;x<b.x1;x++){
   let at=(y-b.y0)*width+x-b.x0;if(seen[at]||!r.mask[y*r.w+x])continue;
@@ -169,11 +188,13 @@ function certificationCheckboxes(r,lines){
   }
  }
  const selections=[];
- for(const [label,re]of[['Initial Certification',/initial\s+certification/i],['Recertification',/recertification/i],['Other',/other/i]]){
+ for(const [label,re]of options){
   const m=labelMatch(line,re);if(!m)return null;const candidates=components.filter(c=>c.x0>=m.x0-r.h*.02&&c.x1<=m.x0+r.h*.018&&Math.abs((c.y0+c.y1)/2-(m.y0+m.y1)/2)<r.h*.008);
   if(candidates.length!==1)return null;selections.push({label,...candidates[0]});
  }
- const selected=selections.filter(c=>c.fill>=.09);return {candidates:selections,selected:selected.length===1&&selections.filter(c=>c.fill<.02).length===2?selected[0].label:null};
+  const selected=selections.filter(c=>c.fill>=.09),clear=selections.filter(c=>c.fill<.02);
+  if(selected.length>1||selected.length+clear.length!==options.length)return null;
+  return {candidates:selections,selected:selected.length===1?selected[0].label:null};
 }
 export function cellSheetLayout(plan){
  const tiles=[];let y=0;
@@ -235,7 +256,7 @@ export function finishTicCells(plan,sheet,blocks){
  if(plan.checkboxes?.selected){values.set('certification_type',plan.checkboxes.selected);const selected=plan.checkboxes.candidates.find(c=>c.label===plan.checkboxes.selected);evidence.certification_type={bbox:{x0:selected.x0,y0:selected.y0,x1:selected.x1,y1:selected.y1},pageWidth:plan.width,pageHeight:plan.height,confidence:.85,method:'checkbox-interior'};}
  else if(plan.checkboxes)unresolved.add('certification_type');
  for(const [key,entry] of Object.entries(plan.supplementalValues??{})){
-  values.set(key,entry.value);evidence[key]={bbox:entry.bbox,pageWidth:plan.width,pageHeight:plan.height,confidence:.8,method:key.startsWith('source_present_')?'source-row-ink':'source-checkbox-interior'};
+  values.set(key,entry.value);evidence[key]={bbox:entry.bbox,pageWidth:plan.width,pageHeight:plan.height,confidence:.8,method:key.startsWith('source_present_')?'source-row-ink':'checkbox-interior'};
  }
  for(const key of unresolved)values.delete(key);
  for(const [key,value]of values){if(key.endsWith('_number')&&key.startsWith('household_member_'))continue;
@@ -253,4 +274,3 @@ export function mergeCellProposals(spatialLines,cellLines){
  const keys=new Set(cellLines.map(line=>/^__CERTIVOIQ_TIC_(?:FIELD|UNRESOLVED)__\s+([a-z0-9_]+):/.exec(line)?.[1]).filter(Boolean));
  return [...spatialLines.filter(line=>!keys.has(/^__CERTIVOIQ_TIC_FIELD__\s+([a-z0-9_]+):/.exec(line)?.[1])),...cellLines];
 }
-

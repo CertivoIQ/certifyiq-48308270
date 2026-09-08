@@ -11,8 +11,8 @@ const blocks=words=>[{paragraphs:[{lines:[{words,bbox:box,text:words.map(w=>w.te
 function fixture(key='unit_number',type='text',sourceWords=[]){const cell={key,type,bbox:box,ink:true,sourceWords};return{plan:{version:1,width:600,height:800,cells:[cell],groups:[],blocked:[],checkboxes:null},sheet:{width:940,height:90,tiles:[{...cell,x:148,y:24,width:120,height:30,scale:1}]}};}
 const asModule=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
 function compile(file,bindings={}){let code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;for(const[k,v]of Object.entries(bindings))code=code.split(k).join(v);return asModule(code);}
-const reg=compile('src/lib/tic-field-registry.ts');
-const {extractTicFieldsFromText}=await import(compile('src/lib/tic-field-extraction.ts',{'@/lib/tic-field-registry':reg,'@/lib/tic-document-layout.mjs':pathToFileURL(resolve('src/lib/tic-document-layout.mjs')).href}));
+import {load} from './helpers/load-typescript.mjs';
+const {extractTicFieldsFromText}=await import(load('src/lib/tic-field-extraction.ts'));
 test('a blank raster never invents TIC cells or certification choices',()=>{const image={width:600,height:800,data:new Uint8ClampedArray(600*800*4).fill(255)};const plan=planTicCells(image,[]);assert.equal(plan.cells.length,0);assert.equal(plan.checkboxes,null);});
 test('malformed and unbounded pixel buffers are rejected',()=>{assert.throws(()=>rasterMask({width:600,height:800,data:new Uint8Array(4)}));assert.throws(()=>rasterMask({width:9000,height:9000,data:new Uint8Array(4)}));});
 test('neutral synthetic Value label is excluded from source values',()=>{const {plan,sheet}=fixture();const got=finishTicCells(plan,sheet,blocks([word('Value:',95,24),word('407')]));assert.equal(got.values.unit_number,'407');assert.equal(got.evidence.unit_number.method,'isolated-cell');});

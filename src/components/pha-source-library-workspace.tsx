@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Stat } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
+import { StateDocumentLibrary } from "@/components/state-document-library";
 
 type SourceRow={id:string;source_scope:string;program_code:string|null;authority_key:string;source_type:string;title:string;issuing_authority:string;source_reference:string;effective_date:string|null;version_label:string|null;checksum:string|null;status:string};
 type TemplateRow={id:string;program_code:string;template_key:string;template_type:string;title:string;version_label:string;status:string;source_library_id:string};
@@ -19,6 +20,7 @@ export function PhaSourceLibraryWorkspace(){
  const sources=query.data?.sources??[];const templates=query.data?.templates??[];
  const current=sources.filter(x=>x.status==="current").length;const blocked=sources.filter(x=>x.status==="blocked"||x.status==="pending").length;const validatedTemplates=templates.filter(x=>x.status==="validated").length;
  return <AppShell title="Source Library & Forms" subtitle="Version-controlled federal and agency authority, forms, notices, letters, and checklists">
+  <StateDocumentLibrary />
   <div className="grid gap-3 md:grid-cols-3"><Stat label="Current sources" value={current} hint="Validated current authority records"/><Stat label="Pending / blocked" value={blocked} hint="Authority not eligible for rule or template release"/><Stat label="Validated templates" value={validatedTemplates} hint="Forms and notices released for use"/></div>
   <div className="mt-4 grid gap-4 xl:grid-cols-[1.3fr_.7fr]">
    <Panel title="Controlled sources" description="Federal authority is staff-governed. Agency sources are workspace-scoped and versioned."><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="pb-3">Source</th><th className="pb-3">Scope</th><th className="pb-3">Program</th><th className="pb-3">Version</th><th className="pb-3">Status</th></tr></thead><tbody>{sources.map(s=><tr key={s.id} className="border-t border-border"><td className="py-3 pr-3"><div className="font-medium">{s.title}</div><div className="text-xs text-muted-foreground">{s.issuing_authority} · {s.authority_key}</div></td><td className="py-3 pr-3">{s.source_scope}</td><td className="py-3 pr-3">{s.program_code?.replaceAll("_"," ").toUpperCase()??"ALL"}</td><td className="py-3 pr-3">{s.version_label??s.effective_date??"—"}</td><td className="py-3"><Pill tone={s.status==="current"?"seal":undefined}>{s.status}</Pill></td></tr>)}{!query.isLoading&&sources.length===0?<tr><td colSpan={5} className="py-8 text-center text-muted-foreground">No controlled sources loaded yet.</td></tr>:null}</tbody></table></div></Panel>

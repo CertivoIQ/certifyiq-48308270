@@ -1,4 +1,9 @@
 export type SupportingDocumentType =
+  | "income_calculation_worksheet"
+  | "vawa_notice"
+  | "vawa_certification"
+  | "vawa_emergency_transfer_plan"
+  | "vawa_emergency_transfer_request"
   | "employment_verification"
   | "rental_application"
   | "annual_student_certification"
@@ -22,6 +27,11 @@ export type SupportingDocumentDefinition = {
 };
 
 export const SUPPORTING_DOCUMENT_DEFINITIONS: readonly SupportingDocumentDefinition[] = [
+  {type: "income_calculation_worksheet", label: "Annual Income Calculation Worksheet", aliases: ["Annual Income Calculation Worksheet"], strongSignals: [/annual\s+income\s+calculation\s+worksheet/i]},
+  {type: "vawa_notice", label: "VAWA — Notice of Occupancy Rights (HUD-5380)", aliases: ["VAWA Notice", "HUD-5380"], strongSignals: [/hud[-\s]*5380\b/i, /notice\s+of\s+occupancy\s+rights.*violence\s+against\s+women/is]},
+  {type: "vawa_certification", label: "VAWA — Certification (HUD-5382)", aliases: ["VAWA Certification", "HUD-5382"], strongSignals: [/hud[-\s]*5382\b/i, /certification\s+of\s+domestic\s+violence/i]},
+  {type: "vawa_emergency_transfer_plan", label: "VAWA — Emergency Transfer Plan (HUD-5381)", aliases: ["VAWA Emergency Transfer Plan", "HUD-5381"], strongSignals: [/hud[-\s]*5381\b/i, /emergency\s+transfer\s+plan.*victims/is]},
+  {type: "vawa_emergency_transfer_request", label: "VAWA — Emergency Transfer Request (HUD-5383)", aliases: ["VAWA Emergency Transfer Request", "HUD-5383"], strongSignals: [/hud[-\s]*5383\b/i, /emergency\s+transfer\s+request.*victims/is]},
   {type: "employment_verification", label: "Employment Verification", aliases: ["Employment Verification", "Verification of Employment"], strongSignals: [/employment\s+verification/i, /verification\s+of\s+employment/i]},
   {type: "rental_application", label: "Rental Application", aliases: ["Rental Application", "Application for Rental"], strongSignals: [/rental\s+application/i, /application\s+for\s+rental/i]},
   {
@@ -168,4 +178,3 @@ export const TIC_PAGE_SIGNALS = [
   /determination\s+of\s+income\s+eligibility/i,
   /gross\s+rent\s+for\s+unit/i,
 ] as const;
-
