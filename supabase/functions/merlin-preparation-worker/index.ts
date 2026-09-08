@@ -97,7 +97,9 @@ Deno.serve(async (request:Request)=>{
   const result=await response.json();
   if(!response.ok) throw new Error("MODEL_HTTP_"+response.status+"_"+String(result.error?.code??"unknown").slice(0,80));
   if(result.choices?.[0]?.finish_reason!=="stop") throw new Error("MODEL_INCOMPLETE");
-  const extraction=validateExtraction(JSON.parse(result.choices[0].message.content));
+  const parsed=JSON.parse(result.choices[0].message.content);
+  if(Array.isArray(parsed.procedures)&&parsed.procedures.length===0) throw new Error("NO_EXPLICIT_PROCEDURES");
+  const extraction=validateExtraction(parsed);
   for(const p of extraction.procedures) for(const citation of p.citations) {
    const page=Number(citation.page_or_locator);
    const excerpt=citation.excerpt.replace(/\s+/g," ").trim();
