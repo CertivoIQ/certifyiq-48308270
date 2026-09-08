@@ -24,8 +24,9 @@ assert.match(
   /recognizeWithSharedWorker\(file, 1, undefined, true\)/,
   'image certifications must be extracted locally with bounded OCR and block data enabled',
 );
-assert.match(pdfOcr, /const sharedOcrSlots/, 'OCR workers must be bounded and reused across documents');
+assert.match(pdfOcr, /const sharedOcrPool = createOcrWorkerPool/, 'OCR workers must be bounded and reused across documents');
 assert.match(intake, /isOcrSupportedFile\(file\)/, 'intake must prepare every supported certification document');
 assert.match(review, /Missing evidence remains \"unable to determine\"/, 'missing evidence must fail closed to human review');
 
 console.log('PASS certification extraction is local, source-bound, and independent of Lovable');
+

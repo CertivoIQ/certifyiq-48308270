@@ -37,7 +37,8 @@ test("large certification uploads use direct resumable storage with progress and
 });
 
 test("document extraction is shared, bounded, and reused during review", () => {
-  assert.match(browserExtraction, /const sharedOcrSlots/);
+  assert.match(browserExtraction, /const sharedOcrPool = createOcrWorkerPool/);
+  assert.match(browserExtraction, /sharedOcrPool\.run\(workerCount/);
   assert.match(browserExtraction, /MAX_PARALLEL_TEXT_READERS = 6/);
   assert.match(browserExtraction, /kind: ["']machine-readable["'][\s\S]*sidecar:/);
   assert.doesNotMatch(browserExtraction, /ocrWorker\.terminate/);
@@ -72,4 +73,5 @@ test("the intake table keeps one strict policy and indexed portfolio relationshi
     assert.match(intakeOptimization, new RegExp(`on public\\.certification_import_items\\(${column}\\)`));
   }
 });
+
 
