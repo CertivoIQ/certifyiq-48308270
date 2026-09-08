@@ -35,6 +35,7 @@ const WORKSHEET_SCALARS = [
 ] as const;
 
 type ScalarType = (typeof WORKSHEET_SCALARS)[number][2];
+type Scalar = (typeof WORKSHEET_SCALARS)[number];
 
 function compact(value: string) {
   return value.replace(/[\uF000-\uF8FF]/g, " ").replace(/[☐□▢◻◽]/g, " ").replace(/_{2,}/g, " ").replace(/\s+/g, " ").trim();
@@ -72,13 +73,22 @@ function pageLines(text: string) {
   return pages;
 }
 
-function nextLabelBoundary(lower: string, after: number) {
-  let boundary = lower.length;
-  for (const [, label] of WORKSHEET_SCALARS) {
-    const index = lower.indexOf(label, after);
-    if (index >= 0 && index < boundary) boundary = index;
+function labelsOnLine(lower: string) {
+  const matches: Array<{ scalar: Scalar; start: number; end: number }> = [];
+  for (const scalar of WORKSHEET_SCALARS) {
+    const [, label] = scalar;
+    let cursor = 0;
+    while (cursor < lower.length) {
+      const start = lower.indexOf(label, cursor);
+      if (start < 0) break;
+      matches.push({ scalar, start, end: start + label.length });
+      cursor = start + 1;
+    }
   }
-  return boundary;
+  matches.sort((a, b) => a.start - b.start || b.end - a.end);
+  // When labels overlap at the same printed position, only the longest exact
+  // label is allowed (e.g. "Qualifying Income Limit Percent" before its prefix).
+  return matches.filter((match, index) => !matches.slice(0, index).some((prior) => prior.start === match.start && prior.end >= match.end));
 }
 
 /**
@@ -93,13 +103,12 @@ export function extractSupplementalTextCandidates(text: string): SupplementalTex
     const pageText = lines.join("\n");
     if (supplementalPageKind(pageText) !== "worksheet") continue;
     for (const line of lines) {
-      const lower = line.toLowerCase();
-      for (const [key, label, type] of WORKSHEET_SCALARS) {
-        const start = lower.indexOf(label);
-        if (start < 0) continue;
-        const valueStart = start + label.length;
-        const valueEnd = nextLabelBoundary(lower, valueStart);
-        const raw = line.slice(valueStart, valueEnd);
+      const labels = labelsOnLine(line.toLowerCase());
+      for (let index = 0; index < labels.length; index += 1) {
+        const match = labels[index]!;
+        const [key, , type] = match.scalar;
+        const next = labels.find((candidate, candidateIndex) => candidateIndex > index && candidate.start >= match.end);
+        const raw = line.slice(match.end, next?.start ?? line.length);
         const value = normalize(type, raw);
         if (value === null) continue;
         candidates.push({ key, value, page, line });
