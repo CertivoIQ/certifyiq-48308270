@@ -13,6 +13,16 @@ const fact = (field, value, page = 5) => ({
   humanVerified: true,
 });
 
+const ocrFact = (field, value, confidence) => ({
+  field,
+  value,
+  sourceDocumentRef: "sample-tic.pdf",
+  page: 5,
+  snippet: `${field}: ${value}`,
+  confidence,
+  humanVerified: false,
+});
+
 test("worksheet imputed and annual income are independently recalculated above the worksheet trigger", () => {
   const result = evaluateTicRecalculations([
     fact("worksheet_total_asset_cash_value", 5200.9),
@@ -71,12 +81,20 @@ test("matching TIC arithmetic does not create an inconsistency finding", () => {
   assert.equal(result.calculated.household_annual_income, 18007.5);
 });
 
-test("missing arithmetic inputs do not manufacture a FAIL", () => {
-  const result = evaluateTicRecalculations([
+test("missing or low-confidence arithmetic inputs do not manufacture a FAIL", () => {
+  const missing = evaluateTicRecalculations([
     fact("worksheet_total_annual_income", 25365),
   ]);
-  assert.deepEqual(result.findings, []);
-  assert.deepEqual(result.calculated, {});
+  assert.deepEqual(missing.findings, []);
+  assert.deepEqual(missing.calculated, {});
+
+  const lowConfidence = evaluateTicRecalculations([
+    ocrFact("income_member_1_total_income", 12000, 0.6),
+    ocrFact("income_member_2_total_income", 6000, 0.6),
+    ocrFact("total_income_e", 99999, 0.6),
+  ]);
+  assert.deepEqual(lowConfidence.findings, []);
+  assert.deepEqual(lowConfidence.calculated, {});
 });
 
 test("strict-cell pages allow only safe same-line fallback for fields the spatial reader missed", () => {
