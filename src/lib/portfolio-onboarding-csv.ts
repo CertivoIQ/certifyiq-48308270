@@ -5,7 +5,7 @@ export const ONBOARDING_FIELDS = {
   state: { label: "Property state", aliases: ["state code", "property state", "property state code"] },
   property_address: { label: "Property address", aliases: ["property address line 1", "address line 1", "street address"] },
   city: { label: "Property city", aliases: ["property city", "city name"] },
-  postal_code: { label: "Postal code", aliases: ["zip", "zip code", "zipcode", "property zip"] },
+  postal_code: { label: "Postal code", aliases: ["zip", "zip code", "zipcode", "property zip", "property postal code"] },
   unit_external_id: { label: "Unit reference ID", aliases: ["unit id", "unit code", "external unit id", "apartment id", "apartment code"] },
   unit_number: { label: "Unit number", aliases: ["unit no", "apartment number", "apartment no", "apt number", "apt no", "unit"] },
   bedrooms: { label: "Bedroom count", aliases: ["bedroom count", "number of bedrooms", "beds", "bedrooms count"] },
@@ -19,7 +19,7 @@ export const ONBOARDING_FIELDS = {
   occupancy_status: { label: "Occupancy status (source detail)", aliases: ["unit status", "occupancy", "resident status"] },
   certification_type: { label: "Certification type (optional)", aliases: ["cert type", "certification category"] },
   certification_effective_date: { label: "Certification effective date (optional)", aliases: ["cert effective date", "certification date"] },
-  program_codes: { label: "Program codes (optional)", aliases: ["programs", "program code", "housing programs"] },
+  program_codes: { label: "Program codes (optional)", aliases: ["programs", "program code", "housing programs", "program name", "housing program"] },
 } as const;
 export type OnboardingField = keyof typeof ONBOARDING_FIELDS;
 export type OnboardingMapping = Partial<Record<OnboardingField, number | null>>;
@@ -60,7 +60,7 @@ export function readOnboardingCsv(input: string): CsvTable {
     finishCell();
     if (row.some((cell) => cell.trim())) records.push(row);
     if (row.length > 200) throw new Error("The onboarding CSV supports up to 200 columns.");
-    if (records.length > ONBOARDING_MAX_ROWS + 1) throw new Error("Import no more than 5,000 tenant rows at once.");
+    if (records.length > ONBOARDING_MAX_ROWS + 1) throw new Error("Import no more than 5,000 unit / tenant rows at once.");
     row = [];
   };
   for (let i = 0; i < text.length; i++) {
@@ -78,7 +78,7 @@ export function readOnboardingCsv(input: string): CsvTable {
   }
   if (quoted) throw new Error("The CSV contains an unclosed quoted value.");
   if (value.length || row.length || closedQuote) finishRow();
-  if (records.length < 2) throw new Error("Include a header row and at least one tenant row.");
+  if (records.length < 2) throw new Error("Include a header row and at least one unit or tenant row.");
   const headers = records.shift()!;
   for (const [index, record] of records.entries()) {
     if (record.length !== headers.length) throw new Error(`CSV record ${index + 2}: ${record.length} cells do not match ${headers.length} headings. Check separators and quoted values.`);
@@ -93,7 +93,10 @@ export function suggestOnboardingMapping(headers: readonly string[]) {
     if (field) (candidates[field] ??= []).push(index);
   });
   const mapping: OnboardingMapping = {};
-  for (const field of fields) mapping[field] = candidates[field]?.length === 1 ? candidates[field]![0]! : null;
+  for (const field of fields) {
+    const exact = (candidates[field] ?? []).filter((index) => normalizeOnboardingHeader(headers[index]!) === normalizeOnboardingHeader(field));
+    mapping[field] = exact.length === 1 ? exact[0]! : candidates[field]?.length === 1 ? candidates[field]![0]! : null;
+  }
   return { mapping, candidates };
 }
 
@@ -101,7 +104,7 @@ export type OnboardingRow = {
   propertyExternalId: string; propertyName: string; state: string;
   propertyAddress?: string | undefined; city?: string | undefined; postalCode?: string | undefined;
   unitExternalId: string; unitNumber: string; bedrooms?: number | undefined;
-  tenantExternalId: string; householdName: string; moveInDate?: string | undefined;
+  tenantExternalId: string; householdName: string; isVacant: boolean; moveInDate?: string | undefined;
   certificationType?: "INITIAL" | "ANNUAL" | "INTERIM" | undefined;
   certificationEffectiveDate?: string | undefined; programCodes: string[];
   sourceData: {
@@ -140,9 +143,8 @@ export function previewOnboarding(table: CsvTable, mapping: OnboardingMapping, o
     if (used.has(index)) issue(`Column ${index + 1} is assigned to both ${used.get(index)} and ${field}. Resolve the duplicate mapping.`);
     used.set(index, field);
   }
-  const required: OnboardingField[] = ["property_external_id", "property_name", "unit_external_id", "unit_number", "tenant_external_id"];
+  const required: OnboardingField[] = ["property_external_id", "property_name", "unit_external_id", "unit_number"];
   for (const field of required) if (mapping[field] == null) issue(`Choose the source column for ${ONBOARDING_FIELDS[field].label}.`);
-  if (mapping.household_name == null && (mapping.tenant_first_name == null || mapping.tenant_last_name == null)) issue("Map the household name, or both primary tenant first and last name.");
   const stateNeeded = new Map<string, { id: string; name: string }>();
   const rows: OnboardingRow[] = [];
   const propertySeen = new Map<string, Record<string, unknown>>();
@@ -170,8 +172,13 @@ export function previewOnboarding(table: CsvTable, mapping: OnboardingMapping, o
     else if (!ONBOARDING_STATE_CODES.includes(state)) issue(`CSV record ${record}: property state must be a valid two-letter code.`);
     const nameParts = [get("tenant_first_name"), get("tenant_middle_name"), get("tenant_last_name")];
     const householdName = get("household_name") || (nameParts[0] && nameParts[2] ? nameParts.filter(Boolean).join(" ") : "");
+    const occupancy = normalizeOnboardingHeader(get("occupancy_status"));
+    const isVacant = ["vacant", "vacantready", "vacantunready", "vacantnotready", "unoccupied"].includes(occupancy);
+    if (isVacant && [get("tenant_external_id"), householdName, ...nameParts, get("move_in_date"), get("certification_type"), get("certification_effective_date")].some(Boolean)) {
+      issue(`CSV record ${record}: vacant units must not include tenant or certification details. Correct the occupancy or clear those details.`);
+    }
     const row: OnboardingRow = {
-      propertyExternalId, propertyName, state,
+      propertyExternalId, propertyName, state, isVacant,
       propertyAddress: get("property_address") || undefined, city: get("city") || undefined, postalCode: get("postal_code") || undefined,
       unitExternalId: get("unit_external_id"), unitNumber: get("unit_number"), tenantExternalId: get("tenant_external_id"), householdName,
       programCodes: get("program_codes").split(/[|;]/).map((value) => value.trim().toUpperCase()).filter(Boolean),
@@ -179,8 +186,11 @@ export function previewOnboarding(table: CsvTable, mapping: OnboardingMapping, o
     };
     for (const [label, value, max] of [
       ["property reference ID", row.propertyExternalId, 120], ["property name", row.propertyName, 240], ["unit reference ID", row.unitExternalId, 120],
-      ["unit number", row.unitNumber, 80], ["tenant reference ID", row.tenantExternalId, 160], ["household name", row.householdName, 240],
+      ["unit number", row.unitNumber, 80],
     ] as const) if (!value || value.length > max) issue(`CSV record ${record}: ${label} is required and must be no longer than ${max} characters.`);
+    if (!isVacant) for (const [label, value, max] of [["tenant reference ID", row.tenantExternalId, 160], ["household name", row.householdName, 240]] as const) {
+      if (!value || value.length > max) issue(`CSV record ${record}: ${label} is required for occupied units and must be no longer than ${max} characters. For a vacant unit, map occupancy status and supply Vacant.`);
+    }
     for (const [label, value, max] of [["property address", row.propertyAddress, 300], ["city", row.city, 160], ["postal code", row.postalCode, 20]] as const) if (value && value.length > max) issue(`CSV record ${record}: ${label} is too long.`);
     if (row.programCodes.length > 20 || row.programCodes.some((value) => value.length > 80)) issue(`CSV record ${record}: invalid program-code length or count.`);
     const bedroomText = get("bedrooms");
@@ -199,8 +209,8 @@ export function previewOnboarding(table: CsvTable, mapping: OnboardingMapping, o
       catch (error) { issue(`CSV record ${record}: ${field}: ${error instanceof Error ? error.message : "invalid date"}.`); }
     }
     checkIdentity(propertySeen, row.propertyExternalId, { propertyName, state, propertyAddress: row.propertyAddress, city: row.city, postalCode: row.postalCode }, "property", record);
-    checkIdentity(unitSeen, JSON.stringify([row.propertyExternalId, row.unitExternalId]), { unitNumber: row.unitNumber, bedrooms: row.bedrooms }, "unit", record);
-    checkIdentity(tenantSeen, row.tenantExternalId, { propertyExternalId, unitExternalId: row.unitExternalId, householdName, moveInDate: row.moveInDate, certificationType: row.certificationType, certificationEffectiveDate: row.certificationEffectiveDate, programCodes: row.programCodes.length ? row.programCodes : undefined }, "tenant", record);
+    checkIdentity(unitSeen, JSON.stringify([row.propertyExternalId, row.unitExternalId]), { unitNumber: row.unitNumber, bedrooms: row.bedrooms, isVacant: row.isVacant }, "unit", record);
+    if (!row.isVacant && row.tenantExternalId) checkIdentity(tenantSeen, row.tenantExternalId, { propertyExternalId, unitExternalId: row.unitExternalId, householdName, moveInDate: row.moveInDate, certificationType: row.certificationType, certificationEffectiveDate: row.certificationEffectiveDate, programCodes: row.programCodes.length ? row.programCodes : undefined }, "tenant", record);
     rows.push(row);
   }
   return { rows, issues, issueCount, stateNeeded: [...stateNeeded.values()], canImport: issueCount === 0 && stateNeeded.size === 0 && rows.length > 0, counts: { properties: propertySeen.size, units: unitSeen.size, tenants: tenantSeen.size } };
