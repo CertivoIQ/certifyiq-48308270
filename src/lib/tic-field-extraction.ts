@@ -1,4 +1,5 @@
 import { supplementalPageKind } from "@/lib/tic-supplemental-fields";
+import { supplementalTextFacts } from "@/lib/tic-supplemental-text-extraction";
 // TIC_CELL_REPAIR_V1
 import { selectedCertificationType, strictMappedValue } from "@/lib/tic-document-layout.mjs";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
@@ -242,6 +243,15 @@ export function extractTicFieldsFromText(
       ));
       found.add(definition.key);
     }
+  }
+
+  // Recognized supplemental worksheet pages get a conservative same-line text
+  // fallback for scalar cells the spatial reader did not emit. Direct/spatial
+  // facts and unresolved/conflicting markers always win.
+  for (const supplementalFact of supplementalTextFacts(text, documentRef, pageProvenance)) {
+    if (found.has(supplementalFact.field) || conflictingDirectFields.has(supplementalFact.field)) continue;
+    facts.push(supplementalFact);
+    found.add(supplementalFact.field);
   }
 
   for (const definition of TIC_FIELD_DEFINITIONS) {
