@@ -1,3 +1,4 @@
+import { PortfolioUnitRegister } from "@/components/portfolio-unit-register";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ export function PortfolioOnboardingPanel() {
   const createOnboarding = useServerFn(createPortfolioOnboarding);
   const listSummary = useServerFn(listPortfolioSummary);
   const selectionVersion = useRef(0);
+  const [managedProperty, setManagedProperty] = useState<string | null>(null);
   const [manifest, setManifest] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [table, setTable] = useState<CsvTable | null>(null);
@@ -89,13 +91,13 @@ export function PortfolioOnboardingPanel() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3"><Building2 className="mt-0.5 size-5 text-primary" /><div>
           <h2 className="font-semibold">Portfolio & tenant onboarding</h2>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Create the properties, units, and tenant profiles your organization will use. Use your existing export: equivalent column headings are matched automatically, and unfamiliar headings can be matched below. Certification documents are uploaded separately.</p>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Create the properties, units, and tenant profiles your organization will use. Use your existing export: equivalent column headings are matched automatically, and unfamiliar headings can be matched below. Vacant units can be uploaded without tenant details: map occupancy status and use Vacant. Add tenants to those units below when they move in. Certification documents are uploaded separately.</p>
         </div></div>
         <button type="button" onClick={downloadTemplate} className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"><Download className="size-4" /> Download onboarding CSV</button>
       </div>
       <label className="mt-5 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center hover:bg-muted/30">
         <FileSpreadsheet className="size-8 text-muted-foreground" /><span className="mt-3 font-medium">Choose portfolio & tenant CSV</span>
-        <span className="mt-1 text-xs text-muted-foreground">Your existing CSV or TSV · template optional · up to 5,000 tenant rows / 10 MB</span>
+        <span className="mt-1 text-xs text-muted-foreground">Your existing CSV or TSV · template optional · up to 5,000 unit / tenant rows / 10 MB</span>
         <span className="mt-2 text-xs font-medium text-foreground">{reading ? "Reading selected file…" : manifest?.name ?? "No CSV selected"}</span>
         <input className="sr-only" type="file" disabled={busy} accept=".csv,.tsv,text/csv,text/tab-separated-values" onChange={(event) => { const file = event.target.files?.[0] ?? null; event.target.value = ""; void chooseManifest(file); }} />
       </label>
@@ -124,7 +126,7 @@ export function PortfolioOnboardingPanel() {
           <p className="text-sm text-muted-foreground">Certification type and program are optional for onboarding. Missing values remain unspecified; they are not guessed. Building, occupancy, name components, and other source columns are retained as import source details, not certification determinations.</p>
           {unmappedHeaders.length ? <p className="text-xs text-muted-foreground">Retained as source details only: {unmappedHeaders.map((name) => name || "(blank heading)").join(", ")}</p> : null}
           {preview.issueCount ? <div role="alert" className="rounded-lg border p-3 text-sm"><p className="font-medium">Resolve {preview.issueCount} mapping or data issue{preview.issueCount === 1 ? "" : "s"} before importing.</p>{preview.issues.slice(0, 8).map((issue, index) => <p key={index} className="mt-1">{issue}</p>)}{preview.issueCount > 8 ? <p className="mt-1">Showing the first 8 issues. Correct these to continue reviewing.</p> : null}</div> : null}
-          {preview.rows.length ? <div className="overflow-x-auto rounded-lg border p-3"><p className="mb-2 text-sm font-semibold">Preview: {preview.counts.properties} properties · {preview.counts.units} units · {preview.counts.tenants} tenant profiles</p><table className="w-full text-left text-sm"><thead><tr><th className="p-2">Property</th><th className="p-2">Unit</th><th className="p-2">Tenant reference</th><th className="p-2">Household name</th><th className="p-2">State</th></tr></thead><tbody>{preview.rows.slice(0, 5).map((row, index) => <tr key={index} className="border-t"><td className="p-2">{row.propertyName}</td><td className="p-2">{row.unitNumber}</td><td className="p-2">{row.tenantExternalId}</td><td className="p-2">{row.householdName}</td><td className="p-2">{row.state || "Select state"}</td></tr>)}</tbody></table><p className="mt-2 text-xs text-muted-foreground">Showing the first {Math.min(5, preview.rows.length)} rows. All rows are validated before saving.</p></div> : null}
+          {preview.rows.length ? <div className="overflow-x-auto rounded-lg border p-3"><p className="mb-2 text-sm font-semibold">Preview: {preview.counts.properties} properties · {preview.counts.units} units · {preview.counts.tenants} tenant profiles</p><table className="w-full text-left text-sm"><thead><tr><th className="p-2">Property</th><th className="p-2">Unit</th><th className="p-2">Tenant reference</th><th className="p-2">Household name</th><th className="p-2">State</th></tr></thead><tbody>{preview.rows.slice(0, 5).map((row, index) => <tr key={index} className="border-t"><td className="p-2">{row.propertyName}</td><td className="p-2">{row.unitNumber}</td><td className="p-2">{row.tenantExternalId || "—"}</td><td className="p-2">{row.isVacant ? "Vacant — no tenant" : row.householdName}</td><td className="p-2">{row.state || "Select state"}</td></tr>)}</tbody></table><p className="mt-2 text-xs text-muted-foreground">Showing the first {Math.min(5, preview.rows.length)} rows. All rows are validated before saving.</p></div> : null}
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={confirmed} disabled={!preview.canImport} onChange={(event) => setConfirmed(event.target.checked)} /><span>I have reviewed the field matches, property states, and preview. Import these onboarding records.</span></label>
         </fieldset>
       ) : null}
@@ -132,7 +134,8 @@ export function PortfolioOnboardingPanel() {
       <div className="mt-3 rounded-lg border bg-background p-3" aria-live="polite"><div className="flex items-center justify-between gap-3 text-xs"><span className="text-muted-foreground">{progressLabel}</span><span className="font-semibold tabular-nums">{progressPercent}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Portfolio onboarding progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}><div className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${progressPercent}%` }} /></div></div>
       <div className="mt-4"><Link to="/launchpad" className="text-sm font-medium text-primary underline">Return to setup checklist</Link></div>
       {message ? <p className="mt-3 rounded-lg border bg-background p-3 text-sm" role="status">{message}</p> : null}
-      {summary.data?.length ? <div className="mt-6 overflow-x-auto"><table className="w-full text-left text-sm"><thead className="border-b text-xs text-muted-foreground"><tr><th className="py-2 pr-4">Property</th><th className="py-2 pr-4">State</th><th className="py-2 pr-4">Units</th><th className="py-2">Tenants</th></tr></thead><tbody>{summary.data.map((property) => <tr key={property.id} className="border-b last:border-0"><td className="py-2 pr-4 font-medium">{property.name}</td><td className="py-2 pr-4">{property.state_code}</td><td className="py-2 pr-4">{property.unitCount}</td><td className="py-2">{property.tenantCount}</td></tr>)}</tbody></table></div> : null}
+      {summary.data?.length ? <div className="mt-6 overflow-x-auto"><table className="w-full text-left text-sm"><thead className="border-b text-xs text-muted-foreground"><tr><th className="py-2 pr-4">Property</th><th className="py-2 pr-4">State</th><th className="py-2 pr-4">Units</th><th className="py-2">Tenants</th></tr></thead><tbody>{summary.data.map((property) => <tr key={property.id} className="border-b last:border-0"><td className="py-2 pr-4 font-medium"><button type="button" className="text-primary underline" onClick={() => setManagedProperty(managedProperty === property.id ? null : property.id)}>{property.name} · Manage units</button></td><td className="py-2 pr-4">{property.state_code}</td><td className="py-2 pr-4">{property.unitCount}</td><td className="py-2">{property.tenantCount}</td></tr>)}</tbody></table></div> : null}
+      {summary.data?.filter((property) => property.id === managedProperty).map((property) => <PortfolioUnitRegister key={property.id} propertyId={property.id} propertyName={property.name} />)}
     </section>
   );
 }

@@ -58,6 +58,8 @@ export async function persistPortfolioOnboarding(db: Db, userId: string, rows: O
     const unitIds = new Map(units.map((row) => [JSON.stringify([String(row["property_id"]), String(row["external_id"])]), String(row["id"])]));
     const tenantRows = new Map<string, RecordData>();
     for (const row of rows) {
+      if (row.isVacant) continue;
+      if (!row.tenantExternalId || !row.householdName) throw new Error("Occupied units require a tenant reference and household name.");
       const propertyId = propertyIds.get(row.propertyExternalId);
       const unitId = unitIds.get(JSON.stringify([propertyId, row.unitExternalId]));
       if (!propertyId || !unitId) throw new Error("The imported unit destination could not be verified.");
