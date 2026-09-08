@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { PLAN_PRICE_ID_LIST, entitlementForPrice } from "@/lib/plan-catalog";
+import { hasFounderTrainingAccess } from "@/lib/founder-training-access";
 
 /**
  * Current subscription for the signed-in user. UX only — every gated action is
@@ -28,7 +29,11 @@ export function useSubscription() {
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      const { data: access, error: accessError } = await supabase
+        .from("account_access").select("plan_id,status,access_until")
+        .eq("user_id", user!.id).maybeSingle();
+      if (accessError) throw accessError;
+      return { subscription: data, access };
     },
   });
 
@@ -46,12 +51,18 @@ export function useSubscription() {
         { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
         () => void query.refetch(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "account_access", filter: `user_id=eq.${user.id}` },
+        () => void query.refetch(),
+      )
       .subscribe();
 
     return () => void supabase.removeChannel(channel);
   }, [user?.id]);
 
-  const sub = query.data ?? null;
+  const sub = query.data?.subscription ?? null;
+  const founderTraining = hasFounderTrainingAccess(query.data?.access);
   const periodEnd = sub?.current_period_end ? new Date(sub.current_period_end) : null;
   const future = !periodEnd || periodEnd.getTime() > Date.now();
 
@@ -63,7 +74,8 @@ export function useSubscription() {
   return {
     subscription: sub,
     entitlement: entitlementForPrice(sub?.price_id),
-    isActive,
+    isActive: founderTraining || isActive,
+    founderTraining,
     isPastDue: sub?.status === "past_due",
     endsAt: periodEnd,
     cancelAtPeriodEnd: sub?.cancel_at_period_end === true,

@@ -3,6 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { StripeEnv } from "@/lib/stripe.server";
 import { FREE_REVIEW_ENTITLEMENT, entitlementForPrice } from "@/lib/plan-catalog";
 import type { AccountState } from "@/utils/entitlements.functions";
+import { hasFounderTrainingAccess } from "@/lib/founder-training-access";
 
 /** Supabase client surface used by entitlement reads/writes. */
 export type EntitlementsDb = SupabaseClient<Database>;
@@ -38,7 +39,8 @@ export async function loadState(
   const planSub =
     (subs ?? []).find((s) => !!entitlementForPrice(s.price_id)) ?? null;
   const entitlement = entitlementForPrice(planSub?.price_id ?? access?.["price_id"]);
-  const isTrial = (access?.["status"] ?? "trialing") === "trialing" && !entitlement;
+  const founderTraining = hasFounderTrainingAccess(access);
+  const isTrial = !founderTraining && (access?.["status"] ?? "trialing") === "trialing" && !entitlement;
 
   const periodStart = periodStartFor(planSub);
   const { data: usage } = await supabase
@@ -51,9 +53,9 @@ export async function loadState(
 
   return {
     status: (access?.["status"] as string) ?? "none",
-    planId: (entitlement?.planId ?? null) as string | null,
+    planId: founderTraining ? "founder_internal" : (entitlement?.planId ?? null),
     priceId: entitlement?.priceId ?? null,
-    planName: entitlement?.name ?? null,
+    planName: founderTraining ? "Founder training access" : entitlement?.name ?? null,
     isTrial,
     // The FREE review program has no calendar expiration. Paid plans retain
     // their normal access dates from account_access.
@@ -61,13 +63,13 @@ export async function loadState(
     filesPurgeAt: isTrial ? null : ((access?.["files_purge_at"] as string | null) ?? null),
     academySeats: Number(access?.["academy_seats"] ?? 0),
     limits: {
-      units: entitlement ? entitlement.unitLimit : isTrial ? FREE_REVIEW_ENTITLEMENT.unitLimit : 0,
-      properties: entitlement
+      units: founderTraining ? null : entitlement ? entitlement.unitLimit : isTrial ? FREE_REVIEW_ENTITLEMENT.unitLimit : 0,
+      properties: founderTraining ? null : entitlement
         ? entitlement.propertyLimit
         : isTrial
           ? FREE_REVIEW_ENTITLEMENT.propertyLimit
           : 0,
-      aiDocs: entitlement
+      aiDocs: founderTraining ? null : entitlement
         ? entitlement.aiDocAllowance
         : isTrial
           ? FREE_REVIEW_ENTITLEMENT.aiDocAllowance
