@@ -2,6 +2,7 @@ BEGIN;
 DO $t$
 DECLARE j public.operations_jobs; next_job public.operations_jobs; token text; proc jsonb; evidence jsonb; n integer;
 BEGIN
+ PERFORM public.merlin_record_provider_probe(true,NULL);
  token:=repeat('a',64);
  INSERT INTO private.merlin_dispatch_tokens(token_hash,expires_at) VALUES(encode(sha256(convert_to(token,'UTF8')),'hex'),now()+interval '1 minute');
  IF NOT public.merlin_consume_dispatch_token(token) OR public.merlin_consume_dispatch_token(token) THEN RAISE EXCEPTION 'token replay'; END IF;
