@@ -12,9 +12,9 @@ function UnitHistory({ unitId }: { unitId: string }) {
     {history.data.length ? <ol className="mt-2 space-y-2">{history.data.map((event) => {
       const record = event.after_record ?? event.before_record;
       return <li key={event.id} className="rounded border bg-background p-3">
-        <div className="font-medium">{String(record?.household_name ?? "Tenant")} · {event.event_type}</div>
-        <div>Tenant reference: {String(record?.external_id ?? event.tenant_profile_id)}</div>
-        <div>Move-in date: {String(record?.move_in_date ?? "Not supplied")}</div>
+        <div className="font-medium">{String(record?.["household_name"] ?? "Tenant")} · {event.event_type}</div>
+        <div>Tenant reference: {String(record?.["external_id"] ?? event.tenant_profile_id)}</div>
+        <div>Move-in date: {String(record?.["move_in_date"] ?? "Not supplied")}</div>
         <div className="text-xs text-muted-foreground"><time dateTime={event.occurred_at}>{new Date(event.occurred_at).toLocaleString()}</time> · Recorded by {event.actor_id ?? "system"}</div>
         {event.before_record && event.after_record ? <details className="mt-2"><summary className="cursor-pointer">Changed details</summary><ul>{Object.keys(event.after_record).filter((key) => key !== "updated_at" && key !== "source_data" && JSON.stringify(event.before_record?.[key]) !== JSON.stringify(event.after_record?.[key])).map((key) => <li key={key}>{key.replaceAll("_", " ")}: {String(event.before_record?.[key] ?? "Not supplied")} → {String(event.after_record?.[key] ?? "Not supplied")}</li>)}</ul></details> : null}
       </li>;

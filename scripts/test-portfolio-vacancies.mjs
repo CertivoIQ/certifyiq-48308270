@@ -43,8 +43,12 @@ test('vacant re-import preserves tenant assigned since the source snapshot',asyn
  await persist(db,'owner',occupied.rows,'occupied.csv');await persist(db,'owner',vacant.rows,'older-vacant.csv');
  assert.equal(db.tables.get('portfolio_tenant_profiles').length,1);assert.equal(db.tables.get('portfolio_tenant_profiles')[0].external_id,'T');
 });
-if(process.env.MALDIVES_CSV) test('actual Maldives Vista CSV saves 204 units and 192 tenants with Miami ZIP',async()=>{
- const table=read(readFileSync(process.env.MALDIVES_CSV,'utf8'));const p=preview(table,suggest(table.headers).mapping);
+test('204-unit Maldives Vista CSV saves 192 tenants with Miami ZIP',async()=>{
+ const fixture=[
+  [...base,'tenant_external_id','household_name','postal_code','city'],
+  ...Array.from({length:204},(_,offset)=>{const i=offset+1;return ['P-MV','Maldives Vista','FL',`U-${i}`,String(i),i<=192?'occupied':'vacant',i<=192?`T-${i}`:'',i<=192?`Fictional Household ${i}`:'','33130','Miami'];}),
+ ].map(row=>row.join(',')).join('\n');
+ const table=read(process.env.MALDIVES_CSV?readFileSync(process.env.MALDIVES_CSV,'utf8'):fixture);const p=preview(table,suggest(table.headers).mapping);
  assert.equal(p.canImport,true,JSON.stringify(p.issues));assert.deepEqual(p.counts,{properties:1,units:204,tenants:192});assert.equal(p.rows.filter(r=>r.isVacant).length,12);
  assert.ok(p.rows.every(r=>r.postalCode==='33130'&&r.city==='Miami'));const db=new Db();const saved=await persist(db,'owner',p.rows,'maldives.csv');
  assert.deepEqual([saved.propertyCount,saved.unitCount,saved.tenantCount],[1,204,192]);
