@@ -1,4 +1,5 @@
 import { supplementalPageKind } from "@/lib/tic-supplemental-fields";
+import { supplementalTextFacts } from "@/lib/tic-supplemental-text-extraction";
 // TIC_CELL_REPAIR_V1
 import { selectedCertificationType, strictMappedValue } from "@/lib/tic-document-layout.mjs";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
@@ -158,7 +159,9 @@ function factFromValue(
  * Parse the TIC registry from OCR/native text. Extraction is only a proposal.
  * Exact source-field mappings emitted by the native/spatial readers always win
  * over loose OCR aliases. Blank form lines stay blank and neighboring labels
- * are never promoted into field data.
+ * are never promoted into field data. On strict-cell pages, a direct same-line
+ * label/value fallback remains allowed for fields the spatial reader did not emit;
+ * next-line inference stays disabled so strict evidence boundaries are preserved.
  */
 export function extractTicFieldsFromText(
   text: string,
@@ -242,19 +245,29 @@ export function extractTicFieldsFromText(
     }
   }
 
+  // Recognized supplemental worksheet pages get a conservative same-line text
+  // fallback for scalar cells the spatial reader did not emit. Direct/spatial
+  // facts and unresolved/conflicting markers always win.
+  for (const supplementalFact of supplementalTextFacts(text, documentRef, pageProvenance)) {
+    if (found.has(supplementalFact.field) || conflictingDirectFields.has(supplementalFact.field)) continue;
+    facts.push(supplementalFact);
+    found.add(supplementalFact.field);
+  }
+
   for (const definition of TIC_FIELD_DEFINITIONS) {
     if (found.has(definition.key) || conflictingDirectFields.has(definition.key) || definition.key === "certification_type" || !definition.aliases.length) continue;
     let extracted: ExtractedFact | null = null;
     for (let index = 0; index < lines.length && !extracted; index += 1) {
       const line = lines[index] ?? "";
       if (line.startsWith(DIRECT_TIC_FIELD_PREFIX)) continue;
-      if (line.startsWith("__CERTIVOIQ_") || (strictCellPages.has(pageOfLine[index]) || supplementalPages.has(pageOfLine[index] ?? 1))) continue;
+      if (line.startsWith("__CERTIVOIQ_") || supplementalPages.has(pageOfLine[index] ?? 1)) continue;
+      const strictPage = strictCellPages.has(pageOfLine[index] ?? 1);
       const lower = line.toLowerCase();
       for (const alias of definition.aliases) {
         if (!lower.includes(alias.toLowerCase())) continue;
         let raw = lineTailAfterAlias(line, alias);
         let value = normalizeValue(definition, raw);
-        if (value === null && !raw.trim()) {
+        if (value === null && !raw.trim() && !strictPage) {
           raw = nextCandidateLine(lines, index);
           value = normalizeValue(definition, raw);
         }
@@ -282,4 +295,3 @@ export function extractTicFieldsFromText(
     : "deterministic-text";
   return { provider, facts, missingFields };
 }
-
