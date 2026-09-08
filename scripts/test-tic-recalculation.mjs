@@ -70,6 +70,17 @@ test("strict-cell pages allow only safe same-line fallback for fields the spatia
   assert.doesNotMatch(extraction, /strictCellPages\.has\(pageOfLine\[index\]\) \|\| supplementalPages/);
 });
 
+test("annual income worksheet scalar fallback covers qualifying limit and variance without guessing across lines", () => {
+  const extraction = readFileSync("src/lib/tic-field-extraction.ts", "utf8");
+  const supplemental = readFileSync("src/lib/tic-supplemental-text-extraction.ts", "utf8");
+  assert.match(extraction, /supplementalTextFacts/);
+  assert.match(supplemental, /worksheet_qualifying_income_limit_percent/);
+  assert.match(supplemental, /worksheet_qualifying_income_limit/);
+  assert.match(supplemental, /worksheet_variance/);
+  assert.match(supplemental, /SAME OCR\/native-text line/);
+  assert.doesNotMatch(supplemental, /nextCandidateLine/);
+});
+
 test("federal review appends recalculation inconsistencies to the normal findings list", () => {
   const orchestrator = readFileSync("src/lib/federal-certification-review-orchestrator.mjs", "utf8");
   assert.match(orchestrator, /evaluateTicRecalculations/);
