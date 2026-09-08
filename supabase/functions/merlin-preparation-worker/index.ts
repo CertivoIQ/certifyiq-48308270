@@ -15,7 +15,7 @@ Deno.serve(async (request:Request)=>{
  if(auth.error||auth.data!==true) return json({error:"Unauthorized"},401);
  let body;
  try {body=await request.json();} catch {return json({error:"Invalid JSON"},400);}
- const apiKey=Deno.env.get("OPENAI_API_KEY");
+ const apiKey=(Deno.env.get("OPENAI_API_KEY")??Deno.env.get("OPEN_AI_KEY"))?.trim();
  if(!apiKey && body.source_only!==true && body.preflight!==true) return json({ok:false,stage:"configuration",configured:false,error:"OPENAI_API_KEY missing"},503);
  if(body.preflight===true){
   let modelAvailable=false;
@@ -80,7 +80,7 @@ Deno.serve(async (request:Request)=>{
   return json({ok:true,claimed:true,jobId:job.id,status:"pending_independent_validation",procedure_count:extraction.procedures.length});
  } catch(error) {
   const message=error instanceof Error?error.message:"PREPARATION_FAILED";
-  const failed=await db.rpc("operations_fail_job",{_job_id:job.id,_worker:worker,_error:{code:"MERLIN_NATIVE_PREPARATION_FAILED",message:message.slice(0,500)}});
+  const failed=await db.rpc("merlin_fail_native_preparation",{_job_id:job.id,_worker:worker,_reason:message.slice(0,500)});
   return json({ok:false,claimed:true,jobId:job.id,error:message.slice(0,500),failure_recorded:!failed.error},500);
  }
 });
