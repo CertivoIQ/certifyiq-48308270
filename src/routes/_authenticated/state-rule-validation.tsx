@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, ExternalLink, FileSearch, Plus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ const VALIDATION_STATUSES = new Set([
   "verified",
   "blocked",
   "rejected",
+  "blocked_or_rejected",
   "all",
 ]);
 
@@ -372,6 +373,26 @@ function StateRuleValidationWorkspace() {
   const [stateCode, setStateCode] = useState(() => routeSearch.state ?? "ALL");
   const [status, setStatus] = useState(() => routeSearch.status ?? "active");
   const [search, setSearch] = useState("");
+  const [packView, setPackView] = useState<"all" | "pending" | "active" | null>(null);
+  const [showPendingOverview, setShowPendingOverview] = useState(true);
+  const recordsRef = useRef<HTMLDivElement>(null);
+  const focusRecords = () => requestAnimationFrame(() => {
+    recordsRef.current?.scrollIntoView({ block: "start" });
+    recordsRef.current?.focus({ preventScroll: true });
+  });
+  const openSources = (nextStatus: string, nextState = "ALL") => {
+    setPackView(null);
+    setShowPendingOverview(false);
+    setStateCode(nextState);
+    setStatus(nextStatus);
+    setSearch("");
+    focusRecords();
+  };
+  const openPacks = (view: "all" | "pending" | "active") => {
+    setPackView(view);
+    setSearch("");
+    focusRecords();
+  };
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [showNewSource, setShowNewSource] = useState(false);
   const [newSource, setNewSource] = useState<NewSourceDraft>(EMPTY_NEW_SOURCE);
@@ -487,6 +508,7 @@ function StateRuleValidationWorkspace() {
       setShowNewSource(false);
       setStateCode(result.state_code);
       setStatus("active");
+      setPackView(null);
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
     },
     onError: (error) => {
@@ -517,7 +539,19 @@ function StateRuleValidationWorkspace() {
     federalSources.every((source) => source.agent_verification_status === "verified");
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => ["blocked", "rejected"].includes(source.agent_verification_status)).length;
-  const active = sources.length - verified;
+  const active = sources.filter((source) =>
+    source.agent_verification_status !== "verified" &&
+    !(source.agent_verification_status === "rejected" && source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE")
+  ).length;
+  const visiblePacks = statePacks.filter((pack) => packView !== "active" || pack.compliance_activation_allowed);
+  const summaryActions = [
+    { label: "State packs", value: statePacks.length, hint: "All state candidates", tone: "neutral" as Tone, selected: packView === "all", open: () => openPacks("all") },
+    { label: "Second validation", value: `${pendingActivations.length}/${statePacks.length}`, hint: "Awaiting activation", tone: "flag" as Tone, selected: packView === "pending", open: () => openPacks("pending") },
+    { label: "Compliance active", value: activatedPacks, hint: "Validated releases", tone: "seal" as Tone, selected: packView === "active", open: () => openPacks("active") },
+    { label: "Remaining", value: active, hint: "Includes unresolved blockers", tone: "flag" as Tone, selected: packView === null && status === "active" && stateCode === "ALL" && !search, open: () => openSources("active") },
+    { label: "Verified sources", value: verified, hint: "Source review only", tone: "seal" as Tone, selected: packView === null && status === "verified" && stateCode === "ALL" && !search, open: () => openSources("verified") },
+    { label: "Blocked / rejected", value: blocked, hint: "Review blocked records", tone: "reject" as Tone, selected: packView === null && status === "blocked_or_rejected" && stateCode === "ALL" && !search, open: () => openSources("blocked_or_rejected") },
+  ];
 
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -535,10 +569,12 @@ function StateRuleValidationWorkspace() {
         return false;
       }
       if (!inheritedFederal && status === "active" && excludedRedundant) return false;
+      if (status === "blocked_or_rejected" && !["blocked", "rejected"].includes(source.agent_verification_status)) return false;
       if (
         !inheritedFederal &&
         status !== "active" &&
         status !== "all" &&
+        status !== "blocked_or_rejected" &&
         source.agent_verification_status !== status
       ) return false;
       if (!needle) return true;
@@ -566,12 +602,20 @@ function StateRuleValidationWorkspace() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <Stat label="State packs" value={query.error ? "—" : statePacks.length} hint="Exactly 50 state candidates" />
-            <Stat label="Second validation" value={query.error ? "—" : `${completedSourceActivations}/${statePacks.length}`} hint="State-pack source stage" tone={allSourceActivationsRecorded ? "seal" : "flag"} />
-            <Stat label="Compliance active" value={query.error ? "—" : activatedPacks} hint="Validated release required" tone={activatedPacks ? "seal" : "flag"} />
-            <Stat label="Remaining" value={query.error ? "—" : active} hint="Includes blocked items" tone={active ? "flag" : "seal"} />
-            <Stat label="Verified sources" value={query.error ? "—" : verified} hint="Source review only" tone={verified ? "seal" : "flag"} />
-            <Stat label="Blocked / rejected" value={query.error ? "—" : blocked} hint="Must be resolved" tone={blocked ? "reject" : "seal"} />
+            {summaryActions.map((summary) => (
+              <button
+                key={summary.label}
+                type="button"
+                aria-label={`View ${summary.label.toLowerCase()}`}
+                aria-pressed={summary.selected}
+                aria-controls="validation-records"
+                disabled={query.isLoading || !!query.error}
+                onClick={summary.open}
+                className="min-w-0 rounded-lg text-left transition-shadow hover:ring-2 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 [&>div]:h-full aria-pressed:ring-2 aria-pressed:ring-primary"
+              >
+                <Stat label={summary.label} value={query.error || query.isLoading ? "—" : summary.value} hint={summary.hint} tone={summary.tone} />
+              </button>
+            ))}
           </div>
 
           <div className="mt-4 rounded-lg border border-flag/30 bg-flag-soft p-4 text-sm">
@@ -599,7 +643,28 @@ function StateRuleValidationWorkspace() {
             ) : null}
           </div>
 
-          <Panel
+          <div id="validation-records" ref={recordsRef} tabIndex={-1} className="scroll-mt-24 focus:outline-none">
+          {packView === "all" || packView === "active" ? (
+            <Panel className="mt-4" title={packView === "all" ? "All state packs" : "Compliance-active state packs"} bodyClassName="p-0">
+              {visiblePacks.length ? (
+                <ul className="divide-y divide-border">
+                  {visiblePacks.map((pack) => (
+                    <li key={pack.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono font-semibold">{pack.state_code}</span>
+                        <Pill tone={toneFor(pack.status)}>{labelFor(pack.status)}</Pill>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}>
+                        <FileSearch className="size-4" /> View source records
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="px-5 py-8 text-sm text-muted-foreground">No compliance-active state packs.</p>}
+            </Panel>
+          ) : null}
+          {packView !== null && query.error ? <p role="alert" className="mt-4 text-sm text-reject">The validation queue could not be refreshed. Displayed records may be out of date.</p> : null}
+          {(packView === null && showPendingOverview) || packView === "pending" ? <Panel
             className="mt-4"
             title="State packs awaiting independent activation"
             description="These packs completed first verification and require a different Administrator to activate them."
@@ -621,6 +686,10 @@ function StateRuleValidationWorkspace() {
                           : " You are eligible to complete the independent activation."}
                       </p>
                     </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}>
+                      <FileSearch className="size-4" /> View source records
+                    </Button>
                     {pack.viewer_can_activate ? (
                       <Button
                         size="sm"
@@ -632,6 +701,7 @@ function StateRuleValidationWorkspace() {
                     ) : (
                       <Pill>Different Administrator required</Pill>
                     )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -651,9 +721,9 @@ function StateRuleValidationWorkspace() {
                 )}
               </div>
             )}
-          </Panel>
+          </Panel> : null}
 
-          {isCrmAdmin ? (
+          {packView === null && isCrmAdmin ? (
             <Panel
               className="mt-4"
               title="Exact-file source records"
@@ -819,6 +889,7 @@ function StateRuleValidationWorkspace() {
             </Panel>
           ) : null}
 
+          {packView === null ? <>
           <Panel className="mt-4" title="Queue filters" bodyClassName="p-5">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1.5">
@@ -852,6 +923,7 @@ function StateRuleValidationWorkspace() {
                   <option value="verified">Verified</option>
                   <option value="blocked">Blocked</option>
                   <option value="rejected">Rejected</option>
+                  <option value="blocked_or_rejected">Blocked / rejected</option>
                   <option value="all">All history</option>
                 </select>
               </div>
@@ -914,6 +986,8 @@ function StateRuleValidationWorkspace() {
               })}
             </div>
           )}
+          </> : null}
+          </div>
         </>
       )}
     </AppShell>
