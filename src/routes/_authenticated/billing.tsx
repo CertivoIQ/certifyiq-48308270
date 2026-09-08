@@ -39,7 +39,7 @@ function BillingPage() {
   const dashboardMode = resolvePlatformDashboardMode(selectedMode, profile.organization_type);
   const billingAllowed = dashboardMode === "executive_demo" || accessLevel === "manager" || phaRole === "executive";
   const { account, loading, refetch } = useAccount();
-  const { subscription, isActive, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
+  const { subscription, isActive, founderTraining, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
   const env = getStripeEnvironment();
   const isEnterprise = account?.planId === "multifamily_enterprise" || account?.planId === "pha";
@@ -111,7 +111,7 @@ function BillingPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-display text-[21px]">
-                    {isActive ? "CertivoIQ annual platform license" : "No active annual license"}
+                    {founderTraining ? "Founder training access" : isActive ? "CertivoIQ annual platform license" : "No active annual license"}
                   </h2>
                   {isPastDue && (
                     <Pill tone="flag">
@@ -121,7 +121,8 @@ function BillingPage() {
                   {cancelAtPeriodEnd && <Pill tone="flag">Cancels at period end</Pill>}
                 </div>
                 <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-                  {isActive &&
+                  {founderTraining && "Complimentary founder access is active across all workspace roles for training, including portfolio intake. No paid subscription is required for this access."}
+                  {!founderTraining && isActive &&
                     !cancelAtPeriodEnd &&
                     "Active. Access is governed by the organization's licensed platform, jurisdictions, programs, and add-ons."}
                   {isActive &&
@@ -133,7 +134,9 @@ function BillingPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {isActive ? (
+                {founderTraining && !subscription ? (
+                  <Pill>Complimentary training access</Pill>
+                ) : isActive ? (
                   <>
                     <Button
                       size="sm"
