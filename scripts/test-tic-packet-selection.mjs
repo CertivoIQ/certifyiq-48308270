@@ -23,7 +23,7 @@ const { extractTicFieldsFromText } = await import(extractionUrl);
 const { isTicContent } = await import(layout);
 const { extractTicSpatialValueLines } = await import('../src/lib/tic-spatial-extraction.mjs');
 const sha = 'a'.repeat(64);
-const tic = 'TENANT INCOME CERTIFICATION\nPART I DEVELOPMENT DATA\nPART II HOUSEHOLD COMPOSITION\n__CERTIVOIQ_TIC_FIELD__ property_name: Correct property\n__CERTIVOIQ_TIC_FIELD__ household_member_1_last_name: TEST\n__CERTIVOIQ_TIC_FIELD__ household_member_1_first_name_middle_initial: PERSON A\n__CERTIVOIQ_TIC_FIELD__ certification_type: Recertification';
+const tic = 'TENANT INCOME CERTIFICATION\nPART I DEVELOPMENT DATA\nPART II HOUSEHOLD COMPOSITION\n__CERTIVOIQ_TIC_FIELD__ property_name: Correct property\n__CERTIVOIQ_TIC_FIELD__ household_member_1_last_name: TEST\n__CERTIVOIQ_TIC_FIELD__ household_member_1_first_name_middle_initial: PERSON A\n__CERTIVOIQ_TIC_FIELD__ household_member_1_relationship: Head\n__CERTIVOIQ_TIC_FIELD__ household_member_1_date_of_birth: 1990-01-01\n__CERTIVOIQ_TIC_FIELD__ household_member_1_full_time_student: No\n__CERTIVOIQ_TIC_FIELD__ household_member_1_ssn_or_alien_registration: 000-00-0000\n__CERTIVOIQ_TIC_FIELD__ certification_type: Recertification';
 const pages = [
   { page: 1, text: 'Cover page\nTenant Income Certification enclosed\n__CERTIVOIQ_TIC_FIELD__ property_name: WRONG COVER VALUE' },
   { page: 2, text: 'Instructions for completing the Tenant Income Certification\nPART I DEVELOPMENT DATA\nPART II HOUSEHOLD COMPOSITION' },
@@ -162,3 +162,17 @@ test('changing the source storage owner is rejected',async()=>{
  const result=await extractCertificationTicPreview({data:{source:{...source,storagePath:'someone-else/packet-job/synthetic.pdf'}},context});
  assert.match(result.error,/does not belong/);
 });
+test('actual preview adds only worksheet fields from an explicitly selected worksheet',async()=>{
+ const previous=pages[7];
+ try{
+  pages[7]={page:8,text:'Annual Income Calculation Worksheet\nRelationship Description\nTotal Asset Cash Value: 520.90\nTotal Actual Income: 0.00\n__CERTIVOIQ_TIC_FIELD__ household_annual_income: 99999'};
+  const pageSelections=choices.map(c=>c.page===8?{page:8,role:'income_calculation_worksheet',reason:''}:c);
+  const preview=await extractCertificationTicPreview({data:{source,pageSelections},context});
+  assert.equal(preview.error,undefined);
+  assert.equal(preview.facts.find(f=>f.field==='worksheet_total_asset_cash_value')?.value,520.9);
+  assert.equal(preview.facts.find(f=>f.field==='worksheet_total_actual_income')?.value,0);
+  assert.ok(!preview.facts.some(f=>f.field==='household_annual_income'));
+  assert.equal(preview.facts.find(f=>f.field==='worksheet_total_asset_cash_value')?.page,8);
+ }finally{pages[7]=previous;}
+});
+
