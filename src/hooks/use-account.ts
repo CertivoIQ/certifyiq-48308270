@@ -17,7 +17,7 @@ export function useAccount() {
     queryKey: ["account-state", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const result = await getAccountState({ data: { environment: getStripeEnvironment() } });
+      const result = await getAccountState({ data: { environment: await getStripeEnvironment() } });
       if ("error" in result) throw new Error(result.error);
       return result;
     },

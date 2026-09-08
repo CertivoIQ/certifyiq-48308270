@@ -9,6 +9,16 @@ function load(path,require=()=>{throw new Error('Unexpected dependency');}) {
   return exports;
 }
 const pricing=load('src/lib/state-pack-proration.ts');
+test('runtime payment configuration returns only a public key and fails closed',()=>{
+  const {publicPaymentConfiguration:config}=load('src/lib/payment-public-config.server.ts');
+  const result=config({NODE_ENV:'production',VITE_PAYMENTS_CLIENT_TOKEN:'pk_live_fixture',STRIPE_LIVE_API_KEY:'secret-must-never-leak'});
+  assert.equal(result.environment,'live');
+  assert.equal(result.publishableKey,'pk_live_fixture');
+  assert.deepEqual(Object.keys(result).sort(),['environment','publishableKey']);
+  assert.throws(()=>config({NODE_ENV:'production',VITE_PAYMENTS_CLIENT_TOKEN:'pk_test_fixture'}),/live configuration/);
+  for(const key of ['', 'sk_live_secret', 'invalid']) assert.throws(()=>config({VITE_PAYMENTS_CLIENT_TOKEN:key}),/not configured/);
+  assert.equal(config({NODE_ENV:'development',VITE_PAYMENTS_CLIENT_TOKEN:'pk_test_fixture'}).environment,'sandbox');
+});
 test('proration uses actual annual seconds and preserves cents',()=>{
   const start=Date.parse('2026-01-01')/1000,end=Date.parse('2027-01-01')/1000;
   assert.equal(pricing.statePackProration(start,end,start).amountCents,6500000);

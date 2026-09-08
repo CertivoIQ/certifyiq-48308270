@@ -19,7 +19,7 @@ export function StripeEmbeddedCheckout({
         licenseKind,
         stateCodes,
         returnUrl: returnUrl || window.location.href,
-        environment: getStripeEnvironment(),
+        environment: await getStripeEnvironment(),
       },
     });
     if ("error" in result) throw new Error(result.error);

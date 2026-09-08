@@ -23,7 +23,7 @@ export function useSubscription() {
         .from("subscriptions")
         .select("*")
         .eq("user_id", user!.id)
-        .eq("environment", getStripeEnvironment())
+        .eq("environment", await getStripeEnvironment())
         .in("price_id", PLAN_PRICE_ID_LIST)
         .order("created_at", { ascending: false })
         .limit(1)

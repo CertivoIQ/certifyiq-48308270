@@ -47,7 +47,7 @@ function CheckoutReturn() {
     },
     queryFn: async () => {
       const result = await getCheckoutSessionStatus({
-        data: { sessionId: sessionId!, environment: getStripeEnvironment() },
+        data: { sessionId: sessionId!, environment: await getStripeEnvironment() },
       });
       return result;
     },

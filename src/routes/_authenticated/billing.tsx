@@ -10,7 +10,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
 import { useWorkspaceProfile } from "@/hooks/use-workspace-profile";
 import { resolvePlatformDashboardMode, usePlatformDashboardAccess } from "@/hooks/use-platform-dashboard-access";
-import { getStripeEnvironment } from "@/lib/stripe";
+import { usePaymentConfiguration, type StripeEnv } from "@/lib/stripe";
 import { createPortalSession, setCancellation } from "@/utils/payments.functions";
 import { toast } from "sonner";
 import { AlertTriangle, CreditCard, ExternalLink, FileText, Shield, Undo2 } from "lucide-react";
@@ -34,6 +34,12 @@ export const Route = createFileRoute("/_authenticated/billing")({
 });
 
 function BillingPage() {
+  const configuration = usePaymentConfiguration();
+  if (!configuration.data) return <AppShell title="Account & billing"><Panel><p role={configuration.isError ? 'alert' : 'status'}>{configuration.isError ? 'Billing is temporarily unavailable. Please retry.' : 'Loading billing…'}</p>{configuration.isError && <Button onClick={() => void configuration.refetch()}>Retry</Button>}</Panel></AppShell>;
+  return <ConfiguredBillingPage env={configuration.data.environment} />;
+}
+
+function ConfiguredBillingPage({ env }: { env: StripeEnv }) {
   const stateBilling = useStatePackBilling();
   const { profile, phaRole } = useWorkspaceProfile();
   const { selectedMode } = usePlatformDashboardAccess();
@@ -43,7 +49,6 @@ function BillingPage() {
   const { account, loading, refetch } = useAccount();
   const { subscription, isActive, founderTraining, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
-  const env = getStripeEnvironment();
   const isEnterprise = account?.planId === "multifamily_enterprise" || account?.planId === "pha";
 
   if (!authorityLoading && !stateBilling.isLoading && !billingAllowed && !stateBilling.isError) {
