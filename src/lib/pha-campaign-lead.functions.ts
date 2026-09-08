@@ -1,3 +1,4 @@
+import { requireInternalSegmentAccess } from "@/lib/internal-segment-access.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { isOrganizationEmail } from "@/lib/organization-email.mjs";
@@ -32,6 +33,7 @@ const leadSchema = z.object({
 });
 
 export const capturePhaCampaignLead = createServerFn({ method: "POST" })
+  .middleware([requireInternalSegmentAccess])
   .inputValidator((input) => {
     const data = leadSchema.parse(input);
     const email = data.email.toLowerCase();

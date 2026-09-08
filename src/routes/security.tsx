@@ -58,7 +58,7 @@ export const publishedSecurityFacts: SecurityFact[] = [
   {
     id: "audit-logs-1",
     statement:
-      "Compliance review, source verification, PHA, staff-access, operations, and retention workflows record attributable events and timestamps where implemented.",
+      "Compliance review, source verification, staff-access, operations, and retention workflows record attributable events and timestamps where implemented.",
     evidenceUrl: "/security-controls.json",
     verifiedAt: "2026-08-29",
     owner: "CertivoIQ Engineering",

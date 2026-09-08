@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       {
         name: "description",
         content:
-          "Role-appropriate CertivoIQ workspace for multifamily compliance operations or public housing agency program administration.",
+          "CertivoIQ Multifamily Enterprise compliance workspace.",
       },
       { name: "robots", content: "noindex,nofollow" },
     ],

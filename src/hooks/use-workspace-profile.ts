@@ -1,3 +1,4 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSession } from "@/hooks/use-session";
@@ -58,6 +59,7 @@ const DEFAULT_PROFILE: WorkspaceProfile = {
 export function useWorkspaceProfile() {
   const { user, ready } = useSession();
   const isFounder = isFounderUser(user);
+  const isInternal = isInternalSegmentUser(user);
   const queryClient = useQueryClient();
 
   const query = useQuery<ResolvedWorkspace>({
@@ -71,6 +73,7 @@ export function useWorkspaceProfile() {
       const own = await client.from("customer_workspace_profiles").select(selectFields).eq("user_id", user!.id).maybeSingle();
       if (own.error) throw own.error;
       if (own.data) {
+        if (!isInternal && own.data.organization_type === "pha") return { profile: DEFAULT_PROFILE, workspaceUserId: user!.id, phaRole: null };
         return {
           profile: own.data,
           workspaceUserId: user!.id,
@@ -78,6 +81,7 @@ export function useWorkspaceProfile() {
         };
       }
 
+      if (!isInternal) return { profile: DEFAULT_PROFILE, workspaceUserId: user!.id, phaRole: null };
       const membership = await client
         .from("pha_workspace_memberships")
         .select("workspace_user_id, agency_role")
@@ -126,11 +130,12 @@ export function useWorkspaceProfile() {
 
   const resolved = query.data ?? { profile: DEFAULT_PROFILE, workspaceUserId: user?.id ?? null, phaRole: null };
   return {
-    profile: resolved.profile,
+    profile: !isInternal && resolved.profile.organization_type === "pha" ? DEFAULT_PROFILE : resolved.profile,
     workspaceUserId: resolved.workspaceUserId,
     // Founder navigation is platform-wide. Treat the founder as a PHA workspace
     // owner for client-side menu visibility without mutating any customer role.
-    phaRole: isFounder ? "workspace_owner" : resolved.phaRole,
+    phaRole: !isInternal ? null : isFounder ? "workspace_owner" : resolved.phaRole,
+    isInternal,
     loading: !ready || (!!user && query.isLoading),
     refetch: query.refetch,
   };

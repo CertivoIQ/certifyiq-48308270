@@ -10,7 +10,7 @@ export const updateLicensePricingClass = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { accountId: string; pricingClass: LicensePricingClass }) => {
     if (!UUID_PATTERN.test(data.accountId)) throw new Error("Invalid accountId");
-    if (data.pricingClass !== "standard" && data.pricingClass !== "pha") {
+    if (data.pricingClass !== "standard") {
       throw new Error("Invalid pricing class");
     }
     return data;

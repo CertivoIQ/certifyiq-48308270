@@ -1,3 +1,4 @@
+import { assertPublicLicenseKind } from "@/lib/internal-segment-access";
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -48,6 +49,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
       assertNewPaidOnboardingAllowed(data.environment, { actorUserId: context.userId });
+      assertPublicLicenseKind(data.licenseKind);
       normalizeLicenseSelection(data);
       return {
         error: "CertivoIQ base licenses are invoice-only and cannot be purchased through Checkout.",

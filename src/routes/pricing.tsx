@@ -17,17 +17,6 @@ const MULTIFAMILY_FEATURES = [
   "Pending final review controls with responsible-party signature and position",
 ];
 
-const PHA_FEATURES = [
-  "HCV, PBV, public housing, and Mod Rehab operating workspaces",
-  "Family intake, eligibility, annual reexamination, and interim reexamination controls",
-  "HUD-50058 transaction routing and reporting controls",
-  "HCV, PBV, and public-housing waiting-list workflows",
-  "Portability, HCV lease-up, and PBV operations",
-  "Public-housing admissions, occupancy, and operations",
-  "HOTMA implementation and NSPIRE standards and inspection workflows",
-  "Reasonable accommodations, notices, agency policies, users, source library, and agency-wide reporting",
-];
-
 const MERLIN_FEATURES = [
   "Plain-language research across licensed compliance manuals and rule guides",
   "Citation-backed explanations connected to controlling source material",
@@ -53,13 +42,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "CertivoIQ pricing for Multifamily Enterprise, Public Housing Authorities, and the optional Merlin compliance-intelligence add-on.",
+          "CertivoIQ pricing for Multifamily Enterprise and the optional Merlin compliance-intelligence add-on.",
       },
       { property: "og:title", content: "CertivoIQ Platform Pricing" },
       {
         property: "og:description",
         content:
-          "Compare CertivoIQ Multifamily Enterprise and PHA features, then add Merlin for citation-backed compliance intelligence.",
+          "Explore CertivoIQ Multifamily Enterprise features, then add Merlin for citation-backed compliance intelligence.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -89,7 +78,7 @@ function PricingPage() {
   return (
     <PublicShell
       title="Platform pricing"
-      subtitle="Choose the operating platform that matches your organization, then add Merlin when you want deeper compliance intelligence."
+      subtitle="Multifamily Enterprise is $65,000 per selected operating state per year, with optional Merlin compliance intelligence."
     >
       <div className="mx-auto max-w-6xl">
         {foundersSpecialAvailable ? (
@@ -105,7 +94,7 @@ function PricingPage() {
                   <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
                     New customers may apply code{" "}
                     <strong className="font-mono text-foreground">{FOUNDERS_PROMOTION.code}</strong>{" "}
-                    during checkout through November 30, 2026. The discount applies to the first
+                    on the initial platform invoice through November 30, 2026. The discount applies to the first
                     annual platform-license term; renewals return to the standard annual price.
                   </p>
                 </div>
@@ -126,16 +115,15 @@ function PricingPage() {
               Product packages
             </p>
             <h2 id="product-packages" className="mt-2 font-display text-3xl">
-              Two operating platforms built for different housing organizations
+              Compliance intelligence for Multifamily Enterprises
             </h2>
             <p className="mt-3 text-[14px] leading-7 text-muted-foreground">
               Multifamily Enterprise is organized around property and portfolio certification risk.
-              PHA adds agency-wide HUD program administration workflows that multifamily owners and
-              agents generally do not require.
+              Equip your team with consistent review and audit-ready evidence.
             </p>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5">
             <Panel className="glow-ring border-primary/40" bodyClassName="flex h-full flex-col p-7 md:p-9">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -159,28 +147,7 @@ function PricingPage() {
               </p>
             </Panel>
 
-            <Panel className="glow-ring border-primary/40" bodyClassName="flex h-full flex-col p-7 md:p-9">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <Pill tone="seal">Public Housing Authority</Pill>
-                  <h3 className="mt-4 font-display text-[28px]">CertivoIQ PHA</h3>
-                  <p className="mt-1 text-[13.5px] text-muted-foreground">
-                    Public Housing Authorities and agency-wide HUD program operations
-                  </p>
-                </div>
-                <div className="text-left md:text-right">
-                  <p className="font-display text-[40px] leading-none">
-                    {usd(COMMERCIAL_TERMS.phaAnnualUsd)}
-                  </p>
-                  <p className="mt-1 text-[13px] text-muted-foreground">per organization / year</p>
-                </div>
-              </div>
-              <FeatureList features={PHA_FEATURES} />
-              <p className="mt-6 border-t border-border pt-5 text-[12.5px] leading-6 text-muted-foreground">
-                The PHA license is a flat organization-level fee and includes one validated
-                operating-state rule guide plus supported PHA program workspaces.
-              </p>
-            </Panel>
+
           </div>
         </section>
 
@@ -249,9 +216,7 @@ function PricingPage() {
             <Button size="lg" asChild>
               <Link to="/trial">Try CertivoIQ for Free</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/pha">Explore PHA Workflows</Link>
-            </Button>
+
           </div>
         </Panel>
       </div>

@@ -1,3 +1,5 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
+import { useSession } from "@/hooks/use-session";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Stat, Meter, Cite } from "@/components/ui-kit";
@@ -15,6 +17,8 @@ import { useT, useFormatters } from "@/lib/i18n/provider";
 
 export function ExecutiveDashboard({ demo = false }: { demo?: boolean }) {
   const t = useT();
+  const { user } = useSession();
+  const isInternal = isInternalSegmentUser(user);
   const { number } = useFormatters();
   const ranked = [...PROPERTIES].sort((a, b) => b.risk - a.risk);
   const maxFindings = Math.max(...FINDINGS_BY_PROGRAM.map((f) => f.count));
@@ -78,7 +82,7 @@ export function ExecutiveDashboard({ demo = false }: { demo?: boolean }) {
             <div className="space-y-4">
               {[
                 { label: t("dash.readiness.hotma"), value: PORTFOLIO.hotmaReadiness, tone: "flag" as const },
-                { label: t("dash.readiness.nspire"), value: PORTFOLIO.nspireReadiness, tone: "seal" as const },
+                ...(isInternal ? [{ label: t("dash.readiness.nspire"), value: PORTFOLIO.nspireReadiness, tone: "seal" as const }] : []),
               ].map((r) => (
                 <div key={r.label}>
                   <div className="mb-1.5 flex items-baseline justify-between">
@@ -153,7 +157,7 @@ export function ExecutiveDashboard({ demo = false }: { demo?: boolean }) {
             {[
               { label: t("dash.obligations.recerts"), value: PORTFOLIO.upcomingRecerts, tone: "flag" as const },
               { label: t("dash.obligations.audits"), value: PORTFOLIO.upcomingAudits, tone: "neutral" as const },
-              { label: t("dash.obligations.nspire"), value: 7, tone: "neutral" as const },
+              ...(isInternal ? [{ label: t("dash.obligations.nspire"), value: 7, tone: "neutral" as const }] : []),
               { label: t("dash.obligations.interim"), value: 23, tone: "flag" as const },
               { label: t("dash.obligations.softApproval"), value: 38, tone: "neutral" as const },
             ].map((o) => (

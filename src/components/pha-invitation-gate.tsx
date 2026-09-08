@@ -1,11 +1,16 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
+import { useSession } from "@/hooks/use-session";
 import type { ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function PhaInvitationGate({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const { user } = useSession();
+  const isInternal = isInternalSegmentUser(user);
   const invitation = useQuery({
-    queryKey: ["pending-pha-invitation"],
+    queryKey: ["pending-pha-invitation", user?.id],
+    enabled: isInternal,
     queryFn: async () => {
       // Generated Supabase types lag the invitation migration.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +47,7 @@ export function PhaInvitationGate({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {invitation.data ? (
+      {isInternal && invitation.data ? (
         <div className="mx-auto mt-4 max-w-[1320px] px-4 sm:px-7">
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">

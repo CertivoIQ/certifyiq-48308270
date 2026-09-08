@@ -33,10 +33,9 @@ export function assertLiveBillingConfiguration() {
 
   const multifamilyPriceId =
     process.env["STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE"]?.trim() ?? "";
-  const phaPriceId = process.env["STRIPE_PHA_PRICE_ID_LIVE"]?.trim() ?? "";
-  if (!PRICE_ID_PATTERN.test(multifamilyPriceId) || !PRICE_ID_PATTERN.test(phaPriceId)) {
+  if (!PRICE_ID_PATTERN.test(multifamilyPriceId)) {
     throw new Error(
-      `Production billing requires configured ${LICENSES.multifamily_enterprise.name} and ${LICENSES.pha.name} prices.`,
+      `Production billing requires configured ${LICENSES.multifamily_enterprise.name} pricing.`,
     );
   }
 

@@ -54,10 +54,7 @@ function TermsOfUse() {
             The standard CertivoIQ Multifamily Enterprise license is{" "}
             {usd(COMMERCIAL_TERMS.multifamilyAnnualPerStateUsd)} per selected operating state per
             year. Each state is separately licensed and is subject to the availability and
-            activation status of its validated rule guide. The standard CertivoIQ PHA license is{" "}
-            {usd(COMMERCIAL_TERMS.phaAnnualUsd)} per organization per year and includes one validated
-            operating-state rule guide and the supported PHA workspaces identified in the signed
-            scope.
+            activation status of its validated rule guide.
           </p>
           <p className="mt-2">
             Licensed capabilities, programs, jurisdictions, transaction volume, service levels, and

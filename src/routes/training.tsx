@@ -1,3 +1,4 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, CheckCircle2, ExternalLink, Search } from "lucide-react";
@@ -17,11 +18,11 @@ function TrainingPage() {
   const { user, ready } = useSession();
   // Remount learning state on account changes; no progress can carry into another account.
   return <AppShell title="Training" subtitle="Learn CertivoIQ, one workflow at a time">
-    <TrainingCenter key={ready ? user?.id ?? "visitor" : "loading"} accountId={user?.id ?? null} isStaff={isStaff} />
+    <TrainingCenter key={ready ? user?.id ?? "visitor" : "loading"} accountId={user?.id ?? null} isStaff={isStaff} isInternal={isInternalSegmentUser(user)} />
   </AppShell>;
 }
 
-function TrainingCenter({ accountId, isStaff }: { accountId: string | null; isStaff: boolean }) {
+function TrainingCenter({ accountId, isStaff, isInternal }: { accountId: string | null; isStaff: boolean; isInternal: boolean }) {
   const [query, setQuery] = useState("");
   const [audience, setAudience] = useState("all");
   const [category, setCategory] = useState("all");
@@ -30,8 +31,8 @@ function TrainingCenter({ accountId, isStaff }: { accountId: string | null; isSt
   const [storageReady, setStorageReady] = useState(false);
   const [storageError, setStorageError] = useState(false);
   const storageKey = accountId ? `certivoiq:training:v1:${accountId}` : null;
-  const available = useMemo(() => filterTrainingLessons(isStaff), [isStaff]);
-  const lessons = useMemo(() => filterTrainingLessons(isStaff, query, audience, category), [isStaff, query, audience, category]);
+  const available = useMemo(() => filterTrainingLessons(isStaff, "", "all", "all", isInternal), [isStaff, isInternal]);
+  const lessons = useMemo(() => filterTrainingLessons(isStaff, query, audience, category, isInternal), [isStaff, query, audience, category, isInternal]);
   const lesson = lessons.find((item) => item.id === selected) ?? lessons[0];
   const categories = [...new Set(available.map((item) => item.category))];
   const completeCount = available.filter((item) => completed.includes(item.id)).length;
@@ -75,7 +76,7 @@ function TrainingCenter({ accountId, isStaff }: { accountId: string | null; isSt
       </label>
       <label className="text-sm font-medium">Workspace
         <select className={selectClass} value={audience} onChange={(event) => { setAudience(event.target.value); setCategory("all"); }}>
-          <option value="all">All available guides</option><option value="multifamily">Multifamily</option><option value="pha">PHA</option>{isStaff ? <option value="staff">Staff administration</option> : null}
+          <option value="all">All available guides</option><option value="multifamily">Multifamily</option>{isInternal ? <option value="pha">PHA</option> : null}{isStaff ? <option value="staff">Staff administration</option> : null}
         </select>
       </label>
       <label className="text-sm font-medium">Topic

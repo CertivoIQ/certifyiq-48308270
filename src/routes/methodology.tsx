@@ -118,6 +118,11 @@ function MethodologyPage() {
             </p>
           </Section>
 
+          <Section id="state-validation" title="State-specific validation status">
+            <p>Last checked September 8, 2026. All 50 states have candidate rule-pack records in the validation workflow. Five candidates have reached verification; two await second verification and 43 remain in agent verification. Candidate verification does not mean a rule pack is activated.</p>
+            <p>No state-specific pack is currently recorded as activated for automated compliance determinations. State-agency and local requirements continue to require Manual Review until the applicable release is approved and activated. Purchasing a state license does not bypass validation.</p>
+          </Section>
+
           <Section id="inputs" title="Required inputs, rounding and effective dates">
             <ul className="list-disc space-y-1 pl-5">
               {INPUTS.map((input) => (

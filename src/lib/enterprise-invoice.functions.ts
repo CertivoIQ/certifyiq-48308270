@@ -1,3 +1,4 @@
+import { assertPublicLicenseKind } from "@/lib/internal-segment-access";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { createServerFn } from "@tanstack/react-start";
@@ -148,6 +149,7 @@ async function issueEnterpriseInvoice(
 
   try {
     assertNewPaidOnboardingAllowed(data.environment, { actorUserId });
+    assertPublicLicenseKind(data.pricingClass === "pha" ? "pha" : "multifamily_enterprise");
     const selection = licenseSelection(data.pricingClass, data.stateCodes);
     const amountCents = selection.annualAmountUsd * 100;
     const label = productLabel(data.pricingClass);

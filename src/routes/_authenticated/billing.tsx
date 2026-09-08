@@ -129,7 +129,7 @@ function BillingPage() {
                     cancelAtPeriodEnd &&
                     `Access remains active until ${endsAt?.toLocaleDateString() ?? "the end of the current period"}.`}
                   {!isActive &&
-                    "CertivoIQ offers Multifamily Enterprise at $65,000 per selected operating state and PHA at $150,000 per organization. Merlin is an optional $5,000/month add-on under a 12-month agreement, or $6,000 month-to-month when approved. FOUNDERS50 applies only to the first annual base license term. Purchases begin with an enterprise invoice; ACH is preferred and card payment is available when requested."}
+                    "CertivoIQ offers Multifamily Enterprise at $65,000 per selected operating state. Merlin is an optional $5,000/month add-on under a 12-month agreement, or $6,000 month-to-month when approved. FOUNDERS50 applies only to the first annual base license term. Purchases begin with an enterprise invoice; ACH is preferred and card payment is available when requested."}
                 </p>
               </div>
 
@@ -188,7 +188,7 @@ function BillingPage() {
               <div>
                 <dt className="font-semibold">Annual price</dt>
                 <dd className="mt-1 text-muted-foreground">
-                  Multifamily: $65,000 per state/year; PHA: $150,000 per organization/year
+                  Multifamily Enterprise: $65,000 per state/year
                 </dd>
               </div>
               <div>

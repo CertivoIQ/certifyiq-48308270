@@ -1,3 +1,4 @@
+import { requireInternalSegmentRoute } from "@/lib/internal-segment-route";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { FormEvent, useMemo, useState } from "react";
@@ -128,6 +129,8 @@ function isPersona(value: string): value is PhaPersona {
 }
 
 export const Route = createFileRoute("/pha/$persona")({
+  ssr: false,
+  beforeLoad: requireInternalSegmentRoute,
   head: ({ params }) => {
     const page = isPersona(params.persona) ? pages[params.persona] : null;
     const title = page ? `${page.headline} | CertivoIQ` : "CertivoIQ for PHA Leadership";
@@ -139,7 +142,7 @@ export const Route = createFileRoute("/pha/$persona")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: `https://certivoiq.com/pha/${params.persona}` },
-        { name: "robots", content: page ? "index,follow" : "noindex" },
+        { name: "robots", content: page ? "noindex,nofollow" : "noindex" },
       ],
       links: page ? [{ rel: "canonical", href: `https://certivoiq.com/pha/${params.persona}` }] : [],
     };
