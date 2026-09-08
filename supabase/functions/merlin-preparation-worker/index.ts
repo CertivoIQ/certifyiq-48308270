@@ -25,7 +25,16 @@ Deno.serve(async (request:Request)=>{
    const created=await db.storage.createBucket(bucket,{public:false,fileSizeLimit:5*1024*1024,allowedMimeTypes:["application/pdf"]});
    if(created.error) return json({ok:false,stage:"storage",error:created.error.message},503);
   } else if(existing.data.public) return json({ok:false,stage:"storage",error:"Source bucket must be private"},503);
-  return json({ok:true,configured:Boolean(apiKey),model,model_available:modelAvailable,source_bucket_private:true,claimed:false});
+  let inferenceAvailable=false,providerErrorCode:string|null=null;
+  if(apiKey && modelAvailable) {
+   const probe=await fetch("https://api.openai.com/v1/responses",{method:"POST",signal:AbortSignal.timeout(20000),
+    headers:{authorization:"Bearer "+apiKey,"content-type":"application/json"},
+    body:JSON.stringify({model,store:false,input:"Reply OK.",reasoning:{effort:"low"},max_output_tokens:32})});
+   const detail=await probe.json(); inferenceAvailable=probe.ok;
+   providerErrorCode=probe.ok?null:String(detail.error?.code??"HTTP_"+probe.status).slice(0,80);
+  }
+  await db.rpc("merlin_record_provider_probe",{_available:inferenceAvailable,_code:providerErrorCode??"NOT_CONFIGURED"});
+  return json({ok:inferenceAvailable,configured:Boolean(apiKey),model,model_available:modelAvailable,inference_available:inferenceAvailable,provider_error_code:providerErrorCode,source_bucket_private:true,claimed:false});
  }
  const worker="merlin-native:"+crypto.randomUUID();
  const claim=await db.rpc("merlin_claim_native_preparation",{_worker:worker,_capture_only:body.source_only===true});
@@ -69,7 +78,7 @@ Deno.serve(async (request:Request)=>{
     ]}],text:{format:{type:"json_schema",name:"affordable_housing_procedures",strict:true,schema:procedureSchema}}})
   });
   const result=await response.json();
-  if(!response.ok) throw new Error("MODEL_HTTP_"+response.status);
+  if(!response.ok) throw new Error("MODEL_HTTP_"+response.status+"_"+String(result.error?.code??"unknown").slice(0,80));
   if(result.status!=="completed") throw new Error("MODEL_INCOMPLETE");
   const extraction=validateExtraction(JSON.parse(outputText(result)));
   const evidence={sha256:digest,final_url:finalUrl,byte_size:bytes.length,storage_bucket:bucket,storage_path:path,
