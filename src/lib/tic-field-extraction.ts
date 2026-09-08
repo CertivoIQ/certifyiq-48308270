@@ -158,7 +158,9 @@ function factFromValue(
  * Parse the TIC registry from OCR/native text. Extraction is only a proposal.
  * Exact source-field mappings emitted by the native/spatial readers always win
  * over loose OCR aliases. Blank form lines stay blank and neighboring labels
- * are never promoted into field data.
+ * are never promoted into field data. On strict-cell pages, a direct same-line
+ * label/value fallback remains allowed for fields the spatial reader did not emit;
+ * next-line inference stays disabled so strict evidence boundaries are preserved.
  */
 export function extractTicFieldsFromText(
   text: string,
@@ -248,13 +250,14 @@ export function extractTicFieldsFromText(
     for (let index = 0; index < lines.length && !extracted; index += 1) {
       const line = lines[index] ?? "";
       if (line.startsWith(DIRECT_TIC_FIELD_PREFIX)) continue;
-      if (line.startsWith("__CERTIVOIQ_") || (strictCellPages.has(pageOfLine[index]) || supplementalPages.has(pageOfLine[index] ?? 1))) continue;
+      if (line.startsWith("__CERTIVOIQ_") || supplementalPages.has(pageOfLine[index] ?? 1)) continue;
+      const strictPage = strictCellPages.has(pageOfLine[index] ?? 1);
       const lower = line.toLowerCase();
       for (const alias of definition.aliases) {
         if (!lower.includes(alias.toLowerCase())) continue;
         let raw = lineTailAfterAlias(line, alias);
         let value = normalizeValue(definition, raw);
-        if (value === null && !raw.trim()) {
+        if (value === null && !raw.trim() && !strictPage) {
           raw = nextCandidateLine(lines, index);
           value = normalizeValue(definition, raw);
         }
@@ -282,4 +285,3 @@ export function extractTicFieldsFromText(
     : "deterministic-text";
   return { provider, facts, missingFields };
 }
-
