@@ -100,6 +100,13 @@ function normalizeText(raw: string) {
 }
 
 function normalizeValue(definition: TicFieldDefinition, raw: string): string | number | null {
+  if (definition.key === 'household_income_restriction_percent' || definition.key === 'unit_rent_restriction_percent') {
+    const choices = [...raw.matchAll(/\b(\d{1,3})\s*%/g)];
+    if (choices.length > 1) {
+      const marked = [...raw.matchAll(/(?:☒|✓|✔|\[x\])\s*(\d{1,3})\s*%/gi)];
+      return marked.length === 1 ? Number(marked[0]![1]) : null;
+    }
+  }
   if (definition.type === "date") return normalizeDate(raw);
   if (definition.type === "currency" || definition.type === "number") return normalizeNumeric(raw);
   if (definition.type === "yes_no") return normalizeYesNo(raw);

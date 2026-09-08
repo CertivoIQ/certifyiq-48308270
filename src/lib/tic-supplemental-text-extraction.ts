@@ -23,6 +23,7 @@ const WORKSHEET_SCALARS = [
   ["worksheet_total_asset_cash_value", "total asset cash value", "currency"],
   ["worksheet_total_actual_income", "total actual income", "currency"],
   ["worksheet_passbook_rate_percent", "passbook rate percent", "number"],
+  ["worksheet_passbook_rate_percent", "passbook rate %", "number"],
   ["worksheet_total_imputed_income", "total imputed income", "currency"],
   ["worksheet_greatest_asset_income", "greatest asset income", "currency"],
   ["worksheet_total_income", "total income", "currency"],
@@ -103,10 +104,17 @@ export function extractSupplementalTextCandidates(text: string): SupplementalTex
     const pageText = lines.join("\n");
     if (supplementalPageKind(pageText) !== "worksheet") continue;
     for (const line of lines) {
+      const qualifying = /qualifying\s+income\s+limit\s+at\s+(\d+(?:\.\d+)?)\s*%\s*=\s*(\$?\s*[\d,]+(?:\.\d{2})?)/i.exec(line);
+      if (qualifying) {
+        candidates.push({key:'worksheet_qualifying_income_limit_percent',value:Number(qualifying[1]),page,line});
+        const limit = normalize('currency', qualifying[2]!);
+        if (limit !== null) candidates.push({key:'worksheet_qualifying_income_limit',value:limit,page,line});
+      }
       const labels = labelsOnLine(line.toLowerCase());
       for (let index = 0; index < labels.length; index += 1) {
         const match = labels[index]!;
         const [key, , type] = match.scalar;
+        if (qualifying && key === 'worksheet_qualifying_income_limit') continue;
         const next = labels.find((candidate, candidateIndex) => candidateIndex > index && candidate.start >= match.end);
         const raw = line.slice(match.end, next?.start ?? line.length);
         const value = normalize(type, raw);

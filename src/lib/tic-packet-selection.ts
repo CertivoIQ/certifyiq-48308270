@@ -64,6 +64,12 @@ export function selectedTicText(pages: readonly PacketPage[], selection: PacketS
   return pages.filter(p => selected.has(p.page)).map(p => `page ${p.page}\n${p.text}`).join('\n');
 }
 
+/** Caller extracts worksheet fields separately and never merges their certified TIC totals. */
+export function selectedWorksheetText(pages: readonly PacketPage[], selection: PacketSelectionManifest): string {
+  const selected = new Set(selection.choices.filter(c => c.role === 'income_calculation_worksheet').map(c => c.page));
+  return pages.filter(p => selected.has(p.page)).map(p => `page ${p.page}\n${p.text}`).join('\n');
+}
+
 /** Per-page references avoid merging two adjacent employers/accounts into one document. */
 export function selectedSupportingPages(selection: PacketSelectionManifest, inventory: readonly PacketPageInventory[]): SupportingPacketGroup[] {
   return selection.choices.filter(c => SUPPORTING_DOCUMENT_TYPE_SET.has(c.role as SupportingDocumentType)).map(c => {

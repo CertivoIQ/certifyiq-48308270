@@ -50,6 +50,7 @@ export function classifyPacketPage(page: PacketPage): PacketPageClassification {
 
   const administrative = administrativePageLabel(text);
   if (administrative) return { page: page.page, kind: "unclassified", documentType: null, label: administrative, confidence: 0.9, basis: "Administrative heading detected. Awaiting user include/omit decision; not TIC evidence." };
+  if (/annual\s+income\s+calculation\s+worksheet/i.test(text)) return {page: page.page, kind: "supporting", documentType: "income_calculation_worksheet", label: "Annual Income Calculation Worksheet", confidence: 0.95, basis: "Income worksheet heading; preserve separately from certified TIC totals."};
   if (isTicContent(text)) return { page: page.page, kind: "tic", documentType: null, label: "Tenant Income Certification", confidence: 0.9, basis: "TIC title or multiple form sections detected. Confirm selected TIC pages before field extraction." };
 
   let best:

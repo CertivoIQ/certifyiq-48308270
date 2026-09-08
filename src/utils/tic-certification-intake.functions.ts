@@ -15,7 +15,7 @@ import {
   type SupportingDocumentType,
 } from "@/lib/tic-supporting-document-registry";
 import { composeSidecarText, provenanceIndex } from "@/lib/ocr-sidecar.mjs";
-import { buildPacketSelection, selectionFromHistory, initialPageChoices, packetInventory, selectedSupportingPages, selectedTicText, validatePageChoices, type PacketPageChoice } from "@/lib/tic-packet-selection";
+import { buildPacketSelection, selectionFromHistory, initialPageChoices, packetInventory, selectedSupportingPages, selectedTicText, selectedWorksheetText, validatePageChoices, type PacketPageChoice } from "@/lib/tic-packet-selection";
 
 const REVIEWER_CONFIRMED_PROVIDER = "reviewer-confirmed";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -118,6 +118,15 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
     source.originalFileName,
     provenanceIndex(composed.pages),
   );
+  if (selection) {
+    const worksheet = ticExtraction.extractTicFieldsFromText(selectedWorksheetText(packetPages, selection), source.originalFileName, provenanceIndex(composed.pages));
+    const existing = new Set(result.facts.map(f => f.field));
+    const supplemental = worksheet.facts.filter(f => /^(?:worksheet_|source_present_worksheet_)/.test(f.field) && !existing.has(f.field));
+    result.facts.push(...supplemental);
+    const fields = new Set(result.facts.map(f => f.field));
+    result.missingFields = result.missingFields.filter(field => !fields.has(field));
+    if (supplemental.some(f => f.provider === 'ocr-tesseract')) result.provider = 'ocr-tesseract';
+  }
   const confidence = result.facts.length ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length : 0;
   const supportingDocuments = selection ? selectedSupportingPages(selection, pageClassifications) : [];
   const selectionDigest = selection ? await hashJson(selection) : null;
@@ -565,4 +574,3 @@ export const getCertificationPacketSelection = createServerFn({ method: "GET" })
     if (!item) throw new Error("That certification is not available to this account.");
     return selectionFromHistory(item.historical_changes, item.sha256 ?? "");
   });
-
