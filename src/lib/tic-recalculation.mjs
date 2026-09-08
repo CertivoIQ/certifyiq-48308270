@@ -1,6 +1,6 @@
-const BUILD = "tic-recalculation-1.0.4";
+const BUILD = "tic-recalculation-1.0.5";
 const RULE_PACK_ID = "CERTIVOIQ-TIC-ARITHMETIC";
-const RULE_PACK_VERSION = "1.0.4";
+const RULE_PACK_VERSION = "1.0.5";
 const TOLERANCE = 0.01;
 const MINIMUM_CONFIDENCE = 0.85;
 // This is the arithmetic threshold printed on the recognized Annual Income
@@ -44,7 +44,7 @@ function makeFinding(facts, ruleId, label, reportedField, reported, calculated, 
   if (variance === null || Math.abs(variance) <= TOLERANCE) return null;
   return {
     ruleId,
-    ruleVersion: "1.0.4",
+    ruleVersion: "1.0.5",
     rulePackId: RULE_PACK_ID,
     rulePackVersion: RULE_PACK_VERSION,
     jurisdiction: "federal",
@@ -220,15 +220,25 @@ export function evaluateTicRecalculations(facts = []) {
     }
   }
 
+  const greatestForAssetTotal = calculatedValue(calculated, "worksheet_greatest_asset_income") ?? reportedGreatest;
+  const reportedTotalAssetIncome = valueOf(map, "worksheet_total_asset_income");
+  if (greatestForAssetTotal !== null) {
+    calculated.worksheet_total_asset_income = greatestForAssetTotal;
+    if (reportedTotalAssetIncome !== null) {
+      const finding = makeFinding(facts, "CERTIVOIQ-WORKSHEET-TOTAL-ASSET-INCOME-001", "Worksheet total asset income", "worksheet_total_asset_income", reportedTotalAssetIncome, greatestForAssetTotal, ["worksheet_greatest_asset_income"]);
+      if (finding) findings.push(finding);
+    }
+  }
+
   const worksheetBaseIncome = valueOf(map, "worksheet_total_income") ?? calculatedValue(calculated, "worksheet_total_of_all_income_sources") ?? worksheetTotalIncomeSources;
-  const selectedAssetIncome = calculatedValue(calculated, "worksheet_greatest_asset_income") ?? reportedGreatest;
+  const selectedAssetIncome = calculatedValue(calculated, "worksheet_total_asset_income") ?? reportedTotalAssetIncome ?? greatestForAssetTotal;
   const worksheetAnnual = valueOf(map, "worksheet_total_annual_income");
   if (worksheetBaseIncome !== null && selectedAssetIncome !== null) {
     const expected = money(worksheetBaseIncome + selectedAssetIncome);
     if (expected !== null) {
       calculated.worksheet_total_annual_income = expected;
       if (worksheetAnnual !== null) {
-        const finding = makeFinding(facts, "CERTIVOIQ-WORKSHEET-TOTAL-ANNUAL-INCOME-001", "Worksheet total annual income", "worksheet_total_annual_income", worksheetAnnual, expected, ["worksheet_total_income", "worksheet_greatest_asset_income"]);
+        const finding = makeFinding(facts, "CERTIVOIQ-WORKSHEET-TOTAL-ANNUAL-INCOME-001", "Worksheet total annual income", "worksheet_total_annual_income", worksheetAnnual, expected, ["worksheet_total_income", "worksheet_total_asset_income"]);
         if (finding) findings.push(finding);
       }
     }
