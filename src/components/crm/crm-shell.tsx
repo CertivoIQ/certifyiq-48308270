@@ -7,6 +7,8 @@ import { IQText } from "@/components/iq-text";
 import { NewsTicker } from "@/components/crm/news-ticker";
 import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
 import type { NewsItem } from "@/lib/crm";
+import { useSession } from '@/hooks/use-session';
+import { isInternalSegmentUser } from '@/lib/internal-segment-access';
 
 function Denied() {
   return (
@@ -40,6 +42,7 @@ export function CrmShell({
   newsItems?: NewsItem[];
 }) {
   const { canManageStaff } = useCrmStaffAuthority();
+  const { user } = useSession();
   const federalNews = useQuery({
     queryKey: ["crm", "official-federal-housing-news"],
     enabled: isStaff === true,
@@ -117,9 +120,9 @@ export function CrmShell({
             <Button size="sm" variant="ghost" asChild>
               <Link to="/crm/operations">Operations</Link>
             </Button>
-            <Button size="sm" variant="ghost" asChild>
+            {isInternalSegmentUser(user) && <Button size="sm" variant="ghost" asChild>
               <Link to="/crm-pha-controls">PHA Controls</Link>
-            </Button>
+            </Button>}
             {canManageStaff ? (
               <Button size="sm" variant="ghost" asChild>
                 <Link to="/crm-staff">Staff Access</Link>
@@ -151,4 +154,3 @@ export function CrmShell({
     </div>
   );
 }
-

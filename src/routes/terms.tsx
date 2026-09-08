@@ -29,7 +29,7 @@ export const Route = createFileRoute("/terms")({
 
 function TermsOfUse() {
   return (
-    <PublicShell title="Terms of Use" subtitle="Effective September 6, 2026">
+    <PublicShell title="Terms of Use" subtitle="Effective September 8, 2026">
       <article className="mx-auto max-w-3xl space-y-7 text-sm leading-7 text-muted-foreground">
         <section>
           <h2 className="font-display text-xl text-foreground">Beta Testing and issue reporting</h2>
@@ -56,6 +56,7 @@ function TermsOfUse() {
             year. Each state is separately licensed and is subject to the availability and
             activation status of its validated rule guide.
           </p>
+          <p className="mt-2">Authorized customer administrators may purchase available additional states directly in Billing. The $65,000 annual state price is prorated to the existing annual contract end, with the amount shown before payment. Access begins after confirmed payment and remains subject to the active base license and state-release availability. The added state ends with the current contract and does not renew separately; remaining base-license installments are unchanged.</p>
           <p className="mt-2">
             Licensed capabilities, programs, jurisdictions, transaction volume, service levels, and
             renewal mechanics are those stated in the applicable order form. Public product
@@ -203,4 +204,3 @@ function TermsOfUse() {
     </PublicShell>
   );
 }
-

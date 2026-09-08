@@ -198,6 +198,8 @@ export const PLANS = [
   },
 ];
 
+/** Customer-facing offers; retained internal products are excluded from media. */
+export const PUBLIC_PLANS = PLANS.filter(plan => plan.id === 'multifamily_enterprise');
 export const ADDONS: { name: string; price: string }[] = [];
 
 /** Sales email already used for CertivoIQ outreach — no new address invented. */

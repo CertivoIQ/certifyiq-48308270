@@ -315,9 +315,14 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       }
       break;
     }
+    case "checkout.session.async_payment_succeeded":
     case "checkout.session.completed": {
       const session = event.data.object;
       if (session["payment_status"] === "unpaid") break;
+      if (session.metadata?.['purchase_type']==='enterprise_state_pack') {
+        const { fulfillStateCheckout } = await import('@/lib/state-pack-billing.server');
+        await fulfillStateCheckout(String(session.id),env);
+      }
       break;
     }
     case "invoice.payment_failed": {
@@ -348,17 +353,33 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       );
       break;
     }
+    case "charge.refunded": {
+      const charge = event.data.object as unknown as {payment_intent?:string;amount_refunded?:number};
+      if (charge.payment_intent && Number(charge.amount_refunded)>0) {
+        const { stateBillingDb } = await import('@/lib/state-pack-billing.server');
+        const { error } = await stateBillingDb().rpc('refund_enterprise_state_pack',{payment_intent_id:charge.payment_intent,payment_environment:env});
+        if(error) throw new Error('Could not reconcile refunded state access.');
+      }
+      await applyEnterpriseTerminalEvent(enterpriseDb(),event.data.object as EnterpriseTerminalBillingObject,event as {id?:string;type?:string});
+      break;
+    }
     case "credit_note.created":
-    case "charge.refunded":
       await applyEnterpriseTerminalEvent(
         enterpriseDb(),
         event.data.object as EnterpriseTerminalBillingObject,
         event as { id?: string; type?: string },
       );
       break;
-    case "checkout.session.async_payment_succeeded":
-    case "checkout.session.async_payment_failed":
+    case "checkout.session.expired":
+    case "checkout.session.async_payment_failed": {
+      const session = event.data.object;
+      if (session.metadata?.['purchase_type']==='enterprise_state_pack') {
+        const { stateBillingDb } = await import('@/lib/state-pack-billing.server');
+        const { error } = await stateBillingDb().from('enterprise_state_pack_orders').update({status:event.type==='checkout.session.expired'?'expired':'failed'}).eq('stripe_session_id',String(session.id)).eq('environment',env).eq('status','pending');
+        if(error) throw new Error('Could not reconcile state payment status.');
+      }
       break;
+    }
     default:
       console.log("Unhandled payments event:", event.type);
   }

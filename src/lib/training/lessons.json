@@ -692,11 +692,11 @@
       },
       {
         "title": "Complete authorized payment",
-        "instruction": "Follow the displayed invoice or checkout flow only for an approved purchase."
+        "instruction": "To add an available operating state, an organization license administrator selects Review & pay under Add a state pack. Review the $65,000 annual rate prorated to your existing annual renewal date, then complete the hosted payment. No sales call is required."
       },
       {
         "title": "Check the return state",
-        "instruction": "After checkout returns, verify the recorded billing status. A browser redirect by itself does not establish a completed payment; contact Tech Support for a discrepancy."
+        "instruction": "After checkout returns, billing automatically checks payment confirmation. Bank payments may remain pending until settlement. Once the state shows paid, select Open state pack for direct access. A browser redirect alone does not establish payment; use Retry if the status could not be refreshed."
       }
     ],
     "coveredRoutes": [

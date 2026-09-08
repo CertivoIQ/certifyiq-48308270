@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { StatePackBilling, useStatePackBilling } from '@/components/state-pack-billing';
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
@@ -33,18 +34,19 @@ export const Route = createFileRoute("/_authenticated/billing")({
 });
 
 function BillingPage() {
+  const stateBilling = useStatePackBilling();
   const { profile, phaRole } = useWorkspaceProfile();
   const { selectedMode } = usePlatformDashboardAccess();
   const { accessLevel, loading: authorityLoading } = useCrmStaffAuthority();
   const dashboardMode = resolvePlatformDashboardMode(selectedMode, profile.organization_type);
-  const billingAllowed = dashboardMode === "executive_demo" || accessLevel === "manager" || phaRole === "executive";
+  const billingAllowed = stateBilling.data?.administrator || dashboardMode === "executive_demo" || accessLevel === "manager" || phaRole === "executive";
   const { account, loading, refetch } = useAccount();
   const { subscription, isActive, founderTraining, isPastDue, cancelAtPeriodEnd, endsAt } = useSubscription();
   const [busy, setBusy] = useState<string | null>(null);
   const env = getStripeEnvironment();
   const isEnterprise = account?.planId === "multifamily_enterprise" || account?.planId === "pha";
 
-  if (!authorityLoading && !billingAllowed) {
+  if (!authorityLoading && !stateBilling.isLoading && !billingAllowed && !stateBilling.isError) {
     return (
       <AppShell title="Billing access" subtitle="Billing is limited to the Executive dashboard and manager-level billing authority">
         <Panel bodyClassName="p-6">
@@ -96,6 +98,7 @@ function BillingPage() {
 
   return (
     <AppShell title="Account & billing" subtitle="Invoice-first annual enterprise licensing">
+      <StatePackBilling query={stateBilling} />
       <div className="-mt-1 mb-4 overflow-hidden rounded-lg">
         <PaymentTestModeBanner />
       </div>

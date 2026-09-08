@@ -531,6 +531,14 @@ export async function applyEnterpriseInvoicePaid(
       isoFromUnix(invoice.period_start) ??
       now;
     const paidThrough = isoFromUnix(invoice.period_end)!;
+    // State additions are prepaid separately and must survive base installments.
+    let effectiveSelection = selection;
+    if (existing?.['id'] && selection.licenseKind === 'multifamily_enterprise') {
+      const { data: additions, error: additionsError } = await db.from('enterprise_state_pack_orders').select('state_code,term_end,status,environment').eq('license_id',existing['id']);
+      if (additionsError) throw new Error('Could not reconcile purchased states.');
+      const states = Array.isArray(additions) ? additions.filter(row=>row['status']==='paid' && row['environment']===env && Date.parse(String(row['term_end']))>Date.now()).map(row=>String(row['state_code'])) : [];
+      effectiveSelection = normalizeLicenseSelection({licenseKind:selection.licenseKind,stateCodes:[...new Set([...selection.stateCodes,...states])]});
+    }
     const installmentsPaid = Math.min(Number(existing?.["installments_paid"] ?? 0) + 1, 12);
     const action: "activated" | "renewed" =
       existing?.["status"] === "active" ? "renewed" : "activated";
@@ -541,9 +549,10 @@ export async function applyEnterpriseInvoicePaid(
         crm_account_id: invoiceCrmAccountId(invoice),
         product_code: PRODUCT_CODE,
         license_kind: selection.licenseKind,
-        licensed_state_codes: selection.stateCodes,
+        licensed_state_codes: effectiveSelection.stateCodes,
+        base_state_codes: selection.stateCodes,
         status: "active",
-        annual_price_cents: selection.annualAmountUsd * 100,
+        annual_price_cents: effectiveSelection.annualAmountUsd * 100,
         currency: invoice.currency ?? "usd",
         starts_at: startsAt,
         expires_at: paidThrough,
@@ -581,7 +590,7 @@ export async function applyEnterpriseInvoicePaid(
       env,
       organizationId,
       paidThrough,
-      selection,
+      effectiveSelection,
     );
     await completeEvent(
       db,

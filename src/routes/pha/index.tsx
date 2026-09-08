@@ -9,13 +9,13 @@ export const Route = createFileRoute("/pha/")({
   beforeLoad: requireInternalSegmentRoute,
   head: () => ({
     meta: [
-      { title: "CertivoIQ for Public Housing Agencies" },
+      { title: "Internal workspace — CertivoIQ" },
       {
         name: "description",
         content:
-          "Choose your PHA leadership role to see how CertivoIQ adds independent certification review without replacing your housing-management system.",
+          "Sign in with an authorized internal account to continue.",
       },
-      { property: "og:title", content: "CertivoIQ for Public Housing Agencies" },
+      { property: "og:title", content: "Internal workspace — CertivoIQ" },
       {
         property: "og:description",
         content: "Processed by your software. Independently reviewed by CertivoIQ.",
