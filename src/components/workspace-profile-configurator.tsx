@@ -108,7 +108,7 @@ function ToggleCard({
 }
 
 export function WorkspaceProfileConfigurator({ userId }: { userId: string }) {
-  const { profile, refetch, loading } = useWorkspaceProfile();
+  const { profile, refetch, loading, isInternal } = useWorkspaceProfile();
   const navigate = useNavigate();
   const dirty = useRef(false);
   const [organizationType, setOrganizationType] = useState<OrganizationType>(
@@ -150,10 +150,10 @@ export function WorkspaceProfileConfigurator({ userId }: { userId: string }) {
 
   async function save(continueSetup: boolean) {
     if (saving || loading) return;
-    const isPha = organizationType === "pha";
+    const isPha = isInternal && organizationType === "pha";
     const values = {
       user_id: userId,
-      organization_type: organizationType,
+      organization_type: isInternal ? organizationType : "multifamily_owner_agent",
       selected_programs: isPha ? [] : programs,
       pha_programs: isPha ? phaPrograms : [],
       pha_hotma_cohort: isPha ? phaCohort : null,
@@ -209,7 +209,7 @@ export function WorkspaceProfileConfigurator({ userId }: { userId: string }) {
             Organization type
           </p>
           <div className="mt-2 grid gap-2 md:grid-cols-2">
-            {ORG_TYPES.map((option) => (
+            {ORG_TYPES.filter((option) => isInternal || option.value === "multifamily_owner_agent").map((option) => (
               <ToggleCard
                 key={option.value}
                 checked={organizationType === option.value}
@@ -304,7 +304,7 @@ export function WorkspaceProfileConfigurator({ userId }: { userId: string }) {
         <div className="mt-5 rounded-md border border-border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground">
           CertivoIQ uses this profile to determine which dashboard, modules, rule packs, deadlines,
           and regulatory overlays apply. LIHTC alone does not activate HOTMA; covered HUD programs
-          do. PHA cohort and reporting-path selections are routed through the deterministic
+          do. Program selections are routed through the deterministic
           implementation engine rather than treated as user-defined compliance conclusions.
         </div>
       </fieldset>

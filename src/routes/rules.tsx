@@ -1,3 +1,5 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
+import { useSession } from "@/hooks/use-session";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
@@ -18,7 +20,7 @@ export const Route = createFileRoute("/rules")({
       {
         name: "description",
         content:
-          "Versioned LIHTC, HOTMA, HOME and Section 8 rule packs layered core → state → county → PHA → property, with effective dates and citations.",
+          "Versioned LIHTC, HOTMA, HOME and Section 8 rule packs layered core → state → county → property, with effective dates and citations.",
       },
       { property: "og:title", content: "Rule Packs & Versioning — CertivoIQ" },
       {
@@ -55,6 +57,7 @@ const STATUS_TONE: Record<CoverageStatus, "seal" | "flag" | "reject"> = {
 };
 
 function RulesPage() {
+  const { user } = useSession();
   const [program, setProgram] = useState<Program | "all">("all");
   const validatedCount = stateCoverage.filter(isUsableForDetermination).length;
   const rows = program === "all" ? RULES : RULES.filter((r) => r.program === program);
@@ -79,7 +82,7 @@ function RulesPage() {
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Panel className="lg:col-span-2" title="Resolution order" description="Each layer may tighten, never loosen, the layer above it">
           <ol className="space-y-2.5">
-            {LAYERS.map((l, i) => (
+            {LAYERS.filter((layer) => layer.name !== "PHA plugin" || isInternalSegmentUser(user)).map((l, i) => (
               <li key={l.name} className="flex items-start gap-3 rounded-md border border-border bg-muted/30 p-3.5" style={{ marginLeft: `${i * 12}px` }}>
                 <Layers className="mt-0.5 size-4 shrink-0 text-slate" />
                 <div className="min-w-0 flex-1">

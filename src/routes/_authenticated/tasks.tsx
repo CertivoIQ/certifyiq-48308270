@@ -1,3 +1,5 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
+import { useSession } from "@/hooks/use-session";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -179,7 +181,7 @@ function isMissingRelationError(error: TaskSourceError) {
   );
 }
 
-async function loadTasks(includeGovernanceTasks: boolean): Promise<TaskItem[]> {
+async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: boolean): Promise<TaskItem[]> {
   // Generated Supabase types lag the controlled governance tables until schema types refresh.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = supabase as any;
@@ -221,14 +223,14 @@ async function loadTasks(includeGovernanceTasks: boolean): Promise<TaskItem[]> {
     incidentResult,
     sourceResult,
   ] = await Promise.all([
-      client
+      includeInternalTasks ? client
         .from("pha_nspire_standard_releases")
         .select("id,source_version,status,imported_standard_count,imported_deficiency_count,created_at,updated_at,activated_at")
         .order("created_at", { ascending: false })
-        .limit(50),
-      client
+        .limit(50) : Promise.resolve({ data: [], error: null }),
+      includeInternalTasks ? client
         .from("pha_nspire_release_attestations")
-        .select("release_id,verifier_id"),
+        .select("release_id,verifier_id") : Promise.resolve({ data: [], error: null }),
       client
         .from("state_rule_pack_releases")
         .select("id,state_code,version,status,validated_rule_count,approved_at,created_at,updated_at")
@@ -525,12 +527,13 @@ function TaskList({ tasks, onCompleted }: { tasks: TaskItem[]; onCompleted: () =
 }
 
 function TasksWorkspace() {
+  const { user } = useSession();
   const { isStaff, loading } = useIsStaff();
   const [view, setView] = useState<"active" | "history">("active");
   const query = useQuery({
-    queryKey: ["role-aware-tasks", isStaff],
+    queryKey: ["role-aware-tasks", user?.id, isStaff, isInternalSegmentUser(user)],
     enabled: !loading,
-    queryFn: () => loadTasks(isStaff),
+    queryFn: () => loadTasks(isStaff, isInternalSegmentUser(user)),
     refetchInterval: 30_000,
   });
 

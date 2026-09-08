@@ -83,7 +83,7 @@ export function CostComparisonCalculator({ annualPrice = DEFAULT_ANNUAL_PRICE }:
 
       <p className="mt-5 text-[12.5px] leading-relaxed text-muted-foreground">
         {currency(annualPrice)} per selected state per year for the Multifamily Enterprise package.
-        Public Housing Authorities use the separate flat organization-level PHA license. Licensed
+        Licensed
         features, state rule guides, included self-directed onboarding, and optional Merlin service are described on
         the pricing page. Compare the applicable license with your organization's actual cost of
         external file reviews, vacancy delays, correction cycles, audit preparation and potential

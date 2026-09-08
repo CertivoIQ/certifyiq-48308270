@@ -1,3 +1,4 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -17,7 +18,7 @@ export const sendPhaWorkspaceInvitationEmail = createServerFn({ method: "POST" }
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(data.accessToken);
     const requester = authData.user;
-    if (authError || !requester) throw new Error("Authenticated PHA administrator is required.");
+    if (authError || !requester || !isInternalSegmentUser(requester)) throw new Error("Authenticated PHA administrator is required.");
 
     const { data: invitation, error: invitationError } = await client
       .from("pha_workspace_invitations")
@@ -25,6 +26,7 @@ export const sendPhaWorkspaceInvitationEmail = createServerFn({ method: "POST" }
       .eq("id", data.invitationId)
       .single();
     if (invitationError || !invitation) throw new Error("PHA invitation was not found.");
+    if (!/^[^@\s]+@certivoiq\.com$/i.test(invitation.invite_email)) throw new Error("Internal invitations only.");
     if (invitation.status !== "pending") throw new Error("Only pending PHA invitations can be delivered.");
     if (new Date(invitation.expires_at).getTime() <= Date.now()) throw new Error("PHA invitation has expired.");
 

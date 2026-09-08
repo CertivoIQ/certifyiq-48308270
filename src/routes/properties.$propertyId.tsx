@@ -1,3 +1,5 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
+import { useSession } from "@/hooks/use-session";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Panel, Pill, Meter, Cite, StatusPill, Stat } from "@/components/ui-kit";
@@ -39,6 +41,8 @@ export const Route = createFileRoute("/properties/$propertyId")({
 });
 
 function PropertyDetail() {
+  const { user } = useSession();
+  const isInternal = isInternalSegmentUser(user);
   const { property, files } = Route.useLoaderData() as { property: Property; files: CertFile[] };
   const band = riskBand(property.risk);
 
@@ -90,6 +94,7 @@ function PropertyDetail() {
               </div>
               <Meter value={property.hotmaReadiness} tone={property.hotmaReadiness >= 80 ? "seal" : "flag"} />
             </div>
+            {isInternal && (
             <div>
               <div className="mb-1.5 flex items-baseline justify-between text-[13px]">
                 <span>NSPIRE readiness</span>
@@ -97,6 +102,7 @@ function PropertyDetail() {
               </div>
               <Meter value={property.nspireReadiness} tone={property.nspireReadiness >= 80 ? "seal" : "flag"} />
             </div>
+            )}
           </div>
           <p className="mt-5 border-t border-border pt-3 text-[12.5px] text-muted-foreground">
             Rule stack: core → <span className="cite">{property.state}</span> state pack → {property.county} County limits → property overrides.

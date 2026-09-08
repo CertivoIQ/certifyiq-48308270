@@ -1,9 +1,12 @@
+import { requireInternalSegmentRoute } from "@/lib/internal-segment-route";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Panel, Pill } from "@/components/ui-kit";
 import { ArrowRight, Building2, ChartNoAxesCombined, ClipboardCheck, Landmark, MonitorCog, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/pha/")({
+  ssr: false,
+  beforeLoad: requireInternalSegmentRoute,
   head: () => ({
     meta: [
       { title: "CertivoIQ for Public Housing Agencies" },
@@ -18,7 +21,7 @@ export const Route = createFileRoute("/pha/")({
         content: "Processed by your software. Independently reviewed by CertivoIQ.",
       },
       { property: "og:url", content: "https://certivoiq.com/pha" },
-      { name: "robots", content: "index,follow" },
+      { name: "robots", content: "noindex,nofollow" },
     ],
     links: [{ rel: "canonical", href: "https://certivoiq.com/pha" }],
   }),

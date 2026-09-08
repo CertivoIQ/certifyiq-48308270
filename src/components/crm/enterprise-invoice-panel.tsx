@@ -45,7 +45,7 @@ export function EnterpriseInvoicePanel({
   const [promotionCode, setPromotionCode] = useState("");
   const [netDays, setNetDays] = useState(30);
   const [busy, setBusy] = useState(false);
-  const [pricingClass, setPricingClass] = useState<LicensePricingClass>(initialPricingClass);
+  const [pricingClass, setPricingClass] = useState<LicensePricingClass>("standard");
   const [stateCodes, setStateCodes] = useState<string[]>([]);
   const [hostedInvoiceUrl, setHostedInvoiceUrl] = useState<string | null>(null);
   const environment = getStripeEnvironment();
@@ -184,7 +184,7 @@ export function EnterpriseInvoicePanel({
   return (
     <Panel
       title="Enterprise license invoice"
-      description="Multifamily Enterprise is $65,000 per selected state each year; PHA is a flat $150,000 each year. The server validates the selected states and derives every invoice amount."
+      description="Multifamily Enterprise is $65,000 per selected state each year. The server validates the selected states and derives every invoice amount."
     >
       <div className="mb-5 grid gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm dark:border-emerald-900 dark:bg-emerald-950/30 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
@@ -202,7 +202,6 @@ export function EnterpriseInvoicePanel({
             className="mt-3 h-10 w-full max-w-md rounded-md border border-input bg-background px-3 text-sm text-foreground"
           >
             <option value="standard">Multifamily Enterprise — $65,000/state/year</option>
-            <option value="pha">Public Housing Authority (PHA) — $150,000/year</option>
           </select>
         </div>
         <div className="rounded-md border border-emerald-300 bg-white px-4 py-3 text-right dark:border-emerald-800 dark:bg-emerald-950">

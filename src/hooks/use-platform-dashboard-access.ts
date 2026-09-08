@@ -1,3 +1,4 @@
+import { isInternalSegmentUser } from "@/lib/internal-segment-access";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ export function resolvePlatformDashboardMode(
 export function usePlatformDashboardAccess() {
   const { user } = useSession();
   const isFounder = isFounderUser(user);
+  const isInternal = isInternalSegmentUser(user);
   const query = useQuery({
     queryKey: ["platform-dashboard-access", user?.id],
     enabled: !!user && !isFounder,
@@ -56,7 +58,7 @@ export function usePlatformDashboardAccess() {
 
   // Founder access is a platform invariant. Ordinary users remain strictly
   // database-entitlement based.
-  const allowedModes = isFounder ? DASHBOARD_ORDER : entitledModes;
+  const allowedModes = (isFounder ? DASHBOARD_ORDER : isInternal ? [...new Set<PlatformDashboardMode>(["multifamily", "pha", ...entitledModes])] : entitledModes).filter((mode) => mode !== "pha" || isInternal);
 
   const storage =
     typeof window === "undefined"

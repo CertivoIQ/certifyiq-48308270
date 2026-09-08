@@ -149,7 +149,7 @@ export function coverageClaim(packs = stateCoverage, asOf = new Date()): string 
   const validated = packs.filter(isUsableForDetermination).length;
   const date = asOf.toISOString().slice(0, 10);
   if (validated === 0) {
-    return `Federal baseline available nationwide; 0 state-specific packs validated as of ${date}. State-specific review is required for every jurisdiction.`;
+    return "Federal baseline available nationwide. State-specific automation requires an approved, activated release; see the methodology page for the latest published validation status.";
   }
   return `Federal baseline available nationwide; ${validated} state-specific pack${validated === 1 ? "" : "s"} validated as of ${date}.`;
 }
