@@ -20,10 +20,11 @@ import { classifyAllMfhHotmaOwnerSystemControls } from "./mfh-hotma-owner-system
 import { classifyAllMfhHotmaModules } from "./mfh-hotma-rule-engine.mjs";
 import { classifyAllPhaHotmaImplementationModules } from "./pha-hotma-implementation-engine.mjs";
 import { scanRecertificationComplianceProcedures } from "./compliance-procedure-registry.mjs";
+import { evaluateTicRecalculations } from "./tic-recalculation.mjs";
 
 export const FEDERAL_REVIEW_ORCHESTRATOR_BUILD =
-  "federal-review-orchestrator-2026.09.1";
-export const FEDERAL_REVIEW_PACK_VERSION = "2026.09.1";
+  "federal-review-orchestrator-2026.09.2";
+export const FEDERAL_REVIEW_PACK_VERSION = "2026.09.2";
 
 const CONTROL = Object.freeze({
   tenantEligibility: Object.freeze({
@@ -253,7 +254,8 @@ export function evaluateFederalCertificationReview(input = {}) {
       : []),
     ...mfhOperationalBlockingFindings,
   ];
-  const findings = [...core.findings, ...controlFindings];
+  const ticRecalculation = evaluateTicRecalculations(input.facts ?? []);
+  const findings = [...core.findings, ...controlFindings, ...ticRecalculation.findings];
 
   return {
     engineBuild: FEDERAL_REVIEW_ORCHESTRATOR_BUILD,
@@ -271,6 +273,7 @@ export function evaluateFederalCertificationReview(input = {}) {
       mfhHotma,
       mfhHotmaOperations,
       phaHotma,
+      ticRecalculation,
     },
   };
 }
