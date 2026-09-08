@@ -1,7 +1,11 @@
-const BUILD = "tic-recalculation-1.0.2";
+const BUILD = "tic-recalculation-1.0.3";
 const RULE_PACK_ID = "CERTIVOIQ-TIC-ARITHMETIC";
-const RULE_PACK_VERSION = "1.0.2";
+const RULE_PACK_VERSION = "1.0.3";
 const TOLERANCE = 0.01;
+// This is the arithmetic threshold printed on the recognized Annual Income
+// Calculation Worksheet template. It is NOT used as program eligibility
+// authority; separate controlled rule packs determine applicable HOTMA/program rules.
+const WORKSHEET_IMPUTATION_THRESHOLD = 5000;
 
 function numeric(value) {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
@@ -33,7 +37,7 @@ function makeFinding(facts, ruleId, label, reportedField, reported, calculated, 
   if (variance === null || Math.abs(variance) <= TOLERANCE) return null;
   return {
     ruleId,
-    ruleVersion: "1.0.2",
+    ruleVersion: "1.0.3",
     rulePackId: RULE_PACK_ID,
     rulePackVersion: RULE_PACK_VERSION,
     jurisdiction: "federal",
@@ -153,7 +157,12 @@ export function evaluateTicRecalculations(facts = []) {
   const worksheetImputed = valueOf(map, "worksheet_total_imputed_income");
   const cashForImputation = calculatedValue(calculated, "worksheet_total_asset_cash_value") ?? worksheetAssetCash;
   if (passbookRate !== null && cashForImputation !== null) {
-    const expected = money(cashForImputation * passbookRate / 100);
+    // Recalculate the recognized worksheet as printed: below/equal to its
+    // $5,000 trigger, imputed income is zero. Above the trigger, apply the
+    // worksheet's reported passbook percentage. Compliance applicability is separate.
+    const expected = cashForImputation > WORKSHEET_IMPUTATION_THRESHOLD
+      ? money(cashForImputation * passbookRate / 100)
+      : 0;
     if (expected !== null) {
       calculated.worksheet_total_imputed_income = expected;
       if (worksheetImputed !== null) {
