@@ -133,8 +133,8 @@ export const Route = createFileRoute("/pha/$persona")({
   beforeLoad: requireInternalSegmentRoute,
   head: ({ params }) => {
     const page = isPersona(params.persona) ? pages[params.persona] : null;
-    const title = page ? `${page.headline} | CertivoIQ` : "CertivoIQ for PHA Leadership";
-    const description = page?.subhead ?? "Role-specific compliance intelligence for public housing agencies.";
+    const title = "Internal workspace — CertivoIQ";
+    const description = "Sign in with an authorized internal account to continue.";
     return {
       meta: [
         { title },

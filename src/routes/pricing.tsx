@@ -142,7 +142,8 @@ function PricingPage() {
               </div>
               <FeatureList features={MULTIFAMILY_FEATURES} />
               <p className="mt-6 border-t border-border pt-5 text-[12.5px] leading-6 text-muted-foreground">
-                Add each operating state at the same annual rate. The active rule guide and source
+                Add available operating states directly from admin Billing at the same annual rate,
+                prorated through your existing renewal date. Access starts after payment confirmation. The active rule guide and source
                 set for every licensed state govern state-specific review.
               </p>
             </Panel>

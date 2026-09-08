@@ -99,6 +99,7 @@ test("billing is absent for ordinary operational roles and guarded at the route"
   assert.doesNotMatch(mfAdmin, /to: "\/billing"/);
   assert.doesNotMatch(phaAdmin, /to: "\/billing"/);
   assert.match(shell, /dashboardMode === "executive_demo" \|\| accessLevel === "manager" \|\| phaRole === "executive"/);
-  assert.match(billing, /billingAllowed = dashboardMode === "executive_demo" \|\| accessLevel === "manager" \|\| phaRole === "executive"/);
+  assert.match(billing, /billingAllowed = stateBilling.data\?\.administrator \|\| dashboardMode === "executive_demo" \|\| accessLevel === "manager" \|\| phaRole === "executive"/);
+  assert.match(shell, /const showBilling = enterpriseBilling.data \|\|/);
   assert.match(billing, /Employees and property-level operational users do not receive billing controls/);
 });

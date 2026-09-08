@@ -36,6 +36,7 @@ import { IQText } from "@/components/iq-text";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useIsStaff, useSession } from "@/hooks/use-session";
+import { useEnterpriseBillingAuthority } from '@/hooks/use-enterprise-billing-authority';
 import { useCrmStaffAuthority } from "@/hooks/use-crm-staff-authority";
 import { useWorkspaceProfile, type PhaAgencyRole } from "@/hooks/use-workspace-profile";
 import {
@@ -227,12 +228,13 @@ function Wordmark() {
 }
 
 function NavLinks({ onNavigate, dashboardMode }: { onNavigate?: (() => void) | undefined; dashboardMode: PlatformDashboardMode }) {
+  const enterpriseBilling = useEnterpriseBillingAuthority();
   const { isStaff } = useIsStaff();
   const { accessLevel, canManageStaff } = useCrmStaffAuthority();
   const { phaRole } = useWorkspaceProfile();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isPha = dashboardMode === "pha";
-  const showBilling = dashboardMode === "executive_demo" || accessLevel === "manager" || phaRole === "executive";
+  const showBilling = enterpriseBilling.data || dashboardMode === "executive_demo" || accessLevel === "manager" || phaRole === "executive";
 
   if (!isPha) {
     const adminItems: NavItem[] = [...MF_ADMIN];
@@ -381,5 +383,4 @@ export function AppShell({ children, title, subtitle, actions }: { children: Rea
     </div>
   );
 }
-
 
