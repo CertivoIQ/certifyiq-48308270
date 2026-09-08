@@ -10,20 +10,18 @@ import { toast } from 'sonner';
 
 export function useStatePackBilling() {
   const { user } = useSession();
-  const environment = getStripeEnvironment();
   const sessionId = typeof window === 'undefined' ? undefined : new URLSearchParams(window.location.search).get('state_checkout') ?? undefined;
-  return useQuery({ queryKey: ['state-pack-billing',user?.id,environment,sessionId], enabled: !!user, queryFn: () => getStatePackBilling({data:{environment,sessionId}}), refetchInterval: query => sessionId && query.state.data?.checkoutPending ? 5000 : false });
+  return useQuery({ queryKey: ['state-pack-billing',user?.id,sessionId], enabled: !!user, queryFn: async () => getStatePackBilling({data:{environment: await getStripeEnvironment(),sessionId}}), refetchInterval: query => sessionId && query.state.data?.checkoutPending ? 5000 : false });
 }
 
 export function StatePackBilling({ query }: { query: ReturnType<typeof useStatePackBilling> }) {
   const [busy,setBusy] = useState<string|null>(null);
-  const environment = getStripeEnvironment();
   const money = (cents: number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100);
   if (query.isError) return <Panel title="State packs"><p role="alert">{query.error.message}</p><Button onClick={()=>void query.refetch()}>Retry</Button></Panel>;
   if (!query.data?.administrator) return null;
   const buy = async (licenseId:string,stateCode:string) => {
     setBusy(`${licenseId}:${stateCode}`);
-    try { const {url} = await purchaseStatePack({data:{licenseId,stateCode,environment}}); window.location.assign(url); }
+    try { const {url} = await purchaseStatePack({data:{licenseId,stateCode,environment: await getStripeEnvironment()}}); window.location.assign(url); }
     catch(error) { toast.error(error instanceof Error ? error.message : 'Could not start checkout.'); }
     finally {setBusy(null);}
   };

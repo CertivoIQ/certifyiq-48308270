@@ -1,4 +1,6 @@
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import { useQuery } from '@tanstack/react-query';
+import { getPublicPaymentConfiguration } from './payment-public-config.functions';
 
 /**
  * Declared locally so this browser module has no cross-tree import into
@@ -6,28 +8,22 @@ import { loadStripe, type Stripe } from "@stripe/stripe-js";
  */
 export type StripeEnv = "sandbox" | "live";
 
-const clientToken = import.meta.env["VITE_PAYMENTS_CLIENT_TOKEN"] as string | undefined;
-
-/** Derived from the token PREFIX — never silently fall through to `live`. */
-function paymentsEnvironment(): StripeEnv {
-  if (clientToken?.startsWith("pk_test_")) return "sandbox";
-  if (clientToken?.startsWith("pk_live_")) return "live";
-  throw new Error(
-    "Payments are not configured for this build. Configure a Stripe publishable key to enable checkout.",
-  );
+export function usePaymentConfiguration() {
+  return useQuery({ queryKey: ['public-payment-configuration'], queryFn: () => getPublicPaymentConfiguration(), staleTime: 60_000 });
 }
 
 let stripePromise: Promise<Stripe | null> | null = null;
 
 export function getStripe(): Promise<Stripe | null> {
   if (!stripePromise) {
-    paymentsEnvironment();
-    stripePromise = loadStripe(clientToken as string);
+    stripePromise = getPublicPaymentConfiguration()
+      .then(({ publishableKey }) => loadStripe(publishableKey))
+      .catch(error => { stripePromise = null; throw error; });
   }
   return stripePromise;
 }
 
-export function getStripeEnvironment(): StripeEnv {
-  return paymentsEnvironment();
+export async function getStripeEnvironment(): Promise<StripeEnv> {
+  return (await getPublicPaymentConfiguration()).environment;
 }
 

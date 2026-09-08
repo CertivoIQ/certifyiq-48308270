@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentProps } from "react";
 import { ExternalLink, FileText, Workflow } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ import {
   type LicensePricingClass,
 } from "@/lib/license-pricing.functions";
 import { US_STATE_CODE_LIST } from "@/lib/license-selection";
-import { getStripeEnvironment } from "@/lib/stripe";
+import { usePaymentConfiguration, type StripeEnv } from "@/lib/stripe";
 
 type InvoiceContact = {
   id: string;
@@ -25,16 +25,24 @@ function moneyFromCents(cents: number) {
   return `$${(cents / 100).toLocaleString()}`;
 }
 
-export function EnterpriseInvoicePanel({
+export function EnterpriseInvoicePanel(props: Omit<ComponentProps<typeof ConfiguredEnterpriseInvoicePanel>, 'environment'>) {
+  const configuration = usePaymentConfiguration();
+  if (!configuration.data) return <Panel title="Enterprise billing"><p role={configuration.isError ? 'alert' : 'status'}>{configuration.isError ? 'Billing is temporarily unavailable. Please retry.' : 'Loading billing…'}</p>{configuration.isError && <Button onClick={() => void configuration.refetch()}>Retry</Button>}</Panel>;
+  return <ConfiguredEnterpriseInvoicePanel {...props} environment={configuration.data.environment} />;
+}
+
+function ConfiguredEnterpriseInvoicePanel({
   accountId,
   accountName,
   contacts,
   initialPricingClass,
+  environment,
 }: {
   accountId: string;
   accountName: string;
   contacts: InvoiceContact[];
   initialPricingClass: LicensePricingClass;
+  environment: StripeEnv;
 }) {
   const verifiedEmails = useMemo(
     () => contacts.filter((contact) => Boolean(contact.email)),
@@ -48,7 +56,6 @@ export function EnterpriseInvoicePanel({
   const [pricingClass, setPricingClass] = useState<LicensePricingClass>("standard");
   const [stateCodes, setStateCodes] = useState<string[]>([]);
   const [hostedInvoiceUrl, setHostedInvoiceUrl] = useState<string | null>(null);
-  const environment = getStripeEnvironment();
   const stateSelectionIsValid =
     pricingClass === "pha" ? stateCodes.length === 1 : stateCodes.length > 0;
   const displayedPrice =
