@@ -7,7 +7,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 const lessons = JSON.parse(read("src/lib/training/lessons.json"));
 const source = read("src/lib/training/catalog.ts").replace('import lessonData from "./lessons.json";', `const lessonData = ${JSON.stringify(lessons)};`);
 const { filterTrainingLessons, parseTrainingProgress } = await import(`data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(source)).toString("base64")}`);
-const routeFiles = readdirSync(new URL("../src/routes", import.meta.url), { recursive: true }).filter((path) => path.endsWith(".tsx"));
+const routeFiles = readdirSync(new URL("../src/routes", import.meta.url), { recursive: true }).map(path=>path.replaceAll('\\','/')).filter((path) => path.endsWith(".tsx"));
 const systemRoutes = new Set(["__root.tsx", "index.tsx", "_authenticated/route.tsx"]);
 const urlFor = (file) => "/" + file.replace(/^_authenticated\//, "").replace(/\.tsx$/, "").replaceAll(".", "/").replace(/\/index$/, "");
 const routes = routeFiles.filter((file) => !systemRoutes.has(file)).map(urlFor);
@@ -37,7 +37,8 @@ test("staff guides are excluded from customer search and filters", () => {
 
 test("search matches tab names and combines topic and workspace filters", () => {
   assert.ok(filterTrainingLessons(false, "jobs pay").some((lesson) => lesson.href === "/income-calculator"));
-  assert.ok(filterTrainingLessons(false, "rfta", "pha", "PHA workflows").some((lesson) => lesson.href === "/pha-hcv-lease-up"));
+  assert.equal(filterTrainingLessons(false, "rfta", "pha", "PHA workflows").length, 0);
+  assert.ok(filterTrainingLessons(false, "rfta", "pha", "PHA workflows", true).some((lesson) => lesson.href === "/pha-hcv-lease-up"));
   assert.equal(filterTrainingLessons(false, "rfta", "multifamily").length, 0);
   assert.equal(filterTrainingLessons(false, "no-such-training-xyz").length, 0);
 });

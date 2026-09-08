@@ -26,7 +26,9 @@ test("founder dashboard is locked to an operational default with session-only sw
   assert.match(founderAccess, /export function isFounderUser/);
 
   assert.match(dashboardAccess, /const isFounder = isFounderUser\(user\)/);
-  assert.match(dashboardAccess, /const allowedModes = isFounder \? DASHBOARD_ORDER : entitledModes/);
+  assert.match(dashboardAccess, /isFounder \? DASHBOARD_ORDER/);
+  assert.match(dashboardAccess, /const isInternal = isInternalSegmentUser\(user\)/);
+  assert.match(dashboardAccess, /filter\(\(mode\) => mode !== "pha" \|\| isInternal\)/);
   assert.match(dashboardAccess, /isFounder[\s\S]*window\.sessionStorage[\s\S]*window\.localStorage/);
   assert.match(dashboardAccess, /founderDashboardSessionKey\(user\.id\)/);
   assert.match(dashboardAccess, /FOUNDER_DEFAULT_DASHBOARD/);

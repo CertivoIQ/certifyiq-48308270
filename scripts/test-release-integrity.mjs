@@ -17,7 +17,9 @@ test("live billing remains fail-closed until configuration and verification are 
   assert.match(config, /VITE_PAYMENTS_CLIENT_TOKEN/);
   assert.match(config, /PAYMENTS_LIVE_WEBHOOK_SECRET/);
   assert.match(config, /STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE/);
-  assert.match(config, /STRIPE_PHA_PRICE_ID_LIVE/);
+  assert.doesNotMatch(config, /STRIPE_PHA_PRICE_ID_LIVE/);
+  assert.match(payments, /assertPublicLicenseKind\(data.licenseKind\)/);
+  assert.match(invoices, /assertPublicLicenseKind/);
   assert.match(config, /STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE/);
   assert.match(config, /LIVE_SECRET_KEY_PATTERN/);
   assert.match(config, /LIVE_PUBLISHABLE_KEY_PATTERN/);
