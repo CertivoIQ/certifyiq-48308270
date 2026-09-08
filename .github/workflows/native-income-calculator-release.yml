@@ -58,6 +58,7 @@ jobs:
           node --test scripts/test-onboarding-handoff.mjs | tee /tmp/income-onboarding-tests.txt
           node --experimental-strip-types --test scripts/test-training.mjs
           node scripts/test-ocr-sidecar.mjs
+          node --test scripts/test-ocr-worker-pool.mjs
           deno check --config supabase/functions/income-calculator/deno.json supabase/functions/income-calculator/index.ts
       - name: Include source identity in Vite and Nitro public asset manifest
         run: node scripts/verify-native-income-calculator-release.mjs identity

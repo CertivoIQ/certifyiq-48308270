@@ -12,6 +12,7 @@ import {
   type OcrSidecarPage,
 } from '@/lib/ocr-sidecar.mjs';
 import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
+import { createOcrWorkerPool, OcrRuntimeError } from '@/lib/ocr-worker-pool';
 import { extractTicSpatialValueLines } from '@/lib/tic-spatial-extraction.mjs';
 import { nativePdfLayout, isTicContent } from '@/lib/tic-document-layout.mjs';
 import { planTicCells, cellSheetLayout, finishTicCells, mergeCellProposals } from '@/lib/tic-ruled-cell-extraction.mjs';
@@ -42,7 +43,11 @@ const TESSERACT_VERSION = '7.0.0';
 const TESSERACT_CORE_VERSION = '7.0.0';
 const TESSERACT_WORKER_PATH = `https://cdn.jsdelivr.net/npm/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js`;
 const TESSERACT_CORE_PATH = `https://cdn.jsdelivr.net/npm/tesseract.js-core@${TESSERACT_CORE_VERSION}`;
-const TESSERACT_LANG_PATH = 'https://tessdata.projectnaptha.com/4.0.0_best';
+// The WASM LSTM build uses the integer model. The float "best" model can abort
+// with a missing DotProductSSE function on SIMD-capable browsers.
+const TESSERACT_LANG_PATH = 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int';
+// Tesseract caches by language, not URL. Keep old float models out of this cache.
+const TESSERACT_CACHE_PATH = 'certivoiq-eng-best-int-1.0.0';
 
 const OCR_RUNTIME_FAILURE_MESSAGE =
   'OCR could not start for this scanned certification. Please retry the upload. If the problem continues, route the document for manual intake rather than reviewing incomplete evidence.';
@@ -54,15 +59,9 @@ type OcrSource = Parameters<SharedOcrWorker['recognize']>[0];
 type OcrRecognition = Awaited<ReturnType<SharedOcrWorker['recognize']>>;
 type OcrPageSegMode = NonNullable<Parameters<SharedOcrWorker['setParameters']>[0]['tessedit_pageseg_mode']>;
 
-type OcrWorkerSlot = {
-  worker: Promise<SharedOcrWorker>;
-  tail: Promise<void>;
-};
-
 // Reuse one bounded pool for the page lifetime. Mass intake must not start
 // three new OCR workers (and reload their language data) for every document.
-const sharedOcrSlots: OcrWorkerSlot[] = [];
-let nextOcrSlot = 0;
+const sharedOcrPool = createOcrWorkerPool(createPinnedOcrWorker, worker => worker.terminate());
 
 function describeOcrError(error: unknown): string {
   if (error instanceof Error && error.message.trim()) return error.message.trim().slice(0, 500);
@@ -77,17 +76,11 @@ async function createPinnedOcrWorker(): Promise<SharedOcrWorker> {
       workerPath: TESSERACT_WORKER_PATH,
       corePath: TESSERACT_CORE_PATH,
       langPath: TESSERACT_LANG_PATH,
+      cachePath: TESSERACT_CACHE_PATH,
       workerBlobURL: true,
     });
   } catch (error) {
     throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
-  }
-}
-
-async function ensureOcrWorkerSlots(count: number) {
-  while (sharedOcrSlots.length < count) {
-    const worker = createPinnedOcrWorker();
-    sharedOcrSlots.push({ worker, tail: Promise.resolve() });
   }
 }
 
@@ -97,11 +90,7 @@ async function recognizeWithSharedWorker(
   pageSegMode?: OcrPageSegMode,
   includeBlocks = false,
 ) {
-  await ensureOcrWorkerSlots(workerCount);
-  const slot = sharedOcrSlots[nextOcrSlot % workerCount]!;
-  nextOcrSlot += 1;
-  const recognition = slot.tail.then(async () => {
-    const worker = await slot.worker;
+  return sharedOcrPool.run(workerCount, async worker => {
     if (pageSegMode) {
       await worker.setParameters({
         tessedit_pageseg_mode: pageSegMode,
@@ -115,8 +104,6 @@ async function recognizeWithSharedWorker(
       includeBlocks ? { text: true, blocks: true } : { text: true },
     );
   });
-  slot.tail = recognition.then(() => undefined, () => undefined);
-  return recognition;
 }
 
 function parallelOcrWorkerCount(pageCount: number): number {
@@ -507,12 +494,6 @@ export async function prepareCertificationForReview(
       42,
     );
 
-    try {
-      await ensureOcrWorkerSlots(workerCount);
-    } catch (error) {
-      throw new Error(`${OCR_RUNTIME_FAILURE_MESSAGE} (${describeOcrError(error)})`);
-    }
-
     const startedAt = Date.now();
     let nextIndex = 0;
     let completedCount = 0;
@@ -582,6 +563,10 @@ export async function prepareCertificationForReview(
             }
           }
         } catch (error) {
+          if (error instanceof OcrRuntimeError) {
+            fatalError = new Error(`${error.message} Failed PDF page: ${pageNumber}.`);
+            return;
+          }
           if (error instanceof Error && error.message === OCR_LIMIT_MESSAGE) {
             fatalError = error;
             return;
@@ -641,4 +626,3 @@ export async function prepareCertificationForReview(
     await pdf.cleanup();
   }
 }
-

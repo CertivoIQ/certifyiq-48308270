@@ -53,7 +53,8 @@ test("scanned PDF OCR handles blank pages and form layouts without weakening evi
   assert.match(pdfOcr, /cdn\.jsdelivr\.net\/npm\/tesseract\.js@/);
   assert.match(pdfOcr, /TESSERACT_CORE_PATH/);
   assert.match(pdfOcr, /cdn\.jsdelivr\.net\/npm\/tesseract\.js-core@/);
-  assert.match(pdfOcr, /TESSERACT_LANG_PATH\s*=\s*'https:\/\/tessdata\.projectnaptha\.com\/4\.0\.0_best'/);
+  assert.ok(pdfOcr.includes('https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int'));
+  assert.match(pdfOcr, /cachePath: TESSERACT_CACHE_PATH/);
   assert.match(pdfOcr, /rotateAuto:\s*true/);
   assert.match(pdfOcr, /createHighContrastCanvas/);
   assert.match(pdfOcr, /otsuThreshold/);
