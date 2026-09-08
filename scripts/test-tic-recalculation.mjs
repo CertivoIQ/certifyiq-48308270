@@ -13,7 +13,28 @@ const fact = (field, value, page = 5) => ({
   humanVerified: true,
 });
 
-test("worksheet imputed and annual income are independently recalculated and mismatches become findings", () => {
+test("worksheet imputed and annual income are independently recalculated above the worksheet trigger", () => {
+  const result = evaluateTicRecalculations([
+    fact("worksheet_total_asset_cash_value", 5200.9),
+    fact("worksheet_passbook_rate_percent", 0.06),
+    fact("worksheet_total_imputed_income", 0),
+    fact("worksheet_total_actual_income", 0),
+    fact("worksheet_greatest_asset_income", 0),
+    fact("worksheet_total_income", 25364.4),
+    fact("worksheet_total_annual_income", 25364.4),
+  ]);
+
+  assert.equal(result.calculated.worksheet_total_imputed_income, 3.12);
+  assert.equal(result.calculated.worksheet_greatest_asset_income, 3.12);
+  assert.equal(result.calculated.worksheet_total_annual_income, 25367.52);
+  assert.ok(result.findings.some((finding) => finding.ruleId === "CERTIVOIQ-WORKSHEET-IMPUTED-ASSET-INCOME-001"));
+  assert.ok(result.findings.some((finding) => finding.ruleId === "CERTIVOIQ-WORKSHEET-TOTAL-ANNUAL-INCOME-001"));
+  assert.match(result.findings[0].explanation, /Reported on TIC:/);
+  assert.match(result.findings[0].explanation, /Calculated by CertivoIQ:/);
+  assert.match(result.findings[0].explanation, /Variance:/);
+});
+
+test("recognized worksheet does not impute below its printed $5,000 trigger", () => {
   const result = evaluateTicRecalculations([
     fact("worksheet_total_asset_cash_value", 520.9),
     fact("worksheet_passbook_rate_percent", 0.06),
@@ -23,15 +44,10 @@ test("worksheet imputed and annual income are independently recalculated and mis
     fact("worksheet_total_income", 25364.4),
     fact("worksheet_total_annual_income", 25364.4),
   ]);
-
-  assert.equal(result.calculated.worksheet_total_imputed_income, 0.31);
-  assert.equal(result.calculated.worksheet_greatest_asset_income, 0.31);
-  assert.equal(result.calculated.worksheet_total_annual_income, 25364.71);
-  assert.ok(result.findings.some((finding) => finding.ruleId === "CERTIVOIQ-WORKSHEET-IMPUTED-ASSET-INCOME-001"));
-  assert.ok(result.findings.some((finding) => finding.ruleId === "CERTIVOIQ-WORKSHEET-TOTAL-ANNUAL-INCOME-001"));
-  assert.match(result.findings[0].explanation, /Reported on TIC:/);
-  assert.match(result.findings[0].explanation, /Calculated by CertivoIQ:/);
-  assert.match(result.findings[0].explanation, /Variance:/);
+  assert.equal(result.calculated.worksheet_total_imputed_income, 0);
+  assert.equal(result.calculated.worksheet_greatest_asset_income, 0);
+  assert.equal(result.calculated.worksheet_total_annual_income, 25364.4);
+  assert.equal(result.findings.length, 0);
 });
 
 test("matching TIC arithmetic does not create an inconsistency finding", () => {
