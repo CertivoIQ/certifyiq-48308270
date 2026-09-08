@@ -1,55 +1,40 @@
-# Merlin and support preparation — September 8, 2026
+# CertivoIQ Merlin and support preparation — September 8, 2026
 
-## Live now
-- Support preparation: every five minutes, at most 100 changed open cases per run.
-- Merlin source preparation: hourly at minute 7, one job at a time; 24 total native attempts per rolling 24 hours, three attempts per job.
-- Existing absence watchdog remains active; its scheduled runs have succeeded.
+## Current state
+Groq is connected: the saved GROQ_API_KEY successfully generated a response from openai/gpt-oss-20b (HTTP 200). No OpenAI credit purchase or Google project repair is required for this connection. No paid-provider fallback is configured.
 
-Support creates an internal suggested reply and investigation checklist from deterministic templates. It never sends a message, changes assignment, or closes a case. The templates prioritize security, billing, compliance, technical, and general requests; they do not claim that the issue was resolved. Repeated inputs are deduplicated; changes generate a new internal draft.
-The existing system-test ticket is explicitly excluded through a protected table. Customer-supplied titles cannot create exclusions.
-There are no open real customer cases in the audited population, so production preparation correctly produced zero drafts. Synthetic rollback-isolated tests verified draft generation and change handling.
+Source preparation runs hourly at minute 7. Support preparation runs every five minutes. The absence watchdog remains active. AI extraction scheduling remains disabled pending a successful full PDF pilot.
 
-## Merlin scope
-223 queued PDF jobs met initial database eligibility checks. The worker rechecks the candidate and SHA-256 before preparation. It accepts only configured official HTTPS domains, validates every redirect, checks PDF magic, limits each source to 5 MB, and uses a 30-second source-download timeout.
-Source-only mode archives matching bytes in a private merlin-source-snapshots bucket and records source_ready_not_extracted. The extraction job stays queued. It does not fabricate a completed extraction or change rule authority.
-One live source was archived successfully (92,038 bytes). A second source exceeded 5 MB; the job was quarantined as a permanent source failure. Oversize, invalid, changed, and unsupported sources require a later processing path or review.
-HTML discovery pages, invalidated candidates, non-PDF formats and mismatched snapshots stay outside this pilot.
+## Groq pilot scope
+The deployed worker preserves official-domain checks, redirect checks, exact SHA-256 matching, a private PDF snapshot bucket, single-use scheduler credentials, one active native worker, and a 24-attempt rolling daily cap.
+PDF text is parsed with pinned unpdf 1.8.1. Single-request extraction accepts up to 25 pages and 12,000 extracted characters; pages with insufficient text require OCR. Longer documents require a segmented processing path and are held for review rather than silently truncated.
+Each inference uses at most 3,500 completion tokens, low reasoning effort, a strict JSON schema, and a 120-second timeout. At most five concise procedures are requested. Every citation must contain a 5–20-word excerpt found verbatim in the cited PDF page's normalized text.
+Results can only become pending_independent_validation and remain unusable for compliance determinations. Text parsing does not verify table layout or images. Draft coverage is explicitly partial.
+Attempt and token caps do not guarantee a dollar spending limit if the Groq account is upgraded later.
 
-## AI extraction
-Gemini adapter deployed, but AI extraction is NOT scheduled and no model extraction has succeeded. The saved Gemini key is detected and can list models. A live gemini-3.1-flash-lite inference probe returns PERMISSION_DENIED: "Your project has been denied access. Please contact support." Google must resolve project access before a live PDF pilot can pass. The earlier OpenAI credential was accepted, but inference returned credit_balance_exhausted. There is no automatic paid-provider fallback.
-The new worker uses gemini-3.1-flash-lite for draft extraction, with at most 8,000 output tokens and a 120-second model timeout. It extracts up to 20 explicitly stated procedures; coverage may be partial. Citations, keys, arrays and confidence values are validated. Results stay pending_independent_validation and unusable for compliance determinations.
-Document state, procedure rows, extraction event and job completion commit in one database transaction. Changed source authority, lost leases, and duplicate completions cannot commit.
-Archived matching bytes can be reused so an original source does not need to be fetched again for extraction.
-Usage is recorded with extraction evidence. Attempt/file/token limits constrain usage; they are not a dollar-denominated spending guarantee.
+## Live findings
+- Groq credential and inference preflight passed.
+- The archived Delaware income-limit PDF reached inference but produced no acceptable cited procedure extraction. No procedures were saved from those failed attempts.
+- Source download timeouts, source HTTP 403, and oversized files were surfaced without bypassing access restrictions.
+- The short Idaho sample notice reached extraction, but its citations failed validation; no draft was committed. Full document extraction has not yet passed, so scheduled AI processing is not enabled.
+- The KHC utility policy exceeded the text budget and was routed to segmentation review.
+- A PDF cleanup compatibility defect was fixed; the attempt consumed by that implementation defect was restored with an audit event.
+- Explicitly scheduled jobs now take priority over the held backlog within each retry class.
+- Empty procedure results, OCR-required documents, and documents requiring segmentation are routed to review.
+- Six Node source/structure tests passed. A rollback-isolated SQL test confirmed segmentation-required failure quarantines the job and rejects duplicate failure updates. An initial test attempt could not claim while a live worker held the concurrency slot; it passed after the worker finished.
+- Security advisor findings remain the existing private-table RLS notices and pg_net placement warning.
 
-## Connection and recovery
-The worker reads GEMINI_API_KEY (or GOOGLE_API_KEY) from Supabase Edge Function Secrets. No re-entry is required: configured=true was verified. The provider's response explicitly directs the project owner to contact Google support. Do not rotate through projects or keys to bypass that denial.
-After Google restores access, run preflight, verify inference, run one PDF extraction pilot, then replace the source-only schedule with extraction scheduling. Keep AI scheduling disabled until the full pilot succeeds.
-Quota/credential failures defer affected work for an hour without consuming a document retry, and create a deduplicated operations incident. A successful preflight clears that incident. The current project denial is recorded as PERMISSION_DENIED. Google free-tier quotas and project eligibility remain external constraints.
-Only the existing verified public regulatory source pipeline is connected to Gemini. Customer/support data is not sent. Google's free-tier data treatment: https://ai.google.dev/gemini-api/docs/pricing
-Model secrets are never stored in the repository. Official instructions: https://supabase.com/docs/guides/functions/secrets
+## Support preparation
+Internal suggested replies and investigation checklists use deterministic templates; no model API is needed. They are deduplicated against changed open-case inputs and do not send messages, assign cases, close cases, or make compliance decisions. A protected exclusion table excludes the verified system-test ticket. No real open support cases existed in the audited population.
 
-## Verification
-Passed:
-- Six Node tests: allowed-domain boundary, redirect rejection, HTML rejection, valid PDF, advertised/streamed size limits, extraction validation.
-- SQL checks: one-time and expired-token rejection, one active worker, Tier 2 scope, lease-bound atomic completion, duplicate completion rejection, authority remains false.
-- SQL checks: source-only capture does not complete extraction or create procedures; repeat captures are skipped.
-- SQL checks: expired leases quarantine at retry cap; rolling daily attempt cap prevents claims; permanent failures quarantine; provider failures preserve document retries and deduplicate/recover incidents.
-- SQL checks: internal drafts, deduplication, revisions, no draft email, closed-case exclusion, security priority, restricted execution, spoofed test-title handling.
-- Live worker: Gemini key detection and model listing; inference denial observed. Six source/validation tests rerun after adapter change and passed. Full Gemini PDF extraction remains unverified.
-- Live worker: private-bucket preflight, successful source archive, oversize-file rejection, 401 without scheduler credential.
-All synthetic database fixtures were rolled back.
-Source cron is active; its first naturally scheduled invocation has not yet been observed.
-Security advisors show intentional RLS-without-policy notices for private scheduler tables (no customer access) and the pre-existing pg_net-in-public warning. Reference: https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public
+## Operations
+Secrets stay in Supabase; never put their values in source files or chat.
+Preflight: select private.dispatch_merlin_preparation(true);
+Single AI pilot: select private.dispatch_merlin_preparation(false);
+Source-only dispatch: select private.dispatch_merlin_source_preparation();
+Pause source schedule: select cron.unschedule('certivoiq-merlin-source-preparation');
+Pause support schedule: select cron.unschedule('certivoiq-support-preparation');
+Provider quota/credential failures defer work for one hour and preserve document retries. A successful preflight clears the provider incident.
+Inspect operations_jobs, merlin_procedure_documents.source_snapshot, merlin_procedure_extraction_events, operations_incidents, and staff-only support_case_notes. Cron dispatch success alone is not proof that a worker completed.
 
-## Pause and operate
-Pause source preparation:
-select cron.unschedule('certivoiq-merlin-source-preparation');
-
-Pause support preparation:
-select cron.unschedule('certivoiq-support-preparation');
-
-Native worker credentials are random, single-use and expire after two minutes. Only the postgres scheduler creates them. The service-role worker consumes them through a restricted function.
-Inspect operations_jobs results, merlin_procedure_documents.source_snapshot, merlin_procedure_extraction_events, and staff-only support_case_notes. Cron scheduler success only confirms dispatch; inspect the HTTP response/job result for actual worker success.
-Restore normal operation using scripts/schedule-merlin-support-preparation.sql.
-No PHA functionality, compliance activation rules, billing, customer communications or frontend deployment was changed.
+Source and review code is recorded in draft PR https://github.com/Watkin5/certifyiq-48308270/pull/430. No frontend deployment or PR merge was performed.
