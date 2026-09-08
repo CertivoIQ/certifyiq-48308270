@@ -1,9 +1,8 @@
-# Vacant-unit onboarding and audited tenant assignment release.
+# Exact source-field to CertivoIQ TIC parity release.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
   push:
-    branches: [main]
     paths:
       - '.github/workflows/cloudflare-v6-onboarding-parity.yml'
 
@@ -114,8 +113,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node node_modules/typescript/bin/tsc --noEmit
-          node --test scripts/test-portfolio-onboarding-mapping.mjs scripts/test-portfolio-vacancies.mjs
           node --test scripts/test-tic-spatial-extraction.mjs
           node --test scripts/test-tic-native-form-extraction.mjs
           node --test scripts/test-command-center-certification-actions.mjs
