@@ -11,6 +11,14 @@ function moduleAt(path, require = () => { throw new Error('Unexpected dependency
   return exports;
 }
 const access = moduleAt('src/lib/internal-segment-access.ts');
+test('printable and email marketing use only the public Multifamily catalog', () => {
+  const catalog = moduleAt('src/lib/platform-data.ts');
+  assert.equal(catalog.PUBLIC_PLANS.length, 1);
+  assert.equal(catalog.PUBLIC_PLANS[0].id, 'multifamily_enterprise');
+  assert.ok(catalog.PLANS.some(plan=>plan.id==='pha'));
+  for (const path of ['src/routes/_authenticated/marketing-kit.tsx','src/lib/email-templates/intro-cold.tsx']) assert.match(readFileSync(path,'utf8'),/PUBLIC_PLANS as PLANS/);
+  assert.doesNotMatch(readFileSync('src/lib/email-templates/i18n.ts','utf8'),/PHA.*150,000/);
+});
 test('internal access requires an exact verified company identity', () => {
   const user = { id: 'u', email: 'Tester@CertivoIQ.com', email_confirmed_at: '2026-09-08' };
   assert.equal(access.isInternalSegmentUser(user), true);

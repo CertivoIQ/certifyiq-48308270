@@ -2,7 +2,7 @@ import React from 'react'
 import { Preview } from '@react-email/components'
 import type { EmailTemplateData, TemplateEntry } from './registry'
 import { emailT, localeOf, type EmailLocale } from './i18n'
-import { PLANS } from '@/lib/platform-data'
+import { PUBLIC_PLANS as PLANS } from '@/lib/platform-data'
 import {
   BRAND,
   Body,
