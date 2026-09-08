@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import "./test-state-rule-summary-navigation.mjs";
 
 const migration = await readFile(
   new URL(
@@ -98,3 +99,4 @@ test("shows the shared federal baseline inside every selected state queue", () =
   assert.match(workspace, /inherited by/);
   assert.match(workspace, /!inheritedFederal && status === "active"/);
 });
+
