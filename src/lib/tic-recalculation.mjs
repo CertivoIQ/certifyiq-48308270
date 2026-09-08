@@ -1,6 +1,6 @@
-const BUILD = "tic-recalculation-1.0.1";
+const BUILD = "tic-recalculation-1.0.2";
 const RULE_PACK_ID = "CERTIVOIQ-TIC-ARITHMETIC";
-const RULE_PACK_VERSION = "1.0.1";
+const RULE_PACK_VERSION = "1.0.2";
 const TOLERANCE = 0.01;
 
 function numeric(value) {
@@ -33,7 +33,7 @@ function makeFinding(facts, ruleId, label, reportedField, reported, calculated, 
   if (variance === null || Math.abs(variance) <= TOLERANCE) return null;
   return {
     ruleId,
-    ruleVersion: "1.0.1",
+    ruleVersion: "1.0.2",
     rulePackId: RULE_PACK_ID,
     rulePackVersion: RULE_PACK_VERSION,
     jurisdiction: "federal",
@@ -151,7 +151,7 @@ export function evaluateTicRecalculations(facts = []) {
 
   const passbookRate = valueOf(map, "worksheet_passbook_rate_percent");
   const worksheetImputed = valueOf(map, "worksheet_total_imputed_income");
-  const cashForImputation = worksheetAssetCash ?? calculatedValue(calculated, "worksheet_total_asset_cash_value");
+  const cashForImputation = calculatedValue(calculated, "worksheet_total_asset_cash_value") ?? worksheetAssetCash;
   if (passbookRate !== null && cashForImputation !== null) {
     const expected = money(cashForImputation * passbookRate / 100);
     if (expected !== null) {
@@ -163,8 +163,10 @@ export function evaluateTicRecalculations(facts = []) {
     }
   }
 
-  const actualForGreatest = worksheetActualIncome ?? calculatedValue(calculated, "worksheet_total_actual_income");
-  const imputedForGreatest = worksheetImputed ?? calculatedValue(calculated, "worksheet_total_imputed_income");
+  // Downstream arithmetic deliberately prefers CertivoIQ's independent calculations.
+  // A bad reported component must not mask a second inconsistency in a dependent total.
+  const actualForGreatest = calculatedValue(calculated, "worksheet_total_actual_income") ?? worksheetActualIncome;
+  const imputedForGreatest = calculatedValue(calculated, "worksheet_total_imputed_income") ?? worksheetImputed;
   const reportedGreatest = valueOf(map, "worksheet_greatest_asset_income");
   if (actualForGreatest !== null && imputedForGreatest !== null) {
     const expected = money(Math.max(actualForGreatest, imputedForGreatest));
@@ -177,8 +179,8 @@ export function evaluateTicRecalculations(facts = []) {
     }
   }
 
-  const worksheetBaseIncome = valueOf(map, "worksheet_total_income") ?? worksheetTotalIncomeSources ?? calculatedValue(calculated, "worksheet_total_of_all_income_sources");
-  const selectedAssetIncome = reportedGreatest ?? calculatedValue(calculated, "worksheet_greatest_asset_income");
+  const worksheetBaseIncome = valueOf(map, "worksheet_total_income") ?? calculatedValue(calculated, "worksheet_total_of_all_income_sources") ?? worksheetTotalIncomeSources;
+  const selectedAssetIncome = calculatedValue(calculated, "worksheet_greatest_asset_income") ?? reportedGreatest;
   const worksheetAnnual = valueOf(map, "worksheet_total_annual_income");
   if (worksheetBaseIncome !== null && selectedAssetIncome !== null) {
     const expected = money(worksheetBaseIncome + selectedAssetIncome);
@@ -192,8 +194,8 @@ export function evaluateTicRecalculations(facts = []) {
   }
 
   const reportedHouseholdAnnual = valueOf(map, "household_annual_income");
-  const ticIncome = reportedIncomeE ?? calculatedValue(calculated, "total_income_e");
-  const ticAssetIncome = reportedAssetIncome ?? calculatedValue(calculated, "total_asset_actual_income");
+  const ticIncome = calculatedValue(calculated, "total_income_e") ?? reportedIncomeE;
+  const ticAssetIncome = calculatedValue(calculated, "total_asset_actual_income") ?? reportedAssetIncome;
   if (reportedHouseholdAnnual !== null && ticIncome !== null && ticAssetIncome !== null) {
     const expected = money(ticIncome + ticAssetIncome);
     if (expected !== null) {
