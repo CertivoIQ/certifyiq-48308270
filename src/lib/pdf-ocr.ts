@@ -741,23 +741,23 @@ export async function identifyCertificationPageLabels(
       try {
         if (pdf && pdfjs) {
           const page = await pdf.getPage(target.page);
-          const viewport = page.getViewport({scale: 1.3});
-          const rendered = createCanvas(viewport.width, Math.ceil(viewport.height * 0.34));
+          const viewport = page.getViewport({scale: 2});
+          const rendered = createCanvas(viewport.width, Math.ceil(viewport.height * 0.5));
           canvas = rendered.canvas;
           await page.render({canvas, canvasContext: rendered.context, viewport, background: '#ffffff'}).promise;
           await assertRenderedPdfImages(page, pdfjs.OPS);
         } else {
           const bitmap = await createImageBitmap(file);
           try {
-            const scale = Math.min(1, 1000 / bitmap.width);
-            const rendered = createCanvas(bitmap.width * scale, bitmap.height * scale * 0.34);
+            const scale = Math.min(1, 1400 / bitmap.width);
+            const rendered = createCanvas(bitmap.width * scale, bitmap.height * scale * 0.5);
             canvas = rendered.canvas;
             rendered.context.drawImage(bitmap, 0, 0, bitmap.width * scale, bitmap.height * scale);
           } finally {bitmap.close();}
         }
         if (signal.aborted) return;
-        const result = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.AUTO));
-        if (!signal.aborted && result.confidence >= 0.55 && result.text) onPage({page: target.page, text: result.text});
+        const result = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.SPARSE_TEXT));
+        if (!signal.aborted && result.confidence >= 0.15 && result.text) onPage({page: target.page, text: result.text});
       } catch {
         // A label suggestion failure leaves a page undecided. Full extraction must still succeed.
       } finally {if (canvas) {canvas.width = 1; canvas.height = 1;}}
