@@ -1,3 +1,4 @@
+import { calculateTicWorksheet, assertTicWorksheetSettings, newTicWorksheetSettings, type TicWorksheetSettings } from "@/lib/tic-calculations";
 import { buildIncomePreparation, validateIncomePreparation, assertIncomeDraft, type IncomeDraft } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
 import { previewEvidenceValue } from "@/lib/preview-evidence-value";
@@ -218,7 +219,10 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
   .inputValidator((data: {
     source: StagedCertificationSource;
     fields: ConfirmedField[];
-    tenantProfileId: string;
+    tenantProfileId?: string | null;
+    standaloneJurisdiction?: string;
+    worksheetSettings?: TicWorksheetSettings;
+    sourceTicFields?: Record<string,string>;
     supportingDocuments?: SupportingDocumentChoice[];
     pageSelections: PacketPageChoice[];
     selectionDigest: string;
@@ -232,7 +236,10 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     if (typeof data.selectionDigest !== "string" || !/^[a-f0-9]{64}$/i.test(data.selectionDigest)) throw new Error("Confirm packet pages and rebuild the TIC before saving.");
     if (data.otherReviewAction && !["INITIAL", "ANNUAL", "INTERIM"].includes(data.otherReviewAction)) throw new Error("Select a valid review action for Other certification.");
     if (data.supportingDocuments?.length) throw new Error("Document selections changed. Reload intake and choose each packet page before saving.");
-    if (!UUID_PATTERN.test(String(data.tenantProfileId ?? ""))) throw new Error("Select the tenant file for this certification.");
+    if(data.tenantProfileId&&!UUID_PATTERN.test(data.tenantProfileId))throw new Error("The selected tenant file is invalid.");
+    if(data.standaloneJurisdiction&&!/^[A-Z]{2}$/.test(data.standaloneJurisdiction))throw new Error("Use a two-letter certification state.");
+    if(data.worksheetSettings)assertTicWorksheetSettings(data.worksheetSettings);
+    if(data.sourceTicFields&&(!data.sourceTicFields||typeof data.sourceTicFields!=='object'||Array.isArray(data.sourceTicFields)||Object.entries(data.sourceTicFields).some(([k,v])=>!TIC_FIELD_KEY_SET.has(k)||typeof v!=='string'||v.length>500)))throw new Error("Invalid source TIC fields.");
     if (!Array.isArray(data.fields) || data.fields.length > TIC_FIELD_KEYS.length) {
       throw new Error("The TIC field confirmation is invalid.");
     }
@@ -259,7 +266,10 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     return {
       source,
       fields,
-      tenantProfileId: data.tenantProfileId,
+      tenantProfileId: data.tenantProfileId || null,
+      standaloneJurisdiction: data.standaloneJurisdiction,
+      worksheetSettings: data.worksheetSettings,
+      sourceTicFields: data.sourceTicFields,
       pageSelections,
       selectionDigest: data.selectionDigest,
       otherReviewAction: data.otherReviewAction,
@@ -279,17 +289,26 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     );
     if (!selection || data.selectionDigest !== selectionDigest) throw new Error("The selected packet pages no longer match this TIC preview. Rebuild the TIC from the current selections before saving.");
 
-    const { data: tenant, error: tenantError } = await db
+    const {data:access,error:accessError}=await db.rpc("income_calculator_access");
+    if(accessError||!access?.allowed)throw new Error(access?.reason||"Certification review access could not be verified.");
+    let tenant:any=null;
+    if(data.tenantProfileId){
+    const { data: selectedTenant, error: tenantError } = await db
       .from("portfolio_tenant_profiles")
       .select("id, property_id, unit_id, household_name, program_codes, portfolio_properties(jurisdiction)")
       .eq("id", data.tenantProfileId)
       .eq("user_id", userId)
       .maybeSingle();
     if (tenantError) throw tenantError;
-    if (!tenant) throw new Error("The selected tenant file is not available to this account.");
+    if (!selectedTenant) throw new Error("The selected tenant file is not available to this account.");
+    tenant=selectedTenant;
+    }
 
     if (!incomePreparation) throw new Error("Complete the Income Calculator before saving this certification.");
-    const preparedIncome = validateIncomePreparation(data.incomeDraft, incomePreparation);
+    const workingSource=data.sourceTicFields||Object.fromEntries(data.fields.map(f=>[f.field,f.value==null?'':String(f.value)]));
+    const worksheet=calculateTicWorksheet(workingSource,data.worksheetSettings||newTicWorksheetSettings());
+    const incomeDraft=data.incomeDraft?.basis==='TIC'?{...data.incomeDraft,ticWorksheet:{values:workingSource,settings:data.worksheetSettings||newTicWorksheetSettings()}}:data.incomeDraft;
+    const preparedIncome = validateIncomePreparation(incomeDraft, incomePreparation);
 
     const originalByField = new Map(result.facts.map((fact) => [fact.field, fact]));
     const submittedByField = new Map(data.fields.map((entry) => [entry.field, entry.value]));
@@ -302,7 +321,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       if (/^(?:source_present_)?application_/.test(field)) continue;
       const original = originalByField.get(field);
       const wasSubmitted = submittedByField.has(field);
-      const submitted = field.startsWith("source_present_") ? original?.value ?? null : wasSubmitted ? submittedByField.get(field)! : original?.value ?? null;
+      const submitted = field.startsWith("source_present_") ? original?.value ?? null : worksheet.calculated[field] ?? (wasSubmitted ? submittedByField.get(field)! : original?.value ?? null);
       const confirmed = normalizeConfirmedValue(field, submitted as string | number | null);
       if (confirmed !== null) confirmedExtractedData[field] = confirmed;
       if (original) {
@@ -326,15 +345,18 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     const completionFindings = ticCompletenessFindings(confirmedExtractedData);
     if (data.startReview && completionFindings.length) throw new Error(completionFindings.map(f => f.message).join(" "));
 
+    const programFields:Record<string,string>={program_type_lihtc:'LIHTC',program_type_home:'HOME',program_type_tax_exempt_bond:'TAX_EXEMPT_BOND',program_type_rural_development:'RURAL_DEVELOPMENT',program_type_hud:'HUD_MFH_PROJECT_BASED'};
+    const declaredPrograms=Object.entries(programFields).filter(([field])=>String(confirmedExtractedData[field]||'').toLowerCase()==='yes').map(([,program])=>program);
+    if(!tenant&&data.startReview&&(!data.standaloneJurisdiction||!declaredPrograms.length))throw new Error("Confirm the certification state and applicable program checkboxes before starting the standalone review.");
     const confirmedAt = new Date().toISOString();
     const { data: item, error: itemError } = await db
       .from("certification_import_items")
       .insert({
         job_id: data.source.jobId,
         user_id: userId,
-        property_id: tenant.property_id,
-        unit_id: tenant.unit_id,
-        tenant_profile_id: tenant.id,
+        property_id: tenant?.property_id ?? null,
+        unit_id: tenant?.unit_id ?? null,
+        tenant_profile_id: tenant?.id ?? null,
         storage_path: data.source.storagePath,
         original_file_name: data.source.originalFileName,
         mime_type: data.source.mimeType,
@@ -343,16 +365,18 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         status: "processing",
         extraction_provider: result.provider,
         certification_type: certificationType,
-        jurisdiction: tenant.portfolio_properties?.jurisdiction ?? null,
-        program_codes: Array.isArray(tenant.program_codes) ? tenant.program_codes : [],
+        jurisdiction: tenant?.portfolio_properties?.jurisdiction ?? data.standaloneJurisdiction ?? null,
+        program_codes: Array.isArray(tenant?.program_codes) ? tenant.program_codes : declaredPrograms,
         extracted_data: confirmedExtractedData,
         historical_changes: [{
           type: "tic_pre_save_confirmation",
+          standalone: !tenant,
+          tic_worksheet: {settings:data.worksheetSettings||newTicWorksheetSettings(),source_values:workingSource,calculated:worksheet.calculated,formulas:worksheet.formulas,differences:worksheet.differences},
           income_preparation_version: preparedIncome.draft.version,
           income_preparation: { ...preparedIncome, pages: incomePreparation.pages.map(({ excerpt: _excerpt, ...page }) => page) },
           confirmed_at: confirmedAt,
           reviewer_id: userId,
-          tenant_profile_id: tenant.id,
+          tenant_profile_id: tenant?.id ?? null,
           packet_selection: selection,
           packet_selection_digest: selectionDigest,
           page_classification_version: "tic-packet-selection:1",
@@ -394,11 +418,11 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
           field_value: value as never,
           source_document_ref: data.source.originalFileName,
           source_page: original?.page ?? null,
-          source_snippet: original?.snippet ?? "Entered during pre-save TIC review; OCR did not provide a value for this field.",
+          source_snippet: worksheet.formulas[field] ? "Calculated from confirmed TIC inputs: "+worksheet.formulas[field] : original?.snippet ?? "Entered during pre-save TIC review; OCR did not provide a value for this field.",
           confidence: original?.confidence ?? 1,
           human_verified: true,
           required_for_decision: original?.requiredForDecision ?? false,
-          extraction_provider: corrected ? REVIEWER_CONFIRMED_PROVIDER : original?.provider ?? REVIEWER_CONFIRMED_PROVIDER,
+          extraction_provider: worksheet.calculated[field] ? "calculated-tic-worksheet" : corrected ? REVIEWER_CONFIRMED_PROVIDER : original?.provider ?? REVIEWER_CONFIRMED_PROVIDER,
         };
       });
       if (confirmedFacts.length) {
@@ -409,7 +433,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       if (finalSupportingDocuments.length) {
         const supportingRows = finalSupportingDocuments.map((document) => ({
           user_id: userId,
-          tenant_profile_id: tenant.id,
+          tenant_profile_id: tenant?.id ?? null,
           certification_import_item_id: item.id,
           storage_path: data.source.storagePath,
           original_file_name: data.source.originalFileName,
@@ -442,7 +466,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         const { error: completionError } = await supabaseAdmin.from("compliance_findings").insert(completionFindings.map(f => ({
           item_id: item.id, user_id: userId, organization_id: `org-${userId}`,
           rule_id: `TIC-COMPLETE-${f.field}`, rule_version: "1", rule_pack_id: "tic-completeness", rule_pack_version: "1",
-          jurisdiction: tenant.portfolio_properties?.jurisdiction ?? "US", status: "UNABLE_TO_DETERMINE", severity: "critical",
+          jurisdiction: tenant?.portfolio_properties?.jurisdiction ?? data.standaloneJurisdiction ?? "US", status: "UNABLE_TO_DETERMINE", severity: "critical",
           explanation: f.message, blocking_reasons: [f.code], evidence_refs: [{ field: f.field }],
           engine_build: "tic-completeness:1", review_state: "unable_to_determine",
         })));
@@ -485,7 +509,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       reviewerSuppliedCount: reviewerSuppliedFields.length,
       supportingDocumentCount: finalSupportingDocuments.length,
       omittedPageCount: selection.omittedPages.length,
-      tenantProfileId: tenant.id,
+      tenantProfileId: tenant?.id ?? null,
       reviewQueueStatus: data.startReview ? "queued" : "not_queued",
       queuedForReview: data.startReview,
     } as const;

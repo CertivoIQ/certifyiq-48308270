@@ -1,3 +1,4 @@
+import { calculateTicWorksheet, assertTicWorksheetSettings, type TicWorksheetSettings } from './tic-calculations';
 import { FREQUENCIES, newInput, newJob, newLine, newStub, evaluate, validDate, type Frequency } from '../../supabase/functions/_shared/income-calculator-engine';
 import type { PacketPageChoice } from './tic-packet-selection';
 
@@ -8,7 +9,7 @@ export type IncomeRow = {
   member: string; sourceName: string; amount: string; frequency: Frequency | '';
   periodStart: string; periodEnd: string; weeks: string; annualAdjustment: string; note: string;
 };
-export type IncomeDraft = { version: string; sourceSha256: string; selectionDigest: string; effectiveDate: string; rows: IncomeRow[]; confirmed: boolean; zeroIncome: boolean };
+export type IncomeDraft = { version: string; sourceSha256: string; selectionDigest: string; effectiveDate: string; rows: IncomeRow[]; confirmed: boolean; zeroIncome: boolean; basis?: 'EVIDENCE'|'TIC'; ticWorksheet?: {values:Record<string,string>;settings:TicWorksheetSettings} };
 export type IncomePage = { page: number; type: string; reference: string; excerpt: string };
 export type IncomePreparation = { draft: IncomeDraft; pages: IncomePage[] };
 export type IncomeCalculation = { version: string; annualIncome: string | null; issues: string[]; rows: { id: string; annual: string | null; basis: string }[]; status: 'Pending full certification review' };
@@ -74,12 +75,15 @@ export function buildIncomePreparation(pages: { page: number; text: string }[], 
       amount, frequency: freq, periodStart, periodEnd,
       weeks: wages ? '52' : '', annualAdjustment: '0', note: bank ? 'Use interest income only. Identify transfers, returned funds and payroll already counted elsewhere before including any deposits.' : '' });
   }
+  for(const choice of choices.filter(c=>c.role==='tic_page'))incomePages.push({page:choice.page,type:'tic_page',reference:'Original TIC page '+choice.page,excerpt:''});
   return { pages: incomePages, draft: { version: INCOME_PREPARATION_VERSION, sourceSha256, selectionDigest, effectiveDate: date(effectiveDate), rows, confirmed: false, zeroIncome: false } };
 }
 export function assertIncomeDraft(value: unknown): asserts value is IncomeDraft {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Complete the Income Calculator before reviewing the certification.');
   const d = value as IncomeDraft;
   if (d.version !== INCOME_PREPARATION_VERSION || !/^[a-f0-9]{64}$/i.test(d.sourceSha256) || !/^[a-f0-9]{64}$/i.test(d.selectionDigest) || typeof d.effectiveDate !== 'string' || typeof d.confirmed !== 'boolean' || typeof d.zeroIncome !== 'boolean' || !Array.isArray(d.rows) || d.rows.length > 200) throw new Error('Invalid income preparation. Reopen the calculator.');
+  if(d.basis!==undefined&&!['TIC','EVIDENCE'].includes(d.basis))throw new Error('Invalid income calculation basis.');
+  if(d.ticWorksheet){const t=d.ticWorksheet;if(!t.values||typeof t.values!=='object'||Array.isArray(t.values)||Object.keys(t.values).length>1000||Object.entries(t.values).some(([k,v])=>!/^[a-z0-9_]+$/.test(k)||typeof v!=='string'||v.length>500))throw new Error('Invalid TIC worksheet values.');assertTicWorksheetSettings(t.settings);}
   const ids = new Set<string>();
   for (const row of d.rows) {
     if (!row || typeof row !== 'object' || !Number.isSafeInteger(row.page) || row.page < 1 || !['wages', 'other', 'asset', 'exclude'].includes(row.kind) || !['', ...Object.keys(FREQUENCIES)].includes(row.frequency)) throw new Error('Invalid income evidence row.');
@@ -90,6 +94,15 @@ export function assertIncomeDraft(value: unknown): asserts value is IncomeDraft 
 }
 export function calculateIncomePreparation(draft: IncomeDraft, pages: IncomePage[], requireConfirmation = false): IncomeCalculation {
   assertIncomeDraft(draft);
+  if(draft.basis==='TIC'){
+    if(!draft.ticWorksheet)throw new Error('Rebuild the worksheet from this TIC.');
+    const w=calculateTicWorksheet(draft.ticWorksheet.values,draft.ticWorksheet.settings),issues=[...w.issues];
+    if(!pages.some(p=>p.type==='tic_page'))issues.push('Select the TIC source pages.');
+    if(!validDate(draft.effectiveDate))issues.push('Enter the certification effective date.');
+    if(requireConfirmation&&!draft.confirmed)issues.push('Confirm the TIC amounts and worksheet method before continuing.');
+    return {version:INCOME_PREPARATION_VERSION,annualIncome:issues.length?null:w.values['household_annual_income']||null,issues,rows:[{id:'tic-income',annual:w.values['total_income_e']||null,basis:'Annual income reported in TIC columns A–D'},{id:'tic-assets',annual:w.values['total_income_assets_m']||null,basis:'Asset income using the selected worksheet method'}],status:'Pending full certification review'};
+  }
+  pages=pages.filter(p=>p.type!=='tic_page');
   const issues: string[] = [];
   const rows: IncomeCalculation['rows'] = [];
   const input = newInput(); input.effectiveDate = draft.effectiveDate;

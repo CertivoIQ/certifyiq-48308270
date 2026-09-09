@@ -95,14 +95,14 @@ test("onboarding and structured complete TIC intake are separate production entr
   assert.match(upload, /certification-upload-panel-v4/);
   assert.match(upload, /<CertificationUploadPanel/);
   assert.match(certificationUi, /intake_type: "certification_documents"/);
-  assert.match(certificationUi, /Tenant file destination/i);
+  assert.match(certificationUi, /Certification destination \(optional\)/i);
   // The selection-first screen supersedes the old complete-packet review heading.
   assert.match(certificationUi, /Organize the uploaded packet/);
   assert.match(certificationUi, /<TicPacketOrganizer/);
   assert.match(certificationUi, /pageSelections: pageChoices/);
   assert.match(certificationUi, /stage !== "ready" \|\| !draft\.selectionDigest/);
   assert.match(certificationUi, /Continue to Income Calculator/);
-  assert.match(certificationUi, /!incomeResult\?\.annualIncome/);
+  assert.match(certificationUi, /incomeResult\?\.annualIncome == null/);
   assert.match(certificationUi, /TIC_FIELD_DEFINITIONS/);
   assert.match(certificationUi, /CertivoIqTicReviewForm/);
   assert.match(ticReviewForm, /PART I — DEVELOPMENT DATA/);

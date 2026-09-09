@@ -1,3 +1,4 @@
+import { calculateTicWorksheet } from "@/lib/tic-calculations";
 import { assertSidecarPageCoverage } from "@/lib/ocr-sidecar.mjs";
 import { savedIncomePreparation } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
@@ -122,6 +123,8 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     }
     const jurisdiction = (data.jurisdiction ?? item.jurisdiction ?? "US").toUpperCase();
 
+    const {error:usageError}=await (supabase as any).rpc("reserve_certification_review",{_item_id:item.id});
+    if(usageError)return {error:usageError.message||"The free-review allowance could not be verified."} as const;
     await supabase.from("certification_import_items").update({
       status: "processing",
       review_queue_status: "processing",
@@ -280,7 +283,10 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       if (statePack && !registry.isUsableForDetermination(statePack)) statePack = undefined;
     }
 
+    const savedWorksheet = preparedIncome?.draft.ticWorksheet;
+    const ticWorksheetCalculation = savedWorksheet ? calculateTicWorksheet(Object.fromEntries(result.facts.map(f => [f.field, f.value == null ? "" : String(f.value)])), savedWorksheet.settings).calculated : null;
     const evaluation = orchestrator.evaluateFederalCertificationReview({
+      ticWorksheetCalculation,
       facts: result.facts,
       programs,
       certificationType: certificationType as "INITIAL" | "ANNUAL" | "INTERIM",

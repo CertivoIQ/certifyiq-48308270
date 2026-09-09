@@ -92,6 +92,8 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     }
     const jurisdiction = (data.jurisdiction ?? item.jurisdiction ?? "US").toUpperCase();
 
+    const {error:usageError}=await (supabase as any).rpc("reserve_certification_review",{_item_id:item.id});
+    if(usageError)return {error:usageError.message||"The free-review allowance could not be verified."} as const;
     await supabase.from("certification_import_items").update({
       status: "processing", review_queue_status: "processing", review_started_at: new Date().toISOString(),
       review_finished_at: null, error_message: null,

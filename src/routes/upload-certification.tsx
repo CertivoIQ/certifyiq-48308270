@@ -10,7 +10,7 @@ export const Route = createFileRoute("/upload-certification")({
       { title: "Upload Certification & OCR — CertivoIQ" },
       {
         name: "description",
-        content: "Upload complete Tenant Income Certification packets, review extracted values in a structured TIC form, and preserve supporting documents under the tenant file.",
+        content: "Upload complete Tenant Income Certification packets, review extracted values in a structured TIC form, and preserve supporting documents with each certification.",
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -22,7 +22,7 @@ function UploadCertificationPage() {
   return (
     <AppShell
       title="Upload Certification & OCR"
-      subtitle="Certification intake only — property, unit, and tenant setup is completed separately during onboarding"
+      subtitle="Review any certification. A property CSV or saved tenant file is not required."
       actions={
         <Button size="sm" variant="outline" asChild>
           <Link to="/files"><FileSearch className="size-4" /> Open review queue</Link>

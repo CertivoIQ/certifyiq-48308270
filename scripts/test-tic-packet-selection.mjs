@@ -117,6 +117,7 @@ const saved = [];
 let preparedScope;
 
 const db={
+  async rpc(name){assert.equal(name,'income_calculator_access');return {data:{allowed:true,mode:'trial',remaining:3},error:null};},
   from(table) { let operation='select', payload;const q={select(){return q},eq(){return q},order(){return q},limit(){return q},update(value){operation='update';payload=value;return q},delete(){operation='delete';return q},insert(value){operation='insert';payload=value;return q},
     maybeSingle:async()=>({data:table==='certification_import_jobs'?{id:'packet-job',status:'processing'}:{id:tenantId,property_id:'property',unit_id:'unit',program_codes:['LIHTC'],portfolio_properties:{jurisdiction:'GA'}},error:null}),
     single:async()=>{saved.push({table,operation,payload});return {data:{id:'saved-item'},error:null}},
@@ -125,6 +126,7 @@ const db={
 };
 globalThis.__packetTestDb=db;
 const serverUrl = compile('src/utils/tic-certification-intake.functions.ts', {
+  '@/lib/tic-calculations':load('src/lib/tic-calculations.ts'),
   '@/lib/tic-completeness':load('src/lib/tic-completeness.ts'),
   '@/lib/certification-income-evidence':load('src/lib/certification-income-evidence.ts'),
   '@tanstack/react-start':api, '@/integrations/supabase/auth-middleware':auth, '@/integrations/supabase/client.server':boundary,
@@ -236,4 +238,22 @@ test('actual preview and save reject income pages that have not completed extrac
   await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:ready.selectionDigest,incomeDraft:incomeDraft(ready),startReview:false},context}),/Page 6 has not completed extraction/);
   assert.equal(saved.length,before);
  } finally {preparedScope=undefined;}
+});
+
+test('actual standalone save recomputes the trial rate and retains supporting pages without a tenant',async()=>{
+ const preview=await extractCertificationTicPreview({data:{source,pageSelections:choices},context});
+ const values={...Object.fromEntries(preview.facts.map(f=>[f.field,String(f.value)])),income_member_1_wages_business:'10000.00',asset_1_type:'Checking',asset_1_cash_value:'9208.26',asset_1_annual_income:'3.18',total_income_assets_m:'36.83',household_annual_income:'10036.83'};
+ const settings={assetMethod:'LEGACY_GREATER',passbookRatePercent:'0.06',imputationThreshold:'5000',rateSource:'Synthetic trial policy'};
+ const draft={...preview.incomePreparation.draft,basis:'TIC',ticWorksheet:{values,settings},confirmed:true};
+ const before=saved.length;
+ const result=await confirmCertificationTicPreview({data:{source,fields:Object.entries(values).map(([field,value])=>({field,value})),sourceTicFields:values,worksheetSettings:settings,tenantProfileId:null,standaloneJurisdiction:'NE',pageSelections:choices,selectionDigest:preview.selectionDigest,incomeDraft:draft,startReview:false},context});
+ assert.equal(result.tenantProfileId,null);assert.equal(result.queuedForReview,false);
+ const writes=saved.slice(before),item=writes.find(e=>e.table==='certification_import_items'&&e.operation==='insert').payload;
+ assert.equal(item.tenant_profile_id,null);assert.equal(item.property_id,null);assert.equal(item.jurisdiction,'NE');
+ assert.equal(Number(item.extracted_data.total_income_assets_m),5.52);assert.equal(Number(item.extracted_data.household_annual_income),10005.52);
+ assert.equal(item.historical_changes[0].tic_worksheet.settings.passbookRatePercent,'0.06');
+ assert.equal(item.historical_changes[0].tic_worksheet.source_values.total_income_assets_m,'36.83');
+ assert.equal(item.historical_changes[0].income_preparation.calculation.annualIncome,'10005.52');
+ const supports=writes.find(e=>e.table==='portfolio_tenant_documents'&&e.operation==='insert').payload;
+ assert.equal(supports.length,2);assert.ok(supports.every(d=>d.tenant_profile_id===null&&d.certification_import_item_id==='saved-item'));
 });

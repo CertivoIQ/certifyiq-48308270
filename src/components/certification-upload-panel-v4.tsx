@@ -1,3 +1,5 @@
+import { calculateTicWorksheet, newTicWorksheetSettings, type TicWorksheetSettings } from "@/lib/tic-calculations";
+import { TicIncomeWorksheet } from "@/components/tic-income-worksheet";
 import { CertificationIncomeCalculator } from "@/components/certification-income-calculator";
 import { calculateIncomePreparation, type IncomeDraft, type IncomePreparation } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
@@ -113,6 +115,7 @@ export function CertificationUploadPanel() {
     queryFn: () => listTenantDestinations(),
   });
 
+  const reviewAccess=useQuery({queryKey:["certification-review-access"],queryFn:async()=>{const {data,error}=await (supabase as unknown as Db).rpc("income_calculator_access");if(error)throw error;return data as {allowed:boolean;mode:string;remaining:number|null;reason:string};}});
   const stagedFile = useRef<File | null>(null);
   const labelAbort = useRef<AbortController | null>(null);
   const labelTask = useRef<Promise<void> | null>(null);
@@ -121,11 +124,15 @@ export function CertificationUploadPanel() {
   useEffect(() => () => { labelAbort.current?.abort(); stagedFile.current = null; }, []);
   const [file, setFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<ExtractionDraft | null>(null);
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [rawFieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [worksheetSettings, setWorksheetSettings] = useState<TicWorksheetSettings>(newTicWorksheetSettings);
+  const worksheet = useMemo(() => {try{return calculateTicWorksheet(rawFieldValues,worksheetSettings);}catch(error){return {...calculateTicWorksheet(rawFieldValues),issues:[error instanceof Error?error.message:"Correct the worksheet settings."]};}},[rawFieldValues,worksheetSettings]);
+  const fieldValues = worksheet.values;
+  const [reviewState, setReviewState] = useState("");
   const [pageChoices, setPageChoices] = useState<PacketPageChoice[]>([]);
   const [stage, setStage] = useState<"organize" | "income" | "tic" | "ready">("organize");
   const [incomeDraft, setIncomeDraft] = useState<IncomeDraft | null>(null);
-  const incomeResult = useMemo(() => incomeDraft && draft?.incomePreparation ? calculateIncomePreparation(incomeDraft, draft.incomePreparation.pages, true) : null, [incomeDraft, draft]);
+  const incomeResult = useMemo(() => {if(!incomeDraft||!draft?.incomePreparation)return null;try{return calculateIncomePreparation(incomeDraft,draft.incomePreparation.pages,true);}catch(error){return {version:'certification-income/1',annualIncome:null,rows:[],issues:[error instanceof Error?error.message:'Correct the worksheet inputs.'],status:'Pending full certification review' as const};}},[incomeDraft,draft]);
   const [viewTicPage, setViewTicPage] = useState(1);
   const [otherReviewAction, setOtherReviewAction] = useState<"" | "INITIAL" | "ANNUAL" | "INTERIM">("");
   const [tenantProfileId, setTenantProfileId] = useState("");
@@ -145,10 +152,7 @@ export function CertificationUploadPanel() {
     [draft],
   );
 
-  useEffect(() => {
-    if (!draft || tenantProfileId || tenantDestinations.data?.length !== 1) return;
-    setTenantProfileId(tenantDestinations.data[0]!.id);
-  }, [draft, tenantDestinations.data, tenantProfileId]);
+
 
   async function uploadCertification() {
     if (!file || busy || draft) return;
@@ -156,6 +160,7 @@ export function CertificationUploadPanel() {
     setMessage("");
     setProgressPercent(1);
     setProgressLabel("Starting secure certification intake…");
+    setWorksheetSettings(newTicWorksheetSettings());
 
     let jobId: string | null = null;
     let storagePath: string | null = null;
@@ -310,6 +315,7 @@ export function CertificationUploadPanel() {
       setViewTicPage(preview.ticPages[0] ?? 1);
       if (!preview.incomePreparation) throw new Error("The selected income evidence could not be prepared.");
       setIncomeDraft(preview.incomePreparation.draft);
+      setWorksheetSettings({...newTicWorksheetSettings(),passbookRatePercent:extracted.get("worksheet_passbook_rate_percent")||""});
       setStage("tic");
       setProgressPercent(100);
       setProgressLabel("TIC ready. Check its fields, then continue to the Income Calculator.");
@@ -324,10 +330,7 @@ export function CertificationUploadPanel() {
     if (!incomeDraft || !incomeResult || incomeResult.annualIncome === null || incomeResult.issues.length) { setMessage("Complete the Income Calculator before saving or starting review."); setStage("income"); return; }
     if (startReview && ticCompletenessFindings(fieldValues).length) { setMessage("Complete the yellow findings before starting another review. You can still save your changes."); return; }
     if (stage !== "ready" || !draft.selectionDigest) { setMessage("Confirm document selection and rebuild the TIC before saving."); return; }
-    if (!tenantProfileId) {
-      setMessage("Select the tenant file before saving this certification packet.");
-      return;
-    }
+
     setBusy(true);
     setSaveAction(startReview ? "review" : "save");
     setMessage("");
@@ -337,7 +340,10 @@ export function CertificationUploadPanel() {
       const result = await confirmPreview({
         data: {
           source: draft.source,
-          tenantProfileId,
+          tenantProfileId: tenantProfileId || null,
+          ...(reviewState ? {standaloneJurisdiction:reviewState} : {}),
+          worksheetSettings,
+          sourceTicFields: rawFieldValues,
           fields: TIC_FIELD_DEFINITIONS.map((definition) => ({
             field: definition.key,
             value: fieldValues[definition.key] ?? "",
@@ -367,10 +373,10 @@ export function CertificationUploadPanel() {
       setProgressPercent(100);
       if (result.queuedForReview) {
         setProgressLabel("Certification packet saved and queued for review.");
-        setMessage(`Certification saved to the tenant file.${changeText}${supportText} It is now in the Compliance Review Queue.`);
+        setMessage(`Certification saved.${changeText}${supportText} It is now in the Compliance Review Queue.`);
       } else {
         setProgressLabel("Certification packet saved.");
-        setMessage(`Certification saved to the tenant file.${changeText}${supportText} It has not been queued for compliance review.`);
+        setMessage(`Certification saved${tenantProfileId ? " to the tenant file" : " as a standalone review"}.${changeText}${supportText} It has not been queued for compliance review.`);
       }
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["certification-items"] }),
@@ -472,13 +478,13 @@ export function CertificationUploadPanel() {
           {stage === "organize" ? (
             <><label className="mb-3 flex items-start gap-2 rounded-lg border p-3 text-sm"><input type="checkbox" className="mt-1" checked={useHandwriting} disabled={busy} onChange={event => setUseHandwriting(event.target.checked)} /><span><strong>Handwritten or mixed TIC</strong><span className="mt-1 block text-muted-foreground">Read handwriting on the TIC pages with AI. Check proposed values against the source before continuing; unclear cells remain for confirmation.</span></span></label><TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} identifying={identifyingPages} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} /></>
           ) : stage === "income" && incomeDraft && draft.incomePreparation ? (
-            <CertificationIncomeCalculator value={incomeDraft} pages={draft.incomePreparation.pages} sourceUrl={draft.sourcePreviewUrl} busy={busy} onChange={setIncomeDraft} onBack={() => setStage("tic")} onContinue={() => {
+            <CertificationIncomeCalculator value={incomeDraft} pages={draft.incomePreparation.pages} sourceUrl={draft.sourcePreviewUrl} busy={busy} onChange={next=>{setIncomeDraft(next);if(next.ticWorksheet)setWorksheetSettings(next.ticWorksheet.settings);}} onBack={() => setStage("tic")} onContinue={() => {
               if (!incomeResult || incomeResult.annualIncome === null || incomeResult.issues.length) return;
               setFieldValues(current => ({ ...current, certification_effective_date: incomeDraft.effectiveDate }));
               setStage("ready"); setMessage("Calculated income has been added. The certification is ready to save for full review.");
             }} />
           ) : stage === "ready" ? (
-            <div className="mt-4 space-y-3 rounded-xl border bg-background p-4"><h3 className="font-semibold">TIC and income calculation prepared</h3><p>Calculated projected annual income: <strong>${incomeResult?.annualIncome ?? "Needs recalculation"}</strong></p><p className="text-sm">Source TIC annual income: {fieldValues["household_annual_income"] || "Not extracted"}. Differences will be flagged during full review.</p><p className="text-sm">{draft.supportingDocuments.length} supporting page(s) included. Income sources and calculation details will be saved with this certification.</p><div className="flex gap-4 text-sm"><button type="button" disabled={busy} className="underline" onClick={() => { setIncomeDraft(current => current ? { ...current, confirmed: false } : null); setStage("tic"); }}>Edit TIC</button><button type="button" disabled={busy} className="underline" onClick={() => setStage("income")}>Edit income calculation</button></div></div>
+            <div className="mt-4 space-y-3 rounded-xl border bg-background p-4"><h3 className="font-semibold">TIC and income calculation prepared</h3><p>Calculated projected annual income: <strong>${incomeResult?.annualIncome ?? "Needs recalculation"}</strong></p><p className="text-sm">Source TIC annual income: {rawFieldValues["household_annual_income"] || "Not extracted"}. Differences will be flagged during full review.</p><p className="text-sm">{draft.supportingDocuments.length} supporting page(s) included. Income sources and calculation details will be saved with this certification.</p><div className="flex gap-4 text-sm"><button type="button" disabled={busy} className="underline" onClick={() => { setIncomeDraft(current => current ? { ...current, confirmed: false } : null); setStage("tic"); }}>Edit TIC</button><button type="button" disabled={busy} className="underline" onClick={() => setStage("income")}>Edit income calculation</button></div></div>
           ) : <>
           <div className="mt-4 rounded border bg-background p-3 text-sm">
             <strong>TIC pages: {draft.ticPages.join(", ")}</strong> · {draft.supportingDocuments.length} included supporting page(s) · omitted pages: {draft.omittedPages.join(", ") || "None"}.
@@ -486,18 +492,18 @@ export function CertificationUploadPanel() {
             <p className="mt-1 text-xs text-muted-foreground">Changing page roles clears unsaved field corrections and requires a fresh extraction. The original file is not altered.</p>
           </div>
           <div className="mt-4 rounded-xl border bg-background p-4">
-            <label className="text-sm font-semibold" htmlFor="tenant-destination">Tenant file destination</label>
-            <p className="mt-1 text-xs text-muted-foreground">The TIC and every preserved supporting document will be stored under this tenant.</p>
+            <label className="text-sm font-semibold" htmlFor="tenant-destination">Certification destination (optional)</label>
+            <p className="mt-1 text-xs text-muted-foreground">Review any certification on its own, or optionally link it to an existing tenant file.</p>
             <select id="tenant-destination" className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm" value={tenantProfileId} disabled={busy || tenantDestinations.isLoading} onChange={(event) => setTenantProfileId(event.target.value)}>
-              <option value="">Select tenant file</option>
+              <option value="">Standalone certification — no property CSV required</option>
               {(tenantDestinations.data ?? []).map((tenant) => (
                 <option key={tenant.id} value={tenant.id}>{tenant.householdName}{tenant.propertyName ? ` · ${tenant.propertyName}` : ""}{tenant.unitNumber ? ` · Unit ${tenant.unitNumber}` : ""}</option>
               ))}
             </select>
-            {tenantDestinations.data?.length === 0 ? <p className="mt-2 text-xs text-destructive">No tenant profiles are available. Complete Portfolio & Tenant Onboarding before saving a certification.</p> : null}
+            {tenantDestinations.data?.length === 0 ? <p className="mt-2 text-xs text-muted-foreground">Your certification will be saved on its own. Property and tenant onboarding can be completed later.</p> : null}
           </div>
 
-          {incomeResult && <div className="mt-4 rounded-xl border bg-background p-4 text-sm"><strong>Calculated projected annual income: ${incomeResult.annualIncome ?? "Needs recalculation"}</strong><p className="mt-1">Source TIC annual income: {fieldValues["household_annual_income"] || "Not extracted"}. The calculated amount accompanies the source TIC for program-specific review.</p><button type="button" className="mt-2 underline" disabled={busy} onClick={() => setStage("income")}>Return to Income Calculator</button></div>}
+          {incomeResult && <div className="mt-4 rounded-xl border bg-background p-4 text-sm"><strong>Calculated projected annual income: ${incomeResult.annualIncome ?? "Needs recalculation"}</strong><p className="mt-1">Source TIC annual income: {rawFieldValues["household_annual_income"] || "Not extracted"}. The calculated amount accompanies the source TIC for program-specific review.</p><button type="button" className="mt-2 underline" disabled={busy} onClick={() => setStage("income")}>Return to Income Calculator</button></div>}
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="rounded-xl border bg-background p-3 min-w-0 lg:sticky lg:top-4 lg:self-start">
               <div className="mb-3 flex items-center gap-2 text-sm font-medium"><FileSearch className="size-4" /> Selected TIC source</div>
@@ -515,11 +521,14 @@ export function CertificationUploadPanel() {
               <div className="mb-3 rounded-lg border bg-background p-3 text-sm">
                 <strong>CertivoIQ TIC Review Form.</strong> Values are placed into the same logical sections and tables as the source TIC. A blank source field stays blank rather than inheriting nearby labels.
               </div>
+              <TicIncomeWorksheet worksheet={worksheet} settings={worksheetSettings} busy={busy} onSettings={setWorksheetSettings} />
+              {!tenantProfileId && <label className="mb-3 block text-sm">Certification state (for program rules)<input aria-label="Certification state" maxLength={2} className="ml-2 w-20 rounded border bg-background p-2" value={reviewState} disabled={busy} onChange={e=>setReviewState(e.target.value.toUpperCase().replace(/[^A-Z]/g,''))}/></label>}
               <CertivoIqTicReviewForm
                 values={fieldValues}
                 factsByField={factsByField}
+                calculatedFields={worksheet.formulas}
                 busy={busy}
-                onChange={(field, value) => { setFieldValues((current) => ({ ...current, [field]: value })); if (field === "certification_effective_date" && incomeDraft) setIncomeDraft({ ...incomeDraft, effectiveDate: value, confirmed: false }); }}
+                onChange={(field, value) => { setFieldValues((current) => ({ ...current, [field]: value })); if (field === "worksheet_passbook_rate_percent") setWorksheetSettings(current=>({...current,passbookRatePercent:value})); if (field === "certification_effective_date" && incomeDraft) setIncomeDraft({ ...incomeDraft, effectiveDate: value, confirmed: false }); }}
               />
             </div>
           </div>
@@ -535,15 +544,16 @@ export function CertificationUploadPanel() {
           </label>}
           </>}
 
-          {stage === "tic" && <div className="mt-4 flex justify-end"><button type="button" disabled={busy || !tenantProfileId || !draft.selectionDigest} className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50" onClick={() => { setIncomeDraft(current => current ? { ...current, effectiveDate: fieldValues["certification_effective_date"] || current.effectiveDate, confirmed: false } : null); setStage("income"); }}>Continue to Income Calculator</button></div>}
+          {stage === "tic" && <div className="mt-4 flex justify-end"><button type="button" disabled={busy || !draft.selectionDigest} className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50" onClick={() => { setIncomeDraft(current => current ? { ...current, effectiveDate: fieldValues["certification_effective_date"] || current.effectiveDate, confirmed: false } : null); setIncomeDraft(current => current ? {...current,basis:current.rows.length?'EVIDENCE':'TIC',ticWorksheet:{values:rawFieldValues,settings:worksheetSettings},confirmed:false} : null); setStage("income"); }}>Continue to Income Calculator</button></div>}
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <button type="button" disabled={busy} onClick={() => void cancelStagedUpload()} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">Cancel Upload</button>
-            <button type="button" disabled={busy || !tenantProfileId || stage !== "ready" || !draft.selectionDigest || !incomeResult?.annualIncome} onClick={() => void confirmAndSave(false)} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">{saveAction === "save" ? "Saving…" : "Save Document"}</button>
-            <button type="button" disabled={busy || !tenantProfileId || stage !== "ready" || !draft.selectionDigest || !incomeResult?.annualIncome || ticCompletenessFindings(fieldValues).length > 0} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
+            <button type="button" disabled={busy || stage !== "ready" || !draft.selectionDigest || incomeResult?.annualIncome == null} onClick={() => void confirmAndSave(false)} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">{saveAction === "save" ? "Saving…" : "Save Document"}</button>
+            <button type="button" disabled={busy || stage !== "ready" || !draft.selectionDigest || incomeResult?.annualIncome == null || ticCompletenessFindings(fieldValues).length > 0} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
           </div>
         </div>
       )}
 
+      {reviewAccess.data?.mode==="trial" && <p className="mt-3 text-sm">{reviewAccess.data.remaining} of 3 free certification reviews remaining. Uploading, calculating, and adjusting the passbook rate do not use a review.</p>}
       <div className="mt-3 rounded-lg border bg-background p-3" aria-live="polite">
         <div className="flex items-center justify-between gap-3 text-xs"><span className="truncate text-muted-foreground">{progressLabel}</span><span className="font-semibold tabular-nums text-foreground">{progressPercent}%</span></div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Certification intake progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}><div className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${progressPercent}%` }} /></div>

@@ -153,16 +153,18 @@ test("one TIC may own multiple tenant supporting document records", () => {
   assert.match(supportMigration, /Multiple preserved supporting documents may link to the same certification/);
 });
 
-test("certification packet must be stored in a tenant file", () => {
+test("standalone certification needs no tenant and optional tenant links remain owner scoped", () => {
   assert.match(uploadPanel, /listCertificationTenantDestinations/);
-  assert.match(uploadPanel, /Tenant file destination/);
-  assert.match(uploadPanel, /Select tenant file/);
-  assert.match(uploadPanel, /disabled=\{busy \|\| !tenantProfileId \|\| stage !== "ready" \|\| !draft\.selectionDigest \|\| !incomeResult\?\.annualIncome\}/);
-  assert.match(ticIntake, /tenantProfileId: string/);
-  assert.match(ticIntake, /portfolio_tenant_profiles/);
-  assert.match(ticIntake, /tenant_profile_id: tenant\.id/);
-  assert.match(ticIntake, /property_id: tenant\.property_id/);
-  assert.match(ticIntake, /unit_id: tenant\.unit_id/);
+  assert.match(uploadPanel, /Certification destination \(optional\)/);
+  assert.match(uploadPanel, /Standalone certification — no property CSV required/);
+  assert.doesNotMatch(uploadPanel, /disabled=\{busy \|\| !tenantProfileId/);
+  assert.doesNotMatch(uploadPanel, /Complete Portfolio & Tenant Onboarding before saving/);
+  assert.match(ticIntake, /tenantProfileId\?: string \| null/);
+  assert.match(ticIntake, /if\(data\.tenantProfileId\)/);
+  assert.match(ticIntake, /\.eq\("id", data\.tenantProfileId\)[\s\S]*?\.eq\("user_id", userId\)/);
+  assert.match(ticIntake, /tenant_profile_id: tenant\?\.id \?\? null/);
+  assert.match(ticIntake, /property_id: tenant\?\.property_id \?\? null/);
+  assert.match(ticIntake, /unit_id: tenant\?\.unit_id \?\? null/);
 });
 
 test("OCR-proposed and missed TIC fields can both be corrected before save", () => {
