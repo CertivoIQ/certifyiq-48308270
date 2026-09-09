@@ -14,6 +14,8 @@ import { Panel } from "@/components/ui-kit";
 
 import { SignupAgreement } from "@/components/signup-agreement";
 import { BETA_TERMS_VERSION } from "@/lib/beta-terms";
+import { useSession } from "@/hooks/use-session";
+import { isFounderUser } from "@/lib/founder-access";
 
 const PENDING_KEY = "certivoiq:pending-free-review-lead";
 const splitList = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean);
@@ -35,6 +37,8 @@ function savePending(form: FormState) { if (typeof sessionStorage !== "undefined
 function clearPending() { if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(PENDING_KEY); }
 
 export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
+  const { user, ready } = useSession();
+  const isFounder = isFounderUser(user);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const captureLead = useServerFn(captureFreeReviewLead);
@@ -46,18 +50,18 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
   const [verificationRequired, setVerificationRequired] = useState(false);
   const [message, setMessage] = useState("");
 
-  const lead = useQuery({ queryKey: ["free-review-lead"], queryFn: () => getLead(), enabled: Boolean(userEmail) });
+  const lead = useQuery({ queryKey: ["free-review-lead"], queryFn: () => getLead(), enabled: ready && Boolean(userEmail) && !isFounder });
   const hasUser = Boolean(userEmail);
   const pendingLead = useMemo(() => readPending(), []);
 
   useEffect(() => {
-    let active = true;
-    supabase.auth.getUser().then(({ data }) => { if (active) setUserEmail(data.user?.email ?? null); });
-    return () => { active = false; };
-  }, []);
+    if (!ready) return;
+    setUserEmail(user?.email ?? null);
+    if (isFounder) navigate({ to: "/upload-certification", replace: true });
+  }, [isFounder, navigate, ready, user?.email]);
 
   useEffect(() => {
-    if (!userEmail || lead.isLoading) return;
+    if (isFounder || !userEmail || lead.isLoading) return;
     if (lead.data && !pendingLead) {
       navigate({ to: "/compliance-intelligence", replace: true });
       return;
@@ -74,7 +78,7 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
         .catch((error) => toast.error(error instanceof Error ? error.message : "Could not save your company information"))
         .finally(() => setBusy(false));
     }
-  }, [captureLead, lead.data, lead.isLoading, navigate, pendingLead, qc, userEmail]);
+  }, [captureLead, isFounder, lead.data, lead.isLoading, navigate, pendingLead, qc, userEmail]);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -119,6 +123,8 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
       setBusy(false);
     }
   }
+
+  if (!ready || isFounder) return <Panel title="Preparing your 3 FREE certification reviews" description="Opening certification upload…"><div className="h-20 animate-pulse rounded-lg bg-muted" /></Panel>;
 
   if (verificationRequired) {
     return <Panel title="Check your email to continue" description="One quick verification step protects your workspace and keeps your FREE review history tied to your account." bodyClassName="p-5"><div className="rounded-lg border border-primary/20 bg-primary/5 p-4"><div className="flex items-start gap-3"><Mail className="mt-0.5 size-5 shrink-0 text-primary" /><p className="text-sm leading-6">{message}</p></div></div><Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>I've verified — continue</Button></Panel>;
