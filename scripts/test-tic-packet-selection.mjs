@@ -176,3 +176,31 @@ test('actual preview adds only worksheet fields from an explicitly selected work
  }finally{pages[7]=previous;}
 });
 
+
+
+test('legacy continuation reaches the same reader as modern TIC sections', () => {
+  const legacy = 'PART V. DETERMINATION OF INCOME ELIGIBILITY\nPART VI. RENT\nTenant Paid Rent: 675.00\nUtility Allowance: 147.00\nRental Assistance: 0.00\nOther non-optional charges and mandatory fees: 0.00\nGross Rent For Unit: 822.00\nPART VII. STUDENT STATUS\nPART VIII. PROGRAM TYPE';
+  assert.equal(isTicContent(legacy), true);
+  const inventory = selection.packetInventory([{page:3,text:tic},{page:4,text:legacy}]);
+  assert.deepEqual(inventory.filter(p=>p.kind==='tic').map(p=>p.page), [3,4]);
+  const facts = extractTicFieldsFromText('page 4\n'+legacy, 'synthetic-legacy.pdf').facts;
+  for (const [field,value] of Object.entries({tenant_paid_rent:675,utility_allowance:147,rent_assistance:0,other_non_optional_charges:0,gross_rent:822})) {
+    const fact=facts.find(f=>f.field===field);
+    assert.equal(fact?.value,value,field);
+    assert.equal(fact.page,4);
+    assert.equal(fact.humanVerified,false);
+  }
+});
+test('legacy recognition still requires distinct sections and excludes administrative pages', () => {
+  for (const text of [
+    'PART VI. RENT\nTenant Paid Rent: 675.00',
+    'PART VI. RENT\nPART VI. RENT',
+    'Instructions for completing the Tenant Income Certification\nPART V. DETERMINATION OF INCOME ELIGIBILITY\nPART VI. RENT',
+    'Review Summary\nPART VI. RENT\nPART VII. STUDENT STATUS',
+    'Bank Statement\nRent payment 675.00\nTenant Income Certification enclosed'
+  ]) assert.equal(isTicContent(text),false,text);
+});
+test('both legacy and modern rent/student section pairs are recognized', () => {
+  assert.equal(isTicContent('PART VI. RENT\nPART VII. STUDENT STATUS'),true);
+  assert.equal(isTicContent('PART VII — RENT\nPART VIII — STUDENT STATUS'),true);
+});
