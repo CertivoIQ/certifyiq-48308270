@@ -98,11 +98,15 @@ test("missing or low-confidence arithmetic inputs do not manufacture a FAIL", ()
 });
 
 import {load} from './helpers/load-typescript.mjs';
-test("strict-cell pages allow only safe same-line fallback for fields the spatial reader missed", async () => {
+test("strict-cell pages require a cell proposal while native text retains label fallback", async () => {
   const {extractTicFieldsFromText}=await import(load('src/lib/tic-field-extraction.ts'));
-  const {facts}=extractTicFieldsFromText('page 4\n__CERTIVOIQ_TIC_CELL_MODE__: strict\nResident Rent: 675.00\nMonthly Utility Allowance:\n147.00\nHousehold Size at Move-in:\nHousehold Income exceeds 140%','synthetic.pdf');
+  const text='page 4\n__CERTIVOIQ_TIC_CELL_MODE__: strict\nResident Rent: 675.00\nMonthly Utility Allowance:\n147.00\nHousehold Size at Move-in:\nHousehold Income exceeds 140%';
+  assert.equal(extractTicFieldsFromText(text,'synthetic.pdf').facts.length,0);
+  const {facts}=extractTicFieldsFromText(text+'\n__CERTIVOIQ_TIC_FIELD__ tenant_paid_rent: 675.00','synthetic.pdf');
   assert.equal(facts.find(f=>f.field==='tenant_paid_rent')?.value,675);
   assert.ok(!facts.some(f=>['utility_allowance','household_size_at_move_in'].includes(f.field)));
+  const native=extractTicFieldsFromText('Resident Rent: 675.00','synthetic.pdf');
+  assert.equal(native.facts.find(f=>f.field==='tenant_paid_rent')?.value,675);
 });
 
 test("annual income worksheet scalar fallback covers qualifying limit and variance without guessing across lines", () => {

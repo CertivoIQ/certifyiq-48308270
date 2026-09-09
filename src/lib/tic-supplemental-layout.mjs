@@ -1,10 +1,11 @@
+import { worksheetFieldType } from './tic-worksheet-types.mjs';
 /** Versioned source regions for the inspected worksheet/application layout.
  * Three printed anchors must agree with the layout before any crop is proposed.
  * No source values are part of the layout. Other templates remain editable.
  */
 const key = label => label.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/_$/,'');
 export function supplementalRegions(lines,width,height) {
- const regions=[],choices=[]; const add=(name,x0,y0,x1,y1,type='text')=>regions.push({key:name,bbox:{x0:x0*width/1237,y0:y0*height/1600,x1:x1*width/1237,y1:y1*height/1600},type});
+ const regions=[],choices=[]; const add=(name,x0,y0,x1,y1,type='text')=>regions.push({key:name,bbox:{x0:x0*width/1237,y0:y0*height/1600,x1:x1*width/1237,y1:y1*height/1600},type:name.startsWith("worksheet_")?worksheetFieldType(name):type});
  const near=(re,y)=>lines.some(l=>re.test(l.text)&&Math.abs(l.bbox.y0/height-y/1600)<.025);
  const table=(prefix,labels,xs,ys)=>{for(let r=0;r<ys.length-1;r++) labels.forEach((label,c)=>add(`${prefix}_${r+1}_${key(label)}`,xs[c]+4,ys[r]+4,xs[c+1]-4,ys[r+1]-4));};
  const choice=(name,boxes)=>choices.push({key:name,options:boxes.map(([value,x0,y0,x1,y1])=>({value,bbox:{x0:x0*width/1237,y0:y0*height/1600,x1:x1*width/1237,y1:y1*height/1600}}))});
@@ -77,3 +78,5 @@ export function supplementalRegions(lines,width,height) {
  }
  return {template,regions,choices};
 }
+
+

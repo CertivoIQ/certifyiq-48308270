@@ -4,18 +4,19 @@ import {
   OCR_ENGINE,
   OCR_LIMIT_MESSAGE,
   OCR_SIDECAR_VERSION,
-  OCR_TIME_BUDGET_MS,
   OCR_TIMEOUT_MESSAGE,
   normalizePageText,
   pageNeedsOcr,
   type OcrSidecar,
   type OcrSidecarPage,
 } from '@/lib/ocr-sidecar.mjs';
+import { ocrTimeBudgetMs } from '@/lib/ocr-time-budget.mjs';
+import { assertRenderedPdfImages, pdfImageDecodeOptions } from '@/lib/pdf-render-integrity.mjs';
 import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
 import { createOcrWorkerPool, OcrRuntimeError } from '@/lib/ocr-worker-pool';
 import { extractTicSpatialValueLines } from '@/lib/tic-spatial-extraction.mjs';
 import { nativePdfLayout, isTicContent } from '@/lib/tic-document-layout.mjs';
-import { planTicCells, cellSheetLayout, finishTicCells, mergeCellProposals } from '@/lib/tic-ruled-cell-extraction.mjs';
+import { planTicCells, cellSheetLayout, finishTicCells, mergeCellProposals, confirmWorksheetNumbers } from '@/lib/tic-ruled-cell-extraction.mjs';
 
 /**
  * Browser-side certification document extraction.
@@ -313,7 +314,33 @@ async function recognizeTicCells(canvas: HTMLCanvasElement, blocks: unknown, wor
     }
     const { PSM } = await import('tesseract.js');
     const result = await recognizeWithSharedWorker(target.canvas, workerCount, PSM.SPARSE_TEXT, true);
-    return finishTicCells(plan, sheet, (result.data as typeof result.data & { blocks?: unknown }).blocks ?? []).lines;
+    const extracted = finishTicCells(plan, sheet, (result.data as typeof result.data & { blocks?: unknown }).blocks ?? []);
+    const confirmed = new Map<string, string>();
+    // A worksheet money/rate cell needs agreement with an independent crop read.
+    // This catches plausible digit errors that currency formatting alone cannot detect.
+    for (const tile of sheet.tiles) {
+      if (!tile.key.startsWith('worksheet_') || !['currency','number'].includes(tile.type) || !extracted.values[tile.key]) continue;
+      const cell = plan.cells.find(candidate => candidate.key === tile.key)!;
+      const b = cell.bbox;
+      const scale = Math.min(3, 70 / Math.max(14, b.y1 - b.y0), 1000 / (b.x1 - b.x0));
+      const width = Math.ceil((b.x1 - b.x0) * scale), height = Math.ceil((b.y1 - b.y0) * scale);
+      const isolated = createCanvas(width + 196, height + 48);
+      try {
+        isolated.context.imageSmoothingEnabled = false;
+        isolated.context.fillStyle = '#000000';
+        isolated.context.font = '28px sans-serif';
+        isolated.context.fillText('Value:', 24, height + 20);
+        isolated.context.drawImage(canvas,b.x0,b.y0,b.x1-b.x0,b.y1-b.y0,148,24,width,height);
+        const second = await recognizeWithSharedWorker(isolated.canvas,workerCount,PSM.SINGLE_LINE,true);
+        const check = finishTicCells(
+          {...plan,cells:[cell],groups:[],blocked:[],checkboxes:null,supplementalValues:{}},
+          {width:isolated.canvas.width,height:isolated.canvas.height,tiles:[{...tile,x:148,y:24,width,height,scale}]},
+          (second.data as typeof second.data & {blocks?:unknown}).blocks ?? [],
+        );
+        if (check.values[tile.key] === extracted.values[tile.key]) confirmed.set(tile.key, check.values[tile.key]!);
+      } finally { isolated.canvas.width = 1; isolated.canvas.height = 1; }
+    }
+    return confirmWorksheetNumbers(extracted, plan, confirmed);
   } finally { target.canvas.width = 1; target.canvas.height = 1; }
 }
 
@@ -412,7 +439,7 @@ export async function prepareCertificationForReview(
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
   const bytes = new Uint8Array(sourceBuffer);
-  const pdf = await pdfjs.getDocument({ data: bytes }).promise;
+  const pdf = await pdfjs.getDocument({ data: bytes, ...pdfImageDecodeOptions(pdfjs.version, window.location.origin) }).promise;
 
   try {
     if (pdf.numPages > MAX_PDF_PAGES) throw new Error(OCR_LIMIT_MESSAGE);
@@ -495,6 +522,7 @@ export async function prepareCertificationForReview(
     );
 
     const startedAt = Date.now();
+    const timeBudgetMs = ocrTimeBudgetMs(needsOcr.length, workerCount);
     let nextIndex = 0;
     let completedCount = 0;
     let fatalError: Error | null = null;
@@ -507,7 +535,7 @@ export async function prepareCertificationForReview(
         nextIndex += 1;
         if (ocrIndex >= needsOcr.length) return;
 
-        if (Date.now() - startedAt > OCR_TIME_BUDGET_MS) {
+        if (Date.now() - startedAt > timeBudgetMs) {
           fatalError = new Error(OCR_TIMEOUT_MESSAGE);
           return;
         }
@@ -527,6 +555,7 @@ export async function prepareCertificationForReview(
           const viewport = page.getViewport({ scale: highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
+          await assertRenderedPdfImages(page, pdfjs.OPS);
 
           if (looksVisuallyBlank(canvas)) {
             blankPages.push(pageNumber);

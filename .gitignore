@@ -39,3 +39,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Versioned PDF image decoders generated from the installed dependency
+public/pdfjs/

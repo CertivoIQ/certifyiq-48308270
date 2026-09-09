@@ -1,0 +1,10 @@
+import {createRequire} from 'node:module';
+import {copyFileSync,mkdirSync,readdirSync,readFileSync} from 'node:fs';
+import {dirname,resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const require=createRequire(import.meta.url);
+const packageRoot=dirname(require.resolve('pdfjs-dist/package.json'));
+const {version}=JSON.parse(readFileSync(resolve(packageRoot,'package.json'),'utf8'));
+const destination=resolve(dirname(fileURLToPath(import.meta.url)),'../public/pdfjs',version,'wasm');
+mkdirSync(destination,{recursive:true});
+for(const file of readdirSync(resolve(packageRoot,'wasm')))copyFileSync(resolve(packageRoot,'wasm',file),resolve(destination,file));

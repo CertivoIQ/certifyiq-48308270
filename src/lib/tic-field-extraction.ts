@@ -256,9 +256,10 @@ export function extractTicFieldsFromText(
 
   // Recognized supplemental worksheet pages get a conservative same-line text
   // fallback for scalar cells the spatial reader did not emit. Direct/spatial
-  // facts and unresolved/conflicting markers always win.
+  // facts and unresolved/conflicting markers always win. A strict cell page uses
+  // only its image-backed proposals, including when a worksheet number was withheld.
   for (const supplementalFact of supplementalTextFacts(text, documentRef, pageProvenance)) {
-    if (found.has(supplementalFact.field) || conflictingDirectFields.has(supplementalFact.field)) continue;
+    if (typeof supplementalFact.page !== 'number' || strictCellPages.has(supplementalFact.page) || found.has(supplementalFact.field) || conflictingDirectFields.has(supplementalFact.field)) continue;
     facts.push(supplementalFact);
     found.add(supplementalFact.field);
   }
@@ -269,7 +270,7 @@ export function extractTicFieldsFromText(
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index] ?? "";
     const page = pageOfLine[index] ?? 1;
-    if (line.startsWith("__CERTIVOIQ_") || supplementalPages.has(page)) continue;
+    if (line.startsWith("__CERTIVOIQ_") || supplementalPages.has(page) || strictCellPages.has(page)) continue;
     const labels = findTicLabels(line, labelDefinitions);
     for (let labelIndex = 0; labelIndex < labels.length; labelIndex += 1) {
       const hit = labels[labelIndex]!;
