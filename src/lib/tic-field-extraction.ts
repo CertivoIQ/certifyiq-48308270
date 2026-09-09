@@ -259,7 +259,7 @@ export function extractTicFieldsFromText(
   // facts and unresolved/conflicting markers always win. A strict cell page uses
   // only its image-backed proposals, including when a worksheet number was withheld.
   for (const supplementalFact of supplementalTextFacts(text, documentRef, pageProvenance)) {
-    if (strictCellPages.has(supplementalFact.page) || found.has(supplementalFact.field) || conflictingDirectFields.has(supplementalFact.field)) continue;
+    if (typeof supplementalFact.page !== 'number' || strictCellPages.has(supplementalFact.page) || found.has(supplementalFact.field) || conflictingDirectFields.has(supplementalFact.field)) continue;
     facts.push(supplementalFact);
     found.add(supplementalFact.field);
   }
