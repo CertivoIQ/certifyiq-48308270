@@ -65,6 +65,48 @@ function formatExtractedValue(field: string, value: unknown) {
   return String(value);
 }
 
+function finiteMoney(value: unknown) {
+  if (value === null || value === undefined || value === '') return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function IncomeLimitComparison({ values }: { values: Record<string, unknown> }) {
+  const income = finiteMoney(values.calculated_projected_annual_income ?? values.household_annual_income);
+  const limit = finiteMoney(values.applicable_lihtc_income_limit);
+  const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  if (income === null) return null;
+  if (limit === null) {
+    return (
+      <div className="mt-3 rounded-lg border border-flag/30 bg-flag/5 p-4">
+        <p className="flex items-center gap-2 text-sm font-semibold text-flag"><HelpCircle className="size-4" />Needs income-limit information</p>
+        <p className="mt-2 text-sm">Calculated household income: <strong>{money(income)}</strong></p>
+        <p className="mt-1 text-xs text-muted-foreground">CertivoIQ needs the applicable property/program income limit for this household size and certification date before it can show an over-or-under result.</p>
+      </div>
+    );
+  }
+  const difference = income - limit;
+  const over = difference > 0;
+  const percent = limit === 0 ? null : (income / limit) * 100;
+  return (
+    <div className={`mt-3 rounded-lg border p-4 ${over ? 'border-destructive/30 bg-destructive/5' : 'border-compliant/30 bg-compliant/5'}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className={`flex items-center gap-2 text-sm font-semibold ${over ? 'text-destructive' : 'text-compliant'}`}>
+          {over ? <XCircle className="size-4" /> : <CheckCircle2 className="size-4" />}
+          {over ? 'Over income limit' : 'At or under income limit'}
+        </p>
+        {percent !== null ? <span className="text-sm font-semibold">{percent.toFixed(1)}% of limit</span> : null}
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div><p className="text-xs text-muted-foreground">Calculated annual income</p><p className="font-semibold tabular-nums">{money(income)}</p></div>
+        <div><p className="text-xs text-muted-foreground">Applicable income limit</p><p className="font-semibold tabular-nums">{money(limit)}</p></div>
+        <div><p className="text-xs text-muted-foreground">{over ? 'Amount over limit' : 'Amount under limit'}</p><p className="font-semibold tabular-nums">{money(Math.abs(difference))}</p></div>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">Calculation: {money(income)} household income − {money(limit)} income limit = {difference < 0 ? '−' : ''}{money(Math.abs(difference))}.</p>
+    </div>
+  );
+}
+
 type EvidenceRef = { field?: string; documentRef?: string | null; page?: number | null; snippet?: string | null };
 
 type CertificationReviewPanelProps = {
@@ -228,6 +270,9 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
           </div>
           {items.data.map((item) => {
             const extracted = extractedEntries(item.extracted_data);
+            const extractedValues = item.extracted_data && typeof item.extracted_data === 'object' && !Array.isArray(item.extracted_data)
+              ? item.extracted_data as Record<string, unknown>
+              : {};
             return (
               <div id={`certification-${item.id}`} key={item.id} className={`rounded-lg border p-3 ${item.id === activeId ? 'border-primary bg-primary/5' : ''}`}>
                 <div className="flex flex-wrap items-center gap-3">
@@ -275,6 +320,7 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
                     Extraction pending.
                   </div>
                 )}
+                <IncomeLimitComparison values={extractedValues} />
                 {item.id === activeId && (item.review_queue_status === 'not_queued' || item.review_queue_status === 'queued') ? (
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
                     <div>
@@ -421,3 +467,4 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
     </section>
   );
 }
+
