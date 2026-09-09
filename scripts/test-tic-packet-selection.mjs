@@ -114,12 +114,14 @@ const owner='11111111-1111-4111-8111-111111111111';
 const tenantId='22222222-2222-4222-8222-222222222222';
 const source={jobId:'packet-job',storagePath:`${owner}/packet-job/synthetic.pdf`,originalFileName:'synthetic.pdf',mimeType:'application/pdf',sizeBytes:original.byteLength,sha256:realSha};
 const saved = [];
+let preparedScope;
+
 const db={
   from(table) { let operation='select', payload;const q={select(){return q},eq(){return q},order(){return q},limit(){return q},update(value){operation='update';payload=value;return q},delete(){operation='delete';return q},insert(value){operation='insert';payload=value;return q},
     maybeSingle:async()=>({data:table==='certification_import_jobs'?{id:'packet-job',status:'processing'}:{id:tenantId,property_id:'property',unit_id:'unit',program_codes:['LIHTC'],portfolio_properties:{jurisdiction:'GA'}},error:null}),
     single:async()=>{saved.push({table,operation,payload});return {data:{id:'saved-item'},error:null}},
     then(resolve){if(operation!=='select') saved.push({table,operation,payload});return Promise.resolve({data:[],error:null}).then(resolve)}};return q;},
-  storage:{from(){return {download:async path=>({data:path.endsWith('.ocr.json') ? new Blob([JSON.stringify({schemaVersion:'2.0',sourceFileName:source.originalFileName,sourceSha256:realSha,sourceByteSize:original.byteLength,createdAt:'2026-09-06T00:00:00Z',pageCount:pages.length,truncated:false,pages:pages.filter(p=>p.text).map(p=>({...p,source:'text',engine:null,ocrConfidence:null}))})]) : new Blob([original]),error:null}),createSignedUrl:async()=>({data:{signedUrl:'https://example.invalid/source'},error:null})}}},
+  storage:{from(){return {download:async path=>({data:path.endsWith('.ocr.json') ? new Blob([JSON.stringify({schemaVersion:'2.0',sourceFileName:source.originalFileName,sourceSha256:realSha,sourceByteSize:original.byteLength,createdAt:'2026-09-06T00:00:00Z',pageCount:pages.length,truncated:false,...(preparedScope ? {preparedPageNumbers:preparedScope} : {}),pages:pages.filter(p=>p.text).map(p=>({...p,source:'text',engine:null,ocrConfidence:null}))})]) : new Blob([original]),error:null}),createSignedUrl:async()=>({data:{signedUrl:'https://example.invalid/source'},error:null})}}},
 };
 globalThis.__packetTestDb=db;
 const serverUrl = compile('src/utils/tic-certification-intake.functions.ts', {
@@ -217,3 +219,21 @@ test('rental assistance type is not the legacy assistance amount', () => {
 
 
 test('actual save requires completed income even when review is not requested',async()=>{ const preview=await extractCertificationTicPreview({data:{source,pageSelections:choices},context}); const before=saved.length; await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:preview.selectionDigest,incomeDraft:{...incomeDraft(preview),confirmed:false},startReview:false},context}),/Confirm the income/); assert.equal(saved.length,before); });
+
+test('bulk page decisions expand exact physical ranges without renumbering', () => {
+  assert.deepEqual(selection.parsePacketPageRange('3-5, 8, 4', 46), [3,4,5,8]);
+  assert.deepEqual(selection.parsePacketPageRange('1–2', 46), [1,2]);
+  for (const input of ['', '0', '47', '5-3', '1,', '3x', '1-200000']) assert.throws(() => selection.parsePacketPageRange(input, 46));
+});
+
+test('actual preview and save reject income pages that have not completed extraction', async()=>{
+ const ready=await extractCertificationTicPreview({data:{source,pageSelections:choices},context});
+ const before=saved.length;
+ preparedScope=[4,5];
+ try {
+  const preview=await extractCertificationTicPreview({data:{source,pageSelections:choices},context});
+  assert.match(preview.error,/Page 6 has not completed extraction/);
+  await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:ready.selectionDigest,incomeDraft:incomeDraft(ready),startReview:false},context}),/Page 6 has not completed extraction/);
+  assert.equal(saved.length,before);
+ } finally {preparedScope=undefined;}
+});

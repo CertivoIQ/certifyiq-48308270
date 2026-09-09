@@ -92,3 +92,17 @@ export function selectionFromHistory(history: unknown, sourceSha256: string): Pa
   const pages = Array.from({ length: Number(raw['pageCount']) }, (_, i) => ({ page: i + 1, text: '' }));
   return buildPacketSelection(pages, raw['choices'], sourceSha256);
 }
+
+/** A bulk decision still resolves to one explicit choice for each physical page. */
+export function parsePacketPageRange(value: string, pageCount: number): number[] {
+  if (!value.trim() || value.length > 500) throw new Error('Enter page numbers, for example 3-5, 8.');
+  const pages = new Set<number>();
+  for (const part of value.trim().split(',')) {
+    const match = /^\s*(\d+)\s*(?:[-–]\s*(\d+)\s*)?$/.exec(part);
+    if (!match) throw new Error('Use page numbers and ranges, for example 3-5, 8.');
+    const start = Number(match[1]), end = Number(match[2] ?? match[1]);
+    if (start < 1 || end < start || end > pageCount) throw new Error(`Choose original pages between 1 and ${pageCount}.`);
+    for (let page = start; page <= end; page++) pages.add(page);
+  }
+  return [...pages].sort((a,b) => a-b);
+}

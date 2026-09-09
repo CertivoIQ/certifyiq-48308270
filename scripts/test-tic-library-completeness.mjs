@@ -118,3 +118,5 @@ import './test-tic-label-variants.mjs';
 
 import './test-tic-scan-recovery.mjs';
 
+
+import './test-selected-page-preparation.mjs';

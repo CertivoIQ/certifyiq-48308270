@@ -2,18 +2,18 @@ import { CertificationIncomeCalculator } from "@/components/certification-income
 import { calculateIncomePreparation, type IncomeDraft, type IncomePreparation } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { FileSearch, FileText, FileUp, UploadCloud } from "lucide-react";
 
 import { TicPacketOrganizer } from "@/components/tic-packet-organizer";
-import { validatePageChoices, type PacketPageChoice, type PacketPageInventory } from "@/lib/tic-packet-selection";
+import { initialPageChoices, packetInventory, validatePageChoices, type PacketPageChoice, type PacketPageInventory } from "@/lib/tic-packet-selection";
 import { CertivoIqTicReviewForm } from "@/components/certivoiq-tic-review-form";
 import { supabase } from "@/integrations/supabase/client";
 import { MAX_UPLOAD_BYTES, sidecarPathFor } from "@/lib/ocr-sidecar.mjs";
-import { isOcrSupportedFile, prepareCertificationForReview } from "@/lib/pdf-ocr";
+import { isOcrSupportedFile, inspectCertificationPacket, identifyCertificationPageLabels, prepareCertificationForReview } from "@/lib/pdf-ocr";
 import { uploadCertificationFile } from "@/lib/certification-upload";
 import { TIC_FIELD_DEFINITIONS } from "@/lib/tic-field-registry";
 import {
@@ -112,6 +112,11 @@ export function CertificationUploadPanel() {
     queryFn: () => listTenantDestinations(),
   });
 
+  const stagedFile = useRef<File | null>(null);
+  const labelAbort = useRef<AbortController | null>(null);
+  const labelTask = useRef<Promise<void> | null>(null);
+  const [identifyingPages, setIdentifyingPages] = useState(false);
+  useEffect(() => () => { labelAbort.current?.abort(); stagedFile.current = null; }, []);
   const [file, setFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<ExtractionDraft | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -127,6 +132,11 @@ export function CertificationUploadPanel() {
   const [message, setMessage] = useState("");
   const [progressPercent, setProgressPercent] = useState(0);
   const [progressLabel, setProgressLabel] = useState("Choose a certification to begin.");
+
+  useEffect(() => {
+    const url = draft?.sourcePreviewUrl;
+    return () => { if (url?.startsWith("blob:")) URL.revokeObjectURL(url); };
+  }, [draft?.sourcePreviewUrl]);
 
   const factsByField = useMemo(
     () => new Map((draft?.facts ?? []).map((fact) => [fact.field, fact])),
@@ -187,7 +197,7 @@ export function CertificationUploadPanel() {
         updateConcurrentProgress(`Staging ${file.name}: ${clampPercent(uploadPercent)}%…`);
       });
 
-      const preparePromise = prepareCertificationForReview(file, (status, nextPreparationPercent) => {
+      const preparePromise = inspectCertificationPacket(file, (status, nextPreparationPercent) => {
         preparationPercent = clampPercent(nextPreparationPercent);
         updateConcurrentProgress(status);
       }).then((result) => {
@@ -199,13 +209,6 @@ export function CertificationUploadPanel() {
       if (uploadOutcome.status === "rejected") throw uploadOutcome.reason;
       if (prepareOutcome.status === "rejected") throw prepareOutcome.reason;
       const prepared = prepareOutcome.value;
-
-      setProgressPercent(92);
-      setProgressLabel("Saving temporary OCR provenance…");
-      const sidecarBytes = new Blob([JSON.stringify(prepared.sidecar)], { type: OCR_SIDECAR_STORAGE_MIME });
-      const { error: sidecarError } = await supabase.storage.from("certification-imports")
-        .upload(sidecarPathFor(storagePath), sidecarBytes, { upsert: true, contentType: OCR_SIDECAR_STORAGE_MIME });
-      if (sidecarError) throw sidecarError;
 
       const source: DraftSource = {
         jobId: job.id,
@@ -220,38 +223,33 @@ export function CertificationUploadPanel() {
         uploadTransport: uploadOutcome.value.transport,
       };
 
-      setProgressPercent(96);
-      setProgressLabel("Identifying TIC pages and organizing other documents for your decision…");
-      const preview = await extractPreview({ data: { source } });
-      if ("error" in preview) throw new Error(preview.error || "The certification extraction could not be completed.");
-
-      const facts = preview.facts as PreviewFact[];
-      const supportingDocuments = preview.supportingDocuments as SupportingPreviewGroup[];
-      const extractedByField = new Map(facts.map((fact) => [fact.field, fieldText(fact.value)]));
-      setFieldValues(Object.fromEntries(
-        TIC_FIELD_DEFINITIONS.map((definition) => [definition.key, extractedByField.get(definition.key) ?? ""]),
-      ));
-      setPageChoices(preview.pageSelections);
+      const inventory = packetInventory(prepared.pages);
+      stagedFile.current = file;
+      const sourcePreviewUrl = URL.createObjectURL(file);
+      setFieldValues({});
+      setPageChoices(initialPageChoices(inventory));
       setStage("organize");
       setOtherReviewAction("");
       setDraft({
-        source,
-        facts,
-        missingFields: [...preview.missingFields],
-        confidence: Number(preview.confidence || 0),
-        extractionProvider: preview.extractionProvider,
-        sourcePreviewUrl: preview.sourcePreviewUrl,
-        supportingDocuments,
-        pageClassifications: preview.pageClassifications,
-        selectionDigest: preview.selectionDigest,
-        ticPages: [...preview.ticPages],
-        omittedPages: [...preview.omittedPages],
-        incomePreparation: preview.incomePreparation,
+        source, facts: [], missingFields: [], confidence: 0, extractionProvider: "pending",
+        sourcePreviewUrl, supportingDocuments: [], pageClassifications: inventory,
+        selectionDigest: null, ticPages: [], omittedPages: [], incomePreparation: null,
       });
       setFile(null);
       setProgressPercent(100);
-      setProgressLabel("Packet identified — confirm which documents belong in this review.");
-      setMessage("Detected TIC pages are preselected. Decide which remaining pages to include or omit before building the TIC. Nothing has been saved to the tenant file.");
+      setProgressLabel("File uploaded — choose documents while page labels are identified.");
+      setMessage("Select the TIC and supporting pages to include. Full extraction runs on included pages after you confirm the selection.");
+      const abort = new AbortController();
+      labelAbort.current = abort;
+      setIdentifyingPages(true);
+      labelTask.current = identifyCertificationPageLabels(file, prepared, page => {
+        const identified = packetInventory([page])[0];
+        if (!identified || abort.signal.aborted) return;
+        setDraft(current => current?.source.sha256 === source.sha256 ? {...current, pageClassifications: current.pageClassifications.map(p => p.page === page.page ? identified : p)} : current);
+        if (identified.kind === "tic") setPageChoices(current => current.map(c => c.page === page.page && c.role === "pending" ? {...c, role: "tic_page"} : c));
+      }, abort.signal).catch(() => undefined).finally(() => {
+        if (labelAbort.current === abort) setIdentifyingPages(false);
+      });
     } catch (error) {
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData.user?.id;
@@ -283,13 +281,28 @@ export function CertificationUploadPanel() {
     setMessage("");
     try {
       validatePageChoices(pageChoices, draft.pageClassifications.length, true);
-      const preview = await extractPreview({ data: { source: draft.source, pageSelections: pageChoices } });
+      const localFile = stagedFile.current;
+      if (!localFile) throw new Error("The original packet is no longer available in this tab. Reopen the upload before extracting.");
+      labelAbort.current?.abort();
+      await labelTask.current;
+      setIdentifyingPages(false);
+      const startedAt = performance.now();
+      const prepared = await prepareCertificationForReview(localFile, (status, percent) => {
+        setProgressLabel(status); setProgressPercent(percent);
+      }, {pageNumbers: pageChoices.filter(choice => choice.role !== "omit").map(choice => choice.page)});
+      if (prepared.sourceSha256 !== draft.source.sha256) throw new Error("The local file no longer matches this staged packet.");
+      setProgressLabel("Saving selected-page extraction…");
+      const sidecarBytes = new Blob([JSON.stringify(prepared.sidecar)], {type: OCR_SIDECAR_STORAGE_MIME});
+      const {error: sidecarError} = await supabase.storage.from("certification-imports").upload(sidecarPathFor(draft.source.storagePath), sidecarBytes, {upsert: true, contentType: OCR_SIDECAR_STORAGE_MIME});
+      if (sidecarError) throw sidecarError;
+      const source = {...draft.source, extractionDurationMs: Math.round(performance.now() - startedAt), totalIntakeDurationMs: draft.source.totalIntakeDurationMs + Math.round(performance.now() - startedAt)};
+      const preview = await extractPreview({ data: { source, pageSelections: pageChoices } });
       if ("error" in preview) throw new Error(preview.error || "The selected TIC pages could not be extracted.");
       const facts = preview.facts as PreviewFact[];
       const extracted = new Map(facts.map(fact => [fact.field, fieldText(fact.value)]));
       setFieldValues(Object.fromEntries(TIC_FIELD_DEFINITIONS.map(definition => [definition.key, extracted.get(definition.key) ?? ""])));
-      setDraft({ ...draft, facts, missingFields: [...preview.missingFields], confidence: preview.confidence, extractionProvider: preview.extractionProvider,
-        sourcePreviewUrl: preview.sourcePreviewUrl, supportingDocuments: preview.supportingDocuments, pageClassifications: preview.pageClassifications,
+      setDraft({ ...draft, source, facts, missingFields: [...preview.missingFields], confidence: preview.confidence, extractionProvider: preview.extractionProvider,
+        sourcePreviewUrl: preview.sourcePreviewUrl, supportingDocuments: preview.supportingDocuments, pageClassifications: preview.pageClassifications.map(page => page.excerpt ? page : draft.pageClassifications.find(previous => previous.page === page.page) ?? page),
         selectionDigest: preview.selectionDigest, ticPages: [...preview.ticPages], omittedPages: [...preview.omittedPages], incomePreparation: preview.incomePreparation });
       setPageChoices(preview.pageSelections);
       setViewTicPage(preview.ticPages[0] ?? 1);
@@ -339,6 +352,9 @@ export function CertificationUploadPanel() {
         ? ` ${result.correctionCount} OCR correction${result.correctionCount === 1 ? "" : "s"} and ${result.reviewerSuppliedCount} previously missed TIC field${result.reviewerSuppliedCount === 1 ? "" : "s"} were recorded.`
         : " No TIC field changes were needed.";
       const supportText = ` ${result.supportingDocumentCount} selected supporting page(s) preserved; ${result.omittedPageCount} page(s) omitted from review and retained only in the original packet.`;
+      labelAbort.current?.abort();
+      stagedFile.current = null;
+      setIdentifyingPages(false);
       setDraft(null);
       setIncomeDraft(null);
       setFieldValues({});
@@ -378,6 +394,9 @@ export function CertificationUploadPanel() {
     setMessage("");
     try {
       await cancelPreview({ data: { source: draft.source } });
+      labelAbort.current?.abort();
+      stagedFile.current = null;
+      setIdentifyingPages(false);
       setDraft(null);
       setIncomeDraft(null);
       setFieldValues({});
@@ -449,7 +468,7 @@ export function CertificationUploadPanel() {
           </div>
 
           {stage === "organize" ? (
-            <TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} />
+            <TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} identifying={identifyingPages} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} />
           ) : stage === "income" && incomeDraft && draft.incomePreparation ? (
             <CertificationIncomeCalculator value={incomeDraft} pages={draft.incomePreparation.pages} sourceUrl={draft.sourcePreviewUrl} busy={busy} onChange={setIncomeDraft} onBack={() => setStage("tic")} onContinue={() => {
               if (!incomeResult || incomeResult.annualIncome === null || incomeResult.issues.length) return;

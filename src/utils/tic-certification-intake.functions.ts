@@ -15,7 +15,7 @@ import {
   supportingDocumentLabel,
   type SupportingDocumentType,
 } from "@/lib/tic-supporting-document-registry";
-import { composeSidecarText, provenanceIndex } from "@/lib/ocr-sidecar.mjs";
+import { assertSidecarPageCoverage, composeSidecarText, provenanceIndex } from "@/lib/ocr-sidecar.mjs";
 import { buildPacketSelection, selectionFromHistory, initialPageChoices, packetInventory, selectedSupportingPages, selectedTicText, selectedWorksheetText, validatePageChoices, type PacketPageChoice } from "@/lib/tic-packet-selection";
 
 const REVIEWER_CONFIRMED_PROVIDER = "reviewer-confirmed";
@@ -105,7 +105,9 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
 
   const sidecarDownload = await supabase.storage.from("certification-imports").download(extraction.sidecarPathFor(source.storagePath));
   if (sidecarDownload.error || !sidecarDownload.data) throw new Error("The source-bound page inventory is unavailable. Re-upload the packet; extraction will not guess its page boundaries.");
-  const composed = composeSidecarText(JSON.parse(await sidecarDownload.data.text()), {
+  const rawSidecar = JSON.parse(await sidecarDownload.data.text());
+  if (pageChoices) assertSidecarPageCoverage(rawSidecar, pageChoices.filter(choice => choice.role !== "omit").map(choice => choice.page));
+  const composed = composeSidecarText(rawSidecar, {
     fileName: source.originalFileName, sha256: sourceSha256, byteSize: bytes.byteLength,
   });
   const textByPage = new Map(composed.pages.map(page => [page.page, page.text]));

@@ -7,6 +7,7 @@ import {
   OCR_TIMEOUT_MESSAGE,
   normalizePageText,
   pageNeedsOcr,
+  preparationPageNumbers,
   type OcrSidecar,
   type OcrSidecarPage,
 } from '@/lib/ocr-sidecar.mjs';
@@ -62,6 +63,7 @@ type OcrPageSegMode = NonNullable<Parameters<SharedOcrWorker['setParameters']>[0
 
 // Reuse one bounded pool for the page lifetime. Mass intake must not start
 // three new OCR workers (and reload their language data) for every document.
+const preparedPageCache = new WeakMap<File, Map<number, OcrSidecarPage | null>>();
 const sharedOcrPool = createOcrWorkerPool(createPinnedOcrWorker, worker => worker.terminate());
 
 function describeOcrError(error: unknown): string {
@@ -318,8 +320,8 @@ async function recognizeTicCells(canvas: HTMLCanvasElement, blocks: unknown, wor
     const confirmed = new Map<string, string>();
     // A worksheet money/rate cell needs agreement with an independent crop read.
     // This catches plausible digit errors that currency formatting alone cannot detect.
-    for (const tile of sheet.tiles) {
-      if (!tile.key.startsWith('worksheet_') || !['currency','number'].includes(tile.type) || !extracted.values[tile.key]) continue;
+    async function confirmTile(tile: (typeof sheet.tiles)[number]) {
+      if (!tile.key.startsWith('worksheet_') || !['currency','number'].includes(tile.type) || !extracted.values[tile.key]) return;
       const cell = plan.cells.find(candidate => candidate.key === tile.key)!;
       const b = cell.bbox;
       const scale = Math.min(3, 70 / Math.max(14, b.y1 - b.y0), 1000 / (b.x1 - b.x0));
@@ -339,6 +341,9 @@ async function recognizeTicCells(canvas: HTMLCanvasElement, blocks: unknown, wor
         );
         if (check.values[tile.key] === extracted.values[tile.key]) confirmed.set(tile.key, check.values[tile.key]!);
       } finally { isolated.canvas.width = 1; isolated.canvas.height = 1; }
+    }
+    for (let index = 0; index < sheet.tiles.length; index += workerCount) {
+      await Promise.all(sheet.tiles.slice(index, index + workerCount).map(confirmTile));
     }
     return confirmWorksheetNumbers(extracted, plan, confirmed);
   } finally { target.canvas.width = 1; target.canvas.height = 1; }
@@ -370,6 +375,7 @@ function reportProgress(
 export async function prepareCertificationForReview(
   file: File,
   onProgress?: PreparationProgressCallback,
+  options: { pageNumbers?: readonly number[] } = {},
 ): Promise<PrepareResult> {
   if (!isOcrSupportedFile(file)) {
     throw new Error('Only PDF, PNG, JPEG, and WEBP certification documents can be extracted.');
@@ -381,6 +387,7 @@ export async function prepareCertificationForReview(
   const sourceSha256 = await sha256Hex(sourceBuffer);
 
   if (isImageFile(file)) {
+    preparationPageNumbers(options.pageNumbers, 1);
     reportProgress(onProgress, 'Preparing certification image for review…', 10);
     reportProgress(onProgress, 'Reading certification image text…', 35);
     let recognition: OcrRecognition;
@@ -419,6 +426,7 @@ export async function prepareCertificationForReview(
         sourceByteSize: file.size,
         createdAt: new Date().toISOString(),
         pageCount: 1,
+        preparedPageNumbers: [1],
         truncated: false,
         pages: [
           {
@@ -444,6 +452,10 @@ export async function prepareCertificationForReview(
   try {
     if (pdf.numPages > MAX_PDF_PAGES) throw new Error(OCR_LIMIT_MESSAGE);
 
+    const requestedPages = preparationPageNumbers(options.pageNumbers, pdf.numPages);
+    const requested = new Set(requestedPages);
+    const cache = preparedPageCache.get(file) ?? new Map<number, OcrSidecarPage | null>();
+    preparedPageCache.set(file, cache);
     const pages: OcrSidecarPage[] = [];
     const needsOcr: number[] = [];
     const preparedTextByPage = new Map<number, string>();
@@ -466,6 +478,13 @@ export async function prepareCertificationForReview(
       while (nextTextPage <= pdf.numPages) {
         const pageNumber = nextTextPage;
         nextTextPage += 1;
+        if (!requested.has(pageNumber)) continue;
+        if (cache.has(pageNumber)) {
+          const cached = cache.get(pageNumber);
+          if (cached) pages.push(cached);
+          completedTextPages += 1;
+          continue;
+        }
         const page = await pdf.getPage(pageNumber);
         const content = await page.getTextContent();
         const nativeViewport = page.getViewport({ scale: 1 });
@@ -485,8 +504,8 @@ export async function prepareCertificationForReview(
         completedTextPages += 1;
         reportProgress(
           onProgress,
-          `Reading PDF text: ${completedTextPages} of ${pdf.numPages} pages complete…`,
-          10 + (completedTextPages / pdf.numPages) * 30,
+          `Reading PDF text: ${completedTextPages} of ${requestedPages.length} selected pages complete…`,
+          10 + (completedTextPages / requestedPages.length) * 30,
         );
       }
     }
@@ -494,7 +513,9 @@ export async function prepareCertificationForReview(
     pages.sort((a, b) => a.page - b.page);
     needsOcr.sort((a, b) => a - b);
 
+    if (needsOcr.length + pages.filter(page => page.source === 'ocr').length > MAX_OCR_PAGES) throw new Error(OCR_LIMIT_MESSAGE);
     if (!needsOcr.length) {
+      if (!pages.length) throw new Error(OCR_NO_TEXT_MESSAGE);
       reportProgress(onProgress, 'PDF text detected; preparation complete.', 100);
       return {
         kind: 'machine-readable',
@@ -507,6 +528,7 @@ export async function prepareCertificationForReview(
           sourceByteSize: file.size,
           createdAt: new Date().toISOString(),
           pageCount: pdf.numPages,
+          preparedPageNumbers: requestedPages,
           truncated: false,
           pages,
         },
@@ -554,11 +576,13 @@ export async function prepareCertificationForReview(
           const highResolutionFormCandidate = isTicFormPage || pageNumber <= 3;
           const viewport = page.getViewport({ scale: highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE });
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
+          try {
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
           await assertRenderedPdfImages(page, pdfjs.OPS);
 
           if (looksVisuallyBlank(canvas)) {
             blankPages.push(pageNumber);
+            cache.set(pageNumber, null);
           } else {
             const { text, confidence, blocks } = await recognizeScannedCanvas(
               canvas,
@@ -577,13 +601,15 @@ export async function prepareCertificationForReview(
               const combinedText = normalizePageText(
                 [removeRedactedNativeValues(preparedTextByPage.get(pageNumber) ?? '', cellLines), text, ...fallbackValues].filter(Boolean).join('\n'),
               );
-              pages.push({
+              const preparedPage: OcrSidecarPage = {
                 page: pageNumber,
                 source: 'ocr',
                 engine: OCR_ENGINE,
                 ocrConfidence: Math.min(1, confidence),
                 text: combinedText,
-              });
+              };
+              pages.push(preparedPage);
+              cache.set(pageNumber, preparedPage);
             } else {
               pageErrors.push({
                 page: pageNumber,
@@ -591,6 +617,7 @@ export async function prepareCertificationForReview(
               });
             }
           }
+          } finally { canvas.width = 1; canvas.height = 1; }
         } catch (error) {
           if (error instanceof OcrRuntimeError) {
             fatalError = new Error(`${error.message} Failed PDF page: ${pageNumber}.`);
@@ -643,6 +670,7 @@ export async function prepareCertificationForReview(
       sourceByteSize: file.size,
       createdAt: new Date().toISOString(),
       pageCount: pdf.numPages,
+      preparedPageNumbers: requestedPages,
       truncated: false,
       pages,
     };
@@ -653,5 +681,88 @@ export async function prepareCertificationForReview(
       : { kind: 'machine-readable', ocrPageCount: 0, sourceSha256, sidecar };
   } finally {
     await pdf.cleanup();
+    await pdf.destroy();
   }
+}
+
+
+export type PacketInspection = { sourceSha256: string; pageCount: number; pages: Array<{page: number; text: string}> };
+
+/** Open the original packet without waiting for OCR. Header suggestions are a separate task. */
+export async function inspectCertificationPacket(file: File, onProgress?: PreparationProgressCallback): Promise<PacketInspection> {
+  if (!isOcrSupportedFile(file)) throw new Error('Only PDF, PNG, JPEG, and WEBP certification documents can be extracted.');
+  reportProgress(onProgress, 'Opening the uploaded packet…', 5);
+  const buffer = await file.arrayBuffer();
+  const sourceSha256 = await sha256Hex(buffer);
+  if (isImageFile(file)) return {sourceSha256, pageCount: 1, pages: [{page: 1, text: ''}]};
+  const pdfjs = await import('pdfjs-dist');
+  pdfjs.GlobalWorkerOptions.workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+  const pdf = await pdfjs.getDocument({data: new Uint8Array(buffer), ...pdfImageDecodeOptions(pdfjs.version, window.location.origin)}).promise;
+  try {
+    if (pdf.numPages > MAX_PDF_PAGES) throw new Error('Certification packets support up to 200 original pages.');
+    const pages: PacketInspection['pages'] = Array.from({length: pdf.numPages}, (_, i) => ({page: i + 1, text: ''}));
+    let next = 0, completed = 0;
+    async function read() {
+      while (next < pages.length) {
+        const index = next++;
+        const page = await pdf.getPage(index + 1);
+        const content = await page.getTextContent();
+        pages[index]!.text = normalizePageText(nativePdfLayout(content.items, page.getViewport({scale: 1})).text);
+        completed++;
+        reportProgress(onProgress, 'Opening packet pages…', 5 + completed / pages.length * 95);
+      }
+    }
+    await Promise.all(Array.from({length: Math.min(MAX_PARALLEL_TEXT_READERS, pdf.numPages)}, () => read()));
+    return {sourceSha256, pageCount: pdf.numPages, pages};
+  } finally {await pdf.destroy();}
+}
+
+/** Small header reads suggest document roles only. They never become certification evidence. */
+export async function identifyCertificationPageLabels(
+  file: File,
+  inspection: PacketInspection,
+  onPage: (page: {page: number; text: string}) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  if (signal.aborted) return;
+  const targets = inspection.pages.filter(page => pageNeedsOcr(page.text));
+  if (!targets.length) return;
+  const workerCount = parallelOcrWorkerCount(targets.length);
+  const {PSM} = await import('tesseract.js');
+  const pdfjs = isPdfFile(file) ? await import('pdfjs-dist') : null;
+  if (pdfjs) pdfjs.GlobalWorkerOptions.workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+  const pdf = pdfjs ? await pdfjs.getDocument({data: new Uint8Array(await file.arrayBuffer()), ...pdfImageDecodeOptions(pdfjs.version, window.location.origin)}).promise : null;
+  let next = 0;
+  const startedAt = Date.now();
+  async function read() {
+    while (!signal.aborted && next < targets.length && Date.now() - startedAt < 120_000) {
+      const target = targets[next++]!;
+      let canvas: HTMLCanvasElement | null = null;
+      try {
+        if (pdf && pdfjs) {
+          const page = await pdf.getPage(target.page);
+          const viewport = page.getViewport({scale: 1.3});
+          const rendered = createCanvas(viewport.width, Math.ceil(viewport.height * 0.34));
+          canvas = rendered.canvas;
+          await page.render({canvas, canvasContext: rendered.context, viewport, background: '#ffffff'}).promise;
+          await assertRenderedPdfImages(page, pdfjs.OPS);
+        } else {
+          const bitmap = await createImageBitmap(file);
+          try {
+            const scale = Math.min(1, 1000 / bitmap.width);
+            const rendered = createCanvas(bitmap.width * scale, bitmap.height * scale * 0.34);
+            canvas = rendered.canvas;
+            rendered.context.drawImage(bitmap, 0, 0, bitmap.width * scale, bitmap.height * scale);
+          } finally {bitmap.close();}
+        }
+        if (signal.aborted) return;
+        const result = normalizedRecognition(await recognizeWithSharedWorker(canvas, workerCount, PSM.AUTO));
+        if (!signal.aborted && result.confidence >= 0.55 && result.text) onPage({page: target.page, text: result.text});
+      } catch {
+        // A label suggestion failure leaves a page undecided. Full extraction must still succeed.
+      } finally {if (canvas) {canvas.width = 1; canvas.height = 1;}}
+    }
+  }
+  try {await Promise.all(Array.from({length: workerCount}, () => read()));}
+  finally {if (pdf) await pdf.destroy();}
 }

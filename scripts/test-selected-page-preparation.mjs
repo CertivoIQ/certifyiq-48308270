@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {assertSidecarPageCoverage, composeSidecarText, preparationPageNumbers} from '../src/lib/ocr-sidecar.mjs';
+const sha='a'.repeat(64);
+const fixture=()=>({schemaVersion:'2.0',sourceFileName:'synthetic.pdf',sourceSha256:sha,sourceByteSize:100,createdAt:'2026-09-01T00:00:00Z',pageCount:46,truncated:false,preparedPageNumbers:[3,4,5],pages:[{page:3,source:'ocr',engine:'tesseract.js:eng',ocrConfidence:0.9,text:'TENANT INCOME CERTIFICATION'},{page:4,source:'text',engine:null,ocrConfidence:null,text:'Tenant paid rent: 675.00'}]});
+test('selected extraction retains original page numbers and source identity',()=>{const result=composeSidecarText(fixture(),{fileName:'synthetic.pdf',sha256:sha,byteSize:100});assert.deepEqual(result.pages.map(p=>p.page),[3,4]);assert.equal(result.sourceIdentity.pageCount,46);assertSidecarPageCoverage(fixture(),[3,4,5]);});
+test('newly included pages cannot enter review using an old selected-page sidecar',()=>{assert.throws(()=>assertSidecarPageCoverage(fixture(),[3,4,5,8]),/Page 8 has not completed extraction/);});
+test('text outside the completed extraction scope is rejected',()=>{const sidecar=fixture();sidecar.pages.push({...sidecar.pages[0],page:8});assert.throws(()=>composeSidecarText(sidecar),/outside its prepared page scope/);});
+test('page coverage is validated rather than trusted',()=>{for(const preparedPageNumbers of [[],[0],[47],[3,3],['3'],null])assert.throws(()=>composeSidecarText({...fixture(),preparedPageNumbers}));});
+test('mismatched source bytes remain rejected for selected-page sidecars',()=>{assert.throws(()=>composeSidecarText(fixture(),{fileName:'synthetic.pdf',sha256:'b'.repeat(64),byteSize:100}),/does not match/);});
+test('the unchanged whole-packet path and legacy source-bound records remain supported',()=>{assert.deepEqual(preparationPageNumbers(undefined,3),[1,2,3]);assert.deepEqual(preparationPageNumbers([3,1],3),[1,3]);const sidecar=fixture();delete sidecar.preparedPageNumbers;assertSidecarPageCoverage(sidecar,[3,4,8]);});
+test('invalid selected ranges fail before work starts',()=>{for(const pages of [[],[0],[4],[1,1],[1.5]])assert.throws(()=>preparationPageNumbers(pages,3));});

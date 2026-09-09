@@ -33,6 +33,24 @@ export function pageNeedsOcr(text) {
   return normalizePageText(text).replace(/\n/g, ' ').trim().length < PAGE_TEXT_MIN_CHARS;
 }
 
+/** Physical page numbers only; duplicates and partial-range guesses are rejected. */
+export function preparationPageNumbers(input, pageCount) {
+  const pages = input === undefined ? Array.from({length: pageCount}, (_, i) => i + 1) : input;
+  if (!Number.isInteger(pageCount) || pageCount < 1 || pageCount > MAX_PDF_PAGES || !Array.isArray(pages) || !pages.length || pages.some(p => !Number.isInteger(p) || p < 1 || p > pageCount) || new Set(pages).size !== pages.length) throw new Error('Choose valid, unique original pages for extraction.');
+  return [...pages].sort((a,b) => a-b);
+}
+
+/** Selected-page sidecars may never stand in for evidence that was not prepared. */
+export function assertSidecarPageCoverage(sidecar, requiredPages) {
+  const identity = validateSidecarSource(sidecar);
+  const required = preparationPageNumbers(requiredPages, identity.pageCount);
+  // Older sidecars were produced by the mandatory whole-packet pipeline.
+  if (sidecar.preparedPageNumbers === undefined) return;
+  const prepared = new Set(preparationPageNumbers(sidecar.preparedPageNumbers, identity.pageCount));
+  const missing = required.find(page => !prepared.has(page));
+  if (missing !== undefined) throw new Error(`Page ${missing} has not completed extraction. Prepare the current page selection before saving or reviewing.`);
+}
+
 function invalid(message) {
   throw new Error(`The OCR sidecar for this certification ${message}`);
 }
@@ -63,6 +81,7 @@ export function validateSidecarSource(sidecar, expectedSource) {
   ) {
     invalid('has incomplete or invalid source identity.');
   }
+  if (sidecar.preparedPageNumbers !== undefined) preparationPageNumbers(sidecar.preparedPageNumbers, Number(sidecar.pageCount));
   if (expectedSource) {
     if (
       sidecar.sourceFileName !== expectedSource.fileName ||
@@ -107,6 +126,7 @@ export function composeSidecarText(sidecar, expectedSource) {
     invalid('contains more page records than the source PDF.');
   }
 
+  if (sidecar.preparedPageNumbers !== undefined && rawPages.some(page => !sidecar.preparedPageNumbers.includes(Number(page?.page)))) invalid('contains text outside its prepared page scope.');
   const pageNumbers = rawPages.map((page) => Number(page?.page));
   const validNumbers = pageNumbers.filter(Number.isInteger);
   if (new Set(validNumbers).size !== validNumbers.length) {
