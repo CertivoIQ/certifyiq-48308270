@@ -41,3 +41,9 @@ test('each new review starts with independent rate settings',()=>{
  assert.equal(newTicWorksheetSettings().passbookRatePercent,'');
  assert.equal(calculateTicWorksheet(input,{...settings,passbookRatePercent:'0'}).values.total_income_assets_m,'3.18');
 });
+
+test('a reported source asset total remains editable while its dependent household total recalculates',()=>{
+ const v={total_income_e:'10000',total_income_assets_m:'5'};
+ const partial=calculateTicWorksheet(v);assert.equal(partial.calculated.total_income_assets_m,undefined);assert.equal(partial.values.household_annual_income,'10005.00');
+ const complete=calculateTicWorksheet({...v,total_income_assets_m:'5.52'});assert.equal(complete.values.household_annual_income,'10005.52');
+});

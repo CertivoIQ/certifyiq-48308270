@@ -53,8 +53,8 @@ export function calculateTicWorksheet(input:Record<string,string>,settings:TicWo
  let selected:bigint|null=null;
  if(settings.assetMethod==='SOURCE'){
   selected=read('total_income_assets_m')??read('total_asset_annual_income')??read('worksheet_total_asset_income')??(!assetCount?read('asset_actual_income_below_iit'):null);
-  if(selected===null&&blank(input['imputed_asset_income'])&&assetCount&&!badActual&&!assetRows.some(a=>/^imputed$/i.test(a.method)))selected=actualIncome;
-  if(selected!==null)put('total_income_assets_m',selected,assetCount&&blank(input['total_income_assets_m'])&&blank(input['total_asset_annual_income'])&&blank(input['worksheet_total_asset_income'])?'Sum of entered annual asset-income amounts':'Asset-income total reported on the selected source TIC');
+  if(selected===null&&blank(input['imputed_asset_income'])&&assetCount&&!badActual&&!assetRows.some(a=>/^imputed$/i.test(a.method))){selected=actualIncome;put('total_income_assets_m',selected,'Sum of entered annual asset-income amounts');}
+  else if(selected!==null)values['total_income_assets_m']=cash(selected);
  }else if(settings.assetMethod==='ACTUAL'){selected=actualIncome;if(assetRows.some(a=>/^imputed$/i.test(a.method))){selected=null;issues.push('Imputed asset rows require the applicable imputation method.');}put('total_income_assets_m',selected,'Actual annual income from the entered assets');}
  else if(settings.assetMethod==='LEGACY_GREATER'){if(actualIncome!==null&&imputed!==null)selected=actualIncome>imputed?actualIncome:imputed;put('total_income_assets_m',selected,'Greater of actual asset income and imputed income above the entered threshold');}
  else if(settings.assetMethod==='HOTMA_PER_ASSET'){

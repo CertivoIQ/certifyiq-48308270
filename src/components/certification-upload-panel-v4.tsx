@@ -528,7 +528,7 @@ export function CertificationUploadPanel() {
                 factsByField={factsByField}
                 calculatedFields={worksheet.formulas}
                 busy={busy}
-                onChange={(field, value) => { setFieldValues((current) => ({ ...current, [field]: value })); if (field === "certification_effective_date" && incomeDraft) setIncomeDraft({ ...incomeDraft, effectiveDate: value, confirmed: false }); }}
+                onChange={(field, value) => { setFieldValues((current) => ({ ...current, [field]: value })); if (field === "worksheet_passbook_rate_percent") setWorksheetSettings(current=>({...current,passbookRatePercent:value})); if (field === "certification_effective_date" && incomeDraft) setIncomeDraft({ ...incomeDraft, effectiveDate: value, confirmed: false }); }}
               />
             </div>
           </div>
