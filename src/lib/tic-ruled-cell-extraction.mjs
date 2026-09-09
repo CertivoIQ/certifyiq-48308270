@@ -45,12 +45,12 @@ function horizontals(r,x0,x1,y0,y1){
  }
  return group(hits,2).map(g=>Math.round((g[0]+g.at(-1))/2));
 }
-function matchesLabel(line,re,key){return re.test(line.text)||!!findTicLabelForKey(line.text,key);}
+function matchesLabel(line,re,key){return !!findTicLabelForKey(line.text,key,re);}
 function labelMatch(line,re,key){
  const words=[...line.words].sort((a,b)=>a.bbox.x0-b.bbox.x0);let text='',spans=[];
  for(const word of words){if(text)text+=' ';spans.push({start:text.length,end:text.length+word.text.length,word});text+=word.text;}
- const exact=re.exec(text),variant=key?findTicLabelForKey(text,key):null;
- const m=variant&&(!exact||variant.end-variant.start>exact[0].length)?{index:variant.start,0:text.slice(variant.start,variant.end)}:exact;if(!m)return null;
+ const variant=key?findTicLabelForKey(text,key,re):null;
+ const m=key?(variant?{index:variant.start,0:text.slice(variant.start,variant.end)}:null):re.exec(text);if(!m)return null;
  const hit=spans.filter(s=>s.end>m.index&&s.start<m.index+m[0].length);
  return {x0:hit[0].word.bbox.x0,x1:hit.at(-1).word.bbox.x1,y0:Math.min(...hit.map(s=>s.word.bbox.y0)),y1:Math.max(...hit.map(s=>s.word.bbox.y1)),match:m[0],words,tail:spans.filter(s=>s.start>=m.index+m[0].length).map(s=>s.word)};
 }
