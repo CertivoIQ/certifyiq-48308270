@@ -10,7 +10,7 @@ export const TIC_LABEL_VARIANTS = {
  property_address: ['property address', 'development address', 'project address'],
  building_identification_number: ['building identification number', 'BIN number', 'BIN'],
  unit_number: ['unit number', 'apartment number', 'apt number', 'unit no.'],
- unit_bedrooms: ['number of bedrooms', 'bedroom count', 'bedrooms'],
+ unit_bedrooms: ['# bedrooms', 'number of bedrooms', 'bedroom count', 'bedrooms'],
  tax_credit_number: ['tax credit number', 'TC number'],
  household_size: ['household size', 'total household members', 'number of household members', 'total number of persons in household'],
  full_time_student_count: ['number of full time students in household', 'full time student count'],
@@ -70,22 +70,25 @@ function tokens(text) {
  return result;
 }
 export function normalizeTicLabel(text) { return tokens(text).map(t=>t.token).join(' '); }
+const compiledLabels = new WeakMap();
+function compileLabels(definitions) {
+ let result=compiledLabels.get(definitions);if(result)return result;
+ result=definitions.flatMap(definition=>(definition.aliases??[]).map(alias=>({key:definition.key,target:tokens(alias).map(t=>t.token)}))).filter(d=>d.target.length);
+ compiledLabels.set(definitions,result);return result;
+}
 /** Keep the longest overlapping label; equal spans assigned to different keys are ambiguous. */
 export function findTicLabels(text, definitions) {
  const source=tokens(text),hits=[];
- for(const definition of definitions){
-  for(const alias of definition.aliases??[]){
-   const target=tokens(alias).map(t=>t.token);if(!target.length)continue;
+ for(const {key,target} of compileLabels(definitions)){
    for(let i=0;i+target.length<=source.length;i++){
     if(target.every((t,j)=>source[i+j].token===t)){
      const start=source[i].start,tokenEnd=source[i+target.length-1].end;
      // A one-word alias inside a value is not a second printed field label.
      if(target.length===1 && start>0 && String(text).slice(0,start).trim() && !/^\s*[:=]/.test(String(text).slice(tokenEnd)))continue;
      let end=tokenEnd;while(end<String(text).length && /[)\]?:.\s]/.test(String(text)[end]))end++;
-     hits.push({key:definition.key,start,end});
+     hits.push({key,start,end});
     }
    }
-  }
  }
  const unique=[...new Map(hits.map(h=>[h.key+':'+h.start+':'+h.end,h])).values()];
  const longest=unique.filter(h=>!unique.some(other=>other.start<=h.start&&other.end>=h.end&&(other.start<h.start||other.end>h.end)));
