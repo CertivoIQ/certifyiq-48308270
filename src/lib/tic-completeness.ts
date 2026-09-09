@@ -5,6 +5,8 @@ const money = (v: unknown) => !blank(v) && /^(?:\$\s*)?(?:\d{1,3}(?:,\d{3})+|\d+
 
 /** Completion is distinct from verification. Never borrow a value from another document. */
 export function ticCompletenessFindings(values: Record<string, unknown>): TicCompletenessFinding[] {
+ // Rental applications are preserved source documents, not required TIC fields.
+ values = Object.fromEntries(Object.entries(values).filter(([key]) => !/^(?:source_present_)?application_/.test(key)));
  const findings: TicCompletenessFinding[] = [];
  const need = (field: string, message: string) => { if (!money(values[field])) findings.push({field,code:'TIC_MISSING_AMOUNT',message}); };
  for(let i=1;i<=27;i++) {
@@ -60,3 +62,4 @@ export function ticCompletenessFindings(values: Record<string, unknown>): TicCom
  for(const who of ['head','adult']) if(String(values[`application_signature_${who}_present`]??'').toLowerCase()==='yes') missing(`application_signature_${who}_date`,`${who} signature is present but its date is missing.`);
  return findings;
 }
+

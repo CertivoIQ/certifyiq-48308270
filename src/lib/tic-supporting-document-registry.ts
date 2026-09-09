@@ -16,6 +16,7 @@ export type SupportingDocumentType =
   | "affidavit"
   | "bank_statement"
   | "check_stub"
+  | "other_income"
   | "other_supporting_document";
 
 export type SupportingDocumentDefinition = {
@@ -150,6 +151,11 @@ export const SUPPORTING_DOCUMENT_DEFINITIONS: readonly SupportingDocumentDefinit
     weakSignals: [/ytd\s+gross/i, /net\s+pay/i, /hours\s+worked/i],
   },
   {
+    type: "other_income", label: "Other Income",
+    aliases: ["Other Income", "Benefit Award Letter", "Pension Statement", "Social Security Benefits", "Unemployment Benefits", "Child Support Income", "Self-Employment Income"],
+    strongSignals: [/benefit\s+(?:award|verification)\s+letter/i, /pension\s+statement/i, /social\s+security\s+benefit/i, /unemployment\s+(?:benefit|compensation)/i, /self[-\s]?employment\s+income/i],
+  },
+  {
     type: "other_supporting_document",
     label: "Other Supporting Document",
     aliases: ["Other Supporting Document"],
@@ -178,3 +184,4 @@ export const TIC_PAGE_SIGNALS = [
   /determination\s+of\s+income\s+eligibility/i,
   /gross\s+rent\s+for\s+unit/i,
 ] as const;
+

@@ -72,7 +72,8 @@ export function TicPacketOrganizer({ inventory, choices, sourceUrl, isPdf, busy,
         </div>
       </div>
       {validation && <p className="mt-3 text-sm font-medium" role="status">{validation}</p>}
-      <div className="mt-4 flex justify-end"><button type="button" className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50" disabled={busy || !!validation || !sourceUrl} onClick={onConfirm}>{busy ? 'Extracting selected TIC pages…' : 'Confirm selection & extract TIC'}</button></div>
+      <div className="mt-4 flex justify-end"><button type="button" className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50" disabled={busy || !!validation || !sourceUrl} onClick={onConfirm}>{busy ? 'Preparing income evidence…' : 'Confirm selection & check TIC'}</button></div>
     </section>
   );
 }
+

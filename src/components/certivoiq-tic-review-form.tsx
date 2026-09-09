@@ -404,7 +404,7 @@ export function CertivoIqTicReviewForm(props: Props) {
           <h3 className="font-bold">Completion findings</h3>
           {ticCompletenessFindings(props.values).length ? <ul className="list-disc pl-5">{ticCompletenessFindings(props.values).map(f => <li key={f.field}><a className="underline" href={`#tic-field-${f.field}`}>{f.message}</a></li>)}</ul> : <p className="text-xs">No incomplete asset amounts detected in the entered fields. Other evidence and review checks still apply.</p>}
         </div>
-        {TIC_SUPPLEMENTAL_SECTIONS.map(section => <section key={section.id} className="mt-5">
+        {TIC_SUPPLEMENTAL_SECTIONS.filter(section => !section.id.startsWith("application_")).map(section => <section key={section.id} className="mt-5">
           <SectionTitle>{section.title}</SectionTitle>
           {section.note && <p className="p-3 text-xs">{section.note}</p>}
           <SupplementalFields fields={section.fields} {...props} />
@@ -414,4 +414,5 @@ export function CertivoIqTicReviewForm(props: Props) {
     </CompletionContext.Provider>
   );
 }
+
 

@@ -1,3 +1,4 @@
+import { savedIncomePreparation } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
@@ -154,6 +155,8 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       return { error: message } as const;
     }
 
+    const preparedIncome = packetSelection ? savedIncomePreparation(item.historical_changes, documentSha256, await hashJson(packetSelection), packetSelection.choices) : null;
+
     let ocrDocument: Awaited<ReturnType<typeof extraction.loadOcrDocument>> = null;
     const sidecarDownload = await supabase.storage
       .from("certification-imports")
@@ -186,7 +189,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     let documentKind: "pdf" | "text" | "pdf-ocr";
 
     if ((confirmedRows ?? []).length) {
-      if (packetSelection && (confirmedRows ?? []).some(row => row.source_page !== null && !packetSelection.ticPages.includes(row.source_page))) {
+      if (packetSelection && (confirmedRows ?? []).some(row => row.source_page !== null && !packetSelection.ticPages.includes(row.source_page) && !(/^(?:source_present_)?worksheet_/.test(row.field_name) && packetSelection.choices.some(choice => choice.page === row.source_page && choice.role === "income_calculation_worksheet")))) {
         throw new Error("A saved TIC field points outside the selected TIC pages. Reconfirm packet selection before review.");
       }
       result = storedFactsResult((confirmedRows ?? []) as StoredFact[], fallbackProvider);
@@ -249,6 +252,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         if (field.startsWith("source_present_") && value === "Yes") completionValues[field] = value;
       }
     }
+    if (preparedIncome && String(completionValues["certification_effective_date"] ?? "") !== preparedIncome.draft.effectiveDate) throw new Error("The certification date changed after income calculation. Recalculate before review.");
     const completionFindings = ticCompletenessFindings(completionValues);
     if (completionFindings.length) {
       const message = completionFindings.map(f => f.message).join(" ");
@@ -290,6 +294,15 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         : {}),
     });
 
+    if (preparedIncome) {
+      const sourceAmount = completionValues["household_annual_income"];
+      const calculated = preparedIncome.calculation.annualIncome;
+      if (sourceAmount === null || sourceAmount === undefined || String(sourceAmount).trim() === "" || !Number.isFinite(Number(sourceAmount)) || Math.abs(Number(sourceAmount) - Number(calculated)) > 0.005) {
+        evaluation.findings.push({ ruleId: "INCOME-EVIDENCE-RECONCILIATION", ruleVersion: "1", rulePackId: "income-evidence", rulePackVersion: "1", jurisdiction, evidenceStatus: "CONFLICTING", ruleEvaluationStatus: "BLOCKED", status: "UNABLE_TO_DETERMINE", severity: "critical", explanation: `The source TIC annual income (${sourceAmount ?? "not extracted"}) differs from the calculated projected income (${calculated}). Reconcile the income sources and applicable program method before final approval.`, citation: "Selected uploaded income evidence and saved calculation", blockingReasons: ["INCOME_RECONCILIATION_REQUIRED"], evidenceRefs: preparedIncome.draft.rows.map(row => ({ field: "calculated_projected_annual_income", confidence: 1, humanVerified: true, documentRef: item.original_file_name, page: row.page, snippet: row.kind === "exclude" ? row.note : `${row.sourceName}: ${row.amount} ${row.frequency}` })), engineBuild: preparedIncome.calculation.version });
+        evaluation.counts.unableToDetermine += 1;
+      }
+    }
+
     await supabaseAdmin.from("compliance_findings").delete().eq("item_id", item.id);
     const { data: insertedFindings, error: findingError } = await supabaseAdmin
       .from("compliance_findings")
@@ -322,6 +335,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         : "pass";
     const manifest = {
       packetSelection,
+      incomePreparation: preparedIncome,
       schemaVersion: "1.1",
       reviewId: item.id,
       organizationId,
@@ -379,7 +393,7 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         status: "completed",
         sha256: documentSha256,
         extraction_provider: result.provider,
-        extracted_data: Object.fromEntries(result.facts.map((fact) => [fact.field, fact.value])) as never,
+        extracted_data: { ...Object.fromEntries(result.facts.map((fact) => [fact.field, fact.value])), ...(preparedIncome ? { calculated_projected_annual_income: preparedIncome.calculation.annualIncome } : {}) } as never,
         processed_at: new Date().toISOString(),
         error_message: null,
         review_queue_status: "completed",
@@ -400,4 +414,5 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       manifestSha256,
     } as const;
   });
+
 

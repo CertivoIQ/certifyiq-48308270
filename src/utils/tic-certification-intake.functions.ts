@@ -1,3 +1,4 @@
+import { buildIncomePreparation, validateIncomePreparation, assertIncomeDraft, type IncomeDraft } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
 import { previewEvidenceValue } from "@/lib/preview-evidence-value";
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -127,10 +128,13 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
     result.missingFields = result.missingFields.filter(field => !fields.has(field));
     if (supplemental.some(f => f.provider === 'ocr-tesseract')) result.provider = 'ocr-tesseract';
   }
+  result.facts = result.facts.filter(f => !/^(?:source_present_)?application_/.test(f.field));
+  result.missingFields = result.missingFields.filter(f => !/^(?:source_present_)?application_/.test(f));
   const confidence = result.facts.length ? result.facts.reduce((sum, fact) => sum + Number(fact.confidence || 0), 0) / result.facts.length : 0;
   const supportingDocuments = selection ? selectedSupportingPages(selection, pageClassifications) : [];
   const selectionDigest = selection ? await hashJson(selection) : null;
-  return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments, selection, selectionDigest };
+  const incomePreparation = selection && selectionDigest ? buildIncomePreparation(packetPages, selection.choices, sourceSha256, selectionDigest, String(result.facts.find(f => f.field === "certification_effective_date")?.value ?? "")) : null;
+  return { result, confidence, sourceSha256, packetPages, pageClassifications, supportingDocuments, selection, selectionDigest, incomePreparation };
 
 }
 
@@ -166,7 +170,7 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     try {
-      const { result, confidence, pageClassifications, supportingDocuments, selection, selectionDigest } = await extractStagedSource(
+      const { result, confidence, pageClassifications, supportingDocuments, selection, selectionDigest, incomePreparation } = await extractStagedSource(
         context.supabase,
         context.userId,
         data.source,
@@ -195,6 +199,7 @@ export const extractCertificationTicPreview = createServerFn({ method: "POST" })
         ticPages: selection?.ticPages ?? [],
         omittedPages: selection?.omittedPages ?? [],
         supportingDocuments,
+        incomePreparation,
       } as const;
     } catch (error) {
       return { error: error instanceof Error ? error.message : "The certification document could not be extracted." } as const;
@@ -217,7 +222,9 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     selectionDigest: string;
     otherReviewAction?: "INITIAL" | "ANNUAL" | "INTERIM";
     startReview?: boolean;
+    incomeDraft?: IncomeDraft;
   }) => {
+    assertIncomeDraft(data.incomeDraft);
     const source = validateSource(data.source);
     const pageSelections = validatePageChoices(data.pageSelections, undefined, true);
     if (typeof data.selectionDigest !== "string" || !/^[a-f0-9]{64}$/i.test(data.selectionDigest)) throw new Error("Confirm packet pages and rebuild the TIC before saving.");
@@ -256,12 +263,13 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
       otherReviewAction: data.otherReviewAction,
       supportingDocuments,
       startReview: data.startReview === true,
+      incomeDraft: data.incomeDraft,
     };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const db = supabase as any;
-    const { result, confidence, sourceSha256, supportingDocuments: serverSupportingDocuments, selection, selectionDigest } = await extractStagedSource(
+    const { result, confidence, sourceSha256, supportingDocuments: serverSupportingDocuments, selection, selectionDigest, incomePreparation } = await extractStagedSource(
       supabase,
       userId,
       data.source,
@@ -278,6 +286,9 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     if (tenantError) throw tenantError;
     if (!tenant) throw new Error("The selected tenant file is not available to this account.");
 
+    if (!incomePreparation) throw new Error("Complete the Income Calculator before saving this certification.");
+    const preparedIncome = validateIncomePreparation(data.incomeDraft, incomePreparation);
+
     const originalByField = new Map(result.facts.map((fact) => [fact.field, fact]));
     const submittedByField = new Map(data.fields.map((entry) => [entry.field, entry.value]));
     const originalExtractedData = Object.fromEntries(result.facts.map((fact) => [fact.field, fact.value]));
@@ -286,6 +297,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     const reviewerSuppliedFields: Array<{ field: string; confirmedValue: unknown }> = [];
 
     for (const field of TIC_FIELD_KEYS) {
+      if (/^(?:source_present_)?application_/.test(field)) continue;
       const original = originalByField.get(field);
       const wasSubmitted = submittedByField.has(field);
       const submitted = field.startsWith("source_present_") ? original?.value ?? null : wasSubmitted ? submittedByField.get(field)! : original?.value ?? null;
@@ -306,6 +318,9 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     const certificationType = ticType === "initial certification" ? "INITIAL" : ticType === "recertification" ? "ANNUAL" : ticType === "other" ? data.otherReviewAction ?? null : null;
     if (data.startReview && !certificationType) throw new Error("Confirm the TIC certification type (and an explicit review action for Other) before starting review.");
 
+    if (String(confirmedExtractedData["certification_effective_date"] ?? "") !== preparedIncome.draft.effectiveDate) throw new Error("The TIC effective date changed. Return to the Income Calculator and recalculate for that date.");
+    // Keep the signed source amount intact. The derived projection accompanies it for review.
+    confirmedExtractedData["calculated_projected_annual_income"] = preparedIncome.calculation.annualIncome!;
     const completionFindings = ticCompletenessFindings(confirmedExtractedData);
     if (data.startReview && completionFindings.length) throw new Error(completionFindings.map(f => f.message).join(" "));
 
@@ -331,6 +346,8 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         extracted_data: confirmedExtractedData,
         historical_changes: [{
           type: "tic_pre_save_confirmation",
+          income_preparation_version: preparedIncome.draft.version,
+          income_preparation: { ...preparedIncome, pages: incomePreparation.pages.map(({ excerpt: _excerpt, ...page }) => page) },
           confirmed_at: confirmedAt,
           reviewer_id: userId,
           tenant_profile_id: tenant.id,
@@ -364,7 +381,7 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
 
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const confirmedFacts = Object.entries(confirmedExtractedData).map(([field, value]) => {
+      const confirmedFacts = Object.entries(confirmedExtractedData).filter(([field]) => field !== "calculated_projected_annual_income").map(([field, value]) => {
         const original = originalByField.get(field);
         const corrected = !original || JSON.stringify(original.value) !== JSON.stringify(value);
         return {

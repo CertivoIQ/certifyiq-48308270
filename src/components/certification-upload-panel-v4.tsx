@@ -1,3 +1,5 @@
+import { CertificationIncomeCalculator } from "@/components/certification-income-calculator";
+import { calculateIncomePreparation, type IncomeDraft, type IncomePreparation } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
@@ -73,6 +75,7 @@ type ExtractionDraft = {
   selectionDigest: string | null;
   ticPages: number[];
   omittedPages: number[];
+  incomePreparation: IncomePreparation | null;
 };
 
 const ACCEPTED_DOCUMENT_TYPES = ".pdf,.png,.jpg,.jpeg,.webp";
@@ -113,7 +116,9 @@ export function CertificationUploadPanel() {
   const [draft, setDraft] = useState<ExtractionDraft | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [pageChoices, setPageChoices] = useState<PacketPageChoice[]>([]);
-  const [stage, setStage] = useState<"organize" | "tic">("organize");
+  const [stage, setStage] = useState<"organize" | "income" | "tic" | "ready">("organize");
+  const [incomeDraft, setIncomeDraft] = useState<IncomeDraft | null>(null);
+  const incomeResult = useMemo(() => incomeDraft && draft?.incomePreparation ? calculateIncomePreparation(incomeDraft, draft.incomePreparation.pages, true) : null, [incomeDraft, draft]);
   const [viewTicPage, setViewTicPage] = useState(1);
   const [otherReviewAction, setOtherReviewAction] = useState<"" | "INITIAL" | "ANNUAL" | "INTERIM">("");
   const [tenantProfileId, setTenantProfileId] = useState("");
@@ -241,6 +246,7 @@ export function CertificationUploadPanel() {
         selectionDigest: preview.selectionDigest,
         ticPages: [...preview.ticPages],
         omittedPages: [...preview.omittedPages],
+        incomePreparation: preview.incomePreparation,
       });
       setFile(null);
       setProgressPercent(100);
@@ -265,9 +271,10 @@ export function CertificationUploadPanel() {
 
   function changePageChoices(choices: PacketPageChoice[]) {
     setPageChoices(choices);
+    setIncomeDraft(null);
     setFieldValues({});
     setOtherReviewAction("");
-    setDraft(current => current ? { ...current, facts: [], selectionDigest: null, ticPages: [], supportingDocuments: [] } : null);
+    setDraft(current => current ? { ...current, facts: [], selectionDigest: null, ticPages: [], supportingDocuments: [], incomePreparation: null } : null);
   }
 
   async function extractSelectedPages() {
@@ -283,14 +290,15 @@ export function CertificationUploadPanel() {
       setFieldValues(Object.fromEntries(TIC_FIELD_DEFINITIONS.map(definition => [definition.key, extracted.get(definition.key) ?? ""])));
       setDraft({ ...draft, facts, missingFields: [...preview.missingFields], confidence: preview.confidence, extractionProvider: preview.extractionProvider,
         sourcePreviewUrl: preview.sourcePreviewUrl, supportingDocuments: preview.supportingDocuments, pageClassifications: preview.pageClassifications,
-        selectionDigest: preview.selectionDigest, ticPages: [...preview.ticPages], omittedPages: [...preview.omittedPages] });
+        selectionDigest: preview.selectionDigest, ticPages: [...preview.ticPages], omittedPages: [...preview.omittedPages], incomePreparation: preview.incomePreparation });
       setPageChoices(preview.pageSelections);
       setViewTicPage(preview.ticPages[0] ?? 1);
+      if (!preview.incomePreparation) throw new Error("The selected income evidence could not be prepared.");
+      setIncomeDraft(preview.incomePreparation.draft);
       setStage("tic");
       setProgressPercent(100);
-      setProgressLabel("TIC built only from your selected certification pages.");
-      const namesMissing = !extracted.get("household_member_1_last_name") || !extracted.get("household_member_1_first_name_middle_initial");
-      setMessage(namesMissing ? "Household-name cells were not fully recovered. Compare the selected TIC with the source and correct unreadable or missed fields; this is not a completed extraction." : "Compare every populated cell with the selected source TIC. Included supporting pages are separate; omitted pages were not used to populate this form.");
+      setProgressLabel("TIC ready. Check its fields, then continue to the Income Calculator.");
+      setMessage("Check the extracted TIC fields first. Selected supporting pages will populate the Income Calculator next.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Selected-page extraction failed.");
     } finally { setBusy(false); }
@@ -298,8 +306,9 @@ export function CertificationUploadPanel() {
 
   async function confirmAndSave(startReview: boolean) {
     if (!draft || busy) return;
+    if (!incomeDraft || !incomeResult || incomeResult.annualIncome === null || incomeResult.issues.length) { setMessage("Complete the Income Calculator before saving or starting review."); setStage("income"); return; }
     if (startReview && ticCompletenessFindings(fieldValues).length) { setMessage("Complete the yellow findings before starting another review. You can still save your changes."); return; }
-    if (stage !== "tic" || !draft.selectionDigest) { setMessage("Confirm document selection and rebuild the TIC before saving."); return; }
+    if (stage !== "ready" || !draft.selectionDigest) { setMessage("Confirm document selection and rebuild the TIC before saving."); return; }
     if (!tenantProfileId) {
       setMessage("Select the tenant file before saving this certification packet.");
       return;
@@ -322,6 +331,7 @@ export function CertificationUploadPanel() {
           selectionDigest: draft.selectionDigest,
           ...(otherReviewAction ? { otherReviewAction } : {}),
           startReview,
+          incomeDraft,
         },
       });
       const changes = result.correctionCount + result.reviewerSuppliedCount;
@@ -330,6 +340,7 @@ export function CertificationUploadPanel() {
         : " No TIC field changes were needed.";
       const supportText = ` ${result.supportingDocumentCount} selected supporting page(s) preserved; ${result.omittedPageCount} page(s) omitted from review and retained only in the original packet.`;
       setDraft(null);
+      setIncomeDraft(null);
       setFieldValues({});
       setPageChoices([]);
       setStage("organize");
@@ -368,6 +379,7 @@ export function CertificationUploadPanel() {
     try {
       await cancelPreview({ data: { source: draft.source } });
       setDraft(null);
+      setIncomeDraft(null);
       setFieldValues({});
       setPageChoices([]);
       setStage("organize");
@@ -390,7 +402,7 @@ export function CertificationUploadPanel() {
         <div>
           <h2 className="font-semibold">Certification document intake</h2>
           <p className="mt-1 max-w-5xl text-sm text-muted-foreground">
-            Upload the full Tenant Income Certification packet. First choose the TIC pages and which supporting documents to include or omit. CertivoIQ then maps only the selected TIC pages into the editable form.
+            Upload the full Tenant Income Certification packet. First choose the TIC pages and which supporting documents to include or omit. Check the extracted TIC first. Next, calculate annual income from selected paystubs, bank statements and other income before starting the full certification review.
           </p>
         </div>
       </div>
@@ -427,7 +439,7 @@ export function CertificationUploadPanel() {
         <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold">{stage === "organize" ? "Organize the uploaded packet" : "2. Check extracted TIC fields"}</h3>
+              <h3 className="font-semibold">{stage === "organize" ? "1. Organize the uploaded packet" : stage === "income" ? "3. Income Calculator" : stage === "ready" ? "4. Ready for full certification review" : "2. Check extracted TIC fields"}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{draft.source.originalFileName} is temporarily staged only. Nothing appears in Documents or the Compliance Review Queue until you confirm it.</p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
@@ -438,6 +450,14 @@ export function CertificationUploadPanel() {
 
           {stage === "organize" ? (
             <TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} />
+          ) : stage === "income" && incomeDraft && draft.incomePreparation ? (
+            <CertificationIncomeCalculator value={incomeDraft} pages={draft.incomePreparation.pages} sourceUrl={draft.sourcePreviewUrl} busy={busy} onChange={setIncomeDraft} onBack={() => setStage("tic")} onContinue={() => {
+              if (!incomeResult || incomeResult.annualIncome === null || incomeResult.issues.length) return;
+              setFieldValues(current => ({ ...current, certification_effective_date: incomeDraft.effectiveDate }));
+              setStage("ready"); setMessage("Calculated income has been added. The certification is ready to save for full review.");
+            }} />
+          ) : stage === "ready" ? (
+            <div className="mt-4 space-y-3 rounded-xl border bg-background p-4"><h3 className="font-semibold">TIC and income calculation prepared</h3><p>Calculated projected annual income: <strong>${incomeResult?.annualIncome ?? "Needs recalculation"}</strong></p><p className="text-sm">Source TIC annual income: {fieldValues["household_annual_income"] || "Not extracted"}. Differences will be flagged during full review.</p><p className="text-sm">{draft.supportingDocuments.length} supporting page(s) included. Income sources and calculation details will be saved with this certification.</p><div className="flex gap-4 text-sm"><button type="button" disabled={busy} className="underline" onClick={() => { setIncomeDraft(current => current ? { ...current, confirmed: false } : null); setStage("tic"); }}>Edit TIC</button><button type="button" disabled={busy} className="underline" onClick={() => setStage("income")}>Edit income calculation</button></div></div>
           ) : <>
           <div className="mt-4 rounded border bg-background p-3 text-sm">
             <strong>TIC pages: {draft.ticPages.join(", ")}</strong> · {draft.supportingDocuments.length} included supporting page(s) · omitted pages: {draft.omittedPages.join(", ") || "None"}.
@@ -456,6 +476,7 @@ export function CertificationUploadPanel() {
             {tenantDestinations.data?.length === 0 ? <p className="mt-2 text-xs text-destructive">No tenant profiles are available. Complete Portfolio & Tenant Onboarding before saving a certification.</p> : null}
           </div>
 
+          {incomeResult && <div className="mt-4 rounded-xl border bg-background p-4 text-sm"><strong>Calculated projected annual income: ${incomeResult.annualIncome ?? "Needs recalculation"}</strong><p className="mt-1">Source TIC annual income: {fieldValues["household_annual_income"] || "Not extracted"}. The calculated amount accompanies the source TIC for program-specific review.</p><button type="button" className="mt-2 underline" disabled={busy} onClick={() => setStage("income")}>Return to Income Calculator</button></div>}
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="rounded-xl border bg-background p-3 min-w-0 lg:sticky lg:top-4 lg:self-start">
               <div className="mb-3 flex items-center gap-2 text-sm font-medium"><FileSearch className="size-4" /> Selected TIC source</div>
@@ -477,7 +498,7 @@ export function CertificationUploadPanel() {
                 values={fieldValues}
                 factsByField={factsByField}
                 busy={busy}
-                onChange={(field, value) => setFieldValues((current) => ({ ...current, [field]: value }))}
+                onChange={(field, value) => { setFieldValues((current) => ({ ...current, [field]: value })); if (field === "certification_effective_date" && incomeDraft) setIncomeDraft({ ...incomeDraft, effectiveDate: value, confirmed: false }); }}
               />
             </div>
           </div>
@@ -493,10 +514,11 @@ export function CertificationUploadPanel() {
           </label>}
           </>}
 
+          {stage === "tic" && <div className="mt-4 flex justify-end"><button type="button" disabled={busy || !tenantProfileId || !draft.selectionDigest} className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50" onClick={() => { setIncomeDraft(current => current ? { ...current, effectiveDate: fieldValues["certification_effective_date"] || current.effectiveDate, confirmed: false } : null); setStage("income"); }}>Continue to Income Calculator</button></div>}
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <button type="button" disabled={busy} onClick={() => void cancelStagedUpload()} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">Cancel Upload</button>
-            <button type="button" disabled={busy || !tenantProfileId || stage !== "tic" || !draft.selectionDigest} onClick={() => void confirmAndSave(false)} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">{saveAction === "save" ? "Saving…" : "Save Document"}</button>
-            <button type="button" disabled={busy || !tenantProfileId || stage !== "tic" || !draft.selectionDigest || ticCompletenessFindings(fieldValues).length > 0} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
+            <button type="button" disabled={busy || !tenantProfileId || stage !== "ready" || !draft.selectionDigest || !incomeResult?.annualIncome} onClick={() => void confirmAndSave(false)} className="rounded-md border px-4 py-2 text-sm font-medium disabled:opacity-50">{saveAction === "save" ? "Saving…" : "Save Document"}</button>
+            <button type="button" disabled={busy || !tenantProfileId || stage !== "ready" || !draft.selectionDigest || !incomeResult?.annualIncome || ticCompletenessFindings(fieldValues).length > 0} onClick={() => void confirmAndSave(true)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saveAction === "review" ? "Saving & queuing…" : "Save & Start Review"}</button>
           </div>
         </div>
       )}
@@ -509,4 +531,5 @@ export function CertificationUploadPanel() {
     </section>
   );
 }
+
 
