@@ -681,7 +681,7 @@ export async function prepareCertificationForReview(
       : { kind: 'machine-readable', ocrPageCount: 0, sourceSha256, sidecar };
   } finally {
     await pdf.cleanup();
-    await pdf.destroy();
+    await pdf.loadingTask.destroy();
   }
 }
 
@@ -714,7 +714,7 @@ export async function inspectCertificationPacket(file: File, onProgress?: Prepar
     }
     await Promise.all(Array.from({length: Math.min(MAX_PARALLEL_TEXT_READERS, pdf.numPages)}, () => read()));
     return {sourceSha256, pageCount: pdf.numPages, pages};
-  } finally {await pdf.destroy();}
+  } finally {await pdf.loadingTask.destroy();}
 }
 
 /** Small header reads suggest document roles only. They never become certification evidence. */
@@ -764,5 +764,5 @@ export async function identifyCertificationPageLabels(
     }
   }
   try {await Promise.all(Array.from({length: workerCount}, () => read()));}
-  finally {if (pdf) await pdf.destroy();}
+  finally {if (pdf) await pdf.loadingTask.destroy();}
 }
