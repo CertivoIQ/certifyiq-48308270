@@ -55,3 +55,11 @@ test('plausible financial OCR conflicts cannot replace a different value read in
  const got=finishTicCells({width:600,height:800,cells:[cell],groups:[],blocked:[],checkboxes:null},{width:940,height:90,tiles:[{...cell,x:148,y:24,width:120,height:32}]},[{paragraphs:[{lines:[{words:[word('4520.90')],bbox:cell.bbox}]}]}]);
  assert.equal(got.values[cell.key],undefined);assert.ok(got.unresolved.includes(cell.key));
 });
+
+import {ocrTimeBudgetMs} from '../src/lib/ocr-time-budget.mjs';
+test('supported large packets get bounded time proportional to available readers',()=>{
+ assert.equal(ocrTimeBudgetMs(3,1),240_000);
+ assert.equal(ocrTimeBudgetMs(43,2),660_000);
+ assert.equal(ocrTimeBudgetMs(50,1),900_000);
+ for(const args of [[0,1],[51,1],[43,0],[43,4],[2.5,1]])assert.throws(()=>ocrTimeBudgetMs(...args));
+});
