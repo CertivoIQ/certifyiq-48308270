@@ -77,7 +77,13 @@ export function findTicLabels(text, definitions) {
   for(const alias of definition.aliases??[]){
    const target=tokens(alias).map(t=>t.token);if(!target.length)continue;
    for(let i=0;i+target.length<=source.length;i++){
-    if(target.every((t,j)=>source[i+j].token===t))hits.push({key:definition.key,start:source[i].start,end:source[i+target.length-1].end});
+    if(target.every((t,j)=>source[i+j].token===t)){
+     const start=source[i].start,tokenEnd=source[i+target.length-1].end;
+     // A one-word alias inside a value is not a second printed field label.
+     if(target.length===1 && start>0 && String(text).slice(0,start).trim() && !/^\s*[:=]/.test(String(text).slice(tokenEnd)))continue;
+     let end=tokenEnd;while(end<String(text).length && /[)\]?:.\s]/.test(String(text)[end]))end++;
+     hits.push({key:definition.key,start,end});
+    }
    }
   }
  }
@@ -86,6 +92,13 @@ export function findTicLabels(text, definitions) {
  return longest.map(h=>({...h,ambiguous:longest.some(other=>other.key!==h.key&&other.start<h.end&&other.end>h.start)})).sort((a,b)=>a.start-b.start||b.end-a.end);
 }
 const sharedDefinitions=Object.entries(TIC_LABEL_VARIANTS).filter(([key])=>!key.startsWith('worksheet_')).map(([key,aliases])=>({key,aliases}));
-export function findTicLabelForKey(text,key) {
- return findTicLabels(text,sharedDefinitions).find(h=>h.key===key&&!h.ambiguous)??null;
+export function findTicLabelForKey(text,key,fallbackPattern) {
+ const labels=findTicLabels(text,sharedDefinitions);
+ const own=labels.find(h=>h.key===key&&!h.ambiguous);
+ if(own)return own;
+ const fallback=fallbackPattern?.exec(text);
+ if(!fallback)return null;
+ const start=fallback.index,end=start+fallback[0].length;
+ if(labels.some(h=>h.key!==key && h.start<end && h.end>start))return null;
+ return {key,start,end,ambiguous:false};
 }
