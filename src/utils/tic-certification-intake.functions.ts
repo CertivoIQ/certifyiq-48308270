@@ -16,7 +16,7 @@ import {
   supportingDocumentLabel,
   type SupportingDocumentType,
 } from "@/lib/tic-supporting-document-registry";
-import { assertSidecarPageCoverage, composeSidecarText, provenanceIndex } from "@/lib/ocr-sidecar.mjs";
+import { composeSidecarText, provenanceIndex } from "@/lib/ocr-sidecar.mjs";
 import { buildPacketSelection, selectionFromHistory, initialPageChoices, packetInventory, selectedSupportingPages, selectedTicText, selectedWorksheetText, validatePageChoices, type PacketPageChoice } from "@/lib/tic-packet-selection";
 
 const REVIEWER_CONFIRMED_PROVIDER = "reviewer-confirmed";
@@ -106,9 +106,7 @@ async function extractStagedSource(supabase: any, userId: string, source: Staged
 
   const sidecarDownload = await supabase.storage.from("certification-imports").download(extraction.sidecarPathFor(source.storagePath));
   if (sidecarDownload.error || !sidecarDownload.data) throw new Error("The source-bound page inventory is unavailable. Re-upload the packet; extraction will not guess its page boundaries.");
-  const rawSidecar = JSON.parse(await sidecarDownload.data.text());
-  if (pageChoices) assertSidecarPageCoverage(rawSidecar, pageChoices.filter(choice => choice.role !== "omit").map(choice => choice.page));
-  const composed = composeSidecarText(rawSidecar, {
+  const composed = composeSidecarText(JSON.parse(await sidecarDownload.data.text()), {
     fileName: source.originalFileName, sha256: sourceSha256, byteSize: bytes.byteLength,
   });
   const textByPage = new Map(composed.pages.map(page => [page.page, page.text]));
@@ -305,7 +303,10 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     }
 
     if (!incomePreparation) throw new Error("Complete the Income Calculator before saving this certification.");
-    const workingSource=data.sourceTicFields||Object.fromEntries(data.fields.map(f=>[f.field,f.value==null?'':String(f.value)]));
+    // Recalculate from the reviewer's confirmed form. sourceTicFields is the
+    // immutable OCR snapshot used below for correction history; using it here
+    // discards confirmed handwriting and user-supplied values at save time.
+    const workingSource=Object.fromEntries(data.fields.map(f=>[f.field,f.value==null?'':String(f.value)]));
     const worksheet=calculateTicWorksheet(workingSource,data.worksheetSettings||newTicWorksheetSettings());
     const incomeDraft=data.incomeDraft?.basis==='TIC'?{...data.incomeDraft,ticWorksheet:{values:workingSource,settings:data.worksheetSettings||newTicWorksheetSettings()}}:data.incomeDraft;
     const preparedIncome = validateIncomePreparation(incomeDraft, incomePreparation);
@@ -617,3 +618,4 @@ export const getCertificationPacketSelection = createServerFn({ method: "GET" })
     if (!item) throw new Error("That certification is not available to this account.");
     return selectionFromHistory(item.historical_changes, item.sha256 ?? "");
   });
+

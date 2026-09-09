@@ -246,14 +246,17 @@ test('actual standalone save recomputes the trial rate and retains supporting pa
  const settings={assetMethod:'LEGACY_GREATER',passbookRatePercent:'0.06',imputationThreshold:'5000',rateSource:'Synthetic trial policy'};
  const draft={...preview.incomePreparation.draft,basis:'TIC',ticWorksheet:{values,settings},confirmed:true};
  const before=saved.length;
- const result=await confirmCertificationTicPreview({data:{source,fields:Object.entries(values).map(([field,value])=>({field,value})),sourceTicFields:values,worksheetSettings:settings,tenantProfileId:null,standaloneJurisdiction:'NE',pageSelections:choices,selectionDigest:preview.selectionDigest,incomeDraft:draft,startReview:false},context});
+ const sourceTicFields={...values,income_member_1_wages_business:'1.00'};
+ const result=await confirmCertificationTicPreview({data:{source,fields:Object.entries(values).map(([field,value])=>({field,value})),sourceTicFields,worksheetSettings:settings,tenantProfileId:null,standaloneJurisdiction:'NE',pageSelections:choices,selectionDigest:preview.selectionDigest,incomeDraft:draft,startReview:false},context});
  assert.equal(result.tenantProfileId,null);assert.equal(result.queuedForReview,false);
  const writes=saved.slice(before),item=writes.find(e=>e.table==='certification_import_items'&&e.operation==='insert').payload;
  assert.equal(item.tenant_profile_id,null);assert.equal(item.property_id,null);assert.equal(item.jurisdiction,'NE');
  assert.equal(Number(item.extracted_data.total_income_assets_m),5.52);assert.equal(Number(item.extracted_data.household_annual_income),10005.52);
  assert.equal(item.historical_changes[0].tic_worksheet.settings.passbookRatePercent,'0.06');
+ assert.equal(item.historical_changes[0].tic_worksheet.source_values.income_member_1_wages_business,'10000.00');
  assert.equal(item.historical_changes[0].tic_worksheet.source_values.total_income_assets_m,'36.83');
  assert.equal(item.historical_changes[0].income_preparation.calculation.annualIncome,'10005.52');
  const supports=writes.find(e=>e.table==='portfolio_tenant_documents'&&e.operation==='insert').payload;
  assert.equal(supports.length,2);assert.ok(supports.every(d=>d.tenant_profile_id===null&&d.certification_import_item_id==='saved-item'));
 });
+
