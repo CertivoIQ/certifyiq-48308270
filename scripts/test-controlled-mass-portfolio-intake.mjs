@@ -102,7 +102,7 @@ test("onboarding and structured complete TIC intake are separate production entr
   assert.match(certificationUi, /pageSelections: pageChoices/);
   assert.match(certificationUi, /stage !== "ready" \|\| !draft\.selectionDigest/);
   assert.match(certificationUi, /Continue to Income Calculator/);
-  assert.match(certificationUi, /!incomeResult\?\.annualIncome/);
+  assert.match(certificationUi, /incomeResult\?\.annualIncome == null/);
   assert.match(certificationUi, /TIC_FIELD_DEFINITIONS/);
   assert.match(certificationUi, /CertivoIqTicReviewForm/);
   assert.match(ticReviewForm, /PART I — DEVELOPMENT DATA/);

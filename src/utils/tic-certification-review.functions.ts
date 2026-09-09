@@ -1,3 +1,4 @@
+import { calculateTicWorksheet } from "@/lib/tic-calculations";
 import { assertSidecarPageCoverage } from "@/lib/ocr-sidecar.mjs";
 import { savedIncomePreparation } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
@@ -282,7 +283,10 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       if (statePack && !registry.isUsableForDetermination(statePack)) statePack = undefined;
     }
 
+    const savedWorksheet = preparedIncome?.draft.ticWorksheet;
+    const ticWorksheetCalculation = savedWorksheet ? calculateTicWorksheet(Object.fromEntries(result.facts.map(f => [f.field, f.value == null ? "" : String(f.value)])), savedWorksheet.settings).calculated : null;
     const evaluation = orchestrator.evaluateFederalCertificationReview({
+      ticWorksheetCalculation,
       facts: result.facts,
       programs,
       certificationType: certificationType as "INITIAL" | "ANNUAL" | "INTERIM",

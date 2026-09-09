@@ -254,7 +254,7 @@ export function evaluateFederalCertificationReview(input = {}) {
       : []),
     ...mfhOperationalBlockingFindings,
   ];
-  const ticRecalculation = evaluateTicRecalculations(input.facts ?? []);
+  const ticRecalculation = evaluateTicRecalculations(input.facts ?? [], input.ticWorksheetCalculation ?? null);
   const findings = [...core.findings, ...controlFindings, ...ticRecalculation.findings];
 
   return {

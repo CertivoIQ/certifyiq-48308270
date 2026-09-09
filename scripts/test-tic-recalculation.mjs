@@ -126,3 +126,20 @@ test("federal review appends recalculation inconsistencies to the normal finding
   assert.match(orchestrator, /\.\.\.ticRecalculation\.findings/);
   assert.match(orchestrator, /ticRecalculation,/);
 });
+
+test("a server-recomputed selected asset method survives full-review arithmetic", () => {
+  const facts = [
+    fact("asset_1_annual_income",3.18),fact("total_income_assets_m",5.52),
+    fact("total_income_e",52912),fact("household_annual_income",52917.52),
+    fact("worksheet_total_asset_cash_value",9208.26),fact("worksheet_passbook_rate_percent",0.06),
+    fact("worksheet_total_actual_income",3.18),fact("worksheet_total_imputed_income",5.52),
+    fact("worksheet_greatest_asset_income",5.52),fact("worksheet_total_asset_income",5.52),
+    fact("worksheet_total_income",52912),fact("worksheet_total_annual_income",52917.52),
+  ];
+  const r=evaluateTicRecalculations(facts,{total_income_assets_m:"5.52",worksheet_total_imputed_income:"5.52",worksheet_greatest_asset_income:"5.52",worksheet_total_asset_income:"5.52"});
+  assert.equal(r.calculated.household_annual_income,52917.52);
+  assert.equal(r.findings.length,0);
+  const hotma=evaluateTicRecalculations(facts.map(f=>["total_income_assets_m","worksheet_total_asset_income"].includes(f.field)?{...f,value:3.18}:["household_annual_income","worksheet_total_annual_income"].includes(f.field)?{...f,value:52915.18}:f),{total_income_assets_m:"3.18",worksheet_total_imputed_income:"0.00",worksheet_total_asset_income:"3.18"});
+  assert.equal(hotma.calculated.household_annual_income,52915.18);
+  assert.equal(hotma.calculated.worksheet_total_asset_income,3.18);
+});

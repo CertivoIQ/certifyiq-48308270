@@ -159,7 +159,7 @@ test("standalone certification needs no tenant and optional tenant links remain 
   assert.match(uploadPanel, /Standalone certification — no property CSV required/);
   assert.doesNotMatch(uploadPanel, /disabled=\{busy \|\| !tenantProfileId/);
   assert.doesNotMatch(uploadPanel, /Complete Portfolio & Tenant Onboarding before saving/);
-  assert.match(ticIntake, /tenantProfileId: string \| null/);
+  assert.match(ticIntake, /tenantProfileId\?: string \| null/);
   assert.match(ticIntake, /if\(data\.tenantProfileId\)/);
   assert.match(ticIntake, /\.eq\("id", data\.tenantProfileId\)[\s\S]*?\.eq\("user_id", userId\)/);
   assert.match(ticIntake, /tenant_profile_id: tenant\?\.id \?\? null/);
