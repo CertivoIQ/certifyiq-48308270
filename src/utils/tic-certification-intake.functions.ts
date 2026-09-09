@@ -351,9 +351,31 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     const declaredPrograms=Object.entries(programFields).filter(([field])=>String(confirmedExtractedData[field]||'').toLowerCase()==='yes').map(([,program])=>program);
     if(!tenant&&data.startReview&&(!data.standaloneJurisdiction||!declaredPrograms.length))throw new Error("Confirm the certification state and applicable program checkboxes before starting the standalone review.");
     const confirmedAt = new Date().toISOString();
-    const { data: item, error: itemError } = await db
-      .from("certification_import_items")
-      .insert({
+    const confirmationHistory = {
+      type: "tic_pre_save_confirmation",
+      standalone: !tenant,
+      tic_worksheet: {settings:data.worksheetSettings||newTicWorksheetSettings(),source_values:workingSource,calculated:worksheet.calculated,formulas:worksheet.formulas,differences:worksheet.differences},
+      income_preparation_version: preparedIncome.draft.version,
+      income_preparation: { ...preparedIncome, pages: incomePreparation.pages.map(({ excerpt: _excerpt, ...page }) => page) },
+      confirmed_at: confirmedAt,
+      reviewer_id: userId,
+      tenant_profile_id: tenant?.id ?? null,
+      packet_selection: selection,
+      packet_selection_digest: selectionDigest,
+      page_classification_version: "tic-packet-selection:1",
+      original_extracted_data: originalExtractedData,
+      confirmed_extracted_data: confirmedExtractedData,
+      completion_findings: completionFindings,
+      corrections,
+      reviewer_supplied_fields: reviewerSuppliedFields,
+      preserved_supporting_documents: finalSupportingDocuments.map((document) => ({
+        type: document.documentType,
+        page_start: document.pageStart,
+        page_end: document.pageEnd,
+        page_numbers: document.pageNumbers,
+      })),
+    };
+    const itemValues = {
         job_id: data.source.jobId,
         user_id: userId,
         property_id: tenant?.property_id ?? null,
@@ -370,30 +392,6 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         jurisdiction: tenant?.portfolio_properties?.jurisdiction ?? data.standaloneJurisdiction ?? null,
         program_codes: Array.isArray(tenant?.program_codes) ? tenant.program_codes : declaredPrograms,
         extracted_data: confirmedExtractedData,
-        historical_changes: [{
-          type: "tic_pre_save_confirmation",
-          standalone: !tenant,
-          tic_worksheet: {settings:data.worksheetSettings||newTicWorksheetSettings(),source_values:workingSource,calculated:worksheet.calculated,formulas:worksheet.formulas,differences:worksheet.differences},
-          income_preparation_version: preparedIncome.draft.version,
-          income_preparation: { ...preparedIncome, pages: incomePreparation.pages.map(({ excerpt: _excerpt, ...page }) => page) },
-          confirmed_at: confirmedAt,
-          reviewer_id: userId,
-          tenant_profile_id: tenant?.id ?? null,
-          packet_selection: selection,
-          packet_selection_digest: selectionDigest,
-          page_classification_version: "tic-packet-selection:1",
-          original_extracted_data: originalExtractedData,
-          confirmed_extracted_data: confirmedExtractedData,
-          completion_findings: completionFindings,
-          corrections,
-          reviewer_supplied_fields: reviewerSuppliedFields,
-          preserved_supporting_documents: finalSupportingDocuments.map((document) => ({
-            type: document.documentType,
-            page_start: document.pageStart,
-            page_end: document.pageEnd,
-            page_numbers: document.pageNumbers,
-          })),
-        }],
         confidence,
         processed_at: confirmedAt,
         upload_duration_ms: data.source.uploadDurationMs ?? null,
@@ -402,9 +400,23 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
         upload_transport: data.source.uploadTransport ?? null,
         upload_sequence: 0,
         review_queue_status: "not_queued",
-      })
-      .select("id")
-      .single();
+      };
+    const { data: existing } = await db.from("certification_import_items").select("id,historical_changes").eq("user_id",userId).eq("sha256",sourceSha256).maybeSingle();
+    let item;
+    let itemError;
+    if (existing?.id) {
+      const previousHistory=Array.isArray(existing.historical_changes)?existing.historical_changes:[];
+      ({data:item,error:itemError}=await db.from("certification_import_items").update({...itemValues,historical_changes:[...previousHistory,confirmationHistory]}).eq("id",existing.id).select("id").single());
+      if (!itemError) {
+        await Promise.all([
+          db.from("certification_facts").delete().eq("item_id",existing.id),
+          db.from("compliance_findings").delete().eq("item_id",existing.id),
+          db.from("portfolio_tenant_documents").delete().eq("certification_import_item_id",existing.id),
+        ]);
+      }
+    } else {
+      ({data:item,error:itemError}=await db.from("certification_import_items").insert({...itemValues,historical_changes:[confirmationHistory]}).select("id").single());
+    }
     if (itemError) throw itemError;
 
     try {
