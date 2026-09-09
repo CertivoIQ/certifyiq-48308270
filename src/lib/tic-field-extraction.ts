@@ -1,3 +1,4 @@
+import { findTicLabels } from "@/lib/tic-label-matching.mjs";
 import { supplementalPageKind } from "@/lib/tic-supplemental-fields";
 import { supplementalTextFacts } from "@/lib/tic-supplemental-text-extraction";
 // TIC_CELL_REPAIR_V1
@@ -261,31 +262,27 @@ export function extractTicFieldsFromText(
     found.add(supplementalFact.field);
   }
 
-  for (const definition of TIC_FIELD_DEFINITIONS) {
-    if (found.has(definition.key) || conflictingDirectFields.has(definition.key) || definition.key === "certification_type" || !definition.aliases.length) continue;
-    let extracted: ExtractedFact | null = null;
-    for (let index = 0; index < lines.length && !extracted; index += 1) {
-      const line = lines[index] ?? "";
-      if (line.startsWith(DIRECT_TIC_FIELD_PREFIX)) continue;
-      if (line.startsWith("__CERTIVOIQ_") || supplementalPages.has(pageOfLine[index] ?? 1)) continue;
-      const strictPage = strictCellPages.has(pageOfLine[index] ?? 1);
-      const lower = line.toLowerCase();
-      for (const alias of definition.aliases) {
-        if (!lower.includes(alias.toLowerCase())) continue;
-        let raw = lineTailAfterAlias(line, alias);
-        let value = normalizeValue(definition, raw);
-        if (value === null && !raw.trim() && !strictPage) {
-          raw = nextCandidateLine(lines, index);
-          value = normalizeValue(definition, raw);
-        }
-        if (value === null) continue;
-        const page = pageOfLine[index] ?? 1;
-        extracted = factFromValue(definition, value, documentRef, line, page, pageProvenance?.get(page));
-        break;
+  const labelDefinitions = TIC_FIELD_DEFINITIONS.filter(definition =>
+    !definition.key.startsWith('worksheet_') && !definition.key.startsWith('application_') &&
+    !definition.key.startsWith('source_present_') && definition.aliases.length);
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index] ?? "";
+    const page = pageOfLine[index] ?? 1;
+    if (line.startsWith("__CERTIVOIQ_") || supplementalPages.has(page)) continue;
+    const labels = findTicLabels(line, labelDefinitions);
+    for (let labelIndex = 0; labelIndex < labels.length; labelIndex += 1) {
+      const hit = labels[labelIndex]!;
+      if (hit.ambiguous || found.has(hit.key) || conflictingDirectFields.has(hit.key) || hit.key === "certification_type") continue;
+      const definition = TIC_FIELD_BY_KEY.get(hit.key)!;
+      const next = labels.find((candidate, i) => i > labelIndex && candidate.start >= hit.end);
+      let raw = line.slice(hit.end, next?.start ?? line.length).replace(/^\s*[:=\-–—]?\s*/, "");
+      let value = normalizeValue(definition, raw);
+      if (value === null && !raw.trim() && !next && !strictCellPages.has(page)) {
+        raw = nextCandidateLine(lines, index);
+        value = normalizeValue(definition, raw);
       }
-    }
-    if (extracted) {
-      facts.push(extracted);
+      if (value === null) continue;
+      facts.push(factFromValue(definition, value, documentRef, line, page, pageProvenance?.get(page)));
       found.add(definition.key);
     }
   }
