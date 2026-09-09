@@ -32,6 +32,11 @@ import {
 
 type Db = any;
 type SupportingClassificationChoice = SupportingDocumentType | "tic_page";
+const messageOf = (error: unknown, fallback: string) => error instanceof Error
+  ? error.message
+  : typeof error === "object" && error !== null && "message" in error
+    ? String(error.message)
+    : fallback;
 
 type PreviewFact = {
   field: string;
@@ -389,7 +394,7 @@ export function CertificationUploadPanel() {
     } catch (error) {
       setProgressPercent(100);
       setProgressLabel("TIC review is still open — document not saved.");
-      setMessage(error instanceof Error ? error.message : "The confirmed certification packet could not be saved.");
+      setMessage(messageOf(error, "The confirmed certification packet could not be saved."));
     } finally {
       setBusy(false);
       setSaveAction(null);
@@ -562,5 +567,4 @@ export function CertificationUploadPanel() {
     </section>
   );
 }
-
 
