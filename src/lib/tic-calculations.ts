@@ -1,6 +1,13 @@
-export type TicWorksheetSettings = { passbookRatePercent: string; assetMethod: 'SOURCE'|'ACTUAL'|'LEGACY_GREATER'|'HOTMA_PER_ASSET'; imputationThreshold: string; rateSource: string };
+export type TicWorksheetSettings = {
+ passbookRatePercent: string;
+ assetMethod: 'SOURCE'|'ACTUAL'|'LEGACY_GREATER'|'HOTMA_PER_ASSET';
+ imputationThreshold: string;
+ rateSource: string;
+ programContext?: 'HUD_MFH'|'HCV_PH'|'HOME_HTF'|'LIHTC'|'USDA_RD'|'OTHER'|'';
+ hotmaStatus?: 'HOTMA_2026'|'PRE_HOTMA_AUTHORIZED'|'AGENCY_SPECIFIC'|'';
+};
 export type TicWorksheet = { values: Record<string,string>; calculated: Record<string,string>; formulas: Record<string,string>; issues: string[]; differences: {field:string;reported:string;calculated:string}[]; incomeRows:{member:string;source:string;annual:string}[]; assetRows:{member:string;description:string;cash:string;annual:string;method:string}[] };
-export const newTicWorksheetSettings = ():TicWorksheetSettings => ({passbookRatePercent:'',assetMethod:'SOURCE',imputationThreshold:'',rateSource:''});
+export const newTicWorksheetSettings = ():TicWorksheetSettings => ({passbookRatePercent:'',assetMethod:'SOURCE',imputationThreshold:'',rateSource:'',programContext:'',hotmaStatus:''});
 const blank=(v:unknown)=>v==null||String(v).trim()==='';
 export function ticMoney(v:unknown):bigint|null {
  if(blank(v))return null;
@@ -17,6 +24,8 @@ export function assertTicWorksheetSettings(s:unknown):asserts s is TicWorksheetS
  if(!s||typeof s!=='object')throw Error('Worksheet settings are required.');
  const v=s as TicWorksheetSettings;
  if(!['SOURCE','ACTUAL','LEGACY_GREATER','HOTMA_PER_ASSET'].includes(v.assetMethod))throw Error('Select the asset-income method.');
+ if(v.programContext!==undefined&&!['','HUD_MFH','HCV_PH','HOME_HTF','LIHTC','USDA_RD','OTHER'].includes(v.programContext))throw Error('Select a valid program for the passbook rate.');
+ if(v.hotmaStatus!==undefined&&!['','HOTMA_2026','PRE_HOTMA_AUTHORIZED','AGENCY_SPECIFIC'].includes(v.hotmaStatus))throw Error('Select a valid HOTMA status.');
  for(const k of ['passbookRatePercent','imputationThreshold','rateSource'] as const)if(typeof v[k]!=='string'||v[k].length>1000)throw Error('Invalid worksheet setting.');
  if(v.passbookRatePercent!==''&&!rate(v.passbookRatePercent))throw Error('Passbook rate must be a percentage from 0 to 100, such as 0.06.');
  if(v.imputationThreshold!==''&&(ticMoney(v.imputationThreshold)===null||ticMoney(v.imputationThreshold)!<0n))throw Error('Enter a nonnegative imputation threshold.');
@@ -81,3 +90,4 @@ export function calculateTicWorksheet(input:Record<string,string>,settings:TicWo
  for(const [to,from] of [['worksheet_property_name','property_name'],['worksheet_unit_code','unit_number'],['worksheet_unit_size','unit_bedrooms'],['worksheet_certification_date','certification_effective_date'],['worksheet_certification_type','certification_type'],['worksheet_qualifying_income_limit_percent','household_income_restriction_percent']])if(input[from!])values[to!]=input[from!]!;
  return {values,calculated,formulas,issues:[...new Set(issues)],differences,incomeRows,assetRows};
 }
+
