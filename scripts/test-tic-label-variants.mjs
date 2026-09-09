@@ -43,3 +43,15 @@ test('bounded cell planning also recognizes rent wording variants',()=>{
   assert.equal(planTicCells({width,height,data},blocks).cells.find(c=>c.key==='tenant_paid_rent')?.sourceWords[0]?.text,'675.00',label);
  }
 });
+
+test('all 443 registered TIC canonical labels preserve their typed source values',()=>{
+ assert.equal(labelDefinitions.length,443);
+ for(const d of labelDefinitions){
+  const value=d.key==='certification_type'?'Recertification':d.type==='date'?'01/02/2026':d.type==='yes_no'?'Yes':d.type==='number'?7:d.type==='currency'?123.45:'SYNTHETICVALUE';
+  const facts=extractTicFieldsFromText('page 4\n'+d.label+': '+value,'synthetic-registry.pdf').facts;
+  const fact=facts.find(f=>f.field===d.key);
+  assert.equal(fact?.value,value,d.key);
+  assert.equal(fact.page,4);
+  assert.equal(fact.humanVerified,false);
+ }
+});
