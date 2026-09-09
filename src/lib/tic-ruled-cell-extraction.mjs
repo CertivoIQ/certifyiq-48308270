@@ -119,6 +119,11 @@ export function planTicCells(image,blocks){
   // The first bounded row is a multiline header, not a household member.
   const headerRow=ys.findIndex((v,i)=>i<ys.length-1&&(ys[i+1]-v)>r.h*.018);
   if(headerRow<0)continue;
+  if(stop&&p.part!=='household') {
+   const totalKeys=p.part==='income'?['total_employment_income','total_social_security_pensions','total_public_assistance','total_other_income']:['total_asset_cash_value','total_asset_annual_income'];
+   const startColumn=p.part==='income'?1:3;
+   for(let c=0;c<totalKeys.length;c++)add(totalKeys[c],{x0:xs[startColumn+c]+4,x1:xs[startColumn+c+1]-4,y0:stop.bbox.y0-3,y1:stop.bbox.y1+4},'currency');
+  }
   const body=ys.slice(headerRow+1);let row=0;
   for(let i=0;i<body.length-1&&row<p.max;i++){
    const top=body[i],bottom=body[i+1];if(bottom-top<r.h*.007||bottom-top>r.h*.025)continue;
@@ -155,7 +160,7 @@ export function planTicCells(image,blocks){
   // OCR often splits the label and its right-aligned amount into separate blocks.
   // Match the original words on the same baseline, not only this OCR line's tail.
   const center=(m.y0+m.y1)/2,height=Math.max(8,m.y1-m.y0);
-  const money=sourceWords.filter(w=>w.bbox.x0>=m.x1&&Math.abs((w.bbox.y0+w.bbox.y1)/2-center)<=height*.65&&/^\$?\d[\d,]*\.\d{2}$/.test(w.text));
+  const money=sourceWords.filter(w=>w.bbox.x0>=m.x1&&Math.abs((w.bbox.y0+w.bbox.y1)/2-center)<=height*1.35&&/^\$?\d[\d,.]*[.,]\d{2}[)]?$/.test(w.text));
   if(money.length!==1)continue;const b=money[0].bbox;
   add(key,{x0:b.x0-5,x1:b.x1+6,y0:b.y0-4,y1:b.y1+4},'currency');
  }
@@ -209,7 +214,8 @@ export function cellSheetLayout(plan){
  }
  return {width:940,height:Math.max(1,y),tiles};
 }
-function normalizedCell(type,words,minConfidence){
+function normalizedCell(type,words,minConfidence,key=''){
+ if(key.startsWith('worksheet_')&&['currency','number'].includes(type))words=words.filter(w=>! /^[=×*+]$/.test(clean(w.text)));
  const selected=words.filter(w=>clean(w.text));
  let text=clean(selected.map(w=>w.text).join(' '));
  const confidence=selected.length?Math.min(...selected.map(w=>Number(w.confidence??0))):0;
@@ -217,7 +223,7 @@ function normalizedCell(type,words,minConfidence){
  if(type==='yes_no'){if(/^N$/i.test(text))text='No';else if(/^Y$/i.test(text))text='Yes';}
  let valid=confidence>=minConfidence&&!!text;
  if(type==='currency')valid=valid&&/^(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}$/.test(text);
- if(type==='number')valid=valid&&/^\d+$/.test(text);
+ if(type==='number')valid=valid&&(key.startsWith('worksheet_')?/^\d+(?:\.\d+)?%?$/:/^\d+$/).test(text);
  if(type==='date')valid=valid&&/^(?:\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})$/.test(text);
  if(type==='yes_no')valid=valid&&/^(?:Yes|No)$/.test(text);
  return valid?{text,confidence:confidence/100}:null;
@@ -226,10 +232,12 @@ export function finishTicCells(plan,sheet,blocks){
  const words=wordsOf(blocks),out=plan.groups.length||plan.cells.length>=3?['__CERTIVOIQ_TIC_CELL_MODE__: strict']:[],unresolved=new Set(plan.blocked),values=new Map(),evidence={};
  for(const tile of sheet.tiles){
   const selected=words.filter(w=>{const y=(w.bbox.y0+w.bbox.y1)/2;return w.bbox.x0>=tile.x-3&&y>=tile.y-4&&y<=tile.y+tile.height+4;}).sort((a,b)=>a.bbox.x0-b.bbox.x0);
-  let parsed=normalizedCell(tile.type,selected,70),method='isolated-cell';
+  let parsed=normalizedCell(tile.type,selected,70,tile.key),method='isolated-cell';
   // Missing single characters may be recovered only from an exact, higher-confidence
   // original word IN THIS SAME CELL. No substitution of |/]/O/l or neighboring fields.
-  if(!parsed){parsed=normalizedCell(tile.type,tile.sourceWords??[],80);method='bounded-page-word';}
+  if(!parsed){parsed=normalizedCell(tile.type,tile.sourceWords??[],80,tile.key);method='bounded-page-word';}
+  const original=normalizedCell(tile.type,tile.sourceWords??[],60,tile.key);
+  if(parsed&&original&&['currency','number','date'].includes(tile.type)&&parsed.text.replace(/[$,%]/g,'')!==original.text.replace(/[$,%]/g,''))parsed=null;
   if(!parsed){unresolved.add(tile.key);continue;}
   values.set(tile.key,parsed.text);
   evidence[tile.key]={bbox:tile.bbox,pageWidth:plan.width,pageHeight:plan.height,confidence:parsed.confidence,method};
@@ -276,4 +284,10 @@ export function mergeCellProposals(spatialLines,cellLines){
  if(cellLines.includes('__CERTIVOIQ_TIC_CELL_MODE__: strict'))return cellLines;
  const keys=new Set(cellLines.map(line=>/^__CERTIVOIQ_TIC_(?:FIELD|UNRESOLVED)__\s+([a-z0-9_]+):/.exec(line)?.[1]).filter(Boolean));
  return [...spatialLines.filter(line=>!keys.has(/^__CERTIVOIQ_TIC_FIELD__\s+([a-z0-9_]+):/.exec(line)?.[1])),...cellLines];
+}
+
+/** Plausible but disagreeing worksheet digits remain explicitly unresolved. */
+export function confirmWorksheetNumbers(result,plan,confirmed) {
+ const unresolved=new Set(plan.cells.filter(c=>c.key.startsWith('worksheet_')&&['currency','number'].includes(c.type)&&result.values[c.key]&&confirmed.get(c.key)!==result.values[c.key]).map(c=>c.key));
+ return [...result.lines.filter(line=>!unresolved.has(/^__CERTIVOIQ_TIC_(?:FIELD|CELL)__\s+([a-z0-9_]+):/.exec(line)?.[1])),...Array.from(unresolved,key=>`${BLOCKED} ${key}: Independent readings of this source cell do not agree.`)];
 }
