@@ -52,6 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           node --test scripts/test-portfolio-onboarding-mapping.mjs scripts/test-portfolio-vacancies.mjs scripts/test-founder-training-access.mjs
+          node --test scripts/test-tic-calculations.mjs scripts/test-income-document-workflow.mjs scripts/test-tic-scan-recovery.mjs supabase/functions/tic-handwriting/core.test.mjs
           node --test scripts/test-native-income-calculator.mjs | tee /tmp/income-calculator-tests.txt
           node --test scripts/test-income-release-identity.mjs | tee /tmp/income-release-tests.txt
           node --test scripts/test-tic-spatial-extraction.mjs scripts/test-tic-native-form-extraction.mjs scripts/test-command-center-certification-actions.mjs scripts/test-standalone-supporting-document-upload.mjs scripts/test-controlled-mass-portfolio-intake.mjs scripts/test-onboarding-certification-separation.mjs scripts/test-certification-task-workflow.mjs | tee /tmp/income-certification-tests.txt

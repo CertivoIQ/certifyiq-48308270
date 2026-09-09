@@ -4,6 +4,7 @@ import { ticCompletenessFindings } from "@/lib/tic-completeness";
 import type { TicFieldDefinition } from "@/lib/tic-field-registry";
 import { TIC_ASSET_ROW_COUNT, TIC_FIELD_BY_KEY, TIC_HOUSEHOLD_ROW_COUNT, TIC_INCOME_ROW_COUNT } from "@/lib/tic-field-registry";
 
+const CalculationContext = createContext<Record<string,string>>({});
 const CompletionContext = createContext(new Map<string, string>());
 
 type FactMeta = {
@@ -17,6 +18,7 @@ type Props = {
   values: Record<string, string>;
   factsByField: Map<string, FactMeta>;
   busy: boolean;
+  calculatedFields?: Record<string,string>;
   onChange: (field: string, value: string) => void;
 };
 
@@ -36,9 +38,11 @@ function Field({
   factsByField,
   busy,
   onChange,
+  calculatedFields,
   compact = false,
   placeholder,
 }: Props & { field: string; compact?: boolean; placeholder?: string }) {
+  const formulas = useContext(CalculationContext);
   const finding = useContext(CompletionContext).get(field);
   const definition = def(field);
   if (!definition) return null;
@@ -51,16 +55,17 @@ function Field({
       <div className="mb-1 flex items-end justify-between gap-2">
         <span className={`${compact ? "text-[10px]" : "text-xs"} font-semibold leading-tight`}>{definition.label}</span>
         <span className={`shrink-0 text-[9px] ${corrected ? "font-semibold" : "text-slate-500"}`}>
-          {corrected ? "Corrected" : confidenceLabel(fact)}
+          {formulas[field] ? "Calculated · confirm" : corrected ? "Corrected" : confidenceLabel(fact)}
         </span>
       </div>
       <input
         className={`${compact ? "h-8 px-2 text-xs" : "h-9 px-2.5 text-sm"} w-full rounded-none border border-slate-500 bg-white text-slate-950 outline-none focus:ring-2 focus:ring-slate-800/20`}
         aria-invalid={Boolean(finding)}
-        title={finding}
+        title={finding || formulas[field]}
         style={finding ? { backgroundColor: "#fef08a", borderColor: "#a16207" } : undefined}
         value={value}
         disabled={busy}
+        readOnly={Boolean(formulas[field])}
         inputMode={definition.type === "currency" || definition.type === "number" ? "decimal" : undefined}
         placeholder={placeholder ?? definition.placeholder ?? ""}
         onChange={(event) => onChange(field, event.target.value)}
@@ -290,7 +295,7 @@ export function CertivoIqTicReviewForm(props: Props) {
   const { values, factsByField, busy, onChange } = props;
   const completion = useMemo(()=>new Map(ticCompletenessFindings(values).map(f=>[f.field,f.message])),[values]);
   return (
-    <CompletionContext.Provider value={completion}>
+    <CalculationContext.Provider value={props.calculatedFields??{}}><CompletionContext.Provider value={completion}>
     <div className="mx-auto w-full max-w-[1180px] space-y-5">
       <div className="overflow-hidden rounded-lg border border-slate-400 bg-white text-slate-950 shadow-sm">
         <div className="border-b-2 border-slate-900 p-3">
@@ -413,7 +418,7 @@ export function CertivoIqTicReviewForm(props: Props) {
         </section>)}
       </div>
     </div>
-    </CompletionContext.Provider>
+    </CompletionContext.Provider></CalculationContext.Provider>
   );
 }
 
