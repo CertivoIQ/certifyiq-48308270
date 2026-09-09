@@ -7,16 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Panel } from "@/components/ui-kit";
+import { useSession } from "@/hooks/use-session";
+import { isFounderUser } from "@/lib/founder-access";
 import { captureFreeReviewLead, getFreeReviewLead } from "@/lib/free-review-lead.functions";
 
 const field = "space-y-1.5";
 const splitList = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean);
 
 export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
+  const { user, ready } = useSession();
+  const isFounder = isFounderUser(user);
   const qc = useQueryClient();
   const getLead = useServerFn(getFreeReviewLead);
   const captureLead = useServerFn(captureFreeReviewLead);
-  const lead = useQuery({ queryKey: ["free-review-lead"], queryFn: () => getLead() });
+  const lead = useQuery({ queryKey: ["free-review-lead"], queryFn: () => getLead(), enabled: ready && !isFounder });
   const [d, setD] = useState({
     companyName: "",
     ownerName: "",
@@ -48,20 +52,18 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
           marketingConsent: d.marketingConsent,
         },
       }),
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["free-review-lead"] });
-      toast.success("You're cleared for 3 FREE certification reviews", {
-        description: `Recommended plan: ${result.plan}.`,
-      });
+      toast.success("You're cleared for 3 FREE certification reviews");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save your company information"),
   });
 
-  if (lead.isLoading) {
+  if (!ready || (!isFounder && lead.isLoading)) {
     return <Panel title="Preparing your 3 FREE certification reviews" description="Checking your review access…"><div className="h-20 animate-pulse rounded-lg bg-muted" /></Panel>;
   }
 
-  if (lead.data) return <>{children}</>;
+  if (isFounder || lead.data) return <>{children}</>;
 
   return (
     <Panel
@@ -138,9 +140,6 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
         {save.isPending ? "Saving your lead…" : "Continue to my 3 FREE certification reviews"}
       </Button>
 
-      <p className="mt-3 text-xs text-muted-foreground">
-        Your portfolio unit count determines the initial plan recommendation: Professional up to 500 units, Business up to 10,000, and Enterprise above 10,000.
-      </p>
     </Panel>
   );
 }
