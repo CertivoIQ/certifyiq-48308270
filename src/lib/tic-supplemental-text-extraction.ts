@@ -1,3 +1,4 @@
+import { findTicLabels, TIC_LABEL_VARIANTS } from "@/lib/tic-label-matching.mjs";
 import type { ExtractedFact } from "@/lib/compliance-rule-engine.mjs";
 import type { PageProvenance } from "@/lib/ocr-sidecar.mjs";
 import { supplementalPageKind } from "@/lib/tic-supplemental-fields";
@@ -74,22 +75,12 @@ function pageLines(text: string) {
   return pages;
 }
 
-function labelsOnLine(lower: string) {
-  const matches: Array<{ scalar: Scalar; start: number; end: number }> = [];
-  for (const scalar of WORKSHEET_SCALARS) {
-    const [, label] = scalar;
-    let cursor = 0;
-    while (cursor < lower.length) {
-      const start = lower.indexOf(label, cursor);
-      if (start < 0) break;
-      matches.push({ scalar, start, end: start + label.length });
-      cursor = start + 1;
-    }
-  }
-  matches.sort((a, b) => a.start - b.start || b.end - a.end);
-  // When labels overlap at the same printed position, only the longest exact
-  // label is allowed (e.g. "Qualifying Income Limit Percent" before its prefix).
-  return matches.filter((match, index) => !matches.slice(0, index).some((prior) => prior.start === match.start && prior.end >= match.end));
+function labelsOnLine(line: string) {
+  const definitions = WORKSHEET_SCALARS.map(scalar => ({key:scalar[0], aliases:[scalar[1], ...(TIC_LABEL_VARIANTS[scalar[0]] ?? [])]}));
+  return findTicLabels(line,definitions).filter(hit=>!hit.ambiguous).map(hit=>({
+    scalar:WORKSHEET_SCALARS.find(scalar=>scalar[0]===hit.key)!,
+    start:hit.start,end:hit.end,
+  }));
 }
 
 /**
