@@ -177,10 +177,8 @@ function staticFieldLines(lines) {
   for (const line of lines) {
     const hits = [];
     for (const [key, pattern] of STATIC_LABELS) {
-      const exact = pattern.exec(line.text);
-      const variant = findTicLabelForKey(line.text, key);
-      const match = variant && (!exact || variant.end - variant.start > exact[0].length)
-        ? { index: variant.start, 0: line.text.slice(variant.start, variant.end) } : exact;
+      const variant = findTicLabelForKey(line.text, key, pattern);
+      const match = variant ? { index: variant.start, 0: line.text.slice(variant.start, variant.end) } : null;
       if (match && Number.isFinite(match.index)) {
         hits.push({ key, start: match.index, end: match.index + match[0].length });
       }
