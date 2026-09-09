@@ -376,7 +376,7 @@ export function CertificationUploadPanel() {
         setMessage(`Certification saved.${changeText}${supportText} It is now in the Compliance Review Queue.`);
       } else {
         setProgressLabel("Certification packet saved.");
-        setMessage(`Certification saved to the tenant file.${changeText}${supportText} It has not been queued for compliance review.`);
+        setMessage(`Certification saved${tenantProfileId ? " to the tenant file" : " as a standalone review"}.${changeText}${supportText} It has not been queued for compliance review.`);
       }
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["certification-items"] }),
@@ -484,7 +484,7 @@ export function CertificationUploadPanel() {
               setStage("ready"); setMessage("Calculated income has been added. The certification is ready to save for full review.");
             }} />
           ) : stage === "ready" ? (
-            <div className="mt-4 space-y-3 rounded-xl border bg-background p-4"><h3 className="font-semibold">TIC and income calculation prepared</h3><p>Calculated projected annual income: <strong>${incomeResult?.annualIncome ?? "Needs recalculation"}</strong></p><p className="text-sm">Source TIC annual income: {fieldValues["household_annual_income"] || "Not extracted"}. Differences will be flagged during full review.</p><p className="text-sm">{draft.supportingDocuments.length} supporting page(s) included. Income sources and calculation details will be saved with this certification.</p><div className="flex gap-4 text-sm"><button type="button" disabled={busy} className="underline" onClick={() => { setIncomeDraft(current => current ? { ...current, confirmed: false } : null); setStage("tic"); }}>Edit TIC</button><button type="button" disabled={busy} className="underline" onClick={() => setStage("income")}>Edit income calculation</button></div></div>
+            <div className="mt-4 space-y-3 rounded-xl border bg-background p-4"><h3 className="font-semibold">TIC and income calculation prepared</h3><p>Calculated projected annual income: <strong>${incomeResult?.annualIncome ?? "Needs recalculation"}</strong></p><p className="text-sm">Source TIC annual income: {rawFieldValues["household_annual_income"] || "Not extracted"}. Differences will be flagged during full review.</p><p className="text-sm">{draft.supportingDocuments.length} supporting page(s) included. Income sources and calculation details will be saved with this certification.</p><div className="flex gap-4 text-sm"><button type="button" disabled={busy} className="underline" onClick={() => { setIncomeDraft(current => current ? { ...current, confirmed: false } : null); setStage("tic"); }}>Edit TIC</button><button type="button" disabled={busy} className="underline" onClick={() => setStage("income")}>Edit income calculation</button></div></div>
           ) : <>
           <div className="mt-4 rounded border bg-background p-3 text-sm">
             <strong>TIC pages: {draft.ticPages.join(", ")}</strong> · {draft.supportingDocuments.length} included supporting page(s) · omitted pages: {draft.omittedPages.join(", ") || "None"}.
@@ -500,10 +500,10 @@ export function CertificationUploadPanel() {
                 <option key={tenant.id} value={tenant.id}>{tenant.householdName}{tenant.propertyName ? ` · ${tenant.propertyName}` : ""}{tenant.unitNumber ? ` · Unit ${tenant.unitNumber}` : ""}</option>
               ))}
             </select>
-            {tenantDestinations.data?.length === 0 ? <p className="mt-2 text-xs text-destructive">No tenant profiles are available. Complete Portfolio & Tenant Onboarding before saving a certification.</p> : null}
+            {tenantDestinations.data?.length === 0 ? <p className="mt-2 text-xs text-muted-foreground">Your certification will be saved on its own. Property and tenant onboarding can be completed later.</p> : null}
           </div>
 
-          {incomeResult && <div className="mt-4 rounded-xl border bg-background p-4 text-sm"><strong>Calculated projected annual income: ${incomeResult.annualIncome ?? "Needs recalculation"}</strong><p className="mt-1">Source TIC annual income: {fieldValues["household_annual_income"] || "Not extracted"}. The calculated amount accompanies the source TIC for program-specific review.</p><button type="button" className="mt-2 underline" disabled={busy} onClick={() => setStage("income")}>Return to Income Calculator</button></div>}
+          {incomeResult && <div className="mt-4 rounded-xl border bg-background p-4 text-sm"><strong>Calculated projected annual income: ${incomeResult.annualIncome ?? "Needs recalculation"}</strong><p className="mt-1">Source TIC annual income: {rawFieldValues["household_annual_income"] || "Not extracted"}. The calculated amount accompanies the source TIC for program-specific review.</p><button type="button" className="mt-2 underline" disabled={busy} onClick={() => setStage("income")}>Return to Income Calculator</button></div>}
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="rounded-xl border bg-background p-3 min-w-0 lg:sticky lg:top-4 lg:self-start">
               <div className="mb-3 flex items-center gap-2 text-sm font-medium"><FileSearch className="size-4" /> Selected TIC source</div>

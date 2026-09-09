@@ -10,10 +10,11 @@ export function TicIncomeWorksheet({worksheet,settings,onSettings,busy}:{workshe
  <label className="text-sm">Applicable imputation threshold ($)<input aria-label="Imputation threshold" inputMode="decimal" className="mt-1 w-full rounded border bg-background p-2" value={settings.imputationThreshold} disabled={busy} onChange={e=>change('imputationThreshold',e.target.value)}/></label>
  <label className="text-sm">Rate / method source or explanation<input aria-label="Passbook rate source" className="mt-1 w-full rounded border bg-background p-2" value={settings.rateSource} disabled={busy} onChange={e=>change('rateSource',e.target.value)}/></label>
  </div>
+ {(settings.assetMethod==='SOURCE'||settings.assetMethod==='ACTUAL')&&<p className="text-sm text-muted-foreground">The selected method does not apply a passbook rate. To calculate imputed asset income, select the applicable imputation method and enter its threshold.</p>}
  <div className="overflow-auto"><table className="w-full text-left text-sm"><caption className="sr-only">Income sources from the TIC</caption><thead><tr><th>Member</th><th>Annual income source</th><th>Amount</th></tr></thead><tbody>{worksheet.incomeRows.map((r,i)=><tr key={i}><td>{r.member}</td><td>{r.source}</td><td>{r.annual}</td></tr>)}</tbody></table></div>
  <dl className="grid gap-2 sm:grid-cols-2">{Object.entries(labels).map(([field,label])=><div key={field}><dt className="text-xs">{label}</dt><dd className="font-semibold">{worksheet.values[field]||'Needs information'}</dd></div>)}</dl>
  {worksheet.issues.length>0&&<ul className="list-disc pl-5 text-sm">{worksheet.issues.map(i=><li key={i}>{i}</li>)}</ul>}
  {worksheet.differences.length>0&&<details><summary className="cursor-pointer font-medium">Differences from source figures ({worksheet.differences.length})</summary><ul className="list-disc pl-5 text-sm">{worksheet.differences.map(d=><li key={d.field}>{labels[d.field]||d.field.replaceAll('_',' ')}: source {d.reported}; calculated {d.calculated}.</li>)}</ul></details>}
- <p className="text-xs text-muted-foreground">A trial rate adjustment is a review input. Applicable property/program authority, income exclusions, and eligibility are evaluated during the full certification review.</p>
+ <p className="text-xs text-muted-foreground">A trial rate adjustment is a review input. Full review must verify the applicable property/program limits, income exclusions and eligibility; changing this rate does not establish qualification.</p>
  </section>;
 }

@@ -31,3 +31,13 @@ test('TIC-only preparation works without payroll dates, a tenant file or a prope
  assert.throws(()=>validateIncomePreparation({...draft,confirmed:false},p),/Confirm/);
  history[0].income_preparation.calculation.annualIncome='1.00';assert.throws(()=>savedIncomePreparation(history,sha,digest,choices),/changed/);
 });
+
+test('per-asset imputation cannot fabricate zero when only aggregate assets are provided',()=>{
+ const r=calculateTicWorksheet({total_income_e:'10000',total_asset_cash_value:'60000',asset_actual_income_below_iit:'200'}, {...settings,assetMethod:'HOTMA_PER_ASSET'});
+ assert.ok(r.issues.some(i=>i.includes('individual asset rows')));assert.equal(r.calculated.total_income_assets_m,undefined);assert.equal(r.calculated.household_annual_income,undefined);
+});
+test('each new review starts with independent rate settings',()=>{
+ const first=newTicWorksheetSettings();first.passbookRatePercent='0.06';
+ assert.equal(newTicWorksheetSettings().passbookRatePercent,'');
+ assert.equal(calculateTicWorksheet(input,{...settings,passbookRatePercent:'0'}).values.total_income_assets_m,'3.18');
+});

@@ -58,7 +58,8 @@ export function calculateTicWorksheet(input:Record<string,string>,settings:TicWo
  }else if(settings.assetMethod==='ACTUAL'){selected=actualIncome;if(assetRows.some(a=>/^imputed$/i.test(a.method))){selected=null;issues.push('Imputed asset rows require the applicable imputation method.');}put('total_income_assets_m',selected,'Actual annual income from the entered assets');}
  else if(settings.assetMethod==='LEGACY_GREATER'){if(actualIncome!==null&&imputed!==null)selected=actualIncome>imputed?actualIncome:imputed;put('total_income_assets_m',selected,'Greater of actual asset income and imputed income above the entered threshold');}
  else if(settings.assetMethod==='HOTMA_PER_ASSET'){
-  if(net!==null&&threshold!==null&&r&&!badActual){
+  if(!assetCount)issues.push('Enter the individual asset rows before using per-asset imputation.');
+  if(assetCount&&net!==null&&threshold!==null&&r&&!badActual){
    let valid=true;for(const a of assetRows)if(/^imputed$/i.test(a.method)){const c=ticMoney(a.cash);if(c===null||net<=threshold){valid=false;issues.push('Confirm actual income for assets below the imputation threshold.');}else imputedRows+=round(c*r.n,r.d);}
    if(valid)selected=actual+imputedRows;
   }
@@ -73,7 +74,7 @@ export function calculateTicWorksheet(input:Record<string,string>,settings:TicWo
  if(rentParts.every(x=>x!==null))put('gross_rent',rentParts.reduce<bigint>((a,b)=>a+b!,0n),'Tenant-paid rent + utility allowance + mandatory charges; subsidy excluded');
  const limit=read('applicable_lihtc_income_limit');
  if(limit!==null)put('current_income_limit_140_percent',round(limit*140n,100n),'Entered income limit × 140%; over-income rule applicability is reviewed separately');
- const worksheet:Record<string,bigint|null>={worksheet_total_of_all_income_sources:e,worksheet_total_income:e,worksheet_total_asset_cash_value:net,worksheet_total_actual_income:actualIncome,worksheet_total_imputed_income:settings.assetMethod==='HOTMA_PER_ASSET'?imputedRows:imputed,worksheet_greatest_asset_income:settings.assetMethod==='LEGACY_GREATER'?selected:null,worksheet_total_asset_income:selected,worksheet_total_annual_income:total,worksheet_total_reported_income:read('household_annual_income'),worksheet_qualifying_income_limit:limit,worksheet_variance:total!==null&&limit!==null?total-limit:null};
+ const worksheet:Record<string,bigint|null>={worksheet_total_of_all_income_sources:e,worksheet_total_income:e,worksheet_total_asset_cash_value:net,worksheet_total_actual_income:actualIncome,worksheet_total_imputed_income:settings.assetMethod==='HOTMA_PER_ASSET'?(selected===null?null:imputedRows):imputed,worksheet_greatest_asset_income:settings.assetMethod==='LEGACY_GREATER'?selected:null,worksheet_total_asset_income:selected,worksheet_total_annual_income:total,worksheet_total_reported_income:read('household_annual_income'),worksheet_qualifying_income_limit:limit,worksheet_variance:total!==null&&limit!==null?total-limit:null};
  for(const [key,n] of Object.entries(worksheet))put(key,n,'Calculated from the entered TIC income and asset components');
  if(settings.passbookRatePercent)values['worksheet_passbook_rate_percent']=settings.passbookRatePercent;
  for(const [to,from] of [['worksheet_property_name','property_name'],['worksheet_unit_code','unit_number'],['worksheet_unit_size','unit_bedrooms'],['worksheet_certification_date','certification_effective_date'],['worksheet_certification_type','certification_type'],['worksheet_qualifying_income_limit_percent','household_income_restriction_percent']])if(input[from!])values[to!]=input[from!]!;
