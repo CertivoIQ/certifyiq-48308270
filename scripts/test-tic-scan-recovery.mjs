@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {pdfImageDecodeOptions,assertRenderedPdfImages} from '../src/lib/pdf-render-integrity.mjs';
+import {pdfImageDecodeOptions,assertRenderedPdfImages,pdfOcrViewport} from '../src/lib/pdf-render-integrity.mjs';
 import {findTicLabelForKey,findTicLabels} from '../src/lib/tic-label-matching.mjs';
 import {worksheetFieldType} from '../src/lib/tic-worksheet-types.mjs';
 import {planTicCells,finishTicCells,confirmWorksheetNumbers} from '../src/lib/tic-ruled-cell-extraction.mjs';
@@ -68,4 +68,26 @@ test('strict cell pages cannot acquire form instructions or unconfirmed workshee
  const text='page 4\n__CERTIVOIQ_TIC_CELL_MODE__: strict\nStudent Explanation: *\nMinimum Set Aside: properties use\n__CERTIVOIQ_TIC_FIELD__ tenant_paid_rent: 700.00\npage 5\nAnnual Income Calculation Worksheet\nRelationship Description\n__CERTIVOIQ_TIC_CELL_MODE__: strict\nVariance: ($5,100.00)';
  const result=extractTicFieldsFromText(text,'synthetic.pdf');
  assert.deepEqual(result.facts.map(f=>f.field),['tenant_paid_rent']);
+});
+
+test('operator-list image delivery may finish after the operator list resolves',async()=>{
+ const objects={has:()=>false,get:(_id,callback)=>setTimeout(()=>callback({width:2500,height:3200}),5)};
+ await assertRenderedPdfImages({...page(null),objs:objects},ops,100);
+ const failed={has:()=>false,get:(_id,callback)=>setTimeout(()=>callback(null),5)};
+ await assert.rejects(assertRenderedPdfImages({...page(null),objs:failed},ops,100),/page 4/);
+ const missing={has:()=>false,get:()=>{}};
+ await assert.rejects(assertRenderedPdfImages({...page(null),objs:missing},ops,5),/not been treated as blank/);
+});
+test('mixed and repeated image operators never hide a failed image',async()=>{
+ const objects=new Map([['good',{width:100,height:100}],['bad',null]]);
+ const mixed={pageNumber:2,objs:objects,commonObjs:objects,getOperatorList:async()=>({fnArray:[85,88,85],argsArray:[['good'],['bad'],['good']]})};
+ await assert.rejects(assertRenderedPdfImages(mixed,ops),/page 2/);
+});
+test('scanner pixel-sized PDF pages use bounded OCR canvases without shrinking normal TIC resolution',()=>{
+ const scanner={getViewport:({scale})=>({width:2524*scale,height:3191*scale,scale})};
+ const bounded=pdfOcrViewport(scanner,3.5);
+ assert.ok(bounded.width*bounded.height<=12_000_001);assert.ok(bounded.height<=4096);
+ const letter={getViewport:({scale})=>({width:612*scale,height:792*scale,scale})};
+ assert.equal(pdfOcrViewport(letter,3.5).scale,3.5);
+ assert.ok(pdfOcrViewport(scanner,2,1700).height<=1700);
 });

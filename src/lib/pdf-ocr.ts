@@ -12,7 +12,7 @@ import {
   type OcrSidecarPage,
 } from '@/lib/ocr-sidecar.mjs';
 import { ocrTimeBudgetMs } from '@/lib/ocr-time-budget.mjs';
-import { assertRenderedPdfImages, pdfImageDecodeOptions } from '@/lib/pdf-render-integrity.mjs';
+import { assertRenderedPdfImages, pdfImageDecodeOptions, pdfOcrViewport } from '@/lib/pdf-render-integrity.mjs';
 import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
 import { createOcrWorkerPool, OcrRuntimeError } from '@/lib/ocr-worker-pool';
 import { extractTicSpatialValueLines } from '@/lib/tic-spatial-extraction.mjs';
@@ -574,7 +574,7 @@ export async function prepareCertificationForReview(
           const preparedText = preparedTextByPage.get(pageNumber) ?? '';
           const isTicFormPage = isTicContent(preparedText);
           const highResolutionFormCandidate = isTicFormPage || pageNumber <= 3;
-          const viewport = page.getViewport({ scale: highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE });
+          const viewport = pdfOcrViewport(page, highResolutionFormCandidate ? TIC_RENDER_SCALE : RENDER_SCALE);
           const { canvas, context } = createCanvas(viewport.width, viewport.height);
           try {
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
@@ -649,7 +649,7 @@ export async function prepareCertificationForReview(
     if (pageErrors.length) {
       const firstFailure = pageErrors[0]!;
       throw new Error(
-        `${OCR_NO_TEXT_MESSAGE} First nonblank failed page: ${firstFailure.page}. ${firstFailure.message}`,
+        `Certification processing stopped at page ${firstFailure.page}. ${firstFailure.message}`,
       );
     }
 
@@ -741,7 +741,7 @@ export async function identifyCertificationPageLabels(
       try {
         if (pdf && pdfjs) {
           const page = await pdf.getPage(target.page);
-          const viewport = page.getViewport({scale: 2});
+          const viewport = pdfOcrViewport(page, 2, 1700);
           const rendered = createCanvas(viewport.width, Math.ceil(viewport.height * 0.5));
           canvas = rendered.canvas;
           await page.render({canvas, canvasContext: rendered.context, viewport, background: '#ffffff'}).promise;
