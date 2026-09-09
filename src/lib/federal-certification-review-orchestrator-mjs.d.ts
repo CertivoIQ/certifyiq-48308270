@@ -21,6 +21,8 @@ declare module "@/lib/federal-certification-review-orchestrator.mjs" {
 
   export interface FederalCertificationReviewInput {
     facts: readonly ExtractedFact[];
+    /** Recomputed on the server from confirmed TIC inputs and the saved worksheet method. */
+    ticWorksheetCalculation?: Record<string, string> | null;
     programs?: readonly CertificationProgram[];
     certificationType?: "INITIAL" | "ANNUAL" | "INTERIM";
     jurisdiction?: string;
