@@ -76,12 +76,23 @@ function compileLabels(definitions) {
  result=definitions.flatMap(definition=>(definition.aliases??[]).map(alias=>({key:definition.key,target:tokens(alias).map(t=>t.token)}))).filter(d=>d.target.length);
  compiledLabels.set(definitions,result);return result;
 }
+// One OCR insertion, deletion, or substitution in one long label word only.
+// Digits and source values are never corrected; competing destinations stay ambiguous.
+function oneLetterApart(a,b) {
+ if(a===b||Math.min(a.length,b.length)<5||Math.abs(a.length-b.length)>1||!/^\p{L}+$/u.test(a+b))return false;
+ let i=0,j=0,edits=0;
+ while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;continue;}if(++edits>1)return false;if(a.length>=b.length)i++;if(b.length>=a.length)j++;}
+ return edits+(i<a.length||j<b.length?1:0)===1;
+}
 /** Keep the longest overlapping label; equal spans assigned to different keys are ambiguous. */
 export function findTicLabels(text, definitions) {
  const source=tokens(text),hits=[];
  for(const {key,target} of compileLabels(definitions)){
    for(let i=0;i+target.length<=source.length;i++){
-    if(target.every((t,j)=>source[i+j].token===t)){
+    const mismatches=target.flatMap((t,j)=>source[i+j].token===t?[]:[j]);
+    const exact=mismatches.length===0;
+    const ocrVariant=target.length>=3&&mismatches.length===1&&oneLetterApart(target[mismatches[0]],source[i+mismatches[0]].token);
+    if(exact||ocrVariant){
      const start=source[i].start,tokenEnd=source[i+target.length-1].end;
      // A one-word alias inside a value is not a second printed field label.
      if(target.length===1 && start>0 && String(text).slice(0,start).trim() && !/^\s*[:=]/.test(String(text).slice(tokenEnd)))continue;
