@@ -1,3 +1,4 @@
+import { TIC_LABEL_VARIANTS } from "./tic-label-matching.mjs";
 import { TIC_SUPPLEMENTAL_FIELDS, TIC_SOURCE_PRESENCE_FIELDS } from "./tic-supplemental-fields";
 export type TicFieldType = "text" | "date" | "number" | "currency" | "yes_no";
 
@@ -17,7 +18,7 @@ const field = (
   type: TicFieldType,
   aliases: readonly string[] = [],
   placeholder?: string,
-): TicFieldDefinition => ({ key, label, section, type, aliases, ...(placeholder ? { placeholder } : {}) });
+): TicFieldDefinition => ({ key, label, section, type, aliases: [...new Set([label, ...aliases, ...(TIC_LABEL_VARIANTS[key] ?? [])])], ...(placeholder ? { placeholder } : {}) });
 
 export const TIC_HOUSEHOLD_ROW_COUNT = 10;
 export const TIC_INCOME_ROW_COUNT = 10;
