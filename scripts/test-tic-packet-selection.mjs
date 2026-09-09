@@ -234,8 +234,8 @@ test('actual preview and save reject income pages that have not completed extrac
  preparedScope=[4,5];
  try {
   const preview=await extractCertificationTicPreview({data:{source,pageSelections:choices},context});
-  assert.match(preview.error,/Page 6 has not completed extraction/);
-  await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:ready.selectionDigest,incomeDraft:incomeDraft(ready),startReview:false},context}),/Page 6 has not completed extraction/);
+  assert.match(preview.error,/outside its prepared page scope|Page 6 has not completed extraction/);
+  await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:ready.selectionDigest,incomeDraft:incomeDraft(ready),startReview:false},context}),/outside its prepared page scope|Page 6 has not completed extraction/);
   assert.equal(saved.length,before);
  } finally {preparedScope=undefined;}
 });

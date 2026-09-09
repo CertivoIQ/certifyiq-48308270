@@ -305,7 +305,8 @@ export const confirmCertificationTicPreview = createServerFn({ method: "POST" })
     if (!incomePreparation) throw new Error("Complete the Income Calculator before saving this certification.");
     // Recalculate from the reviewer's confirmed form. sourceTicFields is the
     // immutable OCR snapshot used below for correction history; using it here
-    // discards confirmed handwriting and user-supplied values at save time.
+    // would discard confirmed handwriting and user-supplied values at save time,
+    // making the persisted worksheet disagree with the income draft the user approved.
     const workingSource=Object.fromEntries(data.fields.map(f=>[f.field,f.value==null?'':String(f.value)]));
     const worksheet=calculateTicWorksheet(workingSource,data.worksheetSettings||newTicWorksheetSettings());
     const incomeDraft=data.incomeDraft?.basis==='TIC'?{...data.incomeDraft,ticWorksheet:{values:workingSource,settings:data.worksheetSettings||newTicWorksheetSettings()}}:data.incomeDraft;
