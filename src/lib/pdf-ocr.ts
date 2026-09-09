@@ -4,13 +4,13 @@ import {
   OCR_ENGINE,
   OCR_LIMIT_MESSAGE,
   OCR_SIDECAR_VERSION,
-  OCR_TIME_BUDGET_MS,
   OCR_TIMEOUT_MESSAGE,
   normalizePageText,
   pageNeedsOcr,
   type OcrSidecar,
   type OcrSidecarPage,
 } from '@/lib/ocr-sidecar.mjs';
+import { ocrTimeBudgetMs } from '@/lib/ocr-time-budget.mjs';
 import { assertRenderedPdfImages, pdfImageDecodeOptions } from '@/lib/pdf-render-integrity.mjs';
 import { ticPdfFormValueLinesByPage, type PdfFieldObjects } from '@/lib/tic-pdf-form-values';
 import { createOcrWorkerPool, OcrRuntimeError } from '@/lib/ocr-worker-pool';
@@ -522,6 +522,7 @@ export async function prepareCertificationForReview(
     );
 
     const startedAt = Date.now();
+    const timeBudgetMs = ocrTimeBudgetMs(needsOcr.length, workerCount);
     let nextIndex = 0;
     let completedCount = 0;
     let fatalError: Error | null = null;
@@ -534,7 +535,7 @@ export async function prepareCertificationForReview(
         nextIndex += 1;
         if (ocrIndex >= needsOcr.length) return;
 
-        if (Date.now() - startedAt > OCR_TIME_BUDGET_MS) {
+        if (Date.now() - startedAt > timeBudgetMs) {
           fatalError = new Error(OCR_TIMEOUT_MESSAGE);
           return;
         }
