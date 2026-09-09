@@ -114,3 +114,5 @@ test('legacy source cells reach the correct TIC rent fields with page and cell e
 });
 
 import './test-tic-label-variants.mjs';
+
+import './test-tic-scan-recovery.mjs';
