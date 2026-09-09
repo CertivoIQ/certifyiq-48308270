@@ -91,3 +91,16 @@ test('scanner pixel-sized PDF pages use bounded OCR canvases without shrinking n
  assert.equal(pdfOcrViewport(letter,3.5).scale,3.5);
  assert.ok(pdfOcrViewport(scanner,2,1700).height<=1700);
 });
+
+import {VISION_ENGINE,composeSidecarText,provenanceIndex} from '../src/lib/ocr-sidecar.mjs';
+import {validateTranscription} from '../supabase/functions/tic-handwriting/core.mjs';
+test('handwritten field proposals keep source page, coordinates and unverified provenance',()=>{
+ const result=validateTranscription({fields:[{key:'tenant_paid_rent',value:'675.00',box:[100,100,300,200],uncertain:false},{key:'rent_assistance',value:'0.00',box:[100,250,300,350],uncertain:false}],unreadable:[]},1000,1500);
+ const sidecar={schemaVersion:'2.0',sourceFileName:'synthetic.pdf',sourceSha256:'a'.repeat(64),sourceByteSize:100,createdAt:new Date().toISOString(),pageCount:4,preparedPageNumbers:[4],truncated:false,pages:[{page:4,source:'ocr',engine:VISION_ENGINE,ocrConfidence:1,text:result.text}]};
+ const composed=composeSidecarText(sidecar);
+ assert.equal(composed.provider,'ocr-groq-vision');assert.equal(composed.pages[0].ocrConfidence,.7);
+ const extracted=extractTicFieldsFromText(composed.text,'synthetic.pdf',provenanceIndex(composed.pages));
+ assert.equal(extracted.provider,'ocr-groq-vision');assert.equal(extracted.facts.length,2);
+ assert.ok(extracted.facts.every(f=>f.page===4&&f.confidence<=.7&&!f.humanVerified&&f.provider==='ocr-groq-vision'&&f.snippet.includes('vision-cell-proposal')));
+ assert.equal(extracted.facts.find(f=>f.field==='rent_assistance').value,0);
+});

@@ -4,6 +4,8 @@ export const OCR_SIDECAR_SUFFIX = '.certivoiq-ocr.json';
 export const OCR_PROVIDER = 'ocr-tesseract';
 export const TEXT_PROVIDER = 'deterministic-text';
 export const OCR_ENGINE = 'tesseract.js:eng';
+export const VISION_ENGINE = 'groq-vision:qwen/qwen3.6-27b';
+export const VISION_PROVIDER = 'ocr-groq-vision';
 
 export const PAGE_TEXT_MIN_CHARS = 40;
 export const MAX_PDF_PAGES = 200;
@@ -112,8 +114,9 @@ function usablePage(page, pageCount) {
   if (page.source === 'ocr') {
     const confidence = Number(page.ocrConfidence);
     if (!Number.isFinite(confidence) || confidence <= 0 || confidence > 1) return null;
-    if (page.engine !== OCR_ENGINE) return null;
-    return { page: pageNumber, source: 'ocr', engine: OCR_ENGINE, ocrConfidence: confidence, text };
+    if (page.engine !== OCR_ENGINE && page.engine !== VISION_ENGINE) return null;
+    if (page.engine === VISION_ENGINE && !text.includes('__CERTIVOIQ_TIC_CELL_MODE__: strict')) return null;
+    return { page: pageNumber, source: 'ocr', engine: page.engine, ocrConfidence: page.engine === VISION_ENGINE ? Math.min(0.7, confidence) : confidence, text };
   }
   return null;
 }
@@ -146,7 +149,7 @@ export function composeSidecarText(sidecar, expectedSource) {
     ocrPageCount,
     textPageCount: pages.length - ocrPageCount,
     skippedPageCount: Math.max(0, sourceIdentity.pageCount - pages.length),
-    provider: ocrPageCount > 0 ? OCR_PROVIDER : TEXT_PROVIDER,
+    provider: pages.some(page => page.engine === VISION_ENGINE) ? VISION_PROVIDER : ocrPageCount > 0 ? OCR_PROVIDER : TEXT_PROVIDER,
     truncated: false,
     sourceIdentity,
   };
@@ -157,9 +160,9 @@ export function provenanceIndex(pages) {
   for (const page of pages ?? []) {
     index.set(page.page, {
       source: page.source,
-      provider: page.source === 'ocr' ? OCR_PROVIDER : TEXT_PROVIDER,
+      provider: page.engine === VISION_ENGINE ? VISION_PROVIDER : page.source === 'ocr' ? OCR_PROVIDER : TEXT_PROVIDER,
       engine: page.engine ?? null,
-      confidence: page.source === 'ocr' ? page.ocrConfidence : 0.99,
+      confidence: page.engine === VISION_ENGINE ? Math.min(0.7, Number(page.ocrConfidence)) : page.source === 'ocr' ? page.ocrConfidence : 0.99,
     });
   }
   return index;
