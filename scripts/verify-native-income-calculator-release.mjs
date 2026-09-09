@@ -26,7 +26,7 @@ if(mode==='identity'){
 }else if(mode==='prepare'){
  const expected=identity();
  assert.deepEqual(JSON.parse(await readFile(`.output/public${identityPath()}`,'utf8')),expected,'Build did not include its exact release identity');
- const names=await readdir('.output/public/assets');const assets=names.filter(n=>/^income-calculator-[\w-]+\.js$/.test(n));assert.equal(assets.length,1,'Exactly one calculator asset required');
+ const names=await readdir('.output/public/assets');const assets=names.filter(n=>/^income-calculator-(?!engine-)[\w-]+\.js$/.test(n));assert.equal(assets.length,1,'Exactly one calculator asset required');
  const asset=assets[0];const bytes=await readFile(`.output/public/assets/${asset}`);assert.ok(bytes.includes(Buffer.from('Income Calculator')));
  // Never mutate public files after Nitro captures their existence/metadata.
  await output('income-build-verification.json',{...expected,identityPath:identityPath(),asset:`/assets/${asset}`,assetSha256:digest(bytes)});

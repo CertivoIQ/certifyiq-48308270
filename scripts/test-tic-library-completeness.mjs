@@ -1,3 +1,4 @@
+import './test-income-document-workflow.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -116,3 +117,4 @@ test('legacy source cells reach the correct TIC rent fields with page and cell e
 import './test-tic-label-variants.mjs';
 
 import './test-tic-scan-recovery.mjs';
+

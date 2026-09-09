@@ -23,7 +23,7 @@ const { extractTicFieldsFromText } = await import(extractionUrl);
 const { isTicContent } = await import(layout);
 const { extractTicSpatialValueLines } = await import('../src/lib/tic-spatial-extraction.mjs');
 const sha = 'a'.repeat(64);
-const tic = 'TENANT INCOME CERTIFICATION\nPART I DEVELOPMENT DATA\nPART II HOUSEHOLD COMPOSITION\n__CERTIVOIQ_TIC_FIELD__ property_name: Correct property\n__CERTIVOIQ_TIC_FIELD__ household_member_1_last_name: TEST\n__CERTIVOIQ_TIC_FIELD__ household_member_1_first_name_middle_initial: PERSON A\n__CERTIVOIQ_TIC_FIELD__ household_member_1_relationship: Head\n__CERTIVOIQ_TIC_FIELD__ household_member_1_date_of_birth: 1990-01-01\n__CERTIVOIQ_TIC_FIELD__ household_member_1_full_time_student: No\n__CERTIVOIQ_TIC_FIELD__ household_member_1_ssn_or_alien_registration: 000-00-0000\n__CERTIVOIQ_TIC_FIELD__ certification_type: Recertification';
+const tic = '__CERTIVOIQ_TIC_FIELD__ certification_effective_date: 2026-09-01\nTENANT INCOME CERTIFICATION\nPART I DEVELOPMENT DATA\nPART II HOUSEHOLD COMPOSITION\n__CERTIVOIQ_TIC_FIELD__ property_name: Correct property\n__CERTIVOIQ_TIC_FIELD__ household_member_1_last_name: TEST\n__CERTIVOIQ_TIC_FIELD__ household_member_1_first_name_middle_initial: PERSON A\n__CERTIVOIQ_TIC_FIELD__ household_member_1_relationship: Head\n__CERTIVOIQ_TIC_FIELD__ household_member_1_date_of_birth: 1990-01-01\n__CERTIVOIQ_TIC_FIELD__ household_member_1_full_time_student: No\n__CERTIVOIQ_TIC_FIELD__ household_member_1_ssn_or_alien_registration: 000-00-0000\n__CERTIVOIQ_TIC_FIELD__ certification_type: Recertification';
 const pages = [
   { page: 1, text: 'Cover page\nTenant Income Certification enclosed\n__CERTIVOIQ_TIC_FIELD__ property_name: WRONG COVER VALUE' },
   { page: 2, text: 'Instructions for completing the Tenant Income Certification\nPART I DEVELOPMENT DATA\nPART II HOUSEHOLD COMPOSITION' },
@@ -124,6 +124,7 @@ const db={
 globalThis.__packetTestDb=db;
 const serverUrl = compile('src/utils/tic-certification-intake.functions.ts', {
   '@/lib/tic-completeness':load('src/lib/tic-completeness.ts'),
+  '@/lib/certification-income-evidence':load('src/lib/certification-income-evidence.ts'),
   '@tanstack/react-start':api, '@/integrations/supabase/auth-middleware':auth, '@/integrations/supabase/client.server':boundary,
   '@/lib/preview-evidence-value':compile('src/lib/preview-evidence-value.ts'), '@/lib/tic-field-registry':registry,
   '@/lib/tic-supporting-document-registry':documents, '@/lib/ocr-sidecar.mjs':sourceModule('src/lib/ocr-sidecar.mjs'),
@@ -132,6 +133,8 @@ const serverUrl = compile('src/utils/tic-certification-intake.functions.ts', {
 });
 const {extractCertificationTicPreview,confirmCertificationTicPreview}=await import(serverUrl);
 const context={supabase:db,userId:owner};
+function incomeDraft(preview) { return {...preview.incomePreparation.draft,confirmed:true,rows:preview.incomePreparation.draft.rows.map(row=>row.page===6?{...row,member:'Sample Person',sourceName:'Sample Employer',amount:'1000.00',frequency:'BIWEEKLY',periodStart:'2026-08-01',periodEnd:'2026-08-14',weeks:'52'}:{...row,kind:'exclude',note:'Bank statement corroborates already-counted payroll; no additional earnings.'})}; }
+const emptyIncome={version:'certification-income/1',sourceSha256:realSha,selectionDigest:'0'.repeat(64),effectiveDate:'2026-09-01',rows:[],confirmed:false,zeroIncome:false};
 test('actual preview handler inventories all pages including blank, without premature fields',async()=>{
  const result=await extractCertificationTicPreview({data:{source},context});
  assert.equal(result.error,undefined);assert.equal(result.pageClassifications.length,8);assert.equal(result.facts.length,0);assert.equal(result.selectionDigest,null);
@@ -145,14 +148,16 @@ test('actual preview handler filters selected TIC fields, and selection digest c
 });
 test('actual save rejects stale selection digest before any record insert',async()=>{
  const before=saved.length;
- await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:'0'.repeat(64)},context}),/no longer match/);
+ await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:'0'.repeat(64),incomeDraft:emptyIncome},context}),/no longer match/);
  assert.equal(saved.length,before);
 });
 test('actual save preserves omission manifest and only creates explicitly included supports',async()=>{
  const preview=await extractCertificationTicPreview({data:{source,pageSelections:choices},context});
- const result=await confirmCertificationTicPreview({data:{source,fields:preview.facts.map(f=>({field:f.field,value:f.value})),tenantProfileId:tenantId,pageSelections:choices,selectionDigest:preview.selectionDigest,startReview:true},context});
+ const result=await confirmCertificationTicPreview({data:{source,fields:preview.facts.map(f=>({field:f.field,value:f.value})),tenantProfileId:tenantId,pageSelections:choices,selectionDigest:preview.selectionDigest,incomeDraft:incomeDraft(preview),startReview:true},context});
  assert.equal(result.omittedPageCount,4);assert.equal(result.supportingDocumentCount,2);assert.equal(result.queuedForReview,true);
  const item=saved.find(e=>e.table==='certification_import_items'&&e.operation==='insert').payload;
+ assert.equal(item.extracted_data.calculated_projected_annual_income,'26000.00');
+ assert.equal(item.historical_changes[0].income_preparation.calculation.annualIncome,'26000.00');
  assert.equal(item.certification_type,'ANNUAL');assert.deepEqual(item.historical_changes[0].packet_selection.omittedPages,[1,2,3,8]);
  const supports=saved.find(e=>e.table==='portfolio_tenant_documents'&&e.operation==='insert').payload;
  assert.deepEqual(supports.map(d=>d.source_page_numbers),[[6],[7]]);
@@ -209,3 +214,6 @@ test('rental assistance type is not the legacy assistance amount', () => {
   const facts=extractTicFieldsFromText('page 4\nPART VI. RENT\nRental Assistance Type: Section 8\nPART VII. STUDENT STATUS', 'synthetic-legacy.pdf').facts;
   assert.ok(!facts.some(f=>f.field==='rent_assistance'));
 });
+
+
+test('actual save requires completed income even when review is not requested',async()=>{ const preview=await extractCertificationTicPreview({data:{source,pageSelections:choices},context}); const before=saved.length; await assert.rejects(()=>confirmCertificationTicPreview({data:{source,fields:[],tenantProfileId:tenantId,pageSelections:choices,selectionDigest:preview.selectionDigest,incomeDraft:{...incomeDraft(preview),confirmed:false},startReview:false},context}),/Confirm the income/); assert.equal(saved.length,before); });

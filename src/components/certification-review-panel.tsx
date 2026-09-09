@@ -26,6 +26,7 @@ const STATUS_STYLE: Record<string, { icon: typeof CheckCircle2; className: strin
 };
 
 const EXTRACTED_FIELD_LABELS: Record<string, string> = {
+  calculated_projected_annual_income: 'Calculated projected annual income (pending program review)',
   tenant_signature_date: 'Tenant signature date',
   certification_effective_date: 'Certification effective date',
   household_annual_income: 'Household annual income',
@@ -38,6 +39,7 @@ const EXTRACTED_FIELD_LABELS: Record<string, string> = {
 };
 
 const MONEY_FIELDS = new Set([
+  'calculated_projected_annual_income',
   'household_annual_income',
   'applicable_lihtc_income_limit',
   'household_net_assets',

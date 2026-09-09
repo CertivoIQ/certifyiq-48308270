@@ -157,7 +157,7 @@ test("certification packet must be stored in a tenant file", () => {
   assert.match(uploadPanel, /listCertificationTenantDestinations/);
   assert.match(uploadPanel, /Tenant file destination/);
   assert.match(uploadPanel, /Select tenant file/);
-  assert.match(uploadPanel, /disabled=\{busy \|\| !tenantProfileId \|\| stage !== "tic" \|\| !draft\.selectionDigest\}/);
+  assert.match(uploadPanel, /disabled=\{busy \|\| !tenantProfileId \|\| stage !== "ready" \|\| !draft\.selectionDigest \|\| !incomeResult\?\.annualIncome\}/);
   assert.match(ticIntake, /tenantProfileId: string/);
   assert.match(ticIntake, /portfolio_tenant_profiles/);
   assert.match(ticIntake, /tenant_profile_id: tenant\.id/);

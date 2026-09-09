@@ -2,13 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ticCompletenessFindings } from '../src/lib/tic-completeness.ts';
 import { TIC_SUPPLEMENTAL_FIELDS, supplementalPageKind } from '../src/lib/tic-supplemental-fields.ts';
-test('listed bank with absent amount blocks; a different source total cannot cure it',()=>{
- const values={application_asset_1_institution:'Example Bank',application_asset_1_account:'1234',asset_1_cash_value:520.90,application_asset_1_interest:0};
- assert.deepEqual(ticCompletenessFindings(values).map(f=>f.field),['application_asset_1_value']);
+test('listed TIC asset with absent amount blocks; another source total cannot cure it',()=>{
+ const values={asset_1_type:'Checking',household_net_assets:520.90,asset_1_annual_income:0};
+ assert.deepEqual(ticCompletenessFindings(values).map(f=>f.field),['asset_1_cash_value']);
 });
 test('explicit zero is complete, whitespace and malformed values are not',()=>{
- for(const v of ['', ' ', null, undefined, 'N/A', '12x']) assert(ticCompletenessFindings({application_asset_1_institution:'Example Bank',application_asset_1_account:'1234',application_asset_1_value:v,application_asset_1_interest:0}).some(f=>f.field==='application_asset_1_value'));
- assert.equal(ticCompletenessFindings({application_asset_1_institution:'Example Bank',application_asset_1_account:'1234',application_asset_1_value:0,application_asset_1_interest:'0.00'}).length,0);
+ for(const v of ['', ' ', null, undefined, 'N/A', '12x']) assert(ticCompletenessFindings({asset_1_type:'Checking',asset_1_cash_value:v,asset_1_annual_income:0}).some(f=>f.field==='asset_1_cash_value'));
+ assert.equal(ticCompletenessFindings({asset_1_type:'Checking',asset_1_cash_value:0,asset_1_annual_income:'0.00'}).length,0);
 });
 test('unused asset rows do not create false findings',()=>assert.deepEqual(ticCompletenessFindings({}),[]));
 test('every supplemental field has a unique independent key',()=>{
@@ -22,12 +22,12 @@ test('application pages are recognized by content, not page number',()=>{
  assert.equal(supplementalPageKind('bank statement checking balance'),null);
 });
 
-test('partial non-financial rows highlight their missing corresponding fields',()=>{
+test('Rental Application automobile fields do not impose TIC requirements',()=>{
  const f=ticCompletenessFindings({application_automobile_1_year:'2020',application_automobile_1_make:'Example',application_automobile_1_model:'Sedan'});
- assert(f.some(x=>x.field==='application_automobile_1_tag_number'));
+ assert.equal(f.length,0);
  assert(!f.some(x=>x.field.startsWith('application_automobile_2')));
 });
-test('yes answer needs its explanation; no answer does not',()=>{
- assert(ticCompletenessFindings({application_question_7:'Yes'}).some(f=>f.field==='application_question_7_explanation'));
+test('Rental Application question explanations are outside the TIC review',()=>{
+ assert.deepEqual(ticCompletenessFindings({application_question_7:'Yes'}),[]);
  assert(!ticCompletenessFindings({application_question_7:'No'}).some(f=>f.field==='application_question_7_explanation'));
 });
