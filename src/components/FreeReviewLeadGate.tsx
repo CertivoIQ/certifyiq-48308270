@@ -52,11 +52,9 @@ export function FreeReviewLeadGate({ children }: { children: ReactNode }) {
           marketingConsent: d.marketingConsent,
         },
       }),
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["free-review-lead"] });
-      toast.success("You're cleared for 3 FREE certification reviews", {
-        description: `Recommended plan: ${result.plan}.`,
-      });
+      toast.success("You\'re cleared for 3 FREE certification reviews");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save your company information"),
   });
