@@ -4,11 +4,11 @@ import { useMemo } from 'react';
 import { FREQUENCIES } from '../../supabase/functions/_shared/income-calculator-engine';
 import { calculateIncomePreparation, type IncomeDraft, type IncomePage, type IncomeRow } from '@/lib/certification-income-evidence';
 
-type Props = { value: IncomeDraft; pages: IncomePage[]; sourceUrl: string | null; busy: boolean; onChange: (draft: IncomeDraft) => void; onContinue: () => void; onBack: () => void };
+type Props = { value: IncomeDraft; pages: IncomePage[]; sourceUrl: string | null; busy: boolean; trial?: boolean; onChange: (draft: IncomeDraft) => void; onContinue: () => void; onBack: () => void };
 const control = 'mt-1 w-full rounded border bg-background px-3 py-2 text-sm';
 const money = (v: string | null) => v === null ? 'Needs information' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(v));
 
-export function CertificationIncomeCalculator({ value, pages, sourceUrl, busy, onChange, onContinue, onBack }: Props) {
+export function CertificationIncomeCalculator({ value, pages, sourceUrl, busy, trial=false, onChange, onContinue, onBack }: Props) {
   const result = useMemo(() => {try{return calculateIncomePreparation(value,pages);}catch(error){return {annualIncome:null,rows:[],issues:[error instanceof Error?error.message:'Correct the worksheet inputs.']};}},[value,pages]);
   const ticView=useMemo(()=>{if(!value.ticWorksheet)return null;try{return calculateTicWorksheet(value.ticWorksheet.values,value.ticWorksheet.settings);}catch(error){return {...calculateTicWorksheet(value.ticWorksheet.values),issues:[error instanceof Error?error.message:'Correct worksheet settings.']};}},[value.ticWorksheet]);
   const change = (patch: Partial<IncomeDraft>) => onChange({ ...value, ...patch, confirmed: false });
@@ -17,7 +17,7 @@ export function CertificationIncomeCalculator({ value, pages, sourceUrl, busy, o
   return <section aria-label="Certification Income Calculator" className="mt-4 space-y-4 rounded-xl border bg-background p-4">
     <div><h3 className="text-lg font-semibold">3. Income Calculator</h3><p className="mt-2 text-sm text-muted-foreground">Income amounts recovered from selected documents appear below. Complete any missing details. CertivoIQ calculates annual income automatically as you work.</p><p className="mt-2 text-xs text-muted-foreground">This is a projected income worksheet. Program rules, exclusions, asset treatment and eligibility are checked during the full certification review.</p></div>
     <label className="block max-w-sm text-sm font-medium">Certification effective date<input aria-label="Income certification effective date" type="date" className={control} value={value.effectiveDate} disabled={busy} onChange={e => change({ effectiveDate: e.target.value })} /></label>
-    {value.ticWorksheet && <><label className="block text-sm">Calculation source<select aria-label="Income calculation source" className={control} disabled={busy} value={value.basis||'EVIDENCE'} onChange={e=>change({basis:e.target.value as 'TIC'|'EVIDENCE'})}><option value="TIC">TIC annual income and assets</option><option value="EVIDENCE">Paystubs and other supporting income evidence</option></select></label>{value.basis==='TIC'&&ticView&&<TicIncomeWorksheet worksheet={ticView} settings={value.ticWorksheet.settings} busy={busy} onSettings={settings=>change({ticWorksheet:{...value.ticWorksheet!,settings}})}/>}</>}
+    {value.ticWorksheet && <><label className="block text-sm">Calculation source<select aria-label="Income calculation source" className={control} disabled={busy} value={value.basis||'EVIDENCE'} onChange={e=>change({basis:e.target.value as 'TIC'|'EVIDENCE'})}><option value="TIC">TIC annual income and assets</option><option value="EVIDENCE">Paystubs and other supporting income evidence</option></select></label>{value.basis==='TIC'&&ticView&&<TicIncomeWorksheet worksheet={ticView} settings={value.ticWorksheet.settings} busy={busy} trial={trial} onSettings={settings=>change({ticWorksheet:{...value.ticWorksheet!,settings}})}/>}</>}
     {!pages.length && <p role="alert" className="rounded border p-3 text-sm">Select Pay Stub / Check Stub, Employment Verification, Bank Statement, Other Income, or Certification of Zero Income for the relevant uploaded pages.</p>}
     {value.basis!=='TIC' && value.rows.map((r, index) => <article key={r.id} className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap justify-between gap-2"><strong className="text-sm">Income evidence {index + 1} · original page {r.page}</strong>{sourceUrl && <a href={`${sourceUrl}#page=${r.page}`} target="_blank" rel="noreferrer" className="text-sm underline">View source page {r.page}</a>}</div>
@@ -33,3 +33,4 @@ export function CertificationIncomeCalculator({ value, pages, sourceUrl, busy, o
     <div className="flex flex-wrap justify-between gap-3"><button type="button" disabled={busy} className="rounded border px-4 py-2 text-sm" onClick={onBack}>Back to TIC</button><button type="button" disabled={busy || !value.confirmed || result.annualIncome === null} className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50" onClick={onContinue}>Add calculated income & prepare full review</button></div>
   </section>;
 }
+

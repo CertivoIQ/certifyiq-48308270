@@ -483,7 +483,7 @@ export function CertificationUploadPanel() {
           {stage === "organize" ? (
             <><label className="mb-3 flex items-start gap-2 rounded-lg border p-3 text-sm"><input type="checkbox" className="mt-1" checked={useHandwriting} disabled={busy} onChange={event => setUseHandwriting(event.target.checked)} /><span><strong>Handwritten or mixed TIC</strong><span className="mt-1 block text-muted-foreground">Read handwriting on the TIC pages with AI. Check proposed values against the source before continuing; unclear cells remain for confirmation.</span></span></label><TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} identifying={identifyingPages} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} /></>
           ) : stage === "income" && incomeDraft && draft.incomePreparation ? (
-            <CertificationIncomeCalculator value={incomeDraft} pages={draft.incomePreparation.pages} sourceUrl={draft.sourcePreviewUrl} busy={busy} onChange={next=>{setIncomeDraft(next);if(next.ticWorksheet)setWorksheetSettings(next.ticWorksheet.settings);}} onBack={() => setStage("tic")} onContinue={() => {
+            <CertificationIncomeCalculator value={incomeDraft} pages={draft.incomePreparation.pages} sourceUrl={draft.sourcePreviewUrl} busy={busy} trial={reviewAccess.data?.mode==="trial"} onChange={next=>{setIncomeDraft(next);if(next.ticWorksheet)setWorksheetSettings(next.ticWorksheet.settings);}} onBack={() => setStage("tic")} onContinue={() => {
               if (!incomeResult || incomeResult.annualIncome === null || incomeResult.issues.length) return;
               setFieldValues(current => ({ ...current, certification_effective_date: incomeDraft.effectiveDate }));
               setStage("ready"); setMessage("Calculated income has been added. The certification is ready to save for full review.");
@@ -526,7 +526,7 @@ export function CertificationUploadPanel() {
               <div className="mb-3 rounded-lg border bg-background p-3 text-sm">
                 <strong>CertivoIQ TIC Review Form.</strong> Values are placed into the same logical sections and tables as the source TIC. A blank source field stays blank rather than inheriting nearby labels.
               </div>
-              <TicIncomeWorksheet worksheet={worksheet} settings={worksheetSettings} busy={busy} onSettings={setWorksheetSettings} />
+              <TicIncomeWorksheet worksheet={worksheet} settings={worksheetSettings} busy={busy} trial={reviewAccess.data?.mode==="trial"} onSettings={setWorksheetSettings} />
               {!tenantProfileId && <label className="mb-3 block text-sm">Certification state (for program rules)<input aria-label="Certification state" maxLength={2} className="ml-2 w-20 rounded border bg-background p-2" value={reviewState} disabled={busy} onChange={e=>setReviewState(e.target.value.toUpperCase().replace(/[^A-Z]/g,''))}/></label>}
               <CertivoIqTicReviewForm
                 values={fieldValues}
