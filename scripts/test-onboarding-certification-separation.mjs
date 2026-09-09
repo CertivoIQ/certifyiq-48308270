@@ -65,7 +65,7 @@ test("scanned PDF OCR handles blank pages and form layouts without weakening evi
   assert.match(pdfOcr, /PSM\.SINGLE_BLOCK/);
   assert.match(pdfOcr, /user_defined_dpi:\s*'300'/);
   assert.match(pdfOcr, /background:\s*'#ffffff'/);
-  assert.match(pdfOcr, /First nonblank failed page/);
+  assert.match(pdfOcr, /Certification processing stopped at page/);
   assert.match(pdfOcr, /if \(pages\.length === 0\)/);
   assert.doesNotMatch(pdfOcr, /if \(ocrPageCount === 0\)/);
 });
