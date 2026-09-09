@@ -91,7 +91,8 @@ function normalizeYesNo(raw: string) {
 }
 
 function normalizeText(raw: string) {
-  const cleaned = boundedTail(raw);
+  // Printed label spans already bound the value; words inside a name are data.
+  const cleaned = stripBlankArtifacts(raw.replace(/^[:=\-–—\s]+/, ""));
   if (!cleaned) return null;
   if (cleaned.length > 160) return null;
   if (/^(?:page|part)\b/i.test(cleaned)) return null;
