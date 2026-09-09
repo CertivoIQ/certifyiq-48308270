@@ -63,3 +63,9 @@ test('supported large packets get bounded time proportional to available readers
  assert.equal(ocrTimeBudgetMs(50,1),900_000);
  for(const args of [[0,1],[51,1],[43,0],[43,4],[2.5,1]])assert.throws(()=>ocrTimeBudgetMs(...args));
 });
+
+test('strict cell pages cannot acquire form instructions or unconfirmed worksheet values through text fallback',()=>{
+ const text='page 4\n__CERTIVOIQ_TIC_CELL_MODE__: strict\nStudent Explanation: *\nMinimum Set Aside: properties use\n__CERTIVOIQ_TIC_FIELD__ tenant_paid_rent: 700.00\npage 5\nAnnual Income Calculation Worksheet\nRelationship Description\n__CERTIVOIQ_TIC_CELL_MODE__: strict\nVariance: ($5,100.00)';
+ const result=extractTicFieldsFromText(text,'synthetic.pdf');
+ assert.deepEqual(result.facts.map(f=>f.field),['tenant_paid_rent']);
+});
