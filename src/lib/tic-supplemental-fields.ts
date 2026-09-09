@@ -1,3 +1,4 @@
+import { worksheetFieldType } from './tic-worksheet-types.mjs';
 import type { TicFieldDefinition } from './tic-field-registry';
 
 // Source worksheet and rental application are separate from certified TIC totals.
@@ -9,7 +10,7 @@ function add(s: SupplementalSection, key: string, label: string, type: TicFieldD
   s.fields.push({ key, label, type, section: s.title, aliases: [] });
 }
 function row(s: SupplementalSection, prefix: string, labels: string[], types: Record<string, TicFieldDefinition['type']> = {}) {
-  for (const label of labels) { const suffix = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_$/,''); add(s, `${prefix}_${suffix}`, label, types[label] ?? 'text'); }
+  for (const label of labels) { const suffix = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/_$/,''); add(s, `${prefix}_${suffix}`, label, types[label] ?? worksheetFieldType(`${prefix}_${suffix}`)); }
 }
 let s = section('worksheet', 'Annual Income Calculation Worksheet', 'Source worksheet figures are transcribed independently. Printed rates and limits are not verified program authority.');
 row(s, 'worksheet', ['Property Code','Property Name','Unit Code','Household Name','Tenant Code','Unit Size','Certification Date','Certification Type','Certification Code']);
@@ -85,3 +86,5 @@ export function supplementalPageKind(text: string): string | null {
 }
 
 export const TIC_SOURCE_PRESENCE_FIELDS: TicFieldDefinition[] = [...new Set(TIC_SUPPLEMENTAL_FIELDS.map(f => /^(application_(?:member|reference|residence|automobile|other_income|asset)_\d+|application_employment_(?:current|previous)|worksheet_(?:member|income|asset)_\d+)_/.exec(f.key)?.[1]).filter((v): v is string => Boolean(v)))].map(group=>({key:`source_present_${group}`,label:'Source row contains information',type:'yes_no',section:'Source activity',aliases:[]}));
+
+
