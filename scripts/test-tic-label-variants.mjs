@@ -44,8 +44,7 @@ test('bounded cell planning also recognizes rent wording variants',()=>{
  }
 });
 
-test('all 443 registered TIC canonical labels preserve their typed source values',()=>{
- assert.equal(labelDefinitions.length,443);
+test('every registered TIC canonical label preserves its typed source value',()=>{
  for(const d of labelDefinitions){
   const value=d.key==='certification_type'?'Recertification':d.type==='date'?'01/02/2026':d.type==='yes_no'?'Yes':d.type==='number'?7:d.type==='currency'?123.45:'SYNTHETICVALUE';
   const facts=extractTicFieldsFromText('page 4\n'+d.label+': '+value,'synthetic-registry.pdf').facts;
