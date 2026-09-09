@@ -47,3 +47,12 @@ test('a reported source asset total remains editable while its dependent househo
  const partial=calculateTicWorksheet(v);assert.equal(partial.calculated.total_income_assets_m,undefined);assert.equal(partial.values.household_annual_income,'10005.00');
  const complete=calculateTicWorksheet({...v,total_income_assets_m:'5.52'});assert.equal(complete.values.household_annual_income,'10005.52');
 });
+
+
+test('source mode uses complete actual asset rows when the reported M total is missing and imputed income is zero',()=>{
+ const v={...input,imputed_asset_income:'0.00'};
+ const r=calculateTicWorksheet(v);
+ assert.equal(r.values.total_income_assets_m,'3.18');
+ assert.equal(r.values.household_annual_income,'52915.18');
+ assert.ok(!r.issues.some(i=>i.includes('Confirm the asset-income total')));
+});
