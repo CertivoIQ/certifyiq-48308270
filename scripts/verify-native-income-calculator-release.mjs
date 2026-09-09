@@ -70,6 +70,7 @@ if(mode==='identity'){
   const route=await get('/income-calculator');assert.match(route.headers.get('content-type')||'',/html/);await route.body?.cancel();
   result.push({origin,sourceCommit:sha,calculatorRouteStatus:200,canonicalRedirectValidated:origin==='https://www.certivoiq.com',assetDigestVerified:true});
  }
+ const handwriting=await fetch('https://emnkzxkcpnyvglwxraxm.supabase.co/functions/v1/tic-handwriting',{method:'POST',headers:{'content-type':'application/json'},body:'{}',signal:AbortSignal.timeout(30000)});assert.equal(handwriting.status,401,'Anonymous handwriting request must be rejected');await handwriting.body?.cancel();
  const backend=await fetch('https://emnkzxkcpnyvglwxraxm.supabase.co/functions/v1/income-calculator',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'metadata'}),signal:AbortSignal.timeout(30000)});assert.equal(backend.status,401,'Anonymous calculator request must be rejected');await backend.body?.cancel();
  await output('income-live-verification.json',{checks:result,anonymousBackendRequest:backend.status,authenticatedSaveReviewTested:false,verifiedAt:new Date().toISOString()});console.log(JSON.stringify(result,null,2));
 }else throw new Error('Expected identity, prepare, preflight, postflight, or live');

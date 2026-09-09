@@ -8,6 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { FileSearch, FileText, FileUp, UploadCloud } from "lucide-react";
 
+import { handwritingReader } from "@/lib/tic-handwriting";
 import { TicPacketOrganizer } from "@/components/tic-packet-organizer";
 import { initialPageChoices, packetInventory, validatePageChoices, type PacketPageChoice, type PacketPageInventory } from "@/lib/tic-packet-selection";
 import { CertivoIqTicReviewForm } from "@/components/certivoiq-tic-review-form";
@@ -116,6 +117,7 @@ export function CertificationUploadPanel() {
   const labelAbort = useRef<AbortController | null>(null);
   const labelTask = useRef<Promise<void> | null>(null);
   const [identifyingPages, setIdentifyingPages] = useState(false);
+  const [useHandwriting, setUseHandwriting] = useState(false);
   useEffect(() => () => { labelAbort.current?.abort(); stagedFile.current = null; }, []);
   const [file, setFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<ExtractionDraft | null>(null);
@@ -289,7 +291,7 @@ export function CertificationUploadPanel() {
       const startedAt = performance.now();
       const prepared = await prepareCertificationForReview(localFile, (status, percent) => {
         setProgressLabel(status); setProgressPercent(percent);
-      }, {pageNumbers: pageChoices.filter(choice => choice.role !== "omit").map(choice => choice.page)});
+      }, {pageNumbers: pageChoices.filter(choice => choice.role !== "omit").map(choice => choice.page), ...(useHandwriting ? {visualTicPages: pageChoices.filter(choice => choice.role === "tic_page").map(choice => choice.page), readVisualTicPage: handwritingReader(draft.source, setProgressLabel)} : {})});
       if (prepared.sourceSha256 !== draft.source.sha256) throw new Error("The local file no longer matches this staged packet.");
       setProgressLabel("Saving selected-page extraction…");
       const sidecarBytes = new Blob([JSON.stringify(prepared.sidecar)], {type: OCR_SIDECAR_STORAGE_MIME});
@@ -468,7 +470,7 @@ export function CertificationUploadPanel() {
           </div>
 
           {stage === "organize" ? (
-            <TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} identifying={identifyingPages} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} />
+            <><label className="mb-3 flex items-start gap-2 rounded-lg border p-3 text-sm"><input type="checkbox" className="mt-1" checked={useHandwriting} disabled={busy} onChange={event => setUseHandwriting(event.target.checked)} /><span><strong>Handwritten or mixed TIC</strong><span className="mt-1 block text-muted-foreground">Read handwriting on the TIC pages with AI. Check proposed values against the source before continuing; unclear cells remain for confirmation.</span></span></label><TicPacketOrganizer inventory={draft.pageClassifications} choices={pageChoices} sourceUrl={draft.sourcePreviewUrl} isPdf={isPdfSource(draft.source)} busy={busy} identifying={identifyingPages} onChange={changePageChoices} onConfirm={() => void extractSelectedPages()} /></>
           ) : stage === "income" && incomeDraft && draft.incomePreparation ? (
             <CertificationIncomeCalculator value={incomeDraft} pages={draft.incomePreparation.pages} sourceUrl={draft.sourcePreviewUrl} busy={busy} onChange={setIncomeDraft} onBack={() => setStage("tic")} onContinue={() => {
               if (!incomeResult || incomeResult.annualIncome === null || incomeResult.issues.length) return;

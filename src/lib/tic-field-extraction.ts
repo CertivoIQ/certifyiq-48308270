@@ -13,7 +13,7 @@ import {
 } from "@/lib/tic-field-registry";
 
 export type TicExtractionResult = {
-  provider: "deterministic-text" | "ocr-tesseract";
+  provider: "deterministic-text" | "ocr-tesseract" | "ocr-groq-vision";
   facts: ExtractedFact[];
   missingFields: string[];
 };
@@ -206,7 +206,7 @@ export function extractTicFieldsFromText(
       const b = value.bbox;
       if (!b || ![b.x0,b.y0,b.x1,b.y1,value.confidence].every(Number.isFinite) ||
           b.x0 < 0 || b.y0 < 0 || b.x1 <= b.x0 || b.y1 <= b.y0 || b.x1 > 20000 || b.y1 > 20000 ||
-          value.confidence < 0 || value.confidence > 1 || !['isolated-cell','bounded-page-word','checkbox-interior'].includes(value.method)) continue;
+          value.confidence < 0 || value.confidence > 1 || !['isolated-cell','bounded-page-word','checkbox-interior','vision-cell-proposal'].includes(value.method)) continue;
       cellMetadata.set(`${pageOfLine[index]}:${meta[1]}`, { confidence:value.confidence, coordinates:`${b.x0},${b.y0},${b.x1},${b.y1}`, method:value.method });
     } catch { /* Malformed metadata never verifies a value. */ }
   }
@@ -296,7 +296,7 @@ export function extractTicFieldsFromText(
     fact.snippet = `Source cell [${cell.coordinates}] (${cell.method}); ${fact.snippet ?? ''}`.slice(0, 300);
   }
   const missingFields = TIC_FIELD_KEYS.filter((key) => !found.has(key));
-  const provider = facts.some((fact) => fact.provider === "ocr-tesseract")
+  const provider = facts.some((fact) => fact.provider === "ocr-groq-vision") ? "ocr-groq-vision" : facts.some((fact) => fact.provider === "ocr-tesseract")
     ? "ocr-tesseract"
     : "deterministic-text";
   return { provider, facts, missingFields };

@@ -4,6 +4,8 @@ declare module '@/lib/ocr-sidecar.mjs' {
   export const OCR_PROVIDER: 'ocr-tesseract';
   export const TEXT_PROVIDER: 'deterministic-text';
   export const OCR_ENGINE: 'tesseract.js:eng';
+  export const VISION_ENGINE: 'groq-vision:qwen/qwen3.6-27b';
+  export const VISION_PROVIDER: 'ocr-groq-vision';
   export const PAGE_TEXT_MIN_CHARS: number;
   export const MAX_PDF_PAGES: number;
   export const MAX_OCR_PAGES: number;
@@ -54,14 +56,14 @@ declare module '@/lib/ocr-sidecar.mjs' {
     ocrPageCount: number;
     textPageCount: number;
     skippedPageCount: number;
-    provider: 'ocr-tesseract' | 'deterministic-text';
+    provider: 'ocr-tesseract' | 'ocr-groq-vision' | 'deterministic-text';
     truncated: false;
     sourceIdentity: SidecarSourceIdentity;
   }
 
   export interface PageProvenance {
     source: OcrPageSource;
-    provider: 'ocr-tesseract' | 'deterministic-text';
+    provider: 'ocr-tesseract' | 'ocr-groq-vision' | 'deterministic-text';
     engine: string | null;
     confidence: number;
   }

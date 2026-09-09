@@ -10,6 +10,7 @@ type FactMeta = {
   page: number | null;
   confidence: number;
   value: unknown;
+  provider?: string;
 };
 
 type Props = {
@@ -25,6 +26,7 @@ function def(key: string): TicFieldDefinition | undefined {
 
 function confidenceLabel(fact?: FactMeta) {
   if (!fact) return "Not extracted";
+  if (fact.provider === "ocr-groq-vision") return `P${fact.page ?? "—"} · AI · confirm`;
   return `P${fact.page ?? "—"} · ${Math.round(Number(fact.confidence || 0) * 100)}%`;
 }
 

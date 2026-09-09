@@ -22,7 +22,7 @@ export type { PageProvenance };
  *    machine-readable PDFs. Fully reproducible, used for tests and fixtures.
  */
 
-export type ExtractionProviderName = "deterministic-text" | "ocr-tesseract";
+export type ExtractionProviderName = "deterministic-text" | "ocr-tesseract" | "ocr-groq-vision";
 
 export const EXTRACTION_FIELDS = [
   "tenant_signature_date",
@@ -130,7 +130,7 @@ export function extractFactsFromText(
   }
 
   const ocrDerived = facts.some((fact) => fact.provider === "ocr-tesseract");
-  return { provider: ocrDerived ? "ocr-tesseract" : "deterministic-text", facts, missingFields };
+  return { provider: facts.some(f => f.provider === "ocr-groq-vision") ? "ocr-groq-vision" : ocrDerived ? "ocr-tesseract" : "deterministic-text", facts, missingFields };
 }
 
 

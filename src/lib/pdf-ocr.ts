@@ -375,7 +375,7 @@ function reportProgress(
 export async function prepareCertificationForReview(
   file: File,
   onProgress?: PreparationProgressCallback,
-  options: { pageNumbers?: readonly number[] } = {},
+  options: { pageNumbers?: readonly number[]; visualTicPages?: readonly number[]; readVisualTicPage?: (canvas: HTMLCanvasElement, page: number) => Promise<OcrSidecarPage> } = {},
 ): Promise<PrepareResult> {
   if (!isOcrSupportedFile(file)) {
     throw new Error('Only PDF, PNG, JPEG, and WEBP certification documents can be extracted.');
@@ -386,6 +386,20 @@ export async function prepareCertificationForReview(
   reportProgress(onProgress, 'Verifying certification integrity…', 5);
   const sourceSha256 = await sha256Hex(sourceBuffer);
 
+  const visualPages = new Set(options.visualTicPages ?? []);
+  if (visualPages.size && !options.readVisualTicPage) throw new Error('The handwriting reader is unavailable.');
+  if (isImageFile(file) && visualPages.has(1) && options.readVisualTicPage) {
+    preparationPageNumbers(options.pageNumbers, 1);
+    if (visualPages.size !== 1) throw new Error('Invalid handwriting page selection.');
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 3000 / Math.max(bitmap.width, bitmap.height));
+    const rendered = createCanvas(bitmap.width * scale, bitmap.height * scale);
+    try {
+      rendered.context.drawImage(bitmap, 0, 0, rendered.canvas.width, rendered.canvas.height);
+      const page = await options.readVisualTicPage(rendered.canvas, 1);
+      return {kind:'ocr',ocrPageCount:1,sourceSha256,sidecar:{schemaVersion:OCR_SIDECAR_VERSION,sourceFileName:file.name,sourceSha256,sourceByteSize:file.size,createdAt:new Date().toISOString(),pageCount:1,preparedPageNumbers:[1],truncated:false,pages:[page]}};
+    } finally {bitmap.close();rendered.canvas.width=1;rendered.canvas.height=1;}
+  }
   if (isImageFile(file)) {
     preparationPageNumbers(options.pageNumbers, 1);
     reportProgress(onProgress, 'Preparing certification image for review…', 10);
@@ -454,6 +468,7 @@ export async function prepareCertificationForReview(
 
     const requestedPages = preparationPageNumbers(options.pageNumbers, pdf.numPages);
     const requested = new Set(requestedPages);
+    if ([...visualPages].some(page => !requested.has(page))) throw new Error('Handwriting pages must be included in this extraction.');
     const cache = preparedPageCache.get(file) ?? new Map<number, OcrSidecarPage | null>();
     preparedPageCache.set(file, cache);
     const pages: OcrSidecarPage[] = [];
@@ -479,7 +494,7 @@ export async function prepareCertificationForReview(
         const pageNumber = nextTextPage;
         nextTextPage += 1;
         if (!requested.has(pageNumber)) continue;
-        if (cache.has(pageNumber)) {
+        if (cache.has(pageNumber) && Boolean(cache.get(pageNumber)?.engine?.startsWith('groq-vision:')) === visualPages.has(pageNumber)) {
           const cached = cache.get(pageNumber);
           if (cached) pages.push(cached);
           completedTextPages += 1;
@@ -499,7 +514,7 @@ export async function prepareCertificationForReview(
         // A partially read TIC still needs spatial OCR; a complete native household row does not.
         const hasHousehold = /__CERTIVOIQ_TIC_FIELD__ household_member_1_last_name:/.test(text) && /__CERTIVOIQ_TIC_FIELD__ household_member_1_first_name_middle_initial:/.test(text);
         const isTicFormPage = isTicContent(nativeText) && !hasHousehold && /household\s+composition/i.test(nativeText);
-        if (pageNeedsOcr(text) || isTicFormPage) needsOcr.push(pageNumber);
+        if (visualPages.has(pageNumber) || pageNeedsOcr(text) || isTicFormPage) needsOcr.push(pageNumber);
         else pages.push({ page: pageNumber, source: 'text', engine: null, ocrConfidence: null, text });
         completedTextPages += 1;
         reportProgress(
@@ -580,7 +595,12 @@ export async function prepareCertificationForReview(
           await page.render({ canvas, canvasContext: context, viewport, background: '#ffffff' }).promise;
           await assertRenderedPdfImages(page, pdfjs.OPS);
 
-          if (looksVisuallyBlank(canvas)) {
+          if (visualPages.has(pageNumber) && options.readVisualTicPage && !looksVisuallyBlank(canvas)) {
+            const visualPage = await options.readVisualTicPage(canvas, pageNumber);
+            if (visualPage.page !== pageNumber || !visualPage.text) throw new Error('The handwriting response does not match this page.');
+            pages.push(visualPage);
+            cache.set(pageNumber, visualPage);
+          } else if (looksVisuallyBlank(canvas)) {
             blankPages.push(pageNumber);
             cache.set(pageNumber, null);
           } else {
