@@ -13,3 +13,30 @@ test('prepare rejects an absent build-time marker',t=>{const {run}=fixture(t);as
 test('prepare rejects stale source identity',t=>{const {cwd,run}=fixture(t);const out=join(cwd,'.output/public/assets');mkdirSync(out,{recursive:true});writeFileSync(join(out,`income-calculator-release-${sha}.json`),JSON.stringify({feature:'income-calculator',engineVersion:'income-calculator/1.0.0',sourceCommit:'b'.repeat(40)}));assert.notEqual(run('prepare').status,0);});
 test('identity refuses invalid source commit input',t=>{const {run}=fixture(t);assert.notEqual(run('identity',{GITHUB_SHA:'not-a-commit'}).status,0);});
 test('release workflow writes identity before the application build',()=>{const yml=readFileSync('.github/workflows/native-income-calculator-release.yml','utf8');assert.ok(yml.indexOf('release.mjs identity')<yml.indexOf('run: bun run build'));assert.ok(yml.includes('income-build-verification.json'));});
+
+import {fetchPublishedAsset} from './release-public-fetch.mjs';
+test('public asset probe retries publication misses then preserves the successful bytes',async()=>{
+ let calls=0,waits=0;
+ const response=await fetchPublishedAsset('https://example.invalid/asset',{},{
+  fetcher:async()=>++calls<3?new Response('missing',{status:404}):new Response('exact-bytes',{status:200}),
+  wait:async()=>{waits++;}
+ });
+ assert.equal(calls,3);assert.equal(waits,2);assert.equal(await response.text(),'exact-bytes');
+});
+test('public asset retry stays bounded and does not turn a persistent failure into success',async()=>{
+ let calls=0;
+ const response=await fetchPublishedAsset('https://example.invalid/asset',{},{
+  fetcher:async()=>{calls++;return new Response('missing',{status:404});},wait:async()=>{}
+ });
+ assert.equal(calls,8);assert.equal(response.status,404);
+});
+test('public probe preserves authentication failures and redirects and never retries a mutation',async()=>{
+ for(const status of [401,403,308]){
+  let calls=0;
+  const response=await fetchPublishedAsset('https://example.invalid/asset',{},{
+   fetcher:async()=>{calls++;return new Response(null,{status});},wait:async()=>assert.fail('Unexpected retry')
+  });
+  assert.equal(calls,1);assert.equal(response.status,status);
+ }
+ await assert.rejects(()=>fetchPublishedAsset('https://example.invalid/asset',{method:'POST'}),/only supports GET/);
+});
