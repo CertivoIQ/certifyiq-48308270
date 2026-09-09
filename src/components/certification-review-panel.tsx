@@ -72,8 +72,8 @@ function finiteMoney(value: unknown) {
 }
 
 function IncomeLimitComparison({ values }: { values: Record<string, unknown> }) {
-  const income = finiteMoney(values.calculated_projected_annual_income ?? values.household_annual_income);
-  const limit = finiteMoney(values.applicable_lihtc_income_limit);
+  const income = finiteMoney(values['calculated_projected_annual_income'] ?? values['household_annual_income']);
+  const limit = finiteMoney(values['applicable_lihtc_income_limit']);
   const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   if (income === null) return null;
   if (limit === null) {
