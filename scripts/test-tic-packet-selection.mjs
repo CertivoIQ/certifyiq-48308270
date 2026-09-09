@@ -204,3 +204,8 @@ test('both legacy and modern rent/student section pairs are recognized', () => {
   assert.equal(isTicContent('PART VI. RENT\nPART VII. STUDENT STATUS'),true);
   assert.equal(isTicContent('PART VII — RENT\nPART VIII — STUDENT STATUS'),true);
 });
+
+test('rental assistance type is not the legacy assistance amount', () => {
+  const facts=extractTicFieldsFromText('page 4\nPART VI. RENT\nRental Assistance Type: Section 8\nPART VII. STUDENT STATUS', 'synthetic-legacy.pdf').facts;
+  assert.ok(!facts.some(f=>f.field==='rent_assistance'));
+});
