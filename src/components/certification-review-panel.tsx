@@ -100,9 +100,16 @@ function IncomeLimitComparison({ values }: { values: Record<string, unknown> }) 
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div><p className="text-xs text-muted-foreground">Calculated annual income</p><p className="font-semibold tabular-nums">{money(income)}</p></div>
         <div><p className="text-xs text-muted-foreground">Applicable income limit</p><p className="font-semibold tabular-nums">{money(limit)}</p></div>
-        <div><p className="text-xs text-muted-foreground">{over ? 'Amount over limit' : 'Amount under limit'}</p><p className="font-semibold tabular-nums">{money(Math.abs(difference))}</p></div>
+        <div><p className="text-xs text-muted-foreground">Variance (income − limit)</p><p className="font-semibold tabular-nums">{difference > 0 ? '+' : difference < 0 ? '−' : ''}{money(Math.abs(difference))}</p></div>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">Calculation: {money(income)} household income − {money(limit)} income limit = {difference < 0 ? '−' : ''}{money(Math.abs(difference))}.</p>
+      <p className="mt-1 text-xs font-medium">
+        {difference === 0
+          ? 'The household income equals the applicable limit, so the variance is $0.00.'
+          : over
+            ? `The household is ${money(difference)} over the applicable income limit. A positive variance means calculated income exceeds the selected limit.`
+            : `The household is ${money(Math.abs(difference))} under the applicable income limit. A negative variance means calculated income remains below the selected limit.`}
+      </p>
     </div>
   );
 }
