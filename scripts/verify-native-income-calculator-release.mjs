@@ -1,3 +1,4 @@
+import {fetchPublishedAsset} from './release-public-fetch.mjs';
 // Read-only release checks, apart from writing local non-sensitive evidence files.
 import {readFile,writeFile,readdir,mkdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -55,12 +56,12 @@ if(mode==='identity'){
  for(const origin of [candidate.origin,...domains.map(d=>`https://${d}`)]){
   const get=async(path)=>{
    const url=new URL(path,origin),options={headers:{'cache-control':'no-cache'},redirect:'manual',signal:AbortSignal.timeout(30000)};
-   let r=await fetch(url,options);
+   let r=await fetchPublishedAsset(url,options);
    // Preserve and explicitly validate the existing www -> canonical redirect.
    if(r.status===308&&url.hostname==='www.certivoiq.com'){
     const canonical=new URL(url);canonical.hostname='certivoiq.com';
     assert.equal(r.headers.get('location'),canonical.href,'Unexpected canonical redirect');
-    await r.body?.cancel();r=await fetch(canonical,{...options,signal:AbortSignal.timeout(30000)});
+    await r.body?.cancel();r=await fetchPublishedAsset(canonical,options);
    }
    assert.equal(r.status,200,`${origin}${path}: HTTP ${r.status}`);return r;
   };
