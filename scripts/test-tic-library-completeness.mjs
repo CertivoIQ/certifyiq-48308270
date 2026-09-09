@@ -112,3 +112,5 @@ test('legacy source cells reach the correct TIC rent fields with page and cell e
   assert.match(fact.snippet,/Source cell/);
  }
 });
+
+import './test-tic-label-variants.mjs';

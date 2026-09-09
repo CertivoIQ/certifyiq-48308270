@@ -1,3 +1,4 @@
+import { findTicLabelForKey } from './tic-label-matching.mjs';
 import { isTicContent } from './tic-document-layout.mjs';
 
 const clean = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -176,12 +177,16 @@ function staticFieldLines(lines) {
   for (const line of lines) {
     const hits = [];
     for (const [key, pattern] of STATIC_LABELS) {
-      const match = pattern.exec(line.text);
+      const variant = findTicLabelForKey(line.text, key, pattern);
+      const match = variant ? { index: variant.start, 0: line.text.slice(variant.start, variant.end) } : null;
       if (match && Number.isFinite(match.index)) {
         hits.push({ key, start: match.index, end: match.index + match[0].length });
       }
     }
-    hits.sort((a, b) => a.start - b.start || a.end - b.end);
+    const accepted = hits.filter(hit => !hits.some(other => other.start <= hit.start && other.end >= hit.end && (other.start < hit.start || other.end > hit.end)));
+    hits.length = 0;
+    hits.push(...accepted);
+    hits.sort((a, b) => a.start - b.start || b.end - a.end);
     for (let index = 0; index < hits.length; index += 1) {
       const hit = hits[index];
       const next = hits[index + 1];

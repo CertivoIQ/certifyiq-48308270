@@ -78,9 +78,11 @@ test('certification type is a first-class mapped field for Initial, Recertificat
   assert.match(review, /other_certification_type/);
 });
 
-test('exact keyed TIC values are parsed before generic OCR aliases', () => {
-  assert.match(fieldExtraction, /for \(let index = 0; index < lines\.length; index \+= 1\)/);
-  assert.match(fieldExtraction, /TIC_FIELD_BY_KEY\.get\(direct\[1\]\)/);
-  assert.match(fieldExtraction, /if \(found\.has\(definition\.key\)/);
-  assert.match(fieldExtraction, /if \(line\.startsWith\(DIRECT_TIC_FIELD_PREFIX\)\) continue/);
+import {load} from './helpers/load-typescript.mjs';
+test('exact keyed TIC values are parsed before generic OCR aliases', async () => {
+ const {extractTicFieldsFromText}=await import(load('src/lib/tic-field-extraction.ts'));
+ const {facts}=extractTicFieldsFromText('page 4\n__CERTIVOIQ_TIC_FIELD__ tenant_paid_rent: 675.00\nResident Rent: 999.00\n__CERTIVOIQ_TIC_UNRESOLVED__ utility_allowance: redacted\nMonthly Utility Allowance: 147.00','synthetic.pdf');
+ assert.equal(facts.filter(f=>f.field==='tenant_paid_rent').length,1);
+ assert.equal(facts.find(f=>f.field==='tenant_paid_rent')?.value,675);
+ assert.ok(!facts.some(f=>f.field==='utility_allowance'));
 });

@@ -1,3 +1,4 @@
+import { findTicLabelForKey } from './tic-label-matching.mjs';
 import { supplementalRegions } from './tic-supplemental-layout.mjs';
 /** Bounded, image-backed TIC cell proposals. Never repairs letters or invents hidden values. */
 const FIELD='__CERTIVOIQ_TIC_FIELD__';
@@ -44,10 +45,12 @@ function horizontals(r,x0,x1,y0,y1){
  }
  return group(hits,2).map(g=>Math.round((g[0]+g.at(-1))/2));
 }
-function labelMatch(line,re){
+function matchesLabel(line,re,key){return !!findTicLabelForKey(line.text,key,re);}
+function labelMatch(line,re,key){
  const words=[...line.words].sort((a,b)=>a.bbox.x0-b.bbox.x0);let text='',spans=[];
  for(const word of words){if(text)text+=' ';spans.push({start:text.length,end:text.length+word.text.length,word});text+=word.text;}
- const m=re.exec(text);if(!m)return null;
+ const variant=key?findTicLabelForKey(text,key,re):null;
+ const m=key?(variant?{index:variant.start,0:text.slice(variant.start,variant.end)}:null):re.exec(text);if(!m)return null;
  const hit=spans.filter(s=>s.end>m.index&&s.start<m.index+m[0].length);
  return {x0:hit[0].word.bbox.x0,x1:hit.at(-1).word.bbox.x1,y0:Math.min(...hit.map(s=>s.word.bbox.y0)),y1:Math.max(...hit.map(s=>s.word.bbox.y1)),match:m[0],words,tail:spans.filter(s=>s.start>=m.index+m[0].length).map(s=>s.word)};
 }
@@ -137,9 +140,9 @@ export function planTicCells(image,blocks){
  // Value regions are bounded by their printed labels, not global template coordinates.
  const headerFields=[['certification_effective_date',/effective\s+date\s*:/i,'date'],['move_in_date',/move[- ]in\s+date\s*:/i,'date'],['property_name',/property\s+name\s*:/i,'text'],['county',/county\s*:/i,'text'],['building_identification_number',/BIN\s*#\s*:/i,'text'],['unit_number',/unit\s+number\s*:/i,'text'],['unit_bedrooms',/#?\s*bedrooms\s*:/i,'number']];
  for(const [key,re,type] of headerFields){
-  const line=lines.find(l=>(!household||l.bbox.y0<household.bbox.y0)&&re.test(l.text));if(!line)continue;
-  const m=labelMatch(line,re);if(!m)continue;
-  const next=headerFields.map(([,other])=>labelMatch(line,other)).filter(n=>n&&n.x0>m.x1).sort((a,b)=>a.x0-b.x0)[0];
+  const line=lines.find(l=>(!household||l.bbox.y0<household.bbox.y0)&&matchesLabel(l,re,key));if(!line)continue;
+  const m=labelMatch(line,re,key);if(!m)continue;
+  const next=headerFields.map(([otherKey,other])=>labelMatch(line,other,otherKey)).filter(n=>n&&n.x0>m.x1).sort((a,b)=>a.x0-b.x0)[0];
   const x1=next?next.x0-8:Math.min(r.w*.955,Math.max(m.x1+r.w*.08,line.bbox.x1+12));
   add(key,{x0:m.x1+4,x1,y0:m.y0-3,y1:Math.max(m.y1,line.bbox.y1)+3},type);
  }
@@ -148,7 +151,7 @@ export function planTicCells(image,blocks){
  if(address){const m=labelMatch(address,/address/i);const stop=labelMatch(address,/unit\s+number/i);if(m&&stop){const b={x0:m.x0,x1:stop.x0-8,y0:address.bbox.y0-3,y1:address.bbox.y1+3};if(redacted(r,b))blocked.push('property_address');}}
  const numberFields=[['total_income_e',/TOTAL\s+INCOME\s*\([A-Z][A-Z]?\)/i],['household_annual_income',/Total\s+Annual\s+Household\s+Income/i],['applicable_lihtc_income_limit',/Current\s+Income\s+Limit\s+per\s+Family\s+Size/i],['tenant_paid_rent',/Tenant\s+Paid\s+Rent/i],['utility_allowance',/Utility\s+Allowance/i],['rent_assistance',/Rental\s+Assistance\s*:/i],['other_non_optional_charges',/Other\s+non-optional\s+charges\s+and\s+mandatory\s+fees/i],['gross_rent',/Gross\s+Rent\s+For\s+Unit/i],['total_income_assets_m',/TOTAL\s+INCOME\s+FROM\s+ASSETS\s*\(K\)/i]];
  for(const [key,re] of numberFields){
-  const line=lines.find(l=>re.test(l.text));if(!line)continue;const m=labelMatch(line,re);if(!m)continue;
+  const line=lines.find(l=>matchesLabel(l,re,key));if(!line)continue;const m=labelMatch(line,re,key);if(!m)continue;
   // OCR often splits the label and its right-aligned amount into separate blocks.
   // Match the original words on the same baseline, not only this OCR line's tail.
   const center=(m.y0+m.y1)/2,height=Math.max(8,m.y1-m.y0);
@@ -158,13 +161,13 @@ export function planTicCells(image,blocks){
  }
  const supplementalValues={};
  for(const [key,heading] of [['unit_rent_restriction_percent',/unit\s+meets\s+rent\s+restriction/i],['household_income_restriction_percent',/designated\s+income\s+restriction|household\s+meets\s+income\s+restriction/i]]){
-  const title=lines.find(l=>heading.test(l.text));if(!title)continue;
+  const title=lines.find(l=>matchesLabel(l,heading,key));if(!title)continue;
   const rows=lines.filter(l=>l.bbox.y0>=title.bbox.y0&&l.bbox.y0-title.bbox.y1<r.h*.07&&l.bbox.x0>=title.bbox.x0-r.h*.02&&/\b(?:20|30|40|50|60|70|80)\s*%/.test(l.text));
   const readings=rows.map(l=>readCheckboxLine(r,l,[...l.text.matchAll(/\b(20|30|40|50|60|70|80)\s*%/g)].map(m=>[m[1],new RegExp('\\b'+m[1]+'\\s*%')])));
   const selected=readings.filter(Boolean).filter(c=>c.selected);
   if(readings.length&&readings.every(Boolean)&&selected.length===1)supplementalValues[key]={value:selected[0].selected,bbox:title.bbox};
  }
- const studentQuestion=lines.find(l=>/are\s+all\s+occupants\s+full[-\s]?time\s+students/i.test(l.text));
+ const studentQuestion=lines.find(l=>matchesLabel(l,/are\s+all\s+occupants\s+full[-\s]?time\s+students/i,'all_occupants_full_time_students'));
  if(studentQuestion){
   const answer=lines.find(l=>l.bbox.y0>=studentQuestion.bbox.y0&&l.bbox.y0-studentQuestion.bbox.y1<r.h*.065&&/\byes\b.*\bno\b/i.test(l.text));
   if(answer){const choice=readCheckboxLine(r,answer,[['Yes',/\byes\b/i],['No',/\bno\b/i]]);if(choice?.selected)supplementalValues.all_occupants_full_time_students={value:choice.selected,bbox:answer.bbox};}
