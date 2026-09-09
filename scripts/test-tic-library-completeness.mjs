@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {resolve,dirname,extname} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import ts from 'typescript';
-import {planTicCells} from '../src/lib/tic-ruled-cell-extraction.mjs';
+import {planTicCells,cellSheetLayout,finishTicCells} from '../src/lib/tic-ruled-cell-extraction.mjs';
 const cache=new Map();
 function load(file){
  file=resolve(file);if(cache.has(file))return cache.get(file);
@@ -75,4 +75,40 @@ test('student choice requires one marked box; conflicting marks remain unresolve
  assert.equal(plan.supplementalValues.all_occupants_full_time_students?.value,'No');
  square(180,true);
  assert.equal(planTicCells({width,height,data},blocks).supplementalValues.all_occupants_full_time_students,undefined);
+});
+
+import {isTicContent} from '../src/lib/tic-document-layout.mjs';
+
+test('legacy source cells reach the correct TIC rent fields with page and cell evidence',()=>{
+ const width=1200,height=1600,data=new Uint8ClampedArray(width*height*4).fill(255);
+ const word=(text,x0,x1,y)=>({text,confidence:96,bbox:{x0,x1,y0:y,y1:y+20}});
+ const line=words=>({text:words.map(w=>w.text).join(' '),words,bbox:{x0:words[0].bbox.x0,x1:words.at(-1).bbox.x1,y0:words[0].bbox.y0,y1:words[0].bbox.y1}});
+ const fields=[
+  ['tenant_paid_rent','Tenant Paid Rent:',675],
+  ['utility_allowance','Utility Allowance:',147],
+  ['rent_assistance','Rental Assistance:',0],
+  ['other_non_optional_charges','Other non-optional charges and mandatory fees:',0],
+  ['gross_rent','Gross Rent For Unit (See Instructions):',822],
+ ];
+ const lines=[line([word('PART V. DETERMINATION OF INCOME ELIGIBILITY',80,750,120)]),line([word('PART VI. RENT',80,400,200)])];
+ fields.forEach(([,label,amount],i)=>{
+  const y=300+i*80;
+  lines.push(line([word(label,80,500,y)]),line([word(amount.toFixed(2),550,630,y)]));
+  // Synthetic glyph strokes, not a real resident document or a solid redaction.
+  for(let yy=y;yy<y+20;yy++)for(let xx=552;xx<625;xx++)if(xx%7<2&&yy%6<4){const n=(yy*width+xx)*4;data[n]=data[n+1]=data[n+2]=0;}
+ });
+ lines.push(line([word('PART VII. STUDENT STATUS',80,500,800)]));
+ const blocks=lines.map(l=>({paragraphs:[{lines:[l]}]}));
+ assert.equal(isTicContent(lines.map(l=>l.text).join('\n')),true);
+ const plan=planTicCells({width,height,data},blocks);
+ const sheet=cellSheetLayout(plan);
+ const mapped=finishTicCells(plan,sheet,[]);
+ const facts=extractTicFieldsFromText('page 4\n'+mapped.lines.join('\n'),'synthetic-cell-sheet.pdf').facts;
+ for(const [key,,amount] of fields){
+  const fact=facts.find(f=>f.field===key);
+  assert.equal(fact?.value,amount,key);
+  assert.equal(fact.page,4);
+  assert.equal(fact.humanVerified,false);
+  assert.match(fact.snippet,/Source cell/);
+ }
 });
