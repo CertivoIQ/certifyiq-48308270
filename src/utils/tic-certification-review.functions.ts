@@ -1,3 +1,4 @@
+import { assertSidecarPageCoverage } from "@/lib/ocr-sidecar.mjs";
 import { savedIncomePreparation } from "@/lib/certification-income-evidence";
 import { ticCompletenessFindings } from "@/lib/tic-completeness";
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -163,8 +164,10 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       .download(extraction.sidecarPathFor(item.storage_path));
     if (sidecarDownload.data) {
       try {
+        const rawSidecar = JSON.parse(await sidecarDownload.data.text());
+        if (packetSelection) assertSidecarPageCoverage(rawSidecar, [...packetSelection.ticPages, ...packetSelection.supportingPages]);
         ocrDocument = extraction.loadOcrDocument(
-          JSON.parse(await sidecarDownload.data.text()),
+          rawSidecar,
           {
             fileName: item.original_file_name,
             sha256: documentSha256,
@@ -175,6 +178,8 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         ocrDocument = null;
       }
     }
+
+    if (packetSelection && !ocrDocument) throw new Error("Selected-page evidence is unavailable or incomplete. Reopen intake and prepare the current page selection before review.");
 
     const { data: confirmedRows, error: confirmedError } = await supabaseAdmin
       .from("certification_facts")

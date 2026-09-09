@@ -31,6 +31,7 @@ declare module '@/lib/ocr-sidecar.mjs' {
     pageCount: number;
     truncated: false;
     pages: OcrSidecarPage[];
+    preparedPageNumbers?: number[];
   }
 
   export interface SidecarSourceIdentity {
@@ -65,6 +66,8 @@ declare module '@/lib/ocr-sidecar.mjs' {
     confidence: number;
   }
 
+  export function preparationPageNumbers(input: readonly number[] | undefined, pageCount: number): number[];
+  export function assertSidecarPageCoverage(sidecar: unknown, requiredPages: readonly number[]): void;
   export function sidecarPathFor(storagePath: string): string;
   export function normalizePageText(text: unknown): string;
   export function pageNeedsOcr(text: unknown): boolean;

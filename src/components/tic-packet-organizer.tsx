@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SUPPORTING_DOCUMENT_DEFINITIONS } from '@/lib/tic-supporting-document-registry';
-import { validatePageChoices, type PacketPageChoice, type PacketPageInventory, type PacketPageRole } from '@/lib/tic-packet-selection';
+import { parsePacketPageRange, validatePageChoices, type PacketPageChoice, type PacketPageInventory, type PacketPageRole } from '@/lib/tic-packet-selection';
 
 type Props = {
   inventory: PacketPageInventory[];
@@ -8,13 +8,17 @@ type Props = {
   sourceUrl: string | null;
   isPdf: boolean;
   busy: boolean;
+  identifying?: boolean;
   onChange: (choices: PacketPageChoice[]) => void;
   onConfirm: () => void;
 };
 const administrative = /cover|transmittal|instructions|administrative|review notes/i;
 
-export function TicPacketOrganizer({ inventory, choices, sourceUrl, isPdf, busy, onChange, onConfirm }: Props) {
+export function TicPacketOrganizer({ inventory, choices, sourceUrl, isPdf, busy, identifying = false, onChange, onConfirm }: Props) {
   const [activePage, setActivePage] = useState(() => choices.find(c => c.role === 'tic_page')?.page ?? 1);
+  const [range, setRange] = useState('');
+  const [rangeRole, setRangeRole] = useState<PacketPageRole>('pending');
+  const [rangeError, setRangeError] = useState('');
   let validation = '';
   try { validatePageChoices(choices, inventory.length, true); } catch (error) { validation = error instanceof Error ? error.message : 'Confirm each page.'; }
   const ticCount = choices.filter(c => c.role === 'tic_page').length;
@@ -28,8 +32,9 @@ export function TicPacketOrganizer({ inventory, choices, sourceUrl, isPdf, busy,
   return (
     <section className="mt-4 rounded-xl border bg-background p-4" aria-label="Choose packet documents">
       <h3 className="text-lg font-semibold">1. Choose documents for this review</h3>
-      <p className="mt-2 text-sm text-muted-foreground">CertivoIQ has inspected the packet for TIC pages. Every other page is held for your decision. Confirm which pages belong to one TIC, include the supporting documents you need, and omit covers or unrelated material.</p>
+      <p className="mt-2 text-sm text-muted-foreground">The original packet is ready. Document labels are suggested as pages are identified. Every other page is held for your decision. Confirm which pages belong to one TIC, include the supporting documents you need, and omit covers or unrelated material.</p>
       <p className="mt-2 text-xs text-muted-foreground">Omitting a page excludes it from extraction and review; it does not delete or alter the original upload. Missing required evidence can still block the final review.</p>
+      {identifying && <p className="mt-2 text-sm" role="status">Identifying document labels… You can choose pages now.</p>}
       <div className="my-3 flex flex-wrap gap-3 text-sm" aria-live="polite">
         <span>{ticCount} TIC</span><span>{supportingCount} supporting</span><span>{omittedCount} omitted</span><strong>{pendingCount} need a decision</strong>
       </div>
@@ -42,6 +47,18 @@ export function TicPacketOrganizer({ inventory, choices, sourceUrl, isPdf, busy,
           const page = inventory.find(p => p.page === c.page);
           return c.role === 'pending' && page && administrative.test(page.label) ? { ...c, role: 'omit', reason: page.label } : c;
         }))}>Omit detected covers and instructions</button>
+      </div>
+      <div className="mb-4 flex flex-wrap items-end gap-2 rounded border p-3">
+        <label className="text-xs">Original pages<input aria-label="Original page numbers or ranges" placeholder="3-5, 8" maxLength={500} value={range} disabled={busy} onChange={e => setRange(e.target.value)} className="mt-1 block rounded border bg-background p-2 text-sm" /></label>
+        <label className="text-xs">Apply document role<select aria-label="Document role for page range" value={rangeRole} disabled={busy} onChange={e => setRangeRole(e.target.value as PacketPageRole)} className="mt-1 block rounded border bg-background p-2 text-sm">
+          <option value="pending">Choose a role</option><option value="tic_page">Tenant Income Certification</option>
+          {SUPPORTING_DOCUMENT_DEFINITIONS.map(d => <option key={d.type} value={d.type}>{d.label}</option>)}
+          <option value="omit">Omit from this review</option>
+        </select></label>
+        <button type="button" disabled={busy || rangeRole === 'pending'} className="rounded border px-3 py-2 text-sm disabled:opacity-50" onClick={() => {
+          try {const pages = new Set(parsePacketPageRange(range, inventory.length)); onChange(choices.map(c => pages.has(c.page) ? {...c, role: rangeRole, reason: rangeRole === 'omit' ? 'Not included in this certification review' : ''} : c)); setRangeError('');} catch(error) {setRangeError(error instanceof Error ? error.message : 'Check the page range.');}
+        }}>Apply to pages</button>
+        {rangeError && <p role="alert" className="w-full text-sm">{rangeError}</p>}
       </div>
       <div className="grid gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(320px,1.15fr)]">
         <div className="max-h-[70vh] space-y-3 overflow-auto pr-1">
@@ -61,7 +78,7 @@ export function TicPacketOrganizer({ inventory, choices, sourceUrl, isPdf, busy,
                   </select>
                 </label>
                 {role === 'omit' && <label className="mt-2 block text-xs">Reason for omitting page {page.page}<input aria-label={`Page ${page.page} omission reason`} className="mt-1 w-full rounded border bg-background p-2 text-sm" value={choice?.reason ?? ''} maxLength={500} disabled={busy} onChange={e => setChoice(page.page, 'omit', e.target.value)} /></label>}
-                {!page.excerpt && <p className="mt-2 text-xs font-medium">No readable text was recovered. Inspect the page before deciding.</p>}
+                {!page.excerpt && <p className="mt-2 text-xs font-medium">No document label is available yet. Inspect the original page before deciding.</p>}
               </article>
             );
           })}
@@ -72,7 +89,7 @@ export function TicPacketOrganizer({ inventory, choices, sourceUrl, isPdf, busy,
         </div>
       </div>
       {validation && <p className="mt-3 text-sm font-medium" role="status">{validation}</p>}
-      <div className="mt-4 flex justify-end"><button type="button" className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50" disabled={busy || !!validation || !sourceUrl} onClick={onConfirm}>{busy ? 'Preparing income evidence…' : 'Confirm selection & check TIC'}</button></div>
+      <div className="mt-4 flex justify-end"><button type="button" className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50" disabled={busy || !!validation || !sourceUrl} onClick={onConfirm}>{busy ? 'Extracting selected pages…' : 'Confirm selection & check TIC'}</button></div>
     </section>
   );
 }
