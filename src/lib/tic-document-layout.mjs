@@ -37,8 +37,8 @@ export function isTicContent(text) {
   const normalized = compact(lines.join(' '));
   const sections = [/part\s+i\b.{0,25}development\s+data/i, /part\s+ii\b.{0,25}household\s+composition/i,
     /part\s+iii\b.{0,25}(?:gross\s+)?annual\s+income/i, /part\s+iv[a-b]?\b.{0,25}(?:income\s+from\s+)?assets/i,
-    /part\s+v\b.{0,25}total\s+household\s+income/i, /part\s+vi\b.{0,25}determination\s+of\s+income\s+eligibility/i,
-    /part\s+vii\b.{0,10}rent/i, /part\s+viii\b.{0,10}student/i, /part\s+ix\b.{0,10}program\s+type/i];
+    /part\s+v\b.{0,25}total\s+household\s+income/i, /part\s+(?:v|vi)\b.{0,25}determination\s+of\s+income\s+eligibility/i,
+    /part\s+(?:vi|vii)\b.{0,10}rent/i, /part\s+(?:vii|viii)\b.{0,10}student/i, /part\s+(?:viii|ix)\b.{0,10}program\s+type/i];
   const count = sections.filter(pattern => pattern.test(normalized)).length;
   const title = lines.some(line => /^tenant\s+income\s+certification(?:\s*\([^)]*\))?\s*$/i.test(line));
   const header = /tenant\s+income\s+certification/i.test(normalized.slice(0, 1500));

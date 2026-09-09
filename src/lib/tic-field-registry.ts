@@ -135,7 +135,7 @@ export const TIC_FIELD_DEFINITIONS: readonly TicFieldDefinition[] = [
   field("tenant_paid_rent", "Tenant Paid Rent", "Part VII — Rent", "currency", ["tenant paid rent", "tenant-paid rent"]),
   field("utility_allowance", "Utility Allowance", "Part VII — Rent", "currency", ["utility allowance"]),
   field("utility_allowance_source", "Utility Allowance Source", "Part VII — Rent", "text", ["utility allowance source", "ua source"]),
-  field("rent_assistance", "Rent Assistance", "Part VII — Rent", "currency", ["rent assistance", "rental assistance amount"]),
+  field("rent_assistance", "Rent Assistance", "Part VII — Rent", "currency", ["rent assistance", "rental assistance amount", "rental assistance:"]),
   field("other_non_optional_charges", "Other non-optional charges", "Part VII — Rent", "currency", ["other non-optional charges", "other non optional charges"]),
   field("gross_rent", "GROSS RENT FOR UNIT", "Part VII — Rent", "currency", ["gross rent for unit", "gross rent"]),
   field("unit_rent_restriction_percent", "Unit Meets Rent Restriction at (%)", "Part VII — Rent", "number", ["unit meets rent restriction at", "rent restriction at"]),
