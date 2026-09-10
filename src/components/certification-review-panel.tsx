@@ -114,6 +114,62 @@ function IncomeLimitComparison({ values }: { values: Record<string, unknown> }) 
   );
 }
 
+type EvidenceRecordRow = {
+  id: string;
+  manifest_sha256: string;
+  manifest: unknown;
+  outcome: string;
+  engine_build: string;
+  created_at: string;
+};
+
+function recordObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function recordArray(value: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(value) ? value.filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry)) : [];
+}
+
+function EvidenceRecordCard({ record }: { record: EvidenceRecordRow }) {
+  const manifest = recordObject(record.manifest);
+  const documents = recordArray(manifest['documents']);
+  const facts = recordArray(manifest['extractedInputs']);
+  const calculations = recordArray(manifest['calculations']);
+  const rules = recordArray(manifest['evaluatedRules']);
+  const actions = recordArray(manifest['humanActions']);
+  const certification = recordObject(manifest['certification']);
+  const download = () => {
+    const blob = new Blob([JSON.stringify(record.manifest, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `certivoiq-evidence-record-${record.id}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <section className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-4" aria-label="CertivoIQ Evidence Record">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><p className="text-xs font-semibold uppercase tracking-wide text-primary">CertivoIQ Evidence Record</p><h3 className="mt-1 font-semibold">Review evidence and reproducibility receipt</h3></div>
+        <span className="rounded-full border bg-background px-3 py-1 text-xs font-semibold">{record.outcome.replaceAll('_', ' ')}</span>
+      </div>
+      <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+        <div><p className="text-xs text-muted-foreground">Evidence ID</p><p className="break-all font-mono text-xs">{record.id}</p></div>
+        <div><p className="text-xs text-muted-foreground">Certification</p><p className="font-medium">{String(certification['type'] ?? '—')} · {String(certification['jurisdiction'] ?? '—')}</p></div>
+        <div><p className="text-xs text-muted-foreground">Generated</p><p className="font-medium">{new Date(record.created_at).toLocaleString()}</p></div>
+        <div><p className="text-xs text-muted-foreground">Engine</p><p className="font-medium">{record.engine_build}</p></div>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {[['Source documents', documents.length], ['Confirmed facts', facts.filter(f => f['humanVerified']).length], ['Calculations', calculations.length], ['Rules evaluated', rules.length], ['Recorded actions', actions.length]].map(([label, count]) => <div key={String(label)} className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-semibold">{count}</p></div>)}
+      </div>
+      {documents.length > 0 ? <div className="mt-4 rounded-lg border bg-background p-3"><p className="text-xs font-semibold">Source integrity</p>{documents.map((document, index) => <p key={String(document['id'] ?? index)} className="mt-1 break-all text-xs text-muted-foreground">{String(document['filename'] ?? 'Document')} · SHA-256 {String(document['sha256'] ?? 'Unavailable')}</p>)}</div> : null}
+      <div className="mt-4 rounded-lg border bg-background p-3"><p className="text-xs font-semibold">Immutable record hash</p><p className="mt-1 break-all font-mono text-xs">{record.manifest_sha256}</p><p className="mt-2 text-xs text-muted-foreground">This hash binds the source identity, confirmed evidence, calculation inputs and outputs, rule versions, findings, and recorded actions in this review version.</p></div>
+      <button type="button" onClick={download} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Download Evidence Record</button>
+    </section>
+  );
+}
+
 type EvidenceRef = { field?: string; documentRef?: string | null; page?: number | null; snippet?: string | null };
 
 type CertificationReviewPanelProps = {
@@ -379,6 +435,12 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
           ) : null}
         </div>
       )}
+
+      {review.data?.evidenceRecord
+        ? <EvidenceRecordCard record={review.data.evidenceRecord as EvidenceRecordRow} />
+        : review.data
+          ? <div className="mt-6 rounded-xl border p-4"><p className="font-medium">Evidence Record pending</p><p className="mt-1 text-sm text-muted-foreground">Run the full certification review to bind the confirmed facts, calculations, governing rules, findings, and source-file hash into the CertivoIQ Evidence Record.</p></div>
+          : null}
 
       {review.data && review.data.findings.length > 0 && (
         <div className="mt-6 space-y-3">
