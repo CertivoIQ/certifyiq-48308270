@@ -114,6 +114,7 @@ jobs:
           node --test scripts/test-auditor-workspace.mjs
           node --test scripts/test-continuous-audit-readiness.mjs
           node --test scripts/test-audit-simulator.mjs
+          node --test scripts/test-compliance-time-machine.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -385,3 +386,42 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910173820_audit_simulator.sql
       - name: Verify classifications, isolation, immutability, and integrity
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/audit_simulator.test.sql
+
+
+  compliance-time-machine-rehearsal:
+    name: Compliance Time Machine rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_time_machine
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_time_machine"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_time_machine
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap historical sources
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_time_machine.bootstrap.sql
+      - name: Apply Audit Replay dependency
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910165308_audit_replay.sql
+      - name: Apply Compliance Time Machine
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910180500_compliance_time_machine.sql
+      - name: Verify point-in-time reconstruction, comparison, and isolation
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_time_machine.test.sql
