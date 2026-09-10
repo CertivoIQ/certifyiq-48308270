@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
 import test from "node:test";
 
 const root = new URL("../", import.meta.url);
@@ -10,7 +9,7 @@ async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
-    const target = path.join(directory, entry.name);
+    const target = new URL(entry.name + (entry.isDirectory() ? "/" : ""), directory);
     if (entry.isDirectory()) files.push(...(await walk(target)));
     else files.push(target);
   }
@@ -49,7 +48,7 @@ test("keeps Storage assurance restrictive and recovery credentials server-writte
     storageAssurance,
     /create policy "Authenticated storage requires current session assurance"[\s\S]*?as restrictive for all to authenticated/i,
   );
-  assert.match(recoveryBoundary, /revoke insert, update, delete[\s\S]*?user_recovery_codes[\s\S]*?from anon, authenticated/i);
+  assert.match(recoveryBoundary, /revoke insert, update, delete[\s\S]*?user_recovery_codes[\s\S]*?from public, anon, authenticated/i);
   assert.doesNotMatch(recoveryBoundary, /grant\s+(insert|update|delete)[\s\S]*?user_recovery_codes[\s\S]*?to (anon|authenticated)/i);
 });
 
@@ -92,7 +91,7 @@ test("emits and live-verifies the approved Permissions Policy", async () => {
 test("does not use pull_request_target or contain high-confidence plaintext secrets", async () => {
   const workflowDir = new URL(".github/workflows/", root);
   for (const file of await walk(workflowDir)) {
-    if (!/\.ya?ml$/i.test(file)) continue;
+    if (!/\.ya?ml$/i.test(file.pathname)) continue;
     assert.doesNotMatch(await readFile(file, "utf8"), /pull_request_target\s*:/, file);
   }
 
