@@ -5,11 +5,12 @@ import { ComplianceImpactAnalysis } from '@/components/compliance-impact-analysi
 import { RegulatoryDiffEngine } from '@/components/regulatory-diff-engine';
 import { PortfolioComplianceIntelligence } from '@/components/portfolio-compliance-intelligence';
 import { ComplianceControlCenter } from '@/components/compliance-control-center';
+import { EnterpriseCapabilityArchitecture } from '@/components/enterprise-capability-architecture';
 
 export const Route = createFileRoute('/_authenticated/compliance-intelligence')({
   component: ComplianceIntelligenceWorkspace,
 });
 
 function ComplianceIntelligenceWorkspace() {
-  return <><ComplianceControlCenter /><ComplianceIntelligenceSuite /><div className="mx-auto w-full max-w-7xl px-6 pb-10 md:px-10"><ComplianceTimeMachine /><ComplianceImpactAnalysis /><RegulatoryDiffEngine /><PortfolioComplianceIntelligence /></div></>;
+  return <><ComplianceControlCenter /><ComplianceIntelligenceSuite /><div className="mx-auto w-full max-w-7xl px-6 pb-10 md:px-10"><ComplianceTimeMachine /><ComplianceImpactAnalysis /><RegulatoryDiffEngine /><PortfolioComplianceIntelligence /><EnterpriseCapabilityArchitecture /></div></>;
 }
