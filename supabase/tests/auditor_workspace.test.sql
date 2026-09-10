@@ -61,6 +61,7 @@ select public.create_auditor_access_grant(
  array['a4600000-0000-4000-8000-000000000010'],array['LIHTC'],
  '2026-01-01','2026-01-31',now()+interval '7 days'
 ) as grant_id \gset
+select set_config('test.grant_id', :'grant_id', true);
 do $$ begin
  if has_table_privilege('authenticated','public.auditor_access_grants','INSERT')
    or has_table_privilege('authenticated','public.auditor_access_events','UPDATE')
@@ -75,7 +76,7 @@ select set_config('request.jwt.claim.sub','a4600000-0000-4000-8000-000000000002'
 do $$
 declare s jsonb;
 begin
- s:=public.auditor_workspace_snapshot(:'grant_id');
+ s:=public.auditor_workspace_snapshot(current_setting('test.grant_id')::uuid);
  if jsonb_array_length(s->'approved_certifications') <> 1
    or s->'approved_certifications'->0->>'file_name' <> 'owner.pdf'
  then raise exception 'Approved certification scope failed'; end if;
@@ -95,7 +96,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','a4600000-0000-4000-8000-000000000003',true);
 do $$ begin
  begin
-   perform public.auditor_workspace_snapshot(:'grant_id');
+   perform public.auditor_workspace_snapshot(current_setting('test.grant_id')::uuid);
    raise exception 'Unscoped account opened auditor workspace';
  exception when raise_exception then
    if sqlerrm <> 'auditor grant does not authorize this account' then raise; end if;
@@ -109,7 +110,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','a4600000-0000-4000-8000-000000000001',true);
 select public.revoke_auditor_access_grant(:'grant_id');
 do $$ begin
- if (select count(*) from public.auditor_access_events where grant_id=:'grant_id') <> 3
+ if (select count(*) from public.auditor_access_events where grant_id=current_setting('test.grant_id')::uuid) <> 3
  then raise exception 'Grant access log is incomplete'; end if;
 end $$;
 reset role;
@@ -118,7 +119,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','a4600000-0000-4000-8000-000000000002',true);
 do $$ begin
  begin
-   perform public.auditor_workspace_snapshot(:'grant_id');
+   perform public.auditor_workspace_snapshot(current_setting('test.grant_id')::uuid);
    raise exception 'Revoked auditor access remained usable';
  exception when raise_exception then
    if sqlerrm <> 'auditor grant revoked' then raise; end if;
@@ -129,7 +130,7 @@ reset role;
 set local role service_role;
 do $$ begin
  begin
-   delete from public.auditor_access_events where grant_id=:'grant_id';
+   delete from public.auditor_access_events where grant_id=current_setting('test.grant_id')::uuid;
    raise exception 'Auditor access log was mutable';
  exception when raise_exception then
    if sqlerrm <> 'Auditor access history is immutable.' then raise; end if;
