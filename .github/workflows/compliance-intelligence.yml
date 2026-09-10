@@ -64,6 +64,7 @@ jobs:
           node --test scripts/test-customer-file-recovery.mjs
           node --test scripts/test-mfa-enforcement.mjs
           node --test scripts/test-mfa-recovery-boundary.mjs
+          node --test scripts/test-session-assurance.mjs
           node --test scripts/test-california-ctcac-compliance-forms.mjs
           bun run test:compliance
           bun run test:slice
@@ -217,3 +218,10 @@ jobs:
         run: |
           psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910035616_harden_mfa_recovery_code_writes.sql
           psql --set ON_ERROR_STOP=1 --file supabase/tests/mfa_recovery_boundary.test.sql
+      - name: Rehearse enrolled MFA across REST and Storage
+        run: |
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/session_assurance.bootstrap.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260906080303_seven_day_session_and_trial_calculator_access.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910155107_enforce_enrolled_mfa_access.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/session_assurance.test.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/session_assurance_storage.test.sql

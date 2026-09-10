@@ -31,7 +31,8 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
-export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
+function createSupabaseAuthMiddleware(allowMfaRecovery: boolean) {
+return createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
     // Deployment-provided server variables take precedence. Lovable/Vite-prefixed
     // public variables are accepted as a secondary source, followed by the
@@ -110,8 +111,12 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     }
 
     const { data: sessionWindow, error: sessionError } = await supabase.rpc("get_session_window" as never);
-    if (sessionError || !(sessionWindow as unknown as { valid?: boolean })?.valid) {
+    const session = sessionWindow as unknown as { valid?: boolean; mfa_satisfied?: boolean } | null;
+    if (sessionError || session?.valid !== true) {
       throw new Error("Your 7-day login session has ended. Please sign in again.");
+    }
+    if (!allowMfaRecovery && session.mfa_satisfied !== true) {
+      throw new Error("Verify your authenticator to continue.");
     }
 
     return next({
@@ -123,4 +128,8 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     });
   },
 );
+}
 
+export const requireSupabaseAuth = createSupabaseAuthMiddleware(false);
+// Only recovery-code verification may use this lifetime-checked AAL1 entry.
+export const requireMfaRecoverySession = createSupabaseAuthMiddleware(true);
