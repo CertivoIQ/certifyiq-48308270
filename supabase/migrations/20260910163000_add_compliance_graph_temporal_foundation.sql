@@ -22,6 +22,8 @@ create table public.compliance_graph_nodes (
   source_version text,
   rule_version text,
   engine_version text,
+  applicable_limit_version text,
+  property_election_version text,
   effective_from date not null,
   effective_to date,
   supersedes_node_id uuid references public.compliance_graph_nodes(id) on delete restrict,
