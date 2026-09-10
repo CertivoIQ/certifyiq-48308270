@@ -76,6 +76,16 @@ const requiredHeaders = [
     expected: "DENY",
   },
   {
+    name: "permissions-policy",
+    validate: (value) => {
+      const normalized = value.toLowerCase().replace(/\s+/g, "");
+      return ["camera=()", "microphone=()", "geolocation=()", "usb=()"].every(
+        (directive) => normalized.includes(directive),
+      );
+    },
+    expected: "camera=(), microphone=(), geolocation=(), usb=()",
+  },
+  {
     name: "content-security-policy",
     validate: (value) => /(?:^|;)\s*frame-ancestors\s+'none'\s*(?:;|$)/i.test(value),
     expected: "frame-ancestors 'none'",
