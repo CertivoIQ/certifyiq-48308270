@@ -63,6 +63,7 @@ jobs:
           node --test scripts/test-launch-control-gates.mjs
           node --test scripts/test-customer-file-recovery.mjs
           node --test scripts/test-mfa-enforcement.mjs
+          node --test scripts/test-mfa-recovery-boundary.mjs
           node --test scripts/test-california-ctcac-compliance-forms.mjs
           bun run test:compliance
           bun run test:slice
@@ -208,3 +209,11 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260831201500_paid_license_database_integrity.sql
       - name: Run rolled-back paid-license database rehearsal
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/paid_license_database_integrity.test.sql
+      - name: Bootstrap existing recovery-code schema
+        run: |
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/mfa_recovery_boundary.bootstrap.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260806221712_9f023f95-da52-4f42-90e4-c35cdc74f759.sql
+      - name: Apply and verify recovery-code security boundary
+        run: |
+          psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910035616_harden_mfa_recovery_code_writes.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/mfa_recovery_boundary.test.sql
