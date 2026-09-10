@@ -7,6 +7,7 @@ const SECURITY_HEADERS = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), usb=()",
   "X-Frame-Options": "DENY",
   "Content-Security-Policy": "frame-ancestors 'none'",
 } as const;
