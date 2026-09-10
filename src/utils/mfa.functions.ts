@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth, requireMfaRecoverySession } from "@/integrations/supabase/auth-middleware";
 import { createHash, randomBytes } from "crypto";
 
 const RECOVERY_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -82,7 +82,7 @@ export const generateRecoveryCodes = createServerFn({ method: "POST" })
  * the recovery code and removes the TOTP factor so they can proceed.
  */
 export const verifyAndDisableRecoveryCode = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireMfaRecoverySession])
   .inputValidator((data: { code: string }) => {
     if (!data.code || typeof data.code !== "string" || data.code.length < 14) {
       throw new Error("Invalid recovery code");

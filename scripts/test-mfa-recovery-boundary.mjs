@@ -12,9 +12,9 @@ const source = stripTypeScriptTypes(original)
   .replaceAll('await import("@/integrations/supabase/client.server")', '({ supabaseAdmin: admin })');
 function handlers(admin) {
   const createServerFn = () => ({ middleware() { return this; }, inputValidator() { return this; }, handler(fn) { return fn; } });
-  return new Function('admin', 'createServerFn', 'requireSupabaseAuth', 'createHash', 'randomBytes',
+  return new Function('admin', 'createServerFn', 'requireSupabaseAuth', 'requireMfaRecoverySession', 'createHash', 'randomBytes',
     source + '\nreturn { generateRecoveryCodes, verifyAndDisableRecoveryCode };')
-    (admin, createServerFn, {}, createHash, randomBytes);
+    (admin, createServerFn, {}, {}, createHash, randomBytes);
 }
 const context = (aal) => ({ userId: 'owner', claims: { aal } });
 
