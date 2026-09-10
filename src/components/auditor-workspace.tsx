@@ -151,7 +151,7 @@ export function AuditorWorkspace() {
     <Panel
       title="Auditor Workspace"
       description="Temporary, read-only access to approved records within an explicit property, program, and date scope."
-      action={
+      actions={
         <Button size="sm" variant="outline" onClick={() => setShowCreate((value) => !value)}>
           <KeyRound className="size-4" /> Create access
         </Button>
