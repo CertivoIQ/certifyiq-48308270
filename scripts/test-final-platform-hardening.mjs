@@ -75,6 +75,20 @@ test("keeps security, billing, upload, audit, and release regressions in the ful
   }
 });
 
+test("emits and live-verifies the approved Permissions Policy", async () => {
+  for (const relative of [
+    "public/_headers",
+    "src/start.ts",
+    "src/server.ts",
+    "scripts/verify-cloudflare-live-response.mjs",
+  ]) {
+    const contents = await read(relative);
+    for (const directive of ["camera=()", "microphone=()", "geolocation=()", "usb=()"]) {
+      assert.ok(contents.includes(directive), `${relative} is missing ${directive}`);
+    }
+  }
+});
+
 test("does not use pull_request_target or contain high-confidence plaintext secrets", async () => {
   const workflowDir = new URL(".github/workflows/", root);
   for (const file of await walk(workflowDir)) {
