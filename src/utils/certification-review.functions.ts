@@ -92,8 +92,6 @@ export const runCertificationReview = createServerFn({ method: "POST" })
     }
     const jurisdiction = (data.jurisdiction ?? item.jurisdiction ?? "US").toUpperCase();
 
-    const {error:usageError}=await (supabase as any).rpc("reserve_certification_review",{_item_id:item.id});
-    if(usageError)return {error:usageError.message||"The free-review allowance could not be verified."} as const;
     await supabase.from("certification_import_items").update({
       status: "processing", review_queue_status: "processing", review_started_at: new Date().toISOString(),
       review_finished_at: null, error_message: null,
@@ -355,7 +353,7 @@ export const getCertificationReview = createServerFn({ method: "GET" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const [facts, findings] = await Promise.all([
+    const [facts, findings, evidenceRecord] = await Promise.all([
       context.supabase
         .from("certification_facts")
         .select("field_name, field_value, source_document_ref, source_page, source_snippet, confidence, human_verified, extraction_provider")
@@ -366,9 +364,17 @@ export const getCertificationReview = createServerFn({ method: "GET" })
         .select("id, rule_id, rule_version, rule_pack_id, rule_pack_version, jurisdiction, status, severity, explanation, blocking_reasons, evidence_refs, review_state, engine_build")
         .eq("item_id", data.itemId)
         .order("severity"),
+      context.supabase
+        .from("evidence_manifests")
+        .select("id, manifest_sha256, manifest, outcome, engine_build, created_at")
+        .eq("review_id", data.itemId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     if (facts.error) throw facts.error;
     if (findings.error) throw findings.error;
+    if (evidenceRecord.error) throw evidenceRecord.error;
 
     const findingIds = (findings.data ?? []).map((finding) => finding.id);
     const reviews = findingIds.length
@@ -380,7 +386,7 @@ export const getCertificationReview = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (reviews.error) throw reviews.error;
 
-    return { facts: facts.data ?? [], findings: findings.data ?? [], reviews: reviews.data ?? [] };
+    return { facts: facts.data ?? [], findings: findings.data ?? [], reviews: reviews.data ?? [], evidenceRecord: evidenceRecord.data ?? null };
   });
 
 export const listCertificationItems = createServerFn({ method: "GET" })
