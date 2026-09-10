@@ -111,6 +111,7 @@ jobs:
           bun run test:assurance-schema
           node --test scripts/test-audit-readiness-workspace.mjs
           node --test scripts/test-audit-replay.mjs
+          node --test scripts/test-auditor-workspace.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -269,3 +270,40 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910165308_audit_replay.sql
       - name: Verify timeline, isolation, and immutability
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/audit_replay.test.sql
+
+
+  auditor-workspace-database-rehearsal:
+    name: Auditor Workspace database rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_auditor
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_auditor"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_auditor
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap auditor scope dependencies
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/auditor_workspace.bootstrap.sql
+      - name: Apply Auditor Workspace migration
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910170637_auditor_workspace.sql
+      - name: Verify scope, expiry, revocation, and access logging
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/auditor_workspace.test.sql
