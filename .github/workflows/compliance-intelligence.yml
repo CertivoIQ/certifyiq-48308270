@@ -110,6 +110,7 @@ jobs:
           bun run test:assurance
           bun run test:assurance-schema
           node --test scripts/test-audit-readiness-workspace.mjs
+          node --test scripts/test-audit-replay.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -231,3 +232,40 @@ jobs:
           psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910163000_add_compliance_graph_temporal_foundation.sql
           psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910164500_harden_compliance_graph_privileges_and_indexes.sql
           psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_graph_temporal.test.sql
+
+
+  audit-replay-database-rehearsal:
+    name: Audit Replay database rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_replay
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_replay"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_replay
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap certification lifecycle
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/audit_replay.bootstrap.sql
+      - name: Apply Audit Replay migration
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910165308_audit_replay.sql
+      - name: Verify timeline, isolation, and immutability
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/audit_replay.test.sql
