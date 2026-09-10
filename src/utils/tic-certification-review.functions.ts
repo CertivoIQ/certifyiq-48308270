@@ -344,6 +344,14 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       : evaluation.counts.fail > 0
         ? "fail"
         : "pass";
+    const historicalActions = (Array.isArray(item.historical_changes) ? item.historical_changes : [])
+      .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
+      .map((entry) => ({
+        action: String(entry["type"] ?? "certification_update"),
+        actorId: String(entry["reviewer_id"] ?? userId),
+        at: String(entry["confirmed_at"] ?? entry["corrected_at"] ?? ""),
+        reason: entry["reason"] == null ? null : String(entry["reason"]),
+      }));
     const manifest = {
       packetSelection,
       incomePreparation: preparedIncome,
@@ -352,10 +360,29 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       organizationId,
       generatedAt: new Date().toISOString(),
       outcome,
+      blockingReasons: evaluation.findings.flatMap((finding) => finding.blockingReasons),
+      certification: {
+        type: certificationType,
+        jurisdiction,
+        programs,
+        effectiveDate: completionValues["certification_effective_date"] ?? null,
+      },
       documents: [{ id: item.id, filename: item.original_file_name, sha256: documentSha256 }],
       extractedInputs: result.facts,
       missingFields: result.missingFields,
       confirmedFactsAuthoritative: (confirmedRows ?? []).length > 0,
+      calculations: savedWorksheet ? [{
+        id: "tic-income-worksheet",
+        formulaVersion: "tic-calculations:1",
+        inputs: savedWorksheet.values,
+        settings: savedWorksheet.settings,
+        result: ticWorksheetCalculation,
+      }, ...(preparedIncome ? [{
+        id: "projected-annual-income",
+        formulaVersion: preparedIncome.calculation.version,
+        inputs: preparedIncome.draft.rows,
+        result: preparedIncome.calculation,
+      }] : [])] : [],
       evaluatedRules: evaluation.findings.map((finding) => ({
         ruleId: finding.ruleId,
         version: finding.ruleVersion,
@@ -363,6 +390,11 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         citation: finding.citation,
         evidenceRefs: finding.evidenceRefs,
       })),
+      humanActions: historicalActions,
+      authority: {
+        federalRulePack: { id: evaluation.rulePackId, version: evaluation.rulePackVersion },
+        statePack: evaluation.statePackApplied,
+      },
       engine: {
         build: evaluation.engineBuild,
         rulePackId: evaluation.rulePackId,
