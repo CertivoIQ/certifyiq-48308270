@@ -116,6 +116,7 @@ jobs:
           node --test scripts/test-audit-simulator.mjs
           node --test scripts/test-compliance-time-machine.mjs
           node --test scripts/test-compliance-impact-analysis.mjs
+          node --test scripts/test-regulatory-diff-engine.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -463,3 +464,42 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910182000_compliance_impact_analysis.sql
       - name: Verify validated-source gating, impact counts, isolation, and immutability
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_impact_analysis.test.sql
+
+
+  regulatory-diff-engine-rehearsal:
+    name: Regulatory Diff Engine rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_regulatory_diff
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_regulatory_diff"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_regulatory_diff
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap validated source versions and graph scope
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/regulatory_diff_engine.bootstrap.sql
+      - name: Apply Compliance Impact Analysis dependency
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910182000_compliance_impact_analysis.sql
+      - name: Apply Regulatory Diff Engine
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910183500_regulatory_diff_engine.sql
+      - name: Verify exact diffs, impact mapping, governance, isolation, and immutability
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/regulatory_diff_engine.test.sql
