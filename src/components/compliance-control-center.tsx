@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -53,7 +53,6 @@ export function ComplianceControlCenter() {
     onSuccess: setReport,
     onError: (error) => toast.error(error instanceof Error ? error.message : "Control Center failed closed"),
   });
-  useEffect(() => { refresh.mutate(); }, []);
 
   return (
     <Panel
@@ -92,7 +91,7 @@ export function ComplianceControlCenter() {
             </div>
           </div>
         </div>
-      ) : <p className="mt-4 text-sm text-muted-foreground">Loading the structured attention queue…</p>}
+      ) : <p className="mt-4 text-sm text-muted-foreground">Refresh to load the structured attention queue.</p>}
     </Panel>
   );
 }
