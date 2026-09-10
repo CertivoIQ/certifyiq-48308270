@@ -119,6 +119,7 @@ jobs:
           node --test scripts/test-regulatory-diff-engine.mjs
           node --test scripts/test-portfolio-compliance-intelligence.mjs
           node --test scripts/test-compliance-control-center.mjs
+          node --test scripts/test-enterprise-capability-architecture.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -583,3 +584,40 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910191000_compliance_control_center.sql
       - name: Verify executive metrics, attention priorities, tenant isolation, and anonymous denial
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_control_center.test.sql
+
+
+  enterprise-capability-architecture-rehearsal:
+    name: Enterprise Capability Architecture rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_enterprise_capabilities
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_enterprise_capabilities"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_enterprise_capabilities
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap established enterprise licensing
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/enterprise_capability_architecture.bootstrap.sql
+      - name: Apply Enterprise Capability Architecture
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910193000_enterprise_capability_architecture.sql
+      - name: Verify packaging governance, existing all-features access, tenant isolation, and anonymous denial
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/enterprise_capability_architecture.test.sql
