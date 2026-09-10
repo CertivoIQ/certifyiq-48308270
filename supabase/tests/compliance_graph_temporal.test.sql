@@ -31,8 +31,24 @@ do $$ begin
   if (select count(*) from public.compliance_finding_why_chain('a4400000-0000-4000-8000-000000000013', date '2026-06-01')) <> 4 then
     raise exception 'Why chain did not include authority, rule, finding, and evidence';
   end if;
-  if has_table_privilege('authenticated', 'public.compliance_graph_nodes', 'UPDATE') then
+  if has_table_privilege('authenticated', 'public.compliance_graph_nodes', 'INSERT')
+     or has_table_privilege('authenticated', 'public.compliance_graph_nodes', 'UPDATE')
+     or has_table_privilege('authenticated', 'public.compliance_graph_nodes', 'DELETE')
+     or has_table_privilege('authenticated', 'public.compliance_graph_edges', 'INSERT')
+     or has_table_privilege('authenticated', 'public.compliance_graph_events', 'INSERT') then
     raise exception 'Authenticated users received mutable graph privileges';
+  end if;
+  if has_function_privilege('anon', 'public.compliance_finding_why_chain(uuid,date)', 'EXECUTE')
+     or has_function_privilege('public', 'public.compliance_finding_why_chain(uuid,date)', 'EXECUTE') then
+    raise exception 'Why-chain execution leaked beyond authenticated users';
+  end if;
+  if to_regclass('public.compliance_graph_nodes_supersedes_idx') is null
+     or to_regclass('public.compliance_graph_edges_from_node_idx') is null
+     or to_regclass('public.compliance_graph_edges_to_node_idx') is null
+     or to_regclass('public.compliance_graph_edges_evidence_manifest_idx') is null
+     or to_regclass('public.compliance_graph_events_node_idx') is null
+     or to_regclass('public.compliance_graph_events_edge_idx') is null then
+    raise exception 'Compliance graph foreign-key indexes are incomplete';
   end if;
 end $$;
 reset role;
