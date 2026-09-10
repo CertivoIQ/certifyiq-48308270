@@ -115,6 +115,7 @@ jobs:
           node --test scripts/test-continuous-audit-readiness.mjs
           node --test scripts/test-audit-simulator.mjs
           node --test scripts/test-compliance-time-machine.mjs
+          node --test scripts/test-compliance-impact-analysis.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -425,3 +426,40 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910180500_compliance_time_machine.sql
       - name: Verify point-in-time reconstruction, comparison, and isolation
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_time_machine.test.sql
+
+
+  compliance-impact-analysis-rehearsal:
+    name: Compliance Impact Analysis rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_impact
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_impact"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_impact
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap graph and portfolio sources
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_impact_analysis.bootstrap.sql
+      - name: Apply Compliance Impact Analysis
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910182000_compliance_impact_analysis.sql
+      - name: Verify validated-source gating, impact counts, isolation, and immutability
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_impact_analysis.test.sql
