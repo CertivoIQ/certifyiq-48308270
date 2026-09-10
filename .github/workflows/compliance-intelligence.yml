@@ -225,3 +225,8 @@ jobs:
           psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910155107_enforce_enrolled_mfa_access.sql
           psql --set ON_ERROR_STOP=1 --file supabase/tests/session_assurance.test.sql
           psql --set ON_ERROR_STOP=1 --file supabase/tests/session_assurance_storage.test.sql
+      - name: Rehearse compliance graph, temporal history, and Evidence Record linkage
+        run: |
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_graph_temporal.bootstrap.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910163000_add_compliance_graph_temporal_foundation.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_graph_temporal.test.sql
