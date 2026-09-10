@@ -90,6 +90,7 @@ const MF_OPERATIONS: readonly NavItem[] = [
   { to: "/files", label: "Certification Review Queue", icon: FileCheck2 },
   { to: "/findings", label: "Findings & Corrections", icon: AlertTriangle },
   { to: "/audit-readiness", label: "Audit Operations", icon: ClipboardCheck },
+  { to: "/compliance-control-center", label: "Compliance Control Center", icon: LayoutDashboard },
   { to: "/document-intelligence", label: "Document Intelligence", icon: Library },
   { to: "/rules", label: "Program Compliance", icon: Scale },
   { to: "/copilot", label: "Compliance Assistant", icon: Sparkles },
@@ -140,6 +141,7 @@ const PHA_COMPLIANCE: readonly PhaNavItem[] = [
   { to: "/document-intelligence", label: "Document Intelligence", icon: FileSearch, key: "compliance" },
   { to: "/pha-reports", label: "Reports & Evidence", icon: FileCheck2, key: "reports" },
   { to: "/rules", label: "Federal & Source Rules", icon: Scale, key: "compliance" },
+  { to: "/compliance-control-center", label: "Compliance Control Center", icon: LayoutDashboard, key: "reports" },
 ];
 
 const PHA_ADMIN: readonly PhaNavItem[] = [
