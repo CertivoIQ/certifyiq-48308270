@@ -52,6 +52,11 @@ export const clearUnverifiedMfaFactors = createServerFn({ method: "POST" })
 export const generateRecoveryCodes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    // Claims are verified by requireSupabaseAuth; a password-only session must
+    // never mint the credential that can remove its second factor.
+    if (context.claims.aal !== "aal2") {
+      throw new Error("Verify your authenticator before generating recovery codes.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { error: deleteError } = await supabaseAdmin
@@ -99,6 +104,19 @@ export const verifyAndDisableRecoveryCode = createServerFn({ method: "POST" })
     if (!row) return { error: "Invalid recovery code" };
     if (row.used_at) return { error: "Recovery code already used" };
 
+    // Atomically consume before any privileged action. Concurrent requests may
+    // both read the code, but only one can claim it. Failure after this point
+    // leaves it spent rather than allowing replay against newly enrolled MFA.
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from("user_recovery_codes")
+      .update({ used_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .eq("user_id", context.userId)
+      .is("used_at", null)
+      .select("id")
+      .maybeSingle();
+    if (claimError || !claimed) return { error: "Could not consume recovery code. Use another unused code." };
+
     const { data: factorData, error: factorError } = await supabaseAdmin.auth.admin.mfa.listFactors({
       userId: context.userId,
     });
@@ -111,12 +129,6 @@ export const verifyAndDisableRecoveryCode = createServerFn({ method: "POST" })
       });
       if (error) return { error: "Could not disable MFA" };
     }
-
-    const { error: updateError } = await supabaseAdmin
-      .from("user_recovery_codes")
-      .update({ used_at: new Date().toISOString() })
-      .eq("id", row.id);
-    if (updateError) return { error: "Could not mark recovery code as used" };
 
     return { ok: true };
   });
