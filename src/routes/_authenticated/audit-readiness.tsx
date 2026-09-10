@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { AuditReplayTimeline } from "@/components/audit-replay-timeline";
+import { AuditSimulator } from "@/components/audit-simulator";
 import { AuditorWorkspace } from "@/components/auditor-workspace";
 import { ContinuousAuditReadiness } from "@/components/continuous-audit-readiness";
 import { Button } from "@/components/ui/button";
@@ -677,6 +678,8 @@ function AuditReadinessWorkspace() {
       <AuditorWorkspace />
 
       <ContinuousAuditReadiness />
+
+      <AuditSimulator />
 
       <div className="rounded-lg border border-flag/30 bg-flag-soft p-4 text-sm">
         <p className="flex items-start gap-2 font-medium">
