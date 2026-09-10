@@ -345,13 +345,16 @@ export const runCertificationReview = createServerFn({ method: "POST" })
         ? "fail"
         : "pass";
     const historicalActions = (Array.isArray(item.historical_changes) ? item.historical_changes : [])
-      .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
-      .map((entry) => ({
-        action: String(entry["type"] ?? "certification_update"),
-        actorId: String(entry["reviewer_id"] ?? userId),
-        at: String(entry["confirmed_at"] ?? entry["corrected_at"] ?? ""),
-        reason: entry["reason"] == null ? null : String(entry["reason"]),
-      }));
+      .flatMap((entry) => {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+        const action = entry as Record<string, unknown>;
+        return [{
+          action: String(action["type"] ?? "certification_update"),
+          actorId: String(action["reviewer_id"] ?? userId),
+          at: String(action["confirmed_at"] ?? action["corrected_at"] ?? ""),
+          reason: action["reason"] == null ? null : String(action["reason"]),
+        }];
+      });
     const manifest = {
       packetSelection,
       incomePreparation: preparedIncome,
@@ -457,5 +460,4 @@ export const runCertificationReview = createServerFn({ method: "POST" })
       manifestSha256,
     } as const;
   });
-
 
