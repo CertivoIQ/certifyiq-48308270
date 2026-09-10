@@ -120,6 +120,7 @@ jobs:
           node --test scripts/test-portfolio-compliance-intelligence.mjs
           node --test scripts/test-compliance-control-center.mjs
           node --test scripts/test-enterprise-capability-architecture.mjs
+          node --test scripts/test-compliance-corpus-architecture.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -621,3 +622,42 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910193000_enterprise_capability_architecture.sql
       - name: Verify packaging governance, existing all-features access, tenant isolation, and anonymous denial
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/enterprise_capability_architecture.test.sql
+
+
+  compliance-corpus-architecture-rehearsal:
+    name: Compliance Corpus Architecture rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_compliance_corpus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_compliance_corpus"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_compliance_corpus
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap graph and tenant relationship sources
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_corpus_architecture.bootstrap.sql
+      - name: Apply Compliance Graph dependency
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910163000_add_compliance_graph_temporal_foundation.sql
+      - name: Apply Compliance Corpus Architecture
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910194500_compliance_corpus_architecture.sql
+      - name: Verify provenance, default-deny training, aggregation threshold, isolation, and immutability
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_corpus_architecture.test.sql
