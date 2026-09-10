@@ -118,6 +118,7 @@ jobs:
           node --test scripts/test-compliance-impact-analysis.mjs
           node --test scripts/test-regulatory-diff-engine.mjs
           node --test scripts/test-portfolio-compliance-intelligence.mjs
+          node --test scripts/test-compliance-control-center.mjs
           bun run test:tenant
           bun run test:recert
           bun run test:limits
@@ -543,3 +544,42 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910185000_portfolio_compliance_intelligence.sql
       - name: Verify metrics, confidentiality, tenant isolation, and anonymous denial
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/portfolio_compliance_intelligence.test.sql
+
+
+  compliance-control-center-rehearsal:
+    name: Compliance Control Center rehearsal
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: certivoiq_control_center
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d certivoiq_control_center"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: certivoiq_control_center
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Bootstrap executive control sources
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_control_center.bootstrap.sql
+      - name: Apply deterministic readiness dependency
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910171958_continuous_audit_readiness.sql
+      - name: Apply Compliance Control Center
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910191000_compliance_control_center.sql
+      - name: Verify executive metrics, attention priorities, tenant isolation, and anonymous denial
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/compliance_control_center.test.sql
