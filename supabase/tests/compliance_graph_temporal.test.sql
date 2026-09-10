@@ -34,18 +34,18 @@ do $$ begin
   if has_table_privilege('authenticated', 'public.compliance_graph_nodes', 'UPDATE') then
     raise exception 'Authenticated users received mutable graph privileges';
   end if;
-end $;
+end $$;
 reset role;
 
 set local role service_role;
-do $ begin
+do $$ begin
   begin
     update public.compliance_graph_nodes set label = 'changed' where id = 'a4400000-0000-4000-8000-000000000013';
     raise exception 'Graph history was mutable for service writers';
   exception when raise_exception then
     if sqlerrm <> 'Compliance graph history is immutable.' then raise; end if;
   end;
-end $;
+end $$;
 reset role;
 
 set local role authenticated;
