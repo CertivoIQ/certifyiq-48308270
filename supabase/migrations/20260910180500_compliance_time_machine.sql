@@ -4,7 +4,7 @@
 
 create index if not exists audit_replay_events_certification_item_fk_idx
   on public.audit_replay_events(certification_item_id);
-do $ begin
+do $hardening$ begin
   if to_regclass('public.auditor_access_events') is not null then
     execute 'create index if not exists auditor_access_events_actor_fk_idx on public.auditor_access_events(actor_id) where actor_id is not null';
   end if;
@@ -12,7 +12,7 @@ do $ begin
     execute 'create index if not exists auditor_access_grants_created_by_fk_idx on public.auditor_access_grants(created_by)';
     execute 'create index if not exists auditor_access_grants_revoked_by_fk_idx on public.auditor_access_grants(revoked_by) where revoked_by is not null';
   end if;
-end $;
+end $hardening$;
 
 create or replace function public.compliance_time_machine_state(_as_of timestamptz)
 returns jsonb
