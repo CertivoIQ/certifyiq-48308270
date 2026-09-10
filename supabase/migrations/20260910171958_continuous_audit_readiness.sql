@@ -116,6 +116,11 @@ with deductions as (
     and lower(a.workflow_status) not in ('completed','closed','cancelled')
 ), totals as (
   select coalesce(sum(points),0)::integer as total_deduction from deductions
+), queued as (
+  select d.*,row_number() over(
+    order by d.points desc,d.due_date nulls last,d.deduction_id
+  ) as queue_order
+  from deductions d
 )
 select jsonb_build_object(
   'as_of',_as_of,
@@ -128,13 +133,13 @@ select jsonb_build_object(
   ),'[]'::jsonb),
   'get_me_to_100',coalesce((
     select jsonb_agg(jsonb_build_object(
-      'queue_order',row_number() over(order by d.points desc,d.due_date nulls last,d.deduction_id),
-      'deduction_id',d.deduction_id,'points_recovered',d.points,
-      'title',d.title,'remediation',d.remediation,'entity_type',d.entity_type,
-      'entity_id',d.entity_id,'property_id',d.property_id,
-      'program_code',d.program_code,'due_date',d.due_date,'source_table',d.source_table
-    ) order by d.points desc,d.due_date nulls last,d.deduction_id)
-    from deductions d
+      'queue_order',q.queue_order,
+      'deduction_id',q.deduction_id,'points_recovered',q.points,
+      'title',q.title,'remediation',q.remediation,'entity_type',q.entity_type,
+      'entity_id',q.entity_id,'property_id',q.property_id,
+      'program_code',q.program_code,'due_date',q.due_date,'source_table',q.source_table
+    ) order by q.points desc,q.due_date nulls last,q.deduction_id)
+    from queued q
   ),'[]'::jsonb)
 );
 $$;
