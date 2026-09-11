@@ -6,16 +6,8 @@ const LEAD_SOURCE = "3 FREE certification reviews";
 
 export interface FreeReviewLeadInput {
   companyName: string;
-  ownerName: string;
-  ownerTitle: string;
+  contactName: string;
   email: string;
-  phone?: string | undefined;
-  units: number;
-  properties: number;
-  hq: string;
-  states: string[];
-  programs: string[];
-  marketingConsent: boolean;
 }
 
 export interface FreeReviewLeadResult {
@@ -26,10 +18,6 @@ export interface FreeReviewLeadResult {
 
 function platformLicense() {
   return "Annual Platform License";
-}
-
-function cleanList(values: string[]) {
-  return values.map((value) => value.trim()).filter(Boolean).slice(0, 25);
 }
 
 function isEmail(value: string) {
@@ -57,50 +45,21 @@ export const captureFreeReviewLead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: FreeReviewLeadInput) => {
     const companyName = data?.companyName?.trim();
-    const ownerName = data?.ownerName?.trim();
-    const ownerTitle = data?.ownerTitle?.trim();
+    const contactName = data?.contactName?.trim();
     const email = data?.email?.trim().toLowerCase();
-    const hq = data?.hq?.trim();
-    const states = cleanList(data?.states ?? []);
-    const programs = cleanList(data?.programs ?? []);
-    const units = Number(data?.units);
-    const properties = Number(data?.properties);
 
-    if (!companyName) throw new Error("Company name is required.");
-    if (!ownerName) throw new Error("Owner / decision-maker name is required.");
-    if (!ownerTitle) throw new Error("Owner / decision-maker title is required.");
+    if (!companyName) throw new Error("Company is required.");
+    if (!contactName) throw new Error("Contact name is required.");
     if (!email || !isEmail(email) || !isOrganizationEmail(email)) {
       throw new Error("Use your organization website email address. Personal email providers are not eligible for the 3 FREE certification reviews.");
     }
-    if (!Number.isInteger(units) || units < 1) throw new Error("Portfolio unit count is required.");
-    if (!Number.isInteger(properties) || properties < 1) throw new Error("Portfolio property count is required.");
-    if (!hq) throw new Error("Headquarters / primary market is required.");
-    if (!states.length) throw new Error("At least one state or market is required.");
-    if (!programs.length) throw new Error("At least one housing program is required.");
 
-    return {
-      companyName,
-      ownerName,
-      ownerTitle,
-      email,
-      phone: data.phone?.trim() || undefined,
-      units,
-      properties,
-      hq,
-      states,
-      programs,
-      marketingConsent: Boolean(data.marketingConsent),
-    };
+    return { companyName, contactName, email };
   })
   .handler(async ({ data, context }): Promise<FreeReviewLeadResult> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const plan = platformLicense();
-    const consentNote = data.marketingConsent ? "yes" : "no";
-    const notes = [
-      "Warm lead captured before 3 FREE certification reviews.",
-      `Marketing email consent: ${consentNote}.`,
-      "Eligible lead qualified with an organization website email.",
-    ].join(" ");
+    const notes = "Warm lead captured before 3 FREE certification reviews. Minimal signup intentionally collects only company, contact name, and organization email.";
 
     const { data: existing, error: existingError } = await supabaseAdmin
       .from("crm_accounts")
@@ -114,20 +73,20 @@ export const captureFreeReviewLead = createServerFn({ method: "POST" })
 
     const accountPayload = {
       name: data.companyName,
-      account_type: (data.units > 10_000 ? "enterprise" : "company") as "enterprise" | "company",
-      units: data.units,
-      properties: data.properties,
-      hq: data.hq,
+      account_type: "company" as const,
+      units: 0,
+      properties: 0,
+      hq: "",
       stage: "trialing" as const,
       plan,
       owner: "Unassigned",
       source: LEAD_SOURCE,
       corporate_email: data.email,
-      phone: data.phone ?? null,
-      states: data.states,
-      programs: data.programs,
+      phone: null,
+      states: [],
+      programs: [],
       responded: true,
-      last_touch: "3 FREE certification reviews requested — lead captured",
+      last_touch: "3 FREE certification reviews started",
       notes,
       created_by: context.userId,
     };
@@ -153,11 +112,11 @@ export const captureFreeReviewLead = createServerFn({ method: "POST" })
 
     const contactPayload = {
       account_id: accountId,
-      name: data.ownerName,
-      title: data.ownerTitle,
+      name: data.contactName,
+      title: "",
       email: data.email,
-      phone: data.phone ?? null,
-      notes: `3 FREE review lead. Marketing email consent: ${consentNote}.`,
+      phone: null,
+      notes: "3 FREE review lead.",
       is_primary: true,
     };
 
