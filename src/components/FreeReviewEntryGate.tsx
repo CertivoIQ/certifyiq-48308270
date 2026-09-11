@@ -47,7 +47,7 @@ function clearPending() {
   if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(PENDING_KEY);
 }
 
-export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
+export function FreeReviewEntryGate({ children: _children }: { children: ReactNode }) {
   const { user, ready } = useSession();
   const isFounder = isFounderUser(user);
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
       const normalized: FreeReviewLeadInput = {
         companyName: form.companyName.trim(),
         contactName: form.contactName.trim(),
-        email: form.email.trim().toLowerCase(),
+        email: (form.email || userEmail || "").trim().toLowerCase(),
       };
 
       if (!isOrganizationEmail(normalized.email)) {
