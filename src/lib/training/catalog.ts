@@ -12,20 +12,44 @@ export type TrainingLesson = {
   status: string;
 };
 
+export type TrainingScope = "customer" | "pha";
+
 export const trainingLessons: TrainingLesson[] = lessonData;
 
-export function filterTrainingLessons(isStaff: boolean, query = "", audience = "all", category = "all", isInternal = false) {
+export function filterTrainingLessons(
+  isStaff: boolean,
+  query = "",
+  audience = "all",
+  category = "all",
+  scope: TrainingScope = "customer",
+) {
   const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  return trainingLessons.map((lesson) => isInternal ? lesson : ({ ...lesson, steps: lesson.steps.filter((step) => !/\bpha\b|nspire|HUD-50058/i.test(step.title + " " + step.instruction)), coveredRoutes: lesson.coveredRoutes.filter((route) => !/pha|nspire/i.test(route)) })).filter((lesson) => {
-    if (!isInternal && (lesson.audience === "pha" || /\bpha\b|nspire|HUD-50058/i.test(lesson.title + " " + lesson.summary + " " + lesson.href))) return false;
-    if (lesson.audience === "staff" && !isStaff) return false;
-    if (audience === "pha" && !["all", "pha"].includes(lesson.audience)) return false;
-    if (audience === "multifamily" && lesson.audience !== "all") return false;
-    if (audience === "staff" && lesson.audience !== "staff") return false;
-    if (category !== "all" && lesson.category !== category) return false;
-    const text = [lesson.title, lesson.summary, lesson.category, ...lesson.steps.flatMap((step) => [step.title, step.instruction])].join(" ").toLowerCase();
-    return terms.every((term) => text.includes(term));
-  });
+  const isPhaScope = scope === "pha";
+
+  return trainingLessons
+    .map((lesson) => isPhaScope
+      ? lesson
+      : ({
+          ...lesson,
+          steps: lesson.steps.filter((step) => !/\bpha\b|nspire|HUD-50058/i.test(step.title + " " + step.instruction)),
+          coveredRoutes: lesson.coveredRoutes.filter((route) => !/pha|nspire/i.test(route)),
+        }))
+    .filter((lesson) => {
+      if (isPhaScope) {
+        if (!["all", "pha"].includes(lesson.audience)) return false;
+      } else {
+        if (lesson.audience === "pha" || /\bpha\b|nspire|HUD-50058/i.test(lesson.title + " " + lesson.summary + " " + lesson.href)) return false;
+        if (lesson.audience === "staff" && !isStaff) return false;
+      }
+
+      if (audience === "pha" && !["all", "pha"].includes(lesson.audience)) return false;
+      if (audience === "multifamily" && lesson.audience !== "all") return false;
+      if (audience === "staff" && lesson.audience !== "staff") return false;
+      if (category !== "all" && lesson.category !== category) return false;
+
+      const text = [lesson.title, lesson.summary, lesson.category, ...lesson.steps.flatMap((step) => [step.title, step.instruction])].join(" ").toLowerCase();
+      return terms.every((term) => text.includes(term));
+    });
 }
 
 export function parseTrainingProgress(raw: string | null): string[] {
