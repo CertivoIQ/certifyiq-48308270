@@ -8,7 +8,6 @@ import { RULES, PROGRAMS, type Program } from "@/lib/demo-data";
 import {
   stateCoverage,
   coverageClaim,
-  isUsableForDetermination,
   type CoverageStatus,
 } from "@/lib/stateCoverageRegistry";
 import { Layers } from "lucide-react";
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/rules")({
       {
         name: "description",
         content:
-          "Versioned LIHTC, HOTMA, HOME and Section 8 rule packs layered core → state → county → property, with effective dates and citations.",
+          "Versioned LIHTC, HOTMA, HOME and Section 8 rule packs with effective dates and citations.",
       },
       { property: "og:title", content: "Rule Packs & Versioning — CertivoIQ" },
       {
@@ -36,7 +35,7 @@ export const Route = createFileRoute("/rules")({
 
 const LAYERS = [
   { name: "Core engine", detail: "Federal statute & HUD regulation — IRC §42, 24 CFR 5 / 92, Handbook 4350.3", count: 118 },
-  { name: "State plugin", detail: "QAP and state agency requirements (THDA, DCA, TDHCA, TCAC…)", count: 358 },
+  { name: "State plugin", detail: "QAP and state agency requirements", count: 358 },
   { name: "County plugin", detail: "MTSP income limits, utility allowance schedules, HOME rents", count: 3142 },
   { name: "PHA plugin", detail: "Payment standards, minimum rent elections, flat rents", count: 214 },
   { name: "Property plugin", detail: "Set-aside election, applicable fraction, unit designations", count: 185 },
@@ -58,31 +57,22 @@ const STATUS_TONE: Record<CoverageStatus, "seal" | "flag" | "reject"> = {
 
 function RulesPage() {
   const { user } = useSession();
+  const internal = isInternalSegmentUser(user);
   const [program, setProgram] = useState<Program | "all">("all");
-  const validatedCount = stateCoverage.filter(isUsableForDetermination).length;
   const rows = program === "all" ? RULES : RULES.filter((r) => r.program === program);
 
   return (
-    <AppShell
-      title="Rule packs"
-      subtitle={coverageClaim()}
-    >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <AppShell title="Rule packs" subtitle={coverageClaim()}>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <Stat label="Federal baseline" value="Nationwide" hint="Applies in every jurisdiction" tone="seal" />
-        <Stat
-          label="Validated state packs"
-          value={validatedCount}
-          hint={`${stateCoverage.length - validatedCount} jurisdictions require state-specific review`}
-          tone={validatedCount ? "seal" : "flag"}
-        />
         <Stat label="Jurisdictions identified" value={stateCoverage.length} hint="Controlling agency identified" />
         <Stat label="Superseded versions retained" value="All" hint="Never deleted — findings cite the version of record" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <Panel className="lg:col-span-2" title="Resolution order" description="Each layer may tighten, never loosen, the layer above it">
+        <Panel className="lg:col-span-2" title="Resolution order" description="Each applicable layer may tighten, never loosen, the layer above it">
           <ol className="space-y-2.5">
-            {LAYERS.filter((layer) => layer.name !== "PHA plugin" || isInternalSegmentUser(user)).map((l, i) => (
+            {LAYERS.filter((layer) => layer.name !== "PHA plugin" || internal).map((l, i) => (
               <li key={l.name} className="flex items-start gap-3 rounded-md border border-border bg-muted/30 p-3.5" style={{ marginLeft: `${i * 12}px` }}>
                 <Layers className="mt-0.5 size-4 shrink-0 text-slate" />
                 <div className="min-w-0 flex-1">
@@ -110,47 +100,40 @@ function RulesPage() {
         </Panel>
       </div>
 
-      <Panel className="mt-4" title="State rule packs" bodyClassName="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-border text-left">
-                {["State", "Controlling agency", "Validated rules", "Effective", "Status"].map((h) => (
-                  <th key={h} className="cite px-5 py-2.5 text-[10.5px] uppercase tracking-[0.14em] font-normal">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {stateCoverage.map((pack) => (
-                <tr key={pack.code} className="hover:bg-muted/40">
-                  <td className="px-5 py-3">
-                    <span className="font-mono text-[12.5px] font-semibold">{pack.code}</span>{" "}
-                    <span className="text-muted-foreground">{pack.state}</span>
-                  </td>
-                  <td className="px-5 py-3 text-[12.5px]">
-                    <a className="underline" href={pack.agencyUrl} target="_blank" rel="noreferrer">
-                      {pack.primaryAgency}
-                    </a>
-                  </td>
-                  <td className="px-5 py-3 font-mono tabular-nums">{pack.validatedRuleCount}</td>
-                  <td className="px-5 py-3 font-mono text-[12px]">{pack.effectiveDate ?? "—"}</td>
-                  <td className="px-5 py-3">
-                    <Pill tone={STATUS_TONE[pack.status]}>{STATUS_LABEL[pack.status]}</Pill>
-                  </td>
+      {internal && (
+        <Panel className="mt-4" title="State rule packs" bodyClassName="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  {["State", "Controlling agency", "Validated rules", "Effective", "Status"].map((h) => (
+                    <th key={h} className="cite px-5 py-2.5 text-[10.5px] uppercase tracking-[0.14em] font-normal">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="border-t border-border px-5 py-3 text-[12.5px] text-muted-foreground">
-          A state pack becomes usable for a determination only after its controlling sources,
-          effective dates, rules, fixtures, expected results and independent expert approval are
-          stored. Until then CertivoIQ applies the federal baseline only and returns
-          &ldquo;Unable to determine&rdquo; whenever the missing state rule could change the outcome.
-        </p>
-      </Panel>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {stateCoverage.map((pack) => (
+                  <tr key={pack.code} className="hover:bg-muted/40">
+                    <td className="px-5 py-3">
+                      <span className="font-mono text-[12.5px] font-semibold">{pack.code}</span>{" "}
+                      <span className="text-muted-foreground">{pack.state}</span>
+                    </td>
+                    <td className="px-5 py-3 text-[12.5px]">
+                      <a className="underline" href={pack.agencyUrl} target="_blank" rel="noreferrer">{pack.primaryAgency}</a>
+                    </td>
+                    <td className="px-5 py-3 font-mono tabular-nums">{pack.validatedRuleCount}</td>
+                    <td className="px-5 py-3 font-mono text-[12px]">{pack.effectiveDate ?? "—"}</td>
+                    <td className="px-5 py-3"><Pill tone={STATUS_TONE[pack.status]}>{STATUS_LABEL[pack.status]}</Pill></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="border-t border-border px-5 py-3 text-[12.5px] text-muted-foreground">
+            State-pack validation detail is an internal governance view. Customer-facing determinations remain fail-closed whenever missing jurisdiction-specific authority could change an outcome.
+          </p>
+        </Panel>
+      )}
 
       <div className="mt-5 flex flex-wrap gap-1.5">
         {(["all", ...PROGRAMS.map((p) => p.id)] as (Program | "all")[]).map((p) => (
@@ -181,27 +164,12 @@ function RulesPage() {
                 <p className="mt-1 max-w-3xl text-[13px] text-muted-foreground">{r.summary}</p>
               </div>
               <dl className="grid shrink-0 gap-1.5 text-[12px]">
-                <div className="flex gap-2">
-                  <dt className="cite w-[76px]">Authority</dt>
-                  <dd className="font-mono">{r.authority}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="cite w-[76px]">Citation</dt>
-                  <dd className="font-mono">{r.citation}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="cite w-[76px]">Effective</dt>
-                  <dd className="font-mono">{r.effective}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="cite w-[76px]">Expires</dt>
-                  <dd className="font-mono">{r.expires ?? "—"}</dd>
-                </div>
+                <div className="flex gap-2"><dt className="cite w-[76px]">Authority</dt><dd className="font-mono">{r.authority}</dd></div>
+                <div className="flex gap-2"><dt className="cite w-[76px]">Citation</dt><dd className="font-mono">{r.citation}</dd></div>
+                <div className="flex gap-2"><dt className="cite w-[76px]">Effective</dt><dd className="font-mono">{r.effective}</dd></div>
+                <div className="flex gap-2"><dt className="cite w-[76px]">Expires</dt><dd className="font-mono">{r.expires ?? "—"}</dd></div>
                 {r.supersededBy && (
-                  <div className="flex gap-2">
-                    <dt className="cite w-[76px]">Supersedes</dt>
-                    <dd className="font-mono">{r.supersededBy}</dd>
-                  </div>
+                  <div className="flex gap-2"><dt className="cite w-[76px]">Supersedes</dt><dd className="font-mono">{r.supersededBy}</dd></div>
                 )}
               </dl>
             </div>

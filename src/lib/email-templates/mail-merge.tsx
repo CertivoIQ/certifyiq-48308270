@@ -64,7 +64,7 @@ function MailMergeEmail({
               ))}
             </Text>
           ))}
-          {ctaUrl && <CtaButton href={ctaUrl}>{ctaLabel || 'See how it works'}</CtaButton>}
+          {ctaUrl && <CtaButton href={ctaUrl}>{ctaLabel || 'Start 3 FREE reviews'}</CtaButton>}
           <Hr style={hr} />
           {agentName && (
             <Text style={small}>
@@ -88,9 +88,9 @@ export const template: TemplateEntry = {
   displayName: 'CRM mail merge',
   previewData: {
     subject: 'HOTMA compliance deadlines are moving — here is your readiness check',
-    bodyText: 'Hi there,\n\nCertivoIQ reviews tenant income certifications against LIHTC, Section 8, HOME and HOTMA rules before an auditor ever sees them.',
-    ctaLabel: 'See a 2-minute demo',
-    ctaUrl: 'https://certivoiq.com/welcome',
+    bodyText: 'Hi there,\n\nCertivoIQ reviews tenant income certifications against LIHTC, Section 8, HOME and HOTMA rules before an auditor ever sees them. Start with 3 FREE certification reviews using your own files.',
+    ctaLabel: 'Start 3 FREE reviews',
+    ctaUrl: 'https://certivoiq.com/trial',
     agentName: 'CertivoIQ Sales',
     agentEmail: 'sales@certivoiq.com',
   },

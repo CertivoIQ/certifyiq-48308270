@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Building2, Mail, ShieldCheck, Users } from "lucide-react";
+import { Mail, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { captureFreeReviewLead, getFreeReviewLead, type FreeReviewLeadInput } from "@/lib/free-review-lead.functions";
@@ -11,18 +11,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Panel } from "@/components/ui-kit";
-
 import { SignupAgreement } from "@/components/signup-agreement";
 import { BETA_TERMS_VERSION } from "@/lib/beta-terms";
 import { useSession } from "@/hooks/use-session";
 import { isFounderUser } from "@/lib/founder-access";
 
 const PENDING_KEY = "certivoiq:pending-free-review-lead";
-const splitList = (value: string) => value.split(",").map((item) => item.trim()).filter(Boolean);
 
-type FormState = FreeReviewLeadInput & { password: string; fullName: string };
+type FormState = FreeReviewLeadInput & { password: string };
 
-const emptyForm: FormState = { companyName: "", ownerName: "", ownerTitle: "", email: "", phone: "", units: 0, properties: 0, hq: "", states: [], programs: [], marketingConsent: false, password: "", fullName: "" };
+const emptyForm: FormState = {
+  companyName: "",
+  contactName: "",
+  email: "",
+  password: "",
+};
 
 function readPending(): FormState | null {
   if (typeof sessionStorage === "undefined") return null;
@@ -33,10 +36,18 @@ function readPending(): FormState | null {
     return null;
   }
 }
-function savePending(form: FormState) { if (typeof sessionStorage !== "undefined") sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...form, password: "" })); }
-function clearPending() { if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(PENDING_KEY); }
 
-export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
+function savePending(form: FormState) {
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...form, password: "" }));
+  }
+}
+
+function clearPending() {
+  if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(PENDING_KEY);
+}
+
+export function FreeReviewEntryGate({ children: _children }: { children: ReactNode }) {
   const { user, ready } = useSession();
   const isFounder = isFounderUser(user);
   const navigate = useNavigate();
@@ -50,7 +61,11 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
   const [verificationRequired, setVerificationRequired] = useState(false);
   const [message, setMessage] = useState("");
 
-  const lead = useQuery({ queryKey: ["free-review-lead"], queryFn: () => getLead(), enabled: ready && Boolean(userEmail) && !isFounder });
+  const lead = useQuery({
+    queryKey: ["free-review-lead"],
+    queryFn: () => getLead(),
+    enabled: ready && Boolean(userEmail) && !isFounder,
+  });
   const hasUser = Boolean(userEmail);
   const pendingLead = useMemo(() => readPending(), []);
 
@@ -63,7 +78,7 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isFounder || !userEmail || lead.isLoading) return;
     if (lead.data && !pendingLead) {
-      navigate({ to: "/compliance-intelligence", replace: true });
+      navigate({ to: "/upload-certification", replace: true });
       return;
     }
     if (!lead.data && pendingLead) {
@@ -72,15 +87,16 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
         .then(() => {
           clearPending();
           void qc.invalidateQueries({ queryKey: ["free-review-lead"] });
-          toast.success("You're cleared for 3 FREE certification reviews");
-          navigate({ to: "/compliance-intelligence", replace: true });
+          toast.success("Your 3 FREE certification reviews are ready");
+          navigate({ to: "/upload-certification", replace: true });
         })
         .catch((error) => toast.error(error instanceof Error ? error.message : "Could not save your company information"))
         .finally(() => setBusy(false));
     }
   }, [captureLead, isFounder, lead.data, lead.isLoading, navigate, pendingLead, qc, userEmail]);
 
-  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((current) => ({ ...current, [key]: value }));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -88,9 +104,9 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
     setMessage("");
     try {
       const normalized: FreeReviewLeadInput = {
-        companyName: form.companyName.trim(), ownerName: form.ownerName.trim(), ownerTitle: form.ownerTitle.trim(), email: form.email.trim().toLowerCase(),
-        phone: form.phone?.trim(), units: Number(form.units), properties: Number(form.properties), hq: form.hq.trim(),
-        states: Array.isArray(form.states) ? form.states : splitList(String(form.states)), programs: Array.isArray(form.programs) ? form.programs : splitList(String(form.programs)), marketingConsent: Boolean(form.marketingConsent),
+        companyName: form.companyName.trim(),
+        contactName: form.contactName.trim(),
+        email: (form.email || userEmail || "").trim().toLowerCase(),
       };
 
       if (!isOrganizationEmail(normalized.email)) {
@@ -99,14 +115,24 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
 
       if (!hasUser) {
         if (!acceptedTerms) throw new Error("Please accept the Terms & Agreements, including the Beta Testing notice.");
-        if (!form.fullName.trim()) throw new Error("Full name is required to create your CertivoIQ account.");
         if (form.password.length < 8) throw new Error("Password must be at least 8 characters.");
         savePending({ ...form, ...normalized });
-        const { data, error } = await supabase.auth.signUp({ email: normalized.email, password: form.password, options: { emailRedirectTo: `${window.location.origin}/trial`, data: { full_name: form.fullName.trim(), terms_version: BETA_TERMS_VERSION, terms_accepted_at: new Date().toISOString() } } });
+        const { data, error } = await supabase.auth.signUp({
+          email: normalized.email,
+          password: form.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/trial`,
+            data: {
+              full_name: normalized.contactName,
+              terms_version: BETA_TERMS_VERSION,
+              terms_accepted_at: new Date().toISOString(),
+            },
+          },
+        });
         if (error) throw error;
         if (!data.session) {
           setVerificationRequired(true);
-          setMessage(`We sent a verification link to ${normalized.email}. After you verify, you'll return here and continue to the certification upload page.`);
+          setMessage(`We sent a verification link to ${normalized.email}. After you verify, you'll continue directly to the certification upload page.`);
           return;
         }
         setUserEmail(data.user?.email ?? normalized.email);
@@ -115,8 +141,8 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
       await captureLead({ data: normalized });
       clearPending();
       await qc.invalidateQueries({ queryKey: ["free-review-lead"] });
-      toast.success("Lead captured — your 3 FREE certification reviews are ready");
-      navigate({ to: "/compliance-intelligence", replace: true });
+      toast.success("Your 3 FREE certification reviews are ready");
+      navigate({ to: "/upload-certification", replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not start your FREE certification reviews");
     } finally {
@@ -124,35 +150,78 @@ export function FreeReviewEntryGate({ children }: { children: ReactNode }) {
     }
   }
 
-  if (!ready || isFounder) return <Panel title="Preparing your 3 FREE certification reviews" description="Opening certification upload…"><div className="h-20 animate-pulse rounded-lg bg-muted" /></Panel>;
-
-  if (verificationRequired) {
-    return <Panel title="Check your email to continue" description="One quick verification step protects your workspace and keeps your FREE review history tied to your account." bodyClassName="p-5"><div className="rounded-lg border border-primary/20 bg-primary/5 p-4"><div className="flex items-start gap-3"><Mail className="mt-0.5 size-5 shrink-0 text-primary" /><p className="text-sm leading-6">{message}</p></div></div><Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>I've verified — continue</Button></Panel>;
+  if (!ready || isFounder) {
+    return (
+      <Panel title="Preparing your 3 FREE certification reviews" description="Opening certification upload…">
+        <div className="h-20 animate-pulse rounded-lg bg-muted" />
+      </Panel>
+    );
   }
 
-  if (busy && hasUser && lead.isLoading) return <Panel title="Preparing your 3 FREE certification reviews" description="Checking your review access…"><div className="h-20 animate-pulse rounded-lg bg-muted" /></Panel>;
+  if (verificationRequired) {
+    return (
+      <Panel title="Check your email to continue" description="One quick verification step protects your workspace and keeps your FREE review history tied to your account." bodyClassName="p-5">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div className="flex items-start gap-3">
+            <Mail className="mt-0.5 size-5 shrink-0 text-primary" />
+            <p className="text-sm leading-6">{message}</p>
+          </div>
+        </div>
+        <Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>I've verified — continue</Button>
+      </Panel>
+    );
+  }
+
+  if (busy && hasUser && lead.isLoading) {
+    return (
+      <Panel title="Preparing your 3 FREE certification reviews" description="Checking your review access…">
+        <div className="h-20 animate-pulse rounded-lg bg-muted" />
+      </Panel>
+    );
+  }
 
   return (
-    <Panel title="Start with your company details" description="Create your CertivoIQ account, tell us about your portfolio, and we'll prepare your 3 FREE certification reviews. Your certification upload comes immediately after this step." bodyClassName="p-5">
-      <div className="mb-5 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" /><div><p className="font-medium">Organization website email required</p><p className="mt-1 text-sm text-muted-foreground">Personal email providers are not eligible for the 3 FREE certification reviews.</p></div></div>
+    <Panel
+      title="Start your 3 FREE certification reviews"
+      description="Enter only your company, contact name, and organization email. After account verification, you'll go directly to certification upload."
+      bodyClassName="p-5"
+    >
+      <div className="mb-5 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+        <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
+        <div>
+          <p className="font-medium">Organization website email required</p>
+          <p className="mt-1 text-sm text-muted-foreground">Personal email providers are not eligible for the 3 FREE certification reviews.</p>
+        </div>
+      </div>
+
       <form onSubmit={submit} className="grid gap-4 lg:grid-cols-2">
-        {!hasUser && <><div className="lg:col-span-2"><Label>Full name *</Label><Input required value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="Your full name" /></div><div><Label>Organization website email *</Label><Input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="name@company.com" /></div><div><Label>Password *</Label><Input required minLength={8} type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="At least 8 characters" /></div></>}
-        <div><Label>Company name *</Label><Input required value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Your company" /></div>
-        <div><Label>Owner / decision-maker name *</Label><Input required value={form.ownerName} onChange={(e) => update("ownerName", e.target.value)} placeholder="Full name" /></div>
-        <div><Label>Owner / decision-maker title *</Label><Input required value={form.ownerTitle} onChange={(e) => update("ownerTitle", e.target.value)} placeholder="Owner, CEO, VP Property Management…" /></div>
-        {hasUser && <div><Label>Organization website email *</Label><Input required type="email" value={form.email || userEmail || ""} onChange={(e) => update("email", e.target.value)} placeholder="name@company.com" /></div>}
-        <div><Label>Phone (optional)</Label><Input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="(555) 555-5555" /></div>
-        <div><Label>Total portfolio units *</Label><Input required type="number" min="1" value={form.units || ""} onChange={(e) => update("units", Number(e.target.value))} placeholder="12,000" /></div>
-        <div><Label>Total portfolio properties *</Label><Input required type="number" min="1" value={form.properties || ""} onChange={(e) => update("properties", Number(e.target.value))} placeholder="120" /></div>
-        <div><Label>Headquarters / primary market *</Label><Input required value={form.hq} onChange={(e) => update("hq", e.target.value)} placeholder="Atlanta, GA" /></div>
-        <div><Label>States / markets served *</Label><Input required value={form.states.join(", ")} onChange={(e) => update("states", splitList(e.target.value))} placeholder="GA, FL, TN" /></div>
-        <div className="lg:col-span-2"><Label>Housing programs in your portfolio *</Label><Input required value={form.programs.join(", ")} onChange={(e) => update("programs", splitList(e.target.value))} placeholder="LIHTC, Section 8, HOME" /></div>
-        <div className="lg:col-span-2 rounded-lg border bg-muted/30 p-4"><label className="flex items-start gap-3 text-sm leading-5"><input type="checkbox" checked={form.marketingConsent} onChange={(e) => update("marketingConsent", e.target.checked)} className="mt-1 size-4 rounded border" /><span>Optional: I agree to receive CertivoIQ marketing emails about compliance updates and plan recommendations. Operational emails needed to deliver my FREE reviews are sent separately. I can unsubscribe from marketing emails at any time.</span></label></div>
-        <div className="lg:col-span-2 grid gap-3 sm:grid-cols-3 rounded-lg border border-border p-4 text-sm"><div className="flex gap-2"><Building2 className="size-4 text-primary" /><span>CRM company record</span></div><div className="flex gap-2"><Users className="size-4 text-primary" /><span>Decision-maker contact</span></div><div className="flex gap-2"><Mail className="size-4 text-primary" /><span>Personalized email fields</span></div></div>
-        {!hasUser && <div className="lg:col-span-2"><SignupAgreement checked={acceptedTerms} onChange={setAcceptedTerms} /></div>}
-        <Button className="lg:col-span-2 w-full sm:w-auto" size="lg" type="submit" disabled={busy || (!hasUser && !acceptedTerms)}>{busy ? "Preparing your FREE reviews…" : hasUser ? "Continue to my 3 FREE certification reviews" : "Create my account & start my 3 FREE certification reviews"}</Button>
+        <div>
+          <Label>Company *</Label>
+          <Input required value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Your company" />
+        </div>
+        <div>
+          <Label>Contact Name *</Label>
+          <Input required value={form.contactName} onChange={(e) => update("contactName", e.target.value)} placeholder="Full name" />
+        </div>
+        <div>
+          <Label>Email *</Label>
+          <Input required type="email" value={form.email || userEmail || ""} onChange={(e) => update("email", e.target.value)} placeholder="name@company.com" />
+        </div>
+        {!hasUser && (
+          <div>
+            <Label>Password *</Label>
+            <Input required minLength={8} type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="At least 8 characters" />
+          </div>
+        )}
+        {!hasUser && (
+          <div className="lg:col-span-2">
+            <SignupAgreement checked={acceptedTerms} onChange={setAcceptedTerms} />
+          </div>
+        )}
+        <Button className="lg:col-span-2 w-full sm:w-auto" size="lg" type="submit" disabled={busy || (!hasUser && !acceptedTerms)}>
+          {busy ? "Preparing your FREE reviews…" : "Continue to upload"}
+        </Button>
       </form>
     </Panel>
   );
 }
-
