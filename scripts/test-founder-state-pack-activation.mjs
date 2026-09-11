@@ -35,7 +35,7 @@ test("the exception does not bypass active-admin or source-readiness checks", ()
   assert.match(migration, /Activation notes must contain 10 to 4000 characters/);
 });
 
-test("other administrators still require an independent activator", () => {
+test("legacy migration retained its original dual-control guard", () => {
   assert.match(
     migration,
     /A different Administrator must activate this state pack/,
@@ -44,7 +44,7 @@ test("other administrators still require an independent activator", () => {
 });
 
 test("verified-source UI places activation directly under review notes", () => {
-  assert.match(route, /The authorized founder account can activate the completed pack/);
+  assert.match(route, /The Sole Authorized State Rule Approver can activate the completed pack/);
   assert.match(
     route,
     /Review notes[\s\S]*Activate \$\{activation\.state_code\} state pack/,
@@ -52,6 +52,6 @@ test("verified-source UI places activation directly under review notes", () => {
   assert.match(route, /disabled=\{!activation\.viewer_can_activate/);
   assert.doesNotMatch(
     route,
-    /This source no longer requires verification[\s\S]{0,160}must be completed by a different Administrator/,
+    /This source no longer requires validation[\s\S]{0,160}must be completed by a different Administrator/,
   );
 });

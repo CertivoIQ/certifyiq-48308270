@@ -322,9 +322,9 @@ test("PHA navigation exposes the verified NSPIRE dashboard menu", () => {
 test("state-rule validation distinguishes completed source activation from compliance release", () => {
   const route = read("src/routes/_authenticated/state-rule-validation.tsx");
 
-  assert.match(route, /Second validation/);
+  assert.match(route, /Agent activation/);
   assert.match(route, /Compliance active/);
-  assert.match(route, /Independent state-pack activation is already complete/);
+  assert.match(route, /Authorized Agent state-pack activation is already complete/);
   assert.match(route, /shared federal baseline has no separate activation button/i);
   assert.match(route, /not activated as a standalone pack/i);
   assert.match(route, /deterministic release gate/i);
