@@ -11,6 +11,8 @@ const githubKeys = createRemoteJWKSet(
   new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
 );
 
+const CERTIFICATION_OCR_SIDECAR_SUFFIX = ".certivoiq-ocr.json";
+
 async function authorizedGitHubWorkflow(request: Request): Promise<boolean> {
   const authorization = request.headers.get("authorization") ?? "";
   if (!authorization.startsWith("Bearer ")) return false;
@@ -24,11 +26,11 @@ async function authorizedGitHubWorkflow(request: Request): Promise<boolean> {
       algorithms: ["RS256"],
     });
     return (
-      payload.repository === "Watkin5/certifyiq-48308270" &&
+      payload.repository === "CertivoIQ/certifyiq-48308270" &&
       payload.repository_id === "1326099740" &&
       payload.ref === "refs/heads/main" &&
       payload.workflow_ref ===
-        "Watkin5/certifyiq-48308270/.github/workflows/operations-worker.yml@refs/heads/main" &&
+        "CertivoIQ/certifyiq-48308270/.github/workflows/operations-worker.yml@refs/heads/main" &&
       (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch") &&
       payload.runner_environment === "github-hosted"
     );
@@ -85,8 +87,14 @@ async function purgeExpiredCustomerFiles(db: ReturnType<typeof createClient>) {
       const objectMap = new Map<string, StorageObject>();
       for (const row of imports ?? []) {
         if (row.storage_path) {
-          const item = { bucket: "certification-imports", path: String(row.storage_path) };
+          const path = String(row.storage_path);
+          const item = { bucket: "certification-imports", path };
           objectMap.set(`${item.bucket}/${item.path}`, item);
+          const sidecar = {
+            bucket: "certification-imports",
+            path: `${path}${CERTIFICATION_OCR_SIDECAR_SUFFIX}`,
+          };
+          objectMap.set(`${sidecar.bucket}/${sidecar.path}`, sidecar);
         }
       }
       for (const row of evidence ?? []) {
