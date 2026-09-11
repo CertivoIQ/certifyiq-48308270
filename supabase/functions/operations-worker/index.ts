@@ -12,6 +12,7 @@ const githubKeys = createRemoteJWKSet(
 );
 
 const CERTIFICATION_OCR_SIDECAR_SUFFIX = ".certivoiq-ocr.json";
+const STALE_CERTIFICATION_UPLOAD_HOURS = 72;
 
 async function authorizedGitHubWorkflow(request: Request): Promise<boolean> {
   const authorization = request.headers.get("authorization") ?? "";
@@ -153,6 +154,64 @@ async function purgeExpiredCustomerFiles(db: ReturnType<typeof createClient>) {
   return { targets: targets?.length ?? 0, completed, objectsDeleted };
 }
 
+async function purgeStaleCertificationUploads(db: ReturnType<typeof createClient>) {
+  let candidateObjectCount = 0;
+  let deletedObjectCount = 0;
+  let markedJobCount = 0;
+
+  try {
+    const { data: candidates, error: candidateError } = await db.rpc(
+      "operations_stale_certification_objects",
+      { _older_than_hours: STALE_CERTIFICATION_UPLOAD_HOURS },
+    );
+    if (candidateError) throw new Error(`Stale upload candidate query failed: ${candidateError.message}`);
+
+    const paths = Array.from(
+      new Set(
+        (candidates ?? [])
+          .map((row: { storage_path?: unknown }) => String(row.storage_path ?? ""))
+          .filter(Boolean),
+      ),
+    );
+    candidateObjectCount = paths.length;
+
+    for (const batch of chunks(paths, 100)) {
+      const { error } = await db.storage.from("certification-imports").remove(batch);
+      if (error) throw new Error(`Stale upload deletion failed: ${error.message}`);
+      deletedObjectCount += batch.length;
+    }
+
+    const { data: marked, error: markError } = await db.rpc(
+      "operations_mark_stale_certification_jobs",
+      { _older_than_hours: STALE_CERTIFICATION_UPLOAD_HOURS },
+    );
+    if (markError) throw new Error(`Stale import job cleanup failed: ${markError.message}`);
+    markedJobCount = Number(marked ?? 0);
+
+    const { error: auditError } = await db.from("stale_certification_upload_purge_events").insert({
+      cutoff_hours: STALE_CERTIFICATION_UPLOAD_HOURS,
+      candidate_object_count: candidateObjectCount,
+      deleted_object_count: deletedObjectCount,
+      marked_job_count: markedJobCount,
+      status: "completed",
+    });
+    if (auditError) throw new Error(`Stale upload audit insert failed: ${auditError.message}`);
+
+    return { candidateObjectCount, deletedObjectCount, markedJobCount };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await db.from("stale_certification_upload_purge_events").insert({
+      cutoff_hours: STALE_CERTIFICATION_UPLOAD_HOURS,
+      candidate_object_count: candidateObjectCount,
+      deleted_object_count: deletedObjectCount,
+      marked_job_count: markedJobCount,
+      status: "failed",
+      error_detail: message.slice(0, 2000),
+    });
+    throw error;
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
@@ -185,18 +244,33 @@ Deno.serve(async (request) => {
     );
   }
 
+  let staleUploads;
+  try {
+    staleUploads = await purgeStaleCertificationUploads(db);
+  } catch (error) {
+    return json(
+      {
+        ok: false,
+        stage: "stale_certification_uploads",
+        retention,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      500,
+    );
+  }
+
   const { data: reaped, error: reapError } = await db.rpc("operations_reap_stale_leases");
-  if (reapError) return json({ ok: false, stage: "reap", retention, error: reapError.message }, 500);
+  if (reapError) return json({ ok: false, stage: "reap", retention, staleUploads, error: reapError.message }, 500);
 
   const { data: claimedData, error: claimError } = await db.rpc("operations_claim_job", {
     _worker: worker,
     _lease_seconds: 120,
   });
-  if (claimError) return json({ ok: false, stage: "claim", retention, error: claimError.message }, 500);
+  if (claimError) return json({ ok: false, stage: "claim", retention, staleUploads, error: claimError.message }, 500);
 
   const job = Array.isArray(claimedData) ? claimedData[0] : claimedData;
   if (!job?.id || !job?.job_type) {
-    return json({ ok: true, retention, reaped: reaped ?? 0, claimed: false });
+    return json({ ok: true, retention, staleUploads, reaped: reaped ?? 0, claimed: false });
   }
 
   const jobId = String(job.id);
@@ -209,15 +283,15 @@ Deno.serve(async (request) => {
       _error: { code: "HANDLER_NOT_ACTIVE", message: `No approved handler for ${jobType}` },
     });
     if (error) {
-      return json({ ok: false, stage: "fail", retention, claimed: true, jobId, error: error.message }, 500);
+      return json({ ok: false, stage: "fail", retention, staleUploads, claimed: true, jobId, error: error.message }, 500);
     }
-    return json({ ok: true, retention, reaped: reaped ?? 0, claimed: true, jobId, status: "retry_or_quarantine" });
+    return json({ ok: true, retention, staleUploads, reaped: reaped ?? 0, claimed: true, jobId, status: "retry_or_quarantine" });
   }
 
   const { data: completed, error: completeError } = await db.rpc("operations_complete_job", {
     _job_id: jobId,
     _worker: worker,
-    _result: { checkedAt: new Date().toISOString(), status: "healthy", retention },
+    _result: { checkedAt: new Date().toISOString(), status: "healthy", retention, staleUploads },
   });
   if (completeError) {
     await db.rpc("operations_fail_job", {
@@ -225,12 +299,13 @@ Deno.serve(async (request) => {
       _worker: worker,
       _error: { code: "WORKER_FAILURE", message: completeError.message },
     });
-    return json({ ok: false, stage: "complete", retention, claimed: true, jobId }, 500);
+    return json({ ok: false, stage: "complete", retention, staleUploads, claimed: true, jobId }, 500);
   }
 
   return json({
     ok: true,
     retention,
+    staleUploads,
     reaped: reaped ?? 0,
     claimed: true,
     jobId,
