@@ -36,8 +36,9 @@ test("keeps emails out of operational validation evidence", () => {
   assert.doesNotMatch(workspace, /reviewer_email|approver_email|email signature/i);
 });
 
-test("tells operators that completed packs activate automatically", () => {
-  assert.match(workspace, /Complete packs activate automatically/);
+test("tells operators that completed packs require authorized activation", () => {
+  assert.match(workspace, /Source validation and Authorized Agent activation are required/);
+  assert.match(workspace, /Sole Authorized State Rule Approver/);
   assert.match(workspace, /Validation date:/);
-  assert.match(workspace, /Pack activated automatically/);
+  assert.match(workspace, /Pack is active/);
 });
