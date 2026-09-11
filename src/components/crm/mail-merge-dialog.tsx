@@ -25,9 +25,9 @@ const DEFAULT_BODY = `Hi {{first_name}},
 
 {{company}} manages {{units}} affordable units across {{states}} — every one of those files has to survive a {{programs}} audit.
 
-CertivoIQ reviews tenant income certifications and TICs against program rules before an auditor ever sees them, gives a pass/fail score with correction steps, and keeps a human sign-off on record.
+CertivoIQ reviews tenant income certifications and TICs against supported program rules before an auditor ever sees them, identifies findings and correction steps, and preserves the review record.
 
-Worth a 15-minute look at how it would score your last 10 certifications?`;
+You can start with 3 FREE certification reviews and see the results on your own files.`;
 
 export function MailMergeDialog({
   open,
@@ -47,8 +47,8 @@ export function MailMergeDialog({
   const [d, setD] = useState({
     subject: "Your {{programs}} certifications, audit-ready before the state asks",
     body: DEFAULT_BODY,
-    ctaLabel: "See a 2-minute demo",
-    ctaUrl: "https://certivoiq.com/welcome",
+    ctaLabel: "Start 3 FREE reviews",
+    ctaUrl: "https://certivoiq.com/trial",
     campaignId: "",
   });
 
