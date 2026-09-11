@@ -69,11 +69,11 @@ test("each summary opens its matching records without any mutation", () => {
   assert.deepEqual(app.mutations, []);
 });
 
-test("second-validation count and list exclude completed and unready packs", () => {
+test("Agent-activation count and list exclude completed and unready packs", () => {
   const app = setup();
-  clickTile(app, "second validation");
+  clickTile(app, "agent activation");
   const tree = app.render();
-  assert.equal(find(tree, (n) => n.type === "Stat" && n.props.label === "Second validation").props.value, "1/2");
+  assert.equal(find(tree, (n) => n.type === "Stat" && n.props.label === "Agent activation").props.value, "1/2");
   assert.equal(nodes(tree).filter((n) => n.type === "li").length, 1);
   assert.equal(sourceIds(app).length, 0);
   assert.equal(find(tree, (n) => n.type === "Button" && nodes(n).some((child) => child.props?.children === "Activate state pack")), undefined);
