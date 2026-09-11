@@ -2,7 +2,9 @@ name: Operations Worker Dispatch
 
 on:
   schedule:
-    - cron: "7 * * * *"
+    # Keep the hourly dispatch away from the start-of-hour GitHub Actions load window.
+    # Changing the cron also reactivates this workflow if GitHub deactivated its schedule.
+    - cron: "23 * * * *"
   workflow_dispatch:
 
 permissions:
