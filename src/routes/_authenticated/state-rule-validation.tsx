@@ -332,11 +332,11 @@ function SourceReviewCard({
           {source.agent_verification_status === "verified" ? (
             <div className="mt-4 rounded-md border border-seal/30 bg-seal-soft p-4 text-sm">
               <p className="flex items-center gap-2 font-medium text-seal">
-                <CheckCircle2 className="size-4" /> First verification complete
+                <CheckCircle2 className="size-4" /> Source validation complete
               </p>
               <p className="mt-1 text-muted-foreground">
-                This source no longer requires verification. State-pack activation is a separate action.
-                The authorized founder account can activate the completed pack.
+                This source no longer requires validation. State-pack activation is a separate action.
+                The Sole Authorized State Rule Approver can activate the completed pack.
               </p>
             </div>
           ) : (
@@ -436,7 +436,7 @@ function StateRuleValidationWorkspace() {
     onSuccess: (result, variables) => {
       toast.success(`${variables.source.state_code} source ${labelFor(result.source_status)}`, {
         description: result.compliance_activation_allowed
-          ? `Pack activated automatically. Validation date: ${result.validated_on ?? "recorded"}.`
+          ? `Pack is active. Validation date: ${result.validated_on ?? "recorded"}.`
           : `Pack status: ${labelFor(result.pack_status)}. Activation remains closed until the full pack passes.`,
       });
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
@@ -465,7 +465,7 @@ function StateRuleValidationWorkspace() {
     },
     onSuccess: (result) => {
       toast.success(`${result.state_code} state pack activated`, {
-        description: `Independent activation recorded for ${result.validated_on}.`,
+        description: `Authorized Agent activation recorded for ${result.validated_on}.`,
       });
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
       void queryClient.invalidateQueries({ queryKey: ["governance-tasks"] });
@@ -502,7 +502,7 @@ function StateRuleValidationWorkspace() {
     },
     onSuccess: (result) => {
       toast.success(`${result.state_code} source record created`, {
-        description: "The exact-file source is queued for independent validation and remains fail-closed.",
+        description: "The exact-file source is queued for Agent validation and remains fail-closed.",
       });
       setNewSource(EMPTY_NEW_SOURCE);
       setShowNewSource(false);
@@ -546,7 +546,7 @@ function StateRuleValidationWorkspace() {
   const visiblePacks = statePacks.filter((pack) => packView !== "active" || pack.compliance_activation_allowed);
   const summaryActions = [
     { label: "State packs", value: statePacks.length, hint: "All state candidates", tone: "neutral" as Tone, selected: packView === "all", open: () => openPacks("all") },
-    { label: "Second validation", value: `${pendingActivations.length}/${statePacks.length}`, hint: "Awaiting activation", tone: "flag" as Tone, selected: packView === "pending", open: () => openPacks("pending") },
+    { label: "Agent activation", value: `${pendingActivations.length}/${statePacks.length}`, hint: "Awaiting your approval", tone: "flag" as Tone, selected: packView === "pending", open: () => openPacks("pending") },
     { label: "Compliance active", value: activatedPacks, hint: "Validated releases", tone: "seal" as Tone, selected: packView === "active", open: () => openPacks("active") },
     { label: "Remaining", value: active, hint: "Includes unresolved blockers", tone: "flag" as Tone, selected: packView === null && status === "active" && stateCode === "ALL" && !search, open: () => openSources("active") },
     { label: "Verified sources", value: verified, hint: "Source review only", tone: "seal" as Tone, selected: packView === null && status === "verified" && stateCode === "ALL" && !search, open: () => openSources("verified") },
@@ -620,7 +620,7 @@ function StateRuleValidationWorkspace() {
 
           <div className="mt-4 rounded-lg border border-flag/30 bg-flag-soft p-4 text-sm">
             <p className="flex items-start gap-2 font-medium">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Two independent validation stages are required.
+              <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Source validation and Authorized Agent activation are required.
             </p>
             <p className="mt-1 text-muted-foreground">
               First, every required state source and the shared federal baseline must be verified. Then a different
@@ -637,7 +637,7 @@ function StateRuleValidationWorkspace() {
                 </p>
                 <p className="mt-1 text-muted-foreground">
                   The shared federal baseline is inherited by all 50 state packs and is not activated as a standalone pack.
-                  Use each state pack's second-validation record, then complete the separate deterministic release gate.
+                  Use each state pack's Authorized Agent activation record, then complete the separate deterministic release gate.
                 </p>
               </div>
             ) : null}
@@ -666,8 +666,8 @@ function StateRuleValidationWorkspace() {
           {packView !== null && query.error ? <p role="alert" className="mt-4 text-sm text-reject">The validation queue could not be refreshed. Displayed records may be out of date.</p> : null}
           {(packView === null && showPendingOverview) || packView === "pending" ? <Panel
             className="mt-4"
-            title="State packs awaiting independent activation"
-            description="These packs completed first verification and require a different Administrator to activate them."
+            title="State packs awaiting Agent activation"
+            description="These packs passed the required source gates and are ready for the Sole Authorized State Rule Approver."
             bodyClassName="p-0"
           >
             {pendingActivations.length ? (
@@ -677,13 +677,13 @@ function StateRuleValidationWorkspace() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-semibold">{pack.state_code}</span>
-                        <Pill tone="flag">Awaiting second validation</Pill>
+                        <Pill tone="flag">Awaiting Agent activation</Pill>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {pack.first_reviewer_count} first-stage reviewer{pack.first_reviewer_count === 1 ? "" : "s"} recorded.
                         {pack.viewer_is_first_reviewer
                           ? " A different Administrator must activate this pack."
-                          : " You are eligible to complete the independent activation."}
+                          : " You are authorized to complete activation."}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -709,15 +709,15 @@ function StateRuleValidationWorkspace() {
               <div className="px-5 py-8 text-center text-sm text-muted-foreground">
                 {allSourceActivationsRecorded ? (
                   <>
-                    <p className="font-medium text-foreground">Independent state-pack activation is already complete.</p>
+                    <p className="font-medium text-foreground">Authorized Agent state-pack activation is already complete.</p>
                     <p className="mt-1">
-                      All {completedSourceActivations} current state-pack source snapshots have second-verification records.
+                      All {completedSourceActivations} current state-pack source snapshots have Authorized Agent activation records.
                       The shared federal baseline has no separate activation button. Compliance remains fail-closed until
                       the deterministic release gate is completed.
                     </p>
                   </>
                 ) : (
-                  "No state packs are awaiting independent activation."
+                  "No state packs are awaiting Agent activation."
                 )}
               </div>
             )}
