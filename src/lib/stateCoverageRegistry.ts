@@ -144,14 +144,9 @@ export function coverageForState(code: string, packs = stateCoverage): StateCove
 
 export const FEDERAL_BASELINE_NOTICE = FEDERAL_ONLY_LIMITATION;
 
-/** The only sanctioned public coverage sentence — generated, never hard-coded. */
-export function coverageClaim(packs = stateCoverage, asOf = new Date()): string {
-  const validated = packs.filter(isUsableForDetermination).length;
-  const date = asOf.toISOString().slice(0, 10);
-  if (validated === 0) {
-    return "Federal baseline available nationwide. State-specific automation requires an approved, activated release; see the methodology page for the latest published validation status.";
-  }
-  return `Federal baseline available nationwide; ${validated} state-specific pack${validated === 1 ? "" : "s"} validated as of ${date}.`;
+/** Sanctioned public coverage sentence. Never publishes state-pack counts. */
+export function coverageClaim(): string {
+  return "Federal baseline review is available nationwide. Jurisdiction-specific requirements are applied only when the governing authority has been approved and activated for use.";
 }
 
 export const RELEASE_CHECKLIST = [
