@@ -19,11 +19,11 @@ async function authorizedWorkflow(request: Request): Promise<boolean> {
       audience: "certivoiq-merlin-procedure-worker",
       algorithms: ["RS256"],
     });
-    return payload.repository === "Watkin5/certifyiq-48308270" &&
+    return payload.repository === "CertivoIQ/certifyiq-48308270" &&
       payload.repository_id === "1326099740" &&
       payload.ref === "refs/heads/main" &&
       payload.workflow_ref ===
-        "Watkin5/certifyiq-48308270/.github/workflows/merlin-procedure-worker.yml@refs/heads/main" &&
+        "CertivoIQ/certifyiq-48308270/.github/workflows/merlin-procedure-worker.yml@refs/heads/main" &&
       (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch" || payload.event_name === "push") &&
       payload.runner_environment === "github-hosted";
   } catch {
