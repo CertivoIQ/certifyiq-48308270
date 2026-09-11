@@ -38,7 +38,7 @@ test("staff guides are excluded from customer search and filters", () => {
 test("search matches tab names and combines topic and workspace filters", () => {
   assert.ok(filterTrainingLessons(false, "jobs pay").some((lesson) => lesson.href === "/income-calculator"));
   assert.equal(filterTrainingLessons(false, "rfta", "pha", "PHA workflows").length, 0);
-  assert.ok(filterTrainingLessons(false, "rfta", "pha", "PHA workflows", true).some((lesson) => lesson.href === "/pha-hcv-lease-up"));
+  assert.ok(filterTrainingLessons(false, "rfta", "pha", "PHA workflows", "pha").some((lesson) => lesson.href === "/pha-hcv-lease-up"));
   assert.equal(filterTrainingLessons(false, "rfta", "multifamily").length, 0);
   assert.equal(filterTrainingLessons(false, "no-such-training-xyz").length, 0);
 });
