@@ -140,6 +140,16 @@ function officialDomainFor(sourceUrl: string) {
   }
 }
 
+function officialSourcePageFor(source: SourceCandidate) {
+  if (
+    source.official_domain === "ahfa.atl1.cdn.digitaloceanspaces.com" &&
+    source.source_url.includes("/multifamily/compliance/")
+  ) {
+    return "https://www.ahfa.com/programs/rental-housing/compliance";
+  }
+  return source.source_url;
+}
+
 function messageForError(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) return error.message;
   if (error && typeof error === "object" && "message" in error) {
@@ -227,14 +237,28 @@ function SourceReviewCard({
           <p className="mt-1 text-sm text-muted-foreground">
             {source.source_type.replaceAll("_", " ")} · {source.official_domain}
           </p>
-          <a
-            className="mt-2 inline-flex items-center gap-1.5 break-all text-sm text-primary underline underline-offset-4"
-            href={source.source_url}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open official source <ExternalLink className="size-3.5 shrink-0" />
-          </a>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <a
+              className="inline-flex items-center gap-1.5 break-all text-sm text-primary underline underline-offset-4"
+              href={officialSourcePageFor(source)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(event) => event.stopPropagation()}
+            >
+              Open official source <ExternalLink className="size-3.5 shrink-0" />
+            </a>
+            {officialSourcePageFor(source) !== source.source_url ? (
+              <a
+                className="inline-flex items-center gap-1.5 break-all text-sm text-primary underline underline-offset-4"
+                href={source.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
+                Download exact file <ExternalLink className="size-3.5 shrink-0" />
+              </a>
+            ) : null}
+          </div>
           <p className="mt-2 text-xs text-muted-foreground">
             Intake condition: {source.candidate_status.replaceAll("_", " ")}
           </p>
