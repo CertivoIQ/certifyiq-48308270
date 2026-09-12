@@ -548,7 +548,7 @@ function StateRuleValidationWorkspace() {
     { label: "State packs", value: statePacks.length, hint: "All state candidates", tone: "neutral" as Tone, selected: packView === "all", open: () => openPacks("all") },
     { label: "Agent activation", value: `${pendingActivations.length}/${statePacks.length}`, hint: "Awaiting your approval", tone: "flag" as Tone, selected: packView === "pending", open: () => openPacks("pending") },
     { label: "Compliance active", value: activatedPacks, hint: "Validated releases", tone: "seal" as Tone, selected: packView === "active", open: () => openPacks("active") },
-    { label: "Remaining", value: active, hint: "Includes unresolved blockers", tone: "flag" as Tone, selected: packView === null && status === "active" && stateCode === "ALL" && !search, open: () => openSources("active") },
+    { label: "Pending verifications", value: active, hint: "Open source records awaiting verification", tone: "flag" as Tone, selected: packView === null && status === "active" && stateCode === "ALL" && !search, open: () => openSources("active") },
     { label: "Verified sources", value: verified, hint: "Source review only", tone: "seal" as Tone, selected: packView === null && status === "verified" && stateCode === "ALL" && !search, open: () => openSources("verified") },
     { label: "Blocked / rejected", value: blocked, hint: "Review blocked records", tone: "reject" as Tone, selected: packView === null && status === "blocked_or_rejected" && stateCode === "ALL" && !search, open: () => openSources("blocked_or_rejected") },
   ];
