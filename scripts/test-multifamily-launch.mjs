@@ -39,6 +39,10 @@ test('customer training excludes internal material while preserving internal les
   const external = catalog.filterTrainingLessons(true);
   assert.ok(external.length > 0);
   assert.doesNotMatch(JSON.stringify(external), /\bPHA\b|NSPIRE|HUD-50058/i);
-  const internal = catalog.filterTrainingLessons(true, '', 'all', 'all', true);
-  assert.equal(internal.length, lessons.length);
+  const internal = catalog.filterTrainingLessons(true, '', 'all', 'all', 'pha');
+  const expectedInternal = lessons.filter(lesson => ['all', 'pha'].includes(lesson.audience));
+  assert.ok(expectedInternal.length > 0);
+  assert.equal(JSON.stringify(internal), JSON.stringify(expectedInternal));
+  // A legacy boolean must not accidentally grant the explicit internal scope.
+  assert.equal(JSON.stringify(catalog.filterTrainingLessons(true, '', 'all', 'all', true)), JSON.stringify(external));
 });
