@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle2, ExternalLink, FileSearch, Plus, ShieldChec
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { StateSourceImportPanel } from "@/components/state-source-import-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -625,6 +626,7 @@ function StateRuleValidationWorkspace() {
         </Panel>
       ) : (
         <>
+          {isCrmAdmin ? <StateSourceImportPanel /> : null}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             {summaryActions.map((summary) => (
               <button
