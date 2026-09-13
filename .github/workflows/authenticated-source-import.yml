@@ -1,0 +1,25 @@
+name: Authenticated source import checks
+on:
+  pull_request:
+    paths:
+      - "src/components/state-source-import-panel.tsx"
+      - "src/routes/_authenticated/state-rule-validation.tsx"
+      - "supabase/migrations/20260913171156_test_authenticated_source_import.sql"
+      - ".github/workflows/authenticated-source-import.yml"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bunx tsc --noEmit
