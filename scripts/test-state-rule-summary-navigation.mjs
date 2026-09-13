@@ -7,7 +7,10 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 const ts = require("typescript");
 const source = readFileSync(new URL("../src/routes/_authenticated/state-rule-validation.tsx", import.meta.url), "utf8");
-assert.match(source, /label: "Pending verifications"/);\nassert.match(source, /open: \(\) => openSources\("active"\)/);\n\nconst code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 } }).outputText;
+assert.match(source, /label: "Pending verifications"/);
+assert.match(source, /open: \(\) => openSources\("active"\)/);
+
+const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 } }).outputText;
 
 function setup({ error = null, loading = false } = {}) {
   let cursor = 0;
@@ -59,9 +62,9 @@ test("each summary opens its matching records without any mutation", () => {
   assert.deepEqual(sourceIds(app), ["verified"]);
   clickTile(app, "blocked / rejected");
   assert.deepEqual(sourceIds(app), ["blocked", "rejected", "redundant"]);
-  clickTile(app, "remaining");
+  clickTile(app, "pending verifications");
   assert.deepEqual(sourceIds(app), ["blocked", "rejected", "captured"]);
-  assert.equal(find(app.render(), (n) => n.type === "Stat" && n.props.label === "Remaining").props.value, 3);
+  assert.equal(find(app.render(), (n) => n.type === "Stat" && n.props.label === "Pending verifications").props.value, 3);
   clickTile(app, "state packs");
   assert.equal(nodes(app.render()).filter((n) => n.type === "li").length, 2);
   clickTile(app, "compliance active");
