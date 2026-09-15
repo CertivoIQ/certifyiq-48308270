@@ -400,6 +400,9 @@ function StateRuleValidationWorkspace() {
   const [search, setSearch] = useState("");
   const [packView, setPackView] = useState<"all" | "pending" | "active" | null>(null);
   const [showPendingOverview, setShowPendingOverview] = useState(true);
+  const [showRejectedQueue, setShowRejectedQueue] = useState(false);
+  const [rejectedSelection, setRejectedSelection] = useState<string[]>([]);
+  const [rejectionReason, setRejectionReason] = useState("");
   const recordsRef = useRef<HTMLDivElement>(null);
   const focusRecords = () => requestAnimationFrame(() => {
     recordsRef.current?.scrollIntoView({ block: "start" });
@@ -408,6 +411,7 @@ function StateRuleValidationWorkspace() {
   const openSources = (nextStatus: string, nextState = "ALL") => {
     setPackView(null);
     setShowPendingOverview(false);
+    setShowRejectedQueue(false);
     setStateCode(nextState);
     setStatus(nextStatus);
     setSearch("");
@@ -415,6 +419,14 @@ function StateRuleValidationWorkspace() {
   };
   const openPacks = (view: "all" | "pending" | "active") => {
     setPackView(view);
+    setShowRejectedQueue(false);
+    setSearch("");
+    focusRecords();
+  };
+  const openRejectedQueue = () => {
+    setPackView(null);
+    setShowPendingOverview(false);
+    setShowRejectedQueue(true);
     setSearch("");
     focusRecords();
   };
@@ -471,6 +483,83 @@ function StateRuleValidationWorkspace() {
       toast.error(messageForError(error, "Source review could not be recorded"));
     },
   });
+
+  const rejectedWorkflow = useMutation({
+    mutationFn: async ({
+      action,
+      items,
+      reason,
+    }: {
+      action: "return" | "finalize";
+      items: SourceCandidate[];
+      reason: string;
+    }) => {
+      // Generated database types intentionally lag controlled launch migrations.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = supabase as any;
+      const results: { id: string; label: string; ok: boolean; message?: string }[] = [];
+      for (const source of items) {
+        const label = `${source.state_code} · ${source.authority_name}`;
+        const { error } =
+          action === "return"
+            ? await client.rpc("return_state_rule_source_to_validation", {
+                p_candidate_id: source.id,
+                p_notes: reason,
+                p_expected_updated_at: source.updated_at,
+              })
+            : await client.rpc("finalize_state_rule_source_rejection", {
+                p_candidate_id: source.id,
+                p_reason: reason,
+                p_expected_updated_at: source.updated_at,
+              });
+        results.push({ id: source.id, label, ok: !error, ...(error ? { message: error.message } : {}) });
+      }
+      return { action, results };
+    },
+    onSuccess: ({ action, results }) => {
+      const succeeded = results.filter((result) => result.ok);
+      const failed = results.filter((result) => !result.ok);
+      if (succeeded.length) {
+        toast.success(
+          action === "return"
+            ? `${succeeded.length} source record${succeeded.length === 1 ? "" : "s"} returned to pending validation`
+            : `${succeeded.length} rejected source record${succeeded.length === 1 ? "" : "s"} permanently deleted`,
+          { description: succeeded.map((result) => result.label).join(", ") },
+        );
+      }
+      failed.forEach((result) =>
+        toast.error(`${result.label}: ${result.message ?? "The action could not be completed."}`),
+      );
+      setRejectedSelection((current) => current.filter((id) => failed.some((result) => result.id === id)));
+      if (succeeded.length && !failed.length) setRejectionReason("");
+      void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
+    },
+    onError: (error) => toast.error(messageForError(error, "The rejected-source action could not be completed")),
+  });
+
+  const runRejectedAction = (action: "return" | "finalize") => {
+    const items = rejectedSources.filter((source) => rejectedSelection.includes(source.id));
+    const reason = rejectionReason.trim();
+    if (!items.length) {
+      toast.error("Select at least one rejected source record.");
+      return;
+    }
+    if (reason.length < 10) {
+      toast.error("A written reason of at least 10 characters is required.");
+      return;
+    }
+    const names = items.map((source) => `${source.state_code} · ${source.authority_name}`).join("\n");
+    const confirmed =
+      action === "return"
+        ? window.confirm(
+            `Return ${items.length} source record${items.length === 1 ? "" : "s"} to pending validation?\n\n${names}\n\nThey re-enter the queue as pending review. Nothing is approved and no rule or pack is activated.`,
+          )
+        : window.confirm(
+            `PERMANENTLY DELETE ${items.length} rejected source record${items.length === 1 ? "" : "s"}?\n\n${names}\n\nThis is irreversible. The records cannot be restored or returned to validation afterwards. Captured evidence files, historical findings and production rules are retained; only a non-restorable deletion audit entry remains.`,
+          );
+    if (!confirmed) return;
+    rejectedWorkflow.mutate({ action, items, reason });
+  };
 
   const activatePack = useMutation({
     mutationFn: async (pack: ActivationReadiness) => {
@@ -563,9 +652,18 @@ function StateRuleValidationWorkspace() {
     federalSources.length > 0 &&
     federalSources.every((source) => source.agent_verification_status === "verified");
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
-  const blocked = sources.filter((source) => ["blocked", "rejected"].includes(source.agent_verification_status)).length;
+  const blocked = sources.filter((source) => source.agent_verification_status === "blocked").length;
+  // Reviewer-rejected records leave the active queue and wait in Rejected sources.
+  // Automatically excluded redundant captures are not reviewer rejections.
+  const rejectedSources = sources.filter(
+    (source) =>
+      source.agent_verification_status === "rejected" &&
+      source.candidate_status !== "EXCLUDED_REDUNDANT_SOURCE",
+  );
+  const rejectedIds = new Set(rejectedSources.map((source) => source.id));
   const active = sources.filter((source) =>
     source.agent_verification_status !== "verified" &&
+    !rejectedIds.has(source.id) &&
     !(source.agent_verification_status === "rejected" && source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE")
   ).length;
   const visiblePacks = statePacks.filter((pack) => packView !== "active" || pack.compliance_activation_allowed);
@@ -575,7 +673,8 @@ function StateRuleValidationWorkspace() {
     { label: "Compliance active", value: activatedPacks, hint: "Validated releases", tone: "seal" as Tone, selected: packView === "active", open: () => openPacks("active") },
     { label: "Pending verifications", value: active, hint: "Open source records awaiting verification", tone: "flag" as Tone, selected: packView === null && status === "active" && stateCode === "ALL" && !search, open: () => openSources("active") },
     { label: "Verified sources", value: verified, hint: "Source review only", tone: "seal" as Tone, selected: packView === null && status === "verified" && stateCode === "ALL" && !search, open: () => openSources("verified") },
-    { label: "Blocked / rejected", value: blocked, hint: "Review blocked records", tone: "reject" as Tone, selected: packView === null && status === "blocked_or_rejected" && stateCode === "ALL" && !search, open: () => openSources("blocked_or_rejected") },
+    { label: "Blocked", value: blocked, hint: "Review blocked records", tone: "reject" as Tone, selected: packView === null && !showRejectedQueue && status === "blocked" && stateCode === "ALL" && !search, open: () => openSources("blocked") },
+    { label: "Rejected sources", value: rejectedSources.length, hint: "Awaiting finalization", tone: "reject" as Tone, selected: showRejectedQueue, open: openRejectedQueue },
   ];
 
   const visible = useMemo(() => {
@@ -594,6 +693,14 @@ function StateRuleValidationWorkspace() {
         return false;
       }
       if (!inheritedFederal && status === "active" && excludedRedundant) return false;
+      // Reviewer-rejected records leave every active queue and live in Rejected sources
+      // until an authorized reviewer returns or finalizes them.
+      if (
+        status !== "rejected" &&
+        status !== "blocked_or_rejected" &&
+        source.agent_verification_status === "rejected" &&
+        !excludedRedundant
+      ) return false;
       if (status === "blocked_or_rejected" && !["blocked", "rejected"].includes(source.agent_verification_status)) return false;
       if (
         !inheritedFederal &&
@@ -627,7 +734,7 @@ function StateRuleValidationWorkspace() {
       ) : (
         <>
           {isCrmAdmin ? <StateSourceImportPanel /> : null}
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
             {summaryActions.map((summary) => (
               <button
                 key={summary.label}
@@ -965,7 +1072,98 @@ function StateRuleValidationWorkspace() {
             </div>
           </Panel>
 
-          {query.error ? (
+          {showRejectedQueue ? (
+            <Panel
+              className="mt-4"
+              title="Rejected sources"
+              description="Rejected records are out of the validation queue and await finalization. Returning a record restores pending review only — it never approves a source or activates a rule."
+            >
+              {!rejectedSources.length ? (
+                <p className="text-sm text-muted-foreground">No rejected source records are awaiting finalization.</p>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setRejectedSelection(
+                          rejectedSelection.length === rejectedSources.length
+                            ? []
+                            : rejectedSources.map((source) => source.id),
+                        )
+                      }
+                    >
+                      {rejectedSelection.length === rejectedSources.length ? "Clear selection" : "Select all"}
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      {rejectedSelection.length} of {rejectedSources.length} selected
+                    </span>
+                  </div>
+                  <ul className="divide-y divide-border rounded-md border border-border">
+                    {rejectedSources.map((source) => (
+                      <li key={source.id} className="flex items-start gap-3 px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="mt-1 size-4"
+                          checked={rejectedSelection.includes(source.id)}
+                          aria-label={`Select ${source.state_code} ${source.authority_name}`}
+                          onChange={(event) =>
+                            setRejectedSelection((current) =>
+                              event.target.checked
+                                ? [...new Set([...current, source.id])]
+                                : current.filter((id) => id !== source.id),
+                            )
+                          }
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono font-semibold">{source.state_code}</span>
+                            <Pill tone="reject">Rejected</Pill>
+                            <Pill>{source.scope.replaceAll("_", " ")}</Pill>
+                            <Pill>{source.program}</Pill>
+                          </div>
+                          <p className="mt-1 text-sm">{source.authority_name}</p>
+                          <p className="break-all text-xs text-muted-foreground">{source.source_url}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rejection-reason">Written reason (required, minimum 10 characters)</Label>
+                    <Textarea
+                      id="rejection-reason"
+                      value={rejectionReason}
+                      rows={3}
+                      placeholder="Record why these rejected sources are returned to validation or permanently deleted."
+                      onChange={(event) => setRejectionReason(event.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={rejectedWorkflow.isPending}
+                      onClick={() => runRejectedAction("return")}
+                    >
+                      Return to validations
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      disabled={rejectedWorkflow.isPending}
+                      onClick={() => runRejectedAction("finalize")}
+                    >
+                      Finalize rejection (permanent delete)
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Finalizing permanently deletes the selected source records. They cannot be restored. Captured
+                    evidence files, historical findings and production rules are retained, and a non-restorable
+                    deletion audit entry records the source identifier, actor, reason and time.
+                  </p>
+                </div>
+              )}
+            </Panel>
+          ) : query.error ? (
             <div className="mt-4 rounded-lg border border-reject/30 bg-reject-soft p-4 text-sm text-reject">
               The validation queue could not be loaded. No source status was changed.
             </div>
@@ -1019,4 +1217,3 @@ function StateRuleValidationWorkspace() {
     </AppShell>
   );
 }
-
