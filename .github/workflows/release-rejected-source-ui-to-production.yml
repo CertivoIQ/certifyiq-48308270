@@ -1,0 +1,210 @@
+name: Release rejected-source UI to production
+
+on:
+  push:
+    branches:
+      - ops/dispatch-rejected-source-production-release
+    paths:
+      - .github/workflows/release-rejected-source-ui-to-production.yml
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      VITE_PAYMENTS_CLIENT_TOKEN: ${{ secrets.VITE_PAYMENTS_CLIENT_TOKEN }}
+      OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+      TARGET_URL: https://certivoiq-founder-dashboard-20260903.rodsheka-watkins.workers.dev
+      RELEASE_SHA: 8e61bc6f6168aa331d8104bfb26f9bc895062936
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.3 }
+
+      - name: Build exact main revision and verify rejected-source asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          bun install --frozen-lockfile
+          node --test scripts/test-cloudflare-candidate-config.mjs
+          bun run build
+          state_asset="$(find .output/public/assets -maxdepth 1 -name 'state-rule-validation-*.js' -type f | head -1)"
+          shell_asset="$(find .output/public/assets -maxdepth 1 -name 'app-shell-*.js' -type f | head -1)"
+          test -n "$state_asset" && test -n "$shell_asset"
+          grep -F -q 'Rejected sources' "$state_asset"
+          grep -F -q 'Awaiting finalization' "$state_asset"
+          grep -F -q 'Finalize rejection (permanent delete)' "$state_asset"
+          grep -F -q 'Return to validations' "$state_asset"
+          grep -F -q 'Platform dashboard' "$shell_asset"
+          grep -F -q 'Multifamily workspace' "$shell_asset"
+          echo "STATE_ASSET=$(basename "$state_asset")" >> "$GITHUB_ENV"
+          echo "APP_SHELL_ASSET=$(basename "$shell_asset")" >> "$GITHUB_ENV"
+          echo "PUBLIC_FILE_COUNT=$(find .output/public -type f | wc -l)" >> "$GITHUB_ENV"
+          echo 'SOURCE_ASSET_GATE=PASS'
+
+      - name: Verify public bundle secret boundary
+        shell: bash
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),path=require('path'); let corpus='';
+          (function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=path.join(d,e.name);if(e.isDirectory())walk(f);else{try{corpus+=fs.readFileSync(f,'utf8')+'\n'}catch{}}}})('.output/public');
+          for(const n of ['SUPABASE_SERVICE_ROLE_KEY','STRIPE_LIVE_API_KEY','PAYMENTS_LIVE_WEBHOOK_SECRET']){const v=process.env[n];if(v&&corpus.includes(v))throw new Error(`${n} leaked into public build`)}
+          console.log('PUBLIC_SECRET_BOUNDARY=PASS');
+          NODE
+
+      - name: Capture existing custom-domain bindings and verify staging isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          [ "$(curl -sS -o /tmp/settings.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$TARGET_WORKER/settings")" = 200 ]
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-before.json
+          apex_old="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-before.json)"
+          www_old="$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-before.json)"
+          zone_id="$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.zone_id' /tmp/domains-before.json)"
+          test -n "$apex_old" && test -n "$www_old" && test -n "$zone_id"
+          test "$apex_old" != "$TARGET_WORKER"
+          test "$www_old" != "$TARGET_WORKER"
+          echo "OLD_APEX_WORKER=$apex_old" >> "$GITHUB_ENV"
+          echo "OLD_WWW_WORKER=$www_old" >> "$GITHUB_ENV"
+          echo "ZONE_ID=$zone_id" >> "$GITHUB_ENV"
+          echo 'PRE_CUTOVER_ISOLATION_GATE=PASS'
+
+      - name: Prepare isolated Worker version config
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/prepare-cloudflare-candidate-config.mjs .output/server/wrangler.json .output/server/wrangler.version-source.json "$TARGET_WORKER"
+          jq '.main = ".output/server/" + .main | .assets.directory = ".output/public" | .workers_dev = true | .preview_urls = true' .output/server/wrangler.version-source.json > wrangler.rejected-source-release.json
+          jq -e --arg w "$TARGET_WORKER" '.name==$w and .main==".output/server/index.mjs" and .assets.binding=="ASSETS" and .assets.directory==".output/public" and .assets.run_worker_first==true and .workers_dev==true and .preview_urls==true and (.route|not) and (.routes|not)' wrangler.rejected-source-release.json >/dev/null
+          test "$(find .output/public -type f | wc -l)" -eq "$PUBLIC_FILE_COUNT"
+          test -f ".output/public/assets/$STATE_ASSET"
+          test -f ".output/public/assets/$APP_SHELL_ASSET"
+          echo 'ROOT_VERSION_CONFIG_GATE=PASS'
+
+      - name: Upload isolated version with runtime secrets
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_LIVE_API_KEY: ${{ secrets.STRIPE_LIVE_API_KEY }}
+          PAYMENTS_LIVE_WEBHOOK_SECRET: ${{ secrets.PAYMENTS_LIVE_WEBHOOK_SECRET }}
+          STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE: ${{ secrets.STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE }}
+          STRIPE_PHA_PRICE_ID_LIVE: ${{ secrets.STRIPE_PHA_PRICE_ID_LIVE }}
+          STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE: ${{ secrets.STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE }}
+          SUPPORT_EMAIL_WEBHOOK_SECRET: ${{ secrets.SUPPORT_EMAIL_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          secret_file="$(mktemp)"
+          SECRET_FILE="$secret_file" node <<'NODE'
+          const fs=require('fs');
+          const required=['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','VITE_SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','STRIPE_LIVE_API_KEY','VITE_PAYMENTS_CLIENT_TOKEN','PAYMENTS_LIVE_WEBHOOK_SECRET','STRIPE_MULTIFAMILY_ENTERPRISE_PRICE_ID_LIVE','STRIPE_PHA_PRICE_ID_LIVE','OPERATIONS_WORKER_SECRET'];
+          const optional=['STRIPE_BILLING_PORTAL_CONFIGURATION_ID_LIVE','SUPPORT_EMAIL_WEBHOOK_SECRET'];
+          const p={}; for(const n of required){if(!process.env[n])throw new Error(`${n} missing`);p[n]=process.env[n]}
+          for(const n of optional){if(process.env[n])p[n]=process.env[n]}
+          fs.writeFileSync(process.env.SECRET_FILE,JSON.stringify(p),{mode:0o600});
+          NODE
+          rm -f /tmp/wrangler-output.ndjson
+          WRANGLER_OUTPUT_FILE_PATH=/tmp/wrangler-output.ndjson timeout 180s bunx --bun wrangler@4.129.0 versions upload --config wrangler.rejected-source-release.json --secrets-file "$secret_file"
+          rm -f "$secret_file"
+          version_id="$(jq -r 'select(.type=="version-upload")|.version_id // empty' /tmp/wrangler-output.ndjson | tail -1)"
+          preview_url="$(jq -r 'select(.type=="version-upload")|.preview_url // empty' /tmp/wrangler-output.ndjson | tail -1)"
+          test -n "$version_id" && test -n "$preview_url"
+          echo "VERSION_ID=$version_id" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=${preview_url%/}" >> "$GITHUB_ENV"
+          echo 'VERSION_UPLOAD_GATE=PASS'
+
+      - name: Verify isolated version preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 12); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$PREVIEW_URL/api/internal/runtime-health")"
+            echo "preview health attempt $i HTTP $code"
+            [ "$code" = 204 ] && { ok=1; break; }
+            sleep 4
+          done
+          [ "$ok" = 1 ]
+          node scripts/verify-cloudflare-live-response.mjs "$PREVIEW_URL"
+          [ "$(curl -sS -o /tmp/preview-state.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$PREVIEW_URL/assets/$STATE_ASSET")" = 200 ]
+          grep -F -q 'Rejected sources' /tmp/preview-state.js
+          grep -F -q 'Finalize rejection (permanent delete)' /tmp/preview-state.js
+          grep -F -q 'Return to validations' /tmp/preview-state.js
+          echo 'VERSION_PREVIEW_REJECTION_GATE=PASS'
+
+      - name: Deploy verified version to isolated Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          bunx --bun wrangler@4.129.0 versions deploy "$VERSION_ID@100%" --name "$TARGET_WORKER" -y
+          ok=0
+          for i in $(seq 1 12); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" "$TARGET_URL/api/internal/runtime-health")"
+            echo "staging health attempt $i HTTP $code"
+            [ "$code" = 204 ] && { ok=1; break; }
+            sleep 4
+          done
+          [ "$ok" = 1 ]
+          node scripts/verify-cloudflare-live-response.mjs "$TARGET_URL"
+          [ "$(curl -sS -o /tmp/stage-state.js -w '%{http_code}' -H 'Cache-Control: no-cache' "$TARGET_URL/assets/$STATE_ASSET")" = 200 ]
+          grep -F -q 'Rejected sources' /tmp/stage-state.js
+          grep -F -q 'Finalize rejection (permanent delete)' /tmp/stage-state.js
+          echo 'ISOLATED_WORKER_GATE=PASS'
+
+      - name: Cut over Worker custom domains with automatic rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          attach(){
+            local host="$1" service="$2"
+            curl -fsS -X PUT "${auth[@]}" -H 'Content-Type: application/json' \
+              --data "$(jq -nc --arg h "$host" --arg s "$service" --arg z "$ZONE_ID" '{hostname:$h,service:$s,zone_id:$z}')" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" >/dev/null
+          }
+          rollback(){
+            echo 'LIVE_VERIFY_FAILED: restoring prior custom-domain Worker bindings'
+            attach certivoiq.com "$OLD_APEX_WORKER" || true
+            attach www.certivoiq.com "$OLD_WWW_WORKER" || true
+          }
+          trap rollback ERR
+          attach certivoiq.com "$TARGET_WORKER"
+          attach www.certivoiq.com "$TARGET_WORKER"
+          ok=0
+          for i in $(seq 1 15); do
+            health="$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $OPERATIONS_WORKER_SECRET" -H 'Cache-Control: no-cache' https://certivoiq.com/api/internal/runtime-health || true)"
+            asset="$(curl -sS -o /tmp/live-state.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://certivoiq.com/assets/$STATE_ASSET" || true)"
+            echo "live verify attempt $i health=$health asset=$asset"
+            if [ "$health" = 204 ] && [ "$asset" = 200 ] && grep -F -q 'Rejected sources' /tmp/live-state.js && grep -F -q 'Finalize rejection (permanent delete)' /tmp/live-state.js; then
+              ok=1; break
+            fi
+            sleep 4
+          done
+          [ "$ok" = 1 ]
+          [ "$(curl -sS -o /tmp/www-state.js -w '%{http_code}' -H 'Cache-Control: no-cache' "https://www.certivoiq.com/assets/$STATE_ASSET")" = 200 ]
+          grep -F -q 'Rejected sources' /tmp/www-state.js
+          grep -F -q 'Finalize rejection (permanent delete)' /tmp/www-state.js
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" -o /tmp/domains-after.json
+          test "$(jq -r '.result[]|select(.hostname=="certivoiq.com")|.service' /tmp/domains-after.json)" = "$TARGET_WORKER"
+          test "$(jq -r '.result[]|select(.hostname=="www.certivoiq.com")|.service' /tmp/domains-after.json)" = "$TARGET_WORKER"
+          trap - ERR
+          echo "PRODUCTION_REJECTED_SOURCE_UI_GATE=PASS release_sha=$RELEASE_SHA worker=$TARGET_WORKER state_asset=$STATE_ASSET"
