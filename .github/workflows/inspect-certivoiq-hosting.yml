@@ -1,0 +1,45 @@
+name: Inspect CertivoIQ hosting bindings
+
+on:
+  push:
+    branches:
+      - ops/dispatch-rejected-source-production-release
+    paths:
+      - .github/workflows/inspect-certivoiq-hosting.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Inspect DNS, Worker routes, and Worker custom domains
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zid"
+          echo '=== DNS ==='
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/dns_records?per_page=100" -o /tmp/dns.json
+          jq -r '.result[] | select(.name=="certivoiq.com" or .name=="www.certivoiq.com") | [.type,.name,.content,(.proxied|tostring)] | @tsv' /tmp/dns.json
+          echo '=== WORKER ROUTES ==='
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/routes.json
+          jq -r '.result[] | [.pattern,(.script // "<none>")] | @tsv' /tmp/routes.json
+          echo '=== WORKER CUSTOM DOMAINS ==='
+          code="$(curl -sS -o /tmp/domains.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains")"
+          echo "domains_http=$code"
+          if [ "$code" = 200 ]; then
+            jq -r '.result[]? | [(.hostname // .name // ""),(.service // .script // ""),(.environment // "")] | @tsv' /tmp/domains.json
+          fi
+          echo '=== PAGES PROJECTS ==='
+          code="$(curl -sS -o /tmp/pages.json -w '%{http_code}' "${auth[@]}" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects")"
+          echo "pages_http=$code"
+          if [ "$code" = 200 ]; then
+            jq -r '.result[]? | [.name,.subdomain,((.domains // [])|join(","))] | @tsv' /tmp/pages.json
+          fi
