@@ -1,0 +1,25 @@
+name: Dispatch rejected-source production release
+
+on:
+  push:
+    branches:
+      - ops/dispatch-rejected-source-production-release
+    paths:
+      - .github/workflows/dispatch-rejected-source-production-release.yml
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch established production release workflow on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run ui-asset-freshness-recovery-v5-once.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main
