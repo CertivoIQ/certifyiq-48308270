@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { IncomeCalculator } from "@/components/income-calculator";
+import { IncomeCalculatorWorkspace } from "@/components/income-calculator-workspace";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,5 +25,5 @@ export function IncomeCalculatorAccess() {
   if (access.isError) return <AppShell title="Income Calculator"><p role="alert">Could not verify calculator access.</p><Button onClick={() => void access.refetch()}>Try again</Button></AppShell>;
   if (!access.data) return <AppShell title="Income Calculator"><p role="status">Checking your calculator access…</p></AppShell>;
   if (!access.data.allowed) return <AppShell title="Income Calculator"><div className="rounded-xl border border-border bg-card p-6"><p>{access.data.reason}</p><Link to="/pricing" className="mt-4 inline-block text-primary underline">View subscription options</Link></div></AppShell>;
-  return <IncomeCalculator key={`${user?.id}:${access.data.mode}`} trial={access.data.mode === "trial"} remainingReviews={access.data.remaining} />;
+  return <IncomeCalculatorWorkspace key={`${user?.id}:${access.data.mode}`} trial={access.data.mode === "trial"} remainingReviews={access.data.remaining} />;
 }
