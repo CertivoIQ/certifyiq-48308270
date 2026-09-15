@@ -3,6 +3,7 @@ import { Calculator, Plus, Save, Printer, Trash2, ShieldCheck } from "lucide-rea
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import type { LimitProfileDraft } from "@/lib/rent-income-limit-engine.mjs";
 import { toast } from "sonner";
 import { PROGRAMS, FREQUENCIES, parseSourcedLimits, profileIssues, evaluate, historyPeriods, newInput, newJob, newLayer, newLine, newProfile, newStub, selectRoute, type ApprovedProfile, type Evaluation, type Input, type Job, type Layer, type MoneyLine, type Profile } from "../../supabase/functions/_shared/income-calculator-engine";
 
@@ -51,7 +52,7 @@ function Lines({ title, value, onChange, annualOnly = false, hint }: { title: st
   return <div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-semibold">{title}</h3>{hint ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{hint}</p> : null}</div><Button type="button" size="sm" variant="outline" onClick={() => onChange([...value, newLine(uid())])}><Plus className="size-4" />Add line</Button></div>{value.map((l, i) => <div key={l.id} className="space-y-3 rounded-lg border border-border p-3"><div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">{title} · {i + 1}</span><Button type="button" size="icon" variant="ghost" aria-label={`Remove ${title} line ${i + 1}`} onClick={() => onChange(value.filter((x) => x.id !== l.id))}><Trash2 className="size-4" /></Button></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Field title="Household member / reference" value={l.member} onChange={(v) => update(l.id, { member: v })} /><Field title="Income or adjustment description" value={l.label} onChange={(v) => update(l.id, { label: v })} /><Field title={annualOnly ? "Annual amount ($)" : "Gross amount ($)"} value={l.amount} decimal onChange={(v) => update(l.id, { amount: v })} />{annualOnly ? <p className="self-end pb-2 text-xs text-muted-foreground">Annual amount only. Negative amounts are accepted only for documented exclusions, reconciliation, or AGI adjustments.</p> : <Choose title="Frequency" value={l.frequency} onChange={(v) => update(l.id, { frequency: v as MoneyLine["frequency"] })} options={Object.keys(FREQUENCIES).map((v) => ({ value: v, label: label(v) }))} />}</div><Field title="Source reference and calculation basis" value={l.source} onChange={(v) => update(l.id, { source: v })} /><Check checked={l.reviewed} onChange={(v) => update(l.id, { reviewed: v }, true)}>I reviewed this amount and its source evidence.</Check></div>)}</div>;
 }
 
-export function IncomeCalculator({ trial = false, remainingReviews = null }: { trial?: boolean; remainingReviews?: number | null } = {}) {
+export function IncomeCalculator({ trial = false, remainingReviews = null, headerSlot = null, limitDraft = null, onPropertyContext }: { trial?: boolean; remainingReviews?: number | null; headerSlot?: ReactNode; limitDraft?: { token: number; draft: LimitProfileDraft } | null; onPropertyContext?: (property: { stateCode: string; name: string } | null) => void } = {}) {
   const [input, setInput] = useState<Input>(newInput);
   const [metadata, setMetadata] = useState<Metadata>({ properties: [], units: [], tenants: [] });
   const [profiles, setProfiles] = useState<ApprovedProfile[]>([]);
@@ -97,7 +98,6 @@ export function IncomeCalculator({ trial = false, remainingReviews = null }: { t
   useEffect(() => {
     if (trial) return;
     setConfigurationError("");
-    // A saved version retains its exact inputs and profiles until explicitly edited.
     if (saved?.id) { setConfigurationLoading(false); return; }
     if (!input.tenantId) { setProfiles([]); setDocuments([]); setSnapshots([]); setConfigurationLoading(false); return; }
     let active = true; setConfigurationLoading(true);
@@ -128,6 +128,17 @@ export function IncomeCalculator({ trial = false, remainingReviews = null }: { t
     setInput(data.snapshot.inputs); setProfiles(data.snapshot.rule_profiles); setSaved(data.snapshot); setReview(data.review); setSigning(blankApproval()); setTab("results");
   });
   const sign = () => run(async () => { if (!saved) throw new Error("Save the current calculation first."); const data = await request<{ review: Review }>({ action: "sign_snapshot", snapshotId: saved.id, approval: signing }); setReview(data.review); toast.success("Final review recorded for the saved snapshot."); });
+  useEffect(() => {
+    if (!limitDraft) return;
+    const draft = limitDraft.draft;
+    setProfileDraft({ ...newProfile(draft.program), agency: draft.agency, designation: draft.designation, geography: draft.geography, limitSource: draft.limitSource, limitFrom: draft.limitFrom, limitTo: draft.limitTo, limits: draft.limits });
+    setLimitsText(Object.entries(draft.limits).map(([size, amount]) => `${size}=${amount}`).join("\n"));
+    setProfileApproval(blankApproval());
+    setTab("rules");
+    toast.info("Unsigned limit profile draft loaded in Program Rule Inputs. Review and sign it to approve; saved signed calculations are unchanged.");
+  }, [limitDraft?.token]);
+  useEffect(() => { onPropertyContext?.(selectedProperty ? { stateCode: selectedProperty.state_code, name: selectedProperty.name } : null); }, [selectedProperty?.id, selectedProperty?.state_code, selectedProperty?.name, onPropertyContext, selectedProperty]);
+
   const editProfile = (program: string) => { const p = profiles.find((x) => x.profile.program === program)?.profile || newProfile(program); setProfileDraft(p); setLimitsText(Object.entries(p.limits).map(([size, amount]) => `${size}=${amount}`).join("\n")); setProfileApproval(blankApproval()); };
   const updateProfile = (next: Profile) => { setProfileDraft(next); setProfileApproval(blankApproval()); };
   const saveProfile = () => run(async () => {
@@ -146,6 +157,7 @@ export function IncomeCalculator({ trial = false, remainingReviews = null }: { t
   const tabs = [["context", "1. Household"], ["wages", "2. Jobs & Pay"], ["other", "3. Other Income & Assets"], ["history", "4. Prior 12 Months"], ["layers", "5. Program Adjustments"], ["results", "6. Results & Review"], ["rules", trial ? "Program Rule Inputs" : "Property Rule Setup"]] as const;
 
   return <AppShell title="CertivoIQ Income Calculator" subtitle="One household record. Separate program calculations. Traceable review.">
+    {headerSlot}
     {trial && <div className="mb-5 rounded-xl border border-border bg-muted/30 p-4 text-sm"><strong>Trial Income Calculator · {remainingReviews} free reviews remaining</strong><p className="mt-2">Use this working calculator without portfolio setup. Calculator use does not consume a review. Access ends when your 3 free certification reviews are exhausted. You can print your worksheet; saving it to a portfolio requires a subscription.</p></div>}
     <style>{`@media print { aside, header, .income-no-print { display:none!important; } main { padding:0!important; } .income-report { display:block!important; } .income-report section { break-inside:avoid; } }`}</style>
     <datalist id="income-document-references">{documents.map((d) => <option key={d.id} value={`${d.id}#page-1`}>{d.original_file_name}</option>)}</datalist>
@@ -164,4 +176,3 @@ export function IncomeCalculator({ trial = false, remainingReviews = null }: { t
     </fieldset>
   </AppShell>;
 }
-
