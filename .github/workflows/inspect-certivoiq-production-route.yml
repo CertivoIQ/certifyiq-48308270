@@ -1,0 +1,39 @@
+name: Inspect CertivoIQ production route
+
+on:
+  push:
+    branches:
+      - ops/dispatch-rejected-source-production-release
+    paths:
+      - .github/workflows/inspect-certivoiq-production-route.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_WORKER: certivoiq-founder-dashboard-20260903
+    steps:
+      - name: Read current production route bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones?name=certivoiq.com&account.id=$CLOUDFLARE_ACCOUNT_ID" -o /tmp/zones.json
+          zid="$(jq -r 'if .success and (.result|length)==1 then .result[0].id else empty end' /tmp/zones.json)"
+          test -n "$zid"
+          curl -fsS "${auth[@]}" "https://api.cloudflare.com/client/v4/zones/$zid/workers/routes" -o /tmp/routes.json
+          apex="$(jq -r '.result[]|select(.pattern=="certivoiq.com/*")|.script' /tmp/routes.json)"
+          www="$(jq -r '.result[]|select(.pattern=="www.certivoiq.com/*")|.script' /tmp/routes.json)"
+          echo "APEX_WORKER=$apex"
+          echo "WWW_WORKER=$www"
+          echo "TARGET_WORKER=$TARGET_WORKER"
+          if [ "$apex" = "$TARGET_WORKER" ] || [ "$www" = "$TARGET_WORKER" ]; then
+            echo "TARGET_ALREADY_ON_PRODUCTION=true"
+          else
+            echo "TARGET_ALREADY_ON_PRODUCTION=false"
+          fi
