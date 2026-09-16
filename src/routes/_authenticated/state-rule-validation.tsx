@@ -203,6 +203,7 @@ function SourceReviewCard({
   onDecision,
   activation,
   onActivate,
+  onResolvePack,
   activationBusy,
   busy,
   inheritedByState,
@@ -213,6 +214,7 @@ function SourceReviewCard({
   onDecision: (decision: "captured_unvalidated" | "verified" | "blocked" | "rejected") => void;
   activation?: ActivationReadiness | undefined;
   onActivate: (pack: ActivationReadiness) => void;
+  onResolvePack: (pack: ActivationReadiness) => void;
   activationBusy: boolean;
   busy: boolean;
   inheritedByState?: string | undefined;
@@ -330,6 +332,15 @@ function SourceReviewCard({
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   {activation.activation_recorded ? (
                     <Pill tone="seal">State pack active</Pill>
+                  ) : !activation.sources_ready ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => onResolvePack(activation)}
+                    >
+                      <FileSearch className="size-4" />
+                      {`Validate ${activation.state_code} state pack`}
+                    </Button>
                   ) : (
                     <Button
                       type="button"
@@ -342,12 +353,14 @@ function SourceReviewCard({
                   )}
                   {!activation.activation_recorded && !activation.sources_ready ? (
                     <p className="text-xs text-muted-foreground">
-                      Activation becomes available after every required source is verified.
+                      Activation stays closed until every required state source and the inherited federal baseline
+                      are verified. Open the remaining {activation.state_code} requirements to finish validation.
                     </p>
                   ) : null}
                   {!activation.activation_recorded && activation.sources_ready && !activation.viewer_can_activate ? (
                     <p className="text-xs text-muted-foreground">
-                      Active Administrator authorization is required.
+                      Active Administrator authorization is required. A different Administrator from the first
+                      reviewer must complete activation.
                     </p>
                   ) : null}
                 </div>
@@ -631,11 +644,31 @@ function StateRuleValidationWorkspace() {
   });
 
   const packs = query.data?.packs ?? [];
-  const statePacks = packs.filter((pack) => pack.state_code !== "US");
-  const selectedPack = statePacks.find((pack) => pack.state_code === stateCode);
+  // Historical duplicate pack candidates exist for some states. Only the newest
+  // candidate per state is the current pack, and every count, activation lookup and
+  // source-card action must target that current candidate — never a stale one.
+  const latestPackByState = new Map<string, Pack>();
+  for (const pack of packs) {
+    if (pack.state_code === "US") continue;
+    const current = latestPackByState.get(pack.state_code);
+    if (!current || pack.updated_at > current.updated_at) latestPackByState.set(pack.state_code, pack);
+  }
+  const statePacks = [...latestPackByState.values()].sort((a, b) =>
+    a.state_code.localeCompare(b.state_code),
+  );
+  const currentPackIds = new Set(statePacks.map((pack) => pack.id));
+  const selectedPack = latestPackByState.get(stateCode);
   const activatedPacks = statePacks.filter((pack) => pack.compliance_activation_allowed).length;
-  const activations = query.data?.activations ?? [];
-  const selectedActivation = activations.find((pack) => pack.state_code === stateCode);
+  const allActivations = query.data?.activations ?? [];
+  // Readiness rows are keyed by pack candidate, so stale historical candidates are dropped.
+  const activations = allActivations.filter((row) => currentPackIds.has(row.pack_candidate_id));
+  const activationByPackId = new Map(activations.map((row) => [row.pack_candidate_id, row]));
+  const activationForState = (code: string) => {
+    const pack = latestPackByState.get(code);
+    return pack ? activationByPackId.get(pack.id) : undefined;
+  };
+  const selectedActivation =
+    stateCode === "ALL" || stateCode === "US" ? undefined : activationForState(stateCode);
   const completedSourceActivations = activations.filter((pack) => pack.activation_recorded).length;
   const allSourceActivationsRecorded =
     statePacks.length > 0 &&
@@ -1186,16 +1219,22 @@ function StateRuleValidationWorkspace() {
                   effectiveDate: typeof existing['effective_date'] === "string" ? existing['effective_date'] : "",
                   supersessionNotes: typeof existing['supersession_notes'] === "string" ? existing['supersession_notes'] : "",
                 };
+                const federalShared = source.state_code === "US" || source.scope === "FEDERAL_SHARED";
+                // A federal row belongs to a state pack only while that state is selected.
+                // Every other card resolves its own state's current pack, including in the ALL view.
+                const cardActivation = federalShared
+                  ? selectedActivation
+                  : activationForState(source.state_code);
                 return (
                   <SourceReviewCard
                     key={source.id}
                     source={source}
                     draft={draft}
                     busy={review.isPending && review.variables?.source.id === source.id}
-                    activation={selectedActivation}
+                    activation={cardActivation}
                     activationBusy={
                       activatePack.isPending &&
-                      activatePack.variables?.pack_candidate_id === selectedActivation?.pack_candidate_id
+                      activatePack.variables?.pack_candidate_id === cardActivation?.pack_candidate_id
                     }
                     inheritedByState={
                       source.scope === "FEDERAL_SHARED" && stateCode !== "ALL" && stateCode !== "US"
@@ -1205,6 +1244,7 @@ function StateRuleValidationWorkspace() {
                     onDraft={(next) => setDrafts((current) => ({ ...current, [source.id]: next }))}
                     onDecision={(decision) => review.mutate({ source, decision })}
                     onActivate={(pack) => activatePack.mutate(pack)}
+                    onResolvePack={(pack) => openSources("active", pack.state_code)}
                   />
                 );
               })}
