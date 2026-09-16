@@ -175,11 +175,15 @@ const SOURCE_COLUMNS =
   "id,state_code,scope,authority_name,official_domain,program,source_type,source_url,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,source_sha256,retrieved_at,verification_evidence,updated_at";
 export const SOURCE_PAGE_SIZE = 1000;
 
-export function isUnresolvedSource(source: SourceCandidate) {
-  if (
+export function isRejectedSource(source: SourceCandidate) {
+  return (
     source.agent_verification_status === "rejected" &&
-    source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE"
-  ) return false;
+    source.candidate_status !== "EXCLUDED_REDUNDANT_SOURCE"
+  );
+}
+
+export function isUnresolvedSource(source: SourceCandidate) {
+  if (source.agent_verification_status === "rejected") return false;
   if (source.agent_verification_status !== "verified") return true;
   return !source.exact_bytes_captured || !source.source_sha256 || !source.retrieved_at;
 }
@@ -360,11 +364,7 @@ function SourceReviewCard({
                   {activation.activation_recorded ? (
                     <Pill tone="seal">State pack active</Pill>
                   ) : !activation.sources_ready ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => onResolvePack(activation)}
-                    >
+                    <Button type="button" variant="outline" onClick={() => onResolvePack(activation)}>
                       <FileSearch className="size-4" />
                       {`Validate ${activation.state_code} state pack`}
                     </Button>
@@ -380,14 +380,7 @@ function SourceReviewCard({
                   )}
                   {!activation.activation_recorded && !activation.sources_ready ? (
                     <p className="text-xs text-muted-foreground">
-                      Activation stays closed until every required state source and the inherited federal baseline
-                      are verified. Open the remaining {activation.state_code} requirements to finish validation.
-                    </p>
-                  ) : null}
-                  {!activation.activation_recorded && activation.sources_ready && !activation.viewer_can_activate ? (
-                    <p className="text-xs text-muted-foreground">
-                      Active Administrator authorization is required. A different Administrator from the first
-                      reviewer must complete activation.
+                      Activation stays closed until every required state source and the inherited federal baseline are verified.
                     </p>
                   ) : null}
                 </div>
@@ -401,28 +394,17 @@ function SourceReviewCard({
               </p>
               <p className="mt-1 text-muted-foreground">
                 This source no longer requires validation. State-pack activation is a separate action.
-                The Sole Authorized State Rule Approver can activate the completed pack.
               </p>
             </div>
           ) : (
             <>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("captured_unvalidated")}>
-                  Save capture
-                </Button>
-                <Button size="sm" disabled={busy} onClick={() => onDecision("verified")}>
-                  <CheckCircle2 className="size-4" /> Verify source
-                </Button>
-                <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("blocked")}>
-                  Mark blocked
-                </Button>
-                <Button size="sm" variant="destructive" disabled={busy} onClick={() => onDecision("rejected")}>
-                  Reject source
-                </Button>
+                <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("captured_unvalidated")}>Save capture</Button>
+                <Button size="sm" disabled={busy} onClick={() => onDecision("verified")}><CheckCircle2 className="size-4" /> Verify source</Button>
+                <Button size="sm" variant="outline" disabled={busy} onClick={() => onDecision("blocked")}>Mark blocked</Button>
+                <Button size="sm" variant="destructive" disabled={busy} onClick={() => onDecision("rejected")}>Reject source</Button>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Every decision is appended to the audit history. Source verification never activates a pack by itself.
-              </p>
+              <p className="mt-3 text-xs text-muted-foreground">Every decision is appended to the audit history.</p>
             </>
           )}
         </div>
@@ -456,11 +438,7 @@ function StateRuleValidationWorkspace() {
     setStatus(nextStatus);
     setSearch("");
     if (typeof window !== "undefined" && window.history?.replaceState) {
-      window.history.replaceState(
-        null,
-        "",
-        `${window.location.pathname}?state=${nextState}&status=${nextStatus}`,
-      );
+      window.history.replaceState(null, "", `${window.location.pathname}?state=${nextState}&status=${nextStatus}`);
     }
     focusRecords();
   };
@@ -492,12 +470,9 @@ function StateRuleValidationWorkspace() {
     mutationFn: async ({ source, decision }: { source: SourceCandidate; decision: string }) => {
       const draft = drafts[source.id] ?? EMPTY_DRAFT;
       if (["blocked", "rejected"].includes(decision)) {
-        const confirmed = window.confirm(
-          `${decision === "rejected" ? "Reject" : "Block"} this official-source candidate? The state pack will remain fail-closed.`,
-        );
+        const confirmed = window.confirm(`${decision === "rejected" ? "Reject" : "Block"} this official-source candidate? The state pack will remain fail-closed.`);
         if (!confirmed) throw new Error("Decision cancelled");
       }
-      // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const { data, error } = await client.rpc("review_state_rule_source_candidate", {
@@ -510,19 +485,25 @@ function StateRuleValidationWorkspace() {
         p_supersession_notes: draft.supersessionNotes || null,
       });
       if (error) throw error;
-      return data as {
-        source_status: string;
-        pack_status: string;
-        compliance_activation_allowed: boolean;
-        validated_on: string | null;
-      };
+      return data as { source_status: string; pack_status: string; compliance_activation_allowed: boolean; validated_on: string | null };
     },
     onSuccess: (result, variables) => {
-      toast.success(`${variables.source.state_code} source ${labelFor(result.source_status)}`, {
-        description: result.compliance_activation_allowed
-          ? `Pack is active. Validation date: ${result.validated_on ?? "recorded"}.`
-          : `Pack status: ${labelFor(result.pack_status)}. Activation remains closed until the full pack passes.`,
-      });
+      toast.success(`${variables.source.state_code} source ${labelFor(result.source_status)}`);
+      queryClient.setQueryData(
+        ["state-rule-validation-queue"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (current: any) => {
+          if (!current?.sources) return current;
+          return {
+            ...current,
+            sources: current.sources.map((source: SourceCandidate) =>
+              source.id === variables.source.id
+                ? { ...source, agent_verification_status: result.source_status }
+                : source,
+            ),
+          };
+        },
+      );
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
     },
     onError: (error) => {
@@ -532,16 +513,7 @@ function StateRuleValidationWorkspace() {
   });
 
   const rejectedWorkflow = useMutation({
-    mutationFn: async ({
-      action,
-      items,
-      reason,
-    }: {
-      action: "return" | "finalize";
-      items: SourceCandidate[];
-      reason: string;
-    }) => {
-      // Generated database types intentionally lag controlled launch migrations.
+    mutationFn: async ({ action, items, reason }: { action: "return" | "finalize"; items: SourceCandidate[]; reason: string }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const results: { id: string; label: string; ok: boolean; message?: string }[] = [];
@@ -567,16 +539,9 @@ function StateRuleValidationWorkspace() {
       const succeeded = results.filter((result) => result.ok);
       const failed = results.filter((result) => !result.ok);
       if (succeeded.length) {
-        toast.success(
-          action === "return"
-            ? `${succeeded.length} source record${succeeded.length === 1 ? "" : "s"} returned to pending validation`
-            : `${succeeded.length} rejected source record${succeeded.length === 1 ? "" : "s"} permanently deleted`,
-          { description: succeeded.map((result) => result.label).join(", ") },
-        );
+        toast.success(action === "return" ? `${succeeded.length} source record${succeeded.length === 1 ? "" : "s"} returned to pending validation` : `${succeeded.length} rejected source record${succeeded.length === 1 ? "" : "s"} permanently deleted`);
       }
-      failed.forEach((result) =>
-        toast.error(`${result.label}: ${result.message ?? "The action could not be completed."}`),
-      );
+      failed.forEach((result) => toast.error(`${result.label}: ${result.message ?? "The action could not be completed."}`));
       setRejectedSelection((current) => current.filter((id) => failed.some((result) => result.id === id)));
       if (succeeded.length && !failed.length) setRejectionReason("");
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
@@ -596,25 +561,17 @@ function StateRuleValidationWorkspace() {
       return;
     }
     const names = items.map((source) => `${source.state_code} · ${source.authority_name}`).join("\n");
-    const confirmed =
-      action === "return"
-        ? window.confirm(
-            `Return ${items.length} source record${items.length === 1 ? "" : "s"} to pending validation?\n\n${names}\n\nThey re-enter the queue as pending review. Nothing is approved and no rule or pack is activated.`,
-          )
-        : window.confirm(
-            `PERMANENTLY DELETE ${items.length} rejected source record${items.length === 1 ? "" : "s"}?\n\n${names}\n\nThis is irreversible. The records cannot be restored or returned to validation afterwards. Captured evidence files, historical findings and production rules are retained; only a non-restorable deletion audit entry remains.`,
-          );
+    const confirmed = action === "return"
+      ? window.confirm(`Return ${items.length} source record${items.length === 1 ? "" : "s"} to pending validation?\n\n${names}`)
+      : window.confirm(`PERMANENTLY DELETE ${items.length} rejected source record${items.length === 1 ? "" : "s"}?\n\n${names}\n\nThis is irreversible.`);
     if (!confirmed) return;
     rejectedWorkflow.mutate({ action, items, reason });
   };
 
   const activatePack = useMutation({
     mutationFn: async (pack: ActivationReadiness) => {
-      const confirmed = window.confirm(
-        `Activate the ${pack.state_code} state rule pack? This records the authorized activation in the audit log.`,
-      );
+      const confirmed = window.confirm(`Activate the ${pack.state_code} state rule pack?`);
       if (!confirmed) throw new Error("Activation cancelled");
-      // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const { data, error } = await client.rpc("activate_state_rule_pack", {
@@ -625,9 +582,7 @@ function StateRuleValidationWorkspace() {
       return data as { state_code: string; validated_on: string; pack_status: string };
     },
     onSuccess: (result) => {
-      toast.success(`${result.state_code} state pack activated`, {
-        description: `Authorized Agent activation recorded for ${result.validated_on}.`,
-      });
+      toast.success(`${result.state_code} state pack activated`);
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
       void queryClient.invalidateQueries({ queryKey: ["governance-tasks"] });
     },
@@ -645,7 +600,6 @@ function StateRuleValidationWorkspace() {
       if (!source.sourceUrl.trim()) throw new Error("Enter the exact official file URL");
       const officialDomain = officialDomainFor(source.sourceUrl);
       if (!officialDomain) throw new Error("Enter a valid HTTPS official file URL");
-      // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const { data, error } = await client.rpc("create_state_rule_source_candidate", {
@@ -662,9 +616,7 @@ function StateRuleValidationWorkspace() {
       return data as { candidate_id: string; state_code: string; source_candidate_count: number };
     },
     onSuccess: (result) => {
-      toast.success(`${result.state_code} source record created`, {
-        description: "The exact-file source is queued for Agent validation and remains fail-closed.",
-      });
+      toast.success(`${result.state_code} source record created`);
       setNewSource(EMPTY_NEW_SOURCE);
       setShowNewSource(false);
       setStateCode(result.state_code);
@@ -672,9 +624,7 @@ function StateRuleValidationWorkspace() {
       setPackView(null);
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
     },
-    onError: (error) => {
-      toast.error(messageForError(error, "Source record could not be created"));
-    },
+    onError: (error) => toast.error(messageForError(error, "Source record could not be created")),
   });
 
   const packs = query.data?.packs ?? [];
@@ -684,9 +634,7 @@ function StateRuleValidationWorkspace() {
     const current = latestPackByState.get(pack.state_code);
     if (!current || pack.updated_at > current.updated_at) latestPackByState.set(pack.state_code, pack);
   }
-  const statePacks = [...latestPackByState.values()].sort((a, b) =>
-    a.state_code.localeCompare(b.state_code),
-  );
+  const statePacks = [...latestPackByState.values()].sort((a, b) => a.state_code.localeCompare(b.state_code));
   const currentPackIds = new Set(statePacks.map((pack) => pack.id));
   const selectedPack = latestPackByState.get(stateCode);
   const activatedPacks = statePacks.filter((pack) => pack.compliance_activation_allowed).length;
@@ -697,40 +645,22 @@ function StateRuleValidationWorkspace() {
     const pack = latestPackByState.get(code);
     return pack ? activationByPackId.get(pack.id) : undefined;
   };
-  const selectedActivation =
-    stateCode === "ALL" || stateCode === "US" ? undefined : activationForState(stateCode);
+  const selectedActivation = stateCode === "ALL" || stateCode === "US" ? undefined : activationForState(stateCode);
   const completedSourceActivations = activations.filter((pack) => pack.activation_recorded).length;
-  const allSourceActivationsRecorded =
-    statePacks.length > 0 &&
-    activations.length === statePacks.length &&
-    completedSourceActivations === statePacks.length;
-  const pendingActivations = activations.filter(
-    (pack) => pack.sources_ready && !pack.activation_recorded,
-  );
+  const allSourceActivationsRecorded = statePacks.length > 0 && activations.length === statePacks.length && completedSourceActivations === statePacks.length;
+  const pendingActivations = activations.filter((pack) => pack.sources_ready && !pack.activation_recorded);
   const sources = query.data?.sources ?? [];
-  const federalSources = sources.filter(
-    (source) => source.state_code === "US" || source.scope === "FEDERAL_SHARED",
-  );
-  const federalSourcesVerified =
-    federalSources.length > 0 &&
-    federalSources.every((source) => source.agent_verification_status === "verified");
+  const federalSources = sources.filter((source) => source.state_code === "US" || source.scope === "FEDERAL_SHARED");
+  const federalSourcesVerified = federalSources.length > 0 && federalSources.every((source) => source.agent_verification_status === "verified");
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => source.agent_verification_status === "blocked").length;
-  const rejectedSources = sources.filter(
-    (source) =>
-      source.agent_verification_status === "rejected" &&
-      source.candidate_status !== "EXCLUDED_REDUNDANT_SOURCE",
-  );
+  const rejectedSources = sources.filter(isRejectedSource);
   const unresolvedSources = sources.filter(isUnresolvedSource);
   const readinessRows = statePacks.map((pack) => {
     const activation = activationByPackId.get(pack.id);
     const isActive = activation ? activation.activation_recorded : pack.compliance_activation_allowed;
     const isReady = !isActive && !!activation?.sources_ready;
-    return {
-      pack,
-      activation,
-      state: isActive ? ("active" as const) : isReady ? ("ready" as const) : ("unresolved" as const),
-    };
+    return { pack, activation, state: isActive ? ("active" as const) : isReady ? ("ready" as const) : ("unresolved" as const) };
   });
   const visiblePacks = statePacks.filter((pack) => packView !== "active" || pack.compliance_activation_allowed);
   const summaryActions = [
@@ -747,62 +677,31 @@ function StateRuleValidationWorkspace() {
     const needle = search.trim().toLowerCase();
     return sources.filter((source) => {
       const federalShared = source.state_code === "US" || source.scope === "FEDERAL_SHARED";
-      const inheritedFederal =
-        stateCode !== "ALL" && stateCode !== "US" && federalShared;
+      const inheritedFederal = stateCode !== "ALL" && stateCode !== "US" && federalShared;
       if (stateCode !== "ALL" && source.state_code !== stateCode && !inheritedFederal) return false;
-      const excludedRedundant =
-        source.agent_verification_status === "rejected" &&
-        source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE";
+      const excludedRedundant = source.agent_verification_status === "rejected" && source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE";
       if (status === "unresolved") {
+        if (isRejectedSource(source)) return false;
         if (!isUnresolvedSource(source) && !inheritedFederal) return false;
-        if (needle) {
-          return [source.state_code, source.authority_name, source.source_type, source.source_url]
-            .join(" ")
-            .toLowerCase()
-            .includes(needle);
-        }
+        if (needle) return [source.state_code, source.authority_name, source.source_type, source.source_url].join(" ").toLowerCase().includes(needle);
         return true;
       }
-      if (!inheritedFederal && status === "active" && source.agent_verification_status === "verified") {
-        return false;
-      }
+      if (!inheritedFederal && status === "active" && source.agent_verification_status === "verified") return false;
       if (!inheritedFederal && status === "active" && excludedRedundant) return false;
-      if (
-        status !== "rejected" &&
-        status !== "blocked_or_rejected" &&
-        source.agent_verification_status === "rejected" &&
-        !excludedRedundant
-      ) return false;
+      if (status !== "rejected" && status !== "blocked_or_rejected" && source.agent_verification_status === "rejected" && !excludedRedundant) return false;
       if (status === "blocked_or_rejected" && !["blocked", "rejected"].includes(source.agent_verification_status)) return false;
-      if (
-        !inheritedFederal &&
-        status !== "active" &&
-        status !== "all" &&
-        status !== "blocked_or_rejected" &&
-        source.agent_verification_status !== status
-      ) return false;
+      if (!inheritedFederal && status !== "active" && status !== "all" && status !== "blocked_or_rejected" && source.agent_verification_status !== status) return false;
       if (!needle) return true;
-      return [source.state_code, source.authority_name, source.source_type, source.source_url]
-        .join(" ")
-        .toLowerCase()
-        .includes(needle);
+      return [source.state_code, source.authority_name, source.source_type, source.source_url].join(" ").toLowerCase().includes(needle);
     });
   }, [search, sources, stateCode, status]);
 
   return (
-    <AppShell
-      title="State & Federal Rule Validation"
-      subtitle="Controlled exact-source review for 50 state packs and shared federal authorities"
-    >
+    <AppShell title="State & Federal Rule Validation" subtitle="Controlled exact-source review for 50 state packs and shared federal authorities">
       {loading ? (
         <Panel bodyClassName="p-8">Checking validation authority…</Panel>
       ) : !canManageStaff ? (
-        <Panel bodyClassName="p-8">
-          <h2 className="font-display text-lg">Manager or Administrator authority required</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Employees cannot view or decide state-source validation records.
-          </p>
-        </Panel>
+        <Panel bodyClassName="p-8"><h2 className="font-display text-lg">Manager or Administrator authority required</h2></Panel>
       ) : (
         <>
           {isCrmAdmin ? <StateSourceImportPanel /> : null}
@@ -824,486 +723,95 @@ function StateRuleValidationWorkspace() {
           </div>
 
           <div className="mt-4 rounded-lg border border-flag/30 bg-flag-soft p-4 text-sm">
-            <p className="flex items-start gap-2 font-medium">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Source validation and Authorized Agent activation are required.
-            </p>
-            <p className="mt-1 text-muted-foreground">
-              First, every required state source and the shared federal baseline must be verified. Then a different
-              Administrator must activate the state pack. Reviewer and activator emails remain hidden from operational
-              screens and are available only through controlled reporting.
-            </p>
-            {selectedPack?.validated_on ? (
-              <p className="mt-2 font-medium">Validation date: {selectedPack.validated_on}</p>
-            ) : null}
-            {stateCode === "US" ? (
-              <div className="mt-3 rounded-md border border-seal/30 bg-background/70 p-3">
-                <p className="font-medium text-seal">
-                  Federal source verification {federalSourcesVerified ? "complete" : "still open"}
-                </p>
-                <p className="mt-1 text-muted-foreground">
-                  The shared federal baseline is inherited by all 50 state packs and is not activated as a standalone pack.
-                  Use each state pack's Authorized Agent activation record, then complete the separate deterministic release gate.
-                </p>
-              </div>
-            ) : null}
+            <p className="flex items-start gap-2 font-medium"><ShieldCheck className="mt-0.5 size-4 shrink-0" /> Source validation and Authorized Agent activation are required.</p>
+            {selectedPack?.validated_on ? <p className="mt-2 font-medium">Validation date: {selectedPack.validated_on}</p> : null}
+            {stateCode === "US" ? <p className="mt-2 text-muted-foreground">Federal source verification {federalSourcesVerified ? "complete" : "still open"}</p> : null}
           </div>
 
           <div id="validation-records" ref={recordsRef} tabIndex={-1} className="scroll-mt-24 focus:outline-none">
-          {packView === "all" || packView === "active" ? (
-            <Panel className="mt-4" title={packView === "all" ? "All state packs" : "Compliance-active state packs"} bodyClassName="p-0">
-              {visiblePacks.length ? (
-                <ul className="divide-y divide-border">
-                  {visiblePacks.map((pack) => (
-                    <li key={pack.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono font-semibold">{pack.state_code}</span>
-                        <Pill tone={toneFor(pack.status)}>{labelFor(pack.status)}</Pill>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}>
-                        <FileSearch className="size-4" /> View source records
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : <p className="px-5 py-8 text-sm text-muted-foreground">No compliance-active state packs.</p>}
-            </Panel>
-          ) : null}
-          {packView !== null && query.error ? <p role="alert" className="mt-4 text-sm text-reject">The validation queue could not be refreshed. Displayed records may be out of date.</p> : null}
-          {(packView === null && showPendingOverview) || packView === "readiness" ? <Panel
-            className="mt-4"
-            title="State pack activation readiness"
-            description="Every current state and DC pack candidate, with the requirements that still block Authorized Agent activation."
-            bodyClassName="p-0"
-          >
-            {readinessRows.length ? (
-              <ul className="divide-y divide-border">
-                {readinessRows.map(({ pack, activation, state }) => (
-                  <li key={pack.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-semibold">{pack.state_code}</span>
-                        {state === "active" ? (
-                          <Pill tone="seal">Active</Pill>
-                        ) : state === "ready" ? (
-                          <Pill tone="flag">Ready to activate</Pill>
-                        ) : (
-                          <Pill tone="reject">Unresolved requirements</Pill>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {state === "unresolved"
-                          ? "Required state sources or the inherited federal baseline are still unresolved. Activation stays closed."
-                          : state === "active"
-                            ? "Authorized Agent activation is recorded for this pack."
-                            : `${activation?.first_reviewer_count ?? 0} first-stage reviewer${(activation?.first_reviewer_count ?? 0) === 1 ? "" : "s"} recorded.${
-                                activation?.viewer_is_first_reviewer
-                                  ? " A different Administrator must activate this pack."
-                                  : " You are authorized to complete activation."
-                              }`}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {state === "unresolved" ? (
-                        <Button variant="outline" size="sm" onClick={() => openSources("unresolved", pack.state_code)}>
-                          <FileSearch className="size-4" /> View unresolved requirements
-                        </Button>
-                      ) : (
-                        <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}>
-                          <FileSearch className="size-4" /> View source records
-                        </Button>
-                      )}
-                      {state === "ready" && activation ? (
-                        activation.viewer_can_activate ? (
-                          <Button
-                            size="sm"
-                            disabled={activatePack.isPending}
-                            onClick={() => activatePack.mutate(activation)}
-                          >
-                            <ShieldCheck className="size-4" /> Activate state pack
-                          </Button>
-                        ) : (
-                          <Pill>Different Administrator required</Pill>
-                        )
-                      ) : null}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                No current state pack candidates are available.
-              </div>
-            )}
-            {allSourceActivationsRecorded ? (
-              <p className="border-t border-border px-5 py-4 text-sm text-muted-foreground">
-                All {completedSourceActivations} current state-pack source snapshots have Authorized Agent activation
-                records. The shared federal baseline has no separate activation button. Compliance remains fail-closed
-                until the deterministic release gate is completed.
-              </p>
-            ) : null}
-          </Panel> : null}
-
-          {packView === null && isCrmAdmin ? (
-            <Panel
-              className="mt-4"
-              title="Exact-file source records"
-              description="Split mutable landing pages and document collections into independently hashable source records."
-              actions={
-                <Button
-                  size="sm"
-                  variant={showNewSource ? "outline" : "default"}
-                  onClick={() => setShowNewSource((current) => !current)}
-                >
-                  <Plus className="size-4" />
-                  {showNewSource ? "Cancel" : "Add source record"}
-                </Button>
-              }
-              bodyClassName={showNewSource ? "p-5" : "hidden"}
-            >
-              {showNewSource ? (
-                <form
-                  className="grid gap-4 md:grid-cols-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    createSource.mutate(newSource);
-                  }}
-                >
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-source-state">State</Label>
-                    <select
-                      id="new-source-state"
-                      required
-                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                      value={newSource.stateCode}
-                      onChange={(event) =>
-                        setNewSource((current) => ({ ...current, stateCode: event.target.value }))
-                      }
-                    >
-                      <option value="">Select a state</option>
-                      {statePacks.map((pack) => (
-                        <option key={pack.id} value={pack.state_code}>
-                          {pack.state_code}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-source-scope">Scope</Label>
-                    <Input
-                      id="new-source-scope"
-                      required
-                      maxLength={100}
-                      value={newSource.scope}
-                      onChange={(event) =>
-                        setNewSource((current) => ({
-                          ...current,
-                          scope: normalizeIdentifier(event.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label htmlFor="new-source-authority">Issuing authority</Label>
-                    <Input
-                      id="new-source-authority"
-                      required
-                      maxLength={250}
-                      placeholder="Arizona Department of Housing"
-                      value={newSource.authorityName}
-                      onChange={(event) =>
-                        setNewSource((current) => ({ ...current, authorityName: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-source-domain">Official domain</Label>
-                    <Input
-                      id="new-source-domain"
-                      readOnly
-                      maxLength={253}
-                      placeholder="Derived from the official file URL"
-                      value={newSource.officialDomain}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Automatically derived from the exact official file URL.
-                    </p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-source-program">Program</Label>
-                    <Input
-                      id="new-source-program"
-                      required
-                      maxLength={100}
-                      value={newSource.program}
-                      onChange={(event) =>
-                        setNewSource((current) => ({
-                          ...current,
-                          program: normalizeIdentifier(event.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-source-type">Source type</Label>
-                    <Input
-                      id="new-source-type"
-                      required
-                      maxLength={150}
-                      placeholder="COMPLIANCE_MANUAL"
-                      value={newSource.sourceType}
-                      onChange={(event) =>
-                        setNewSource((current) => ({
-                          ...current,
-                          sourceType: normalizeIdentifier(event.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-source-condition">Intake condition</Label>
-                    <Input
-                      id="new-source-condition"
-                      required
-                      maxLength={150}
-                      value={newSource.candidateStatus}
-                      onChange={(event) =>
-                        setNewSource((current) => ({
-                          ...current,
-                          candidateStatus: normalizeIdentifier(event.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label htmlFor="new-source-url">Exact official file URL</Label>
-                    <Input
-                      id="new-source-url"
-                      type="url"
-                      required
-                      maxLength={2000}
-                      placeholder="https://housing.az.gov/.../document.pdf"
-                      value={newSource.sourceUrl}
-                      onChange={(event) => {
-                        const sourceUrl = event.target.value;
-                        setNewSource((current) => ({
-                          ...current,
-                          sourceUrl,
-                          officialDomain: officialDomainFor(sourceUrl),
-                        }));
-                      }}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Use the direct PDF, spreadsheet, ZIP, or other immutable official file—not a landing page.
-                    </p>
-                  </div>
-                  <div className="md:col-span-2 flex flex-wrap items-center gap-3">
-                    <Button type="submit" disabled={createSource.isPending}>
-                      {createSource.isPending ? "Creating…" : "Create validation record"}
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                      A new record returns the pack to validation until every required source passes.
-                    </p>
-                  </div>
-                </form>
-              ) : null}
-            </Panel>
-          ) : null}
-
-          {packView === null ? <>
-          <Panel className="mt-4" title="Queue filters" bodyClassName="p-5">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="state-filter">Source jurisdiction</Label>
-                <select
-                  id="state-filter"
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  value={stateCode}
-                  onChange={(event) => setStateCode(event.target.value)}
-                >
-                  <option value="ALL">All state and federal sources</option>
-                  <option value="US">Federal shared — all 50 states</option>
-                  {statePacks.map((pack) => (
-                    <option key={pack.id} value={pack.state_code}>
-                      {pack.state_code} — {labelFor(pack['status'])}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="status-filter">Status</Label>
-                <select
-                  id="status-filter"
-                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
-                >
-                  <option value="active">All remaining</option>
-                  <option value="unresolved">Unresolved requirements</option>
-                  <option value="queued_for_agent_verification">Queued</option>
-                  <option value="captured_unvalidated">Captured, unvalidated</option>
-                  <option value="verified">Verified</option>
-                  <option value="blocked">Blocked</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="blocked_or_rejected">Blocked / rejected</option>
-                  <option value="all">All history</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="source-search">Search</Label>
-                <Input
-                  id="source-search"
-                  value={search}
-                  placeholder="Agency, state, source type, or URL"
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </div>
-            </div>
-          </Panel>
-
-          {showRejectedQueue ? (
-            <Panel
-              className="mt-4"
-              title="Rejected sources"
-              description="Rejected records are out of the validation queue and await finalization. Returning a record restores pending review only — it never approves a source or activates a rule."
-            >
-              {!rejectedSources.length ? (
-                <p className="text-sm text-muted-foreground">No rejected source records are awaiting finalization.</p>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        setRejectedSelection(
-                          rejectedSelection.length === rejectedSources.length
-                            ? []
-                            : rejectedSources.map((source) => source.id),
-                        )
-                      }
-                    >
-                      {rejectedSelection.length === rejectedSources.length ? "Clear selection" : "Select all"}
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      {rejectedSelection.length} of {rejectedSources.length} selected
-                    </span>
-                  </div>
-                  <ul className="divide-y divide-border rounded-md border border-border">
-                    {rejectedSources.map((source) => (
-                      <li key={source.id} className="flex items-start gap-3 px-4 py-3">
-                        <input
-                          type="checkbox"
-                          className="mt-1 size-4"
-                          checked={rejectedSelection.includes(source.id)}
-                          aria-label={`Select ${source.state_code} ${source.authority_name}`}
-                          onChange={(event) =>
-                            setRejectedSelection((current) =>
-                              event.target.checked
-                                ? [...new Set([...current, source.id])]
-                                : current.filter((id) => id !== source.id),
-                            )
-                          }
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-mono font-semibold">{source.state_code}</span>
-                            <Pill tone="reject">Rejected</Pill>
-                            <Pill>{source.scope.replaceAll("_", " ")}</Pill>
-                            <Pill>{source.program}</Pill>
-                          </div>
-                          <p className="mt-1 text-sm">{source.authority_name}</p>
-                          <p className="break-all text-xs text-muted-foreground">{source.source_url}</p>
-                        </div>
+            {packView === "all" || packView === "active" ? (
+              <Panel className="mt-4" title={packView === "all" ? "All state packs" : "Compliance-active state packs"} bodyClassName="p-0">
+                {visiblePacks.length ? (
+                  <ul className="divide-y divide-border">
+                    {visiblePacks.map((pack) => (
+                      <li key={pack.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                        <div className="flex flex-wrap items-center gap-2"><span className="font-mono font-semibold">{pack.state_code}</span><Pill tone={toneFor(pack.status)}>{labelFor(pack.status)}</Pill></div>
+                        <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}><FileSearch className="size-4" /> View source records</Button>
                       </li>
                     ))}
                   </ul>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="rejection-reason">Written reason (required, minimum 10 characters)</Label>
-                    <Textarea
-                      id="rejection-reason"
-                      value={rejectionReason}
-                      rows={3}
-                      placeholder="Record why these rejected sources are returned to validation or permanently deleted."
-                      onChange={(event) => setRejectionReason(event.target.value)}
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      disabled={rejectedWorkflow.isPending}
-                      onClick={() => runRejectedAction("return")}
-                    >
-                      Return to validations
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      disabled={rejectedWorkflow.isPending}
-                      onClick={() => runRejectedAction("finalize")}
-                    >
-                      Finalize rejection (permanent delete)
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Finalizing permanently deletes the selected source records. They cannot be restored. Captured
-                    evidence files, historical findings and production rules are retained, and a non-restorable
-                    deletion audit entry records the source identifier, actor, reason and time.
-                  </p>
+                ) : <p className="px-5 py-8 text-sm text-muted-foreground">No compliance-active state packs.</p>}
+              </Panel>
+            ) : null}
+
+            {(packView === null && showPendingOverview) || packView === "readiness" ? (
+              <Panel className="mt-4" title="State pack activation readiness" bodyClassName="p-0">
+                <ul className="divide-y divide-border">
+                  {readinessRows.map(({ pack, activation, state }) => (
+                    <li key={pack.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div><span className="font-mono font-semibold">{pack.state_code}</span> <Pill tone={state === "active" ? "seal" : state === "ready" ? "flag" : "reject"}>{state === "active" ? "Active" : state === "ready" ? "Ready to activate" : "Unresolved requirements"}</Pill></div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {state === "unresolved" ? <Button variant="outline" size="sm" onClick={() => openSources("unresolved", pack.state_code)}><FileSearch className="size-4" /> View unresolved requirements</Button> : <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}><FileSearch className="size-4" /> View source records</Button>}
+                        {state === "ready" && activation?.viewer_can_activate ? <Button size="sm" onClick={() => activatePack.mutate(activation)}><ShieldCheck className="size-4" /> Activate state pack</Button> : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {allSourceActivationsRecorded ? <p className="border-t border-border px-5 py-4 text-sm text-muted-foreground">All {completedSourceActivations} current state-pack source snapshots have Authorized Agent activation records.</p> : null}
+              </Panel>
+            ) : null}
+
+            {packView === null ? <>
+              <Panel className="mt-4" title="Queue filters" bodyClassName="p-5">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div><Label htmlFor="state-filter">Source jurisdiction</Label><select id="state-filter" className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={stateCode} onChange={(event) => setStateCode(event.target.value)}><option value="ALL">All state and federal sources</option><option value="US">Federal shared — all 50 states</option>{statePacks.map((pack) => <option key={pack.id} value={pack.state_code}>{pack.state_code} — {labelFor(pack.status)}</option>)}</select></div>
+                  <div><Label htmlFor="status-filter">Status</Label><select id="status-filter" className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm" value={status} onChange={(event) => setStatus(event.target.value)}><option value="active">All remaining</option><option value="unresolved">Unresolved requirements</option><option value="queued_for_agent_verification">Queued</option><option value="captured_unvalidated">Captured, unvalidated</option><option value="verified">Verified</option><option value="blocked">Blocked</option><option value="rejected">Rejected</option><option value="blocked_or_rejected">Blocked / rejected</option><option value="all">All history</option></select></div>
+                  <div><Label htmlFor="source-search">Search</Label><Input id="source-search" value={search} placeholder="Agency, state, source type, or URL" onChange={(event) => setSearch(event.target.value)} /></div>
+                </div>
+              </Panel>
+
+              {showRejectedQueue ? (
+                <Panel className="mt-4" title="Rejected sources">
+                  {!rejectedSources.length ? <p className="text-sm text-muted-foreground">No rejected source records are awaiting finalization.</p> : (
+                    <div className="space-y-4">
+                      <ul className="divide-y divide-border rounded-md border border-border">
+                        {rejectedSources.map((source) => (
+                          <li key={source.id} className="flex items-start gap-3 px-4 py-3">
+                            <input type="checkbox" checked={rejectedSelection.includes(source.id)} aria-label={`Select ${source.state_code} ${source.authority_name}`} onChange={(event) => setRejectedSelection((current) => event.target.checked ? [...new Set([...current, source.id])] : current.filter((id) => id !== source.id))} />
+                            <div><span className="font-mono font-semibold">{source.state_code}</span> <Pill tone="reject">Rejected</Pill><p className="mt-1 text-sm">{source.authority_name}</p></div>
+                          </li>
+                        ))}
+                      </ul>
+                      <Textarea value={rejectionReason} rows={3} onChange={(event) => setRejectionReason(event.target.value)} />
+                      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => runRejectedAction("return")}>Return to validations</Button><Button variant="destructive" onClick={() => runRejectedAction("finalize")}>Finalize rejection (permanent delete)</Button></div>
+                    </div>
+                  )}
+                </Panel>
+              ) : query.error ? (
+                <div className="mt-4 rounded-lg border border-reject/30 bg-reject-soft p-4 text-sm text-reject">The validation queue could not be loaded.</div>
+              ) : query.isLoading ? (
+                <Panel className="mt-4" bodyClassName="p-10">Loading the state-source queue…</Panel>
+              ) : !visible.length ? (
+                <Panel className="mt-4" bodyClassName="p-10 text-center"><FileSearch className="mx-auto size-8 text-muted-foreground" /><p className="mt-3 font-medium">No source candidates match these filters.</p></Panel>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  <p className="text-sm text-muted-foreground">Showing {visible.length} source candidate{visible.length === 1 ? "" : "s"}.</p>
+                  {visible.map((source) => {
+                    const existing = source.verification_evidence ?? {};
+                    const draft = drafts[source.id] ?? {
+                      sha256: source.source_sha256 ?? "",
+                      retrievedAt: source.retrieved_at ? source.retrieved_at.slice(0, 16) : "",
+                      notes: typeof existing['notes'] === "string" ? existing['notes'] : "",
+                      effectiveDate: typeof existing['effective_date'] === "string" ? existing['effective_date'] : "",
+                      supersessionNotes: typeof existing['supersession_notes'] === "string" ? existing['supersession_notes'] : "",
+                    };
+                    const federalShared = source.state_code === "US" || source.scope === "FEDERAL_SHARED";
+                    const cardActivation = federalShared ? selectedActivation : activationForState(source.state_code);
+                    return <SourceReviewCard key={source.id} source={source} draft={draft} busy={review.isPending && review.variables?.source.id === source.id} activation={cardActivation} activationBusy={activatePack.isPending && activatePack.variables?.pack_candidate_id === cardActivation?.pack_candidate_id} inheritedByState={source.scope === "FEDERAL_SHARED" && stateCode !== "ALL" && stateCode !== "US" ? stateCode : undefined} onDraft={(next) => setDrafts((current) => ({ ...current, [source.id]: next }))} onDecision={(decision) => review.mutate({ source, decision })} onActivate={(pack) => activatePack.mutate(pack)} onResolvePack={(pack) => openSources("active", pack.state_code)} />;
+                  })}
                 </div>
               )}
-            </Panel>
-          ) : query.error ? (
-            <div className="mt-4 rounded-lg border border-reject/30 bg-reject-soft p-4 text-sm text-reject">
-              The validation queue could not be loaded. No source status was changed.
-            </div>
-          ) : query.isLoading ? (
-            <Panel className="mt-4" bodyClassName="p-10">Loading the state-source queue…</Panel>
-          ) : !visible.length ? (
-            <Panel className="mt-4" bodyClassName="p-10 text-center">
-              <FileSearch className="mx-auto size-8 text-muted-foreground" />
-              <p className="mt-3 font-medium">No source candidates match these filters.</p>
-            </Panel>
-          ) : (
-            <div className="mt-4 space-y-4">
-              <p className="text-sm text-muted-foreground">Showing {visible.length} source candidate{visible.length === 1 ? "" : "s"}.</p>
-              {visible.map((source) => {
-                const existing = source.verification_evidence ?? {};
-                const draft = drafts[source.id] ?? {
-                  sha256: source.source_sha256 ?? "",
-                  retrievedAt: source.retrieved_at ? source.retrieved_at.slice(0, 16) : "",
-                  notes: typeof existing['notes'] === "string" ? existing['notes'] : "",
-                  effectiveDate: typeof existing['effective_date'] === "string" ? existing['effective_date'] : "",
-                  supersessionNotes: typeof existing['supersession_notes'] === "string" ? existing['supersession_notes'] : "",
-                };
-                const federalShared = source.state_code === "US" || source.scope === "FEDERAL_SHARED";
-                const cardActivation = federalShared
-                  ? selectedActivation
-                  : activationForState(source.state_code);
-                return (
-                  <SourceReviewCard
-                    key={source.id}
-                    source={source}
-                    draft={draft}
-                    busy={review.isPending && review.variables?.source.id === source.id}
-                    activation={cardActivation}
-                    activationBusy={
-                      activatePack.isPending &&
-                      activatePack.variables?.pack_candidate_id === cardActivation?.pack_candidate_id
-                    }
-                    inheritedByState={
-                      source.scope === "FEDERAL_SHARED" && stateCode !== "ALL" && stateCode !== "US"
-                        ? stateCode
-                        : undefined
-                    }
-                    onDraft={(next) => setDrafts((current) => ({ ...current, [source.id]: next }))}
-                    onDecision={(decision) => review.mutate({ source, decision })}
-                    onActivate={(pack) => activatePack.mutate(pack)}
-                    onResolvePack={(pack) => openSources("unresolved", pack.state_code)}
-                  />
-                );
-              })}
-            </div>
-          )}
-          </> : null}
+            </> : null}
           </div>
         </>
       )}
