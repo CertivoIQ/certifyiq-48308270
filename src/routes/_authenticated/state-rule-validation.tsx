@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const VALIDATION_STATUSES = new Set([
   "active",
+  "unresolved",
   "queued_for_agent_verification",
   "captured_unvalidated",
   "verified",
@@ -170,28 +171,54 @@ function labelFor(status: string) {
   return status.replaceAll("_", " ");
 }
 
+const SOURCE_COLUMNS =
+  "id,state_code,scope,authority_name,official_domain,program,source_type,source_url,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,source_sha256,retrieved_at,verification_evidence,updated_at";
+export const SOURCE_PAGE_SIZE = 1000;
+
+export function isUnresolvedSource(source: SourceCandidate) {
+  if (
+    source.agent_verification_status === "rejected" &&
+    source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE"
+  ) return false;
+  if (source.agent_verification_status !== "verified") return true;
+  return !source.exact_bytes_captured || !source.source_sha256 || !source.retrieved_at;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadAllSourceCandidates(client: any) {
+  const rows: SourceCandidate[] = [];
+  for (let page = 0; ; page += 1) {
+    const from = page * SOURCE_PAGE_SIZE;
+    const { data, error } = await client
+      .from("state_rule_source_candidates")
+      .select(SOURCE_COLUMNS)
+      .order("state_code")
+      .order("authority_name")
+      .range(from, from + SOURCE_PAGE_SIZE - 1);
+    if (error) throw error;
+    const batch = (data ?? []) as SourceCandidate[];
+    rows.push(...batch);
+    if (batch.length < SOURCE_PAGE_SIZE) return rows;
+  }
+}
+
 async function loadValidationQueue() {
   // Generated database types intentionally lag controlled launch migrations.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = supabase as any;
-  const [packResult, sourceResult, activationResult] = await Promise.all([
+  const [packResult, sources, activationResult] = await Promise.all([
     client
       .from("state_rule_pack_candidates")
       .select("id,state_code,status,source_candidate_count,blocked_source_count,compliance_activation_allowed,validated_on,updated_at")
       .order("state_code"),
-    client
-      .from("state_rule_source_candidates")
-      .select("id,state_code,scope,authority_name,official_domain,program,source_type,source_url,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,source_sha256,retrieved_at,verification_evidence,updated_at")
-      .order("state_code")
-      .order("authority_name"),
+    loadAllSourceCandidates(client),
     client.rpc("state_rule_pack_activation_readiness"),
   ]);
   if (packResult.error) throw packResult.error;
-  if (sourceResult.error) throw sourceResult.error;
   if (activationResult.error) throw activationResult.error;
   return {
     packs: (packResult.data ?? []) as Pack[],
-    sources: (sourceResult.data ?? []) as SourceCandidate[],
+    sources,
     activations: (activationResult.data ?? []) as ActivationReadiness[],
   };
 }
@@ -411,7 +438,7 @@ function StateRuleValidationWorkspace() {
   const [stateCode, setStateCode] = useState(() => routeSearch.state ?? "ALL");
   const [status, setStatus] = useState(() => routeSearch.status ?? "active");
   const [search, setSearch] = useState("");
-  const [packView, setPackView] = useState<"all" | "pending" | "active" | null>(null);
+  const [packView, setPackView] = useState<"all" | "readiness" | "active" | null>(null);
   const [showPendingOverview, setShowPendingOverview] = useState(true);
   const [showRejectedQueue, setShowRejectedQueue] = useState(false);
   const [rejectedSelection, setRejectedSelection] = useState<string[]>([]);
@@ -428,9 +455,16 @@ function StateRuleValidationWorkspace() {
     setStateCode(nextState);
     setStatus(nextStatus);
     setSearch("");
+    if (typeof window !== "undefined" && window.history?.replaceState) {
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}?state=${nextState}&status=${nextStatus}`,
+      );
+    }
     focusRecords();
   };
-  const openPacks = (view: "all" | "pending" | "active") => {
+  const openPacks = (view: "all" | "readiness" | "active") => {
     setPackView(view);
     setShowRejectedQueue(false);
     setSearch("");
@@ -644,9 +678,6 @@ function StateRuleValidationWorkspace() {
   });
 
   const packs = query.data?.packs ?? [];
-  // Historical duplicate pack candidates exist for some states. Only the newest
-  // candidate per state is the current pack, and every count, activation lookup and
-  // source-card action must target that current candidate — never a stale one.
   const latestPackByState = new Map<string, Pack>();
   for (const pack of packs) {
     if (pack.state_code === "US") continue;
@@ -660,7 +691,6 @@ function StateRuleValidationWorkspace() {
   const selectedPack = latestPackByState.get(stateCode);
   const activatedPacks = statePacks.filter((pack) => pack.compliance_activation_allowed).length;
   const allActivations = query.data?.activations ?? [];
-  // Readiness rows are keyed by pack candidate, so stale historical candidates are dropped.
   const activations = allActivations.filter((row) => currentPackIds.has(row.pack_candidate_id));
   const activationByPackId = new Map(activations.map((row) => [row.pack_candidate_id, row]));
   const activationForState = (code: string) => {
@@ -686,25 +716,28 @@ function StateRuleValidationWorkspace() {
     federalSources.every((source) => source.agent_verification_status === "verified");
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => source.agent_verification_status === "blocked").length;
-  // Reviewer-rejected records leave the active queue and wait in Rejected sources.
-  // Automatically excluded redundant captures are not reviewer rejections.
   const rejectedSources = sources.filter(
     (source) =>
       source.agent_verification_status === "rejected" &&
       source.candidate_status !== "EXCLUDED_REDUNDANT_SOURCE",
   );
-  const rejectedIds = new Set(rejectedSources.map((source) => source.id));
-  const active = sources.filter((source) =>
-    source.agent_verification_status !== "verified" &&
-    !rejectedIds.has(source.id) &&
-    !(source.agent_verification_status === "rejected" && source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE")
-  ).length;
+  const unresolvedSources = sources.filter(isUnresolvedSource);
+  const readinessRows = statePacks.map((pack) => {
+    const activation = activationByPackId.get(pack.id);
+    const isActive = activation ? activation.activation_recorded : pack.compliance_activation_allowed;
+    const isReady = !isActive && !!activation?.sources_ready;
+    return {
+      pack,
+      activation,
+      state: isActive ? ("active" as const) : isReady ? ("ready" as const) : ("unresolved" as const),
+    };
+  });
   const visiblePacks = statePacks.filter((pack) => packView !== "active" || pack.compliance_activation_allowed);
   const summaryActions = [
     { label: "State packs", value: statePacks.length, hint: "All state candidates", tone: "neutral" as Tone, selected: packView === "all", open: () => openPacks("all") },
-    { label: "Agent activation", value: `${pendingActivations.length}/${statePacks.length}`, hint: "Awaiting your approval", tone: "flag" as Tone, selected: packView === "pending", open: () => openPacks("pending") },
+    { label: "Agent activation", value: `${pendingActivations.length}/${statePacks.length}`, hint: "Open activation readiness", tone: "flag" as Tone, selected: packView === "readiness", open: () => openPacks("readiness") },
     { label: "Compliance active", value: activatedPacks, hint: "Validated releases", tone: "seal" as Tone, selected: packView === "active", open: () => openPacks("active") },
-    { label: "Pending verifications", value: active, hint: "Open source records awaiting verification", tone: "flag" as Tone, selected: packView === null && status === "active" && stateCode === "ALL" && !search, open: () => openSources("active") },
+    { label: "Pending verifications", value: unresolvedSources.length, hint: "Unresolved records blocking readiness", tone: "flag" as Tone, selected: packView === null && status === "unresolved" && stateCode === "ALL" && !search, open: () => openSources("unresolved") },
     { label: "Verified sources", value: verified, hint: "Source review only", tone: "seal" as Tone, selected: packView === null && status === "verified" && stateCode === "ALL" && !search, open: () => openSources("verified") },
     { label: "Blocked", value: blocked, hint: "Review blocked records", tone: "reject" as Tone, selected: packView === null && !showRejectedQueue && status === "blocked" && stateCode === "ALL" && !search, open: () => openSources("blocked") },
     { label: "Rejected sources", value: rejectedSources.length, hint: "Awaiting finalization", tone: "reject" as Tone, selected: showRejectedQueue, open: openRejectedQueue },
@@ -720,14 +753,20 @@ function StateRuleValidationWorkspace() {
       const excludedRedundant =
         source.agent_verification_status === "rejected" &&
         source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE";
-      // A selected state always shows its inherited federal baseline, even when
-      // the "All remaining" queue filter would normally hide a completed source.
+      if (status === "unresolved") {
+        if (!isUnresolvedSource(source) && !inheritedFederal) return false;
+        if (needle) {
+          return [source.state_code, source.authority_name, source.source_type, source.source_url]
+            .join(" ")
+            .toLowerCase()
+            .includes(needle);
+        }
+        return true;
+      }
       if (!inheritedFederal && status === "active" && source.agent_verification_status === "verified") {
         return false;
       }
       if (!inheritedFederal && status === "active" && excludedRedundant) return false;
-      // Reviewer-rejected records leave every active queue and live in Rejected sources
-      // until an authorized reviewer returns or finalizes them.
       if (
         status !== "rejected" &&
         status !== "blocked_or_rejected" &&
@@ -830,63 +869,78 @@ function StateRuleValidationWorkspace() {
             </Panel>
           ) : null}
           {packView !== null && query.error ? <p role="alert" className="mt-4 text-sm text-reject">The validation queue could not be refreshed. Displayed records may be out of date.</p> : null}
-          {(packView === null && showPendingOverview) || packView === "pending" ? <Panel
+          {(packView === null && showPendingOverview) || packView === "readiness" ? <Panel
             className="mt-4"
-            title="State packs awaiting Agent activation"
-            description="These packs passed the required source gates and are ready for the Sole Authorized State Rule Approver."
+            title="State pack activation readiness"
+            description="Every current state and DC pack candidate, with the requirements that still block Authorized Agent activation."
             bodyClassName="p-0"
           >
-            {pendingActivations.length ? (
+            {readinessRows.length ? (
               <ul className="divide-y divide-border">
-                {pendingActivations.map((pack) => (
-                  <li key={pack.pack_candidate_id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                {readinessRows.map(({ pack, activation, state }) => (
+                  <li key={pack.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-semibold">{pack.state_code}</span>
-                        <Pill tone="flag">Awaiting Agent activation</Pill>
+                        {state === "active" ? (
+                          <Pill tone="seal">Active</Pill>
+                        ) : state === "ready" ? (
+                          <Pill tone="flag">Ready to activate</Pill>
+                        ) : (
+                          <Pill tone="reject">Unresolved requirements</Pill>
+                        )}
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {pack.first_reviewer_count} first-stage reviewer{pack.first_reviewer_count === 1 ? "" : "s"} recorded.
-                        {pack.viewer_is_first_reviewer
-                          ? " A different Administrator must activate this pack."
-                          : " You are authorized to complete activation."}
+                        {state === "unresolved"
+                          ? "Required state sources or the inherited federal baseline are still unresolved. Activation stays closed."
+                          : state === "active"
+                            ? "Authorized Agent activation is recorded for this pack."
+                            : `${activation?.first_reviewer_count ?? 0} first-stage reviewer${(activation?.first_reviewer_count ?? 0) === 1 ? "" : "s"} recorded.${
+                                activation?.viewer_is_first_reviewer
+                                  ? " A different Administrator must activate this pack."
+                                  : " You are authorized to complete activation."
+                              }`}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}>
-                      <FileSearch className="size-4" /> View source records
-                    </Button>
-                    {pack.viewer_can_activate ? (
-                      <Button
-                        size="sm"
-                        disabled={activatePack.isPending}
-                        onClick={() => activatePack.mutate(pack)}
-                      >
-                        <ShieldCheck className="size-4" /> Activate state pack
-                      </Button>
-                    ) : (
-                      <Pill>Different Administrator required</Pill>
-                    )}
+                      {state === "unresolved" ? (
+                        <Button variant="outline" size="sm" onClick={() => openSources("unresolved", pack.state_code)}>
+                          <FileSearch className="size-4" /> View unresolved requirements
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => openSources("all", pack.state_code)}>
+                          <FileSearch className="size-4" /> View source records
+                        </Button>
+                      )}
+                      {state === "ready" && activation ? (
+                        activation.viewer_can_activate ? (
+                          <Button
+                            size="sm"
+                            disabled={activatePack.isPending}
+                            onClick={() => activatePack.mutate(activation)}
+                          >
+                            <ShieldCheck className="size-4" /> Activate state pack
+                          </Button>
+                        ) : (
+                          <Pill>Different Administrator required</Pill>
+                        )
+                      ) : null}
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
               <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                {allSourceActivationsRecorded ? (
-                  <>
-                    <p className="font-medium text-foreground">Authorized Agent state-pack activation is already complete.</p>
-                    <p className="mt-1">
-                      All {completedSourceActivations} current state-pack source snapshots have Authorized Agent activation records.
-                      The shared federal baseline has no separate activation button. Compliance remains fail-closed until
-                      the deterministic release gate is completed.
-                    </p>
-                  </>
-                ) : (
-                  "No state packs are awaiting Agent activation."
-                )}
+                No current state pack candidates are available.
               </div>
             )}
+            {allSourceActivationsRecorded ? (
+              <p className="border-t border-border px-5 py-4 text-sm text-muted-foreground">
+                All {completedSourceActivations} current state-pack source snapshots have Authorized Agent activation
+                records. The shared federal baseline has no separate activation button. Compliance remains fail-closed
+                until the deterministic release gate is completed.
+              </p>
+            ) : null}
           </Panel> : null}
 
           {packView === null && isCrmAdmin ? (
@@ -1084,6 +1138,7 @@ function StateRuleValidationWorkspace() {
                   onChange={(event) => setStatus(event.target.value)}
                 >
                   <option value="active">All remaining</option>
+                  <option value="unresolved">Unresolved requirements</option>
                   <option value="queued_for_agent_verification">Queued</option>
                   <option value="captured_unvalidated">Captured, unvalidated</option>
                   <option value="verified">Verified</option>
@@ -1220,8 +1275,6 @@ function StateRuleValidationWorkspace() {
                   supersessionNotes: typeof existing['supersession_notes'] === "string" ? existing['supersession_notes'] : "",
                 };
                 const federalShared = source.state_code === "US" || source.scope === "FEDERAL_SHARED";
-                // A federal row belongs to a state pack only while that state is selected.
-                // Every other card resolves its own state's current pack, including in the ALL view.
                 const cardActivation = federalShared
                   ? selectedActivation
                   : activationForState(source.state_code);
@@ -1244,7 +1297,7 @@ function StateRuleValidationWorkspace() {
                     onDraft={(next) => setDrafts((current) => ({ ...current, [source.id]: next }))}
                     onDecision={(decision) => review.mutate({ source, decision })}
                     onActivate={(pack) => activatePack.mutate(pack)}
-                    onResolvePack={(pack) => openSources("active", pack.state_code)}
+                    onResolvePack={(pack) => openSources("unresolved", pack.state_code)}
                   />
                 );
               })}
