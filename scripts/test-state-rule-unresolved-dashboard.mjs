@@ -26,7 +26,7 @@ function makeSource(id, overrides = {}) {
     agent_verification_status: "verified",
     exact_bytes_captured: true,
     compliance_activation_allowed: false,
-    source_sha256: "a".repeat(64),
+    source_sha256: `${id}`.padEnd(64, "0").slice(0, 64).toLowerCase(),
     retrieved_at: "2026-09-01T00:00:00Z",
     verification_evidence: {},
     updated_at: "2026-09-01T00:00:00Z",
@@ -317,4 +317,81 @@ test("every summary card reveals concrete data", () => {
     assert.ok(revealed, `${label} reveals records`);
   }
   assert.deepEqual(app.mutations, []);
+});
+
+const NSPIRE_SHA = "86fccde32eba9e1b38cb659f20018b4555fc378e371dabac720eb020bf3f6f8c";
+const inSnapshot = (stamp, overrides = {}) =>
+  makeSource(`in-nspire-${stamp}`, {
+    state_code: "IN",
+    authority_name: "Indiana Housing NSPIRE presentation",
+    inventory_generated_at: stamp,
+    source_sha256: NSPIRE_SHA,
+    ...overrides,
+  });
+const inPacks = [
+  { id: "in-old", state_code: "IN", status: "verified", inventory_generated_at: "2026-08-27T00:00:00Z", source_candidate_count: 1, blocked_source_count: 0, compliance_activation_allowed: false, validated_on: null, updated_at: "2026-08-27T00:00:00Z" },
+  { id: "in-mid", state_code: "IN", status: "verified", inventory_generated_at: "2026-09-12T17:53:00Z", source_candidate_count: 1, blocked_source_count: 0, compliance_activation_allowed: false, validated_on: null, updated_at: "2026-09-12T17:53:00Z" },
+  { id: "in-new", state_code: "IN", status: "verified", inventory_generated_at: "2026-09-12T20:48:00Z", source_candidate_count: 1, blocked_source_count: 0, compliance_activation_allowed: false, validated_on: null, updated_at: "2026-09-12T20:48:00Z" },
+];
+
+test("three identical Indiana NSPIRE snapshots collapse to one current source card", () => {
+  const { exports } = setup();
+  const rows = [
+    inSnapshot("2026-08-27T00:00:00Z", { agent_verification_status: "verified" }),
+    inSnapshot("2026-09-12T17:53:00Z"),
+    inSnapshot("2026-09-12T20:48:00Z"),
+  ];
+  const current = exports.selectCurrentInventorySources(inPacks, rows);
+  assert.equal(current.length, 1);
+  assert.equal(current[0].inventory_generated_at, "2026-09-12T20:48:00Z");
+});
+
+test("duplicate hashes inside the current snapshot collapse to the richest row", () => {
+  const { exports } = setup();
+  const stamp = "2026-09-12T20:48:00Z";
+  const rows = [
+    inSnapshot(stamp, { agent_verification_status: "queued_for_agent_verification", exact_bytes_captured: false, retrieved_at: null }),
+    makeSource("in-canonical", { state_code: "IN", inventory_generated_at: stamp, source_sha256: NSPIRE_SHA, agent_verification_status: "verified" }),
+  ];
+  const current = exports.selectCurrentInventorySources([inPacks[2]], rows);
+  assert.equal(current.length, 1);
+  assert.equal(current[0].id, "in-canonical");
+});
+
+test("blank-hash rows and excluded redundant rows are handled distinctly", () => {
+  const { exports } = setup();
+  const stamp = "2026-09-12T20:48:00Z";
+  const rows = [
+    makeSource("blank-a", { state_code: "IN", inventory_generated_at: stamp, source_sha256: null }),
+    makeSource("blank-b", { state_code: "IN", inventory_generated_at: stamp, source_sha256: "  " }),
+    makeSource("redundant", { state_code: "IN", inventory_generated_at: stamp, candidate_status: "EXCLUDED_REDUNDANT_SOURCE", agent_verification_status: "rejected" }),
+  ];
+  const current = exports.selectCurrentInventorySources([inPacks[2]], rows);
+  assert.equal(current.map((row) => row.id).sort().join(","), "blank-a,blank-b");
+});
+
+test("summary counts and the rejected queue read the current snapshot only", () => {
+  const app = setup({
+    packs: inPacks,
+    activations: [],
+    sources: [
+      inSnapshot("2026-08-27T00:00:00Z", { agent_verification_status: "rejected" }),
+      makeSource("in-history-blocked", { state_code: "IN", inventory_generated_at: "2026-08-27T00:00:00Z", source_sha256: "b".repeat(64), agent_verification_status: "blocked" }),
+      makeSource("in-current-rejected", { state_code: "IN", inventory_generated_at: "2026-09-12T20:48:00Z", source_sha256: "c".repeat(64), agent_verification_status: "rejected" }),
+      inSnapshot("2026-09-12T20:48:00Z", { agent_verification_status: "queued_for_agent_verification" }),
+    ],
+  });
+  const value = (label) =>
+    nodes(find(app.render(), (n) => n.props["aria-label"] === `View ${label}`)).find((n) => n.type === "Stat").props.value;
+  assert.equal(value("blocked"), 0, "historical blocked rows leave operational counts");
+  assert.equal(value("pending verifications"), 1);
+  assert.equal(value("rejected sources"), 1, "only current rejected rows await finalization");
+  clickTile(app, "rejected sources");
+  assert.match(text(app.render()), /in-current-rejected|Indiana|authority/);
+  assert.deepEqual(app.mutations, []);
+});
+
+test("the current-inventory note is visible with the queue filters", () => {
+  const app = setup();
+  assert.match(text(app.render()), /Operational validation shows the current source inventory only\. Historical source snapshots remain preserved for audit reporting\./);
 });
