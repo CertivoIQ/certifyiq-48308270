@@ -195,6 +195,29 @@ function taskTone(task: TaskItem): Tone {
   return "flag";
 }
 
+export type SummaryFilter = "all" | "approval" | "verification" | "exceptions";
+
+// Verification-required work is every active verification or rule-pack row, not only
+// rows that carry a pack candidate. Selection is for review organisation; activation
+// eligibility is decided separately by authoritative backend readiness.
+export function isSelectableTask(task: TaskItem) {
+  return task.active && (task.category === "verification" || task.category === "rule_pack");
+}
+
+export function summaryLabel(filter: SummaryFilter) {
+  if (filter === "approval") return "approval and certification work";
+  if (filter === "verification") return "verification-required work";
+  if (filter === "exceptions") return "exceptions";
+  return "all active tasks";
+}
+
+export function matchesSummaryFilter(task: TaskItem, filter: SummaryFilter) {
+  if (filter === "all") return true;
+  if (filter === "approval") return task.category === "approval" || task.category === "certification";
+  if (filter === "verification") return task.category === "verification" || task.category === "rule_pack";
+  return task.attention === true;
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -308,6 +331,9 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
   );
   if (failed?.error) throw failed.error;
 
+  // Some deployments do not include the optional PHA module yet. Keep that gap visible
+  // as an active exception instead of failing the entire governance queue or treating
+  // the unavailable source as complete.
   const nspireSourceUnavailable = nspireResults.some((result) =>
     isMissingRelationError(result.error),
   );
@@ -320,6 +346,8 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
   const incidents = (incidentResult.data ?? []) as Incident[];
   const sources = (sourceResult.data ?? []) as SourceVersion[];
 
+  // Authoritative activation eligibility. The cached compliance_activation_allowed
+  // flag on the candidate row is never used on its own to decide what the user sees.
   const readinessByPack = new Map<string, ActivationReadiness>();
   const readinessResult = await client.rpc("state_rule_pack_activation_readiness");
   if (readinessResult.error && !isMissingRelationError(readinessResult.error)) {
@@ -429,6 +457,9 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
 
   for (const candidate of sourceCandidates) {
     const status = candidate.agent_verification_status ?? candidate.candidate_status;
+
+    // Verified source evidence remains available in State Rule Validation history,
+    // but it is no longer outstanding governance work and must leave Tasks entirely.
     if (status === "verified") continue;
 
     tasks.push({
@@ -526,7 +557,7 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
   );
 }
 
-function TaskList({
+export function TaskList({
   tasks,
   onCompleted,
   selectedIds,
@@ -556,7 +587,7 @@ function TaskList({
   return (
     <ul className="divide-y divide-border">
       {tasks.map((task) => {
-        const selectable = Boolean(task.packCandidateId);
+        const selectable = isSelectableTask(task);
         const selected = selectedIds.includes(task.id);
         const bodyClick = selectable
           ? (event: React.MouseEvent<HTMLDivElement>) => {
@@ -576,7 +607,11 @@ function TaskList({
                     className="mt-1 shrink-0"
                     checked={selected}
                     onCheckedChange={() => onToggleSelect(task)}
-                    aria-label={`Select ${task.activationStateCode ?? ""} state rule pack`}
+                    aria-label={
+                      task.packCandidateId
+                        ? `Select ${task.activationStateCode ?? ""} state rule pack`
+                        : `Select verification task ${task.title}`
+                    }
                   />
                 ) : null}
                 <div className="min-w-0" onClick={bodyClick}>
@@ -630,7 +665,12 @@ function TaskList({
                   {task.validationStateCode ? (
                     <Link
                       to="/state-rule-validation"
-                      search={{ state: task.validationStateCode, status: "active" }}
+                      search={{
+                        state: task.validationStateCode,
+                        // Outstanding verification work lands on the unresolved requirements,
+                        // never on a stale "active" filter that can render empty.
+                        status: isSelectableTask(task) ? "unresolved" : "active",
+                      }}
                     >
                       {task.actionLabel}
                     </Link>
@@ -652,6 +692,7 @@ function TasksWorkspace() {
   const { isStaff, loading } = useIsStaff();
   const queryClient = useQueryClient();
   const [view, setView] = useState<"active" | "history">("active");
+  const [summaryFilter, setSummaryFilter] = useState<SummaryFilter>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pendingActivation, setPendingActivation] = useState<TaskItem[] | null>(null);
   const query = useQuery({
@@ -665,21 +706,62 @@ function TasksWorkspace() {
   const allTasks = useMemo(() => queryData ?? [], [queryData]);
   const activeTasks = allTasks.filter((task) => task.active);
   const history = allTasks.filter((task) => !task.active);
-  const visibleTasks = view === "active" ? activeTasks : history;
-  const awaitingApproval = activeTasks.filter(
-    (task) => task.category === "approval" || task.category === "certification",
-  ).length;
-  const verifications = activeTasks.filter(
-    (task) => task.category === "verification" || task.category === "rule_pack",
-  ).length;
-  const exceptions = activeTasks.filter((task) => task.attention).length;
+  const visibleTasks =
+    view === "active" ? activeTasks.filter((task) => matchesSummaryFilter(task, summaryFilter)) : history;
+  const awaitingApproval = activeTasks.filter((task) => matchesSummaryFilter(task, "approval")).length;
+  const verifications = activeTasks.filter((task) => matchesSummaryFilter(task, "verification")).length;
+  const exceptions = activeTasks.filter((task) => matchesSummaryFilter(task, "exceptions")).length;
 
-  const selectedPacks = useMemo(
-    () => allTasks.filter((task) => task.packCandidateId && selectedIds.includes(task.id)),
+  const openSummary = (filter: SummaryFilter) => {
+    setView("active");
+    setSummaryFilter(filter);
+  };
+  const openHistory = () => {
+    setView("history");
+    setSummaryFilter("all");
+  };
+
+  const summaryCards: { label: string; filter: SummaryFilter; value: number; hint: string; tone?: Tone }[] = [
+    {
+      label: "Active tasks",
+      filter: "all",
+      value: activeTasks.length,
+      hint: "Cleared when the underlying control completes",
+      tone: query.error ? "reject" : activeTasks.length ? "flag" : "seal",
+    },
+    {
+      label: "Awaiting approval",
+      filter: "approval",
+      value: awaitingApproval,
+      hint: "Separate approver controls remain enforced",
+    },
+    {
+      label: "Verification required",
+      filter: "verification",
+      value: verifications,
+      hint: "Sources and rule packs",
+    },
+    {
+      label: "Exceptions",
+      filter: "exceptions",
+      value: exceptions,
+      hint: "Blocked, conflicting, or open incidents",
+      tone: query.error || exceptions ? "reject" : "seal",
+    },
+  ];
+
+  const selectedTasks = useMemo(
+    () => allTasks.filter((task) => selectedIds.includes(task.id)),
     [allTasks, selectedIds],
   );
-  const selectedReady = selectedPacks.filter((task) => task.activationReady);
-  const selectedNotReady = selectedPacks.filter((task) => !task.activationReady);
+  // Only rows carrying a pack candidate can ever reach the activation RPC.
+  const selectedPacks = useMemo(
+    () => selectedTasks.filter((task) => task.packCandidateId),
+    [selectedTasks],
+  );
+  const selectedReady = selectedPacks.filter((task) => task.activationReady === true);
+  const selectedNotReady = selectedPacks.filter((task) => task.activationReady !== true);
+  const selectedVerificationCount = selectedTasks.filter(isSelectableTask).length;
 
   const toggleSelect = (task: TaskItem) => {
     setSelectedIds((current) =>
@@ -743,10 +825,13 @@ function TasksWorkspace() {
   });
 
   const requestActivation = (packs: TaskItem[]) => {
-    const ready = packs.filter((pack) => pack.activationReady);
+    // Ordinary verification selections can never reach activation: a row must carry a
+    // pack candidate and authoritative readiness.
+    const ready = packs.filter((pack) => Boolean(pack.packCandidateId) && pack.activationReady === true);
     if (!ready.length) return;
     setPendingActivation(ready);
   };
+
 
   return (
     <AppShell
@@ -760,10 +845,25 @@ function TasksWorkspace() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="Active tasks" value={query.error ? "—" : activeTasks.length} hint="Cleared when the underlying control completes" tone={query.error ? "reject" : activeTasks.length ? "flag" : "seal"} />
-            <Stat label="Awaiting approval" value={query.error ? "—" : awaitingApproval} hint="Separate approver controls remain enforced" />
-            <Stat label="Verification required" value={query.error ? "—" : verifications} hint="Sources and rule packs" />
-            <Stat label="Exceptions" value={query.error ? "—" : exceptions} hint="Blocked, conflicting, or open incidents" tone={query.error || exceptions ? "reject" : "seal"} />
+            {summaryCards.map((card) => (
+              <button
+                key={card.label}
+                type="button"
+                aria-label={`View ${card.label.toLowerCase()}`}
+                aria-pressed={view === "active" && summaryFilter === card.filter}
+                aria-controls="task-records"
+                disabled={query.isLoading || !!query.error}
+                onClick={() => openSummary(card.filter)}
+                className="min-w-0 rounded-lg text-left transition-shadow hover:ring-2 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 [&>div]:h-full aria-pressed:ring-2 aria-pressed:ring-primary"
+              >
+                <Stat
+                  label={card.label}
+                  value={query.error ? "—" : card.value}
+                  hint={card.hint}
+                  {...(card.tone ? { tone: card.tone } : {})}
+                />
+              </button>
+            ))}
           </div>
 
           {query.error ? (
@@ -772,12 +872,15 @@ function TasksWorkspace() {
             </div>
           ) : null}
 
+          <div id="task-records">
           <Panel
             className="mt-4"
             title={view === "active" ? "Outstanding tasks" : "Completed history"}
             description={
               view === "active"
-                ? "Items leave this queue automatically when their authoritative workflow reaches a completed state."
+                ? summaryFilter === "all"
+                  ? "Items leave this queue automatically when their authoritative workflow reaches a completed state."
+                  : `Filtered to ${summaryLabel(summaryFilter)}. Select the summary card again or Active to clear the filter.`
                 : "Completed and superseded controls remain available as an audit trail."
             }
             actions={
@@ -798,21 +901,37 @@ function TasksWorkspace() {
                     ? ` (${selectedReady.length} ready${selectedNotReady.length ? `, ${selectedNotReady.length} not ready` : ""})`
                     : ""}
                 </Button>
-                <Button size="sm" variant={view === "active" ? "default" : "outline"} onClick={() => setView("active")}>
+                {selectedIds.length ? (
+                  <Button size="sm" variant="outline" onClick={() => setSelectedIds([])}>
+                    Clear selection
+                  </Button>
+                ) : null}
+                <Button size="sm" variant={view === "active" ? "default" : "outline"} onClick={() => openSummary("all")}>
                   <Clock3 className="size-4" /> Active ({query.error ? "—" : activeTasks.length})
                 </Button>
-                <Button size="sm" variant={view === "history" ? "default" : "outline"} onClick={() => setView("history")}>
+                <Button size="sm" variant={view === "history" ? "default" : "outline"} onClick={openHistory}>
                   <CheckCircle2 className="size-4" /> History ({query.error ? "—" : history.length})
                 </Button>
               </div>
             }
             bodyClassName="p-0"
           >
-            {selectedPacks.length && !selectedReady.length ? (
-              <p className="border-b border-border px-5 py-3 text-sm text-muted-foreground" role="status">
-                None of the {selectedPacks.length} selected state packs are activation-ready. Complete source
-                verification and independent Administrator separation first.
-              </p>
+            {selectedIds.length ? (
+              <div
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-5 py-3 text-sm"
+                role="status"
+                aria-label="Task selection summary"
+              >
+                <span className="font-medium">{selectedVerificationCount} verification-required selected</span>
+                <span className="text-muted-foreground">{selectedPacks.length} state packs selected</span>
+                <span className="text-muted-foreground">{selectedReady.length} activation-ready</span>
+                {selectedPacks.length && !selectedReady.length ? (
+                  <span className="text-muted-foreground">
+                    None of the selected state packs are activation-ready — complete source verification and
+                    independent Administrator separation first.
+                  </span>
+                ) : null}
+              </div>
             ) : null}
             {query.isLoading ? (
               <div className="px-5 py-10 text-sm text-muted-foreground">Loading role-aware tasks…</div>
@@ -838,6 +957,7 @@ function TasksWorkspace() {
               />
             )}
           </Panel>
+          </div>
 
           <AlertDialog
             open={Boolean(pendingActivation)}
