@@ -38,6 +38,19 @@ function setup({ state = "ALL", status = "active", sources, packs, activations }
   let cursor = 0;
   const cells = [];
   const mutations = [];
+  const mutationConfigs = [];
+  const cache = new Map();
+  const invalidated = [];
+  const queryClient = {
+    setQueryData: (key, updater) => {
+      const id = JSON.stringify(key);
+      const next = typeof updater === "function" ? updater(cache.get(id)) : updater;
+      cache.set(id, next);
+      return next;
+    },
+    getQueryData: (key) => cache.get(JSON.stringify(key)),
+    invalidateQueries: (args) => { invalidated.push(args?.queryKey); },
+  };
   let options;
   const data = {
     packs: packs ?? [
@@ -76,13 +89,16 @@ function setup({ state = "ALL", status = "active", sources, packs, activations }
       createFileRoute: () => (config) => { options = config; return { useSearch: () => ({ state, status }) }; },
     },
     "@tanstack/react-query": {
-      useQueryClient: () => ({}),
+      useQueryClient: () => queryClient,
       useQuery: () => ({ data, error: null, isLoading: false }),
-      useMutation: () => ({ mutate: (value) => mutations.push(value), isPending: false }),
+      useMutation: (config) => {
+        mutationConfigs.push(config);
+        return { mutate: (value) => mutations.push(value), isPending: false };
+      },
     },
     "@/hooks/use-crm-staff-authority": { useCrmStaffAuthority: () => ({ canManageStaff: true, isCrmAdmin: true, loading: false }) },
     "@/integrations/supabase/client": { supabase: {} },
-    sonner: { toast: {} },
+    sonner: { toast: { success: () => {}, error: () => {} } },
   };
   const exports = {};
   vm.runInNewContext(code, {
@@ -91,7 +107,7 @@ function setup({ state = "ALL", status = "active", sources, packs, activations }
     requestAnimationFrame: (fn) => fn(),
   });
   const render = () => { cursor = 0; return options.component(); };
-  return { render, mutations, exports, options };
+  return { render, mutations, exports, options, mutationConfigs, queryClient, cache, invalidated, data };
 }
 
 function nodes(tree) {
@@ -157,7 +173,7 @@ test("an exactly full final page still terminates on the next short page", async
   assert.equal(rows.length, size);
 });
 
-test("unresolved marks every record that still blocks readiness", () => {
+test("unresolved marks records awaiting verification and never reviewer rejections", () => {
   const { exports } = setup();
   const unresolved = (overrides) => exports.isUnresolvedSource(makeSource("x", overrides));
   assert.equal(unresolved({}), false);
@@ -165,22 +181,29 @@ test("unresolved marks every record that still blocks readiness", () => {
   assert.equal(unresolved({ retrieved_at: null }), true);
   assert.equal(unresolved({ exact_bytes_captured: false }), true);
   assert.equal(unresolved({ agent_verification_status: "blocked" }), true);
-  assert.equal(unresolved({ agent_verification_status: "rejected" }), true);
+  assert.equal(unresolved({ agent_verification_status: "rejected" }), false);
   assert.equal(
     unresolved({ agent_verification_status: "rejected", candidate_status: "EXCLUDED_REDUNDANT_SOURCE" }),
     false,
   );
+  const rejected = (overrides) => exports.isRejectedSource(makeSource("x", overrides));
+  assert.equal(rejected({ agent_verification_status: "rejected" }), true);
+  assert.equal(
+    rejected({ agent_verification_status: "rejected", candidate_status: "EXCLUDED_REDUNDANT_SOURCE" }),
+    false,
+  );
+  assert.equal(rejected({}), false);
 });
 
 test("Pending verifications opens the unresolved view over the full dataset", () => {
   const app = setup();
   const tile = find(app.render(), (n) => n.props["aria-label"] === "View pending verifications");
   const stat = nodes(tile).find((n) => n.type === "Stat");
-  assert.equal(stat.props.value, 6);
+  assert.equal(stat.props.value, 5, "reviewer-rejected records are not pending verifications");
   tile.props.onClick();
   assert.equal(
     sourceIds(app).sort().join(","),
-    "blocked,queued,rejected,verified-no-bytes,verified-no-hash,verified-no-retrieved",
+    "blocked,queued,verified-no-bytes,verified-no-hash,verified-no-retrieved",
   );
   assert.equal(find(app.render(), (n) => n.props.id === "status-filter").props.value, "unresolved");
   assert.deepEqual(app.mutations, []);
@@ -189,8 +212,48 @@ test("Pending verifications opens the unresolved view over the full dataset", ()
 test("the unresolved route search is honoured directly", () => {
   const app = setup({ status: "unresolved" });
   assert.equal(find(app.render(), (n) => n.props.id === "status-filter").props.value, "unresolved");
-  assert.ok(sourceIds(app).includes("rejected"));
+  assert.ok(!sourceIds(app).includes("rejected"));
   assert.ok(!sourceIds(app).includes("verified-complete"));
+});
+
+test("a rejected federal/shared source leaves the unresolved view for a selected state", () => {
+  const sources = [
+    makeSource("federal-rejected", {
+      state_code: "US",
+      scope: "FEDERAL_SHARED",
+      agent_verification_status: "rejected",
+    }),
+    makeSource("ak-queued", { agent_verification_status: "queued_for_agent_verification" }),
+  ];
+  const app = setup({ state: "AK", status: "unresolved", sources });
+  assert.deepEqual(sourceIds(app), ["ak-queued"]);
+});
+
+test("the rejected queue still lists reviewer-rejected sources", () => {
+  const app = setup();
+  const tile = find(app.render(), (n) => n.props["aria-label"] === "View rejected sources");
+  assert.equal(nodes(tile).find((n) => n.type === "Stat").props.value, 1);
+  tile.props.onClick();
+  assert.ok(text(app.render()).length > 0);
+  assert.deepEqual(app.mutations, []);
+});
+
+test("a successful Reject decision updates the cached queue immediately", () => {
+  const app = setup();
+  app.render();
+  const key = ["state-rule-validation-queue"];
+  app.queryClient.setQueryData(key, { packs: [], activations: [], sources: [makeSource("to-reject")] });
+  const review = app.mutationConfigs.find((config) => typeof config?.onSuccess === "function");
+  assert.ok(review, "the review mutation registers an onSuccess handler");
+  review.onSuccess(
+    { source_status: "rejected", pack_status: "verified", compliance_activation_allowed: false, validated_on: null },
+    { source: makeSource("to-reject"), decision: "rejected" },
+  );
+  const cached = app.queryClient.getQueryData(key);
+  assert.equal(cached.sources[0].agent_verification_status, "rejected");
+  assert.equal(app.exports.isUnresolvedSource(cached.sources[0]), false);
+  assert.equal(app.exports.isRejectedSource(cached.sources[0]), true);
+  assert.ok(app.invalidated.some((k) => JSON.stringify(k) === JSON.stringify(key)));
 });
 
 test("Agent activation lists unresolved states when none are activation-ready", () => {
