@@ -1,0 +1,26 @@
+name: Exact SHA Recovery 2026-09-16
+on:
+  push:
+    branches:
+      - ops/exact-sha-recovery-20260916
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Capture exact bytes and SHA-256
+        run: node scripts/exact-sha-recovery-20260916.mjs
+      - name: Upload exact-byte custody artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exact-sha-recovery-20260916
+          path: artifacts/exact-sha-recovery/**
+          if-no-files-found: error
+          retention-days: 90
