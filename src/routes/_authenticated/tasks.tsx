@@ -1,8 +1,9 @@
 import { isInternalSegmentUser } from "@/lib/internal-segment-access";
 import { useSession } from "@/hooks/use-session";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -19,6 +20,17 @@ import { Button } from "@/components/ui/button";
 import { Panel, Pill, Stat, type Tone } from "@/components/ui-kit";
 import { useIsStaff } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/tasks")({
   head: () => ({
@@ -55,6 +67,23 @@ type TaskItem = {
   caseId?: string | undefined;
   workflowRole?: "employee" | "manager";
   attention?: boolean;
+  packCandidateId?: string | undefined;
+  activationStateCode?: string | undefined;
+  activationReady?: boolean;
+  activationBlockedReason?: string;
+};
+
+type ActivationReadiness = {
+  pack_candidate_id: string;
+  state_code: string;
+  pack_status: string;
+  sources_ready: boolean;
+  activation_recorded: boolean;
+  first_reviewer_count: number;
+  viewer_is_first_reviewer: boolean;
+  viewer_can_activate: boolean;
+  validated_on: string | null;
+  activated_on: string | null;
 };
 
 type CertificationWorkflowTask = {
@@ -279,9 +308,6 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
   );
   if (failed?.error) throw failed.error;
 
-  // Some deployments do not include the optional PHA module yet. Keep that gap visible
-  // as an active exception instead of failing the entire governance queue or treating
-  // the unavailable source as complete.
   const nspireSourceUnavailable = nspireResults.some((result) =>
     isMissingRelationError(result.error),
   );
@@ -293,6 +319,15 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
   const approvals = (approvalResult.data ?? []) as Approval[];
   const incidents = (incidentResult.data ?? []) as Incident[];
   const sources = (sourceResult.data ?? []) as SourceVersion[];
+
+  const readinessByPack = new Map<string, ActivationReadiness>();
+  const readinessResult = await client.rpc("state_rule_pack_activation_readiness");
+  if (readinessResult.error && !isMissingRelationError(readinessResult.error)) {
+    throw readinessResult.error;
+  }
+  for (const row of (readinessResult.data ?? []) as ActivationReadiness[]) {
+    readinessByPack.set(row.pack_candidate_id, row);
+  }
 
   const attestationCounts = new Map<string, number>();
   for (const attestation of attestations) {
@@ -336,32 +371,64 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
   }
 
   for (const candidate of packCandidates) {
-    const active = !candidate.compliance_activation_allowed;
+    const readiness = readinessByPack.get(candidate.id);
     const awaitingActivation = candidate.status === "awaiting_second_verification";
+    const activationRecorded = readiness
+      ? readiness.activation_recorded
+      : candidate.compliance_activation_allowed;
+    const active = !activationRecorded;
+    const activationReady = Boolean(
+      readiness &&
+        readiness.sources_ready &&
+        readiness.viewer_can_activate &&
+        !readiness.activation_recorded,
+    );
+    const blockedReason = !readiness
+      ? "Activation readiness is unavailable for this pack."
+      : readiness.activation_recorded
+        ? "This state pack is already activated."
+        : !readiness.sources_ready
+          ? "Every required state and shared federal source must complete verification first."
+          : !readiness.viewer_can_activate
+            ? readiness.viewer_is_first_reviewer
+              ? "A different Administrator must activate a pack you first reviewed — independent Administrator activation required."
+              : "Your account is not authorized to activate this state pack."
+            : "";
     tasks.push({
       id: `rule-pack-candidate:${candidate.id}`,
       category: "rule_pack",
-      title: awaitingActivation
+      title: activationReady
         ? `Activate ${candidate.state_code} state rule pack`
         : `${candidate.state_code} state rule-pack validation`,
-      description: awaitingActivation
-        ? `${candidate.source_candidate_count} verified source records · independent Administrator activation required`
-        : `${candidate.source_candidate_count} candidate sources · ${candidate.blocked_source_count} blocked · ${active ? "first verification required" : "dual-control activation satisfied"}`,
+      description: activationReady
+        ? `${candidate.source_candidate_count} verified source records · ready for authorized activation`
+        : `${candidate.source_candidate_count} candidate sources · ${candidate.blocked_source_count} blocked · ${
+            awaitingActivation
+              ? "independent Administrator activation required"
+              : active
+                ? blockedReason || "first verification required"
+                : "dual-control activation satisfied"
+          }`,
       status: candidate.status,
       active,
       occurredAt: candidate.updated_at,
       destination: active ? "/state-rule-validation" : "/rules",
-      actionLabel: awaitingActivation ? "Activate state pack" : active ? "Validate sources" : "View rules",
+      actionLabel: activationReady
+        ? "Activate state pack"
+        : active
+          ? "Validate sources"
+          : "View rules",
       validationStateCode: active ? candidate.state_code : undefined,
+      packCandidateId: candidate.id,
+      activationStateCode: candidate.state_code,
+      activationReady,
+      activationBlockedReason: blockedReason,
       attention: candidate.blocked_source_count > 0,
     });
   }
 
   for (const candidate of sourceCandidates) {
     const status = candidate.agent_verification_status ?? candidate.candidate_status;
-
-    // Verified source evidence remains available in State Rule Validation history,
-    // but it is no longer outstanding governance work and must leave Tasks entirely.
     if (status === "verified") continue;
 
     tasks.push({
@@ -459,7 +526,21 @@ async function loadTasks(includeGovernanceTasks: boolean, includeInternalTasks: 
   );
 }
 
-function TaskList({ tasks, onCompleted }: { tasks: TaskItem[]; onCompleted: () => void }) {
+function TaskList({
+  tasks,
+  onCompleted,
+  selectedIds,
+  onToggleSelect,
+  onActivate,
+  activationBusy,
+}: {
+  tasks: TaskItem[];
+  onCompleted: () => void;
+  selectedIds: string[];
+  onToggleSelect: (task: TaskItem) => void;
+  onActivate: (tasks: TaskItem[]) => void;
+  activationBusy: boolean;
+}) {
   if (!tasks.length) {
     return (
       <div className="px-5 py-12 text-center">
@@ -474,54 +555,94 @@ function TaskList({ tasks, onCompleted }: { tasks: TaskItem[]; onCompleted: () =
 
   return (
     <ul className="divide-y divide-border">
-      {tasks.map((task) => (
-        <li key={task.id} className="px-5 py-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={task.attention ? "text-reject" : "text-muted-foreground"}>
-                  {categoryIcon(task.category)}
-                </span>
-                <h3 className="font-medium capitalize">{task.title}</h3>
-                <Pill tone={taskTone(task)}>{categoryLabel(task.category)}</Pill>
-                <Pill tone={taskTone(task)}>{task.status.replaceAll("_", " ")}</Pill>
+      {tasks.map((task) => {
+        const selectable = Boolean(task.packCandidateId);
+        const selected = selectedIds.includes(task.id);
+        const bodyClick = selectable
+          ? (event: React.MouseEvent<HTMLDivElement>) => {
+              const target = event.target as HTMLElement;
+              if (target.closest("a,button,input,textarea,label,[role='checkbox']")) return;
+              onToggleSelect(task);
+            }
+          : undefined;
+
+        return (
+          <li key={task.id} className="px-5 py-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                {selectable ? (
+                  <Checkbox
+                    id={`select-${task.id}`}
+                    className="mt-1 shrink-0"
+                    checked={selected}
+                    onCheckedChange={() => onToggleSelect(task)}
+                    aria-label={`Select ${task.activationStateCode ?? ""} state rule pack`}
+                  />
+                ) : null}
+                <div className="min-w-0" onClick={bodyClick}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={task.attention ? "text-reject" : "text-muted-foreground"}>
+                      {categoryIcon(task.category)}
+                    </span>
+                    <h3 className="font-medium capitalize">
+                      {selectable ? (
+                        <label htmlFor={`select-${task.id}`} className="cursor-pointer">
+                          {task.title}
+                        </label>
+                      ) : (
+                        task.title
+                      )}
+                    </h3>
+                    <Pill tone={taskTone(task)}>{categoryLabel(task.category)}</Pill>
+                    <Pill tone={taskTone(task)}>{task.status.replaceAll("_", " ")}</Pill>
+                  </div>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{task.description}</p>
+                  <p className="cite mt-1.5">
+                    {task.active ? "Opened or updated" : "Completed"} {formatDate(task.occurredAt)}
+                  </p>
+                  {task.approvalId && task.approvalType ? (
+                    <OperationsApprovalActions
+                      approvalId={task.approvalId}
+                      actionType={task.approvalType}
+                    />
+                  ) : null}
+                  {task.findingId || task.caseId ? (
+                    <CertificationTaskActions
+                      findingId={task.findingId}
+                      caseId={task.caseId}
+                      active={task.active}
+                      onCompleted={onCompleted}
+                    />
+                  ) : null}
+                </div>
               </div>
-              <p className="mt-1.5 text-sm text-muted-foreground">{task.description}</p>
-              <p className="cite mt-1.5">
-                {task.active ? "Opened or updated" : "Completed"} {formatDate(task.occurredAt)}
-              </p>
-              {task.approvalId && task.approvalType ? (
-                <OperationsApprovalActions
-                  approvalId={task.approvalId}
-                  actionType={task.approvalType}
-                />
-              ) : null}
-              {task.findingId || task.caseId ? (
-                <CertificationTaskActions
-                  findingId={task.findingId}
-                  caseId={task.caseId}
-                  active={task.active}
-                  onCompleted={onCompleted}
-                />
-              ) : null}
-            </div>
-            {task.active && (task.findingId || task.caseId) ? null : (
-            <Button size="sm" variant="outline" asChild className="shrink-0">
-              {task.validationStateCode ? (
-                <Link
-                  to="/state-rule-validation"
-                  search={{ state: task.validationStateCode, status: "active" }}
+              {task.active && (task.findingId || task.caseId) ? null : task.activationReady ? (
+                <Button
+                  size="sm"
+                  className="shrink-0"
+                  disabled={activationBusy}
+                  onClick={() => onActivate([task])}
                 >
-                  {task.actionLabel}
-                </Link>
+                  Activate {task.activationStateCode} state pack
+                </Button>
               ) : (
-                <Link to={task.destination}>{task.actionLabel}</Link>
+                <Button size="sm" variant="outline" asChild className="shrink-0">
+                  {task.validationStateCode ? (
+                    <Link
+                      to="/state-rule-validation"
+                      search={{ state: task.validationStateCode, status: "active" }}
+                    >
+                      {task.actionLabel}
+                    </Link>
+                  ) : (
+                    <Link to={task.destination}>{task.actionLabel}</Link>
+                  )}
+                </Button>
               )}
-            </Button>
-            )}
-          </div>
-        </li>
-      ))}
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -529,7 +650,10 @@ function TaskList({ tasks, onCompleted }: { tasks: TaskItem[]; onCompleted: () =
 function TasksWorkspace() {
   const { user } = useSession();
   const { isStaff, loading } = useIsStaff();
+  const queryClient = useQueryClient();
   const [view, setView] = useState<"active" | "history">("active");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingActivation, setPendingActivation] = useState<TaskItem[] | null>(null);
   const query = useQuery({
     queryKey: ["role-aware-tasks", user?.id, isStaff, isInternalSegmentUser(user)],
     enabled: !loading,
@@ -537,7 +661,8 @@ function TasksWorkspace() {
     refetchInterval: 30_000,
   });
 
-  const allTasks = query.data ?? [];
+  const queryData = query.data;
+  const allTasks = useMemo(() => queryData ?? [], [queryData]);
   const activeTasks = allTasks.filter((task) => task.active);
   const history = allTasks.filter((task) => !task.active);
   const visibleTasks = view === "active" ? activeTasks : history;
@@ -548,6 +673,80 @@ function TasksWorkspace() {
     (task) => task.category === "verification" || task.category === "rule_pack",
   ).length;
   const exceptions = activeTasks.filter((task) => task.attention).length;
+
+  const selectedPacks = useMemo(
+    () => allTasks.filter((task) => task.packCandidateId && selectedIds.includes(task.id)),
+    [allTasks, selectedIds],
+  );
+  const selectedReady = selectedPacks.filter((task) => task.activationReady);
+  const selectedNotReady = selectedPacks.filter((task) => !task.activationReady);
+
+  const toggleSelect = (task: TaskItem) => {
+    setSelectedIds((current) =>
+      current.includes(task.id) ? current.filter((id) => id !== task.id) : [...current, task.id],
+    );
+  };
+
+  const activation = useMutation({
+    mutationFn: async (packs: TaskItem[]) => {
+      // Generated database types intentionally lag controlled launch migrations.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = supabase as any;
+      const results: { state: string; ok: boolean; message?: string }[] = [];
+      for (const pack of packs) {
+        const state = pack.activationStateCode ?? "state";
+        try {
+          const { error } = await client.rpc("activate_state_rule_pack", {
+            p_pack_candidate_id: pack.packCandidateId,
+            p_notes:
+              "Authorized state-pack activation confirmed by the responsible Administrator in the CertivoIQ Tasks workspace.",
+          });
+          if (error) throw error;
+          results.push({ state, ok: true });
+        } catch (error) {
+          results.push({
+            state,
+            ok: false,
+            message:
+              error instanceof Error && error.message
+                ? error.message
+                : "Activation was refused by the authorization controls.",
+          });
+        }
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      for (const result of results) {
+        if (result.ok) toast.success(`${result.state} state pack activated`);
+        else toast.error(`${result.state} was not activated`, { description: result.message });
+      }
+      setSelectedIds((current) =>
+        current.filter(
+          (id) =>
+            !results.some(
+              (result) =>
+                result.ok &&
+                allTasks.some((task) => task.id === id && task.activationStateCode === result.state),
+            ),
+        ),
+      );
+    },
+    onError: () => {
+      toast.error("Activation could not be completed. No control state was changed.");
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["role-aware-tasks"] });
+      void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
+      void queryClient.invalidateQueries({ queryKey: ["governance-tasks"] });
+    },
+  });
+
+  const requestActivation = (packs: TaskItem[]) => {
+    const ready = packs.filter((pack) => pack.activationReady);
+    if (!ready.length) return;
+    setPendingActivation(ready);
+  };
 
   return (
     <AppShell
@@ -582,7 +781,23 @@ function TasksWorkspace() {
                 : "Completed and superseded controls remain available as an audit trail."
             }
             actions={
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  disabled={!selectedReady.length || activation.isPending}
+                  aria-disabled={!selectedReady.length || activation.isPending}
+                  title={
+                    selectedReady.length
+                      ? undefined
+                      : "Select at least one state pack that backend readiness confirms you can activate."
+                  }
+                  onClick={() => requestActivation(selectedPacks)}
+                >
+                  <ShieldCheck className="size-4" /> Activate selected state packs
+                  {selectedPacks.length
+                    ? ` (${selectedReady.length} ready${selectedNotReady.length ? `, ${selectedNotReady.length} not ready` : ""})`
+                    : ""}
+                </Button>
                 <Button size="sm" variant={view === "active" ? "default" : "outline"} onClick={() => setView("active")}>
                   <Clock3 className="size-4" /> Active ({query.error ? "—" : activeTasks.length})
                 </Button>
@@ -593,6 +808,12 @@ function TasksWorkspace() {
             }
             bodyClassName="p-0"
           >
+            {selectedPacks.length && !selectedReady.length ? (
+              <p className="border-b border-border px-5 py-3 text-sm text-muted-foreground" role="status">
+                None of the {selectedPacks.length} selected state packs are activation-ready. Complete source
+                verification and independent Administrator separation first.
+              </p>
+            ) : null}
             {query.isLoading ? (
               <div className="px-5 py-10 text-sm text-muted-foreground">Loading role-aware tasks…</div>
             ) : query.error ? (
@@ -607,9 +828,50 @@ function TasksWorkspace() {
                 </Button>
               </div>
             ) : (
-              <TaskList tasks={visibleTasks} onCompleted={() => void query.refetch()} />
+              <TaskList
+                tasks={visibleTasks}
+                onCompleted={() => void query.refetch()}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onActivate={requestActivation}
+                activationBusy={activation.isPending}
+              />
             )}
           </Panel>
+
+          <AlertDialog
+            open={Boolean(pendingActivation)}
+            onOpenChange={(open) => {
+              if (!open) setPendingActivation(null);
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Activate {pendingActivation?.length ?? 0} state rule pack
+                  {(pendingActivation?.length ?? 0) === 1 ? "" : "s"}?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This records an authorized activation for{" "}
+                  {(pendingActivation ?? []).map((pack) => pack.activationStateCode).join(", ")}. The
+                  database re-checks every readiness and reviewer-separation rule before any pack becomes
+                  active.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    const packs = pendingActivation ?? [];
+                    setPendingActivation(null);
+                    if (packs.length) activation.mutate(packs);
+                  }}
+                >
+                  Confirm activation
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       )}
     </AppShell>
