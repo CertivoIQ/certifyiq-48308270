@@ -175,15 +175,27 @@ const SOURCE_COLUMNS =
   "id,state_code,scope,authority_name,official_domain,program,source_type,source_url,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,source_sha256,retrieved_at,verification_evidence,updated_at";
 export const SOURCE_PAGE_SIZE = 1000;
 
-export function isUnresolvedSource(source: SourceCandidate) {
-  if (
+// A source record is unresolved while it still awaits verification work: anything not
+// verified, and any verified record missing its exact-bytes custody evidence.
+// Reviewer-rejected records leave the verification queues entirely and wait in the
+// Rejected sources finalization queue; automatically excluded redundant captures are
+// likewise out of scope. Neither ever counts as source-ready for pack activation —
+// that decision stays with the authoritative readiness backend.
+export function isRejectedSource(source: SourceCandidate) {
+  return (
     source.agent_verification_status === "rejected" &&
-    source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE"
-  ) return false;
+    source.candidate_status !== "EXCLUDED_REDUNDANT_SOURCE"
+  );
+}
+
+export function isUnresolvedSource(source: SourceCandidate) {
+  if (source.agent_verification_status === "rejected") return false;
   if (source.agent_verification_status !== "verified") return true;
   return !source.exact_bytes_captured || !source.source_sha256 || !source.retrieved_at;
 }
 
+// PostgREST caps a response at one API page, so the queue must page deterministically
+// until a short page is returned. Ordering stays state_code + authority_name.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadAllSourceCandidates(client: any) {
   const rows: SourceCandidate[] = [];
@@ -455,6 +467,7 @@ function StateRuleValidationWorkspace() {
     setStateCode(nextState);
     setStatus(nextStatus);
     setSearch("");
+    // Keep the view shareable, e.g. ?state=ALL&status=unresolved.
     if (typeof window !== "undefined" && window.history?.replaceState) {
       window.history.replaceState(
         null,
@@ -523,6 +536,24 @@ function StateRuleValidationWorkspace() {
           ? `Pack is active. Validation date: ${result.validated_on ?? "recorded"}.`
           : `Pack status: ${labelFor(result.pack_status)}. Activation remains closed until the full pack passes.`,
       });
+      // Reflect the authoritative decision in the cached queue immediately so a rejected
+      // row leaves the verification views now instead of after the 30s refetch. The
+      // refetch below still reconciles pack status and readiness from the backend.
+      queryClient.setQueryData(
+        ["state-rule-validation-queue"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (current: any) => {
+          if (!current?.sources) return current;
+          return {
+            ...current,
+            sources: current.sources.map((source: SourceCandidate) =>
+              source.id === variables.source.id
+                ? { ...source, agent_verification_status: result.source_status }
+                : source,
+            ),
+          };
+        },
+      );
       void queryClient.invalidateQueries({ queryKey: ["state-rule-validation-queue"] });
     },
     onError: (error) => {
@@ -716,11 +747,7 @@ function StateRuleValidationWorkspace() {
     federalSources.every((source) => source.agent_verification_status === "verified");
   const verified = sources.filter((source) => source.agent_verification_status === "verified").length;
   const blocked = sources.filter((source) => source.agent_verification_status === "blocked").length;
-  const rejectedSources = sources.filter(
-    (source) =>
-      source.agent_verification_status === "rejected" &&
-      source.candidate_status !== "EXCLUDED_REDUNDANT_SOURCE",
-  );
+  const rejectedSources = sources.filter(isRejectedSource);
   const unresolvedSources = sources.filter(isUnresolvedSource);
   const readinessRows = statePacks.map((pack) => {
     const activation = activationByPackId.get(pack.id);
@@ -754,6 +781,7 @@ function StateRuleValidationWorkspace() {
         source.agent_verification_status === "rejected" &&
         source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE";
       if (status === "unresolved") {
+        if (isRejectedSource(source)) return false;
         if (!isUnresolvedSource(source) && !inheritedFederal) return false;
         if (needle) {
           return [source.state_code, source.authority_name, source.source_type, source.source_url]
@@ -1297,7 +1325,7 @@ function StateRuleValidationWorkspace() {
                     onDraft={(next) => setDrafts((current) => ({ ...current, [source.id]: next }))}
                     onDecision={(decision) => review.mutate({ source, decision })}
                     onActivate={(pack) => activatePack.mutate(pack)}
-                    onResolvePack={(pack) => openSources("unresolved", pack.state_code)}
+                    onResolvePack={(pack) => openSources("active", pack.state_code)}
                   />
                 );
               })}
