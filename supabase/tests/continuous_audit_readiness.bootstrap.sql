@@ -20,7 +20,7 @@ create table public.pha_public_housing_leases(
 );
 create or replace function private.certivoiq_assurance_reviewer(_user_id uuid)
 returns boolean language sql stable security definer set search_path=''
-as $ select false; $;
+as $$ select false; $$;
 revoke all on function private.certivoiq_assurance_reviewer(uuid)
   from public,anon,authenticated;
 grant execute on function private.certivoiq_assurance_reviewer(uuid)
