@@ -155,7 +155,7 @@ export function ComplianceCorpusGovernance() {
                 <div key={text(finding.id, String(index))} className="rounded-md border bg-background p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-medium">{text(finding.rule_id, "Finding")}</p>
-                    <div className="flex gap-1.5"><Pill tone={text(finding.severity).toLowerCase() === "critical" ? "reject" : "flag"}>{text(finding.severity)}</Pill><Pill tone="neutral">{text(finding.status)}</Pill></div>
+                    <div className="flex gap-1.5"><Pill tone={text(finding.severity).toLowerCase() === "critical" ? "flag" : "neutral"}>{text(finding.severity)}</Pill><Pill tone="neutral">{text(finding.status)}</Pill></div>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">{text(finding.jurisdiction)} · rule {text(finding.rule_version)} · {text(finding.engine_build)} · review {text(finding.review_state)}</p>
                 </div>
