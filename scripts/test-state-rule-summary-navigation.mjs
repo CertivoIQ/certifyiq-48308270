@@ -17,7 +17,7 @@ function setup({ error = null, loading = false } = {}) {
   const state = [];
   const mutations = [];
   let options;
-  const makeSource = (id, status, candidateStatus = "CAPTURED") => ({ id, state_code: "AZ", scope: "STATEWIDE", authority_name: id, source_type: "MANUAL", source_url: `https://example.gov/${id}.pdf`, agent_verification_status: status, candidate_status: candidateStatus, verification_evidence: {} });
+  const makeSource = (id, status, candidateStatus = "CAPTURED") => ({ id, state_code: "AZ", scope: "STATEWIDE", authority_name: id, source_type: "MANUAL", source_url: `https://example.gov/${id}.pdf`, agent_verification_status: status, candidate_status: candidateStatus, exact_bytes_captured: true, source_sha256: "a".repeat(64), retrieved_at: "2026-09-17T00:00:00Z", verification_evidence: {} });
   const data = {
     packs: [
       { id: "az", state_code: "AZ", status: "awaiting_second_verification", compliance_activation_allowed: false },
@@ -99,7 +99,7 @@ test("summary selection resets stale search and jurisdiction filters", () => {
 test("tiles are keyboard-native buttons and disabled until data is available", () => {
   for (const condition of [{ loading: true }, { error: new Error("offline") }]) {
     const tiles = nodes(setup(condition).render()).filter((n) => n.props["aria-controls"] === "validation-records");
-    assert.equal(tiles.length, 6);
+    assert.equal(tiles.length, 7);
     assert.ok(tiles.every((n) => n.type === "button" && n.props.type === "button" && n.props.disabled));
   }
 });
