@@ -6,17 +6,21 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { CostComparisonCalculator } from "@/components/CostComparisonCalculator";
 import { useSubscription } from "@/hooks/use-subscription";
 import {
+  Activity,
   ArrowRight,
   Check,
   CircleCheck,
+  CreditCard,
   FileCheck2,
   FileSearch,
   Fingerprint,
+  Lock,
   ShieldCheck,
   Sparkles,
   Workflow,
   XCircle,
 } from "lucide-react";
+
 
 const FREE_REVIEW_COUNT = 3;
 
@@ -82,6 +86,34 @@ const EXECUTIVE_OUTCOMES = [
 
 const PROGRAMS = ["LIHTC (IRC §42)", "Project-Based Section 8", "HOME", "HOTMA income & asset provisions"] as const;
 
+const SECURITY_PILLARS = [
+  {
+    icon: Lock,
+    title: "Bank-Level Encryption",
+    detail:
+      "All tenant income data and personal identifiers are encrypted at rest and in transit. Powered by Supabase’s isolated database architecture on AWS.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Perimeter Protection",
+    detail:
+      "Our platform sits behind Cloudflare’s advanced Web Application Firewall (WAF), mitigating DDoS attacks and preventing unauthorized access attempts.",
+  },
+  {
+    icon: CreditCard,
+    title: "Compliant Payment Processing",
+    detail:
+      "We never touch or store raw financial accounts or credit card data. All billing operations are handled strictly through Stripe, a PCI-DSS Level 1 certified processor.",
+  },
+  {
+    icon: Activity,
+    title: "Continuous Compliance",
+    detail:
+      "We actively monitor our system configurations against industry-standard benchmarks and are on a direct path toward formal SOC 2 compliance.",
+  },
+] as const;
+
+
 function WelcomePage() {
   const { isActive: isSubscriber } = useSubscription();
 
@@ -131,7 +163,7 @@ function WelcomePage() {
               <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-muted-foreground">
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Organization website email required</span>
                 <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Findings tied to source evidence</span>
-                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Nationwide federal baseline; state-specific packs require validation</span>
+                <span className="flex items-center gap-1.5"><Check className="size-3.5 text-gold" /> Nationwide federal baseline with state-specific compliance source coverage</span>
               </div>
               <div className="mt-8 grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-border bg-card px-3 py-3"><p className="font-mono text-[10px] text-gold">01 · UPLOAD</p><p className="mt-1 text-[12px] font-medium">Bring one certification file</p></div>
@@ -181,6 +213,35 @@ function WelcomePage() {
             <div className="px-4 py-7"><p className="font-display text-xl">Scale team capacity</p><p className="mt-1.5 text-[12.5px] text-muted-foreground">Turn compliance capacity into profitability without adding administrative burden.</p></div>
           </div>
         </section>
+
+        <section id="security-trust" aria-labelledby="security-trust-heading" className="border-b border-border bg-background">
+          <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <Pill tone="neutral">Security &amp; trust</Pill>
+                <h2 id="security-trust-heading" className="mt-4 font-display text-[30px] leading-tight sm:text-[40px]">
+                  Institutional-Grade Security &amp; Privacy
+                </h2>
+                <p className="mt-3 text-[14.5px] leading-7 text-muted-foreground">
+                  Your tenant certifications and financial data are protected by the same security standards used by global banks.
+                </p>
+              </div>
+              <Link to="/security" className="text-[12.5px] font-semibold underline">Security &amp; data use</Link>
+            </div>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {SECURITY_PILLARS.map(({ icon: Icon, title, detail }) => (
+                <div key={title} className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <span className="inline-flex size-10 items-center justify-center rounded-lg border border-gold/25 bg-gold/10">
+                    <Icon aria-hidden="true" className="size-5 text-gold-ink dark:text-gold" />
+                  </span>
+                  <h3 className="mt-4 font-display text-[17px] leading-snug">{title}</h3>
+                  <p className="mt-1.5 text-[12.5px] leading-5 text-muted-foreground">{detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
 
         <section id="how-it-works" className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
           <div className="max-w-2xl">
@@ -288,6 +349,7 @@ function WelcomePage() {
           </div>
         </section>
       </main>
+
 
       <footer className="border-t border-border py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 text-center sm:flex-row sm:text-left lg:px-8">

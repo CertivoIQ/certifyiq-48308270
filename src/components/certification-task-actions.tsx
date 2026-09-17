@@ -64,10 +64,6 @@ export function CertificationTaskActions({
       toast.error("Responsible party name, position, and signature are required.");
       return;
     }
-    if (name.toLocaleLowerCase() !== signed.toLocaleLowerCase()) {
-      toast.error("The typed signature must match the responsible party name.");
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -118,8 +114,7 @@ export function CertificationTaskActions({
     const ready =
       responsiblePartyName.trim().length >= 2 &&
       responsiblePartyPosition.trim().length >= 2 &&
-      signature.trim().length >= 2 &&
-      responsiblePartyName.trim().toLocaleLowerCase() === signature.trim().toLocaleLowerCase();
+      signature.trim().length >= 2;
 
     return (
       <div className="mt-3 max-w-2xl rounded-md border border-border bg-muted/20 p-4">
@@ -164,7 +159,7 @@ export function CertificationTaskActions({
               onChange={(event) => setSignature(event.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              By signing, the responsible party confirms that all certification findings have been resolved and final review is complete.
+              This typed signature records the responsible party's signature and does not need to exactly match the display name entered above. By signing, the responsible party confirms that all certification findings have been resolved and final review is complete.
             </p>
           </div>
         </div>
