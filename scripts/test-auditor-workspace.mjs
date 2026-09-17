@@ -6,6 +6,10 @@ const migration = await readFile(
   new URL("../supabase/migrations/20260910170637_auditor_workspace.sql", import.meta.url),
   "utf8",
 );
+const entitlementMigration = await readFile(
+  new URL("../supabase/migrations/20260917224500_unlimited_multifamily_auditor_access.sql", import.meta.url),
+  "utf8",
+);
 const component = await readFile(
   new URL("../src/components/auditor-workspace.tsx", import.meta.url),
   "utf8",
@@ -36,6 +40,17 @@ test("logs access and prevents cross-customer visibility", () => {
   assert.match(migration, /m\.user_id=_grant\.owner_user_id/);
   assert.match(migration, /security definer set search_path=''/);
   assert.match(migration, /revoke all on function public\.auditor_workspace_snapshot/);
+});
+
+test("requires paid Multifamily Enterprise access without imposing an auditor seat cap", () => {
+  assert.match(entitlementMigration, /license_kind='multifamily_enterprise'/);
+  assert.match(entitlementMigration, /l\.status='active'/);
+  assert.match(entitlementMigration, /l\.paid_through > now\(\)/);
+  assert.match(entitlementMigration, /create_auditor_access_grants/);
+  assert.match(entitlementMigration, /No auditor seat count or per-license auditor cap/i);
+  assert.match(component, /Unlimited authorized auditors/);
+  assert.match(component, /create_auditor_access_grants/);
+  assert.match(component, /separated by commas/);
 });
 
 test("renders create, revoke, expiry, and read-only snapshot controls", () => {

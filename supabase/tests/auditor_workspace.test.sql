@@ -2,7 +2,15 @@ begin;
 insert into auth.users(id,email) values
  ('a4600000-0000-4000-8000-000000000001','owner@example.invalid'),
  ('a4600000-0000-4000-8000-000000000002','auditor@example.invalid'),
- ('a4600000-0000-4000-8000-000000000003','other@example.invalid');
+ ('a4600000-0000-4000-8000-000000000003','other@example.invalid'),
+ ('a4600000-0000-4000-8000-000000000004','auditor2@example.invalid'),
+ ('a4600000-0000-4000-8000-000000000005','auditor3@example.invalid');
+
+insert into public.enterprise_licenses(id,organization_id,license_kind,status,paid_through) values
+ ('a4600000-0000-4000-8000-000000000090','a4600000-0000-4000-8000-000000000091',
+  'multifamily_enterprise','active',now()+interval '30 days');
+insert into public.enterprise_license_members(license_id,user_id,role) values
+ ('a4600000-0000-4000-8000-000000000090','a4600000-0000-4000-8000-000000000001','admin');
 insert into public.portfolio_properties(id,user_id,name) values
  ('a4600000-0000-4000-8000-000000000010','a4600000-0000-4000-8000-000000000001','Owner Property'),
  ('a4600000-0000-4000-8000-000000000011','a4600000-0000-4000-8000-000000000003','Other Property');
@@ -62,6 +70,30 @@ select public.create_auditor_access_grant(
  '2026-01-01','2026-01-31',now()+interval '7 days'
 ) as grant_id \gset
 select set_config('test.grant_id', :'grant_id', true);
+
+do $$
+declare ids uuid[];
+begin
+ ids:=public.create_auditor_access_grants(
+   'a4600000-0000-4000-8000-000000000001','ignored-client-org',
+   array[
+     'a4600000-0000-4000-8000-000000000004'::uuid,
+     'a4600000-0000-4000-8000-000000000005'::uuid
+   ],
+   'property',null,array['a4600000-0000-4000-8000-000000000010'],array['LIHTC'],
+   '2026-01-01','2026-01-31',now()+interval '7 days'
+ );
+ if cardinality(ids) <> 2 then raise exception 'Bulk auditor grant count failed'; end if;
+ if (select count(*) from public.auditor_access_grants
+     where owner_user_id='a4600000-0000-4000-8000-000000000001') <> 3
+ then raise exception 'Multiple authorized auditors were capped'; end if;
+ if exists(
+   select 1 from public.auditor_access_grants
+   where owner_user_id='a4600000-0000-4000-8000-000000000001'
+     and organization_id <> 'a4600000-0000-4000-8000-000000000091'
+ ) then raise exception 'Auditor grant organization was not bound to paid enterprise license'; end if;
+end $$;
+
 do $$ begin
  if has_table_privilege('authenticated','public.auditor_access_grants','INSERT')
    or has_table_privilege('authenticated','public.auditor_access_events','UPDATE')
@@ -95,6 +127,17 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a4600000-0000-4000-8000-000000000003',true);
 do $$ begin
+ begin
+   perform public.create_auditor_access_grant(
+     'a4600000-0000-4000-8000-000000000003','org-other',
+     'a4600000-0000-4000-8000-000000000004','property',null,
+     array['a4600000-0000-4000-8000-000000000011'],array['LIHTC'],
+     '2026-01-01','2026-01-31',now()+interval '7 days'
+   );
+   raise exception 'Unpaid account created auditor access';
+ exception when raise_exception then
+   if sqlerrm <> 'An active paid Multifamily Enterprise license administrator is required' then raise; end if;
+ end;
  begin
    perform public.auditor_workspace_snapshot(current_setting('test.grant_id')::uuid);
    raise exception 'Unscoped account opened auditor workspace';

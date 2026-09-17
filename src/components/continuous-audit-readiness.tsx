@@ -63,12 +63,21 @@ export function ContinuousAuditReadiness() {
   const result = readiness.data;
   const score = result?.score ?? 0;
 
+  const handleGetMeTo100 = () => {
+    if (showQueue) {
+      setShowQueue(false);
+      return;
+    }
+    setShowQueue(true);
+    if (!result && !readiness.isFetching) void readiness.refetch();
+  };
+
   return (
     <Panel
       title="Continuous Audit Readiness"
       description="A deterministic score where every deducted point maps to a concrete compliance record."
       actions={
-        <Button size="sm" onClick={() => setShowQueue((value) => !value)} disabled={!result}>
+        <Button size="sm" onClick={handleGetMeTo100} aria-expanded={showQueue}>
           <Target className="size-4" /> Get me to 100
         </Button>
       }
@@ -113,24 +122,43 @@ export function ContinuousAuditReadiness() {
         </div>
       )}
 
-      {showQueue && result ? (
+      {showQueue ? (
         <div className="mt-5 rounded-lg border border-primary/25 bg-primary/5 p-4">
           <p className="flex items-center gap-2 font-medium">
             <ListChecks className="size-4" /> Exact remediation queue
           </p>
-          <ol className="mt-3 space-y-3">
-            {result.get_me_to_100.map((item) => (
-              <li key={item.deduction_id} className="flex gap-3 text-sm">
-                <span className="font-semibold tabular-nums">{item.queue_order}.</span>
-                <div>
-                  <p className="font-medium">
-                    {item.title} <ArrowRight className="inline size-3" /> recover {item.points_recovered} points
-                  </p>
-                  <p className="text-muted-foreground">{item.remediation}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          {readiness.isFetching && !result ? (
+            <p className="mt-3 text-sm text-muted-foreground">Calculating your exact path to 100…</p>
+          ) : null}
+          {readiness.isError && !result ? (
+            <div className="mt-3 space-y-2">
+              <p className="text-sm text-destructive" role="alert">
+                The remediation queue could not be loaded.
+              </p>
+              <Button size="sm" variant="outline" onClick={() => void readiness.refetch()}>
+                Retry readiness
+              </Button>
+            </div>
+          ) : null}
+          {result ? (
+            result.get_me_to_100.length ? (
+              <ol className="mt-3 space-y-3">
+                {result.get_me_to_100.map((item) => (
+                  <li key={item.deduction_id} className="flex gap-3 text-sm">
+                    <span className="font-semibold tabular-nums">{item.queue_order}.</span>
+                    <div>
+                      <p className="font-medium">
+                        {item.title} <ArrowRight className="inline size-3" /> recover {item.points_recovered} points
+                      </p>
+                      <p className="text-muted-foreground">{item.remediation}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">No remediation actions are required. Readiness is already at 100.</p>
+            )
+          ) : null}
         </div>
       ) : null}
     </Panel>
