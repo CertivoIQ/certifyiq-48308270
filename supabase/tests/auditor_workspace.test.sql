@@ -71,7 +71,7 @@ select public.create_auditor_access_grant(
 ) as grant_id \gset
 select set_config('test.grant_id', :'grant_id', true);
 
-do $
+do $$
 declare ids uuid[];
 begin
  ids:=public.create_auditor_access_grants(
@@ -92,9 +92,9 @@ begin
    where owner_user_id='a4600000-0000-4000-8000-000000000001'
      and organization_id <> 'a4600000-0000-4000-8000-000000000091'
  ) then raise exception 'Auditor grant organization was not bound to paid enterprise license'; end if;
-end $;
+end $$;
 
-do $ begin
+do $$ begin
  if has_table_privilege('authenticated','public.auditor_access_grants','INSERT')
    or has_table_privilege('authenticated','public.auditor_access_events','UPDATE')
  then raise exception 'Auditor tables are directly writable'; end if;
@@ -126,7 +126,7 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a4600000-0000-4000-8000-000000000003',true);
-do $ begin
+do $$ begin
  begin
    perform public.create_auditor_access_grant(
      'a4600000-0000-4000-8000-000000000003','org-other',
