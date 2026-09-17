@@ -324,7 +324,7 @@ test("state-rule validation distinguishes completed source activation from compl
 
   assert.match(route, /Agent activation/);
   assert.match(route, /Compliance active/);
-  assert.match(route, /Authorized Agent state-pack activation is already complete/);
+  assert.match(route, /Authorized Agent activation\s+records/);
   assert.match(route, /shared federal baseline has no separate activation button/i);
   assert.match(route, /not activated as a standalone pack/i);
   assert.match(route, /deterministic release gate/i);
