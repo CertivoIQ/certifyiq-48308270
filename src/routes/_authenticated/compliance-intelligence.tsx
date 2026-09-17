@@ -15,8 +15,7 @@ export const Route = createFileRoute('/_authenticated/compliance-intelligence')(
 function ComplianceIntelligenceWorkspace() {
   return (
     <>
-      <ComplianceControlCenter />
-      <ComplianceIntelligenceSuite />
+      <ComplianceControlCenter /><ComplianceIntelligenceSuite />
       <div className="mx-auto w-full max-w-7xl space-y-6 px-6 pb-10 md:px-10">
         <section id="compliance-time-machine" className="scroll-mt-24"><ComplianceTimeMachine /></section>
         <section id="compliance-impact-analysis" className="scroll-mt-24"><ComplianceImpactAnalysis /></section>
