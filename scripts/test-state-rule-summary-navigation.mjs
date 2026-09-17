@@ -82,7 +82,7 @@ test("Agent-activation count tracks pending readiness while the readiness list s
   assert.equal(find(tree, (n) => n.type === "Button" && nodes(n).some((child) => child.props?.children === "Activate state pack")), undefined);
   const open = find(tree, (n) => n.type === "Button" && n.props.variant === "outline");
   open.props.onClick();
-  assert.equal(sourceIds(app).length, 5);
+  assert.deepEqual(sourceIds(app), ["verified", "blocked", "redundant", "captured"]);
   assert.deepEqual(app.mutations, []);
 });
 
