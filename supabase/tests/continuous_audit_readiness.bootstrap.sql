@@ -18,14 +18,6 @@ create table public.pha_public_housing_leases(
   id uuid primary key,workspace_user_id uuid not null references auth.users(id),
   lease_start date not null,signature_complete boolean not null,status text not null
 );
-create or replace function private.certivoiq_assurance_reviewer(_user_id uuid)
-returns boolean language sql stable security definer set search_path=''
-as $$ select false; $$;
-revoke all on function private.certivoiq_assurance_reviewer(uuid)
-  from public,anon,authenticated;
-grant execute on function private.certivoiq_assurance_reviewer(uuid)
-  to service_role;
-
 alter table public.certification_import_items enable row level security;
 alter table public.compliance_findings enable row level security;
 alter table public.compliance_remediation_actions enable row level security;
@@ -36,10 +28,7 @@ create policy owner_items on public.certification_import_items for select to aut
 create policy owner_findings on public.compliance_findings for select to authenticated
   using ((select auth.uid())=user_id);
 create policy owner_remediation on public.compliance_remediation_actions for select to authenticated
-  using (
-    (select private.certivoiq_assurance_reviewer((select auth.uid())))
-    or exists(select 1 from public.compliance_findings f where f.id=finding_id and f.user_id=(select auth.uid()))
-  );
+  using (exists(select 1 from public.compliance_findings f where f.id=finding_id and f.user_id=(select auth.uid())));
 create policy owner_actions on public.pha_family_actions for select to authenticated
   using ((select auth.uid())=user_id);
 create policy owner_leases on public.pha_public_housing_leases for select to authenticated
