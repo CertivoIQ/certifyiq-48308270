@@ -8,6 +8,19 @@ alter table public.certification_workflow_cases
 alter table public.compliance_findings
   add column jurisdiction text not null default 'FEDERAL',
   add column review_state text not null default 'pending';
+create table public.enterprise_licenses(
+  id uuid primary key,
+  organization_id uuid not null,
+  license_kind text not null,
+  status text not null,
+  paid_through timestamptz
+);
+create table public.enterprise_license_members(
+  license_id uuid not null references public.enterprise_licenses(id),
+  user_id uuid not null references auth.users(id),
+  role text not null,
+  primary key(license_id,user_id)
+);
 create table public.portfolio_properties(
   id uuid primary key,user_id uuid not null references auth.users(id),
   name text not null,created_at timestamptz not null default now()
@@ -21,5 +34,6 @@ create table public.compliance_remediation_actions(
 create or replace function private.certification_is_manager(_actor uuid,_owner uuid)
 returns boolean language sql stable security definer set search_path=''
 as $$ select _actor=_owner; $$;
-grant all on public.portfolio_properties,public.compliance_remediation_actions
+grant all on public.enterprise_licenses,public.enterprise_license_members,
+  public.portfolio_properties,public.compliance_remediation_actions
   to authenticated,service_role;
