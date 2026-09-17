@@ -53,7 +53,7 @@ export function AuditorWorkspace() {
   const { session } = useSession();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [auditorId, setAuditorId] = useState("");
+  const [auditorIds, setAuditorIds] = useState("");
   const [scopeType, setScopeType] = useState<AuditorGrant["scope_type"]>("property");
   const [portfolioRef, setPortfolioRef] = useState("");
   const [propertyIds, setPropertyIds] = useState("");
@@ -100,14 +100,15 @@ export function AuditorWorkspace() {
     mutationFn: async () => {
       const ownerId = session?.user.id;
       if (!ownerId) throw new Error("Sign in to create auditor access");
-      if (!auditorId.trim()) throw new Error("Enter the authenticated auditor account ID");
+      const authorizedAuditorIds = splitList(auditorIds);
+      if (authorizedAuditorIds.length === 0) throw new Error("Enter at least one authenticated auditor account ID");
       if (scopeType === "property" && splitList(propertyIds).length === 0) {
         throw new Error("Property scope requires at least one property ID");
       }
-      const { data, error } = await client.rpc("create_auditor_access_grant", {
+      const { data, error } = await client.rpc("create_auditor_access_grants", {
         _owner_user_id: ownerId,
         _organization_id: ownerId,
-        _auditor_user_id: auditorId.trim(),
+        _auditor_user_ids: authorizedAuditorIds,
         _scope_type: scopeType,
         _portfolio_ref: portfolioRef.trim() || null,
         _property_ids: splitList(propertyIds),
@@ -121,12 +122,13 @@ export function AuditorWorkspace() {
         _include_regulatory_citations: true,
       });
       if (error) throw error;
-      return data as string;
+      return data as string[];
     },
-    onSuccess: (id) => {
-      setSelectedGrantId(id);
+    onSuccess: (ids) => {
+      setSelectedGrantId(ids[0] ?? "");
+      setAuditorIds("");
       setShowCreate(false);
-      toast.success("Temporary auditor access created");
+      toast.success(ids.length === 1 ? "Temporary auditor access created" : `${ids.length} temporary auditor access grants created`);
       void queryClient.invalidateQueries({ queryKey: ["auditor-access-grants"] });
     },
     onError: (error) =>
@@ -160,14 +162,23 @@ export function AuditorWorkspace() {
       <div className="mb-4 flex flex-wrap gap-2">
         <Pill tone="seal">Read-only</Pill>
         <Pill tone="neutral">Expiration enforced server-side</Pill>
+        <Pill tone="neutral">Unlimited authorized auditors</Pill>
         <Pill tone="neutral">Every open logged</Pill>
       </div>
 
       {showCreate ? (
         <div className="mb-5 grid gap-4 rounded-lg border p-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="auditor-id">Authenticated auditor account ID</Label>
-            <Input id="auditor-id" value={auditorId} onChange={(event) => setAuditorId(event.target.value)} />
+            <Label htmlFor="auditor-id">Authenticated auditor account IDs</Label>
+            <Input
+              id="auditor-id"
+              value={auditorIds}
+              onChange={(event) => setAuditorIds(event.target.value)}
+              placeholder="UUID, UUID, UUID"
+            />
+            <p className="text-xs text-muted-foreground">
+              Paid Multifamily Enterprise accounts may authorize unlimited auditors. Enter one or more authenticated CertivoIQ account IDs separated by commas.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="auditor-scope">Scope</Label>
