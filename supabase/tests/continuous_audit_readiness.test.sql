@@ -76,7 +76,9 @@ begin
 end $$;
 reset role;
 
-do $$ begin
+do $ begin
+ if not has_function_privilege('authenticated','private.certivoiq_assurance_reviewer(uuid)','EXECUTE')
+ then raise exception 'Authenticated assurance reviewer grant was not restored'; end if;
  if has_function_privilege('anon','public.audit_readiness_score(date)','EXECUTE')
  then raise exception 'Anonymous readiness scoring is enabled'; end if;
 end $$;
