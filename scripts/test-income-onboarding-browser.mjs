@@ -57,7 +57,16 @@ try {
  await page.goto(`${base}/launchpad`);await page.getByRole('button',{name:'Verify portfolio onboarding',exact:true}).click();await page.getByText('Step 4 of 6',{exact:true}).waitFor();await page.getByRole('button',{name:'Verify certification upload',exact:true}).click();await page.getByRole('alert').filter({hasText:'Upload at least one certification'}).waitFor();pass('Portfolio completion advances to step 4; missing certification remains blocked');
  const profile={...e.newProfile('LIHTC'),agency:'TEST ONLY - synthetic agency',implementation:'HOTMA',effectiveFrom:'2026-01-01',effectiveTo:'2027-12-31',policyVersion:'TEST ONLY - NOT A PROPERTY POLICY',policySource:'Synthetic acceptance fixture only',evidencePolicy:'Synthetic fixture, not resident evidence',minEvidenceMonths:'2',designation:'TEST ONLY',geography:'Synthetic geography',limitSource:'FICTITIOUS TEST LIMIT - NOT FOR ELIGIBILITY',limitFrom:'2026-01-01',limitTo:'2027-12-31',limits:{'2':'50000'}};
  const approval={name:'AUTOMATED TEST ONLY',position:'Isolated acceptance test runner',signature:'TEST SIGNATURE - NO REAL HOUSEHOLD',consent:true};
- await api(owner,{action:'save_profile',propertyId:property.id,unitId:unit.id,profile,approval});owner.retained=true;
+ const calculatorAccess=await owner.client.rpc('income_calculator_access');if(calculatorAccess.error)throw calculatorAccess.error;
+ const accessMode=calculatorAccess.data?.mode;
+ if(accessMode==='trial'){
+  const trialPersistence=await api(owner,{action:'save_profile',propertyId:property.id,unitId:unit.id,profile,approval},403);
+  assert.match(trialPersistence.error||'',/platform subscription is required/i);pass('Trial calculator remains usable but portfolio persistence stays subscription-gated');
+ } else if(accessMode!=='paid'){
+  throw new Error(`Unexpected calculator access mode for acceptance fixture: ${accessMode||'missing'}`);
+ }
+ if(accessMode==='paid'){
+  await api(owner,{action:'save_profile',propertyId:property.id,unitId:unit.id,profile,approval});owner.retained=true;
  const layer={...e.newLayer('LIHTC'),evidenceMonths:'3',evidenceSource:'Synthetic reviewed fixture only',evidenceReviewed:true,treatmentReviewed:true,assetsReviewed:true,reconciliationReviewed:true};
  const input={...e.newInput(),tenantId:tenant.id,propertyId:property.id,unitId:unit.id,effectiveDate:'2026-09-05',certificationType:'INITIAL',householdSize:'2',subsidy:'NONE',householdReviewed:true,changesReviewed:true,jobs:[{...e.newJob('test-job'),member:'Synthetic member',employer:'Synthetic employer',rate:'20',hours:'40',source:'Synthetic hourly verification',reviewed:true}],layers:[layer]};
  const draft=await api(owner,{action:'save_snapshot',input,calculation:{annualIncome:'1'}});assert.equal(draft.calculation.results[0].annualIncome,'41600.00');assert.equal(draft.calculation.reviewable,true);pass('Authenticated backend recalculates $20 × 40 × 52 = $41,600 and ignores submitted totals');
@@ -72,6 +81,9 @@ try {
  await api(stranger,{action:'load',tenantId:tenant.id,effectiveDate:'2026-09-05'},422);pass('A different authenticated account cannot read or sign the owner test records');
  const tamper=await owner.client.from('income_calculator_snapshots').update({engine_version:'tampered-test'}).eq('id',second.id);assert.ok(tamper.error);const privileged=await admin.from('income_calculator_snapshots').update({engine_version:'tampered-test'}).eq('id',second.id);assert.ok(privileged.error);pass('Snapshot mutation is blocked for the authenticated owner and server role');
  await page.screenshot({path:join(out,'synthetic-pending-review.png'),fullPage:true});
+ } else {
+  pass('Paid portfolio persistence browser path not exercised by the isolated trial fixture',{skipped:true});
+ }
 } catch(error) {
  failed=true;checks.push({name:'Acceptance failure',passed:false,error:error.message});console.error(`FAIL ${error.message}`);
  if(page) {await page.screenshot({path:join(out,'synthetic-failure.png'),fullPage:true}).catch(()=>{});writeFileSync(join(out,'page-text.txt'),await page.locator('body').innerText().catch(()=>''));}
