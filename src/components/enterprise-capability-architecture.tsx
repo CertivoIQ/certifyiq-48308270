@@ -58,7 +58,7 @@ export function EnterpriseCapabilityArchitecture() {
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
             <Pill tone="seal">Enterprise-ready</Pill>
-            <Pill tone="neutral">Pricing logic: none</Pill>
+            <Pill tone="neutral">No per-feature pricing</Pill>
             <Pill tone="neutral">Governed authorization</Pill>
           </div>
           <div className="grid gap-3 lg:grid-cols-2">
