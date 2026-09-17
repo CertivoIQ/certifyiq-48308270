@@ -355,6 +355,8 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/continuous_audit_readiness.bootstrap.sql
       - name: Apply deterministic readiness function
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910171958_continuous_audit_readiness.sql
+      - name: Reproduce assurance reviewer permission drift
+        run: psql --set ON_ERROR_STOP=1 --file supabase/tests/continuous_audit_readiness.permission_drift.sql
       - name: Restore assurance reviewer execute grant
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260917223000_restore_assurance_reviewer_execute.sql
       - name: Verify deductions, scoring, queue, tenant isolation, and assurance permission path
