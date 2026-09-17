@@ -176,7 +176,6 @@ function listOf(value: any): string[] {
 
 async function loadFindingsWorkspace(userId: string) {
   const client = supabase as any;
-  const accountId = userId;
 
   const { data: findingRows, error: findingError } = await client
     .from("compliance_findings")
@@ -200,32 +199,6 @@ async function loadFindingsWorkspace(userId: string) {
       .in("id", itemIds);
     if (itemError) throw itemError;
     items = (itemRows ?? []) as ItemRow[];
-  }
-
-  const { data: certifications, error: certificationError } = await client
-    .from("certifications")
-    .select("id")
-    .eq("account_id", accountId)
-    .order("created_at", { ascending: false });
-  if (certificationError) throw certificationError;
-
-  const certificationIds = (certifications ?? []).map((certification: { id: string }) => certification.id);
-  if (certificationIds.length > 0) {
-    const { error: reviewError } = await client
-      .from("certification_reviews")
-      .select("*")
-      .eq("account_id", accountId)
-      .in("certification_id", certificationIds)
-      .order("reviewed_at", { ascending: false });
-    if (reviewError) throw reviewError;
-
-    const { error: correctionError } = await client
-      .from("correction_assignments")
-      .select("*")
-      .eq("account_id", accountId)
-      .in("certification_id", certificationIds)
-      .order("created_at", { ascending: false });
-    if (correctionError) throw correctionError;
   }
 
   return { findings, items };
