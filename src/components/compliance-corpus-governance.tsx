@@ -152,12 +152,12 @@ export function ComplianceCorpusGovernance() {
             <div className="space-y-2">
               <p className="font-medium">Recent structured finding records</p>
               {snapshot.recent_findings.length ? snapshot.recent_findings.map((finding, index) => (
-                <div key={text(finding.id, String(index))} className="rounded-md border bg-background p-3 text-sm">
+                <div key={text(finding["id"], String(index))} className="rounded-md border bg-background p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium">{text(finding.rule_id, "Finding")}</p>
-                    <div className="flex gap-1.5"><Pill tone={text(finding.severity).toLowerCase() === "critical" ? "flag" : "neutral"}>{text(finding.severity)}</Pill><Pill tone="neutral">{text(finding.status)}</Pill></div>
+                    <p className="font-medium">{text(finding["rule_id"], "Finding")}</p>
+                    <div className="flex gap-1.5"><Pill tone={text(finding["severity"]).toLowerCase() === "critical" ? "flag" : "neutral"}>{text(finding["severity"])}</Pill><Pill tone="neutral">{text(finding["status"])}</Pill></div>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{text(finding.jurisdiction)} · rule {text(finding.rule_version)} · {text(finding.engine_build)} · review {text(finding.review_state)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{text(finding["jurisdiction"])} · rule {text(finding["rule_version"])} · {text(finding["engine_build"])} · review {text(finding["review_state"])}</p>
                 </div>
               )) : <p className="text-sm text-muted-foreground">No structured finding records are available.</p>}
             </div>
@@ -167,12 +167,12 @@ export function ComplianceCorpusGovernance() {
             <div className="space-y-2">
               <p className="font-medium">Recent correction workflow records</p>
               {snapshot.recent_corrections.length ? snapshot.recent_corrections.map((correction, index) => (
-                <div key={text(correction.finding_id, String(index))} className="rounded-md border bg-background p-3 text-sm">
+                <div key={text(correction["finding_id"], String(index))} className="rounded-md border bg-background p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium">{text(correction.rule_id, "Correction")}</p>
-                    <Pill tone={text(correction.assignment_status).toLowerCase() === "resolved" ? "seal" : "flag"}>{text(correction.assignment_status, text(correction.status))}</Pill>
+                    <p className="font-medium">{text(correction["rule_id"], "Correction")}</p>
+                    <Pill tone={text(correction["assignment_status"]).toLowerCase() === "resolved" ? "seal" : "flag"}>{text(correction["assignment_status"], text(correction["status"]))}</Pill>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Finding status {text(correction.finding_status, text(correction.status))} · review {text(correction.review_state)} · assigned {text(correction.assigned_at)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Finding status {text(correction["finding_status"], text(correction["status"]))} · review {text(correction["review_state"])} · assigned {text(correction["assigned_at"])}</p>
                 </div>
               )) : <p className="text-sm text-muted-foreground">No correction workflow records are available.</p>}
             </div>
