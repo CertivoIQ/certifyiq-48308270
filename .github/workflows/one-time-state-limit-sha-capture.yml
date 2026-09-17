@@ -50,12 +50,6 @@ jobs:
             ctype="$(file --brief --mime-type "$out")"
             echo "CERTIVOIQ_EXACT_SOURCE key=$key sha256=$sha bytes=$bytes mime=$ctype magic=$magic url=$url"
           }
-          capture HUD_FY2026_MTSP_PDF 'https://www.huduser.gov/portal/datasets/mtsp/mtsp26/HERA-Income-Limits-Report-FY26.pdf' '25504446'
-          capture NH_2026_INCOME_LIMITS 'https://www.nhhousing.org/wp-content/uploads/2026/06/Income_Limits_2026.pdf' '25504446'
-          capture NH_2026_RENT_LIMITS 'https://www.nhhousing.org/wp-content/uploads/2026/06/Rent_Limits_2026.pdf' '25504446'
-          capture WI_2026_MTSP_LIMITS 'https://www.wheda.com/globalassets/documents/tax-credits/mf-data-library/2026-multifamily-tax-subsidy-project-mtsp-limits.pdf' '25504446'
-          capture AZ_2026_2027_QAP 'https://housing.az.gov/sites/default/files/2026-08/2026-2027%20QAP-ADOH%20Clean%20Copy.pdf' '25504446'
-          capture AZ_2025_LIHTC_COMPLIANCE_MANUAL 'https://housing.az.gov/sites/default/files/2025-08/LIHTC-Compliance-Manual_2025.pdf' '25504446'
-          capture OR_2025_QAP 'https://www.oregon.gov/ohcs/rental-housing/housing-development/development-resources/Documents/QAP/2025-qap-final.pdf' '25504446'
+          capture CT_LIHTC_COMPLIANCE_MANUAL 'https://spectrumlihtc.com/wp-content/uploads/CHFA-CT-LIHTC-Compliance-Manual-Updated-10.2024.pdf' '25504446'
           echo "CAPTURE_FAILURES=$failures"
           exit "$failures"
