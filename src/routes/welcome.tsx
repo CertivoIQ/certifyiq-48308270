@@ -247,7 +247,7 @@ function WelcomePage() {
           <div className="max-w-2xl">
             <Pill tone="neutral">The workflow</Pill>
             <h2 className="mt-4 font-display text-[38px] leading-tight sm:text-[50px]">Every finding traces back<br />to the document that caused it.</h2>
-            <p className="mt-4 text-[15px] leading-7 text-background/65">CertivoIQ is deliberately not a black box. Evidence is extracted from the certification file, deterministic versioned rules make the evaluation explainable, and each result is presented with its source.</p>
+            <p className="mt-4 text-[15px] leading-7 text-muted-foreground">CertivoIQ is deliberately not a black box. Evidence is extracted from the certification file, deterministic versioned rules make the evaluation explainable, and each result is presented with its source.</p>
           </div>
           <div className="mt-10 grid gap-3 md:grid-cols-4">
             {FLOW.map(({ icon: Icon, label }, index) => (
