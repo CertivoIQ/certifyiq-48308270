@@ -100,23 +100,13 @@ function pickPrograms(source: any): string[] {
       return value.split(/[,;]\s*/).filter(Boolean);
     }
   }
-  const inferred = Object.entries(source)
-    .filter(([key, value]) => key.startsWith("program_type_") && String(value).toLowerCase() === "yes")
-    .map(([key]) => key.replace("program_type_", "").toUpperCase());
-  return inferred;
+  return [];
 }
 
 function profileFor(item: ItemRow, findings: FindingRow[]): ReviewedProfile {
   const data = item.extracted_data ?? {};
   const nested = (data.household ?? data.profile ?? {}) as any;
   const open = findings.filter((finding) => isOpenFinding(finding)).length;
-  const householdFromMember = [
-    pick(data, ["household_member_1_first_name_middle_initial"]),
-    pick(data, ["household_member_1_last_name"]),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
   return {
     itemId: item.id,
     fileName: item.original_file_name ?? "Certification file",
@@ -124,9 +114,7 @@ function profileFor(item: ItemRow, findings: FindingRow[]): ReviewedProfile {
     unitNumber: pick(data, ["unit_number", "unitNumber", "unit"]) ?? pick(nested, ["unit_number"]),
     householdName:
       pick(data, ["household_name", "householdName", "primary_applicant_name", "head_of_household", "tenant_name"]) ??
-      pick(nested, ["household_name", "primary_applicant_name", "name"]) ??
-      householdFromMember ||
-      null,
+      pick(nested, ["household_name", "primary_applicant_name", "name"]),
     certificationType: pick(data, ["certification_type", "certificationType", "tic_type", "type"]),
     effectiveDate: pick(data, [
       "certification_effective_date",
@@ -230,6 +218,7 @@ function FindingsPage() {
 
   const findings = workspace.data?.findings ?? [];
   const items = workspace.data?.items ?? [];
+
   const itemsById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
 
   const profiles = useMemo(() => {
@@ -276,18 +265,13 @@ function FindingsPage() {
     requestAnimationFrame(() => listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
-  const cards: {
-    id: ViewMode;
-    label: string;
-    value: number;
-    tone: "flag" | "reject" | "seal" | "neutral";
-    hint: string;
-  }[] = [
-    { id: "open", label: "Open findings", value: openFindings.length, tone: "flag", hint: "FAIL and Unable to determine" },
-    { id: "critical", label: "Critical open", value: criticalOpen.length, tone: "reject", hint: "Escalate before approval" },
-    { id: "resolved", label: "Resolved corrections", value: resolved.length, tone: "seal", hint: "Reviewed and closed" },
-    { id: "profiles", label: "Reviewed profiles", value: profiles.length, tone: "neutral", hint: "Certifications with findings" },
-  ];
+  const cards: { id: ViewMode; label: string; value: number; tone: "flag" | "reject" | "seal" | "neutral"; hint: string }[] =
+    [
+      { id: "open", label: "Open findings", value: openFindings.length, tone: "flag", hint: "FAIL and Unable to determine" },
+      { id: "critical", label: "Critical open", value: criticalOpen.length, tone: "reject", hint: "Escalate before approval" },
+      { id: "resolved", label: "Resolved corrections", value: resolved.length, tone: "seal", hint: "Reviewed and closed" },
+      { id: "profiles", label: "Reviewed profiles", value: profiles.length, tone: "neutral", hint: "Certifications with findings" },
+    ];
 
   const visibleFindings =
     view === "open" ? openFindings : view === "critical" ? criticalOpen : view === "resolved" ? resolved : [];
@@ -370,12 +354,8 @@ function FindingsPage() {
                       {profile.householdName ?? "Household not determined"}
                     </h2>
                     <Cite>
-                      {[
-                        profile.propertyName ?? "Property not determined",
-                        profile.unitNumber ? `Unit ${profile.unitNumber}` : null,
-                        profile.certificationType,
-                        profile.effectiveDate,
-                      ]
+                      {[profile.propertyName ?? "Property not determined", profile.unitNumber ? `Unit ${profile.unitNumber}` : null,
+                        profile.certificationType, profile.effectiveDate]
                         .filter(Boolean)
                         .join(" · ")}
                     </Cite>
@@ -480,7 +460,10 @@ function FindingsPage() {
 
                   {canResolve && (
                     <div className="mt-4 rounded-md border border-border bg-muted/30 p-3">
-                      <label htmlFor={`resolution-${finding.id}`} className="block text-[12.5px] font-medium">
+                      <label
+                        htmlFor={`resolution-${finding.id}`}
+                        className="block text-[12.5px] font-medium"
+                      >
                         Resolution notes
                       </label>
                       <Textarea
