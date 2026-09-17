@@ -4,6 +4,7 @@ name: CertivoIQ structured TIC bound-worker candidate
 
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/cloudflare-v6-onboarding-parity.yml'
 
@@ -76,8 +77,8 @@ jobs:
           grep -F -q '["certification_type", name]' src/lib/tic-pdf-form-values.ts
           grep -F -q 'household_member_${member}_last_name' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'household_member_${member}_first_name_middle_initial' src/lib/tic-spatial-extraction.mjs
-          grep -F -q 'income_member_${member}_wages_business' src/lib/tic-spatial-extraction.mjs
-          grep -F -q 'asset_${member}_cash_value' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'income_member_${sourceRow}_wages_business' src/lib/tic-spatial-extraction.mjs
+          grep -F -q 'asset_${sourceRow}_cash_value' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'explicitMemberNumber' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'locateHouseholdTable' src/lib/tic-spatial-extraction.mjs
           grep -F -q 'annual_student_certification' src/lib/tic-supporting-document-registry.ts
@@ -101,7 +102,7 @@ jobs:
           grep -F -q "const RENDER_SCALE = 3" src/lib/pdf-ocr.ts
           grep -F -q "TESSERACT_VERSION = '7.0.0'" src/lib/pdf-ocr.ts
           grep -F -q 'PSM.SPARSE_TEXT' src/lib/pdf-ocr.ts
-          grep -F -q 'First nonblank failed page' src/lib/pdf-ocr.ts
+          grep -F -q 'Certification processing stopped at page' src/lib/pdf-ocr.ts
           ! head -n 1 src/components/certivoiq-tic-review-form.tsx | grep -F -q 'eslint-disable react/'
           grep -F -q '[-/]' src/lib/tic-field-extraction.ts
           echo "SOURCE_SHA=$(git rev-parse HEAD)"
