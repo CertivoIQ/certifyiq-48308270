@@ -30,7 +30,6 @@ export function ComplianceIntelligenceSuite() {
             <h1 className="text-3xl font-semibold tracking-tight">Compliance Intelligence Suite</h1>
             <p className="mt-2 max-w-3xl text-muted-foreground">Portfolio onboarding, certification intake, and compliance review remain separate so each step has a clear audit trail.</p>
           </div>
-          <div className="rounded-xl border bg-muted/40 px-4 py-3 text-sm"><div className="font-medium">Client-controlled review queue</div><div className="mt-1 text-muted-foreground">No certification is reviewed merely because it was uploaded.</div></div>
         </div>
       </section>
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
