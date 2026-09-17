@@ -1,4 +1,5 @@
 # Exact source-field to CertivoIQ TIC parity release.
+# Release trigger: deploy current reviewed main through the bound v11 worker.
 name: CertivoIQ structured TIC bound-worker candidate
 
 on:
