@@ -6,6 +6,10 @@ const migration = await readFile(
   new URL("../supabase/migrations/20260910171958_continuous_audit_readiness.sql", import.meta.url),
   "utf8",
 );
+const grantMigration = await readFile(
+  new URL("../supabase/migrations/20260917223000_restore_assurance_reviewer_execute.sql", import.meta.url),
+  "utf8",
+);
 const component = await readFile(
   new URL("../src/components/continuous-audit-readiness.tsx", import.meta.url),
   "utf8",
@@ -36,8 +40,17 @@ test("is tenant-scoped and fails closed for anonymous callers", () => {
   assert.match(migration, /revoke all on function public\.audit_readiness_score\(date\) from public,anon/);
 });
 
+test("restores the assurance reviewer grant required by readiness RLS", () => {
+  assert.match(grantMigration, /grant execute on function private\.certivoiq_assurance_reviewer\(uuid\)/i);
+  assert.match(grantMigration, /to authenticated, service_role/i);
+});
+
 test("renders deduction drill-down and exact remediation queue", () => {
   assert.match(component, /Get me to 100/);
+  assert.doesNotMatch(component, /disabled=\{!result\}/);
+  assert.match(component, /readiness\.refetch\(\)/);
+  assert.match(component, /Calculating your exact path to 100/);
+  assert.match(component, /Retry readiness/);
   assert.match(component, /Exact remediation queue/);
   assert.match(component, /points_recovered/);
   assert.match(component, /entity_id/);
