@@ -174,13 +174,16 @@ function listOf(value: any): string[] {
   return [String(value)];
 }
 
-async function loadFindingsWorkspace() {
+async function loadFindingsWorkspace(userId: string) {
   const client = supabase as any;
+  const accountId = userId;
+
   const { data: findingRows, error: findingError } = await client
     .from("compliance_findings")
     .select(
       "id,item_id,rule_id,rule_version,rule_pack_id,rule_pack_version,jurisdiction,status,severity,explanation,blocking_reasons,evidence_refs,engine_build,review_state,created_at,updated_at",
     )
+    .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1000);
   if (findingError) throw findingError;
@@ -193,9 +196,36 @@ async function loadFindingsWorkspace() {
     const { data: itemRows, error: itemError } = await client
       .from("certification_import_items")
       .select("id,original_file_name,status,extracted_data,created_at,processed_at")
+      .eq("user_id", userId)
       .in("id", itemIds);
     if (itemError) throw itemError;
     items = (itemRows ?? []) as ItemRow[];
+  }
+
+  const { data: certifications, error: certificationError } = await client
+    .from("certifications")
+    .select("id")
+    .eq("account_id", accountId)
+    .order("created_at", { ascending: false });
+  if (certificationError) throw certificationError;
+
+  const certificationIds = (certifications ?? []).map((certification: { id: string }) => certification.id);
+  if (certificationIds.length > 0) {
+    const { error: reviewError } = await client
+      .from("certification_reviews")
+      .select("*")
+      .eq("account_id", accountId)
+      .in("certification_id", certificationIds)
+      .order("reviewed_at", { ascending: false });
+    if (reviewError) throw reviewError;
+
+    const { error: correctionError } = await client
+      .from("correction_assignments")
+      .select("*")
+      .eq("account_id", accountId)
+      .in("certification_id", certificationIds)
+      .order("created_at", { ascending: false });
+    if (correctionError) throw correctionError;
   }
 
   return { findings, items };
@@ -213,7 +243,7 @@ function FindingsPage() {
   const workspace = useQuery({
     queryKey: ["findings-workspace", user?.id],
     enabled: ready && !!user,
-    queryFn: loadFindingsWorkspace,
+    queryFn: () => loadFindingsWorkspace(user!.id),
   });
 
   const findings = workspace.data?.findings ?? [];
