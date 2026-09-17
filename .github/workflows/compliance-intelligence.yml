@@ -316,7 +316,9 @@ jobs:
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/auditor_workspace.bootstrap.sql
       - name: Apply Auditor Workspace migration
         run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260910170637_auditor_workspace.sql
-      - name: Verify scope, expiry, revocation, and access logging
+      - name: Apply paid unlimited auditor entitlement
+        run: psql --set ON_ERROR_STOP=1 --file supabase/migrations/20260917224500_unlimited_multifamily_auditor_access.sql
+      - name: Verify paid entitlement, unlimited auditor scope, expiry, revocation, and access logging
         run: psql --set ON_ERROR_STOP=1 --file supabase/tests/auditor_workspace.test.sql
 
 
