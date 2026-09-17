@@ -57,6 +57,15 @@ function versionLabel(node: SourceNode) {
   return [node.source_version ?? "unversioned", node.effective_from ? `effective ${node.effective_from}` : null, `SHA ${sha}…`].filter(Boolean).join(" · ");
 }
 
+function BooleanSummary({ label, value }: { label: string; value: boolean | undefined }) {
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-xl font-semibold">{value ? "Yes" : "No"}</p>
+    </div>
+  );
+}
+
 export function RegulatoryDiffEngine() {
   const [family, setFamily] = useState("");
   const [priorId, setPriorId] = useState("");
@@ -168,10 +177,10 @@ export function RegulatoryDiffEngine() {
           </div>
           <p className="font-medium">{report.prior.label} ({report.prior.source_version ?? "unversioned"}) → {report.current.label} ({report.current.source_version ?? "unversioned"})</p>
           <div className="grid gap-3 sm:grid-cols-4">
-            <Stat label="Exact bytes changed" value={report.changes.exact_source_bytes_changed ? "Yes" : "No"} />
-            <Stat label="Text changed" value={report.changes.substantive_text_changed ? "Yes" : "No"} />
-            <Stat label="Effective date changed" value={report.changes.effective_date_changed ? "Yes" : "No"} />
-            <Stat label="Supersession declared" value={report.changes.supersession_declared ? "Yes" : "No"} />
+            <BooleanSummary label="Exact bytes changed" value={report.changes.exact_source_bytes_changed} />
+            <BooleanSummary label="Text changed" value={report.changes.substantive_text_changed} />
+            <BooleanSummary label="Effective date changed" value={report.changes.effective_date_changed} />
+            <BooleanSummary label="Supersession declared" value={report.changes.supersession_declared} />
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-md border p-4"><p className="font-medium">Requirements added</p><p className="mt-2 text-sm text-muted-foreground">{report.changes.requirements_added.join(", ") || "None explicitly captured"}</p></div>
