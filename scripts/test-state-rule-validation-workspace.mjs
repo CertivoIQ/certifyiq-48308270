@@ -89,7 +89,7 @@ test("deep-links each state task into its filtered validation queue", () => {
   assert.match(workspace, /validateSearch/);
   assert.match(workspace, /routeSearch\.state \?\? "ALL"/);
   assert.match(tasks, /validationStateCode:\s*active \? candidate\.state_code : undefined/);
-  assert.match(tasks, /search=\{\{ state: task\.validationStateCode, status: "active" \}\}/);
+  assert.match(tasks, /status:\s*isSelectableTask\(task\)\s*\?\s*"unresolved"\s*:\s*"active"/);
 });
 
 

@@ -14,9 +14,7 @@ import { useAccount } from '@/hooks/use-account';
 import { CertificationSupportingDocumentsPanel } from '@/components/certification-supporting-documents-panel';
 
 /**
- * Live review panel for the compliance vertical slice: uploaded documents show
- * proposed extracted information immediately, while compliance review remains
- * an explicit separate action.
+ * Live review panel for the compliance vertical slice.
  */
 
 const STATUS_STYLE: Record<string, { icon: typeof CheckCircle2; className: string; label: string }> = {
@@ -182,9 +180,7 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
   const [selectedId, setSelectedId] = useState<string | null>(initialItemId);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [jurisdiction, setJurisdiction] = useState('');
-  const [certificationType, setCertificationType] = useState<
-    '' | 'INITIAL' | 'ANNUAL' | 'INTERIM'
-  >('');
+  const [certificationType, setCertificationType] = useState<'' | 'INITIAL' | 'ANNUAL' | 'INTERIM'>('');
   const [notice, setNotice] = useState('');
   const { account } = useAccount();
 
@@ -280,32 +276,24 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
           <div>
             <h2 className="font-semibold">Certification documents</h2>
             <p className="text-sm text-muted-foreground">
-              Extracted document information is saved and displayed automatically after upload. Compliance review begins only when selected below.
+              Review extracted certification information, supporting evidence, findings, and source citations below.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="text-sm text-muted-foreground" htmlFor="certification-type">
-            Certification type
-          </label>
+          <label className="text-sm text-muted-foreground" htmlFor="certification-type">Certification type</label>
           <select
             id="certification-type"
             className="rounded-md border bg-background px-2 py-1 text-sm"
             value={certificationType}
-            onChange={(event) =>
-              setCertificationType(
-                event.target.value as '' | 'INITIAL' | 'ANNUAL' | 'INTERIM',
-              )
-            }
+            onChange={(event) => setCertificationType(event.target.value as '' | 'INITIAL' | 'ANNUAL' | 'INTERIM')}
           >
             <option value="">Select type</option>
             <option value="INITIAL">Initial</option>
             <option value="ANNUAL">Annual</option>
             <option value="INTERIM">Interim</option>
           </select>
-          <label className="text-sm text-muted-foreground" htmlFor="jurisdiction">
-            Jurisdiction
-          </label>
+          <label className="text-sm text-muted-foreground" htmlFor="jurisdiction">Jurisdiction</label>
           <input
             id="jurisdiction"
             className="w-20 rounded-md border bg-background px-2 py-1 text-sm uppercase"
@@ -327,9 +315,8 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
 
       {items.data && items.data.length > 0 ? (
         <div className="mt-5 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>Documents are never selected for compliance review automatically.</span>
-            <button type="button" className="font-medium text-primary" onClick={() => setSelectedIds(new Set(items.data.map((item) => item.id)))}>Select all visible</button>
+          <div className="flex justify-end text-xs text-muted-foreground">
+            <button type="button" className="cursor-pointer font-medium text-primary" onClick={() => setSelectedIds(new Set(items.data.map((item) => item.id)))}>Select all visible</button>
           </div>
           {items.data.map((item) => {
             const extracted = extractedEntries(item.extracted_data);
@@ -348,13 +335,13 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
                       if (event.target.checked) next.add(item.id); else next.delete(item.id);
                       return next;
                     })}
-                    className="size-4"
+                    className="size-4 cursor-pointer"
                   />
-                  <button type="button" onClick={() => setSelectedId(item.id)} className="min-w-0 flex-1 text-left">
+                  <button type="button" onClick={() => setSelectedId(item.id)} className="min-w-0 flex-1 cursor-pointer text-left">
                     <span className="block truncate text-sm font-medium">{item.household_name || item.original_file_name}</span>
                     <span className="block truncate text-xs text-muted-foreground">{item.property_name ? `${item.property_name} · Unit ${item.unit_number}` : item.original_file_name} · {item.certification_type || 'type required'} · {item.jurisdiction || 'jurisdiction required'}</span>
                   </button>
-                  <span className="rounded-full border px-2 py-1 text-xs">{item.review_queue_status.replaceAll('_', ' ')}</span>
+                  <span className="rounded-full border px-2 py-1 text-xs">{(item.review_queue_status ?? 'pending').replaceAll('_', ' ')}</span>
                 </div>
 
                 {extracted.length > 0 ? (
@@ -375,26 +362,22 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
                     </dl>
                   </div>
                 ) : item.processed_at ? (
-                  <div className="mt-3 rounded-lg border bg-background/70 p-3 text-xs text-muted-foreground">
-                    No supported certification fields were found automatically. The source document and OCR evidence are saved.
-                  </div>
+                  <div className="mt-3 rounded-lg border bg-background/70 p-3 text-xs text-muted-foreground">No supported certification fields were found automatically. The source document and OCR evidence are saved.</div>
                 ) : (
-                  <div className="mt-3 rounded-lg border bg-background/70 p-3 text-xs text-muted-foreground">
-                    Extraction pending.
-                  </div>
+                  <div className="mt-3 rounded-lg border bg-background/70 p-3 text-xs text-muted-foreground">Extraction pending.</div>
                 )}
                 <IncomeLimitComparison values={extractedValues} />
                 {item.id === activeId && (item.review_queue_status === 'not_queued' || item.review_queue_status === 'queued') ? (
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
                     <div>
                       <p className="text-sm font-medium">Pending certification actions</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Attach supporting evidence before review, or begin the controlled review for this certification only.</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Attach supporting evidence before review, or begin review for this certification.</p>
                     </div>
                     <button
                       type="button"
                       disabled={runQueue.isPending}
                       onClick={() => runQueue.mutate([item.id])}
-                      className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <PlayCircle className="size-4" />
                       {runQueue.isPending ? 'Reviewing…' : 'Review Certification'}
@@ -407,16 +390,10 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
           })}
         </div>
       ) : (
-        <p className="mt-5 text-sm text-muted-foreground">
-          Upload a certification document to populate Documents automatically.
-        </p>
+        <p className="mt-5 text-sm text-muted-foreground">Upload a certification document to populate Documents automatically.</p>
       )}
 
-      {notice && (
-        <p className="mt-4 rounded-lg bg-muted/50 p-3 text-sm" role="status">
-          {notice}
-        </p>
-      )}
+      {notice && <p className="mt-4 rounded-lg bg-muted/50 p-3 text-sm" role="status">{notice}</p>}
 
       {review.data && (
         <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-4">
@@ -426,11 +403,7 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
                 <p className="font-medium">{freeReviewsRemaining} FREE certification review{freeReviewsRemaining === 1 ? '' : 's'} remaining</p>
                 <p className="mt-1 text-sm text-muted-foreground">Use the remaining reviews to validate CertivoIQ on your own files, then scale to your full portfolio.</p>
               </div>
-              {freeReviewsRemaining === 0 && (
-                <Link to="/pricing" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
-                  Choose your plan
-                </Link>
-              )}
+              {freeReviewsRemaining === 0 && <Link to="/pricing" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">Choose your plan</Link>}
             </div>
           ) : null}
         </div>
@@ -457,57 +430,23 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
                     <Icon className="h-4 w-4" />
                     {style.label} · {finding.rule_id} v{finding.rule_version}
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {finding.rule_pack_id}@{finding.rule_pack_version} · {finding.jurisdiction} · {finding.engine_build}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{finding.rule_pack_id}@{finding.rule_pack_version} · {finding.jurisdiction} · {finding.engine_build}</span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{finding.explanation}</p>
                 {blocking.length > 0 && (
                   <ul className="mt-2 space-y-1 text-sm text-flag">
-                    {blocking.map((reason) => (
-                      <li key={reason} className="flex gap-2">
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                        {reason}
-                      </li>
-                    ))}
+                    {blocking.map((reason) => <li key={reason} className="flex gap-2"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />{reason}</li>)}
                   </ul>
                 )}
-                {refs.length > 0 && (
-                  <div className="mt-3 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-                    <div className="font-medium text-foreground">Evidence</div>
-                    <ul className="mt-1 space-y-1">
-                      {refs.map((ref) => (
-                        <li key={`${finding.id}-${ref.field}`}>
-                          {ref.field} — {ref.documentRef} p.{ref.page ?? '—'}: “{ref.snippet}”
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {refs.length > 0 && <EvidenceRefList findingId={finding.id} refs={refs} />}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <button
-                    className="rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50"
-                    disabled={decide.isPending || finding.status === 'UNABLE_TO_DETERMINE'}
-                    onClick={() => decide.mutate({ findingId: finding.id, decision: 'approved' })}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    className="rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50"
-                    disabled={decide.isPending}
-                    onClick={() => decide.mutate({ findingId: finding.id, decision: 'remediation_requested' })}
-                  >
-                    Request remediation
-                  </button>
+                  <button className="cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50" disabled={decide.isPending || finding.status === 'UNABLE_TO_DETERMINE'} onClick={() => decide.mutate({ findingId: finding.id, decision: 'approved' })}>Approve</button>
+                  <button className="cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50" disabled={decide.isPending} onClick={() => decide.mutate({ findingId: finding.id, decision: 'remediation_requested' })}>Request remediation</button>
                   <span className="text-xs text-muted-foreground">Review state: {finding.review_state}</span>
                 </div>
                 {trail.length > 0 && (
                   <ul className="mt-2 text-xs text-muted-foreground">
-                    {trail.map((entry) => (
-                      <li key={`${entry.finding_id}-${entry.created_at}`}>
-                        {new Date(entry.created_at).toLocaleString()} — {entry.decision}
-                      </li>
-                    ))}
+                    {trail.map((entry) => <li key={`${entry.finding_id}-${entry.created_at}`}>{new Date(entry.created_at).toLocaleString()} — {entry.decision}</li>)}
                   </ul>
                 )}
               </article>
@@ -518,22 +457,92 @@ export function CertificationReviewPanel({ initialItemId = null, initialAction }
 
       {review.data && review.data.facts.length > 0 && (
         <details className="mt-6 rounded-xl border p-4">
-          <summary className="cursor-pointer text-sm font-medium">
-            Source citations for extracted information ({review.data.facts.length})
-          </summary>
-          <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-            {review.data.facts.map((fact) => (
-              <li key={fact.field_name}>
-                <span className="font-medium text-foreground">{EXTRACTED_FIELD_LABELS[fact.field_name] ?? fact.field_name}</span>: {String(fact.field_value)} —{' '}
-                {fact.source_document_ref} p.{fact.source_page ?? '—'} · {Math.round(Number(fact.confidence) * 100)}%
-                confidence · {fact.extraction_provider}
-                {fact.human_verified ? ' · confirmed' : ''}
-              </li>
-            ))}
-          </ul>
+          <summary className="cursor-pointer text-sm font-medium">Source citations for extracted information ({review.data.facts.length})</summary>
+          <CitationList facts={review.data.facts as CitationFact[]} />
         </details>
       )}
     </section>
   );
 }
 
+type CitationFact = {
+  field_name: string;
+  field_value: unknown;
+  source_document_ref: string | null;
+  source_page: number | null;
+  source_snippet?: string | null;
+  confidence: number | string | null;
+  human_verified?: boolean | null;
+  extraction_provider: string | null;
+};
+
+function CitationList({ facts }: { facts: CitationFact[] }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  return (
+    <ul className="mt-3 space-y-2 text-xs">
+      {facts.map((fact) => {
+        const isSelected = selected === fact.field_name;
+        return (
+          <li key={fact.field_name}>
+            <button
+              type="button"
+              aria-pressed={isSelected}
+              aria-expanded={isSelected}
+              onClick={() => setSelected(isSelected ? null : fact.field_name)}
+              className={`w-full cursor-pointer rounded-lg border px-3 py-2 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card'}`}
+            >
+              <span className="font-medium text-foreground">{EXTRACTED_FIELD_LABELS[fact.field_name] ?? fact.field_name}</span>
+              <span className="text-muted-foreground">: {String(fact.field_value)}</span>
+              {isSelected ? (
+                <span className="mt-2 block space-y-1 text-muted-foreground">
+                  {fact.source_snippet ? <span className="block">Source snippet: “{fact.source_snippet}”</span> : null}
+                  <span className="block">Document reference: {fact.source_document_ref ?? '—'}</span>
+                  <span className="block">Page: {fact.source_page ?? '—'}</span>
+                  <span className="block">Confidence: {fact.confidence === null ? '—' : `${Math.round(Number(fact.confidence) * 100)}%`}</span>
+                  <span className="block">Extraction provider: {fact.extraction_provider ?? '—'}</span>
+                  {fact.human_verified ? <span className="block">Confirmed by reviewer</span> : null}
+                </span>
+              ) : null}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function EvidenceRefList({ findingId, refs }: { findingId: string; refs: EvidenceRef[] }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  return (
+    <div className="mt-3 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+      <div className="font-medium text-foreground">Evidence</div>
+      <ul className="mt-2 space-y-2">
+        {refs.map((ref, index) => {
+          const refKey = ref.field ?? `ref-${index}`;
+          const isSelected = selected === refKey;
+          return (
+            <li key={`${findingId}-${refKey}`}>
+              <button
+                type="button"
+                aria-pressed={isSelected}
+                aria-expanded={isSelected}
+                onClick={() => setSelected(isSelected ? null : refKey)}
+                className={`w-full cursor-pointer rounded-md border px-2 py-1.5 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card'}`}
+              >
+                <span className="font-medium text-foreground">{ref.field}</span>
+                <span> — {ref.documentRef} p.{ref.page ?? '—'}</span>
+                {isSelected ? (
+                  <span className="mt-1 block">
+                    {ref.snippet ? <span className="block">Source snippet: “{ref.snippet}”</span> : null}
+                    <span className="block">Document reference: {ref.documentRef}</span>
+                    <span className="block">Page: {ref.page ?? '—'}</span>
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}

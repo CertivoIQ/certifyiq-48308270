@@ -13,5 +13,17 @@ export const Route = createFileRoute('/_authenticated/compliance-intelligence')(
 });
 
 function ComplianceIntelligenceWorkspace() {
-  return <><ComplianceControlCenter /><ComplianceIntelligenceSuite /><div className="mx-auto w-full max-w-7xl px-6 pb-10 md:px-10"><ComplianceTimeMachine /><ComplianceImpactAnalysis /><RegulatoryDiffEngine /><PortfolioComplianceIntelligence /><EnterpriseCapabilityArchitecture /><ComplianceCorpusGovernance /></div></>;
+  return (
+    <>
+      <ComplianceControlCenter /><ComplianceIntelligenceSuite />
+      <div className="mx-auto w-full max-w-7xl space-y-6 px-6 pb-10 md:px-10">
+        <section id="compliance-time-machine" className="scroll-mt-24"><ComplianceTimeMachine /></section>
+        <section id="compliance-impact-analysis" className="scroll-mt-24"><ComplianceImpactAnalysis /></section>
+        <section id="regulatory-diff-engine" className="scroll-mt-24"><RegulatoryDiffEngine /></section>
+        <section id="portfolio-compliance-intelligence" className="scroll-mt-24"><PortfolioComplianceIntelligence /></section>
+        <section id="enterprise-capability-architecture" className="scroll-mt-24"><EnterpriseCapabilityArchitecture /></section>
+        <section id="compliance-corpus-governance" className="scroll-mt-24"><ComplianceCorpusGovernance /></section>
+      </div>
+    </>
+  );
 }

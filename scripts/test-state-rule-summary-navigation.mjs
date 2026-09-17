@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const ts = require("typescript");
 const source = readFileSync(new URL("../src/routes/_authenticated/state-rule-validation.tsx", import.meta.url), "utf8");
 assert.match(source, /label: "Pending verifications"/);
-assert.match(source, /open: \(\) => openSources\("active"\)/);
+assert.match(source, /open: \(\) => openSources\("unresolved"\)/);
 
 const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022 } }).outputText;
 
@@ -17,7 +17,7 @@ function setup({ error = null, loading = false } = {}) {
   const state = [];
   const mutations = [];
   let options;
-  const makeSource = (id, status, candidateStatus = "CAPTURED") => ({ id, state_code: "AZ", scope: "STATEWIDE", authority_name: id, source_type: "MANUAL", source_url: `https://example.gov/${id}.pdf`, agent_verification_status: status, candidate_status: candidateStatus, verification_evidence: {} });
+  const makeSource = (id, status, candidateStatus = "CAPTURED") => ({ id, state_code: "AZ", scope: "STATEWIDE", authority_name: id, source_type: "MANUAL", source_url: `https://example.gov/${id}.pdf`, agent_verification_status: status, candidate_status: candidateStatus, exact_bytes_captured: true, source_sha256: "a".repeat(64), retrieved_at: "2026-09-17T00:00:00Z", verification_evidence: {} });
   const data = {
     packs: [
       { id: "az", state_code: "AZ", status: "awaiting_second_verification", compliance_activation_allowed: false },
@@ -60,11 +60,11 @@ test("each summary opens its matching records without any mutation", () => {
   const app = setup();
   clickTile(app, "verified sources");
   assert.deepEqual(sourceIds(app), ["verified"]);
-  clickTile(app, "blocked / rejected");
-  assert.deepEqual(sourceIds(app), ["blocked", "rejected", "redundant"]);
+  clickTile(app, "blocked");
+  assert.deepEqual(sourceIds(app), ["blocked"]);
   clickTile(app, "pending verifications");
-  assert.deepEqual(sourceIds(app), ["blocked", "rejected", "captured"]);
-  assert.equal(find(app.render(), (n) => n.type === "Stat" && n.props.label === "Pending verifications").props.value, 3);
+  assert.deepEqual(sourceIds(app), ["blocked", "captured"]);
+  assert.equal(find(app.render(), (n) => n.type === "Stat" && n.props.label === "Pending verifications").props.value, 2);
   clickTile(app, "state packs");
   assert.equal(nodes(app.render()).filter((n) => n.type === "li").length, 2);
   clickTile(app, "compliance active");
@@ -72,17 +72,17 @@ test("each summary opens its matching records without any mutation", () => {
   assert.deepEqual(app.mutations, []);
 });
 
-test("Agent-activation count and list exclude completed and unready packs", () => {
+test("Agent-activation count tracks pending readiness while the readiness list shows all current packs", () => {
   const app = setup();
   clickTile(app, "agent activation");
   const tree = app.render();
   assert.equal(find(tree, (n) => n.type === "Stat" && n.props.label === "Agent activation").props.value, "1/2");
-  assert.equal(nodes(tree).filter((n) => n.type === "li").length, 1);
+  assert.equal(nodes(tree).filter((n) => n.type === "li").length, 2);
   assert.equal(sourceIds(app).length, 0);
   assert.equal(find(tree, (n) => n.type === "Button" && nodes(n).some((child) => child.props?.children === "Activate state pack")), undefined);
   const open = find(tree, (n) => n.type === "Button" && n.props.variant === "outline");
   open.props.onClick();
-  assert.equal(sourceIds(app).length, 5);
+  assert.deepEqual(sourceIds(app), ["verified", "blocked", "redundant", "captured"]);
   assert.deepEqual(app.mutations, []);
 });
 
@@ -99,7 +99,7 @@ test("summary selection resets stale search and jurisdiction filters", () => {
 test("tiles are keyboard-native buttons and disabled until data is available", () => {
   for (const condition of [{ loading: true }, { error: new Error("offline") }]) {
     const tiles = nodes(setup(condition).render()).filter((n) => n.props["aria-controls"] === "validation-records");
-    assert.equal(tiles.length, 6);
+    assert.equal(tiles.length, 7);
     assert.ok(tiles.every((n) => n.type === "button" && n.props.type === "button" && n.props.disabled));
   }
 });
