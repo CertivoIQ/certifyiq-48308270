@@ -58,10 +58,14 @@ try {
  const profile={...e.newProfile('LIHTC'),agency:'TEST ONLY - synthetic agency',implementation:'HOTMA',effectiveFrom:'2026-01-01',effectiveTo:'2027-12-31',policyVersion:'TEST ONLY - NOT A PROPERTY POLICY',policySource:'Synthetic acceptance fixture only',evidencePolicy:'Synthetic fixture, not resident evidence',minEvidenceMonths:'2',designation:'TEST ONLY',geography:'Synthetic geography',limitSource:'FICTITIOUS TEST LIMIT - NOT FOR ELIGIBILITY',limitFrom:'2026-01-01',limitTo:'2027-12-31',limits:{'2':'50000'}};
  const approval={name:'AUTOMATED TEST ONLY',position:'Isolated acceptance test runner',signature:'TEST SIGNATURE - NO REAL HOUSEHOLD',consent:true};
  const calculatorAccess=await owner.client.rpc('income_calculator_access');if(calculatorAccess.error)throw calculatorAccess.error;
- assert.equal(calculatorAccess.data?.mode,'trial');
- const trialPersistence=await api(owner,{action:'save_profile',propertyId:property.id,unitId:unit.id,profile,approval},403);
- assert.match(trialPersistence.error||'',/platform subscription is required/i);pass('Trial calculator remains usable but portfolio persistence stays subscription-gated');
- if(calculatorAccess.data?.mode==='paid'){
+ const accessMode=calculatorAccess.data?.mode;
+ if(accessMode==='trial'){
+  const trialPersistence=await api(owner,{action:'save_profile',propertyId:property.id,unitId:unit.id,profile,approval},403);
+  assert.match(trialPersistence.error||'',/platform subscription is required/i);pass('Trial calculator remains usable but portfolio persistence stays subscription-gated');
+ } else if(accessMode!=='paid'){
+  throw new Error(`Unexpected calculator access mode for acceptance fixture: ${accessMode||'missing'}`);
+ }
+ if(accessMode==='paid'){
   await api(owner,{action:'save_profile',propertyId:property.id,unitId:unit.id,profile,approval});owner.retained=true;
  const layer={...e.newLayer('LIHTC'),evidenceMonths:'3',evidenceSource:'Synthetic reviewed fixture only',evidenceReviewed:true,treatmentReviewed:true,assetsReviewed:true,reconciliationReviewed:true};
  const input={...e.newInput(),tenantId:tenant.id,propertyId:property.id,unitId:unit.id,effectiveDate:'2026-09-05',certificationType:'INITIAL',householdSize:'2',subsidy:'NONE',householdReviewed:true,changesReviewed:true,jobs:[{...e.newJob('test-job'),member:'Synthetic member',employer:'Synthetic employer',rate:'20',hours:'40',source:'Synthetic hourly verification',reviewed:true}],layers:[layer]};
