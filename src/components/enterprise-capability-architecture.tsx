@@ -21,8 +21,8 @@ type Matrix = {
 };
 
 const CAPABILITY_ROUTES: Record<string, string> = {
-  audit_simulation: "/audit-readiness#audit-simulator",
-  auditor_workspace: "/audit-readiness#auditor-workspace",
+  audit_simulation: "/audit-readiness",
+  auditor_workspace: "/audit-readiness",
   compliance_intelligence: "/compliance-intelligence#portfolio-compliance-intelligence",
   regulatory_change_intelligence: "/compliance-intelligence#regulatory-diff-engine",
   enterprise_benchmarking: "/compliance-intelligence#portfolio-compliance-intelligence",
@@ -53,9 +53,7 @@ export function EnterpriseCapabilityArchitecture() {
       description="Governed access boundaries for enterprise capabilities. Module access does not bypass data-use, compliance-review, or external-license controls."
     >
       {matrix.isLoading ? <p className="text-sm text-muted-foreground">Loading capability access…</p> : null}
-      {matrix.isError ? (
-        <p className="text-sm text-destructive">Capability access could not be loaded. Access remains fail-closed.</p>
-      ) : null}
+      {matrix.isError ? <p className="text-sm text-destructive">Capability access could not be loaded. Access remains fail-closed.</p> : null}
       {matrix.data ? (
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
