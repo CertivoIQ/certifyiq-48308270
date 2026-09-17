@@ -1,0 +1,41 @@
+name: One-time exact limit source SHA capture
+on:
+  push:
+    branches:
+      - ops/capture-mtsp-2026-sha
+    paths:
+      - .github/workflows/one-time-state-limit-sha-capture.yml
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and hash official exact files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/limits
+          capture() {
+            local key="$1" url="$2" expected_magic="$3"
+            local out="/tmp/limits/${key}"
+            curl --fail --location --retry 3 --retry-delay 2 --connect-timeout 30 --max-time 180 \
+              -A 'CertivoIQ controlled source verification/1.0' "$url" -o "$out"
+            test -s "$out"
+            local magic sha bytes ctype
+            magic="$(xxd -p -l 8 "$out" | tr -d '\n')"
+            if [[ "$magic" != ${expected_magic}* ]]; then
+              echo "MAGIC_MISMATCH key=$key expected=$expected_magic actual=$magic" >&2
+              exit 1
+            fi
+            sha="$(sha256sum "$out" | awk '{print $1}')"
+            bytes="$(stat -c %s "$out")"
+            ctype="$(file --brief --mime-type "$out")"
+            echo "CERTIVOIQ_EXACT_SOURCE key=$key sha256=$sha bytes=$bytes mime=$ctype magic=$magic url=$url"
+          }
+          capture HUD_FY2026_MTSP_PDF 'https://www.huduser.gov/portal/datasets/mtsp/mtsp26/HERA-Income-Limits-Report-FY26.pdf' '25504446'
+          capture NH_2026_INCOME_LIMITS 'https://www.nhhousing.org/wp-content/uploads/2026/06/Income_Limits_2026.pdf' '25504446'
+          capture NH_2026_RENT_LIMITS 'https://www.nhhousing.org/wp-content/uploads/2026/06/Rent_Limits_2026.pdf' '25504446'
+          capture WI_2026_MTSP_LIMITS 'https://www.wheda.com/globalassets/documents/tax-credits/mf-data-library/2026-multifamily-tax-subsidy-project-mtsp-limits.pdf' '25504446'
