@@ -40,7 +40,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "founder",
-      "evidence": "Production verification on 2026-09-18 confirmed exactly one verified TOTP factor in auth.mfa_factors. The founder MFA requirement remains enforced and the stale launch issue was closed as completed."
+      "evidence": "Production auth.mfa_factors verification on 2026-09-02 confirmed one verified TOTP factor for the founder account. Reverified on 2026-09-18: auth.mfa_factors still contains exactly one verified TOTP factor. The founder MFA requirement remains enforced and the stale launch issue was closed as completed."
     },
     {
       "id": "stripe_controlled_live_e2e",
@@ -64,7 +64,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "compliance_reviewers",
-      "evidence": "Production verification on 2026-09-18 confirmed two distinct staff attestations in pha_nspire_release_attestations from two distinct verifier IDs; latest attestation was recorded 2026-09-02. The controlled release had already activated after the required dual attestation and the stale launch issue was closed as completed."
+      "evidence": "Production verification on 2026-09-02 confirmed two distinct staff attestations to SHA-256 9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254; the HUD-NSPIRE-FINAL-STANDARDS release activated as current and the controlled bundle artifact moved to verified. Reverified on 2026-09-18: pha_nspire_release_attestations contains 2 attestations from 2 distinct verifier IDs. The stale launch issue was closed as completed."
     },
     {
       "id": "tn_tx_independent_source_validation",
