@@ -36,11 +36,16 @@ test("support worker supports explicit provider-neutral SMTP without hardcoded c
   assert.doesNotMatch(worker, /SMTP_PASSWORD[^\n]*=/);
 });
 
-test("legacy Gmail remains a fallback only when explicit SMTP is not requested", () => {
+test("legacy Gmail supports separate authentication and support sender identities", () => {
+  assert.match(worker, /GMAIL_USER/);
+  assert.match(worker, /GMAIL_FROM_EMAIL/);
+  assert.match(worker, /gmailFrom/);
   assert.match(worker, /explicitSmtpRequested/);
   assert.match(worker, /explicitSmtpReady/);
   assert.match(worker, /legacyGmailReady/);
   assert.match(worker, /service: "gmail"/);
+  assert.match(worker, /auth: \{ user: gmailUser, pass: gmailPassword!/);
+  assert.match(worker, /fromEmail: gmailFrom/);
   assert.match(worker, /explicitSmtpRequested \? !explicitSmtpReady : !legacyGmailReady/);
 });
 

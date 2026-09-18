@@ -23,6 +23,7 @@ Deno.serve(async (req: Request) => {
   const smtpFrom = (Deno.env.get("SMTP_FROM_EMAIL") || smtpUser || "").trim();
 
   const gmailUser = (Deno.env.get("GMAIL_USER") || "support@certivoiq.com").trim();
+  const gmailFrom = (Deno.env.get("GMAIL_FROM_EMAIL") || "support@certivoiq.com").trim();
   // Google displays app passwords in spaced groups; SMTP requires the credential itself.
   const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD")?.replace(/\s/g, "");
 
@@ -33,7 +34,7 @@ Deno.serve(async (req: Request) => {
     smtpHost && Number.isInteger(smtpPort) && smtpPort > 0 && smtpPort <= 65535 &&
     smtpUser && smtpPassword && smtpFrom,
   );
-  const legacyGmailReady = Boolean(gmailUser && gmailPassword);
+  const legacyGmailReady = Boolean(gmailUser && gmailPassword && gmailFrom);
 
   if (!supabaseUrl || !serviceRoleKey || (explicitSmtpRequested ? !explicitSmtpReady : !legacyGmailReady)) {
     return json({ error: "Support notification service is not configured." }, 503);
@@ -90,7 +91,7 @@ Deno.serve(async (req: Request) => {
           service: "gmail",
           auth: { user: gmailUser, pass: gmailPassword! },
         }),
-        fromEmail: gmailUser,
+        fromEmail: gmailFrom,
       };
 
   let sent = 0;
