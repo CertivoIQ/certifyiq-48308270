@@ -93,5 +93,6 @@ test("production HUD staging RPC is secret-authenticated and fail-closed", () =>
   assert.match(operationsWorker, /hud-source-watch\.yml/);
   assert.match(operationsWorker, /searchParams\.get\("mode"\) === "stage-hud-source"/);
   assert.match(operationsWorker, /stageHudSource/);
+  assert.match(operationsWorker, /correlation_id: crypto\.randomUUID\(\)/);
   assert.match(operationsWorker, /authentication: "github_oidc"/);
 });

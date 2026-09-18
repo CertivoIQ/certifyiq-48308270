@@ -313,6 +313,7 @@ async function stageHudSource(db: ReturnType<typeof createClient>, payload: HudS
     after_sha256: sha256,
     evidence_refs: [{ source_version_id: sourceVersionId }],
     source_refs: [sourceUrl],
+    correlation_id: crypto.randomUUID(),
     detail: {
       parser_build: parserBuild,
       tracked_dataset_count: datasetRows.length,
