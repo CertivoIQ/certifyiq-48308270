@@ -42,3 +42,12 @@ Disposition: **platform-managed infrastructure warning — documented, not treat
 The remaining `rls_enabled_no_policy` entries are reviewed as informational where the table is intentionally service-only/private and client table privileges are revoked. They are not evidence that RLS is bypassed; no-policy RLS denies client row access by default when no broader privilege path exists.
 
 Any future client exposure of one of these tables requires an explicit policy and a new access review.
+
+
+## Support notification production smoke
+
+A controlled internal support case (`SC-1011`) was created in production on 2026-09-18 with no customer data. The normal support-case triggers created the expected notification outbox records and the existing scheduled/secret-authenticated worker claimed them.
+
+SMTP delivery failed with provider response `535 5.7.8 Username and Password not accepted`, confirming that the remaining support-mail issue is provider credential configuration rather than case creation, outbox routing, scheduling, or retry logic.
+
+The support worker change in this release adds explicit provider-neutral `SMTP_*` configuration while retaining the legacy Gmail configuration only as a fallback. Production delivery is not considered ready until a valid approved SMTP credential is installed and a follow-up smoke message records `status='sent'` with a provider message ID.
