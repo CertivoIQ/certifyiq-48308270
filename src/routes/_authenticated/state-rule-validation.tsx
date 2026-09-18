@@ -48,6 +48,7 @@ type Pack = {
   id: string;
   state_code: string;
   status: string;
+  inventory_generated_at?: string | null;
   source_candidate_count: number;
   blocked_source_count: number;
   compliance_activation_allowed: boolean;
@@ -72,6 +73,7 @@ type ActivationReadiness = {
 type SourceCandidate = {
   id: string;
   state_code: string;
+  inventory_generated_at: string | null;
   scope: string;
   authority_name: string;
   official_domain: string;
@@ -172,15 +174,12 @@ function labelFor(status: string) {
 }
 
 const SOURCE_COLUMNS =
-  "id,state_code,scope,authority_name,official_domain,program,source_type,source_url,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,source_sha256,retrieved_at,verification_evidence,updated_at";
+  "id,state_code,inventory_generated_at,scope,authority_name,official_domain,program,source_type,source_url,candidate_status,agent_verification_status,exact_bytes_captured,compliance_activation_allowed,source_sha256,retrieved_at,verification_evidence,updated_at";
+
+export const CURRENT_INVENTORY_NOTE =
+  "Operational validation shows the current source inventory only. Historical source snapshots remain preserved for audit reporting.";
 export const SOURCE_PAGE_SIZE = 1000;
 
-// A source record is unresolved while it still awaits verification work: anything not
-// verified, and any verified record missing its exact-bytes custody evidence.
-// Reviewer-rejected records leave the verification queues entirely and wait in the
-// Rejected sources finalization queue; automatically excluded redundant captures are
-// likewise out of scope. Neither ever counts as source-ready for pack activation —
-// that decision stays with the authoritative readiness backend.
 export function isRejectedSource(source: SourceCandidate) {
   return (
     source.agent_verification_status === "rejected" &&
@@ -194,8 +193,93 @@ export function isUnresolvedSource(source: SourceCandidate) {
   return !source.exact_bytes_captured || !source.source_sha256 || !source.retrieved_at;
 }
 
-// PostgREST caps a response at one API page, so the queue must page deterministically
-// until a short page is returned. Ordering stays state_code + authority_name.
+export function currentInventoryByState(
+  packs: Pick<Pack, "state_code" | "inventory_generated_at">[],
+  sources: Pick<SourceCandidate, "state_code" | "inventory_generated_at">[],
+) {
+  const latest = new Map<string, string>();
+  for (const pack of packs) {
+    const stamp = pack.inventory_generated_at;
+    if (!stamp) continue;
+    const current = latest.get(pack.state_code);
+    if (!current || stamp > current) latest.set(pack.state_code, stamp);
+  }
+  const fallback = new Map<string, string>();
+  for (const source of sources) {
+    const stamp = source.inventory_generated_at;
+    if (!stamp || latest.has(source.state_code)) continue;
+    const current = fallback.get(source.state_code);
+    if (!current || stamp > current) fallback.set(source.state_code, stamp);
+  }
+  for (const [state, stamp] of fallback) latest.set(state, stamp);
+  return latest;
+}
+
+const SOURCE_STATUS_RANK: Record<string, number> = {
+  verified: 4,
+  captured_unvalidated: 3,
+  queued_for_agent_verification: 2,
+};
+
+function evidenceRank(source: SourceCandidate) {
+  const evidenceKeys = source.verification_evidence
+    ? Object.keys(source.verification_evidence).length
+    : 0;
+  return (
+    (source.exact_bytes_captured ? 1 : 0) +
+    (source.source_sha256 ? 1 : 0) +
+    (source.retrieved_at ? 1 : 0) +
+    evidenceKeys
+  );
+}
+
+function preferSource(candidate: SourceCandidate, incumbent: SourceCandidate) {
+  const rank = (source: SourceCandidate): [number, number, number, string] => [
+    source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE" ? 0 : 1,
+    SOURCE_STATUS_RANK[source.agent_verification_status] ?? 1,
+    evidenceRank(source),
+    source.updated_at ?? "",
+  ];
+  const left = rank(candidate);
+  const right = rank(incumbent);
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index]! > right[index]!) return true;
+    if (left[index]! < right[index]!) return false;
+  }
+  return false;
+}
+
+export function selectCurrentInventorySources(
+  packs: Pick<Pack, "state_code" | "inventory_generated_at">[],
+  sources: SourceCandidate[],
+) {
+  const latest = currentInventoryByState(packs, sources);
+  const canonical = new Map<string, SourceCandidate>();
+  const kept: SourceCandidate[] = [];
+  for (const source of sources) {
+    const current = latest.get(source.state_code);
+    if (current && source.inventory_generated_at && source.inventory_generated_at !== current) continue;
+    if (source.candidate_status === "EXCLUDED_REDUNDANT_SOURCE") continue;
+    const sha = source.source_sha256?.trim().toLowerCase();
+    if (!sha) {
+      kept.push(source);
+      continue;
+    }
+    const key = `${source.state_code}::${sha}`;
+    const incumbent = canonical.get(key);
+    if (!incumbent) {
+      canonical.set(key, source);
+      kept.push(source);
+      continue;
+    }
+    if (preferSource(source, incumbent)) {
+      canonical.set(key, source);
+      kept[kept.indexOf(incumbent)] = source;
+    }
+  }
+  return kept;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadAllSourceCandidates(client: any) {
   const rows: SourceCandidate[] = [];
@@ -221,7 +305,7 @@ async function loadValidationQueue() {
   const [packResult, sources, activationResult] = await Promise.all([
     client
       .from("state_rule_pack_candidates")
-      .select("id,state_code,status,source_candidate_count,blocked_source_count,compliance_activation_allowed,validated_on,updated_at")
+      .select("id,state_code,status,inventory_generated_at,source_candidate_count,blocked_source_count,compliance_activation_allowed,validated_on,updated_at")
       .order("state_code"),
     loadAllSourceCandidates(client),
     client.rpc("state_rule_pack_activation_readiness"),
@@ -467,13 +551,8 @@ function StateRuleValidationWorkspace() {
     setStateCode(nextState);
     setStatus(nextStatus);
     setSearch("");
-    // Keep the view shareable, e.g. ?state=ALL&status=unresolved.
     if (typeof window !== "undefined" && window.history?.replaceState) {
-      window.history.replaceState(
-        null,
-        "",
-        `${window.location.pathname}?state=${nextState}&status=${nextStatus}`,
-      );
+      window.history.replaceState(null, "", `${window.location.pathname}?state=${nextState}&status=${nextStatus}`);
     }
     focusRecords();
   };
@@ -510,7 +589,6 @@ function StateRuleValidationWorkspace() {
         );
         if (!confirmed) throw new Error("Decision cancelled");
       }
-      // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const { data, error } = await client.rpc("review_state_rule_source_candidate", {
@@ -536,9 +614,6 @@ function StateRuleValidationWorkspace() {
           ? `Pack is active. Validation date: ${result.validated_on ?? "recorded"}.`
           : `Pack status: ${labelFor(result.pack_status)}. Activation remains closed until the full pack passes.`,
       });
-      // Reflect the authoritative decision in the cached queue immediately so a rejected
-      // row leaves the verification views now instead of after the 30s refetch. The
-      // refetch below still reconciles pack status and readiness from the backend.
       queryClient.setQueryData(
         ["state-rule-validation-queue"],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -572,7 +647,6 @@ function StateRuleValidationWorkspace() {
       items: SourceCandidate[];
       reason: string;
     }) => {
-      // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const results: { id: string; label: string; ok: boolean; message?: string }[] = [];
@@ -645,7 +719,6 @@ function StateRuleValidationWorkspace() {
         `Activate the ${pack.state_code} state rule pack? This records the authorized activation in the audit log.`,
       );
       if (!confirmed) throw new Error("Activation cancelled");
-      // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const { data, error } = await client.rpc("activate_state_rule_pack", {
@@ -676,7 +749,6 @@ function StateRuleValidationWorkspace() {
       if (!source.sourceUrl.trim()) throw new Error("Enter the exact official file URL");
       const officialDomain = officialDomainFor(source.sourceUrl);
       if (!officialDomain) throw new Error("Enter a valid HTTPS official file URL");
-      // Generated database types intentionally lag controlled launch migrations.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const client = supabase as any;
       const { data, error } = await client.rpc("create_state_rule_source_candidate", {
@@ -738,7 +810,8 @@ function StateRuleValidationWorkspace() {
   const pendingActivations = activations.filter(
     (pack) => pack.sources_ready && !pack.activation_recorded,
   );
-  const sources = query.data?.sources ?? [];
+  const allSources = query.data?.sources ?? [];
+  const sources = selectCurrentInventorySources(packs, allSources);
   const federalSources = sources.filter(
     (source) => source.state_code === "US" || source.scope === "FEDERAL_SHARED",
   );
@@ -1139,6 +1212,7 @@ function StateRuleValidationWorkspace() {
 
           {packView === null ? <>
           <Panel className="mt-4" title="Queue filters" bodyClassName="p-5">
+            <p className="mb-4 text-xs text-muted-foreground">{CURRENT_INVENTORY_NOTE}</p>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1.5">
                 <Label htmlFor="state-filter">Source jurisdiction</Label>
@@ -1173,7 +1247,7 @@ function StateRuleValidationWorkspace() {
                   <option value="blocked">Blocked</option>
                   <option value="rejected">Rejected</option>
                   <option value="blocked_or_rejected">Blocked / rejected</option>
-                  <option value="all">All history</option>
+                  <option value="all">All current sources</option>
                 </select>
               </div>
               <div className="space-y-1.5">
