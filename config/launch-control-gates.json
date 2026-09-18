@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-04",
+  "updatedAt": "2026-09-18",
   "gates": [
     {
       "id": "production_auth_rls_uat",
@@ -24,7 +24,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "engineering",
-      "evidence": "supabase/migrations/20260829020000_harden_privileged_rpc_surface.sql; production migration 20260904165332_harden_authenticated_security_definer_functions.sql applied 2026-09-04. Production catalog verification confirmed zero authenticated executable SECURITY DEFINER functions in public, 19 SECURITY INVOKER public wrappers, 19 private implementations with empty search_path, no anonymous private-schema usage, explicit client grants, and confirmed-email enforcement for PHA invitation acceptance. Supabase security advisor returned zero SECURITY DEFINER findings after deployment; full CI run 33898182449 passed before production apply."
+      "evidence": "Production RPC hardening reverified 2026-09-18 after the Audit Readiness/Auditor/HUD changes. The current Supabase security advisor reports zero authenticated SECURITY DEFINER executable-function warnings. The only remaining WARN is pg_net installed in public; production catalog confirms pg_net is non-relocatable and it is intentionally required by the controlled pg_cron/net.http_post support-notification path. Remaining RLS-without-policy findings are INFO-level and primarily service/private tables."
     },
     {
       "id": "leaked_password_protection",
@@ -40,7 +40,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "founder",
-      "evidence": "Production auth.mfa_factors verification on 2026-09-02 confirmed one verified TOTP factor for the founder account."
+      "evidence": "Production auth.mfa_factors verification on 2026-09-02 confirmed one verified TOTP factor for the founder account. Reverified on 2026-09-18: auth.mfa_factors still contains exactly one verified TOTP factor. The founder MFA requirement remains enforced and the stale launch issue was closed as completed."
     },
     {
       "id": "stripe_controlled_live_e2e",
@@ -64,7 +64,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "compliance_reviewers",
-      "evidence": "Production verification on 2026-09-02 confirmed two distinct staff attestations to SHA-256 9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254; the HUD-NSPIRE-FINAL-STANDARDS release activated as current and the controlled bundle artifact moved to verified."
+      "evidence": "Production verification on 2026-09-02 confirmed two distinct staff attestations to SHA-256 9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254; the HUD-NSPIRE-FINAL-STANDARDS release activated as current and the controlled bundle artifact moved to verified. Reverified on 2026-09-18: pha_nspire_release_attestations contains 2 attestations from 2 distinct verifier IDs. The stale launch issue was closed as completed."
     },
     {
       "id": "tn_tx_independent_source_validation",
@@ -119,6 +119,23 @@
         "evidence": "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md",
         "residualRisk": "No real-customer pilot has validated workflow fit, data variability, operational usability, or consequential-result accuracy."
       }
+    },
+    {
+      "id": "hud_source_watch",
+      "category": "regulatory",
+      "status": "technical_complete",
+      "blocking": true,
+      "ownerRole": "engineering",
+      "evidence": "HUD Source Watch repaired through PRs #506-#512. Latest production push run 35373154407 completed successfully on 2026-09-18 using the OIDC-authenticated Operations Worker route. The staging boundary remains fail-closed and does not activate compliance rules or communications."
+    },
+    {
+      "id": "support_email_delivery",
+      "category": "operations",
+      "status": "human_required",
+      "blocking": true,
+      "ownerRole": "founder",
+      "action": "Provision a valid production SMTP credential for support@certivoiq.com, then run one controlled support-ticket delivery and verify receipt and reply routing.",
+      "evidence": "Production support-notification-worker is ACTIVE and pg_cron invokes it every minute. Four historical notifications reached sent status. Four current notifications are retrying with Google SMTP 535 Bad Credentials. Supabase Vault contains only the support worker secret; no Microsoft 365/SMTP mailbox credential is currently provisioned. The worker already supports explicit SMTP configuration."
     },
     {
       "id": "support_incident_routing",
