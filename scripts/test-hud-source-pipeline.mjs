@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
+
+const hudStageMigration = await readFile(
+  new URL("../supabase/migrations/20260918164500_restore_hud_source_staging_rpc.sql", import.meta.url),
+  "utf8",
+);
 
 import {
   HUD_DATASET_SCHEDULE_URL,
@@ -52,4 +58,16 @@ test("version comparison distinguishes initial, unchanged, and changed sources",
   assert.equal(compareHudSourceVersion(null, a), "INITIAL");
   assert.equal(compareHudSourceVersion(a, a), "UNCHANGED");
   assert.equal(compareHudSourceVersion(a, b), "CHANGED");
+});
+
+
+test("production HUD staging RPC is secret-authenticated and fail-closed", () => {
+  assert.match(hudStageMigration, /operations_stage_hud_source_v1/);
+  assert.match(hudStageMigration, /github_operations_worker/);
+  assert.match(hudStageMigration, /official HUD USER HTTPS source required/);
+  assert.match(hudStageMigration, /tracked dataset rows incomplete/);
+  assert.match(hudStageMigration, /compliance_activation_allowed', false/);
+  assert.match(hudStageMigration, /communication_allowed', false/);
+  assert.match(hudStageMigration, /grant execute on function public\.operations_stage_hud_source_v1[\s\S]*to anon, service_role/i);
+  assert.doesNotMatch(hudStageMigration, /to authenticated/);
 });
