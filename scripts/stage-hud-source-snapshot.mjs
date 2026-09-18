@@ -3,7 +3,7 @@ import {
   prepareHudSourceSnapshot,
 } from "../src/lib/hud-source-pipeline.mjs";
 
-const required = ["CERTIVOIQ_SUPABASE_URL"];
+const required = ["SUPABASE_URL"];
 for (const name of required) {
   if (!process.env[name]) throw new Error(`${name} is required`);
 }
@@ -75,7 +75,7 @@ const tokenPayload = await tokenResponse.json();
 const oidcToken = tokenPayload?.value;
 if (!oidcToken) throw new Error("GitHub OIDC token response did not include a value");
 
-const endpoint = `${process.env.CERTIVOIQ_SUPABASE_URL.replace(/\/$/, "")}/functions/v1/operations-worker?mode=stage-hud-source`;
+const endpoint = `${process.env.SUPABASE_URL.replace(/\/$/, "")}/functions/v1/operations-worker?mode=stage-hud-source`;
 const staged = await fetch(endpoint, {
   method: "POST",
   headers: {

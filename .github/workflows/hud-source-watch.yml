@@ -36,13 +36,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate required configuration
-        env:
-          CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
-        run: test -n "$CERTIVOIQ_SUPABASE_URL"
       - name: Verify HUD source pipeline controls
         run: node --test scripts/test-hud-source-pipeline.mjs
       - name: Stage HUD schedule evidence
         env:
-          CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
+          SUPABASE_URL: https://emnkzxkcpnyvglwxraxm.supabase.co
         run: node scripts/stage-hud-source-snapshot.mjs

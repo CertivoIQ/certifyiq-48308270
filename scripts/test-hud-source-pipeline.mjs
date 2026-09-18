@@ -86,6 +86,8 @@ test("production HUD staging RPC is secret-authenticated and fail-closed", () =>
   assert.match(stageScript, /certivoiq-operations-worker/);
   assert.match(stageScript, /\/functions\/v1\/operations-worker\?mode=stage-hud-source/);
   assert.match(stageScript, /ACTIONS_ID_TOKEN_REQUEST_URL/);
+  assert.match(stageScript, /process\.env\.SUPABASE_URL/);
+  assert.doesNotMatch(stageScript, /CERTIVOIQ_SUPABASE_URL/);
   assert.doesNotMatch(stageScript, /CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY/);
   assert.doesNotMatch(stageScript, /OPERATIONS_WORKER_SECRET/);
   assert.match(operationsWorker, /hud-source-watch\.yml/);
