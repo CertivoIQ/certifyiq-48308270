@@ -3,7 +3,7 @@ import {
   prepareHudSourceSnapshot,
 } from "../src/lib/hud-source-pipeline.mjs";
 
-const required = ["CERTIVOIQ_SUPABASE_URL", "CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY", "OPERATIONS_WORKER_SECRET"];
+const required = ["CERTIVOIQ_SUPABASE_URL"];
 for (const name of required) {
   if (!process.env[name]) throw new Error(`${name} is required`);
 }
