@@ -21,7 +21,6 @@ test("every launch gate has explicit ownership and blocking semantics", () => {
 test("remaining human and external approvals are never labeled technically complete", () => {
   const expectedStatuses = {
     stripe_controlled_live_e2e: "exception_approved",
-    tn_tx_independent_source_validation: "human_required",
     terms_privacy_counsel_review: "exception_approved",
     independent_penetration_test: "exception_approved",
     controlled_customer_pilot: "exception_approved",
@@ -104,6 +103,22 @@ test("NSPIRE dual attestation is recorded from activated production evidence", (
   assert.match(gate?.evidence ?? "", /two distinct staff attestations/i);
   assert.match(gate?.evidence ?? "", /9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254/i);
   assert.match(gate?.evidence ?? "", /activated as current/i);
+});
+
+test("TN and TX source verification is complete while second review remains non-blocking", () => {
+  const verified = config.gates.find((item) => item.id === "tn_tx_source_verification");
+  assert.equal(verified?.status, "technical_complete");
+  assert.equal(verified?.blocking, true);
+  assert.match(verified?.evidence ?? "", /Tennessee and Texas state packs report status=verified/i);
+  assert.match(verified?.evidence ?? "", /TN is 36\/36/i);
+  assert.match(verified?.evidence ?? "", /TX is 56\/56/i);
+  assert.match(verified?.evidence ?? "", /validated_on=2026-09-17/i);
+
+  const secondReview = config.gates.find((item) => item.id === "tn_tx_independent_source_review");
+  assert.equal(secondReview?.status, "human_required");
+  assert.equal(secondReview?.blocking, false);
+  assert.match(secondReview?.evidence ?? "", /independent_validation_completed=false/i);
+  assert.match(secondReview?.action ?? "", /independent second review/i);
 });
 
 test("successful isolated candidate deployment is recorded without cutover", () => {
