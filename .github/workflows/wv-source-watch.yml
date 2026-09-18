@@ -5,6 +5,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/wv-source-watch.yml'
+      - 'scripts/stage-wv-official-index.mjs'
+      - 'scripts/test-wv-source-watch.mjs'
+      - 'src/lib/wv-official-index-pipeline.mjs'
   schedule:
     - cron: "41 11 * * *"
 
@@ -36,6 +41,8 @@ jobs:
           test -n "$CERTIVOIQ_SUPABASE_URL"
           test -n "$CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY"
           test -n "$OPERATIONS_WORKER_SECRET"
+      - name: Verify WVHDF source-watch fail-closed behavior
+        run: node --test scripts/test-wv-source-watch.mjs
       - name: Stage WVHDF official resource index
         env:
           CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
