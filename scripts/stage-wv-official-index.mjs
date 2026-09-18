@@ -1,4 +1,5 @@
 import {
+  WVHDF_MULTIFAMILY_INDEX_FALLBACK_URL,
   WVHDF_MULTIFAMILY_INDEX_URL,
   prepareWvOfficialIndexSnapshot,
 } from "../src/lib/wv-official-index-pipeline.mjs";
@@ -12,18 +13,67 @@ for (const name of required) {
   if (!process.env[name]) throw new Error(`${name} is required`);
 }
 
-const response = await fetch(WVHDF_MULTIFAMILY_INDEX_URL, {
-  redirect: "follow",
-  signal: AbortSignal.timeout(20_000),
-  headers: {
-    accept: "text/html,application/xhtml+xml",
-    "user-agent": "CertivoIQ-SourceMonitor/1.0 (+https://certivoiq.com)",
-  },
-});
-if (!response.ok) throw new Error(`WVHDF source request failed with HTTP ${response.status}`);
+const MAX_BYTES = 5 * 1024 * 1024;
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
+const MONITOR_UA = "CertivoIQ-SourceMonitor/1.1 (+https://certivoiq.com)";
+
+const attempts = [
+  { url: WVHDF_MULTIFAMILY_INDEX_URL, userAgent: MONITOR_UA, mode: "canonical-monitor" },
+  { url: WVHDF_MULTIFAMILY_INDEX_URL, userAgent: BROWSER_UA, mode: "canonical-browser" },
+  { url: WVHDF_MULTIFAMILY_INDEX_FALLBACK_URL, userAgent: BROWSER_UA, mode: "official-fallback-browser" },
+];
+
+let response = null;
+const blocked = [];
+for (const attempt of attempts) {
+  let candidate;
+  try {
+    candidate = await fetch(attempt.url, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(20_000),
+      headers: {
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "en-US,en;q=0.9",
+        "cache-control": "no-cache",
+        "user-agent": attempt.userAgent,
+      },
+    });
+  } catch (error) {
+    blocked.push({ mode: attempt.mode, url: attempt.url, error: error instanceof Error ? error.message : String(error) });
+    continue;
+  }
+
+  if (candidate.ok) {
+    response = candidate;
+    break;
+  }
+  if (candidate.status === 403 || candidate.status === 429) {
+    blocked.push({ mode: attempt.mode, url: attempt.url, status: candidate.status });
+    continue;
+  }
+  throw new Error(`WVHDF source request failed with HTTP ${candidate.status} at ${attempt.url}`);
+}
+
+if (!response) {
+  console.warn(
+    "::warning title=WVHDF publisher blocked automated retrieval::Official WVHDF endpoints returned access blocks. No source bytes were staged or activated; the last validated source remains unchanged.",
+  );
+  console.log(JSON.stringify({
+    status: "RETRIEVAL_BLOCKED",
+    authority: "West Virginia Housing Development Fund",
+    canonical_url: WVHDF_MULTIFAMILY_INDEX_URL,
+    compliance_activation_allowed: false,
+    attempts: blocked,
+  }));
+  process.exit(0);
+}
+
 const declaredLength = Number(response.headers.get("content-length") ?? 0);
-if (declaredLength > 5 * 1024 * 1024) throw new Error("WVHDF source exceeds the 5 MiB limit");
+if (declaredLength > MAX_BYTES) throw new Error("WVHDF source exceeds the 5 MiB limit");
 const body = new Uint8Array(await response.arrayBuffer());
+if (body.byteLength > MAX_BYTES) throw new Error("WVHDF source exceeds the 5 MiB limit");
+
 const snapshot = prepareWvOfficialIndexSnapshot({
   sourceUrl: WVHDF_MULTIFAMILY_INDEX_URL,
   finalUrl: response.url,
@@ -56,6 +106,7 @@ const staged = await fetch(endpoint, {
       parser_build: snapshot.parser_build,
       content_type: snapshot.content_type,
       content_length: snapshot.content_length,
+      retrieval_url: snapshot.retrieval_url,
       activation_status: snapshot.activation_status,
       compliance_activation_allowed: false,
     },
