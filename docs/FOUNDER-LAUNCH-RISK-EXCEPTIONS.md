@@ -1,8 +1,8 @@
 # Founder-approved launch risk exceptions
 
-Status date: 2026-09-04  
-Approval source: founder confirmation in the CertivoIQ Codex launch-readiness task  
-Scope: initial controlled production launch only
+Status date: 2026-09-18  
+Approval source: founder confirmation in the CertivoIQ launch-readiness task  
+Scope: initial controlled production launch for Exceptions 1–3; Stripe Exception 4 was expanded by the founder on 2026-09-18 so the billing gate is non-blocking for paid Multifamily launch while final settlement verification remains deferred
 
 ## Important classification
 
@@ -91,28 +91,40 @@ Required follow-up:
 ## Exception 4: Authorized Stripe live-payment lifecycle
 
 **Gate:** `stripe_controlled_live_e2e`  
-**Decision:** Founder-approved exception  
-**Underlying live paid lifecycle:** Not completed
+**Decision:** Founder-approved non-blocking exception on 2026-09-18  
+**Underlying settled live paid lifecycle:** Not completed
+
+Verified live evidence:
+
+- the live Certivo Stripe account is connected;
+- Multifamily and Merlin live products/prices match the approved catalog;
+- the production webhook endpoint is enabled for the billing and entitlement events;
+- the live customer portal allows invoice history and payment-method updates while self-service subscription update/cancellation are disabled;
+- FOUNDERS50 is live at 50% for 12 months through the approved redemption deadline;
+- synthetic invoice `SN0DGD5I-0001` was created for one Multifamily state with a $5,416.63 first installment, $2,708.32 FOUNDERS50 discount, and $2,708.31 due;
+- the founder initiated the ACH payment and Stripe placed the PaymentIntent in `processing`;
+- while settlement was pending, CertivoIQ correctly created no enterprise license or entitlement, proving fail-closed pre-settlement behavior;
+- the synthetic subscription was cancelled after the founder ended the test so no future recurring invoices are generated;
+- Stripe would not allow the pending invoice to be voided while the bank payment remained in processing.
 
 Residual risk accepted:
 
-- no successful live payment has verified production `invoice.paid` handling;
-- exactly-once entitlement activation, portal behavior, replay handling, and reversal deactivation remain unverified with a real paid transaction;
-- simulations and rolled-back database rehearsals cannot prove end-to-end behavior across live Stripe and production systems.
+- no successful settled live payment has yet verified production `invoice.paid` handling;
+- exactly-once entitlement activation, event replay handling, and post-payment reversal deactivation remain unverified with a settled live payment;
+- ACH settlement may still fail or be returned, and the pending test debit may still produce bank/processor return fees.
 
 Compensating controls:
 
-- do not claim that the live paid lifecycle passed;
-- keep unrestricted paid onboarding disabled;
+- do not claim that a fully settled live paid lifecycle passed;
 - retain signed-webhook validation, exact amount and billing-metadata checks, replay/idempotency controls, and fail-closed entitlement behavior;
-- manually review any initial paid transaction and immediately disable or reverse an incorrect entitlement;
-- retain the existing evidence that the prior zero-dollar event was ignored and invoice `BXFHHQOW-0001` was voided without payment or entitlement.
+- manually monitor the first successful real customer payment from Stripe through CertivoIQ entitlement creation;
+- if the first successful payment produces a missing, duplicate, incorrect, or unreversed entitlement, immediately pause further paid onboarding and treat it as a launch incident;
+- preserve Stripe object IDs and redacted outcomes as SOC 2 / launch evidence without storing secrets or payment credentials.
 
-Required follow-up:
+Required non-blocking follow-up:
 
-- complete one explicitly authorized live paid lifecycle after launch and before unrestricted paid onboarding;
-- verify payment, exactly-one entitlement, event replay, portal access, and cancellation/refund/reversal;
-- record only Stripe object IDs and outcomes—never keys or webhook secrets.
+- on the first successful real customer settlement, verify `invoice.paid`, exactly-one entitlement activation, admin access, replay/idempotency, portal access, and cancellation/refund/reversal behavior;
+- record the evidence and then change the underlying billing lifecycle from exception-accepted to technically verified.
 
 ## Revocation and review triggers
 

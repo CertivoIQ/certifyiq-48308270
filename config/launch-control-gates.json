@@ -46,16 +46,16 @@
       "id": "stripe_controlled_live_e2e",
       "category": "billing",
       "status": "exception_approved",
-      "blocking": true,
+      "blocking": false,
       "ownerRole": "founder",
-      "action": "Complete one explicitly authorized paid billing lifecycle after launch and before unrestricted paid onboarding; verify invoice.paid, exactly-one entitlement activation, portal access, replay idempotency, and cancellation or reversal.",
-      "evidence": "Live Stripe preflight on 2026-09-04 confirmed three active products, authoritative prices, API-versioned enabled webhook endpoint, valid FOUNDERS50 coupon, and controlled portal configuration bpc_1UBztYEGeotPzK5ZUN8mKxGX with invoice history and payment-method updates enabled while self-service subscription update/cancellation remain disabled. The prior zero-dollar invoice.paid event was correctly ignored and no entitlement was created. Non-financial simulation evidence: CI run 33895146469 passed authoritative pricing, sandbox eligibility, signed webhook validation and rejection cases, replay-safe credit/refund controls, and a rolled-back paid-license database integrity rehearsal. Live invoice BXFHHQOW-0001 was emailed and then explicitly voided on 2026-09-04 after the founder selected simulation-only testing; Stripe confirms it was never paid or attempted, and production contains zero licenses tied to that invoice. The live paid lifecycle was not completed. On 2026-09-04, the founder approved a narrowly scoped launch exception; see docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md.",
+      "action": "On the first successful real customer payment, manually verify invoice.paid, exactly-one entitlement activation, portal access, replay idempotency, and cancellation/refund/reversal behavior. If any mismatch occurs, pause further paid onboarding and treat it as a launch incident.",
+      "evidence": "Live Stripe re-verification on 2026-09-18 confirmed the Certivo live account, authoritative Multifamily and Merlin products/prices, enabled production billing webhook, valid FOUNDERS50 coupon/promotion, and customer portal with invoice history/payment-method updates enabled while self-service subscription changes/cancellation are disabled. Controlled invoice SN0DGD5I-0001 was created for a synthetic one-state Multifamily organization: $5,416.63 first installment, $2,708.32 FOUNDERS50 discount, $2,708.31 due. The founder initiated ACH payment and Stripe entered PaymentIntent processing. While settlement was pending, production correctly created no enterprise license or entitlement, demonstrating fail-closed pre-settlement behavior. The founder then ended the test and accepted the remaining settlement/webhook/reversal uncertainty; the synthetic subscription was cancelled to prevent future recurring invoices. Stripe would not allow the already-pending invoice to be voided while bank processing remained unresolved. Final invoice.paid, exactly-once entitlement activation, replay handling, and post-payment reversal remain unverified and must be observed on the first successful real customer payment.",
       "exception": {
         "approvedByRole": "founder",
-        "approvedAt": "2026-09-04",
-        "scope": "Initial controlled production launch only; this is risk acceptance and does not represent a successful live payment or validated entitlement lifecycle.",
+        "approvedAt": "2026-09-18",
+        "scope": "Paid Multifamily launch may proceed with this billing gate non-blocking; this is explicit risk acceptance and does not represent a successful settled live payment or validated post-settlement entitlement lifecycle.",
         "evidence": "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md",
-        "residualRisk": "No successful live paid lifecycle has verified production payment receipt, exactly-once entitlement activation, portal behavior, event replay handling, or reversal deactivation. Simulation and database rehearsals are not substitutes for a real paid transaction."
+        "residualRisk": "A successful settled live payment has not yet verified production invoice.paid handling, exactly-once entitlement activation, event replay behavior, or post-payment reversal deactivation. The live 2026-09-18 exercise verified pricing, discounting, invoice generation, ACH initiation, portal controls, and fail-closed behavior before settlement."
       }
     },
     {
