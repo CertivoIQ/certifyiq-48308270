@@ -11,11 +11,14 @@ on:
       - 'scripts/test-hud-source-pipeline.mjs'
       - 'src/lib/hud-source-pipeline.mjs'
       - 'supabase/migrations/20260918164500_restore_hud_source_staging_rpc.sql'
+      - 'supabase/migrations/20260918171500_harden_hud_source_staging_boundary.sql'
+      - 'supabase/functions/operations-worker/index.ts'
   schedule:
     - cron: "17 11 * * *"
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: certivoiq-hud-source-watch
@@ -33,20 +36,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate required secrets
+      - name: Validate required configuration
         env:
           CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
-          CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY }}
-          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
-        run: |
-          test -n "$CERTIVOIQ_SUPABASE_URL"
-          test -n "$CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY"
-          test -n "$OPERATIONS_WORKER_SECRET"
+        run: test -n "$CERTIVOIQ_SUPABASE_URL"
       - name: Verify HUD source pipeline controls
         run: node --test scripts/test-hud-source-pipeline.mjs
       - name: Stage HUD schedule evidence
         env:
           CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
-          CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY }}
-          OPERATIONS_WORKER_SECRET: ${{ secrets.OPERATIONS_WORKER_SECRET }}
         run: node scripts/stage-hud-source-snapshot.mjs

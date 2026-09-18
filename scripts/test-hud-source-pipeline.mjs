@@ -6,6 +6,18 @@ const hudStageMigration = await readFile(
   new URL("../supabase/migrations/20260918164500_restore_hud_source_staging_rpc.sql", import.meta.url),
   "utf8",
 );
+const hudBoundaryMigration = await readFile(
+  new URL("../supabase/migrations/20260918171500_harden_hud_source_staging_boundary.sql", import.meta.url),
+  "utf8",
+);
+const stageScript = await readFile(
+  new URL("./stage-hud-source-snapshot.mjs", import.meta.url),
+  "utf8",
+);
+const operationsWorker = await readFile(
+  new URL("../supabase/functions/operations-worker/index.ts", import.meta.url),
+  "utf8",
+);
 
 import {
   HUD_DATASET_SCHEDULE_URL,
@@ -68,6 +80,13 @@ test("production HUD staging RPC is secret-authenticated and fail-closed", () =>
   assert.match(hudStageMigration, /tracked dataset rows incomplete/);
   assert.match(hudStageMigration, /compliance_activation_allowed', false/);
   assert.match(hudStageMigration, /communication_allowed', false/);
-  assert.match(hudStageMigration, /grant execute on function public\.operations_stage_hud_source_v1[\s\S]*to anon, service_role/i);
-  assert.doesNotMatch(hudStageMigration, /to authenticated/);
+  assert.match(hudBoundaryMigration, /revoke all on function public\.operations_stage_hud_source_v1[\s\S]*from public, anon, authenticated, service_role/i);
+  assert.match(hudBoundaryMigration, /grant execute on function public\.operations_stage_hud_source_v1[\s\S]*to service_role/i);
+  assert.doesNotMatch(hudBoundaryMigration, /grant execute[\s\S]*to anon/i);
+  assert.match(stageScript, /certivoiq-operations-worker/);
+  assert.match(stageScript, /\/functions\/v1\/operations-worker\/stage-hud-source/);
+  assert.match(stageScript, /ACTIONS_ID_TOKEN_REQUEST_URL/);
+  assert.match(operationsWorker, /hud-source-watch\.yml/);
+  assert.match(operationsWorker, /stageHudSource/);
+  assert.match(operationsWorker, /authentication: "github_oidc"/);
 });

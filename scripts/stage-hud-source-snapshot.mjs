@@ -63,16 +63,26 @@ if (!snapshot) {
   throw new Error(`HUD source validation blocked: ${retrievalFailures.join(",") || "NO_VALID_RESPONSE"}`);
 }
 
-const endpoint = `${process.env.CERTIVOIQ_SUPABASE_URL.replace(/\/$/, "")}/rest/v1/rpc/operations_stage_hud_source_v1`;
+const oidcUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+const oidcRequestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+if (!oidcUrl || !oidcRequestToken) throw new Error("GitHub OIDC token request context is required");
+
+const tokenResponse = await fetch(`${oidcUrl}&audience=certivoiq-operations-worker`, {
+  headers: { Authorization: `Bearer ${oidcRequestToken}` },
+});
+if (!tokenResponse.ok) throw new Error(`GitHub OIDC token request failed with HTTP ${tokenResponse.status}`);
+const tokenPayload = await tokenResponse.json();
+const oidcToken = tokenPayload?.value;
+if (!oidcToken) throw new Error("GitHub OIDC token response did not include a value");
+
+const endpoint = `${process.env.CERTIVOIQ_SUPABASE_URL.replace(/\/$/, "")}/functions/v1/operations-worker/stage-hud-source`;
 const staged = await fetch(endpoint, {
   method: "POST",
   headers: {
-    apikey: process.env.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY,
-    Authorization: `Bearer ${process.env.CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY}`,
+    Authorization: `Bearer ${oidcToken}`,
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    worker_secret: process.env.OPERATIONS_WORKER_SECRET,
     source_url: snapshot.source_url,
     final_url: snapshot.final_url,
     source_sha256: snapshot.source_sha256,
