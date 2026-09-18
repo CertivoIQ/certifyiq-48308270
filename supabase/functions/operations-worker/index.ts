@@ -338,7 +338,7 @@ Deno.serve(async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const url = new URL(request.url);
-  const isHudStage = url.pathname.endsWith("/stage-hud-source");
+  const isHudStage = url.searchParams.get("mode") === "stage-hud-source";
   const authorized = isHudStage
     ? await authorizedGitHubWorkflow(request, "hud-source-watch.yml", ["schedule", "workflow_dispatch", "push"])
     : await authorizedGitHubWorkflow(request);

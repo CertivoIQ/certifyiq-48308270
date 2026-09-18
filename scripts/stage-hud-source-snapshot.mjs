@@ -75,7 +75,7 @@ const tokenPayload = await tokenResponse.json();
 const oidcToken = tokenPayload?.value;
 if (!oidcToken) throw new Error("GitHub OIDC token response did not include a value");
 
-const endpoint = `${process.env.CERTIVOIQ_SUPABASE_URL.replace(/\/$/, "")}/functions/v1/operations-worker/stage-hud-source`;
+const endpoint = `${process.env.CERTIVOIQ_SUPABASE_URL.replace(/\/$/, "")}/functions/v1/operations-worker?mode=stage-hud-source`;
 const staged = await fetch(endpoint, {
   method: "POST",
   headers: {

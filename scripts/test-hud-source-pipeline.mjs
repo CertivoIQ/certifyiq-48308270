@@ -84,11 +84,12 @@ test("production HUD staging RPC is secret-authenticated and fail-closed", () =>
   assert.match(hudBoundaryMigration, /grant execute on function public\.operations_stage_hud_source_v1[\s\S]*to service_role/i);
   assert.doesNotMatch(hudBoundaryMigration, /grant execute[\s\S]*to anon/i);
   assert.match(stageScript, /certivoiq-operations-worker/);
-  assert.match(stageScript, /\/functions\/v1\/operations-worker\/stage-hud-source/);
+  assert.match(stageScript, /\/functions\/v1\/operations-worker\?mode=stage-hud-source/);
   assert.match(stageScript, /ACTIONS_ID_TOKEN_REQUEST_URL/);
   assert.doesNotMatch(stageScript, /CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY/);
   assert.doesNotMatch(stageScript, /OPERATIONS_WORKER_SECRET/);
   assert.match(operationsWorker, /hud-source-watch\.yml/);
+  assert.match(operationsWorker, /searchParams\.get\("mode"\) === "stage-hud-source"/);
   assert.match(operationsWorker, /stageHudSource/);
   assert.match(operationsWorker, /authentication: "github_oidc"/);
 });
