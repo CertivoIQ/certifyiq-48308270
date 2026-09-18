@@ -1,12 +1,133 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import nodemailer from "npm:nodemailer@6.9.16";
+import { SignJWT, importPKCS8 } from "npm:jose@5.9.6";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
 const cleanError = (value: unknown) =>
   (value instanceof Error ? value.message : String(value)).slice(0, 1000);
+
+const base64Url = (value: string) =>
+  btoa(unescape(encodeURIComponent(value)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+
+type GoogleServiceAccount = {
+  client_email?: string;
+  private_key?: string;
+};
+
+async function gmailApiAccessToken(
+  serviceAccountJson: string,
+  impersonatedUser: string,
+): Promise<string> {
+  let account: GoogleServiceAccount;
+  try {
+    account = JSON.parse(serviceAccountJson) as GoogleServiceAccount;
+  } catch {
+    throw new Error("Google Workspace service account JSON is invalid");
+  }
+  if (!account.client_email || !account.private_key) {
+    throw new Error("Google Workspace service account JSON is incomplete");
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const key = await importPKCS8(account.private_key, "RS256");
+  const assertion = await new SignJWT({
+    scope: "https://www.googleapis.com/auth/gmail.send",
+  })
+    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+    .setIssuer(account.client_email)
+    .setSubject(impersonatedUser)
+    .setAudience("https://oauth2.googleapis.com/token")
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(key);
+
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  const payload = await response.json();
+  if (!response.ok || !payload?.access_token) {
+    throw new Error(
+      `Google Workspace OAuth token exchange failed: ${String(payload?.error_description ?? payload?.error ?? response.status).slice(0, 500)}`,
+    );
+  }
+  return String(payload.access_token);
+}
+
+function gmailRawMessage(input: {
+  fromEmail: string;
+  recipientEmail: string;
+  subject: string;
+  textBody?: string | null;
+  htmlBody?: string | null;
+}) {
+  const boundary = `certivoiq-${crypto.randomUUID()}`;
+  const subject = input.subject.replace(/[\r\n]+/g, " ");
+  const recipient = input.recipientEmail.replace(/[\r\n]+/g, "");
+  const from = input.fromEmail.replace(/[\r\n]+/g, "");
+  const lines = [
+    `From: CertivoIQ Technical Support <${from}>`,
+    `To: ${recipient}`,
+    `Reply-To: ${from}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    input.textBody ?? "",
+    "",
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    input.htmlBody ?? "",
+    "",
+    `--${boundary}--`,
+  ];
+  return base64Url(lines.join("\r\n"));
+}
+
+async function sendWithGmailApi(input: {
+  serviceAccountJson: string;
+  impersonatedUser: string;
+  fromEmail: string;
+  recipientEmail: string;
+  subject: string;
+  textBody?: string | null;
+  htmlBody?: string | null;
+}) {
+  const token = await gmailApiAccessToken(input.serviceAccountJson, input.impersonatedUser);
+  const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      raw: gmailRawMessage(input),
+    }),
+  });
+  const payload = await response.json();
+  if (!response.ok || !payload?.id) {
+    throw new Error(
+      `Gmail API send failed: ${String(payload?.error?.message ?? response.status).slice(0, 500)}`,
+    );
+  }
+  return { messageId: String(payload.id) };
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -24,8 +145,15 @@ Deno.serve(async (req: Request) => {
 
   const gmailUser = (Deno.env.get("GMAIL_USER") || "support@certivoiq.com").trim();
   const gmailFrom = (Deno.env.get("GMAIL_FROM_EMAIL") || "support@certivoiq.com").trim();
-  // Google displays app passwords in spaced groups; SMTP requires the credential itself.
   const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD")?.replace(/\s/g, "");
+
+  const workspaceServiceAccountJson = Deno.env.get("GOOGLE_WORKSPACE_SERVICE_ACCOUNT_JSON")?.trim();
+  const workspaceImpersonatedUser = (
+    Deno.env.get("GOOGLE_WORKSPACE_IMPERSONATED_USER") || gmailUser
+  ).trim();
+  const gmailApiReady = Boolean(
+    workspaceServiceAccountJson && workspaceImpersonatedUser && gmailFrom,
+  );
 
   const explicitSmtpRequested = Boolean(
     smtpHost || smtpUser || smtpPassword || Deno.env.get("SMTP_FROM_EMAIL") || Deno.env.get("SMTP_PORT"),
@@ -35,8 +163,10 @@ Deno.serve(async (req: Request) => {
     smtpUser && smtpPassword && smtpFrom,
   );
   const legacyGmailReady = Boolean(gmailUser && gmailPassword && gmailFrom);
+  const providerReady =
+    gmailApiReady || (explicitSmtpRequested ? explicitSmtpReady : legacyGmailReady);
 
-  if (!supabaseUrl || !serviceRoleKey || (explicitSmtpRequested ? !explicitSmtpReady : !legacyGmailReady)) {
+  if (!supabaseUrl || !serviceRoleKey || !providerReady) {
     return json({ error: "Support notification service is not configured." }, 503);
   }
 
@@ -75,24 +205,26 @@ Deno.serve(async (req: Request) => {
   if (selectError) return json({ error: selectError.message }, 500);
   if (!pending?.length) return json({ processed: 0, sent: 0, failed: 0 });
 
-  const mailer = explicitSmtpReady
-    ? {
-        transporter: nodemailer.createTransport({
-          host: smtpHost!,
-          port: smtpPort,
-          secure: smtpSecure,
-          requireTLS: !smtpSecure,
-          auth: { user: smtpUser!, pass: smtpPassword! },
-        }),
-        fromEmail: smtpFrom,
-      }
-    : {
-        transporter: nodemailer.createTransport({
-          service: "gmail",
-          auth: { user: gmailUser, pass: gmailPassword! },
-        }),
-        fromEmail: gmailFrom,
-      };
+  const smtpMailer = !gmailApiReady
+    ? explicitSmtpReady
+      ? {
+          transporter: nodemailer.createTransport({
+            host: smtpHost!,
+            port: smtpPort,
+            secure: smtpSecure,
+            requireTLS: !smtpSecure,
+            auth: { user: smtpUser!, pass: smtpPassword! },
+          }),
+          fromEmail: smtpFrom,
+        }
+      : {
+          transporter: nodemailer.createTransport({
+            service: "gmail",
+            auth: { user: gmailUser, pass: gmailPassword! },
+          }),
+          fromEmail: gmailFrom,
+        }
+    : null;
 
   let sent = 0;
   let failed = 0;
@@ -110,14 +242,24 @@ Deno.serve(async (req: Request) => {
     if (claimError || !claimed) continue;
 
     try {
-      const info = await mailer.transporter.sendMail({
-        from: `CertivoIQ Technical Support <${mailer.fromEmail}>`,
-        to: item.recipient_email,
-        replyTo: mailer.fromEmail,
-        subject: item.subject,
-        text: item.text_body,
-        html: item.html_body,
-      });
+      const info = gmailApiReady
+        ? await sendWithGmailApi({
+            serviceAccountJson: workspaceServiceAccountJson!,
+            impersonatedUser: workspaceImpersonatedUser,
+            fromEmail: gmailFrom,
+            recipientEmail: item.recipient_email,
+            subject: item.subject,
+            textBody: item.text_body,
+            htmlBody: item.html_body,
+          })
+        : await smtpMailer!.transporter.sendMail({
+            from: `CertivoIQ Technical Support <${smtpMailer!.fromEmail}>`,
+            to: item.recipient_email,
+            replyTo: smtpMailer!.fromEmail,
+            subject: item.subject,
+            text: item.text_body,
+            html: item.html_body,
+          });
 
       await admin.from("support_notification_outbox").update({
         status: "sent",
@@ -146,4 +288,3 @@ Deno.serve(async (req: Request) => {
 
   return json({ processed: sent + failed, sent, failed });
 });
-
