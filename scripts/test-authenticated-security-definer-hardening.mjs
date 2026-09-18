@@ -9,6 +9,13 @@ const migration = readFileSync(
   ),
   "utf8",
 );
+const newRpcMigration = readFileSync(
+  new URL(
+    "../supabase/migrations/20260918165500_harden_new_authenticated_rpc_surface.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 const functions = [
   "accept_pha_workspace_invitation",
@@ -85,4 +92,43 @@ test("migration fails closed if any authenticated public definer remains", () =>
   assert.match(migration, /exposed_authenticated_definers/i);
   assert.match(migration, /has_function_privilege\('authenticated', p\.oid, 'execute'\)/i);
   assert.match(migration, /Authenticated SECURITY DEFINER functions remain in public/i);
+});
+
+
+const newRpcFunctions = [
+  "approve_certification_final",
+  "resolve_certification_finding",
+  "auditor_workspace_snapshot",
+  "calculate_compliance_impact",
+  "compare_regulatory_source_versions",
+  "compliance_corpus_governance_snapshot",
+  "create_auditor_access_grant",
+  "enterprise_capability_matrix",
+  "revoke_auditor_access_grant",
+  "run_audit_simulation",
+  "state_rule_pack_activation_readiness",
+  "validated_regulatory_source_catalog",
+];
+
+test("later authenticated RPCs are returned to the invoker-safe public/private boundary", () => {
+  for (const name of newRpcFunctions) {
+    assert.match(
+      newRpcMigration,
+      new RegExp("function public\\." + name + "\\([^]*?security invoker", "i"),
+      name + " must expose only a SECURITY INVOKER wrapper",
+    );
+  }
+  for (const name of newRpcFunctions.filter(
+    (name) => !["approve_certification_final", "resolve_certification_finding"].includes(name),
+  )) {
+    assert.match(
+      newRpcMigration,
+      new RegExp("alter function public\\." + name + "\\([^;]*\\) set schema private", "i"),
+      name + " implementation must move out of public",
+    );
+  }
+  assert.match(newRpcMigration, /Authenticated SECURITY DEFINER functions remain in public/i);
+  assert.match(newRpcMigration, /Expected 12 hardened public wrappers/i);
+  assert.match(newRpcMigration, /revoke all on schema private from public, anon/i);
+  assert.match(newRpcMigration, /grant usage on schema private to authenticated, service_role/i);
 });

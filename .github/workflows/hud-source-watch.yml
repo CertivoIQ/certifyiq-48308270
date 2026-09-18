@@ -2,6 +2,15 @@ name: HUD Source Watch
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/hud-source-watch.yml'
+      - 'scripts/stage-hud-source-snapshot.mjs'
+      - 'scripts/test-hud-source-pipeline.mjs'
+      - 'src/lib/hud-source-pipeline.mjs'
+      - 'supabase/migrations/20260918164500_restore_hud_source_staging_rpc.sql'
   schedule:
     - cron: "17 11 * * *"
 
@@ -33,6 +42,8 @@ jobs:
           test -n "$CERTIVOIQ_SUPABASE_URL"
           test -n "$CERTIVOIQ_SUPABASE_PUBLISHABLE_KEY"
           test -n "$OPERATIONS_WORKER_SECRET"
+      - name: Verify HUD source pipeline controls
+        run: node --test scripts/test-hud-source-pipeline.mjs
       - name: Stage HUD schedule evidence
         env:
           CERTIVOIQ_SUPABASE_URL: ${{ secrets.CERTIVOIQ_SUPABASE_URL }}
