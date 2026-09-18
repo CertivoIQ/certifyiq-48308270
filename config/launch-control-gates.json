@@ -40,7 +40,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "founder",
-      "evidence": "Production verification on 2026-09-18 confirmed exactly one verified MFA factor in auth.mfa_factors. The founder MFA requirement remains enforced and the stale launch issue was closed as completed."
+      "evidence": "Production verification on 2026-09-18 confirmed exactly one verified TOTP factor in auth.mfa_factors. The founder MFA requirement remains enforced and the stale launch issue was closed as completed."
     },
     {
       "id": "stripe_controlled_live_e2e",
@@ -64,7 +64,7 @@
       "status": "technical_complete",
       "blocking": true,
       "ownerRole": "compliance_reviewers",
-      "evidence": "Production verification on 2026-09-18 confirmed 2 NSPIRE release attestations from 2 distinct verifier IDs; latest attestation was recorded 2026-09-02. The controlled release had already activated after the required dual attestation and the stale launch issue was closed as completed."
+      "evidence": "Production verification on 2026-09-18 confirmed two distinct staff attestations in pha_nspire_release_attestations from two distinct verifier IDs; latest attestation was recorded 2026-09-02. The controlled release had already activated after the required dual attestation and the stale launch issue was closed as completed."
     },
     {
       "id": "tn_tx_independent_source_validation",
