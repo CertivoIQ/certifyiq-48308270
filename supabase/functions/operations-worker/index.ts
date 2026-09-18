@@ -14,7 +14,11 @@ const githubKeys = createRemoteJWKSet(
 const CERTIFICATION_OCR_SIDECAR_SUFFIX = ".certivoiq-ocr.json";
 const STALE_CERTIFICATION_UPLOAD_HOURS = 72;
 
-async function authorizedGitHubWorkflow(request: Request): Promise<boolean> {
+async function authorizedGitHubWorkflow(
+  request: Request,
+  workflowFile = "operations-worker.yml",
+  allowedEvents = ["schedule", "workflow_dispatch"],
+): Promise<boolean> {
   const authorization = request.headers.get("authorization") ?? "";
   if (!authorization.startsWith("Bearer ")) return false;
   const token = authorization.slice("Bearer ".length).trim();
@@ -31,8 +35,8 @@ async function authorizedGitHubWorkflow(request: Request): Promise<boolean> {
       payload.repository_id === "1326099740" &&
       payload.ref === "refs/heads/main" &&
       payload.workflow_ref ===
-        "CertivoIQ/certifyiq-48308270/.github/workflows/operations-worker.yml@refs/heads/main" &&
-      (payload.event_name === "schedule" || payload.event_name === "workflow_dispatch") &&
+        `CertivoIQ/certifyiq-48308270/.github/workflows/${workflowFile}@refs/heads/main` &&
+      allowedEvents.includes(String(payload.event_name ?? "")) &&
       payload.runner_environment === "github-hosted"
     );
   } catch {
@@ -212,12 +216,133 @@ async function purgeStaleCertificationUploads(db: ReturnType<typeof createClient
   }
 }
 
+
+type HudStageRequest = {
+  source_url?: unknown;
+  final_url?: unknown;
+  source_sha256?: unknown;
+  retrieved_at?: unknown;
+  content_type?: unknown;
+  content_length?: unknown;
+  parser_build?: unknown;
+  dataset_rows?: unknown;
+};
+
+function validHudUrl(value: unknown) {
+  try {
+    const url = new URL(String(value ?? ""));
+    return url.protocol === "https:" && ["huduser.gov", "www.huduser.gov"].includes(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+async function stageHudSource(db: ReturnType<typeof createClient>, payload: HudStageRequest) {
+  const sourceUrl = String(payload.source_url ?? "");
+  const finalUrl = String(payload.final_url ?? "");
+  const sha256 = String(payload.source_sha256 ?? "");
+  const retrievedAt = String(payload.retrieved_at ?? "");
+  const contentType = String(payload.content_type ?? "");
+  const contentLength = Number(payload.content_length ?? 0);
+  const parserBuild = String(payload.parser_build ?? "");
+  const datasetRows = payload.dataset_rows;
+
+  if (!validHudUrl(sourceUrl) || !validHudUrl(finalUrl)) throw new Error("official HUD USER HTTPS source required");
+  if (!/^[0-9a-f]{64}$/.test(sha256)) throw new Error("invalid source sha256");
+  if (!Number.isFinite(contentLength) || contentLength <= 0 || contentLength > 5 * 1024 * 1024) throw new Error("invalid content length");
+  if (contentType !== "text/html") throw new Error("invalid content type");
+  if (!/^hud-source-pipeline-/.test(parserBuild)) throw new Error("uncontrolled parser build");
+  if (!Array.isArray(datasetRows) || datasetRows.length < 20) throw new Error("tracked dataset rows incomplete");
+  for (const row of datasetRows) {
+    if (!row || typeof row !== "object" || !String((row as Record<string, unknown>).dataset_id ?? "") ||
+        !String((row as Record<string, unknown>).dataset_name ?? "") ||
+        !(Object.prototype.hasOwnProperty.call(row, "most_recent_release")) ||
+        !(Object.prototype.hasOwnProperty.call(row, "expected_next_update"))) {
+      throw new Error("invalid dataset row");
+    }
+  }
+
+  const { data: existing, error: existingError } = await db
+    .from("operations_source_versions")
+    .select("id")
+    .eq("official_url", sourceUrl)
+    .eq("sha256", sha256)
+    .eq("authority", "HUD USER")
+    .eq("program", "Dataset Update Schedule")
+    .order("retrieved_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existingError) throw new Error(`HUD source lookup failed: ${existingError.message}`);
+
+  let sourceVersionId = existing?.id as string | undefined;
+  let staged = false;
+  if (!sourceVersionId) {
+    const { data: inserted, error: insertError } = await db
+      .from("operations_source_versions")
+      .insert({
+        official_url: sourceUrl,
+        authority: "HUD USER",
+        program: "Dataset Update Schedule",
+        retrieved_at: retrievedAt,
+        sha256,
+        parsing_status: "parsed",
+        validation_status: "validated",
+        evidence_manifest: {
+          final_url: finalUrl,
+          content_type: contentType,
+          content_length: contentLength,
+          parser_build: parserBuild,
+          dataset_rows: datasetRows,
+          validation_scope: "SOURCE_IDENTITY_AND_SCHEDULE_STRUCTURE_ONLY",
+          compliance_activation_allowed: false,
+          communication_allowed: false,
+        },
+      })
+      .select("id")
+      .single();
+    if (insertError) throw new Error(`HUD source insert failed: ${insertError.message}`);
+    sourceVersionId = String(inserted.id);
+    staged = true;
+  }
+
+  const { error: auditError } = await db.from("operations_audit_events").insert({
+    actor_kind: "worker",
+    action: staged ? "source.staged" : "source.unchanged",
+    target_type: "operations_source_version",
+    target_id: sourceVersionId,
+    after_sha256: sha256,
+    evidence_refs: [{ source_version_id: sourceVersionId }],
+    source_refs: [sourceUrl],
+    detail: {
+      parser_build: parserBuild,
+      tracked_dataset_count: datasetRows.length,
+      compliance_activation_allowed: false,
+      communication_allowed: false,
+      authentication: "github_oidc",
+    },
+  });
+  if (auditError) throw new Error(`HUD source audit insert failed: ${auditError.message}`);
+
+  return {
+    ok: true,
+    staged,
+    sourceVersionId,
+    sha256,
+    trackedDatasetCount: datasetRows.length,
+    complianceActivationAllowed: false,
+    communicationAllowed: false,
+  };
+}
+
 Deno.serve(async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  if (!(await authorizedGitHubWorkflow(request))) {
-    return json({ error: "Unauthorized" }, 401);
-  }
+  const url = new URL(request.url);
+  const isHudStage = url.pathname.endsWith("/stage-hud-source");
+  const authorized = isHudStage
+    ? await authorizedGitHubWorkflow(request, "hud-source-watch.yml", ["schedule", "workflow_dispatch", "push"])
+    : await authorizedGitHubWorkflow(request);
+  if (!authorized) return json({ error: "Unauthorized" }, 401);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -229,6 +354,15 @@ Deno.serve(async (request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const worker = "certivoiq-control-plane";
+
+  if (isHudStage) {
+    try {
+      const payload = (await request.json()) as HudStageRequest;
+      return json(await stageHudSource(db, payload));
+    } catch (error) {
+      return json({ ok: false, stage: "hud_source", error: error instanceof Error ? error.message : String(error) }, 400);
+    }
+  }
 
   let retention;
   try {
