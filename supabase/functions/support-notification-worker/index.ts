@@ -13,12 +13,29 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const workerSecret = Deno.env.get("SUPPORT_NOTIFICATION_WORKER_SECRET");
+
+  const smtpHost = Deno.env.get("SMTP_HOST")?.trim();
+  const smtpPort = Number(Deno.env.get("SMTP_PORT") || "587");
+  const smtpSecure = (Deno.env.get("SMTP_SECURE") || "false").trim().toLowerCase() === "true";
+  const smtpUser = Deno.env.get("SMTP_USER")?.trim();
+  const smtpPassword = Deno.env.get("SMTP_PASSWORD")?.trim();
+  const smtpFrom = (Deno.env.get("SMTP_FROM_EMAIL") || smtpUser || "").trim();
+
   const gmailUser = (Deno.env.get("GMAIL_USER") || "support@certivoiq.com").trim();
   // Google displays app passwords in spaced groups; SMTP requires the credential itself.
   const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD")?.replace(/\s/g, "");
-  const workerSecret = Deno.env.get("SUPPORT_NOTIFICATION_WORKER_SECRET");
 
-  if (!supabaseUrl || !serviceRoleKey || !gmailPassword) {
+  const explicitSmtpRequested = Boolean(
+    smtpHost || smtpUser || smtpPassword || Deno.env.get("SMTP_FROM_EMAIL") || Deno.env.get("SMTP_PORT"),
+  );
+  const explicitSmtpReady = Boolean(
+    smtpHost && Number.isInteger(smtpPort) && smtpPort > 0 && smtpPort <= 65535 &&
+    smtpUser && smtpPassword && smtpFrom,
+  );
+  const legacyGmailReady = Boolean(gmailUser && gmailPassword);
+
+  if (!supabaseUrl || !serviceRoleKey || (explicitSmtpRequested ? !explicitSmtpReady : !legacyGmailReady)) {
     return json({ error: "Support notification service is not configured." }, 503);
   }
 
@@ -57,10 +74,24 @@ Deno.serve(async (req: Request) => {
   if (selectError) return json({ error: selectError.message }, 500);
   if (!pending?.length) return json({ processed: 0, sent: 0, failed: 0 });
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: gmailUser, pass: gmailPassword },
-  });
+  const mailer = explicitSmtpReady
+    ? {
+        transporter: nodemailer.createTransport({
+          host: smtpHost!,
+          port: smtpPort,
+          secure: smtpSecure,
+          requireTLS: !smtpSecure,
+          auth: { user: smtpUser!, pass: smtpPassword! },
+        }),
+        fromEmail: smtpFrom,
+      }
+    : {
+        transporter: nodemailer.createTransport({
+          service: "gmail",
+          auth: { user: gmailUser, pass: gmailPassword! },
+        }),
+        fromEmail: gmailUser,
+      };
 
   let sent = 0;
   let failed = 0;
@@ -78,10 +109,10 @@ Deno.serve(async (req: Request) => {
     if (claimError || !claimed) continue;
 
     try {
-      const info = await transporter.sendMail({
-        from: `CertivoIQ Technical Support <${gmailUser}>`,
+      const info = await mailer.transporter.sendMail({
+        from: `CertivoIQ Technical Support <${mailer.fromEmail}>`,
         to: item.recipient_email,
-        replyTo: gmailUser,
+        replyTo: mailer.fromEmail,
         subject: item.subject,
         text: item.text_body,
         html: item.html_body,
