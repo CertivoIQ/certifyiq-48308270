@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 
 export const WVHDF_MULTIFAMILY_INDEX_URL =
   "https://www.wvhdf.com/programs/multi-family-programs-and-resources/";
-export const WV_INDEX_PIPELINE_BUILD = "wv-official-index-2026.08.25.1";
+export const WVHDF_MULTIFAMILY_INDEX_FALLBACK_URL =
+  "https://www.wvhdf.com/program/on-site-systems-program";
+export const WV_INDEX_PIPELINE_BUILD = "wv-official-index-2026.09.17.2";
 const MAX_BYTES = 5 * 1024 * 1024;
 
 function trustedWvhdfUrl(value) {
@@ -52,7 +54,8 @@ export function prepareWvOfficialIndexSnapshot({
   return {
     stage_status: "VALIDATED_FOR_STAGING",
     activation_status: "BLOCKED_PENDING_CONTENT_VALIDATION",
-    official_url: finalUrl,
+    official_url: sourceUrl,
+    retrieval_url: finalUrl,
     authority: "West Virginia Housing Development Fund",
     program: "LIHTC",
     jurisdiction: "WV",
