@@ -23,6 +23,8 @@ Deno.serve(async (req: Request) => {
   const smtpFrom = (Deno.env.get("SMTP_FROM_EMAIL") || smtpUser || "").trim();
 
   const gmailUser = (Deno.env.get("GMAIL_USER") || "support@certivoiq.com").trim();
+  const gmailFallbackUser = (Deno.env.get("GMAIL_FALLBACK_USER") || "rjwatkins@certivoiq.com").trim();
+  const gmailFromEmail = (Deno.env.get("GMAIL_FROM_EMAIL") || "support@certivoiq.com").trim();
   // Google displays app passwords in spaced groups; SMTP requires the credential itself.
   const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD")?.replace(/\s/g, "");
 
@@ -74,8 +76,8 @@ Deno.serve(async (req: Request) => {
   if (selectError) return json({ error: selectError.message }, 500);
   if (!pending?.length) return json({ processed: 0, sent: 0, failed: 0 });
 
-  const mailer = explicitSmtpReady
-    ? {
+  const mailers = explicitSmtpReady
+    ? [{
         transporter: nodemailer.createTransport({
           host: smtpHost!,
           port: smtpPort,
@@ -84,14 +86,19 @@ Deno.serve(async (req: Request) => {
           auth: { user: smtpUser!, pass: smtpPassword! },
         }),
         fromEmail: smtpFrom,
-      }
-    : {
+        authUser: smtpUser!,
+      }]
+    : [...new Set([gmailUser, gmailFallbackUser].filter(Boolean))].map((authUser) => ({
         transporter: nodemailer.createTransport({
           service: "gmail",
-          auth: { user: gmailUser, pass: gmailPassword! },
+          auth: { user: authUser, pass: gmailPassword! },
         }),
-        fromEmail: gmailUser,
-      };
+        fromEmail: gmailFromEmail,
+        authUser,
+      }));
+
+  const isAuthenticationError = (value: unknown) =>
+    /(?:535|badcredentials|invalid login|username and password not accepted)/i.test(cleanError(value));
 
   let sent = 0;
   let failed = 0;
@@ -109,14 +116,27 @@ Deno.serve(async (req: Request) => {
     if (claimError || !claimed) continue;
 
     try {
-      const info = await mailer.transporter.sendMail({
-        from: `CertivoIQ Technical Support <${mailer.fromEmail}>`,
-        to: item.recipient_email,
-        replyTo: mailer.fromEmail,
-        subject: item.subject,
-        text: item.text_body,
-        html: item.html_body,
-      });
+      let info: Awaited<ReturnType<(typeof mailers)[number]["transporter"]["sendMail"]>> | null = null;
+      let deliveryError: unknown = null;
+      for (let index = 0; index < mailers.length; index += 1) {
+        const mailer = mailers[index];
+        try {
+          info = await mailer.transporter.sendMail({
+            from: `CertivoIQ Technical Support <${mailer.fromEmail}>`,
+            to: item.recipient_email,
+            replyTo: mailer.fromEmail,
+            subject: item.subject,
+            text: item.text_body,
+            html: item.html_body,
+          });
+          break;
+        } catch (error) {
+          deliveryError = error;
+          const hasFallback = index < mailers.length - 1;
+          if (!hasFallback || explicitSmtpReady || !isAuthenticationError(error)) throw error;
+        }
+      }
+      if (!info) throw deliveryError ?? new Error("Support notification delivery failed");
 
       await admin.from("support_notification_outbox").update({
         status: "sent",
