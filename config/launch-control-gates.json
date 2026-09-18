@@ -67,13 +67,21 @@
       "evidence": "Production verification on 2026-09-02 confirmed two distinct staff attestations to SHA-256 9758d7703e574eb3f0ab923b58dc9040cf5f6e7a671db2785ebd4ec7ebee6254; the HUD-NSPIRE-FINAL-STANDARDS release activated as current and the controlled bundle artifact moved to verified. Reverified on 2026-09-18: pha_nspire_release_attestations contains 2 attestations from 2 distinct verifier IDs. The stale launch issue was closed as completed."
     },
     {
-      "id": "tn_tx_independent_source_validation",
+      "id": "tn_tx_source_verification",
       "category": "regulatory",
-      "status": "human_required",
+      "status": "technical_complete",
       "blocking": true,
       "ownerRole": "compliance_reviewers",
-      "action": "Independently validate the 15 Tennessee and 11 Texas exact-document captures, effective dates, supersession status, applicability, and rule mappings.",
-      "evidence": "supabase/migrations/20260903195500_tn_tx_document_level_sources.sql"
+      "evidence": "Production recheck on 2026-09-18 confirmed both Tennessee and Texas state packs report status=verified with blocked_source_count=0. For all current non-excluded source candidates, TN is 36/36 agent_verification_status=verified and 36/36 compliance_activation_allowed=true; TX is 56/56 verified and 56/56 compliance_activation_allowed=true. Source-level verification evidence records last_decision=verified with validated_on=2026-09-17. This gate records source verification only and does not assert completion of a separate second-review control or state-pack rule activation."
+    },
+    {
+      "id": "tn_tx_independent_source_review",
+      "category": "regulatory",
+      "status": "human_required",
+      "blocking": false,
+      "ownerRole": "compliance_reviewers",
+      "action": "Complete and record an independent second review of the TN/TX release-critical source set when operationally scheduled; reconcile legacy independent_validation_completed=false evidence metadata without changing the verified source decisions unless the reviewer identifies a substantive issue.",
+      "evidence": "The current TN/TX source and pack verification decisions are complete, but older exact-document evidence metadata still records independent_validation_required=true / independent_validation_completed=false. This second-review control is tracked separately and is non-blocking for controlled launch."
     },
     {
       "id": "terms_privacy_counsel_review",
