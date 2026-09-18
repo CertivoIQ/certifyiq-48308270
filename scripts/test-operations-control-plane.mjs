@@ -184,3 +184,13 @@ test("governance work is centralized in the Tasks workspace", () => {
     /result\.error && !isMissingRelationError\(result\.error\)/,
   );
 });
+
+
+test("operations audit correlation has a server-side UUID default", () => {
+  const migration = readFileSync(
+    new URL("../supabase/migrations/20260918172000_default_operations_audit_correlation.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /alter column correlation_id set default gen_random_uuid\(\)/i);
+  assert.doesNotMatch(migration, /drop not null/i);
+});
