@@ -34,7 +34,6 @@ test("remaining human and external approvals are never labeled technically compl
 
 test("founder-approved exceptions preserve residual risk and underlying-review truth", () => {
   for (const id of [
-    "stripe_controlled_live_e2e",
     "terms_privacy_counsel_review",
     "independent_penetration_test",
     "controlled_customer_pilot",
@@ -49,6 +48,16 @@ test("founder-approved exceptions preserve residual risk and underlying-review t
     assert.equal(gate?.exception?.evidence, "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md");
     assert.ok(gate?.action);
   }
+
+  const stripe = config.gates.find((item) => item.id === "stripe_controlled_live_e2e");
+  assert.equal(stripe?.status, "exception_approved");
+  assert.equal(stripe?.blocking, false);
+  assert.equal(stripe?.exception?.approvedByRole, "founder");
+  assert.equal(stripe?.exception?.approvedAt, "2026-09-18");
+  assert.match(stripe?.exception?.scope ?? "", /does not represent/i);
+  assert.ok(stripe?.exception?.residualRisk);
+  assert.equal(stripe?.exception?.evidence, "docs/FOUNDER-LAUNCH-RISK-EXCEPTIONS.md");
+  assert.ok(stripe?.action);
 });
 
 test("state-rule requirement exposure is recorded as remediated from production evidence", () => {
@@ -76,6 +85,17 @@ test("founder MFA enrollment is recorded from production verification evidence",
   assert.equal(gate?.status, "technical_complete");
   assert.match(gate?.evidence ?? "", /verified TOTP factor/i);
   assert.match(gate?.evidence ?? "", /2026-09-02/);
+});
+
+test("Stripe live billing exercise is recorded as a non-blocking founder exception", () => {
+  const gate = config.gates.find((item) => item.id === "stripe_controlled_live_e2e");
+  assert.equal(gate?.status, "exception_approved");
+  assert.equal(gate?.blocking, false);
+  assert.match(gate?.evidence ?? "", /SN0DGD5I-0001/);
+  assert.match(gate?.evidence ?? "", /\$2,708\.31 due/i);
+  assert.match(gate?.evidence ?? "", /PaymentIntent processing/i);
+  assert.match(gate?.evidence ?? "", /no enterprise license or entitlement/i);
+  assert.match(gate?.action ?? "", /first successful real customer payment/i);
 });
 
 test("NSPIRE dual attestation is recorded from activated production evidence", () => {
