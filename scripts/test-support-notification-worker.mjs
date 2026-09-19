@@ -76,7 +76,7 @@ test("support worker prefers Gmail API OAuth when Workspace delegation is config
 
 test("Gmail API keeps support sender separate from delegated auth user", () => {
   assert.match(worker, /fromEmail: gmailFrom/);
-  assert.match(worker, /impersonatedUser: workspaceImpersonatedUser/);
+  assert.match(worker, /gmailApiAccessToken\(\s*workspaceServiceAccountJson!,\s*workspaceImpersonatedUser/);
   assert.match(worker, /Reply-To:/);
   assert.match(worker, /CertivoIQ Technical Support/);
 });
