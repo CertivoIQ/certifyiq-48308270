@@ -47,7 +47,7 @@ test("legacy Gmail supports separate authentication and support sender identitie
   assert.match(worker, /auth: \{ user: gmailUser, pass: gmailPassword!/);
   assert.match(worker, /fromEmail: gmailFrom/);
   assert.match(worker, /providerReady/);
-  assert.match(worker, /gmailApiReady \|\| \(explicitSmtpRequested \? explicitSmtpReady : legacyGmailReady\)/);
+  assert.match(worker, /gmailUserOauthReady \|\| gmailApiReady \|\| \(explicitSmtpRequested \? explicitSmtpReady : legacyGmailReady\)/);
 });
 
 test("delivery remains auditable and retry-safe", () => {
@@ -71,12 +71,28 @@ test("support worker prefers Gmail API OAuth when Workspace delegation is config
   assert.match(worker, /SignJWT/);
   assert.match(worker, /importPKCS8/);
   assert.match(worker, /gmailApiReady \|\|/);
-  assert.match(worker, /const smtpMailer = !gmailApiReady/);
+  assert.match(worker, /const smtpMailer = !\(gmailUserOauthReady \|\| gmailApiReady\)/);
 });
 
 test("Gmail API keeps support sender separate from delegated auth user", () => {
   assert.match(worker, /fromEmail: gmailFrom/);
-  assert.match(worker, /impersonatedUser: workspaceImpersonatedUser/);
+  assert.match(worker, /gmailApiAccessToken\(\s*workspaceServiceAccountJson!,\s*workspaceImpersonatedUser/);
   assert.match(worker, /Reply-To:/);
   assert.match(worker, /CertivoIQ Technical Support/);
+});
+
+
+test("support worker supports Gmail user OAuth refresh-token delivery without service-account keys", () => {
+  for (const name of [
+    "GOOGLE_OAUTH_CLIENT_ID",
+    "GOOGLE_OAUTH_CLIENT_SECRET",
+    "GOOGLE_OAUTH_REFRESH_TOKEN",
+  ]) {
+    assert.match(worker, new RegExp(name));
+  }
+  assert.match(worker, /gmailUserOauthReady/);
+  assert.match(worker, /grant_type: "refresh_token"/);
+  assert.match(worker, /Google user OAuth refresh failed/);
+  assert.match(worker, /gmailUserOauthReady\s*\? await sendWithGmailApi/);
+  assert.match(worker, /accessToken: await gmailUserOAuthAccessToken/);
 });
